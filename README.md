@@ -1,6 +1,6 @@
 # Vegas Quant — The 5-Spot Challenge
 
-Mobile-first public NFL research desk and protected publishing application. Next.js 16, TypeScript, Supabase Auth/Postgres/Realtime, and Vercel.
+Mobile-first public NFL challenge overview, member-only research desk, and protected publishing application. Next.js 16, TypeScript, Supabase Auth/Postgres/Realtime, and Vercel.
 
 **Vegas Quant Ultra is the analyst. This application never generates picks, probabilities, odds, injuries, or betting recommendations.**
 
@@ -20,21 +20,22 @@ npm run typecheck
 npm run build
 ```
 
-The dedicated Supabase project's public URL and publishable key are included in `src/lib/supabase.ts`. These are intentionally public credentials. Optional environment overrides are documented in `.env.example`. **No service-role key, admin token, or private API key is required by this app.** Database policies and explicit admin authorization enforce publishing access.
+The dedicated Supabase project's public URL and publishable key are included in `src/lib/supabase.ts`. These are intentionally public credentials. Optional environment overrides are documented in `.env.example`. Public browsing needs no secret. Stripe billing requires server-only keys described in `.env.example` and [Membership setup](docs/MEMBERSHIP.md). RLS enforces paid research access; an admin allowlist plus MFA protects publishing. Checkout is disabled until configured.
 
 ## Pages
 
 - `/` — live challenge, market context, actual bankroll chart, illustrative ladder, decision gate.
 - `/games/[slug]` — full handicap, market snapshots, immutable analysis versions, official plays.
 - `/history` — permanent ledger, filters, CSV export, ROI/CLV/process summaries.
-- `/admin` — email/password authentication and approved-admin publishing forms.
-- `/picks/[id]/share` — screenshot-friendly pick card and PNG download.
+- `/membership` — registration, sign-in, season passes, and admin authenticator verification.
+- `/admin` — approved-admin publishing forms, requiring an MFA-verified session.
+- `/picks/[id]/share` — admin-only clean pick card and authenticated PNG download.
 
 ## Deploy on Vercel
 
 Import `Aleynaalij/VegasQuantV1`, framework **Next.js**, root directory **/**. The checked-in publishable connection enables public reads without secret configuration. For another database, set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and apply the migrations.
 
-Configure Supabase Auth's Site URL and allowed redirect URL to the production origin and `/admin`. An administrator can approve a registered account by inserting its verified Auth user ID into `private.admin_users` through the trusted Supabase management connection. Ordinary registrations have **zero publishing privileges**. Never grant admin based on editable user metadata.
+Configure Supabase Auth's Site URL and allowed redirect URL to the production origin and `/admin`. An administrator can approve a registered account by inserting its verified Auth user ID into `private.admin_users` through the trusted Supabase management connection. Ordinary registrations have **zero publishing privileges and no paid research access**. Never grant admin based on editable user metadata.
 
 ## Accounting and history
 
@@ -43,7 +44,7 @@ Configure Supabase Auth's Site URL and allowed redirect URL to the production or
 - Publishing reserves the intended stake; balance shows settled equity. The reserve transaction is informational (zero balance change). There can be only one official play per stage and one open challenge leg.
 - Actual entry confirmation is separate from the recommendation. Actual entry odds drive settlement. An unconfirmed execution has no CLV and cannot settle.
 - No deposits or top-ups exist within a challenge. Stakes cannot exceed available challenge funds. Long-term standalone picks are separate from challenge balances.
-- Public price CLV is `(entry decimal odds / closing decimal odds − 1) × 100` only for identical lines. Line CLV measures points gained, with direction-aware totals/props. NFL key 3/7 crossings are flagged.
+- Price CLV is `(entry decimal odds / closing decimal odds − 1) × 100` only for identical lines. Line CLV measures points gained, with direction-aware totals/props. NFL key 3/7 crossings are flagged.
 - The stated analyst edge is preserved exactly, with a database minimum of 3%. It is **not** silently replaced by a recomputed value from rounded probabilities.
 - Analysis, market snapshots, official picks, entries, closes, results, reviews, transactions, and audit events are append-only. Analysis updates and process-review updates create new records.
 - Published official picks include the game, analysis, and market information known at publication. No retroactive recommendation edits are available.

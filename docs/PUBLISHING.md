@@ -4,7 +4,7 @@ Vegas Quant Ultra and the owner are the sole source of analysis and official dec
 
 ## Through the phone admin
 
-1. Sign in at `/admin` using an approved account.
+1. Sign in at `/membership` with an approved account, verify the authenticator code, then open `/admin`.
 2. Select the game and publish a timestamped **analysis version**. Paste the original handoff verbatim. Copy only supplied content into the named sections and projections.
 3. Publish current/opening market snapshots with their actual observation time and source.
 4. When expressly approved, choose **Official pick**, select its source analysis and challenge stage, and enter the supplied values. The screen previews the exact publication payload before confirmation.
@@ -23,7 +23,7 @@ If the Work-chat package omits a required field, ask for it. Examples in the pro
 
 ## Work-chat operations
 
-The connected Supabase management tool can read the normalized tables and execute an approved publication transaction. Normal app publishing calls `public.publish(action, payload, request_id)` as an approved Auth administrator. Do not invent an administrator identity or bypass the allowlist. If no approved admin session is available, a trusted database operator can apply an explicitly authorized owner handoff with a reviewed transaction, preserving all validations and immutable audit records. Always verify the public page after publishing.
+The connected Supabase management tool can read the normalized tables and execute an approved publication transaction. Normal app publishing calls `public.publish(action, payload, request_id)` as an approved Auth administrator. Do not invent an administrator identity or bypass the allowlist. If no approved admin session is available, a trusted database operator can apply an explicitly authorized owner handoff with a reviewed transaction, preserving all validations and immutable audit records. Always verify the member view after publishing, and confirm protected details do not appear in the public response.
 
 No autonomous odds, injury, weather, close, or result feed is configured. Closing-line capture is not scheduled unless explicitly requested and an authorized data source is supplied.
 
@@ -33,4 +33,4 @@ No autonomous odds, injury, weather, close, or result feed is configured. Closin
 - Append a new analysis or process review when the reasoning evolves.
 - Financial corrections require a separately designed compensating transaction and explicit owner instruction; the initial release intentionally does not silently rewrite settled money.
 - Do not expose administrator identities or private receipt data through public views.
-- Use the public ledger CSV export for review; full relational history lives in Supabase and should be included in the owner's database backups.
+- Use the member ledger CSV export for review; full relational history lives in Supabase and should be included in the owner's database backups.
