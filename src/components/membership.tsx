@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
 import { Shell, Panel } from "./ui";
+import FriendPass from "./friend-pass";
 import type { Session } from "@supabase/supabase-js";
 type Quote = {
   plan: "full" | "half";
@@ -78,9 +79,11 @@ export default function Membership() {
           })
         : await supabase.auth.signInWithPassword(credentials);
       if (r.error) throw r.error;
+      const friendsCode=String(f.get("friends_code") || "").trim();
+      if (signup && friendsCode) { try { sessionStorage.setItem("vq-friend-code",friendsCode); } catch {} }
       setNotice(
         signup
-          ? "Confirm your email, then return here to sign in. Registration alone does not unlock paid research."
+          ? "Confirm your email, then return here to sign in. If you entered a friends code, activate it below after signing in."
           : "Signed in.",
       );
       const current = await refresh();
@@ -234,6 +237,7 @@ export default function Membership() {
                 required
               />
             </label>
+            {signup && <label>Friends promo code (optional)<input name="friends_code" maxLength={100} autoComplete="off" autoCapitalize="characters" spellCheck={false} /><small>Confirm your email, then activate your code after signing in. A place is used only after successful redemption.</small></label>}
             <button className="primary" disabled={busy}>
               {signup ? "Register" : "Sign in"}
             </button>
@@ -249,6 +253,7 @@ export default function Membership() {
           </form>
         </Panel>
       )}
+      {session && !access.admin_account && <FriendPass />}
       {access.admin_account && !access.admin && (
         <Panel title="Admin security · Two-step verification">
           <div className="notebook">
@@ -339,7 +344,7 @@ export default function Membership() {
         <p>
           <Link className="text-link" href="/admin">
             Open private publishing desk →
-          </Link>
+          </Link>{" · "}<Link className="text-link" href="/admin/accounts">Accounts & friends passes →</Link>
         </p>
       )}
       {!access.allowed && !access.admin_account && (
