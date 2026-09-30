@@ -79,6 +79,7 @@ export default function Membership() {
           })
         : await supabase.auth.signInWithPassword(credentials);
       if (r.error) throw r.error;
+      if (signup) window.dispatchEvent(new Event("vq:welcome"));
       const friendsCode=String(f.get("friends_code") || "").trim();
       if (signup && friendsCode) { try { sessionStorage.setItem("vq-friend-code",friendsCode); } catch {} }
       setNotice(
@@ -184,6 +185,7 @@ export default function Membership() {
           <div className="eyebrow">VEGAS QUANT ACCOUNT</div>
           <h1>One login. Your research desk.</h1>
           <p>Sign in to access your research and account tools.</p>
+          <button type="button" className="vq-welcome-about" onClick={() => window.dispatchEvent(new Event("vq:welcome"))}>What is Vegas Quant?</button>
         </div>
       </div>
       {notice && (

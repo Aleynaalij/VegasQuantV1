@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Welcome from "@/components/welcome";
 export const metadata: Metadata = {
   title: "Vegas Quant | 5-Spot Challenge",
   description:
@@ -12,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>{children}<Welcome /></body>
     </html>
   );
 }
