@@ -6,12 +6,12 @@ import {
   money,
   odd,
   signedMoney,
-  time,
   winProfit,
   type Desk,
   type Pick,
 } from "@/lib/domain";
 import { Badge, SourceLink } from "./ui";
+import CopyPick from "./copy-pick";
 export default function PickCard({
   p,
   d,
@@ -52,6 +52,14 @@ export default function PickCard({
       <div className="official-price">
         {odd(p.odds)} <span>{p.book}</span>
       </div>
+      <p className="pick-publication">
+        Published <time dateTime={p.created_at}>{new Date(p.created_at).toLocaleString("en-US", {
+          timeZone: "America/New_York", year: "numeric", month: "short", day: "numeric",
+          hour: "numeric", minute: "2-digit", timeZoneName: "short",
+        })}</time> · Vegas Quant Ultra
+      </p>
+      <p className="pick-odds-notice">Odds and available lines may change. This card preserves the original published selection, line, odds, and stake; later sportsbook prices do not change that record.</p>
+      {!share && <CopyPick selection={p.selection} odds={p.odds} stakeCents={p.stake_cents} />}
       <div className="pick-finances">
         <div>
           <span>Stake</span>
@@ -178,7 +186,7 @@ export default function PickCard({
         </div>
       )}
       <div className="pick-bottom">
-        <small>Published {time(p.created_at)} · Vegas Quant Ultra</small>
+        <small>Original publication preserved · Vegas Quant Ultra</small>
         {!share && allowShare && (
           <Link href={`/picks/${p.id}/share`}>
             Share card

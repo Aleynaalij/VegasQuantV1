@@ -2266,3 +2266,9 @@ footer p {
 .vq-welcome-error { color: #ffb4ad; font-size: 13px; }
 .vq-welcome-about { background: transparent; color: #75deb0; border: 1px solid #34423e; border-radius: 8px; padding: 10px 14px; margin-top: 8px; }
 @media (max-width: 420px) { .vq-welcome-content { padding: 22px 20px 10px; } .vq-welcome-footer { padding: 14px 20px 16px; } }
+.pick-publication, .official-card > .pick-odds-notice { font-size: 12px; line-height: 1.6; color: var(--muted); }
+.official-card > .pick-odds-notice { padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; }
+.copy-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0; }
+.copy-pick button { min-height: 44px; padding: 10px 18px; border: 1px solid #446b5b; border-radius: 8px; background: #162c24; color: #a8f1ce; font-size: 13px; }
+.copy-pick [role="status"] { font-size: 12px; color: var(--muted); }
+.copy-pick textarea { width: 100%; font-size: 14px; }
