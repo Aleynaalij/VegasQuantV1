@@ -345,11 +345,15 @@ export default function PersonalChallenge({
           <label>
             Your American odds
             <input
-              inputMode="decimal"
-              type="number"
+              inputMode="text"
+              type="text"
               name="odds"
+              autoComplete="off"
+              autoCapitalize="off"
+              spellCheck={false}
+              pattern="[+\-]?[0-9]+([.][0-9]+)?"
+              title="Enter American odds with a sign, for example -114 or +120."
               required
-              step="any"
               value={odds}
               onChange={(e) => {
                 setOdds(e.target.value);
