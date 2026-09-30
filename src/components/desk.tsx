@@ -29,6 +29,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
 import PickCard from "./pick-card";
+import ResearchNotebook from "./research-notebook";
 const pct = (v: number | null) => (v === null ? "—" : `${v.toFixed(2)}%`);
 const value = (s: unknown) =>
   s === undefined || s === null || s === "" ? "Awaiting analyst" : String(s);
@@ -471,18 +472,12 @@ export default function DeskApp({
                 aside={<span className="muted">Vegas Quant Ultra</span>}
               >
                 {a ? (
-                  <div className="notebook">
-                    <h3>{a.title}</h3>
-                    <p className="preserve">
-                      {a.sections["Game Summary"] || a.raw_handoff}
-                    </p>
-                    {g && (
-                      <Link className="text-link" href={`/games/${g.slug}`}>
-                        Read the full analysis
-                        <ArrowRight size={15} />
-                      </Link>
-                    )}
-                  </div>
+                  <ResearchNotebook
+                    key={a.id}
+                    analysis={a}
+                    slug={g?.slug}
+                    official={Boolean(official)}
+                  />
                 ) : (
                   <Empty title="The read is still developing.">
                     Vegas Quant Ultra is reviewing the game. Market prices, fair
@@ -565,11 +560,7 @@ export default function DeskApp({
                   }
                 >
                   {sectionNames.map((section, i) => (
-                    <details
-                      className="analysis-section"
-                      key={section}
-                      open={i === 0}
-                    >
+                    <details className="analysis-section" key={section}>
                       <summary>
                         <span>{String(i + 1).padStart(2, "0")}</span>
                         {section}

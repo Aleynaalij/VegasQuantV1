@@ -1967,3 +1967,129 @@ footer p {
       color 0.15s ease;
   }
 }
+
+/* Compact, progressively disclosed research. */
+.research-compact {
+  min-width: 0;
+}
+.research-meta {
+  padding: 18px 22px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  justify-content: space-between;
+  color: #91a39e;
+  font-size: 10px;
+}
+.research-meta span:last-child {
+  color: #80d6b5;
+}
+.research-tabs {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 0 22px 12px;
+  scrollbar-width: thin;
+  scrollbar-color: #405750 transparent;
+}
+.research-tabs button {
+  flex-shrink: 0;
+  min-height: 42px;
+  padding: 10px 14px;
+  border: 1px solid #293b36;
+  border-radius: 9px;
+  background: #111a1e;
+  color: #a9b6b2;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.research-tabs button[aria-selected="true"] {
+  color: #c5ffe8;
+  border-color: #548875;
+  background: #213b32;
+}
+.research-tabs button:focus-visible,
+.research-more:focus-visible {
+  outline: 2px solid #80d6b5;
+  outline-offset: 2px;
+}
+.research-body {
+  padding: 6px 22px 18px;
+}
+.research-body h3 {
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+.research-fair-lines {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.research-fair-lines > div {
+  padding: 12px 10px;
+  border: 1px solid #293b36;
+  border-radius: 10px;
+  min-width: 0;
+}
+.research-fair-lines span {
+  display: block;
+  font-size: 10px;
+  color: #94a49f;
+  margin-bottom: 7px;
+}
+.research-fair-lines strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.research-hint {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #94a49f;
+  margin: 13px 0 0;
+}
+.research-excerpt {
+  max-height: 156px;
+  overflow: hidden;
+}
+.research-excerpt p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.research-excerpt.expanded {
+  max-height: 320px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding-right: 10px;
+}
+.research-more {
+  margin-top: 12px;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 12px;
+  color: #80d6b5;
+  cursor: pointer;
+}
+.research-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid #293b36;
+  padding: 15px 22px;
+  color: #80d6b5;
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  .research-meta,
+  .research-tabs,
+  .research-body,
+  .research-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
