@@ -79,6 +79,7 @@ export type Analysis = {
   created_at: string;
 };
 export type Pick = {
+  market_info_url?: string | null;
   id: string;
   game_id: string;
   stage_id: string | null;

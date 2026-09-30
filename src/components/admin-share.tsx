@@ -2,64 +2,111 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import type { Desk } from "@/lib/domain";
-import PickCard from "./pick-card";
 export default function AdminShare({ id }: { id: string }) {
-  const [desk, setDesk] = useState<Desk | null>(null),
-    [notice, setNotice] = useState("Checking admin access…");
+  const [url, setUrl] = useState<string>();
+  const [file, setFile] = useState<File>();
+  const [notice, setNotice] = useState("Preparing your share card…");
   useEffect(() => {
-    let live = true;
+    let live = true,
+      objectUrl: string | undefined;
     void (async () => {
-      const a = await supabase.rpc("is_admin");
-      if (!a.data) {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session)
+          throw new Error("Sign in with research access to share a pick.");
+        const r = await fetch(`/picks/${id}/image`, {
+          headers: { Authorization: `Bearer ${data.session.access_token}` },
+          cache: "no-store",
+        });
+        if (!r.ok)
+          throw new Error(
+            r.status === 404
+              ? "Pick not found."
+              : "Research access is required. Admins must complete verification.",
+          );
+        const blob = await r.blob();
+        if (!live) return;
+        objectUrl = URL.createObjectURL(blob);
+        setUrl(objectUrl);
+        setFile(
+          new File([blob], `vegas-quant-${id}.png`, { type: "image/png" }),
+        );
+        setNotice("");
+      } catch (e) {
         if (live)
           setNotice(
-            "Sign in and verify your authenticator to export a clean share card.",
+            e instanceof Error
+              ? e.message
+              : "Unable to generate card. Try again.",
           );
-        return;
-      }
-      const d = await supabase.rpc("desk_data");
-      if (live && !d.error) {
-        setDesk(d.data);
-        setNotice("");
       }
     })();
     return () => {
       live = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, []);
-  const pick = desk?.picks.find((p) => p.id === id);
-  async function download() {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) return;
-    const r = await fetch(`/picks/${id}/image`, {
-      headers: { Authorization: `Bearer ${data.session.access_token}` },
-    });
-    if (!r.ok) {
-      setNotice("Admin verification required.");
-      return;
+  }, [id]);
+  async function share() {
+    if (!file) return;
+    try {
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Vegas Quant · Official Play",
+        });
+      } else
+        setNotice(
+          "Your browser does not support image sharing. Save the card below, then share it from Photos or Files.",
+        );
+    } catch (e) {
+      if (!(e instanceof Error && e.name === "AbortError"))
+        setNotice(
+          "Sharing unavailable. Save the image below to share it manually.",
+        );
     }
-    const url = URL.createObjectURL(await r.blob());
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `vegas-quant-${id}.png`;
-    a.click();
-    URL.revokeObjectURL(url);
   }
   return (
-    <main className="share-page">
-      <Link href="/">VEGAS QUANT</Link>
-      {notice && <p role="status">{notice}</p>}
-      {pick && desk ? (
+    <main
+      className="share-page"
+      style={{ maxWidth: 540, margin: "auto", padding: "24px 16px 110px" }}
+    >
+      <Link href="/">← VEGAS QUANT</Link>
+      <h1>Share Pick</h1>
+      <p>
+        Original published details. Odds may change. No wager is guaranteed.
+      </p>
+      <p role="status">{notice}</p>
+      {url && (
         <>
-          <PickCard p={pick} d={desk} share />
-          <button className="primary" onClick={download}>
-            Download clean share card
-          </button>
+          {/* Authenticated blob preview: never expose a public image URL. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt="Vegas Quant official pick with published selection, odds, stake, edge, confidence and publication time"
+            style={{ width: "100%", height: "auto", borderRadius: 16 }}
+          />
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 16,
+              marginTop: 20,
+            }}
+          >
+            <button className="primary" onClick={share}>
+              Share Pick
+            </button>
+            <a
+              className="primary"
+              href={url}
+              download={`vegas-quant-${id}.png`}
+            >
+              Save image
+            </a>
+          </div>
         </>
-      ) : (
-        <Link href="/membership">Sign in / verify admin →</Link>
       )}
+      {!url && <Link href="/membership">Account / sign in →</Link>}
     </main>
   );
 }

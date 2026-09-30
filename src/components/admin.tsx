@@ -27,6 +27,7 @@ import {
   type Desk,
 } from "@/lib/domain";
 import { Badge, Panel, Shell } from "./ui";
+import { marketInfoUrls } from "@/lib/market-info";
 type InputDef = {
   name: string;
   label: string;
@@ -39,6 +40,12 @@ type InputDef = {
   step?: string;
 };
 const pickFields: InputDef[] = [
+  {
+    name: "market_info_url",
+    label: "View Market Info · optional informational page",
+    required: false,
+    options: ["", ...marketInfoUrls],
+  },
   { name: "selection", label: "Selection · exactly as supplied" },
   {
     name: "market",

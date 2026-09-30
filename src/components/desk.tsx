@@ -505,11 +505,11 @@ export default function DeskApp({
                 </Panel>
               )}
               {page === "home" && official && (
-                <PickCard p={official} d={d} allowShare={access.admin} />
+                <PickCard p={official} d={d} allowShare />
               )}
               {page === "game" &&
                 gamePicks.map((p) => (
-                  <PickCard key={p.id} p={p} d={d} allowShare={access.admin} />
+                  <PickCard key={p.id} p={p} d={d} allowShare />
                 ))}
               {page === "home" && (
                 <Panel

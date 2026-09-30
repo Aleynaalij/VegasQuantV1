@@ -9,10 +9,11 @@ export async function GET(
   const { id } = await params;
   const auth = await requestUser(_req);
   if (!auth) return new Response("Authentication required", { status: 401 });
-  const { data: allowed } = await auth.db.rpc("is_admin");
-  if (!allowed)
-    return new Response("Admin verification required", { status: 403 });
+  const { data: allowed } = await auth.db.rpc("membership_status");
+  if (!allowed?.allowed)
+    return new Response("Research access required", { status: 403 });
   const { data: d } = await auth.db.rpc("desk_data");
+  if (!d) return new Response("Unable to load pick", { status: 503 });
   const p = d.picks.find((p: import("@/lib/domain").Pick) => p.id === id);
   if (!p) return new Response("Pick not found", { status: 404 });
   const g = d.games.find(
@@ -130,7 +131,11 @@ export async function GET(
             color: "#b5c1b9",
           }}
         >
-          Playable: {p.playable_number}
+          Published{" "}
+          {new Date(p.created_at).toLocaleString("en-US", {
+            timeZone: "America/New_York",
+            timeZoneName: "short",
+          })}
         </div>
         <div
           style={{
@@ -140,8 +145,20 @@ export async function GET(
             color: "#b5c1b9",
           }}
         >
-          Pass: {p.pass_number}
+          Original published price · Odds may change.
         </div>
+        {!allowed.admin && (
+          <div
+            style={{
+              display: "flex",
+              marginTop: 35,
+              color: "#69786f",
+              fontSize: 22,
+            }}
+          >
+            Shared by {allowed.member_code}
+          </div>
+        )}
         <div
           style={{
             display: "flex",

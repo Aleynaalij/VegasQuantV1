@@ -11,12 +11,13 @@ import {
   type Pick,
 } from "@/lib/domain";
 import { Badge, SourceLink } from "./ui";
+import { isMarketInfoUrl } from "@/lib/market-info";
 import CopyPick from "./copy-pick";
 export default function PickCard({
   p,
   d,
   share = false,
-  allowShare = false,
+  allowShare = true,
 }: {
   p: Pick;
   d: Desk;
@@ -53,13 +54,32 @@ export default function PickCard({
         {odd(p.odds)} <span>{p.book}</span>
       </div>
       <p className="pick-publication">
-        Published <time dateTime={p.created_at}>{new Date(p.created_at).toLocaleString("en-US", {
-          timeZone: "America/New_York", year: "numeric", month: "short", day: "numeric",
-          hour: "numeric", minute: "2-digit", timeZoneName: "short",
-        })}</time> · Vegas Quant Ultra
+        Published{" "}
+        <time dateTime={p.created_at}>
+          {new Date(p.created_at).toLocaleString("en-US", {
+            timeZone: "America/New_York",
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+            timeZoneName: "short",
+          })}
+        </time>{" "}
+        · Vegas Quant Ultra
       </p>
-      <p className="pick-odds-notice">Odds and available lines may change. This card preserves the original published selection, line, odds, and stake; later sportsbook prices do not change that record.</p>
-      {!share && <CopyPick selection={p.selection} odds={p.odds} stakeCents={p.stake_cents} />}
+      <p className="pick-odds-notice">
+        Odds and available lines may change. This card preserves the original
+        published selection, line, odds, and stake; later sportsbook prices do
+        not change that record.
+      </p>
+      {!share && (
+        <CopyPick
+          selection={p.selection}
+          odds={p.odds}
+          stakeCents={p.stake_cents}
+        />
+      )}
       <div className="pick-finances">
         <div>
           <span>Stake</span>
@@ -185,11 +205,22 @@ export default function PickCard({
           <p>{review.lessons}</p>
         </div>
       )}
+      {!share && isMarketInfoUrl(p.market_info_url) && (
+        <p>
+          <a href={p.market_info_url} target="_blank" rel="noopener noreferrer">
+            View Market Info ↗
+          </a>
+          <small>
+            {" "}
+            · Informational comparison only. Current prices may differ.
+          </small>
+        </p>
+      )}
       <div className="pick-bottom">
         <small>Original publication preserved · Vegas Quant Ultra</small>
         {!share && allowShare && (
           <Link href={`/picks/${p.id}/share`}>
-            Share card
+            Share Pick
             <ArrowUpRight size={15} />
           </Link>
         )}
