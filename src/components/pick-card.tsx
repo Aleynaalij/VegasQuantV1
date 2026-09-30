@@ -16,10 +16,12 @@ export default function PickCard({
   p,
   d,
   share = false,
+  allowShare = false,
 }: {
   p: Pick;
   d: Desk;
   share?: boolean;
+  allowShare?: boolean;
 }) {
   const st = d.stages.find((s) => s.id === p.stage_id),
     ch = d.challenges.find((c) => c.id === st?.challenge_id),
@@ -177,7 +179,7 @@ export default function PickCard({
       )}
       <div className="pick-bottom">
         <small>Published {time(p.created_at)} · Vegas Quant Ultra</small>
-        {!share && (
+        {!share && allowShare && (
           <Link href={`/picks/${p.id}/share`}>
             Share card
             <ArrowUpRight size={15} />

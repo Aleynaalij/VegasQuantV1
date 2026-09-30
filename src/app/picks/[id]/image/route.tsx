@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { getDesk } from "@/lib/data";
+import { requestUser } from "@/lib/billing-server";
 import { money, odd, winProfit } from "@/lib/domain";
 export const dynamic = "force-dynamic";
 export async function GET(
@@ -7,11 +7,20 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const d = await getDesk(),
-    p = d.picks.find((p) => p.id === id);
+  const auth = await requestUser(_req);
+  if (!auth) return new Response("Authentication required", { status: 401 });
+  const { data: allowed } = await auth.db.rpc("is_admin");
+  if (!allowed)
+    return new Response("Admin verification required", { status: 403 });
+  const { data: d } = await auth.db.rpc("desk_data");
+  const p = d.picks.find((p: import("@/lib/domain").Pick) => p.id === id);
   if (!p) return new Response("Pick not found", { status: 404 });
-  const g = d.games.find((g) => g.id === p.game_id),
-    s = d.stages.find((s) => s.id === p.stage_id);
+  const g = d.games.find(
+      (g: import("@/lib/domain").Game) => g.id === p.game_id,
+    ),
+    s = d.stages.find(
+      (s: { id: string; stage_number: number }) => s.id === p.stage_id,
+    );
   return new ImageResponse(
     (
       <div
@@ -150,7 +159,7 @@ export async function GET(
       height: 1350,
       headers: {
         "Content-Disposition": `attachment; filename="vegas-quant-${id}.png"`,
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "private, no-store",
       },
     },
   );

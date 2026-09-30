@@ -149,6 +149,9 @@ export function Shell({
           <div className="top-actions">
             <span className="live-dot" />{" "}
             <span className="desktop">Research & execution</span>
+            <Link href="/membership" className="admin-link">
+              Members
+            </Link>
             <Link href="/admin" className="admin-link">
               <LockKeyhole size={14} />
               <span>Admin</span>

@@ -2093,3 +2093,119 @@ footer p {
     padding-right: 16px;
   }
 }
+.membership-lock {
+  margin: 24px 0;
+  padding: 28px;
+  border: 1px solid #30443c;
+  border-radius: 16px;
+  background: #101b1b;
+}
+.membership-lock h2 {
+  max-width: 650px;
+  line-height: 1.3;
+}
+.membership-lock p {
+  line-height: 1.7;
+  color: #a4b6ad;
+  font-size: 13px;
+}
+.pass-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+.pass-grid > div {
+  padding: 22px;
+  background: #10171c;
+  border: 1px solid #2c3b35;
+  border-radius: 12px;
+}
+.pass-grid strong {
+  font-size: 32px;
+  color: #8ce2bb;
+}
+.member-stamp {
+  color: #8da89b;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 10px 0;
+}
+.member-watermarked .panel,
+.member-watermarked .official-card {
+  position: relative;
+  isolation: isolate;
+}
+.member-watermarked .panel::after,
+.member-watermarked .official-card::after {
+  content: var(--member-mark);
+  position: absolute;
+  inset: 45% 8px auto auto;
+  color: rgba(174, 203, 188, 0.12);
+  font-size: 11px;
+  letter-spacing: 2px;
+  pointer-events: none;
+  z-index: 1;
+  text-shadow:
+    0 100px rgba(174, 203, 188, 0.1),
+    0 -100px rgba(174, 203, 188, 0.1);
+  max-width: 90%;
+  overflow: hidden;
+}
+.member-form {
+  max-width: 480px;
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+.member-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+.member-form input {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #3c4c43;
+  border-radius: 8px;
+  color: #eef6f0;
+  background: #0c1318;
+}
+.member-notice {
+  padding: 16px;
+  border: 1px solid #3e5c4b;
+  border-radius: 8px;
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+}
+.member-form button {
+  min-height: 44px;
+}
+.mfa-qr {
+  background: white;
+  padding: 12px;
+  width: 220px;
+  max-width: 100%;
+}
+@media (max-width: 600px) {
+  .pass-grid {
+    grid-template-columns: 1fr;
+  }
+  .membership-lock {
+    padding: 20px;
+  }
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid #293b36;
+  border-radius: 14px;
+  margin: 24px 0;
+  overflow: hidden;
+  background: #10171e;
+}
+@media (max-width: 700px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

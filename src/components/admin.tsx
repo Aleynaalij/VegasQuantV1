@@ -648,14 +648,16 @@ export default function Admin() {
           </form>
         </Panel>
       ) : !authorized ? (
-        <Panel title="Account awaiting approval">
+        <Panel title="Admin verification required">
           <div className="notebook">
             <ShieldCheck size={32} />
             <h3>You’re signed in, but publishing is locked.</h3>
+            <a className="primary" href="/membership">
+              Verify admin access →
+            </a>
             <p>
-              Tell the owner to approve <b>{session.user.email}</b> for Vegas
-              Quant administration. No public content can be changed from this
-              account yet.
+              Approved admins must verify their authenticator before publishing.
+              If this account has not been approved, contact the owner.
             </p>
           </div>
         </Panel>
