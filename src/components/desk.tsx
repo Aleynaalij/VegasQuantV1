@@ -28,6 +28,7 @@ import {
 } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
+import PersonalChallenge from "./personal-challenge";
 import PickCard from "./pick-card";
 import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
@@ -309,32 +310,40 @@ export default function DeskApp({
         {error && <div className="notice">{error}</div>}
         {page === "home" && ch && (
           <>
-            <section className="stats">
-              <Stat
-                label="Starting bankroll"
-                value={money(ch.starting_cents)}
-                note="Maximum initial loss: $20"
-              />
-              <Stat
-                label="Current bankroll"
-                value={money(ch.balance_cents)}
-                note={
-                  <span className={m.net < 0 ? "negative" : "positive"}>
-                    {signedMoney(m.net)} settled P/L
-                  </span>
-                }
-              />
-              <Stat
-                label="Target bankroll"
-                value="≈ $640"
-                note="Aspirational · not guaranteed"
-              />
-              <Stat
-                label="Challenge record"
-                value={`${m.wins} W / ${m.losses} L`}
-                note={`${d.results.filter((r) => challengePicks.some((p) => p.id === r.pick_id) && ["PUSH", "VOID"].includes(r.result)).length} pushes / voids`}
-              />
-            </section>
+            <PersonalChallenge
+              key={`${ch.id}:${access.member_code}`}
+              challenge={ch}
+              pick={official}
+              picks={challengePicks}
+              results={d.results}
+            >
+              <section className="stats">
+                <Stat
+                  label="Starting bankroll"
+                  value={money(ch.starting_cents)}
+                  note="Maximum initial loss: $20"
+                />
+                <Stat
+                  label="Current bankroll"
+                  value={money(ch.balance_cents)}
+                  note={
+                    <span className={m.net < 0 ? "negative" : "positive"}>
+                      {signedMoney(m.net)} settled P/L
+                    </span>
+                  }
+                />
+                <Stat
+                  label="Target bankroll"
+                  value="≈ $640"
+                  note="Aspirational · not guaranteed"
+                />
+                <Stat
+                  label="Challenge record"
+                  value={`${m.wins} W / ${m.losses} L`}
+                  note={`${d.results.filter((r) => challengePicks.some((p) => p.id === r.pick_id) && ["PUSH", "VOID"].includes(r.result)).length} pushes / voids`}
+                />
+              </section>
+            </PersonalChallenge>
             <div className="status-strip">
               <span>
                 Current stage <b>{ch.current_stage} of 5</b>
