@@ -45,6 +45,7 @@ export default function DeskApp({
   gameSlug?: string;
 }) {
   const [d, setD] = useState(initial),
+    [checkingAccess, setCheckingAccess] = useState(true),
     [error, setError] = useState(""),
     [filter, setFilter] = useState("All"),
     [challengeFilter, setChallengeFilter] = useState("All"),
@@ -62,12 +63,13 @@ export default function DeskApp({
         if (error) {
           setD({ ...initial, access: noAccess } as Desk);
           setError(
-            "Live refresh is unavailable. Showing the last loaded version.",
+            "We couldn’t check your research access. Refresh the page to try again, or open Account to check your sign-in.",
           );
         } else {
           setD(data);
           setError("");
         }
+        setCheckingAccess(false);
       }
       fetching = false;
     }
@@ -226,6 +228,10 @@ export default function DeskApp({
   if (!access.allowed)
     return (
       <PublicOverview
+        page={page}
+        gameSlug={gameSlug}
+        loading={checkingAccess}
+        error={error}
         overview={(d as Desk & { overview?: Overview }).overview}
         games={d.games}
       />

@@ -6,10 +6,16 @@ export default function PublicOverview({
   overview,
   games,
   loading = false,
+  page = "home",
+  gameSlug,
+  error,
 }: {
   overview?: Overview;
   games: Game[];
   loading?: boolean;
+  page?: "home" | "game" | "history";
+  gameSlug?: string;
+  error?: string;
 }) {
   const challenge = overview?.challenges[0];
   const stage = overview?.stages.find(
@@ -17,7 +23,24 @@ export default function PublicOverview({
       s.challenge_id === challenge?.id &&
       s.stage_number === challenge?.current_stage,
   );
-  const game = games.find((g) => g.id === stage?.game_id);
+  const game = games.find((g) => gameSlug ? g.slug === gameSlug : g.id === stage?.game_id);
+  if (page !== "home") return (
+    <Shell active={page}>
+      <div className="heading"><div>
+        <div className="eyebrow">{page === "game" ? "MATCHUP DESK" : "PERMANENT LEDGER"}</div>
+        <h1>{page === "game" ? "Matchup analysis" : "Betting ledger"}</h1>
+        <p>{page === "game" ? "Research, market updates, and the history behind each decision." : "Published picks, results, closing-line value, and process grades."}</p>
+      </div></div>
+      {page === "game" && game && <Panel title={`${game.away_team} @ ${game.home_team}`}><div className="notebook"><p>{game.slot} · {time(game.kickoff)}</p><p>Detailed research is available with an active season pass.</p></div></Panel>}
+      <section className="membership-lock" aria-live="polite">
+        <span className="eyebrow">MEMBER ACCESS</span>
+        <h2>{loading ? "Checking your access…" : error ? "Unable to check access" : page === "game" ? "Unlock the matchup research" : "Unlock the permanent ledger"}</h2>
+        <p>{error || (loading ? "Your research will appear here if your account has access." : "Sign in with an active season pass to view this page. Have a friends code? Activate it from your Account page. Administrators must complete verification.")}</p>
+        {!loading && <Link href="/membership" className="primary">Sign in / manage access →</Link>}
+        {!loading && <p className="muted">Already signed in? Check your pass status under Account.</p>}
+      </section>
+    </Shell>
+  );
   return (
     <Shell>
       <div className="heading">
@@ -71,6 +94,7 @@ export default function PublicOverview({
         </div>
       </Panel>
       <section className="membership-lock">
+        {error && <p role="alert">{error}</p>}
         <span className="eyebrow">THE MEMBER RESEARCH DESK</span>
         <h2>
           {loading
