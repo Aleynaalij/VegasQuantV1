@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AccountLink from "./account-link";
 import {
   Activity,
   ArrowUpRight,
@@ -149,13 +150,7 @@ export function Shell({
           <div className="top-actions">
             <span className="live-dot" />{" "}
             <span className="desktop">Research & execution</span>
-            <Link href="/membership" className="admin-link">
-              Members
-            </Link>
-            <Link href="/admin" className="admin-link">
-              <LockKeyhole size={14} />
-              <span>Admin</span>
-            </Link>
+            <AccountLink />
           </div>
         </header>
         <main>
@@ -191,9 +186,12 @@ export function Shell({
             <History size={19} />
             Ledger
           </Link>
-          <Link className={active === "admin" ? "active" : ""} href="/admin">
+          <Link
+            className={active === "account" ? "active" : ""}
+            href="/membership"
+          >
             <LockKeyhole size={19} />
-            Admin
+            Account
           </Link>
         </nav>
       </div>

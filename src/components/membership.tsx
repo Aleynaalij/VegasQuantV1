@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
 import { Shell, Panel } from "./ui";
@@ -13,6 +14,7 @@ type Quote = {
   expires_at: string;
 };
 export default function Membership() {
+  const router = useRouter();
   const [session, setSession] = useState<Session | null>(null),
     [access, setAccess] = useState<Access>(noAccess),
     [signup, setSignup] = useState(false),
@@ -22,12 +24,19 @@ export default function Membership() {
     [enabled, setEnabled] = useState(false),
     [mode, setMode] = useState("test"),
     [factor, setFactor] = useState(""),
-    [qr, setQr] = useState("");
+    [qr, setQr] = useState(""),
+    [setupKey, setSetupKey] = useState("");
   async function refresh() {
     const { data } = await supabase.auth.getSession();
     setSession(data.session);
+    if (!data.session) {
+      setFactor("");
+      setQr("");
+      setSetupKey("");
+    }
     const r = await supabase.rpc("membership_status");
     setAccess(r.error ? noAccess : r.data);
+    return r.error ? noAccess : (r.data as Access);
   }
   useEffect(() => {
     if (new URLSearchParams(location.search).get("payment") === "received")
@@ -74,7 +83,8 @@ export default function Membership() {
           ? "Confirm your email, then return here to sign in. Registration alone does not unlock paid research."
           : "Signed in.",
       );
-      await refresh();
+      const current = await refresh();
+      if (!signup && current.allowed) router.replace("/");
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Sign in failed.");
     } finally {
@@ -113,7 +123,19 @@ export default function Membership() {
       if (existing) {
         setFactor(existing.id);
         setQr("");
+        setSetupKey("");
       } else {
+        if (factor && setupKey) return;
+        // Unverified enrollments cannot be recovered after leaving this page.
+        // Remove only incomplete setup attempts; never remove a verified factor.
+        for (const pending of r.data.all.filter(
+          (f) => f.factor_type === "totp" && f.status === "unverified",
+        )) {
+          const removed = await supabase.auth.mfa.unenroll({
+            factorId: pending.id,
+          });
+          if (removed.error) throw removed.error;
+        }
         const enrolled = await supabase.auth.mfa.enroll({
           factorType: "totp",
           friendlyName: `Vegas Quant admin ${Date.now()}`,
@@ -121,6 +143,7 @@ export default function Membership() {
         if (enrolled.error) throw enrolled.error;
         setFactor(enrolled.data.id);
         setQr(enrolled.data.totp.qr_code);
+        setSetupKey(enrolled.data.totp.secret);
       }
       setNotice("Use your authenticator app to provide the six-digit code.");
     } catch (e) {
@@ -141,8 +164,10 @@ export default function Membership() {
       if (r.error) throw r.error;
       setQr("");
       setFactor("");
-      await refresh();
-      setNotice("Admin verification complete.");
+      setSetupKey("");
+      const current = await refresh();
+      if (current.admin) router.replace("/");
+      else setNotice("Verification completed. Refresh to check your access.");
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Verification failed");
     } finally {
@@ -150,12 +175,12 @@ export default function Membership() {
     }
   }
   return (
-    <Shell>
+    <Shell active="account">
       <div className="heading">
         <div>
-          <div className="eyebrow">VEGAS QUANT MEMBERSHIP</div>
-          <h1>Your seat at the research desk.</h1>
-          <p>2026 season passes · One payment · No automatic renewal</p>
+          <div className="eyebrow">VEGAS QUANT ACCOUNT</div>
+          <h1>One login. Your research desk.</h1>
+          <p>Sign in to access your research and account tools.</p>
         </div>
       </div>
       {notice && (
@@ -168,7 +193,13 @@ export default function Membership() {
           <div className="notebook">
             <p>{session.user.email}</p>
             <p>
-              {access.allowed ? "Access active" : "No active research pass"}
+              {access.admin_account
+                ? access.admin
+                  ? "Administrator · Full access"
+                  : "Administrator · Complete verification to open your board. No paid pass needed."
+                : access.allowed
+                  ? "Access active"
+                  : "No active research pass"}
               {access.expires_at
                 ? ` · Expires ${new Date(access.expires_at).toLocaleString("en-US", { timeZone: "America/New_York" })} ET`
                 : ""}
@@ -187,7 +218,7 @@ export default function Membership() {
           </div>
         </Panel>
       ) : (
-        <Panel title={signup ? "Create your account" : "Member sign in"}>
+        <Panel title={signup ? "Create your account" : "Sign in"}>
           <form className="member-form" onSubmit={auth}>
             <label>
               Email
@@ -222,17 +253,65 @@ export default function Membership() {
         <Panel title="Admin security · Two-step verification">
           <div className="notebook">
             <p>
-              Admin publishing requires an authenticator code after sign-in.
+              Your admin account is recognized. Two-step verification protects
+              your research and publishing tools. Complete it below to open the
+              board.
             </p>
-            <button className="primary" disabled={busy} onClick={prepareMfa}>
-              Set up / verify authenticator
-            </button>
+            {!factor && (
+              <button className="primary" disabled={busy} onClick={prepareMfa}>
+                Continue with authenticator
+              </button>
+            )}
+            {setupKey && (
+              <div className="mfa-setup">
+                <h3>Setting up on this phone?</h3>
+                <p>
+                  Copy the setup key. In your authenticator app, add an account
+                  using a setup key (manual entry), choose Time-based, and name
+                  it Vegas Quant. Return here and enter its six-digit code.
+                </p>
+                <label>
+                  Setup key
+                  <input
+                    aria-label="Authenticator setup key"
+                    readOnly
+                    value={setupKey}
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </label>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(setupKey);
+                      setNotice(
+                        "Setup key copied. Add it in your authenticator app, then return here.",
+                      );
+                    } catch {
+                      setNotice(
+                        "Press and hold the setup key to copy it manually.",
+                      );
+                    }
+                  }}
+                >
+                  Copy setup key
+                </button>
+                <p className="muted">
+                  Keep this key private. It is shown only during setup.
+                </p>
+              </div>
+            )}
             {qr && (
-              <img
-                className="mfa-qr"
-                src={qr}
-                alt="Scan with your authenticator app"
-              />
+              <details className="mfa-alternative">
+                <summary>Using another device? Show QR code</summary>
+                <img
+                  className="mfa-qr"
+                  src={qr}
+                  alt="Scan with your authenticator app"
+                />
+              </details>
             )}
             {factor && (
               <form className="member-form" onSubmit={verifyMfa}>
@@ -240,6 +319,8 @@ export default function Membership() {
                   Authenticator code
                   <input
                     name="code"
+                    aria-label="Authenticator code"
+                    maxLength={6}
                     inputMode="numeric"
                     pattern="[0-9]{6}"
                     autoComplete="one-time-code"
@@ -247,7 +328,7 @@ export default function Membership() {
                   />
                 </label>
                 <button className="primary" disabled={busy}>
-                  Verify
+                  Verify & open board
                 </button>
               </form>
             )}
@@ -303,28 +384,30 @@ export default function Membership() {
           </p>
         </>
       )}
-      <Panel title="How season access works">
-        <div className="notebook">
-          <p>
-            Full access covers the remaining 2026 season, playoffs, and Super
-            Bowl. Half access covers the next half of remaining NFL weeks and
-            playoff rounds, rounded up. The current unfinished round counts. A
-            pass begins after payment confirmation and ends at the exact date
-            shown before checkout. No guaranteed number of picks; a pass remains
-            a valid decision.
-          </p>
-          <p>
-            Access is personal and includes account-specific watermarks.
-            Unauthorized sharing may result in account removal after review. We
-            cannot detect or prevent screenshots. No automatic renewal.
-          </p>
-          <p>
-            You are buying sports analysis and tracking, not a wager or entry
-            into a prize pool. No outcome is guaranteed. Refund/support terms
-            will be provided before live checkout opens.
-          </p>
-        </div>
-      </Panel>
+      {!access.admin_account && (
+        <Panel title="How season access works">
+          <div className="notebook">
+            <p>
+              Full access covers the remaining 2026 season, playoffs, and Super
+              Bowl. Half access covers the next half of remaining NFL weeks and
+              playoff rounds, rounded up. The current unfinished round counts. A
+              pass begins after payment confirmation and ends at the exact date
+              shown before checkout. No guaranteed number of picks; a pass
+              remains a valid decision.
+            </p>
+            <p>
+              Access is personal and includes account-specific watermarks.
+              Unauthorized sharing may result in account removal after review.
+              We cannot detect or prevent screenshots. No automatic renewal.
+            </p>
+            <p>
+              You are buying sports analysis and tracking, not a wager or entry
+              into a prize pool. No outcome is guaranteed. Refund/support terms
+              will be provided before live checkout opens.
+            </p>
+          </div>
+        </Panel>
+      )}
     </Shell>
   );
 }

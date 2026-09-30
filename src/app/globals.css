@@ -2209,3 +2209,39 @@ footer p {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+.mfa-setup {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  max-width: 520px;
+}
+.mfa-setup label {
+  display: grid;
+  gap: 8px;
+}
+.mfa-setup input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px;
+  background: #0b1419;
+  color: #f4f5f4;
+  border: 1px solid #42534e;
+  border-radius: 8px;
+  font-family: monospace;
+}
+.mfa-alternative {
+  margin-top: 20px;
+}
+.mfa-alternative summary {
+  cursor: pointer;
+  color: #85cfb8;
+}
+.mfa-alternative .mfa-qr {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  margin: 16px 0;
+}
