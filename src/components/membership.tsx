@@ -80,8 +80,12 @@ export default function Membership() {
         : await supabase.auth.signInWithPassword(credentials);
       if (r.error) throw r.error;
       if (signup) window.dispatchEvent(new Event("vq:welcome"));
-      const friendsCode=String(f.get("friends_code") || "").trim();
-      if (signup && friendsCode) { try { sessionStorage.setItem("vq-friend-code",friendsCode); } catch {} }
+      const friendsCode = String(f.get("friends_code") || "").trim();
+      if (signup && friendsCode) {
+        try {
+          sessionStorage.setItem("vq-friend-code", friendsCode);
+        } catch {}
+      }
       setNotice(
         signup
           ? "Confirm your email, then return here to sign in. If you entered a friends code, activate it below after signing in."
@@ -185,7 +189,13 @@ export default function Membership() {
           <div className="eyebrow">VEGAS QUANT ACCOUNT</div>
           <h1>One login. Your research desk.</h1>
           <p>Sign in to access your research and account tools.</p>
-          <button type="button" className="vq-welcome-about" onClick={() => window.dispatchEvent(new Event("vq:welcome"))}>What is Vegas Quant?</button>
+          <button
+            type="button"
+            className="vq-welcome-about"
+            onClick={() => window.dispatchEvent(new Event("vq:welcome"))}
+          >
+            What is Vegas Quant?
+          </button>
         </div>
       </div>
       {notice && (
@@ -209,6 +219,15 @@ export default function Membership() {
                 ? ` · Expires ${new Date(access.expires_at).toLocaleString("en-US", { timeZone: "America/New_York" })} ET`
                 : ""}
             </p>
+            {access.admin && (
+              <nav className="account-tools">
+                <Link href="/admin">Publishing desk →</Link>
+                <Link href="/admin/accounts">Accounts & tail activity →</Link>
+                <Link href="/admin/intelligence">
+                  Private Data Intelligence →
+                </Link>
+              </nav>
+            )}
             {access.allowed && (
               <Link className="primary" href="/">
                 Open research desk →
@@ -239,7 +258,22 @@ export default function Membership() {
                 required
               />
             </label>
-            {signup && <label>Friends promo code (optional)<input name="friends_code" maxLength={100} autoComplete="off" autoCapitalize="characters" spellCheck={false} /><small>Confirm your email, then activate your code after signing in. A place is used only after successful redemption.</small></label>}
+            {signup && (
+              <label>
+                Friends promo code (optional)
+                <input
+                  name="friends_code"
+                  maxLength={100}
+                  autoComplete="off"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                />
+                <small>
+                  Confirm your email, then activate your code after signing in.
+                  A place is used only after successful redemption.
+                </small>
+              </label>
+            )}
             <button className="primary" disabled={busy}>
               {signup ? "Register" : "Sign in"}
             </button>
@@ -346,7 +380,11 @@ export default function Membership() {
         <p>
           <Link className="text-link" href="/admin">
             Open private publishing desk →
-          </Link>{" · "}<Link className="text-link" href="/admin/accounts">Accounts & friends passes →</Link>
+          </Link>
+          {" · "}
+          <Link className="text-link" href="/admin/accounts">
+            Accounts & friends passes →
+          </Link>
         </p>
       )}
       {!access.allowed && !access.admin_account && (

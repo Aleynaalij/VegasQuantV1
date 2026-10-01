@@ -99,12 +99,9 @@ export function Shell({
         <nav>
           <Link className={active === "home" ? "active" : ""} href="/">
             <LayoutDashboard size={18} />
-            The challenge
+            Home
           </Link>
-          <Link
-            className={active === "game" ? "active" : ""}
-            href="/games/steelers-browns-2026-10-01"
-          >
+          <Link className={active === "game" ? "active" : ""} href="/games">
             <BookOpen size={18} />
             Matchup desk
           </Link>
@@ -115,14 +112,14 @@ export function Shell({
             href="/history"
           >
             <History size={18} />
-            Permanent ledger
+            Records
           </Link>
           <Link
-            className={active === "performance" ? "active" : ""}
-            href="/performance"
+            className={active === "account" ? "active" : ""}
+            href="/membership"
           >
-            <Activity size={18} />
-            Performance
+            <LockKeyhole size={18} />
+            Account
           </Link>
         </nav>
         <div className="sidebar-rule">
@@ -154,7 +151,20 @@ export function Shell({
             VEGAS QUANT
           </Link>
           <div className="breadcrumb">
-            Workspace <span>/</span> <b>The 5-Spot Challenge</b>
+            Workspace <span>/</span>{" "}
+            <b>
+              {(
+                {
+                  home: "Home",
+                  game: "Matchup",
+                  history: "Records",
+                  performance: "Performance",
+                  account: "Account",
+                  admin: "Publishing",
+                  intelligence: "Data Intelligence",
+                } as Record<string, string>
+              )[active] || "Workspace"}
+            </b>
           </div>
           <div className="top-actions">
             <span className="live-dot" />{" "}
@@ -179,12 +189,9 @@ export function Shell({
         <nav className="mobile-nav">
           <Link className={active === "home" ? "active" : ""} href="/">
             <LayoutDashboard size={19} />
-            Challenge
+            Home
           </Link>
-          <Link
-            className={active === "game" ? "active" : ""}
-            href="/games/steelers-browns-2026-10-01"
-          >
+          <Link className={active === "game" ? "active" : ""} href="/games">
             <BookOpen size={19} />
             Matchup
           </Link>
@@ -195,7 +202,7 @@ export function Shell({
             href="/history"
           >
             <History size={19} />
-            Ledger
+            Records
           </Link>
           <Link
             className={active === "account" ? "active" : ""}

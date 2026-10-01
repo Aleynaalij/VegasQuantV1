@@ -709,6 +709,7 @@ export default function Admin() {
             </Badge>
             <span>{session.user.email}</span>
             <a href="/admin/accounts">Accounts & friends passes →</a>
+            <a href="/admin/intelligence">Private Data Intelligence →</a>
             <a href="/" target="_blank" rel="noreferrer">
               Open public site ↗
             </a>

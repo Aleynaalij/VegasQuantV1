@@ -2344,3 +2344,26 @@ footer p {
 .slip-quick-metrics { font-size:13px; color:var(--green,#72dbb4); }
 .slip-details { border-top:1px solid var(--border,#29383e); margin-top:16px; }
 .slip-details > summary { cursor:pointer; padding:16px 0; font-weight:600; }
+
+/* One home for each kind of information. */
+.workspace-index { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin:24px 0; }
+.workspace-index > a { display:block; padding:22px; border:1px solid var(--border,#29383e); border-radius:14px; background:var(--panel,#101820); text-decoration:none; }
+.workspace-index h2 { margin:12px 0; font-size:20px; }
+.workspace-index p { color:var(--muted,#94a3aa); font-size:13px; line-height:1.6; }
+.workspace-index > a > span:last-child { color:var(--green,#72dbb4); font-size:13px; }
+.section-switch { display:flex; gap:8px; overflow-x:auto; margin:18px 0; padding-bottom:6px; }
+.section-switch a,.section-switch button { white-space:nowrap; padding:12px 16px; background:transparent; color:var(--muted,#94a3aa); border:1px solid var(--border,#29383e); border-radius:9px; font:inherit; text-decoration:none; }
+.section-switch .selected { border-color:var(--green,#72dbb4); color:var(--green,#72dbb4); background:rgba(114,219,180,.06); }
+.intel-controls { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.intel-asof,.intel-footer { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; font-size:12px; color:var(--muted,#94a3aa); margin:12px 0; }
+.intel-footer { padding:14px 20px; }
+.intel-row { padding:18px 0; border-bottom:1px solid var(--border,#29383e); overflow-wrap:anywhere; }
+.intel-row h3 { margin:12px 0; font-size:16px; }
+.intel-row p { font-size:13px; line-height:1.7; }
+.intel-stamp { display:block; line-height:1.8; color:var(--muted,#94a3aa); font-size:11px; overflow-wrap:anywhere; }
+.intel-stamp > span { display:block; }
+.intel-entry { margin:16px 0; }
+.intel-entry pre { overflow:auto; max-height:350px; font-size:12px; }
+.ledger-mobile { display:none; }
+.account-tools { display:grid; gap:14px; margin:18px 0; }
+@media(max-width:700px){.intel-controls{grid-template-columns:1fr}.ledger-desktop{display:none}.ledger-mobile{display:block;padding:0 18px}.filter-bar{display:grid;grid-template-columns:1fr}.workspace-index{grid-template-columns:1fr}.section-switch a,.section-switch button{font-size:12px;padding:11px 12px}}
