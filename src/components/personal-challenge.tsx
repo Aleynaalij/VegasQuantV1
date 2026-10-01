@@ -32,12 +32,14 @@ export default function PersonalChallenge({
   picks,
   results,
   children,
+  renderOfficial,
 }: {
   challenge: Challenge;
   pick?: Pick;
   picks: Pick[];
   results: Result[];
   children: ReactNode;
+  renderOfficial?: (entryAction: ReactNode) => ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [view, setView] = useState<"official" | "personal">("official");
@@ -183,8 +185,34 @@ export default function PersonalChallenge({
       .toISOString()
       .slice(0, 16);
   };
+  const entryAction = (
+    <div className="slip-entry-action">
+      {" "}
+      {pick && !ended && !current && (
+        <button className="primary" disabled={loading} onClick={open}>
+          I played this
+        </button>
+      )}
+      {current && (
+        <div className="slip-personal-entry">
+          <Badge tone="green">
+            {settlements.find((s) => s.entry_id === current.id)?.result ??
+              (ended ? "AWAITING GRADE" : "IN PLAY")}
+          </Badge>
+          <p>
+            Your entry: {current.line === null ? "Moneyline" : current.line} ·{" "}
+            {odd(current.odds)} · {money(current.stake_cents)} staked
+          </p>
+          <small>
+            {current.book} · {money(current.payout_cents)} total return if win
+          </small>
+        </div>
+      )}
+    </div>
+  );
   return (
     <section className="personal-challenge" aria-label="Challenge tracking">
+      {renderOfficial?.(entryAction)}
       <div className="personal-toolbar">
         <div className="personal-switch" aria-label="Bankroll view">
           <button
@@ -202,17 +230,7 @@ export default function PersonalChallenge({
             My challenge
           </button>
         </div>
-        {pick && !ended && !current && (
-          <button className="primary" disabled={loading} onClick={open}>
-            I played this
-          </button>
-        )}
-        {current && (
-          <Badge tone="green">
-            {settlements.find((s) => s.entry_id === current.id)?.result ??
-              (ended ? "AWAITING GRADE" : "IN PLAY")}
-          </Badge>
-        )}
+        {!renderOfficial && entryAction}
       </div>
       <p className="personal-caption">
         {view === "official"

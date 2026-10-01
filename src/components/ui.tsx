@@ -109,11 +109,20 @@ export function Shell({
             Matchup desk
           </Link>
           <Link
-            className={active === "history" ? "active" : ""}
+            className={
+              ["history", "performance"].includes(active) ? "active" : ""
+            }
             href="/history"
           >
             <History size={18} />
             Permanent ledger
+          </Link>
+          <Link
+            className={active === "performance" ? "active" : ""}
+            href="/performance"
+          >
+            <Activity size={18} />
+            Performance
           </Link>
         </nav>
         <div className="sidebar-rule">
@@ -180,7 +189,9 @@ export function Shell({
             Matchup
           </Link>
           <Link
-            className={active === "history" ? "active" : ""}
+            className={
+              ["history", "performance"].includes(active) ? "active" : ""
+            }
             href="/history"
           >
             <History size={19} />

@@ -33,6 +33,8 @@ import PickCard from "./pick-card";
 import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
 import UpdateFeed from "./update-feed";
+import Performance from "./performance";
+import SourceStatus from "./source-status";
 import ResearchNotebook from "./research-notebook";
 const pct = (v: number | null) => (v === null ? "—" : `${v.toFixed(2)}%`);
 const value = (s: unknown) =>
@@ -43,7 +45,7 @@ export default function DeskApp({
   gameSlug,
 }: {
   initial: Desk;
-  page: "home" | "game" | "history";
+  page: "home" | "game" | "history" | "performance";
   gameSlug?: string;
 }) {
   const [d, setD] = useState(initial),
@@ -267,18 +269,22 @@ export default function DeskApp({
             <h1>
               {page === "home"
                 ? "The 5-Spot Challenge"
-                : page === "history"
-                  ? "The permanent ledger"
-                  : g
-                    ? `${g.away_team.replace("Pittsburgh ", "").replace("Cleveland ", "")} @ ${g.home_team.replace("Cleveland ", "")}`
-                    : "Matchup desk"}
+                : page === "performance"
+                  ? "Performance & process"
+                  : page === "history"
+                    ? "The permanent ledger"
+                    : g
+                      ? `${g.away_team.replace("Pittsburgh ", "").replace("Cleveland ", "")} @ ${g.home_team.replace("Cleveland ", "")}`
+                      : "Matchup desk"}
             </h1>
             <p>
               {page === "home"
                 ? "5 games. 5 decisions. $20 starting bankroll."
-                : page === "history"
-                  ? "Track execution. Grade the process. Keep the losses."
-                  : "The handicap, the market, and the full history of the read."}
+                : page === "performance"
+                  ? "Measured results. Transparent samples. Every outcome retained."
+                  : page === "history"
+                    ? "Track execution. Grade the process. Keep the losses."
+                    : "The handicap, the market, and the full history of the read."}
             </p>
           </div>
           {page === "home" ? (
@@ -312,6 +318,20 @@ export default function DeskApp({
         {page === "home" && ch && (
           <>
             <PersonalChallenge
+              renderOfficial={
+                official
+                  ? (entryAction) => (
+                      <div className="featured-official">
+                        <PickCard
+                          p={official}
+                          d={d}
+                          compact
+                          entryAction={entryAction}
+                        />
+                      </div>
+                    )
+                  : undefined
+              }
               key={`${ch.id}:${access.member_code}`}
               challenge={ch}
               pick={official}
@@ -418,10 +438,10 @@ export default function DeskApp({
             )}
           </>
         )}
-        {page !== "history" && g && (
+        {(page === "home" || page === "game") && g && (
           <UpdateFeed desk={d} game={g} memberCode={access.member_code} />
         )}
-        {page !== "history" && (
+        {(page === "home" || page === "game") && (
           <div className="content-grid">
             <div className="primary-column">
               {g ? (
@@ -471,9 +491,9 @@ export default function DeskApp({
                   </div>
                   <div className="market-strip">
                     {[
-                      ["Current spread", market?.spread],
-                      ["Current moneyline", market?.moneyline],
-                      ["Current total", market?.total],
+                      ["Latest recorded spread", market?.spread],
+                      ["Latest recorded moneyline", market?.moneyline],
+                      ["Latest recorded total", market?.total],
                     ].map(([label, v]) => (
                       <div key={label}>
                         <span>{label}</span>
@@ -487,12 +507,15 @@ export default function DeskApp({
                     ))}
                   </div>
                   {market && (
-                    <p className="market-source">
-                      As of {time(market.observed_at)} ·{" "}
-                      <SourceLink href={market.source}>
-                        Market source
-                      </SourceLink>
-                    </p>
+                    <SourceStatus
+                      source={market.source}
+                      at={market.observed_at}
+                      kind="Market observation"
+                      historical={
+                        market.kind === "opening" ||
+                        Date.parse(g.kickoff) <= Date.now()
+                      }
+                    />
                   )}
                   <div className="panel-foot">
                     <span>
@@ -517,9 +540,7 @@ export default function DeskApp({
                   </Empty>
                 </Panel>
               )}
-              {page === "home" && official && (
-                <PickCard p={official} d={d} allowShare />
-              )}
+
               {page === "game" &&
                 gamePicks.map((p) => (
                   <PickCard key={p.id} p={p} d={d} allowShare />
@@ -733,8 +754,12 @@ export default function DeskApp({
             </aside>
           </div>
         )}
+        {page === "performance" && <Performance desk={d} />}
         {page === "history" && (
           <>
+            <Link className="secondary" href="/performance">
+              Performance & process →
+            </Link>
             <section className="stats ledger-stats">
               <Stat label="Record" value={`${lm.wins} W / ${lm.losses} L`} />
               <Stat label="Win rate" value={pct(lm.winRate)} />

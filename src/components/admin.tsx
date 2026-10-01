@@ -27,6 +27,7 @@ import {
   type Desk,
 } from "@/lib/domain";
 import { Badge, Panel, Shell } from "./ui";
+import { publishingChecks, type PublishCheck } from "@/lib/publishing-checks";
 import { marketInfoUrls } from "@/lib/market-info";
 type InputDef = {
   name: string;
@@ -279,6 +280,8 @@ export default function Admin() {
     [editingGame, setEditingGame] = useState(false),
     [importText, setImportText] = useState(""),
     [importDefaults, setImportDefaults] = useState<Record<string, unknown>>({});
+  const [checks, setChecks] = useState<PublishCheck[]>([]);
+  const [confirmed, setConfirmed] = useState(false);
   const mounted = useRef(true);
   const refresh = useCallback(async () => {
     const { data, error } = await supabase.rpc("desk_data");
@@ -450,6 +453,8 @@ export default function Admin() {
         data.challenge_id = challengeId;
         if (action === "resume") num("next_stage");
       }
+      setChecks(publishingChecks(action, data, d));
+      setConfirmed(false);
       setRequestId(crypto.randomUUID());
       setPreview(data);
       setNotice("");
@@ -458,10 +463,37 @@ export default function Admin() {
     }
   }
   async function publish() {
-    if (!preview || busy) return;
+    if (
+      !preview ||
+      busy ||
+      !confirmed ||
+      checks.some((c) => c.level === "block")
+    )
+      return;
     setBusy(true);
     setNotice("");
     try {
+      const fresh = await supabase.rpc("desk_data");
+      if (fresh.error) throw fresh.error;
+      const latestChecks = publishingChecks(action, preview, fresh.data);
+      setD(fresh.data);
+      setChecks(latestChecks);
+      if (latestChecks.some((c) => c.level === "block"))
+        throw new Error(
+          "Publishing checks changed. Resolve blocked items before publishing.",
+        );
+      if (
+        latestChecks.some(
+          (c) =>
+            c.level === "warning" &&
+            !checks.some(
+              (old) => old.level === c.level && old.message === c.message,
+            ),
+        )
+      ) {
+        setConfirmed(false);
+        throw new Error("New warnings appeared. Review and confirm again.");
+      }
       const { error } = await supabase.rpc("publish", {
         p_action: action,
         p_payload: preview,
@@ -697,7 +729,14 @@ export default function Admin() {
               title={actionLabels[action]}
               aside={<Badge>Append-only publishing</Badge>}
             >
-              <form onSubmit={prepare} key={`${action}-${formKey}`}>
+              <form
+                onSubmit={prepare}
+                key={`${action}-${formKey}`}
+                onChange={() => {
+                  setPreview(null);
+                  setConfirmed(false);
+                }}
+              >
                 <div className="form-grid">
                   <label className="field">
                     <span>Challenge</span>
@@ -939,7 +978,67 @@ export default function Admin() {
                 These are the exact fields being published. Confirm the
                 analyst’s numbers and wording.
               </p>
-              <pre>{JSON.stringify(preview, null, 2)}</pre>
+              <div className="publishing-checks" aria-live="polite">
+                <h3>
+                  {checks.filter((c) => c.level === "block").length} blocked ·{" "}
+                  {checks.filter((c) => c.level === "warning").length} warnings
+                </h3>
+                {checks
+                  .filter((c) => c.level !== "pass")
+                  .map((c, i) => (
+                    <p
+                      className={c.level === "block" ? "negative" : "muted"}
+                      key={i}
+                    >
+                      <b>{c.level === "block" ? "Fix required" : "Review"}:</b>{" "}
+                      {c.message}
+                    </p>
+                  ))}
+                <details>
+                  <summary>
+                    {checks.filter((c) => c.level === "pass").length} checks
+                    passed
+                  </summary>
+                  {checks
+                    .filter((c) => c.level === "pass")
+                    .map((c, i) => (
+                      <p key={i}>✓ {c.message}</p>
+                    ))}
+                </details>
+              </div>
+              {action === "pick" && (
+                <div className="publication-summary">
+                  <h3>{String(preview.selection)}</h3>
+                  <p>
+                    Odds: {String(preview.odds)} · Stake:{" "}
+                    {money(Number(preview.stake_cents))} ·{" "}
+                    {String(preview.book)}
+                  </p>
+                  <p>
+                    Analyst edge: {String(preview.edge)} percentage points ·
+                    Confidence: {String(preview.confidence)}/10
+                  </p>
+                  <p>Original terms become permanent on publication.</p>
+                </div>
+              )}
+              <details className="admin-section">
+                <summary>Review all exact publication fields</summary>
+                <pre>{JSON.stringify(preview, null, 2)}</pre>
+              </details>
+              <label className="check-field">
+                <input
+                  type="checkbox"
+                  checked={confirmed}
+                  onChange={(e) => setConfirmed(e.target.checked)}
+                />
+                I checked the exact values against the owner / analyst handoff
+                and reviewed all warnings.
+                {action === "pick"
+                  ? " The owner explicitly authorized this official play."
+                  : action === "result"
+                    ? " The result is final and source-confirmed."
+                    : ""}
+              </label>
               <div className="panel-actions">
                 <button
                   className="secondary"
@@ -948,7 +1047,15 @@ export default function Admin() {
                 >
                   Back to editing
                 </button>
-                <button className="primary" disabled={busy} onClick={publish}>
+                <button
+                  className="primary"
+                  disabled={
+                    busy ||
+                    !confirmed ||
+                    checks.some((c) => c.level === "block")
+                  }
+                  onClick={publish}
+                >
                   {busy ? "Publishing…" : "Confirm & publish"}
                   <CheckCircle2 size={16} />
                 </button>

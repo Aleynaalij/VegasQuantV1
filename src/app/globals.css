@@ -2319,3 +2319,28 @@ footer p {
 .correction-review textarea,.entry-correction textarea { min-height:90px; }
 #analysis-history { scroll-margin-top:80px; }
 @media(max-width:640px) { .position-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .update-feed,.position-card { padding:16px; } }
+
+/* Source provenance, performance, publication review and featured official leg */
+.source-status { margin:12px 0; padding:12px 16px; border-left:2px solid var(--border,#29383e); background:rgba(255,255,255,.02); overflow-wrap:anywhere; }
+.source-status > div { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:12px; color:var(--muted,#94a3aa); }
+.source-status p { margin:8px 0 4px; font-size:12px; }
+.source-status small { display:block; font-size:11px; color:var(--muted,#94a3aa); line-height:1.6; }
+.performance-page { display:grid; gap:20px; min-width:0; }
+.performance-filters { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.performance-curve { padding:20px; }
+.performance-curve svg { display:block; width:100%; height:auto; }
+.performance-range { display:flex; justify-content:space-between; gap:12px; font-size:13px; }
+.performance-page .table-scroll { overflow-x:auto; }
+.publishing-checks,.publication-summary { padding:16px; border:1px solid var(--border,#29383e); border-radius:12px; margin:16px 0; }
+.publishing-checks p { line-height:1.6; }
+.publishing-checks details p { font-size:12px; }
+.publish-review pre { overflow:auto; max-height:420px; }
+.featured-official { margin-bottom:24px; }
+.slip-entry-action { margin:16px 0; }
+.slip-entry-action .primary { width:100%; min-height:48px; }
+.slip-personal-entry { padding:14px; border:1px solid #39755f; border-radius:12px; background:rgba(114,219,180,.06); }
+.slip-personal-entry p { margin:10px 0 4px; }
+.slip-personal-entry small { color:var(--muted,#94a3aa); }
+.slip-quick-metrics { font-size:13px; color:var(--green,#72dbb4); }
+.slip-details { border-top:1px solid var(--border,#29383e); margin-top:16px; }
+.slip-details > summary { cursor:pointer; padding:16px 0; font-weight:600; }

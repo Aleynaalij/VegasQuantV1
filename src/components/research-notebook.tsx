@@ -5,6 +5,7 @@ import { useId, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { time, type Analysis } from "@/lib/domain";
 
+import SourceStatus from "./source-status";
 const categories = [
   ["Quick read", ""],
   ["Decisions & props", "Edge Analysis"],
@@ -31,6 +32,11 @@ export default function ResearchNotebook({
   const content = analysis.sections[section];
   return (
     <div className="research-compact">
+      <SourceStatus
+        source={analysis.source}
+        at={analysis.created_at}
+        kind="Analyst publication"
+      />
       <div className="research-meta">
         <span>
           VERSION {analysis.version} · {time(analysis.created_at)}
