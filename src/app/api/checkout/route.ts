@@ -43,7 +43,8 @@ export async function POST(req: Request) {
       p_id: randomUUID(),
       p_user: auth.user.id,
       p_plan: quote.plan,
-      p_expires: quote.expires_at || new Date(Date.now() + 32 * 86400000).toISOString(),
+      p_expires:
+        quote.expires_at || new Date(Date.now() + 32 * 86400000).toISOString(),
     });
     if (error)
       return Response.json(
@@ -67,10 +68,16 @@ export async function POST(req: Request) {
             price_data: {
               currency: "usd",
               unit_amount: order.amount,
-              ...(quote.recurring ? { recurring: { interval: "month" as const } } : {}),
+              ...(quote.recurring
+                ? { recurring: { interval: "month" as const } }
+                : {}),
               product_data: {
-                name: quote.recurring ? "Vegas Quant — Monthly Access" : "Vegas Quant — Full 2026 Season",
-                description: quote.recurring ? "$5 each month until canceled. Cancel in Account; access lasts through the paid period. Sports analysis only." : "2026 season, playoffs and Super Bowl. One payment. No automatic renewal.",
+                name: quote.recurring
+                  ? "Vegas Quant — Monthly Access"
+                  : "Vegas Quant — Full 2026 Season",
+                description: quote.recurring
+                  ? "$5 each month until canceled. Cancel in Account; access lasts through the paid period. Sports analysis only."
+                  : "2026 season, playoffs and Super Bowl. One payment. No automatic renewal.",
               },
             },
             quantity: 1,
@@ -82,7 +89,11 @@ export async function POST(req: Request) {
           mode: billingMode(),
         },
         ...(quote.recurring
-          ? { subscription_data: { metadata: { order_id: order.id, user_id: auth.user.id } } }
+          ? {
+              subscription_data: {
+                metadata: { order_id: order.id, user_id: auth.user.id },
+              },
+            }
           : { payment_intent_data: { metadata: { order_id: order.id } } }),
         success_url: `${appOrigin()}/membership?payment=received`,
         cancel_url: `${appOrigin()}/membership?payment=cancelled`,

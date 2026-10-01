@@ -1,3 +1,7 @@
+# Current release
+
+See [2026-10-01 release](RELEASE-2026-10-01.md) for current $5 monthly / $20 season billing and activation requirements. The original setup notes below describe the initial release.
+
 # Vegas Quant 2026 membership
 
 Implemented: public overview with only matchup metadata, bankroll, stage/status and aggregate record; member-only research, markets, picks, results, audit data and ledger. Supabase RLS applies equally to REST, RPC and realtime. Public HTML contains no protected research. Pages refresh access from the authenticated database. No UI-only paywall.

@@ -109,7 +109,7 @@ export default function PickCard({
           stakeCents={p.stake_cents}
         />
       )}
-      <SlipBody className="slip-details" {...(!compact ? {open:true} : {})}>
+      <SlipBody className="slip-details" {...(!compact ? { open: true } : {})}>
         {!compact && <summary>Full slip · stake, analysis & results</summary>}
         {personalPath ? (
           <p className="personal-caption">

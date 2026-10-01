@@ -158,16 +158,16 @@ export default function PublicOverview({
           </p>
           <div className="pass-grid">
             <div>
-              <strong>$10</strong>
+              <strong>$20</strong>
               <h3>Full 2026 season</h3>
               <p>Remaining regular season, playoffs, and Super Bowl.</p>
             </div>
             <div>
-              <strong>$7</strong>
-              <h3>Half of what remains</h3>
+              <strong>$5 / month</strong>
+              <h3>Monthly access</h3>
               <p>
-                The next half of remaining weeks and playoff rounds, rounded up.
-                Exact expiry shown before payment.
+                Full research access. Renews monthly until canceled. Cancel in
+                Account.
               </p>
             </div>
           </div>
@@ -175,8 +175,9 @@ export default function PublicOverview({
             View membership options →
           </Link>
           <p className="muted">
-            One-time access. No automatic renewal. Membership pays for
-            analysis—not wagers or prizes.
+            Season pass: one payment, no automatic renewal. Monthly: $5 per
+            month until canceled. Membership pays for sports analysis and
+            tracking.
           </p>
         </section>
       </details>

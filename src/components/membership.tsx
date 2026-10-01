@@ -399,8 +399,16 @@ export default function Membership() {
                 <h2>
                   {q.plan === "full" ? "2026 Season Pass" : "Monthly Access"}
                 </h2>
-                <p>{q.recurring ? "Per month · renews automatically until canceled." : "One payment · includes playoffs and the Super Bowl."}</p>
-                <p>{q.expires_at ? `Access through ${new Date(q.expires_at).toLocaleDateString("en-US", {timeZone: "America/New_York"})}.` : "Cancel in Account. Access continues through your paid billing period."}</p>
+                <p>
+                  {q.recurring
+                    ? "Per month · renews automatically until canceled."
+                    : "One payment · includes playoffs and the Super Bowl."}
+                </p>
+                <p>
+                  {q.expires_at
+                    ? `Access through ${new Date(q.expires_at).toLocaleDateString("en-US", { timeZone: "America/New_York" })}.`
+                    : "Cancel in Account. Access continues through your paid billing period."}
+                </p>
                 <button
                   className="primary"
                   disabled={!session || busy || !enabled}
@@ -420,7 +428,9 @@ export default function Membership() {
           <p className="muted">
             {enabled && mode === "test"
               ? "Test mode only. No real payments. Test purchases do not grant production access."
-              : enabled ? "Payments are processed securely by Stripe." : "Checkout will open once payment setup is complete."}
+              : enabled
+                ? "Payments are processed securely by Stripe."
+                : "Checkout will open once payment setup is complete."}
           </p>
         </>
       )}
@@ -429,10 +439,11 @@ export default function Membership() {
           <div className="notebook">
             <p>
               Monthly access is $5 per month and renews until canceled. The $20
-              Season Pass covers the remaining 2026 season, playoffs, and Super Bowl
-              with no automatic renewal. Both include the same research and tracking.
-              Existing passes keep their original expiration dates. No number of picks
-              or result is guaranteed; passing is a valid decision.
+              Season Pass covers the remaining 2026 season, playoffs, and Super
+              Bowl with no automatic renewal. Both include the same research and
+              tracking. Existing passes keep their original expiration dates. No
+              number of picks or result is guaranteed; passing is a valid
+              decision.
             </p>
             <p>
               Access is personal and includes account-specific watermarks.

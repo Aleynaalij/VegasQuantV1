@@ -11,6 +11,7 @@ grant usage on schema auth to anon,authenticated,service_role;
 -- Local-only seed helper; not used by correction logic.
 create function extensions.gen_random_bytes(n integer) returns bytea language sql as $$select decode(substr(md5(random()::text),1,n*2),'hex')$$;`);
 for(const file of (await readdir('supabase/migrations')).sort()) {
+ if(file.endsWith('_schedule_source_sync.sql')) continue;
  const sql=(await readFile('supabase/migrations/'+file,'utf8')).replace('alter publication supabase_realtime add table public.audit_events;','');
  await db.exec(sql);
 }
