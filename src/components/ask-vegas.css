@@ -1,0 +1,241 @@
+/* Local, public help guide. Sits clear of the mobile navigation and safe area. */
+.ask-vegas-launcher {
+  position: fixed;
+  right: 20px;
+  bottom: 24px;
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 46px;
+  padding: 10px 17px;
+  border: 1px solid #477c68;
+  border-radius: 30px;
+  background: #163a2e;
+  color: #b6f4d9;
+  box-shadow: 0 5px 24px #0006;
+  font-size: 13px;
+  font-weight: 650;
+}
+.ask-vegas-dialog {
+  position: fixed;
+  inset: auto 20px 24px auto;
+  margin: 0;
+  padding: 0;
+  width: 390px;
+  max-width: calc(100vw - 24px);
+  height: min(620px, calc(100dvh - 48px));
+  max-height: calc(100dvh - 48px);
+  border: 1px solid #3d6657;
+  border-radius: 22px;
+  background: #0c151a;
+  color: #e9f1ed;
+  box-shadow: 0 18px 65px #0009;
+  overflow: hidden;
+}
+.ask-vegas-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.ask-vegas-dialog::backdrop {
+  background: #02080980;
+}
+.ask-vegas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px;
+  border-bottom: 1px solid #293a40;
+  flex-shrink: 0;
+}
+.ask-vegas-header strong {
+  display: block;
+  font-size: 18px;
+}
+.ask-vegas-header small {
+  display: block;
+  color: #9aa9b0;
+  font-size: 12px;
+  margin-top: 5px;
+}
+.ask-vegas-header button,
+.ask-vegas-form button {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 12px;
+  background: #173c2f;
+  color: #b6f4d9;
+}
+.ask-vegas-toolbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid #293a40;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.ask-vegas-toolbar button {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  color: #a8d9c2;
+  min-height: 36px;
+  font-size: 12px;
+  padding: 6px;
+}
+.ask-vegas-chat,
+.ask-vegas-topics {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  flex: 1;
+  padding: 16px;
+  scroll-padding: 12px;
+}
+.ask-vegas-answer {
+  padding: 14px;
+  background: #142027;
+  border: 1px solid #2b3a43;
+  border-radius: 14px;
+  line-height: 1.65;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.ask-vegas-answer strong {
+  font-size: 14px;
+}
+.ask-vegas-answer p {
+  margin: 8px 0;
+  color: #c1ccd0;
+}
+.ask-vegas-answer a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #82dfb8;
+  min-height: 40px;
+  font-weight: 600;
+}
+.ask-vegas-answer button {
+  color: #82dfb8;
+  background: transparent;
+  border: 1px solid #456657;
+  border-radius: 8px;
+  padding: 10px;
+}
+.ask-vegas-question {
+  margin: 18px 0 10px 28px;
+  padding: 11px 14px;
+  background: #214e3d;
+  border-radius: 14px 14px 3px 14px;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.ask-vegas-suggestions {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ask-vegas-suggestions button,
+.ask-vegas-topics button {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #30443c;
+  border-radius: 10px;
+  background: #101c20;
+  color: #b9e5d1;
+  font-size: 13px;
+  min-height: 44px;
+}
+.ask-vegas-topics h3 {
+  font-size: 12px;
+  color: #91a69b;
+  margin: 14px 0 9px;
+}
+.ask-vegas-topics button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 7px;
+}
+.ask-vegas-topics svg {
+  flex-shrink: 0;
+}
+.ask-vegas-form {
+  display: flex;
+  gap: 8px;
+  padding: 12px 14px 6px;
+  border-top: 1px solid #293a40;
+  flex-shrink: 0;
+}
+.ask-vegas-form input {
+  min-width: 0;
+  flex: 1;
+  font-size: 16px;
+  padding: 11px;
+  border: 1px solid #3b5148;
+  border-radius: 12px;
+  background: #081115;
+  color: #e9f1ed;
+}
+.ask-vegas-form button:disabled {
+  opacity: 0.4;
+}
+.ask-vegas-privacy {
+  font-size: 10px;
+  line-height: 1.5;
+  color: #91a19e;
+  padding: 0 16px 12px;
+  margin: 0;
+  flex-shrink: 0;
+}
+.ask-vegas-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.ask-vegas-dialog :focus-visible,
+.ask-vegas-launcher:focus-visible {
+  outline: 2px solid #83e6bb;
+  outline-offset: 3px;
+}
+@media (max-width: 900px) {
+  .ask-vegas-launcher {
+    right: 14px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+  }
+  .ask-vegas-dialog {
+    right: 12px;
+    bottom: calc(82px + env(safe-area-inset-bottom));
+    height: min(620px, calc(100dvh - 106px - env(safe-area-inset-bottom)));
+    max-height: calc(100dvh - 106px - env(safe-area-inset-bottom));
+  }
+}
+@media (max-height: 450px) {
+  .ask-vegas-dialog {
+    bottom: 8px;
+    height: calc(100dvh - 16px);
+    max-height: calc(100dvh - 16px);
+  }
+  .ask-vegas-header {
+    padding: 8px 14px;
+  }
+  .ask-vegas-privacy {
+    display: none;
+  }
+}
+@media print {
+  .ask-vegas-launcher,
+  .ask-vegas-dialog {
+    display: none !important;
+  }
+}
