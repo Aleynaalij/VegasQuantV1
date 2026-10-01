@@ -20,6 +20,7 @@ import {
 } from "@/lib/domain";
 import {
   personalTotals,
+  entryBalances,
   type PersonalAccount,
   type PersonalEntry,
   type PersonalSettlement,
@@ -27,14 +28,13 @@ import {
 import ChallengeRun from "./challenge-run";
 import type { Stage } from "@/lib/domain";
 import EntryCorrection from "./entry-correction";
-import { Badge, Stat } from "./ui";
+import { Badge } from "./ui";
 export default function PersonalChallenge({
   challenge,
   stages,
   pick,
   picks,
   results,
-  children,
   renderOfficial,
 }: {
   challenge: Challenge;
@@ -42,11 +42,11 @@ export default function PersonalChallenge({
   pick?: Pick;
   picks: Pick[];
   results: Result[];
-  children: ReactNode;
   renderOfficial?: (entryAction: ReactNode) => ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [view, setView] = useState<"official" | "personal">("official");
+  const [starting, setStarting] = useState("20");
+  const [loadError, setLoadError] = useState(false);
   const [account, setAccount] = useState<PersonalAccount | null>(null),
     [entries, setEntries] = useState<PersonalEntry[]>([]),
     [settlements, setSettlements] = useState<PersonalSettlement[]>([]);
@@ -57,8 +57,7 @@ export default function PersonalChallenge({
     [stake, setStake] = useState(""),
     [payout, setPayout] = useState("");
   const dialog = useRef<HTMLDialogElement>(null),
-    generation = useRef(0),
-    initialized = useRef(false);
+    generation = useRef(0);
   const load = useCallback(async () => {
     const run = ++generation.current;
     try {
@@ -91,10 +90,7 @@ export default function PersonalChallenge({
         );
       }
       if (run === generation.current) {
-        if (!initialized.current) {
-          if (a.data) setView("personal");
-          initialized.current = true;
-        }
+        setLoadError(false);
         setAccount(a.data);
         setEntries(es);
         setSettlements(ss);
@@ -102,6 +98,7 @@ export default function PersonalChallenge({
       }
     } catch {
       if (run === generation.current) {
+        setLoadError(true);
         setNotice("Unable to load your entries. Refresh to try again.");
         setLoading(false);
       }
@@ -128,10 +125,6 @@ export default function PersonalChallenge({
     settlements,
   );
   const current = entries.find((e) => e.pick_id === pick?.id);
-  const focusEntries = entries.filter(
-    (e) => !settlements.some((s) => s.entry_id === e.id),
-  );
-  const spotlight = focusEntries.length ? focusEntries : entries.slice(-1);
   const ended = results.some((r) => r.pick_id === pick?.id);
   function estimate(o: string, s: string) {
     const n = Number(o),
@@ -170,7 +163,6 @@ export default function PersonalChallenge({
       });
       if (r.error) throw r.error;
       await load();
-      setView("personal");
       dialog.current?.close();
       setNotice("Your actual entry is recorded.");
     } catch (e) {
@@ -193,7 +185,11 @@ export default function PersonalChallenge({
     <div className="slip-entry-action">
       {" "}
       {pick && !ended && !current && (
-        <button className="primary" disabled={loading} onClick={open}>
+        <button
+          className="primary"
+          disabled={loading || loadError}
+          onClick={open}
+        >
           I played this
         </button>
       )}
@@ -214,184 +210,176 @@ export default function PersonalChallenge({
       )}
     </div>
   );
+  async function setup(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (saving || loadError) return;
+    setSaving(true);
+    setNotice("");
+    try {
+      const r = await supabase.rpc("start_personal_bankroll", {
+        p_challenge_id: challenge.id,
+        p_starting_cents: Math.round(Number(starting) * 100),
+      });
+      if (r.error) throw r.error;
+      await load();
+      setNotice("Your starting bankroll is saved. No wager was recorded.");
+    } catch (e) {
+      setNotice(
+        (e as { message?: string }).message ||
+          "Could not save your starting bankroll.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+  const outcomes = entryBalances(
+    account ? totals.balance : Math.round(Number(starting) * 100),
+    Math.round(Number(stake) * 100),
+    Math.round(Number(payout) * 100),
+  );
   return (
     <section className="personal-challenge" aria-label="Challenge tracking">
-      <ChallengeRun
-        challenge={challenge}
-        stages={stages}
-        member
-        onMode={(mode) => setView(mode === "track" ? "personal" : "official")}
-      />
+      <ChallengeRun challenge={challenge} stages={stages} member />
       {renderOfficial?.(entryAction)}
-      <details
-        className="run-bankroll-details"
-        open={view === "personal" && account ? true : undefined}
+      {!renderOfficial && entryAction}
+      <section
+        className={`one-bankroll ${totals.inPlay > 0 && account ? "is-in-play" : ""}`}
+        aria-label="Your bankroll path"
       >
-        <summary>
-          {view === "personal"
-            ? "Your bankroll & results"
-            : "Official bankroll & results"}
-        </summary>
-        <div className="personal-toolbar">
-          <div className="personal-switch" aria-label="Bankroll view">
-            <button
-              type="button"
-              aria-pressed={view === "official"}
-              onClick={() => setView("official")}
-            >
-              Official challenge
-            </button>
-            <button
-              type="button"
-              aria-pressed={view === "personal"}
-              onClick={() => setView("personal")}
-            >
-              My challenge
-            </button>
-          </div>
-          {!renderOfficial && entryAction}
-        </div>
-        <p className="personal-caption">
-          {view === "official"
-            ? "Official published challenge. Your entries are tracked separately."
-            : "Your recorded cash wagers. Visible to you and verified admins."}
-        </p>
-        {view === "official" ? (
-          children
-        ) : loading ? (
-          <p>Loading your challenge…</p>
-        ) : (
+        <span className="eyebrow">YOUR CHALLENGE · ONE PATH</span>
+        {loading ? (
+          <p>Loading your bankroll…</p>
+        ) : loadError ? (
+          <button className="secondary" onClick={() => void load()}>
+            Retry loading bankroll
+          </button>
+        ) : account ? (
           <>
-            {spotlight.map((e) => {
-              const settled = settlements.find((s) => s.entry_id === e.id);
+            <div className="balance-hero">
+              <div>
+                <span>Your bankroll</span>
+                <strong>{money(totals.balance)}</strong>
+              </div>
+              <Badge tone={totals.inPlay ? "green" : "muted"}>
+                {totals.inPlay
+                  ? "IN PLAY"
+                  : entries.length
+                    ? "SETTLED"
+                    : "READY"}
+              </Badge>
+            </div>
+            <p className="balance-equation">
+              {money(account.starting_cents)} starting <span>+</span>{" "}
+              {signedMoney(totals.net)} settled P/L <span>=</span>{" "}
+              {money(totals.balance)}
+            </p>
+            <div className="balance-facts">
+              <span>
+                Available <b>{money(totals.available)}</b>
+              </span>
+              <span>
+                In play <b>{money(totals.inPlay)}</b>
+              </span>
+              <span>
+                Record{" "}
+                <b>
+                  {totals.wins}W / {totals.losses}L
+                </b>
+              </span>
+            </div>
+            {totals.inPlay > 0 ? (
+              <div className="balance-next">
+                <span>If all open entries win</span>
+                <strong>{money(totals.ifWin)}</strong>
+                <small>
+                  {money(totals.available)} uncommitted + {money(totals.payout)}{" "}
+                  total returns. Potential, not settled.
+                </small>
+              </div>
+            ) : (
+              <p className="personal-caption">
+                {entries.length
+                  ? "Your settled balance carries forward. The next entry uses the stake and odds you actually record."
+                  : "Starting amount saved. No bets recorded yet."}
+              </p>
+            )}
+            <details className="balance-method">
+              <summary>How your balance updates</summary>
+              <p>
+                Win: add actual profit. Loss: subtract the recorded stake. Push
+                or void: return the stake. A passed stage leaves your balance
+                unchanged.
+              </p>
+              <p>
+                Funds in play are reserved, not counted as winnings. Future
+                stakes and prices are never assumed.
+              </p>
+            </details>
+          </>
+        ) : (
+          <form className="bankroll-setup" onSubmit={setup}>
+            <h2>What’s your starting bankroll?</h2>
+            <p>
+              The challenge’s starting example is $20. Enter your own amount to
+              track one personal balance. This does not place a wager.
+            </p>
+            <label className="field">
+              Starting bankroll ($)
+              <input
+                name="starting_bankroll"
+                type="number"
+                inputMode="decimal"
+                min="0.01"
+                max="1000000"
+                step="0.01"
+                required
+                value={starting}
+                onChange={(e) => setStarting(e.target.value)}
+              />
+            </label>
+            <small>
+              Check the amount before saving. Your starting record is permanent;
+              results update the balance automatically.
+            </small>
+            <button className="primary" disabled={saving}>
+              {saving ? "Saving…" : "Save my starting bankroll"}
+            </button>
+          </form>
+        )}
+        {entries.length > 0 && (
+          <details className="personal-history">
+            <summary>Your entries ({entries.length})</summary>
+            {entries.map((e) => {
+              const s = settlements.find((s) => s.entry_id === e.id);
               const published = picks.find((p) => p.id === e.pick_id);
-              const awaiting =
-                !settled && results.some((r) => r.pick_id === e.pick_id);
+              const needsReview =
+                !s && results.some((r) => r.pick_id === e.pick_id);
               return (
-                <article className="position-card" key={e.id}>
-                  <div className="personal-toolbar">
-                    <Badge tone={settled?.result === "LOSS" ? "red" : "green"}>
-                      {settled?.result ??
-                        (awaiting ? "AWAITING INDIVIDUAL GRADE" : "IN PLAY")}
-                    </Badge>
-                    {e.correction_id && (
-                      <small>Corrected · original retained</small>
-                    )}
-                  </div>
-                  <h3>{published?.selection ?? "Your recorded pick"}</h3>
-                  <div className="position-grid">
-                    <div>
-                      <small>Your entry</small>
-                      <strong>
-                        {e.line === null ? "ML" : e.line} · {odd(e.odds)}
-                      </strong>
-                      <span>{e.book}</span>
-                    </div>
-                    <div>
-                      <small>Staked</small>
-                      <strong>{money(e.stake_cents)}</strong>
-                    </div>
-                    <div>
-                      <small>Total return if win</small>
-                      <strong>{money(e.payout_cents)}</strong>
-                    </div>
-                    <div>
-                      <small>{settled ? "Settled P/L" : "Result"}</small>
-                      <strong>
-                        {settled
-                          ? signedMoney(settled.profit_cents)
-                          : awaiting
-                            ? "Review pending"
-                            : "Pending"}
-                      </strong>
-                    </div>
-                  </div>
+                <article key={e.id}>
+                  <strong>{published?.selection || "Official pick"}</strong>
+                  <p>
+                    Actual line: {e.line ?? "Moneyline"} · {odd(e.odds)} ·{" "}
+                    {e.book}
+                  </p>
+                  <p>
+                    {money(e.stake_cents)} staked · {money(e.payout_cents)}{" "}
+                    total return if win
+                  </p>
+                  <Badge tone={s?.result === "LOSS" ? "red" : "green"}>
+                    {s?.result ??
+                      (needsReview ? "AWAITING INDIVIDUAL GRADE" : "IN PLAY")}
+                  </Badge>
+                  {s && <span> {signedMoney(s.profit_cents)} P/L</span>}
+                  <small>
+                    Placed {time(e.placed_at)} · Recorded {time(e.created_at)}
+                  </small>
+                  <EntryCorrection entry={e} onChanged={() => void load()} />
                 </article>
               );
             })}
-            {!entries.length && (
-              <p className="personal-caption">
-                No personal entries yet. Record a wager you already placed using
-                “I played this.”
-              </p>
-            )}
-            {account && (
-              <section
-                className={`stats personal-stats ${totals.inPlay > 0 ? "is-in-play" : ""}`}
-                aria-label="Your bankroll"
-              >
-                <Stat
-                  label="Money in play"
-                  value={money(totals.inPlay)}
-                  note={`Started with ${money(account?.starting_cents ?? challenge.starting_cents)}`}
-                />
-                <Stat
-                  label="Your current bankroll"
-                  value={money(totals.balance)}
-                  note={`${signedMoney(totals.net)} settled P/L · ${money(totals.available)} available`}
-                />
-                <Stat
-                  label="Potential total return"
-                  value={money(totals.payout)}
-                  note={
-                    totals.inPlay
-                      ? `${money(totals.ifWin)} bankroll if open entries win`
-                      : "No unsettled entries"
-                  }
-                />
-                <Stat
-                  label="Your record"
-                  value={`${totals.wins} W / ${totals.losses} L`}
-                  note={
-                    totals.inPlay
-                      ? `${money(totals.ifWin)} balance if open entries win`
-                      : "Only your recorded entries count"
-                  }
-                />
-              </section>
-            )}
-            {entries.length > 0 && (
-              <details className="personal-history">
-                <summary>Your entries ({entries.length})</summary>
-                {entries.map((e) => {
-                  const s = settlements.find((s) => s.entry_id === e.id);
-                  const published = picks.find((p) => p.id === e.pick_id);
-                  const needsReview =
-                    !s && results.some((r) => r.pick_id === e.pick_id);
-                  return (
-                    <article key={e.id}>
-                      <strong>{published?.selection || "Official pick"}</strong>
-                      <p>
-                        Actual line: {e.line ?? "Moneyline"} · {odd(e.odds)} ·{" "}
-                        {e.book}
-                      </p>
-                      <p>
-                        {money(e.stake_cents)} staked · {money(e.payout_cents)}{" "}
-                        total return if win
-                      </p>
-                      <Badge tone={s?.result === "LOSS" ? "red" : "green"}>
-                        {s?.result ??
-                          (needsReview
-                            ? "AWAITING INDIVIDUAL GRADE"
-                            : "IN PLAY")}
-                      </Badge>
-                      {s && <span> {signedMoney(s.profit_cents)} P/L</span>}
-                      <small>
-                        Placed {time(e.placed_at)} · Recorded{" "}
-                        {time(e.created_at)}
-                      </small>
-                      <EntryCorrection
-                        entry={e}
-                        onChanged={() => void load()}
-                      />
-                    </article>
-                  );
-                })}
-              </details>
-            )}
-          </>
+          </details>
         )}
-      </details>
+      </section>
       {!isOpen && notice && <p role="status">{notice}</p>}
       <dialog
         onClose={() => setIsOpen(false)}
@@ -415,7 +403,8 @@ export default function PersonalChallenge({
                 min="0.01"
                 max="1000000"
                 step="0.01"
-                defaultValue="20"
+                value={starting}
+                onChange={(e) => setStarting(e.target.value)}
                 required
               />
             </label>
@@ -507,13 +496,22 @@ export default function PersonalChallenge({
               defaultValue={localNow()}
             />
           </label>
-          {payout && stake && (
-            <p>
-              Potential profit:{" "}
-              <strong>
-                {money(Math.round((Number(payout) - Number(stake)) * 100))}
-              </strong>
-            </p>
+          {outcomes && payout && stake && (
+            <div className="entry-balance-preview" aria-live="polite">
+              <h3>Your balance after this entry</h3>
+              <p>
+                Profit if win: <strong>{money(outcomes.profit)}</strong>
+              </p>
+              <p>
+                Win <strong>{money(outcomes.win)}</strong> · Loss{" "}
+                <strong>{money(outcomes.loss)}</strong> · Push / void{" "}
+                <strong>{money(outcomes.push)}</strong>
+              </p>
+              <small>
+                Uses your starting/settled balance and this entry only. Other
+                open entries remain unsettled.
+              </small>
+            </div>
           )}
           <label className="entry-confirm">
             <input type="checkbox" required /> I already placed this wager and

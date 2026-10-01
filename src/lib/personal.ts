@@ -45,3 +45,20 @@ export function personalTotals(
     losses: entries.filter((e) => results.get(e.id)?.result === "LOSS").length,
   };
 }
+// Arithmetic for an entry the user supplies; never recommends a future stake.
+export function entryBalances(balance: number, stake: number, payout: number) {
+  if (
+    ![balance, stake, payout].every(Number.isSafeInteger) ||
+    balance < 0 ||
+    stake <= 0 ||
+    stake > balance ||
+    payout < stake
+  )
+    return null;
+  return {
+    win: balance - stake + payout,
+    loss: balance - stake,
+    push: balance,
+    profit: payout - stake,
+  };
+}

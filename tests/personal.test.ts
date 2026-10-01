@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { personalTotals, type PersonalEntry } from "../src/lib/personal";
+import { personalTotals, entryBalances, type PersonalEntry } from "../src/lib/personal";
 const e: PersonalEntry = {
   id: "a",
   pick_id: "p",
@@ -48,4 +48,12 @@ test("one challenge never incorporates unrelated settlements", () => {
   );
   assert.equal(t.balance, 2000);
   assert.equal(t.wins, 0);
+});
+
+test("custom bankroll carries unspent money through each actual entry",()=>{
+ assert.deepEqual(entryBalances(5000,2000,3754),{win:6754,loss:3000,push:5000,profit:1754});
+ assert.deepEqual(entryBalances(6754,1000,2500),{win:8254,loss:5754,push:6754,profit:1500});
+ assert.equal(entryBalances(2000,5000,10000),null);
+ assert.equal(entryBalances(5000,0,0),null);
+ assert.equal(entryBalances(NaN,1000,2000),null);
 });

@@ -343,6 +343,7 @@ export default function DeskApp({
                           p={official}
                           d={d}
                           compact
+                          personalPath
                           entryAction={entryAction}
                         />
                       </div>
@@ -355,34 +356,7 @@ export default function DeskApp({
               pick={official}
               picks={challengePicks}
               results={d.results}
-            >
-              <section className="stats">
-                <Stat
-                  label="Starting bankroll"
-                  value={money(ch.starting_cents)}
-                  note="Maximum initial loss: $20"
-                />
-                <Stat
-                  label="Current bankroll"
-                  value={money(ch.balance_cents)}
-                  note={
-                    <span className={m.net < 0 ? "negative" : "positive"}>
-                      {signedMoney(m.net)} settled P/L
-                    </span>
-                  }
-                />
-                <Stat
-                  label="Target bankroll"
-                  value="≈ $640"
-                  note="Aspirational · not guaranteed"
-                />
-                <Stat
-                  label="Challenge record"
-                  value={`${m.wins} W / ${m.losses} L`}
-                  note={`${d.results.filter((r) => challengePicks.some((p) => p.id === r.pick_id) && ["PUSH", "VOID"].includes(r.result)).length} pushes / voids`}
-                />
-              </section>
-            </PersonalChallenge>
+            />
           </>
         )}
         {page === "home" && (
@@ -410,14 +384,6 @@ export default function DeskApp({
                 </Link>
               )}
             </div>
-          </details>
-        )}
-        {page === "home" && ch && (
-          <details className="admin-section">
-            <summary>Challenge bankroll history</summary>
-            <Panel title="Actual challenge progression">
-              <BankrollChart d={d} challengeId={ch.id} />
-            </Panel>
           </details>
         )}
         {page === "game" && g && (

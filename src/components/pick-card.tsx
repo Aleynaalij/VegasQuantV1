@@ -22,6 +22,7 @@ export default function PickCard({
   allowShare = true,
   entryAction,
   compact = false,
+  personalPath = false,
 }: {
   p: Pick;
   d: Desk;
@@ -29,6 +30,7 @@ export default function PickCard({
   allowShare?: boolean;
   entryAction?: ReactNode;
   compact?: boolean;
+  personalPath?: boolean;
 }) {
   const st = d.stages.find((s) => s.id === p.stage_id),
     ch = d.challenges.find((c) => c.id === st?.challenge_id),
@@ -108,31 +110,40 @@ export default function PickCard({
       )}
       <details className="slip-details" open={compact ? undefined : true}>
         <summary>Full slip · stake, analysis & results</summary>
-        <div className="pick-finances">
-          <div>
-            <span>Stake</span>
-            <strong>{money(p.stake_cents)}</strong>
-          </div>
-          <div>
-            <span>To win</span>
-            <strong className="positive">
-              {money(winProfit(p.stake_cents, p.odds))}
-            </strong>
-          </div>
-          <div>
-            <span>{r ? "Challenge balance" : "Balance if win"}</span>
-            <strong>
-              {r?.bankroll_cents !== null && r?.bankroll_cents !== undefined
-                ? money(r.bankroll_cents)
-                : ch
-                  ? money(
-                      (reserve?.balance_cents ?? ch.balance_cents) +
-                        winProfit(p.stake_cents, p.odds),
-                    )
-                  : "Standalone"}
-            </strong>
-          </div>
-        </div>
+        {personalPath ? (
+          <p className="personal-caption">
+            Original published stake: {money(p.stake_cents)}. Your actual stake
+            and bankroll are tracked in your path below.
+          </p>
+        ) : (
+          <>
+            <div className="pick-finances">
+              <div>
+                <span>Stake</span>
+                <strong>{money(p.stake_cents)}</strong>
+              </div>
+              <div>
+                <span>To win</span>
+                <strong className="positive">
+                  {money(winProfit(p.stake_cents, p.odds))}
+                </strong>
+              </div>
+              <div>
+                <span>{r ? "Challenge balance" : "Balance if win"}</span>
+                <strong>
+                  {r?.bankroll_cents !== null && r?.bankroll_cents !== undefined
+                    ? money(r.bankroll_cents)
+                    : ch
+                      ? money(
+                          (reserve?.balance_cents ?? ch.balance_cents) +
+                            winProfit(p.stake_cents, p.odds),
+                        )
+                      : "Standalone"}
+                </strong>
+              </div>
+            </div>
+          </>
+        )}
         <div className="pick-numbers">
           {[
             ["Model probability", `${p.model_probability}%`],
