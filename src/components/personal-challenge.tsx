@@ -225,7 +225,7 @@ export default function PersonalChallenge({
       {renderOfficial?.(entryAction)}
       <details
         className="run-bankroll-details"
-        open={view === "personal" ? true : undefined}
+        open={view === "personal" && account ? true : undefined}
       >
         <summary>
           {view === "personal"
@@ -315,39 +315,41 @@ export default function PersonalChallenge({
                 “I played this.”
               </p>
             )}
-            <section
-              className={`stats personal-stats ${totals.inPlay > 0 ? "is-in-play" : ""}`}
-              aria-label="Your bankroll"
-            >
-              <Stat
-                label="Money in play"
-                value={money(totals.inPlay)}
-                note={`Started with ${money(account?.starting_cents ?? challenge.starting_cents)}`}
-              />
-              <Stat
-                label="Your current bankroll"
-                value={money(totals.balance)}
-                note={`${signedMoney(totals.net)} settled P/L · ${money(totals.available)} available`}
-              />
-              <Stat
-                label="Potential total return"
-                value={money(totals.payout)}
-                note={
-                  totals.inPlay
-                    ? `${money(totals.ifWin)} bankroll if open entries win`
-                    : "No unsettled entries"
-                }
-              />
-              <Stat
-                label="Your record"
-                value={`${totals.wins} W / ${totals.losses} L`}
-                note={
-                  totals.inPlay
-                    ? `${money(totals.ifWin)} balance if open entries win`
-                    : "Only your recorded entries count"
-                }
-              />
-            </section>
+            {account && (
+              <section
+                className={`stats personal-stats ${totals.inPlay > 0 ? "is-in-play" : ""}`}
+                aria-label="Your bankroll"
+              >
+                <Stat
+                  label="Money in play"
+                  value={money(totals.inPlay)}
+                  note={`Started with ${money(account?.starting_cents ?? challenge.starting_cents)}`}
+                />
+                <Stat
+                  label="Your current bankroll"
+                  value={money(totals.balance)}
+                  note={`${signedMoney(totals.net)} settled P/L · ${money(totals.available)} available`}
+                />
+                <Stat
+                  label="Potential total return"
+                  value={money(totals.payout)}
+                  note={
+                    totals.inPlay
+                      ? `${money(totals.ifWin)} bankroll if open entries win`
+                      : "No unsettled entries"
+                  }
+                />
+                <Stat
+                  label="Your record"
+                  value={`${totals.wins} W / ${totals.losses} L`}
+                  note={
+                    totals.inPlay
+                      ? `${money(totals.ifWin)} balance if open entries win`
+                      : "Only your recorded entries count"
+                  }
+                />
+              </section>
+            )}
             {entries.length > 0 && (
               <details className="personal-history">
                 <summary>Your entries ({entries.length})</summary>

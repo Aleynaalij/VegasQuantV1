@@ -272,7 +272,9 @@ export default function DeskApp({
             VEGAS QUANT · {access.member_code} · Personal access
           </div>
         )}
-        <div className={`heading ${page === "home" ? "home-heading" : ""}`}>
+        <div
+          className={`heading ${page === "home" ? `home-heading ${d.challenges.length <= 1 ? "single-challenge" : ""}` : ""}`}
+        >
           <div>
             <div className="eyebrow">
               {page === "home"

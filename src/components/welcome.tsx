@@ -64,11 +64,11 @@ export default function Welcome() {
       aria-describedby="welcome-intro" onCancel={(event) => event.preventDefault()}>
       <div className="vq-welcome-content">
         <p className="vq-welcome-eyebrow">WELCOME TO VEGAS QUANT</p>
-        <h2 id="welcome-title">Research first.<br />Decisions with discipline.</h2>
-        <p id="welcome-intro">Your sports analytics and decision-tracking desk. Understand the reasoning, follow the numbers, and learn from every outcome.</p>
+        <h2 id="welcome-title">Five stages.<br />Your run starts here.</h2>
+        <p id="welcome-intro">Join the 5-Spot Challenge, follow the decisions, and see how the run unfolds. No wager is required.</p>
         <div className="vq-welcome-sections">
-          <section><h3>Understand the game</h3><p>Explore matchup research, market movement, projections, and analysis from Vegas Quant Ultra. A lean or watchlist is not an official pick.</p></section>
-          <section><h3>Follow the process</h3><p>Track published picks, entry prices, closing-line value, results, and lessons. The 5-Spot Challenge starts at $20; its roughly $640 target is aspirational. No qualifying edge? We pass.</p></section>
+          <section><h3>Choose your way to play</h3><p>Follow Along for free, or Track My Bets to record wagers you already placed. Checking in never creates a bet.</p></section>
+          <section><h3>Research when you want it</h3><p>A season pass unlocks Vegas Quant Ultra’s analysis and official slips. No qualifying edge? The challenge pauses. The $20 experiment’s roughly $640 target is aspirational.</p></section>
           <section className="vq-welcome-risk"><h3>Know the limits</h3><p>This is analysis and entertainment, not a sportsbook or an investment strategy. We do not accept or place bets. Projections can be wrong, and no pick or profit is guaranteed. Any wager can lose, including your entire stake. Only risk money you can afford to lose.</p></section>
         </div>
         {error && <p role="alert" className="vq-welcome-error">{error}</p>}

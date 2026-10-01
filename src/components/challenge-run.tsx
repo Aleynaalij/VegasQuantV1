@@ -254,7 +254,11 @@ export default function ChallengeRun({
         {(!run || selected === challenge.current_stage) && (
           <div className="run-next">
             <h2>{msg.title}</h2>
-            <p>{msg.body}</p>
+            <p>
+              {!member && challenge.status === "OFFICIAL PLAY"
+                ? "Members can view the official slip. Join free to follow the challenge’s progress."
+                : msg.body}
+            </p>
           </div>
         )}
         {run && selected !== challenge.current_stage && (
