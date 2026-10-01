@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 export function GET() {
   return Response.json(
     {
-      quotes: [passQuote("full"), passQuote("half")].filter(Boolean),
+      quotes: [passQuote("full"), passQuote("monthly")].filter(Boolean),
       enabled: billingEnabled(),
       mode: billingMode(),
     },

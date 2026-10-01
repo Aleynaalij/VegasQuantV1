@@ -464,7 +464,7 @@ function IntelligenceWorkspace({ desk: d }: { desk: Desk }) {
       </div>
       <div className="intel-asof">
         <span>
-          Source data as of {time(asOf)} · automatic feed not connected
+          Source data as of {time(asOf)} · manual research + source feeds
         </span>
         <button className="text-link" onClick={refresh}>
           Refresh records
@@ -487,7 +487,7 @@ function IntelligenceWorkspace({ desk: d }: { desk: Desk }) {
           <p>
             Manual / owner-supplied records. Received or publication timestamps
             are labeled separately and never treated as live quote observations.
-            No paid odds, betting splits, weather or injury feed is connected.
+            Source-feed health and automated observations are available in Data feed health. Betting splits and analyst adjustments require supplied data.
             Historical views use source timestamps and are not a proof of what
             the website knew at that moment.
           </p>

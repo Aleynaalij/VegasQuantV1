@@ -40,6 +40,6 @@ export async function requestUser(req: Request) {
     : { user: data.user, db };
 }
 export function appOrigin() {
-  return new URL(process.env.APP_URL || "https://vegas-quant-v1.vercel.app")
+  return new URL(process.env.APP_URL || "https://vegasquant.app")
     .origin;
 }

@@ -101,7 +101,7 @@ export function Shell({
             <LayoutDashboard size={18} />
             Home
           </Link>
-          <Link className={active === "game" ? "active" : ""} href="/games">
+          <Link className={active === "game" ? "active" : ""} href="/matchups">
             <BookOpen size={18} />
             Matchup desk
           </Link>
@@ -191,7 +191,7 @@ export function Shell({
             <LayoutDashboard size={19} />
             Home
           </Link>
-          <Link className={active === "game" ? "active" : ""} href="/games">
+          <Link className={active === "game" ? "active" : ""} href="/matchups">
             <BookOpen size={19} />
             Matchup
           </Link>

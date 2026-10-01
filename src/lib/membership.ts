@@ -40,17 +40,10 @@ export const roundEnds = [
   Date.UTC(2027, 1, 2, 12),
   Date.UTC(2027, 1, 16, 12),
 ];
-export function passQuote(plan: "full" | "half", now = Date.now()) {
-  const remaining = roundEnds.filter((end) => end > now);
-  if (!remaining.length) return null;
-  const covered =
-    plan === "full" ? remaining.length : Math.ceil(remaining.length / 2);
-  return {
-    plan,
-    amount: plan === "full" ? 1000 : 700,
-    season: "2026",
-    remaining: remaining.length,
-    covered,
-    expires_at: new Date(remaining[covered - 1]).toISOString(),
-  };
+export const seasonEnd = roundEnds[roundEnds.length - 1];
+export type Plan = "full" | "monthly";
+export function passQuote(plan: Plan, now = Date.now()) {
+  if (plan === "monthly") return { plan, amount: 500, season: "2026", recurring: true, expires_at: null };
+  if (now >= seasonEnd) return null;
+  return { plan, amount: 2000, season: "2026", recurring: false, expires_at: new Date(seasonEnd).toISOString() };
 }

@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import {syncSubscription, idOf} from "@/lib/subscription-sync";
 import {
   billingEnabled,
   billingMode,
@@ -26,6 +27,16 @@ export async function POST(req: Request) {
     return Response.json({ received: true, test_only: true });
   const db = serviceDb();
   try {
+    if (event.type.startsWith("customer.subscription.")) {
+      await syncSubscription(stripe, (event.data.object as Stripe.Subscription).id, event);
+      return Response.json({received:true});
+    }
+    if (["invoice.paid", "invoice.payment_failed", "invoice.payment_action_required"].includes(event.type)) {
+      const inv = await stripe.invoices.retrieve((event.data.object as Stripe.Invoice).id);
+      const sid = idOf(inv.parent?.subscription_details?.subscription);
+      if(sid) await syncSubscription(stripe, sid, event, inv.id);
+      return Response.json({received:true});
+    }
     if (
       [
         "checkout.session.completed",
@@ -34,6 +45,11 @@ export async function POST(req: Request) {
     ) {
       const object = event.data.object as Stripe.Checkout.Session;
       const session = await stripe.checkout.sessions.retrieve(object.id);
+      if (session.mode === "subscription") {
+        const sid = idOf(session.subscription);
+        if(sid) await syncSubscription(stripe, sid, event);
+        return Response.json({received:true});
+      }
       if (session.payment_status !== "paid")
         return Response.json({ received: true });
       const intentId =

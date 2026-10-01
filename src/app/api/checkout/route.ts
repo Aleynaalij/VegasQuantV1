@@ -24,7 +24,7 @@ export async function POST(req: Request) {
     );
   try {
     const body = await req.json();
-    if (!["full", "half"].includes(body.plan))
+    if (!["full", "monthly"].includes(body.plan))
       return Response.json({ error: "Invalid pass." }, { status: 400 });
     const quote = passQuote(body.plan);
     if (!quote)
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       p_id: randomUUID(),
       p_user: auth.user.id,
       p_plan: quote.plan,
-      p_expires: quote.expires_at,
+      p_expires: quote.expires_at || new Date(Date.now() + 32 * 86400000).toISOString(),
     });
     if (error)
       return Response.json(
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     const stripe = stripeClient();
     const session = await stripe.checkout.sessions.create(
       {
-        mode: "payment",
+        mode: quote.recurring ? "subscription" : "payment",
         payment_method_types: ["card"],
         customer_email: auth.user.email,
         client_reference_id: auth.user.id,
@@ -67,9 +67,10 @@ export async function POST(req: Request) {
             price_data: {
               currency: "usd",
               unit_amount: order.amount,
+              ...(quote.recurring ? { recurring: { interval: "month" as const } } : {}),
               product_data: {
-                name: `Vegas Quant — 2026 ${quote.plan === "full" ? "full" : "half"} season access`,
-                description: `Access expires ${new Date(order.expires_at).toISOString()}. Sports analysis only. No wagers or prizes. No automatic renewal.`,
+                name: quote.recurring ? "Vegas Quant — Monthly Access" : "Vegas Quant — Full 2026 Season",
+                description: quote.recurring ? "$5 each month until canceled. Cancel in Account; access lasts through the paid period. Sports analysis only." : "2026 season, playoffs and Super Bowl. One payment. No automatic renewal.",
               },
             },
             quantity: 1,
@@ -80,7 +81,9 @@ export async function POST(req: Request) {
           user_id: auth.user.id,
           mode: billingMode(),
         },
-        payment_intent_data: { metadata: { order_id: order.id } },
+        ...(quote.recurring
+          ? { subscription_data: { metadata: { order_id: order.id, user_id: auth.user.id } } }
+          : { payment_intent_data: { metadata: { order_id: order.id } } }),
         success_url: `${appOrigin()}/membership?payment=received`,
         cancel_url: `${appOrigin()}/membership?payment=cancelled`,
       },

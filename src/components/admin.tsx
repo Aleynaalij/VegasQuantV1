@@ -708,6 +708,8 @@ export default function Admin() {
               APPROVED ADMIN
             </Badge>
             <span>{session.user.email}</span>
+            <a href="/admin/feeds">Data feed health →</a>
+            <a href="/admin/matchups">Publish Matchup Intelligence →</a>
             <a href="/admin/accounts">Accounts & friends passes →</a>
             <a href="/admin/intelligence">Private Data Intelligence →</a>
             <a href="/" target="_blank" rel="noreferrer">

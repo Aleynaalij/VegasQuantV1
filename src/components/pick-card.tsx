@@ -32,6 +32,7 @@ export default function PickCard({
   compact?: boolean;
   personalPath?: boolean;
 }) {
+  const SlipBody = compact ? "section" : "details";
   const st = d.stages.find((s) => s.id === p.stage_id),
     ch = d.challenges.find((c) => c.id === st?.challenge_id),
     g = d.games.find((g) => g.id === p.game_id),
@@ -108,8 +109,8 @@ export default function PickCard({
           stakeCents={p.stake_cents}
         />
       )}
-      <details className="slip-details" open={compact ? undefined : true}>
-        <summary>Full slip · stake, analysis & results</summary>
+      <SlipBody className="slip-details" {...(!compact ? {open:true} : {})}>
+        {!compact && <summary>Full slip · stake, analysis & results</summary>}
         {personalPath ? (
           <p className="personal-caption">
             Original published stake: {money(p.stake_cents)}. Your actual stake
@@ -246,7 +247,7 @@ export default function PickCard({
             <p>{review.lessons}</p>
           </div>
         )}
-      </details>
+      </SlipBody>
       {!share && isMarketInfoUrl(p.market_info_url) && (
         <p>
           <a href={p.market_info_url} target="_blank" rel="noopener noreferrer">

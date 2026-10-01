@@ -6,13 +6,13 @@ import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
 import { Shell, Panel } from "./ui";
 import FriendPass from "./friend-pass";
+import BillingAccount from "./billing-account";
 import type { Session } from "@supabase/supabase-js";
 type Quote = {
-  plan: "full" | "half";
+  plan: "full" | "monthly";
   amount: number;
-  covered: number;
-  remaining: number;
-  expires_at: string;
+  recurring: boolean;
+  expires_at: string | null;
 };
 export default function Membership() {
   const router = useRouter();
@@ -103,7 +103,7 @@ export default function Membership() {
       setBusy(false);
     }
   }
-  async function checkout(plan: "full" | "half") {
+  async function checkout(plan: "full" | "monthly") {
     setBusy(true);
     setNotice("");
     try {
@@ -389,6 +389,7 @@ export default function Membership() {
           </Link>
         </p>
       )}
+      {session && <BillingAccount token={session.access_token} />}
       {!access.allowed && !access.admin_account && (
         <>
           <div className="pass-grid">
@@ -396,18 +397,10 @@ export default function Membership() {
               <div key={q.plan}>
                 <strong>${q.amount / 100}</strong>
                 <h2>
-                  {q.plan === "full" ? "Full season" : "Half of what remains"}
+                  {q.plan === "full" ? "2026 Season Pass" : "Monthly Access"}
                 </h2>
-                <p>
-                  {q.covered} of {q.remaining} remaining weeks/playoff rounds.
-                </p>
-                <p>
-                  Access through{" "}
-                  {new Date(q.expires_at).toLocaleString("en-US", {
-                    timeZone: "America/New_York",
-                  })}{" "}
-                  ET.
-                </p>
+                <p>{q.recurring ? "Per month · renews automatically until canceled." : "One payment · includes playoffs and the Super Bowl."}</p>
+                <p>{q.expires_at ? `Access through ${new Date(q.expires_at).toLocaleDateString("en-US", {timeZone: "America/New_York"})}.` : "Cancel in Account. Access continues through your paid billing period."}</p>
                 <button
                   className="primary"
                   disabled={!session || busy || !enabled}
@@ -427,7 +420,7 @@ export default function Membership() {
           <p className="muted">
             {enabled && mode === "test"
               ? "Test mode only. No real payments. Test purchases do not grant production access."
-              : "Checkout will open once payment setup is complete."}
+              : enabled ? "Payments are processed securely by Stripe." : "Checkout will open once payment setup is complete."}
           </p>
         </>
       )}
@@ -435,17 +428,16 @@ export default function Membership() {
         <Panel title="How season access works">
           <div className="notebook">
             <p>
-              Full access covers the remaining 2026 season, playoffs, and Super
-              Bowl. Half access covers the next half of remaining NFL weeks and
-              playoff rounds, rounded up. The current unfinished round counts. A
-              pass begins after payment confirmation and ends at the exact date
-              shown before checkout. No guaranteed number of picks; a pass
-              remains a valid decision.
+              Monthly access is $5 per month and renews until canceled. The $20
+              Season Pass covers the remaining 2026 season, playoffs, and Super Bowl
+              with no automatic renewal. Both include the same research and tracking.
+              Existing passes keep their original expiration dates. No number of picks
+              or result is guaranteed; passing is a valid decision.
             </p>
             <p>
               Access is personal and includes account-specific watermarks.
               Unauthorized sharing may result in account removal after review.
-              We cannot detect or prevent screenshots. No automatic renewal.
+              We cannot detect or prevent screenshots.
             </p>
             <p>
               You are buying sports analysis and tracking, not a wager or entry

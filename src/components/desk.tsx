@@ -363,7 +363,7 @@ export default function DeskApp({
           <details className="admin-section home-explore">
             <summary>Explore research & records</summary>
             <div className="workspace-index">
-              <Link href="/games">
+              <Link href="/matchups">
                 <span className="eyebrow">RESEARCH</span>
                 <h2>Matchup desk</h2>
                 <p>Analysis, market snapshots and the history of the read.</p>
@@ -824,7 +824,7 @@ function MatchupWorkspace({
           {g.slot} · {time(g.kickoff)}
         </span>
         <span>{g.venue}</span>
-        <Link href="/games">All matchups →</Link>
+        <Link href="/matchups">All matchups →</Link>
       </div>
       <nav className="section-switch" aria-label="Matchup sections">
         {["Research", "Market history", "Updates & history"].map((v) => (
