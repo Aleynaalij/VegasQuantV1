@@ -1,5 +1,10 @@
 export type PersonalAccount = { id: string; starting_cents: number };
 export type PersonalEntry = {
+  original?: PersonalEntry;
+  correction_id?: string | null;
+  corrected_at?: string | null;
+  result?: "WIN" | "LOSS" | "PUSH" | "VOID" | null;
+  profit_cents?: number | null;
   id: string;
   pick_id: string;
   line: number | null;

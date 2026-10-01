@@ -24,6 +24,7 @@ import {
   type PersonalEntry,
   type PersonalSettlement,
 } from "@/lib/personal";
+import EntryCorrection from "./entry-correction";
 import { Badge, Stat } from "./ui";
 export default function PersonalChallenge({
   challenge,
@@ -65,23 +66,23 @@ export default function PersonalChallenge({
         ss: PersonalSettlement[] = [];
       if (a.data) {
         const e = await supabase
-          .from("personal_entries")
+          .from("personal_entry_state")
           .select("*")
           .eq("personal_challenge_id", a.data.id)
           .order("created_at");
         if (e.error) throw e.error;
         es = e.data;
-        if (es.length) {
-          const s = await supabase
-            .from("personal_settlements")
-            .select("entry_id,result,profit_cents")
-            .in(
-              "entry_id",
-              es.map((e) => e.id),
-            );
-          if (s.error) throw s.error;
-          ss = s.data;
-        }
+        ss = es.flatMap((e) =>
+          e.result
+            ? [
+                {
+                  entry_id: e.id,
+                  result: e.result,
+                  profit_cents: e.profit_cents ?? 0,
+                },
+              ]
+            : [],
+        );
       }
       if (run === generation.current) {
         if (!initialized.current) {
@@ -121,6 +122,10 @@ export default function PersonalChallenge({
     settlements,
   );
   const current = entries.find((e) => e.pick_id === pick?.id);
+  const focusEntries = entries.filter(
+    (e) => !settlements.some((s) => s.entry_id === e.id),
+  );
+  const spotlight = focusEntries.length ? focusEntries : entries.slice(-1);
   const ended = results.some((r) => r.pick_id === pick?.id);
   function estimate(o: string, s: string) {
     const n = Number(o),
@@ -205,7 +210,7 @@ export default function PersonalChallenge({
         {current && (
           <Badge tone="green">
             {settlements.find((s) => s.entry_id === current.id)?.result ??
-              "IN PLAY"}
+              (ended ? "AWAITING GRADE" : "IN PLAY")}
           </Badge>
         )}
       </div>
@@ -220,18 +225,67 @@ export default function PersonalChallenge({
         <p>Loading your challenge…</p>
       ) : (
         <>
+          {spotlight.map((e) => {
+            const settled = settlements.find((s) => s.entry_id === e.id);
+            const published = picks.find((p) => p.id === e.pick_id);
+            const awaiting =
+              !settled && results.some((r) => r.pick_id === e.pick_id);
+            return (
+              <article className="position-card" key={e.id}>
+                <div className="personal-toolbar">
+                  <Badge tone={settled?.result === "LOSS" ? "red" : "green"}>
+                    {settled?.result ??
+                      (awaiting ? "AWAITING INDIVIDUAL GRADE" : "IN PLAY")}
+                  </Badge>
+                  {e.correction_id && (
+                    <small>Corrected · original retained</small>
+                  )}
+                </div>
+                <h3>{published?.selection ?? "Your recorded pick"}</h3>
+                <div className="position-grid">
+                  <div>
+                    <small>Your entry</small>
+                    <strong>
+                      {e.line === null ? "ML" : e.line} · {odd(e.odds)}
+                    </strong>
+                    <span>{e.book}</span>
+                  </div>
+                  <div>
+                    <small>Staked</small>
+                    <strong>{money(e.stake_cents)}</strong>
+                  </div>
+                  <div>
+                    <small>Total return if win</small>
+                    <strong>{money(e.payout_cents)}</strong>
+                  </div>
+                  <div>
+                    <small>{settled ? "Settled P/L" : "Result"}</small>
+                    <strong>
+                      {settled
+                        ? signedMoney(settled.profit_cents)
+                        : awaiting
+                          ? "Review pending"
+                          : "Pending"}
+                    </strong>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+          {!entries.length && (
+            <p className="personal-caption">
+              No personal entries yet. Record a wager you already placed using
+              “I played this.”
+            </p>
+          )}
           <section
             className={`stats personal-stats ${totals.inPlay > 0 ? "is-in-play" : ""}`}
             aria-label="Your bankroll"
           >
             <Stat
-              label="Your starting bankroll"
-              value={money(account?.starting_cents ?? challenge.starting_cents)}
-              note={
-                account
-                  ? "Recorded when you joined"
-                  : "Set when recording your first entry"
-              }
+              label="Money in play"
+              value={money(totals.inPlay)}
+              note={`Started with ${money(account?.starting_cents ?? challenge.starting_cents)}`}
             />
             <Stat
               label="Your current bankroll"
@@ -239,11 +293,11 @@ export default function PersonalChallenge({
               note={`${signedMoney(totals.net)} settled P/L · ${money(totals.available)} available`}
             />
             <Stat
-              label={totals.inPlay ? "In play" : "Potential payout"}
-              value={money(totals.inPlay || 0)}
+              label="Potential total return"
+              value={money(totals.payout)}
               note={
                 totals.inPlay
-                  ? `${money(totals.payout)} total return if open entries win`
+                  ? `${money(totals.ifWin)} bankroll if open entries win`
                   : "No unsettled entries"
               }
             />
@@ -284,6 +338,7 @@ export default function PersonalChallenge({
                     <small>
                       Placed {time(e.placed_at)} · Recorded {time(e.created_at)}
                     </small>
+                    <EntryCorrection entry={e} onChanged={() => void load()} />
                   </article>
                 );
               })}

@@ -32,6 +32,7 @@ import PersonalChallenge from "./personal-challenge";
 import PickCard from "./pick-card";
 import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
+import UpdateFeed from "./update-feed";
 import ResearchNotebook from "./research-notebook";
 const pct = (v: number | null) => (v === null ? "—" : `${v.toFixed(2)}%`);
 const value = (s: unknown) =>
@@ -417,6 +418,9 @@ export default function DeskApp({
             )}
           </>
         )}
+        {page !== "history" && g && (
+          <UpdateFeed desk={d} game={g} memberCode={access.member_code} />
+        )}
         {page !== "history" && (
           <div className="content-grid">
             <div className="primary-column">
@@ -629,6 +633,7 @@ export default function DeskApp({
                       </details>
                     ))}
                   </Panel>
+                  <div id="analysis-history" />
                   <Panel
                     title="Analysis version history"
                     aside={

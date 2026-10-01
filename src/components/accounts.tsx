@@ -6,6 +6,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import AdminCorrections from "./admin-corrections";
 import AccountTails from "./account-tails";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -118,6 +119,7 @@ export default function Accounts() {
         </Panel>
       ) : (
         <>
+          <AdminCorrections />
           <Panel title="Friends · full season">
             <div className="notebook">
               {data.promos.map((p) => (
