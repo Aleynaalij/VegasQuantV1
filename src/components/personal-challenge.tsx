@@ -183,16 +183,6 @@ export default function PersonalChallenge({
   };
   const entryAction = (
     <div className="slip-entry-action">
-      {" "}
-      {pick && !ended && !current && (
-        <button
-          className="primary"
-          disabled={loading || loadError}
-          onClick={open}
-        >
-          I played this
-        </button>
-      )}
       {current && (
         <div className="slip-personal-entry">
           <Badge tone="green">
@@ -240,8 +230,8 @@ export default function PersonalChallenge({
   return (
     <section className="personal-challenge" aria-label="Challenge tracking">
       <ChallengeRun challenge={challenge} stages={stages} member />
-      {renderOfficial?.(entryAction)}
-      {!renderOfficial && entryAction}
+      {renderOfficial?.(current ? entryAction : null)}
+      {!renderOfficial && current && entryAction}
       <section
         className={`one-bankroll ${totals.inPlay > 0 && account ? "is-in-play" : ""}`}
         aria-label="Your bankroll path"
@@ -302,6 +292,20 @@ export default function PersonalChallenge({
                   ? "Your settled balance carries forward. The next entry uses the stake and odds you actually record."
                   : "Starting amount saved. No bets recorded yet."}
               </p>
+            )}
+            {pick && !ended && !current && (
+              <div className="bankroll-entry-action">
+                <button
+                  className="primary"
+                  disabled={loading || loadError}
+                  onClick={open}
+                >
+                  Record my actual entry
+                </button>
+                <p className="personal-caption">
+                  For a wager you already placed. Enter its odds and stake here.
+                </p>
+              </div>
             )}
             <details className="balance-method">
               <summary>How your balance updates</summary>
