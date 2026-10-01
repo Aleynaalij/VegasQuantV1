@@ -1,4 +1,7 @@
+"use client";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import ChallengeRun from "./challenge-run";
 import { Shell, Panel, Stat, Badge } from "./ui";
 import { money, time, type Game } from "@/lib/domain";
 import type { Overview } from "@/lib/membership";
@@ -17,7 +20,17 @@ export default function PublicOverview({
   gameSlug?: string;
   error?: string;
 }) {
-  const challenge = overview?.challenges[0];
+  const [wanted, setWanted] = useState("");
+  useEffect(() => {
+    setWanted(
+      new URLSearchParams(location.search).get("challenge") ||
+        sessionStorage.getItem("vq-join-challenge") ||
+        "",
+    );
+  }, []);
+  const challenge =
+    overview?.challenges.find((c) => c.id === wanted) ||
+    overview?.challenges[0];
   const stage = overview?.stages.find(
     (s) =>
       s.challenge_id === challenge?.id &&
@@ -96,91 +109,77 @@ export default function PublicOverview({
     );
   return (
     <Shell>
-      <div className="heading">
-        <div>
-          <div className="eyebrow">THE VEGAS QUANT PROJECT</div>
-          <h1>The 5-Spot Challenge</h1>
-          <p>5 games. 5 decisions. $20 starting bankroll.</p>
-        </div>
-        <Link href="/membership" className="primary">
-          Member sign in
-        </Link>
-      </div>
-      <div className="stats-grid">
-        <Stat label="Starting bankroll" value="$20.00" />
-        <Stat
-          label="Current bankroll"
-          value={challenge ? money(challenge.balance_cents) : "—"}
-        />
-        <Stat
-          label="Target bankroll"
-          value="≈ $640"
-          note="Aspirational · not guaranteed"
-        />
-        <Stat
-          label="Challenge record"
-          value={
-            challenge ? `${challenge.wins} W / ${challenge.losses} L` : "—"
+      {challenge ? (
+        <ChallengeRun
+          key={challenge.id}
+          challenge={challenge}
+          stages={
+            overview?.stages.filter((s) => s.challenge_id === challenge.id) ||
+            []
           }
         />
-      </div>
-      <Panel
-        title={`Challenge #${challenge?.number || 1}`}
-        aside={<Badge>{challenge?.status || "PREP"}</Badge>}
-      >
+      ) : (
+        <div className="heading">
+          <h1>The 5-Spot Challenge</h1>
+          <p>Loading the next run…</p>
+        </div>
+      )}
+      <details className="admin-section">
+        <summary>How the challenge works</summary>
         <div className="notebook">
           <p>
-            Stage {challenge?.current_stage || 1} of 5 · Maximum initial loss:
-            $20
+            Five stages: Thursday night, Sunday early, Sunday late, Sunday night
+            and Monday night. Follow each decision at your own pace.
           </p>
-          {game && (
-            <>
-              <h2>
-                {game.away_team} @ {game.home_team}
-              </h2>
+          <p>
+            The official experiment starts with $20. An approximately $640
+            target is aspirational; actual balances use real odds. A stage
+            pauses when there is no qualifying edge.
+          </p>
+          <p>
+            Joining and checking in are free. There are no entry fees or prizes.
+            A season pass unlocks the analyst’s detailed research.
+          </p>
+        </div>
+      </details>
+      <details className="admin-section">
+        <summary>Explore the research membership</summary>
+        <section className="membership-lock">
+          {error && <p role="alert">{error}</p>}
+          <span className="eyebrow">THE MEMBER RESEARCH DESK</span>
+          <h2>
+            {loading
+              ? "Checking your access…"
+              : "The overview is public. The research is for members."}
+          </h2>
+          <p>
+            Unlock matchup analysis, fair lines, market updates, official picks,
+            and the permanent decision history.
+          </p>
+          <div className="pass-grid">
+            <div>
+              <strong>$10</strong>
+              <h3>Full 2026 season</h3>
+              <p>Remaining regular season, playoffs, and Super Bowl.</p>
+            </div>
+            <div>
+              <strong>$7</strong>
+              <h3>Half of what remains</h3>
               <p>
-                {game.slot} · {time(game.kickoff)}
+                The next half of remaining weeks and playoff rounds, rounded up.
+                Exact expiry shown before payment.
               </p>
-            </>
-          )}
-          <p>A stage may be passed when no qualifying edge exists.</p>
-        </div>
-      </Panel>
-      <section className="membership-lock">
-        {error && <p role="alert">{error}</p>}
-        <span className="eyebrow">THE MEMBER RESEARCH DESK</span>
-        <h2>
-          {loading
-            ? "Checking your access…"
-            : "The overview is public. The research is for members."}
-        </h2>
-        <p>
-          Unlock matchup analysis, fair lines, market updates, official picks,
-          and the permanent decision history.
-        </p>
-        <div className="pass-grid">
-          <div>
-            <strong>$10</strong>
-            <h3>Full 2026 season</h3>
-            <p>Remaining regular season, playoffs, and Super Bowl.</p>
+            </div>
           </div>
-          <div>
-            <strong>$7</strong>
-            <h3>Half of what remains</h3>
-            <p>
-              The next half of remaining weeks and playoff rounds, rounded up.
-              Exact expiry shown before payment.
-            </p>
-          </div>
-        </div>
-        <Link href="/membership" className="primary">
-          View membership options →
-        </Link>
-        <p className="muted">
-          One-time access. No automatic renewal. Membership pays for
-          analysis—not wagers or prizes.
-        </p>
-      </section>
+          <Link href="/membership" className="primary">
+            View membership options →
+          </Link>
+          <p className="muted">
+            One-time access. No automatic renewal. Membership pays for
+            analysis—not wagers or prizes.
+          </p>
+        </section>
+      </details>
     </Shell>
   );
 }

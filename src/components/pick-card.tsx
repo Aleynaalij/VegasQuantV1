@@ -65,6 +65,12 @@ export default function PickCard({
           Analyst edge: +{p.edge} pp · Confidence: {p.confidence}/10
         </p>
       )}
+      {compact && (
+        <p className="slip-why">
+          <strong>The read</strong> {p.why_like.split(/\n\s*\n/)[0]}{" "}
+          <Link href={`/games/${g?.slug}`}>See the research →</Link>
+        </p>
+      )}
       <p className="pick-publication">
         Published{" "}
         <time dateTime={p.created_at}>
@@ -100,33 +106,33 @@ export default function PickCard({
           stakeCents={p.stake_cents}
         />
       )}
-      <div className="pick-finances">
-        <div>
-          <span>Stake</span>
-          <strong>{money(p.stake_cents)}</strong>
-        </div>
-        <div>
-          <span>To win</span>
-          <strong className="positive">
-            {money(winProfit(p.stake_cents, e?.odds ?? p.odds))}
-          </strong>
-        </div>
-        <div>
-          <span>{r ? "Challenge balance" : "Balance if win"}</span>
-          <strong>
-            {r?.bankroll_cents !== null && r?.bankroll_cents !== undefined
-              ? money(r.bankroll_cents)
-              : ch
-                ? money(
-                    (reserve?.balance_cents ?? ch.balance_cents) +
-                      winProfit(p.stake_cents, e?.odds ?? p.odds),
-                  )
-                : "Standalone"}
-          </strong>
-        </div>
-      </div>
       <details className="slip-details" open={compact ? undefined : true}>
-        <summary>Analysis, entry rules & results</summary>
+        <summary>Full slip · stake, analysis & results</summary>
+        <div className="pick-finances">
+          <div>
+            <span>Stake</span>
+            <strong>{money(p.stake_cents)}</strong>
+          </div>
+          <div>
+            <span>To win</span>
+            <strong className="positive">
+              {money(winProfit(p.stake_cents, p.odds))}
+            </strong>
+          </div>
+          <div>
+            <span>{r ? "Challenge balance" : "Balance if win"}</span>
+            <strong>
+              {r?.bankroll_cents !== null && r?.bankroll_cents !== undefined
+                ? money(r.bankroll_cents)
+                : ch
+                  ? money(
+                      (reserve?.balance_cents ?? ch.balance_cents) +
+                        winProfit(p.stake_cents, p.odds),
+                    )
+                  : "Standalone"}
+            </strong>
+          </div>
+        </div>
         <div className="pick-numbers">
           {[
             ["Model probability", `${p.model_probability}%`],

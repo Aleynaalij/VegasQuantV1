@@ -92,7 +92,11 @@ export default function Membership() {
           : "Signed in.",
       );
       const current = await refresh();
-      if (!signup && current.allowed) router.replace("/");
+      if (
+        !signup &&
+        (current.allowed || sessionStorage.getItem("vq-join-challenge"))
+      )
+        router.replace("/");
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Sign in failed.");
     } finally {
@@ -187,8 +191,8 @@ export default function Membership() {
       <div className="heading">
         <div>
           <div className="eyebrow">VEGAS QUANT ACCOUNT</div>
-          <h1>One login. Your research desk.</h1>
-          <p>Sign in to access your research and account tools.</p>
+          <h1>Your next run starts here.</h1>
+          <p>Create an account or sign in to join the challenge.</p>
           <button
             type="button"
             className="vq-welcome-about"
@@ -228,11 +232,9 @@ export default function Membership() {
                 </Link>
               </nav>
             )}
-            {access.allowed && (
-              <Link className="primary" href="/">
-                Open research desk →
-              </Link>
-            )}{" "}
+            <Link className="primary" href="/">
+              Open my challenge →
+            </Link>{" "}
             <button
               className="research-more"
               onClick={() => void supabase.auth.signOut()}

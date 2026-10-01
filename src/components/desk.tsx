@@ -102,6 +102,15 @@ export default function DeskApp({
       void supabase.removeChannel(channel);
     };
   }, []);
+  useEffect(() => {
+    const desired =
+      new URLSearchParams(window.location.search).get("challenge") ||
+      sessionStorage.getItem("vq-join-challenge");
+    if (desired && d.challenges.some((c) => c.id === desired)) {
+      setSelectedChallenge(desired);
+      sessionStorage.removeItem("vq-join-challenge");
+    }
+  }, [d.challenges]);
   const ch =
       d.challenges.find((c) => c.id === selectedChallenge) || d.challenges[0],
     stages = d.stages.filter((s) => s.challenge_id === ch?.id),
@@ -263,7 +272,7 @@ export default function DeskApp({
             VEGAS QUANT · {access.member_code} · Personal access
           </div>
         )}
-        <div className="heading">
+        <div className={`heading ${page === "home" ? "home-heading" : ""}`}>
           <div>
             <div className="eyebrow">
               {page === "home"
@@ -340,6 +349,7 @@ export default function DeskApp({
               }
               key={`${ch.id}:${access.member_code}`}
               challenge={ch}
+              stages={stages}
               pick={official}
               picks={challengePicks}
               results={d.results}
@@ -371,102 +381,34 @@ export default function DeskApp({
                 />
               </section>
             </PersonalChallenge>
-            <div className="status-strip">
-              <span>
-                Current stage <b>{ch.current_stage} of 5</b>
-              </span>
-              <span>
-                Average price CLV <b>{pct(m.avgClv)}</b>
-              </span>
-              <span>
-                Challenge status{" "}
-                <Badge
-                  tone={
-                    ch.status === "PASS / PAUSED"
-                      ? "gold"
-                      : ch.status === "LOST"
-                        ? "red"
-                        : "green"
-                  }
-                >
-                  {ch.status}
-                </Badge>
-              </span>
-            </div>
-            <section className="stage-track" aria-label="Five challenge stages">
-              {stages.map((s) => (
-                <div
-                  className={`stage-step ${s.stage_number === ch.current_stage ? "current" : ""}`}
-                  key={s.id}
-                >
-                  <span className="stage-number">
-                    {s.status === "WON" ? (
-                      <Check size={16} />
-                    ) : (
-                      String(s.stage_number).padStart(2, "0")
-                    )}
-                  </span>
-                  <div>
-                    <strong>
-                      {s.stage_number === 1
-                        ? "Thursday night"
-                        : s.stage_number === 2
-                          ? "Sunday · 1 PM"
-                          : s.stage_number === 3
-                            ? "Sunday · 4 PM"
-                            : s.stage_number === 4
-                              ? "Sunday night"
-                              : "Monday night"}
-                    </strong>
-                    <small>{s.status === "PREP" ? "Upcoming" : s.status}</small>
-                    {s.game_id && (
-                      <Link
-                        href={`/games/${d.games.find((g) => g.id === s.game_id)?.slug}`}
-                      >
-                        Matchup <ArrowRight size={11} />
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </section>
-            {ch.status === "PASS / PAUSED" && (
-              <div className="pause-banner">
-                <ShieldCheck size={21} />
-                <div>
-                  <strong>PASS — CHALLENGE PAUSED</strong>
-                  <p>
-                    {ch.pause_reason} No substitute wager. An explicit resume is
-                    required.
-                  </p>
-                </div>
-              </div>
-            )}
           </>
         )}
         {page === "home" && (
-          <div className="workspace-index">
-            <Link href="/games">
-              <span className="eyebrow">RESEARCH</span>
-              <h2>Matchup desk</h2>
-              <p>Analysis, market snapshots and the history of the read.</p>
-              <span>Open research →</span>
-            </Link>
-            <Link href="/history">
-              <span className="eyebrow">RECORDS</span>
-              <h2>Results & performance</h2>
-              <p>Every published pick, closing line and process review.</p>
-              <span>Open records →</span>
-            </Link>
-            {access.admin && (
-              <Link href="/admin/intelligence">
-                <span className="eyebrow">PRIVATE</span>
-                <h2>Data Intelligence</h2>
-                <p>Market tape, consensus, news and execution quality.</p>
-                <span>Open private workspace →</span>
+          <details className="admin-section home-explore">
+            <summary>Explore research & records</summary>
+            <div className="workspace-index">
+              <Link href="/games">
+                <span className="eyebrow">RESEARCH</span>
+                <h2>Matchup desk</h2>
+                <p>Analysis, market snapshots and the history of the read.</p>
+                <span>Open research →</span>
               </Link>
-            )}
-          </div>
+              <Link href="/history">
+                <span className="eyebrow">RECORDS</span>
+                <h2>Results & performance</h2>
+                <p>Every published pick, closing line and process review.</p>
+                <span>Open records →</span>
+              </Link>
+              {access.admin && (
+                <Link href="/admin/intelligence">
+                  <span className="eyebrow">PRIVATE</span>
+                  <h2>Data Intelligence</h2>
+                  <p>Market tape, consensus, news and execution quality.</p>
+                  <span>Open private workspace →</span>
+                </Link>
+              )}
+            </div>
+          </details>
         )}
         {page === "home" && ch && (
           <details className="admin-section">
