@@ -131,8 +131,8 @@ export type Result = {
   id: string;
   pick_id: string;
   result: "WIN" | "LOSS" | "PUSH" | "VOID";
-  away_score: number;
-  home_score: number;
+  away_score: number | null;
+  home_score: number | null;
   profit_cents: number;
   bankroll_cents: number | null;
   source: string;

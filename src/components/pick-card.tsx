@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { ArrowUpRight, ShieldCheck } from "lucide-react";
+import { ArrowUpRight, ShieldCheck, CircleCheck } from "lucide-react";
 import {
   clv,
   lineText,
@@ -45,7 +45,16 @@ export default function PickCard({
     (t) => t.pick_id === p.id && t.kind === "RESERVE",
   );
   return (
-    <article className={`official-card ${share ? "share-card" : ""}`}>
+    <article className={`official-card ${r?.result === "WIN" ? "official-card-won" : ""} ${share ? "share-card" : ""}`}>
+      {r?.result === "WIN" && (
+        <div className="pick-win-banner" role="status">
+          <CircleCheck className="pick-win-check" size={80} aria-hidden="true" />
+          <div><span className="eyebrow">LEG {st?.stage_number ?? ""} · SETTLED</span>
+            <h2>WE WON</h2><p>{signedMoney(r.profit_cents)} official profit</p>
+            {st && st.stage_number < 5 && <p>On to Stage {st.stage_number + 1}</p>}
+          </div>
+        </div>
+      )}
       <div className="panel-head">
         <span className="eyebrow">
           <ShieldCheck size={15} />
@@ -193,7 +202,7 @@ export default function PickCard({
           )}
         <div className="callout-row">
           <Badge tone="gold">Grade {p.bet_grade}</Badge>
-          <Badge tone="green">{p.timing}</Badge>
+          {!r && <Badge tone="green">{p.timing}</Badge>}
           <span>Predicted close: {p.predicted_close}</span>
         </div>
         <div className="pick-reason">
@@ -219,7 +228,9 @@ export default function PickCard({
         {r && (
           <div className="result-block">
             <h3>
-              FINAL · {r.away_score} – {r.home_score}
+              {r.away_score !== null && r.home_score !== null
+                ? `FINAL · ${r.away_score} – ${r.home_score}`
+                : "WAGER SETTLED · Final game score pending"}
             </h3>
             <p className={r.profit_cents < 0 ? "negative" : "positive"}>
               {r.result} · {signedMoney(r.profit_cents)} net
