@@ -9,6 +9,7 @@ export type HelpTopic = {
   link: string;
 };
 export const helpTopics: HelpTopic[] = [
+  { id: "feed", title: "What is the Feed?", category: "Start here", phrases: ["feed", "watchlist", "what we are watching", "what are we eyeing", "latest thoughts"], answer: "Open the center VQ logo tab for short analyst updates: matchup watchlists, injury watches, observed prices and the next items to check. Tap Why we’re watching for context or Open matchup research for the full notebook. Feed posts are timestamped and preserved. Watching a market does not make it an official play. Detailed feed content requires research access.", href: "/feed", link: "Open the Feed" },
   {
     id: "purpose",
     title: "What is Vegas Quant?",

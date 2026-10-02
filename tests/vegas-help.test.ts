@@ -41,5 +41,5 @@ test("unknown questions fall back and keyword substrings do not hallucinate answ
 test("knowledge uses unique topics and internal destinations", () => {
   assert.equal(new Set(helpTopics.map((t) => t.id)).size, helpTopics.length);
   for (const t of helpTopics)
-    assert.ok(["/", "/membership", "/history", "/matchups"].includes(t.href));
+    assert.ok(["/", "/membership", "/history", "/matchups", "/feed"].includes(t.href));
 });

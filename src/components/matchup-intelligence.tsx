@@ -85,6 +85,7 @@ export default function MatchupIntelligence({
     [selected, setSelected] = useState(""),
     [error, setError] = useState("");
   const epoch = useRef(0);
+  useEffect(() => { const q = new URLSearchParams(window.location.search).get("q"); if(q) setQuery(q.slice(0,160)); }, []);
   useEffect(() => {
     let live = true;
     async function refresh() {

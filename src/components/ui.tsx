@@ -105,6 +105,7 @@ export function Shell({
             <BookOpen size={18} />
             Matchup desk
           </Link>
+          <Link className={`feed-nav-link ${active === "feed" ? "active" : ""}`} href="/feed"><BrandMark />Feed</Link>
           <Link
             className={
               ["history", "performance"].includes(active) ? "active" : ""
@@ -157,6 +158,7 @@ export function Shell({
                 {
                   home: "Home",
                   game: "Matchup",
+                  feed: "The Feed",
                   history: "Records",
                   performance: "Performance",
                   account: "Account",
@@ -195,6 +197,7 @@ export function Shell({
             <BookOpen size={19} />
             Matchup
           </Link>
+          <Link className={`feed-nav-link ${active === "feed" ? "active" : ""}`} href="/feed"><BrandMark />Feed</Link>
           <Link
             className={
               ["history", "performance"].includes(active) ? "active" : ""
