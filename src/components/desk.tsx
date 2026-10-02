@@ -133,7 +133,7 @@ export default function DeskApp({
     official = d.picks.find(
       (p) =>
         p.game_id === g?.id && (page === "game" || p.stage_id === stage?.id),
-    ),
+    ) || (page === "home" ? [...challengePicks].sort((a, b) => b.created_at.localeCompare(a.created_at)).find((p) => d.results.some((r) => r.pick_id === p.id && r.result === "WIN")) : undefined),
     gamePicks = d.picks.filter((p) => p.game_id === g?.id);
   const gameStatus =
     d.stages.find((s) => s.game_id === g?.id && s.challenge_id === ch?.id)

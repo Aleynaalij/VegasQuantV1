@@ -115,7 +115,7 @@ export type Entry = {
   line: number | null;
   odds: number;
   source: string;
-  bet_at: string;
+  bet_at: string | null;
   created_at: string;
 };
 export type Closing = {

@@ -71,7 +71,7 @@ export default function PickCard({
       <div className="official-price">
         {odd(p.odds)} <span>{p.book}</span>
       </div>
-      {entryAction}
+      {!r && entryAction}
       {compact && (
         <p className="slip-quick-metrics">
           Analyst edge: +{p.edge} pp · Confidence: {p.confidence}/10
