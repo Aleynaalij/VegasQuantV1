@@ -1,7 +1,7 @@
 import Link from "next/link";
+import BrandMark from "./brand-mark";
 import AccountLink from "./account-link";
 import {
-  Activity,
   ArrowUpRight,
   BookOpen,
   History,
@@ -88,7 +88,7 @@ export function Shell({
       <aside className="sidebar">
         <Link className="brand" href="/">
           <span className="logo">
-            <Activity size={26} />
+            <BrandMark />
           </span>
           <span>
             VEGAS <b>QUANT</b>
@@ -137,7 +137,7 @@ export function Shell({
           </div>
         </div>
         <div className="sidebar-bottom">
-          <span className="avatar">VQ</span>
+          <span className="avatar"><BrandMark /></span>
           <span>
             Vegas Quant Ultra<small>Analyst of record</small>
           </span>
@@ -147,7 +147,7 @@ export function Shell({
       <div className="main-wrap">
         <header className="topbar">
           <Link href="/" className="mobile-brand">
-            <Activity size={21} />
+            <BrandMark />
             VEGAS QUANT
           </Link>
           <div className="breadcrumb">

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { MessageCircle, X, ArrowUpRight, Send, BookOpen } from "lucide-react";
+import BrandMark from "./brand-mark";
+import { X, ArrowUpRight, Send, BookOpen } from "lucide-react";
 import { findHelp, helpTopics, type HelpTopic } from "@/lib/vegas-help";
 
 type Message = { question: string; topic: HelpTopic | null };
@@ -47,7 +48,7 @@ export default function AskVegas() {
         aria-controls="ask-vegas-dialog"
         onClick={() => setOpen(true)}
       >
-        <MessageCircle size={19} aria-hidden="true" /> Ask Vegas
+        <BrandMark /> Ask Vegas
       </button>
       <dialog
         ref={dialog}

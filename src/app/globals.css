@@ -2385,3 +2385,33 @@ footer p {
 @keyframes pick-win-pop { 0% { transform:scale(.5); opacity:0; } 65% { transform:scale(1.12); opacity:1; } 100% { transform:scale(1); opacity:1; } }
 @media(prefers-reduced-motion:reduce) { .pick-win-check { animation:none; } }
 @media(max-width:380px) { .pick-win-banner { gap:12px; padding:18px 12px; } .pick-win-check { width:60px; height:60px; } }
+
+/* Vegas Quant identity: approved mint mark, charcoal surfaces, restrained light. */
+:root { --green:#73dcb3; --bg:#080e12; --panel:#101820; }
+body { background:radial-gradient(ellipse at 85% 0%,#14342950,transparent 650px),var(--bg); }
+.vq-mark { display:block; width:44px; height:30px; flex-shrink:0; color:var(--green); }
+.brand { gap:12px; letter-spacing:-.5px; }
+.brand b { font-weight:800; }
+.brand .logo { width:44px; height:40px; background:none; border-radius:0; }
+.brand small { letter-spacing:1.6px; }
+.sidebar { background:linear-gradient(175deg,#111e22,#0b1117 65%); border-right-color:#73dcb320; }
+.sidebar nav a.active { background:linear-gradient(90deg,#20403690,#15262170); box-shadow:inset 3px 0 var(--green); }
+.sidebar-bottom .avatar { background:#143129; border:1px solid #73dcb330; }
+.sidebar-bottom .avatar .vq-mark { width:27px; height:21px; }
+.topbar { background:#0a1218ed; border-bottom:1px solid #73dcb326; }
+.panel { background:linear-gradient(145deg,#14202980,transparent 65%),var(--panel); border-color:#2a3941; border-radius:16px; }
+.official-card { background:radial-gradient(ellipse at 100% 0%,#1a493632,transparent 65%),#0e181d; box-shadow:0 16px 42px #00000024; }
+.slip-brand-signature { display:flex; align-items:center; gap:9px; }
+.slip-brand-signature .vq-mark { width:26px; height:20px; }
+.challenge-run { position:relative; isolation:isolate; background:radial-gradient(ellipse at 100% 0%,#24554360,transparent 68%),#0d171c; border-color:#73dcb33d; box-shadow:inset 0 1px #73dcb320,0 18px 48px #0000001a; }
+.challenge-run::after { content:""; position:absolute; right:-25px; top:35px; width:250px; height:160px; background:url('/brand/vq-mark.svg') center/contain no-repeat; opacity:.045; z-index:-1; pointer-events:none; }
+.primary { box-shadow:0 4px 18px #73dcb316; }
+.ask-vegas-launcher .vq-mark { width:25px; height:19px; color:inherit; }
+@media(max-width:950px) {
+ .mobile-brand { font-family:"Manrope",sans-serif; letter-spacing:-.45px; font-size:14px; gap:10px; }
+ .mobile-brand .vq-mark { width:37px; height:27px; }
+ .mobile-nav { background:#0c161df5; border-top-color:#73dcb32e; box-shadow:0 -8px 28px #00000025; }
+ .mobile-nav a { border-radius:12px; padding:3px 10px; }
+ .mobile-nav a.active { background:#73dcb310; box-shadow:inset 0 2px #73dcb3; }
+}
+@media(prefers-reduced-motion:no-preference) { .sidebar nav a,.primary { transition:background-color .18s ease,box-shadow .18s ease; } }

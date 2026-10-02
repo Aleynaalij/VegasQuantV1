@@ -15,6 +15,7 @@ import { Badge, SourceLink } from "./ui";
 import { isMarketInfoUrl } from "@/lib/market-info";
 import SourceStatus from "./source-status";
 import CopyPick from "./copy-pick";
+import BrandMark from "./brand-mark";
 export default function PickCard({
   p,
   d,
@@ -271,7 +272,7 @@ export default function PickCard({
         </p>
       )}
       <div className="pick-bottom">
-        <small>Original publication preserved · Vegas Quant Ultra</small>
+        <small className="slip-brand-signature"><BrandMark /> Original publication preserved · Vegas Quant Ultra</small>
         {!share && allowShare && (
           <Link href={`/picks/${p.id}/share`}>
             Share Pick
