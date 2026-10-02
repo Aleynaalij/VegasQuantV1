@@ -45,6 +45,8 @@ export default function PersonalChallenge({
   renderOfficial?: (entryAction: ReactNode) => ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [adjustments,setAdjustments]=useState<{id:string;delta_cents:number;reason:string;created_at:string}[]>([]);
+  const [editingBalance,setEditingBalance]=useState(false),[newBalance,setNewBalance]=useState(""),[balanceReason,setBalanceReason]=useState("Balance correction");
   const [starting, setStarting] = useState("20");
   const [loadError, setLoadError] = useState(false);
   const [account, setAccount] = useState<PersonalAccount | null>(null),
@@ -89,7 +91,10 @@ export default function PersonalChallenge({
             : [],
         );
       }
+      const changes=a.data?await supabase.from("personal_bankroll_adjustments").select("id,delta_cents,reason,created_at").eq("personal_challenge_id",a.data.id).order("created_at",{ascending:false}):{data:[],error:null};
+      if(changes.error)throw changes.error;
       if (run === generation.current) {
+        setAdjustments(changes.data||[]);
         setLoadError(false);
         setAccount(a.data);
         setEntries(es);
@@ -123,6 +128,7 @@ export default function PersonalChallenge({
     account?.starting_cents ?? challenge.starting_cents,
     entries,
     settlements,
+    adjustments.reduce((sum,a)=>sum+Number(a.delta_cents),0),
   );
   const current = entries.find((e) => e.pick_id === pick?.id);
   const ended = results.some((r) => r.pick_id === pick?.id);
@@ -222,6 +228,15 @@ export default function PersonalChallenge({
       setSaving(false);
     }
   }
+  async function updateBalance(event:FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if(!account||saving||loadError)return;
+    const cents=Math.round(Number(newBalance)*100);
+    if(!Number.isSafeInteger(cents)||cents<totals.inPlay||cents>100000000){setNotice("Enter a balance that covers your in-play funds.");return;}
+    setSaving(true);setNotice("");
+    try { const r=await supabase.rpc("update_personal_bankroll",{p_account_id:account.id,p_balance_cents:cents,p_expected_cents:totals.balance,p_reason:balanceReason});if(r.error)throw r.error;await load();setEditingBalance(false);setNotice("Bankroll updated. Your bet results and starting record are preserved."); }
+    catch(e){setNotice((e as {message?:string}).message||"Could not update bankroll.");await load();}
+    finally{setSaving(false);}
+  }
   const outcomes = entryBalances(
     account ? totals.balance : Math.round(Number(starting) * 100),
     Math.round(Number(stake) * 100),
@@ -258,9 +273,16 @@ export default function PersonalChallenge({
                     : "READY"}
               </Badge>
             </div>
+            <button className="secondary bankroll-edit-button" onClick={()=>{setNewBalance((totals.balance/100).toFixed(2));setEditingBalance(v=>!v);}}>Update bankroll</button>
+            {editingBalance&&<form className="bankroll-quick-edit" onSubmit={updateBalance}>
+              <label className="field">New total bankroll ($)<input autoFocus type="number" inputMode="decimal" min={totals.inPlay/100} max="1000000" step="0.01" required value={newBalance} onChange={e=>setNewBalance(e.target.value)}/></label>
+              <label className="field">Reason<select aria-label="Adjustment reason" value={balanceReason} onChange={e=>setBalanceReason(e.target.value)}><option>Balance correction</option><option>Deposit</option><option>Withdrawal</option></select></label>
+              <p>Include {money(totals.inPlay)} already in play. This records a balance adjustment, not a bet result or a sportsbook transfer.</p>
+              <div><button className="primary" disabled={saving}>{saving?"Saving…":"Save balance"}</button><button type="button" className="text-link" onClick={()=>setEditingBalance(false)}>Cancel</button></div>
+            </form>}
             <p className="balance-equation">
               {money(account.starting_cents)} starting <span>+</span>{" "}
-              {signedMoney(totals.net)} settled P/L <span>=</span>{" "}
+              {signedMoney(totals.net)} settled P/L {adjustments.length>0&&<><span>+</span> {signedMoney(adjustments.reduce((sum,a)=>sum+Number(a.delta_cents),0))} adjustments </>}<span>=</span>{" "}
               {money(totals.balance)}
             </p>
             <div className="balance-facts">
@@ -350,6 +372,7 @@ export default function PersonalChallenge({
             </button>
           </form>
         )}
+        {adjustments.length>0&&<details className="personal-history"><summary>Balance adjustments ({adjustments.length})</summary>{adjustments.map(a=><article key={a.id}><strong>{signedMoney(Number(a.delta_cents))} · {a.reason}</strong><small>{time(a.created_at)}</small></article>)}</details>}
         {entries.length > 0 && (
           <details className="personal-history">
             <summary>Your entries ({entries.length})</summary>

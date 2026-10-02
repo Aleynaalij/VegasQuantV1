@@ -174,7 +174,7 @@ export const helpTopics: HelpTopic[] = [
   },
   {
     id: "bankroll",
-    title: "How do I enter my bankroll?",
+    title: "How do I update my bankroll?",
     category: "Your run",
     phrases: [
       "bankroll",
@@ -186,7 +186,7 @@ export const helpTopics: HelpTopic[] = [
       "formula",
     ],
     answer:
-      "On Home, enter your starting bankroll. $20 is suggested, not required. Your one personal path uses the entries you actually record. Bankroll equals starting amount plus settled profit/loss; available funds exclude stakes still in play. An “if win” value is only a possible outcome. Saving a starting amount does not automatically place or record future bets.",
+      "On Home, enter your starting bankroll. $20 is suggested, not required. Your one personal path uses the entries you actually record. Use Update bankroll beside your balance to enter a new total and choose deposit, withdrawal, or balance correction. Each adjustment is preserved separately from bet results. Bankroll equals starting amount plus adjustments plus settled profit/loss; available funds exclude stakes still in play. An “if win” value is only a possible outcome. Saving a starting amount does not automatically place or record future bets.",
     href: "/",
     link: "Manage your bankroll",
   },

@@ -57,3 +57,9 @@ test("custom bankroll carries unspent money through each actual entry",()=>{
  assert.equal(entryBalances(5000,0,0),null);
  assert.equal(entryBalances(NaN,1000,2000),null);
 });
+test("balance adjustments change available cash without changing wager profit or record",()=>{
+ const t=personalTotals(2000,[e],[{entry_id:'a',result:'WIN',profit_cents:1754}],1000);
+ assert.equal(t.balance,4754);assert.equal(t.net,1754);assert.equal(t.wins,1);assert.equal(t.available,4754);
+ const open=personalTotals(2000,[e],[],500);assert.equal(open.inPlay,2000);assert.equal(open.available,500);assert.equal(open.ifWin,4254);
+ const withdrawn=personalTotals(2000,[],[],-2000);assert.equal(withdrawn.balance,0);assert.equal(withdrawn.losses,0);
+});

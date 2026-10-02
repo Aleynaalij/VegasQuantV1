@@ -24,6 +24,7 @@ export function personalTotals(
   starting: number,
   entries: PersonalEntry[],
   settlements: PersonalSettlement[],
+  adjustments = 0,
 ) {
   const results = new Map(settlements.map((s) => [s.entry_id, s]));
   const net = entries.reduce(
@@ -33,7 +34,7 @@ export function personalTotals(
   const open = entries.filter((e) => !results.has(e.id));
   const inPlay = open.reduce((n, e) => n + e.stake_cents, 0);
   const payout = open.reduce((n, e) => n + e.payout_cents, 0);
-  const balance = starting + net;
+  const balance = starting + net + adjustments;
   return {
     balance,
     net,

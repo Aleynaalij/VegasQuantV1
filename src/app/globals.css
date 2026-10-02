@@ -2506,3 +2506,8 @@ body { background:radial-gradient(ellipse at 85% 0%,#14342950,transparent 650px)
 .edge-explainer p,.edge-footnote { font-size:12px!important; line-height:1.6; }
 .edge-copy-status:empty { display:none; }
 @media(max-width:480px) { .edge-release { padding:16px; } .edge-pick { padding:15px; } }
+.bankroll-edit-button { margin:12px 0; min-height:44px; }
+.bankroll-quick-edit { display:grid; gap:12px; padding:18px; border:1px solid #73dcb34d; border-radius:15px; margin:12px 0; background:#0d191e; }
+.bankroll-quick-edit p { font-size:12px; line-height:1.6; }
+.bankroll-quick-edit>div { display:flex; flex-wrap:wrap; align-items:center; gap:20px; }
+.bankroll-quick-edit .primary { padding:12px 20px; }
