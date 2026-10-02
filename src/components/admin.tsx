@@ -879,6 +879,7 @@ export default function Admin() {
                 {action === "pick" && (
                   <>
                     <div className="warning-box">
+                      Publishing a challenge pick also creates its Feed edge card. It includes up to two BETTABLE targets with at least 3 percentage points of edge from each game’s latest analysis in the same date and game window. Supply and review those targets before publishing.
                       Only publish after the owner explicitly confirms the
                       official play. All supplied values are preserved; nothing
                       is inferred or recalculated as analyst opinion.

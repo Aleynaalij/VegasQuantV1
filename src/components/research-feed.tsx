@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight, Eye, Clock3, ShieldCheck, ChevronDown } from "lucide-react";
 import { Shell, Badge } from "./ui";
 import BrandMark from "./brand-mark";
+import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
 import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
 import { time } from "@/lib/domain";
@@ -13,24 +14,27 @@ const categories = ["All", "Watchlist", "Injury watch", "Market update", "Decisi
 const pageSize = 12;
 export default function ResearchFeed() {
  const [posts,setPosts]=useState<Post[]>([]),[access,setAccess]=useState<Access>(noAccess),[loading,setLoading]=useState(true),[error,setError]=useState(""),[filter,setFilter]=useState("All"),[limit,setLimit]=useState(pageSize),[hasMore,setHasMore]=useState(false),[saving,setSaving]=useState(false),[notice,setNotice]=useState("");
+ const [edgeRelease,setEdgeRelease]=useState<EdgeRelease|null>(null);
  const epoch=useRef(0);
  async function refresh() {
   const n=++epoch.current;
   const a=await supabase.rpc("membership_status");
   if(n!==epoch.current)return;
-  if(a.error){setPosts([]);setAccess(noAccess);setError("Couldn’t check access. Please retry.");setLoading(false);return;}
+  if(a.error){setPosts([]);setEdgeRelease(null);setAccess(noAccess);setError("Couldn’t check access. Please retry.");setLoading(false);return;}
   const current=a.data as Access;setAccess(current);
-  if(!current.allowed){setPosts([]);setLoading(false);return;}
+  if(!current.allowed){setPosts([]);setEdgeRelease(null);setLoading(false);return;}
   let query=supabase.from("research_feed_posts").select("*,game:games(slug)").order("created_at",{ascending:false}).order("id",{ascending:false}).limit(limit+1);
   if(filter!=="All")query=query.eq("category",filter);
-  const r=await query;
+  const [r,edges]=await Promise.all([query,supabase.from("edge_releases").select("official_pick_id,created_at,items").order("created_at",{ascending:false}).limit(1)]);
   if(n!==epoch.current)return;
+  setEdgeRelease(edges.error?null:(edges.data?.[0] as EdgeRelease||null));
+  if(edges.error){setError("Couldn’t refresh edge picks. Please retry.");setLoading(false);return;}
   if(r.error){setError("Couldn’t load the feed. Please retry.");}else{setPosts((r.data as Post[]).slice(0,limit));setHasMore(r.data.length>limit);setError("");}
   setLoading(false);
  }
  useEffect(()=>{
   void refresh();
-  const auth=supabase.auth.onAuthStateChange(()=>{++epoch.current;setPosts([]);setAccess(noAccess);setLoading(true);setTimeout(()=>void refresh(),0);});
+  const auth=supabase.auth.onAuthStateChange(()=>{++epoch.current;setPosts([]);setEdgeRelease(null);setAccess(noAccess);setLoading(true);setTimeout(()=>void refresh(),0);});
   const focus=()=>{if(document.visibilityState==='visible')void refresh();};
   window.addEventListener('focus',focus);const timer=setInterval(focus,30000);
   return()=>{++epoch.current;auth.data.subscription.unsubscribe();window.removeEventListener('focus',focus);clearInterval(timer);};
@@ -49,6 +53,7 @@ export default function ResearchFeed() {
  return <Shell active="feed"><div className={`vq-feed ${access.allowed&&!access.admin?'member-watermarked':''}`} style={{'--member-watermark':JSON.stringify(`VEGAS QUANT · ${access.member_code||''}`)} as CSSProperties}>
   <header className="feed-hero"><div className="feed-kicker"><BrandMark/><span>VEGAS QUANT ULTRA · THE FEED</span></div><h1>Inside the read.</h1><p>What we’re watching. What changed. What comes next.</p><div className="feed-rule"><ShieldCheck size={16}/><span>Research updates · A watchlist is not an official play.</span></div></header>
   {loading?<p role="status">Opening your feed…</p>:!access.allowed?<section className="feed-gate"><Eye size={32}/><h2>A closer look at the next decision.</h2><p>Follow matchup watchlists, injury updates and the reasoning behind each stage.</p><Link className="primary" href="/membership">Sign in or get research access <ArrowUpRight size={16}/></Link></section>:<>
+   {edgeRelease&&filter==="All"&&<EdgeReleaseCard release={edgeRelease}/>}
    <nav className="feed-filters" aria-label="Filter feed">{categories.map(c=><button key={c} aria-pressed={filter===c} className={filter===c?'selected':''} onClick={()=>{if(c===filter)return;setFilter(c);setLimit(pageSize);setLoading(true);}}>{c}</button>)}</nav>
    <div className="feed-stream">{posts.map(p=><article className="feed-post" key={p.id}>
     <div className="feed-byline"><span className="feed-avatar"><BrandMark/></span><div><strong>Vegas Quant Ultra</strong><time dateTime={p.created_at}>{time(p.created_at)}</time></div><Badge>{p.category}</Badge></div>

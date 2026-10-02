@@ -2480,3 +2480,29 @@ body { background:radial-gradient(ellipse at 85% 0%,#14342950,transparent 650px)
  .feed-matchup { padding:15px; }
  .feed-hero { padding-top:3px; }
 }
+
+.edge-release { padding:24px; margin:4px 0 28px; border:1px solid #73dcb36b; border-radius:24px; background:radial-gradient(ellipse at top right,#245c3d65,transparent 70%),#0e191e; }
+.edge-release-heading { display:flex; flex-wrap:wrap; align-items:center; gap:10px; color:var(--green); font-size:10px; letter-spacing:1px; }
+.edge-release-heading .vq-mark { width:30px; height:24px; }
+.edge-release-heading>b { margin-left:auto; padding:8px; border:1px solid #73dcb34a; border-radius:9px; font-size:20px; }
+.edge-release>h2 { margin:18px 0 8px; font-size:34px; letter-spacing:-1px; }
+.edge-release>p { font-size:13px; }
+.edge-release>time { font-size:11px; color:var(--muted); }
+.edge-pick-list { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; margin-top:20px; }
+.edge-pick { padding:19px; border:1px solid #2d4840; border-radius:16px; background:#0a1419; overflow-wrap:anywhere; }
+.edge-pick-top { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:8px; color:var(--green); font-size:11px; }
+.edge-pick-top strong { font-size:20px; }
+.edge-pick>small { display:block; margin-top:13px; color:var(--muted); font-size:11px; }
+.edge-pick h3 { font-size:21px; line-height:1.3; margin:10px 0; }
+.edge-pick-metrics { display:flex; flex-wrap:wrap; align-items:center; gap:15px; }
+.edge-pick-metrics b { font-size:25px; color:var(--green); }
+.edge-pick-metrics span { font-size:11px; color:var(--muted); }
+.edge-pick p { font-size:13px; line-height:1.6; white-space:pre-line; }
+.edge-read { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.edge-pick summary,.edge-explainer summary { cursor:pointer; font-size:12px; color:var(--green); padding:10px 0; }
+.edge-pick-actions { display:flex; flex-wrap:wrap; gap:14px; justify-content:space-between; margin-top:14px; color:var(--green); font-size:12px; }
+.edge-pick-actions button { min-height:35px; }
+.edge-explainer { border-top:1px solid #315044; margin-top:14px; }
+.edge-explainer p,.edge-footnote { font-size:12px!important; line-height:1.6; }
+.edge-copy-status:empty { display:none; }
+@media(max-width:480px) { .edge-release { padding:16px; } .edge-pick { padding:15px; } }
