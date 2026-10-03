@@ -1825,3 +1825,193 @@ footer {
 .profile-roster .community-person strong {
   font-size: 13px;
 }
+/* Keep the requested profile-left / content-right composition on phones. */
+@media (max-width: 760px) {
+  .community-resume,
+  .member-profile-layout {
+    grid-template-columns: clamp(88px, 25vw, 116px) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+  }
+  .community-profile-rail {
+    border-radius: 14px;
+  }
+  .community-profile-rail .profile-cover {
+    height: 36px;
+    padding: 10px 8px;
+    font-size: 8px;
+    letter-spacing: 0.06em;
+  }
+  .profile-rail-content {
+    padding: 10px;
+    min-height: 0;
+  }
+  .profile-rail-content > .community-avatar {
+    position: static;
+    width: 48px;
+    height: 48px;
+    margin: -22px 0 12px;
+    border-width: 3px;
+  }
+  .profile-rail-content > .eyebrow {
+    font-size: 8px;
+    letter-spacing: 0.03em;
+  }
+  .profile-rail-content h1 {
+    font-size: 16px;
+    line-height: 1.25;
+    margin: 8px 0;
+    overflow-wrap: anywhere;
+  }
+  .profile-handle,
+  .profile-rail-content p {
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+  .profile-view-link {
+    font-size: 11px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .profile-socials {
+    gap: 6px;
+  }
+  .profile-socials a {
+    padding: 8px 4px;
+    font-size: 10px;
+    min-height: 36px;
+  }
+  .profile-rail-content > .primary {
+    white-space: normal;
+    padding: 10px 5px;
+    font-size: 11px;
+  }
+  .profile-roster > summary {
+    padding: 14px 8px;
+    min-height: 44px;
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+  .profile-roster .community-panel {
+    padding: 0 5px 12px;
+  }
+  .profile-roster .community-person {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 7px 3px;
+  }
+  .profile-roster .community-person strong {
+    font-size: 11px;
+  }
+  .profile-roster .community-person small,
+  .profile-roster .community-person span:not(.community-avatar) {
+    font-size: 10px;
+  }
+  .community-resume .community-layout,
+  .community-resume .personal-challenge,
+  .community-resume .featured-official {
+    min-width: 0;
+  }
+  .community-resume .official-card,
+  .community-resume .one-bankroll,
+  .community-resume .challenge-run,
+  .community-resume .community-panel {
+    padding: 12px !important;
+    border-radius: 14px;
+  }
+  .community-resume .official-card h2,
+  .community-resume .challenge-run h1 {
+    font-size: 20px;
+    line-height: 1.3;
+    letter-spacing: -0.025em;
+  }
+  .community-resume .official-price {
+    font-size: 28px;
+    flex-wrap: wrap;
+  }
+  .community-resume .official-price span {
+    font-size: 11px;
+  }
+  .community-resume .pick-win-banner {
+    padding: 12px;
+    flex-wrap: wrap;
+  }
+  .community-resume .pick-win-check {
+    width: 30px;
+    height: 30px;
+  }
+  .community-resume .pick-win-banner h2 {
+    font-size: 20px;
+  }
+  .community-resume .panel-head,
+  .community-resume .run-heading,
+  .community-resume .balance-hero,
+  .community-resume .balance-facts {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .community-resume .eyebrow {
+    font-size: 9px;
+    letter-spacing: 0.07em;
+  }
+  .community-resume .slip-expand-cta {
+    font-size: 11px;
+    padding: 14px 8px !important;
+    line-height: 1.5;
+  }
+  .community-resume .pick-finances,
+  .community-resume .pick-metrics,
+  .community-resume .balance-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .community-resume .journey {
+    gap: 4px;
+  }
+  .community-resume .journey-dot {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .community-resume .journey:before {
+    top: 14px;
+  }
+  .community-resume .journey-stop {
+    font-size: 9px;
+  }
+  .community-resume .journey-stop small {
+    font-size: 8px;
+    overflow-wrap: anywhere;
+  }
+  .community-resume .balance-hero strong {
+    font-size: 30px;
+  }
+  .community-resume .payout-status {
+    padding: 12px;
+  }
+  .community-resume .primary,
+  .community-resume .secondary {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  .community-resume .run-intro,
+  .community-resume .personal-caption,
+  .community-resume .slip-quick-metrics {
+    font-size: 12px;
+  }
+  .member-activity-feed {
+    min-width: 0;
+  }
+  .member-activity-feed h2 {
+    font-size: 22px;
+  }
+  .member-feed-card {
+    padding: 14px;
+    gap: 10px;
+    flex-direction: column;
+  }
+  .member-feed-card h3 {
+    font-size: 18px;
+  }
+}
