@@ -1,3 +1,4 @@
+import { sendPushTest } from "@/lib/push-test-server";
 import { timingSafeEqual } from "node:crypto";
 import webpush from "web-push";
 import { serviceDb } from "@/lib/billing-server";
@@ -16,6 +17,17 @@ export async function POST(req: Request) {
       actual = Buffer.from(supplied);
     if (expected.length !== actual.length || !timingSafeEqual(expected, actual))
       return Response.json({ error: "Unauthorized" }, { status: 401 });
+    const body = await req.json().catch(() => ({}));
+    if (body.test_user_id) {
+      if (
+        typeof body.test_user_id !== "string" ||
+        !/^[0-9a-f-]{36}$/i.test(body.test_user_id)
+      )
+        return Response.json({ error: "Invalid user" }, { status: 400 });
+      return Response.json(await sendPushTest(body.test_user_id), {
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
     const claimed = await db.rpc("claim_push_deliveries");
     if (claimed.error) throw Error("Unavailable");
     let sent = 0,

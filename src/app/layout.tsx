@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "@/components/ask-vegas.css";
 import "./experience.css";
+import NotificationBootstrap from "@/components/notification-bootstrap";
 import Welcome from "@/components/welcome";
 import AskVegas from "@/components/ask-vegas";
 export const metadata: Metadata = {
@@ -32,6 +33,7 @@ export default function RootLayout({
       <body>
         {children}
         <Welcome />
+        <NotificationBootstrap />
         <AskVegas />
       </body>
     </html>

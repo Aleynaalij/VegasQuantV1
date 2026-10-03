@@ -1238,3 +1238,46 @@ footer {
 .screen-account .member-form input:not([type="checkbox"]) {
   width: 100%;
 }
+.alert-preference {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px;
+  margin: 18px 0;
+  background: #0c1914;
+  border: 1px solid #365848;
+  border-radius: 14px;
+}
+.alert-preference strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--green);
+  font-size: 12px;
+}
+.alert-preference input {
+  appearance: none;
+  width: 50px;
+  height: 28px;
+  border-radius: 20px;
+  background: #46534e;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.alert-preference input::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  top: 4px;
+  left: 4px;
+}
+.alert-preference input:checked {
+  background: #559676;
+}
+.alert-preference input:checked::before {
+  left: 26px;
+}

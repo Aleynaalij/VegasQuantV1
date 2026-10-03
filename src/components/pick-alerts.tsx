@@ -1,91 +1,79 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  alertsWanted,
+  disableDevice,
+  registerDevice,
+  setAlertsWanted,
+  supportsPush,
+  testDevice,
+} from "@/lib/push-client";
 export default function PickAlerts() {
   const [supported, setSupported] = useState(false),
+    [wanted, setWanted] = useState(true),
     [enabled, setEnabled] = useState(false),
     [busy, setBusy] = useState(false),
-    [notice, setNotice] = useState("");
+    [notice, setNotice] = useState(""),
+    [permission, setPermission] = useState<NotificationPermission>("default");
   useEffect(() => {
     let live = true;
-    const ok =
-      "serviceWorker" in navigator &&
-      "PushManager" in window &&
-      "Notification" in window;
-    setSupported(ok);
-    if (ok)
-      navigator.serviceWorker
-        .getRegistration()
-        .then((reg) => reg?.pushManager.getSubscription())
-        .then((sub) => {
-          if (live) setEnabled(!!sub);
-        })
-        .catch(() => {
-          if (live)
-            setNotice("Reload the app to initialize notification support.");
-        });
+    async function refresh() {
+      const ok = supportsPush();
+      if (!live) return;
+      setSupported(ok);
+      if (!ok) return;
+      const { data } = await supabase.auth.getSession();
+      if (!live || !data.session) return;
+      const uid = data.session.user.id,
+        reg = await navigator.serviceWorker.getRegistration(),
+        sub = await reg?.pushManager.getSubscription();
+      if (!live) return;
+      setWanted(alertsWanted(uid));
+      setPermission(Notification.permission);
+      if (!sub) {
+        setEnabled(false);
+        return;
+      }
+      const saved = await supabase
+        .from("push_subscriptions")
+        .select("id")
+        .eq("endpoint", sub.endpoint)
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (live)
+        setEnabled(
+          !saved.error && !!saved.data && Notification.permission === "granted",
+        );
+    }
+    void refresh();
+    window.addEventListener("vq-alerts-changed", refresh);
+    window.addEventListener("focus", refresh);
     return () => {
       live = false;
+      window.removeEventListener("vq-alerts-changed", refresh);
+      window.removeEventListener("focus", refresh);
     };
   }, []);
-  async function toggle() {
+  async function change(on: boolean) {
     setBusy(true);
     setNotice("");
     try {
       const { data } = await supabase.auth.getSession();
       if (!data.session) throw Error("Sign in first.");
-      const registration = await navigator.serviceWorker.getRegistration();
-      if (!registration?.active)
-        throw Error(
-          "Reload the app to initialize notification support, then retry.",
-        );
-      if (enabled) {
-        const sub = await registration.pushManager.getSubscription();
-        if (sub) {
-          const deleted = await supabase
-            .from("push_subscriptions")
-            .delete()
-            .eq("endpoint", sub.endpoint);
-          if (deleted.error) throw Error("Could not disable alerts. Retry.");
-          await sub.unsubscribe();
-        }
+      const uid = data.session.user.id;
+      if (!on) {
+        await disableDevice(uid);
+        setWanted(false);
         setEnabled(false);
-        setNotice("Alerts disabled on this device.");
+        setNotice("Alerts are off on this device.");
       } else {
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted")
-          throw Error(
-            "Notifications were not enabled. You can change this in browser settings.",
-          );
-        const key = await supabase.rpc("push_public_key");
-        if (key.error || !key.data)
-          throw Error("Alerts are temporarily unavailable.");
-        const decoded = atob(
-          String(key.data).replace(/-/g, "+").replace(/_/g, "/"),
-        );
-        const bytes = Uint8Array.from(decoded, (c) => c.charCodeAt(0));
-        const existing = await registration.pushManager.getSubscription();
-        const sub =
-          existing ||
-          (await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: bytes,
-          }));
-        const json = sub.toJSON();
-        const saved = await supabase.rpc("register_push", {
-          p_endpoint: sub.endpoint,
-          p_p256dh: json.keys?.p256dh,
-          p_auth: json.keys?.auth,
-        });
-        if (saved.error) {
-          if (!existing) await sub.unsubscribe();
-          throw Error(
-            "Could not save this device. Sign in again or disable a previous device.",
-          );
-        }
-        setEnabled(true);
+        setAlertsWanted(uid, true);
+        setWanted(true);
+        const sub = await registerDevice(uid);
+        setEnabled(!!sub);
         setNotice(
-          "Official decision alerts enabled on this device. No research or financial details appear on the lock screen.",
+          sub ? "Alerts are on." : "Allow notifications below to finish setup.",
         );
       }
     } catch (e) {
@@ -94,32 +82,107 @@ export default function PickAlerts() {
       setBusy(false);
     }
   }
+  async function allow() {
+    setBusy(true);
+    setNotice("");
+    try {
+      // Called immediately from a tap, before any asynchronous session work.
+      const result = await Notification.requestPermission();
+      setPermission(result);
+      if (result !== "granted")
+        throw Error(
+          "Your browser has not allowed notifications. Enable them in this site’s browser settings.",
+        );
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) throw Error("Sign in first.");
+      setAlertsWanted(data.session.user.id, true);
+      setWanted(true);
+      const sub = await registerDevice(data.session.user.id);
+      if (!sub) throw Error("Could not register this device.");
+      setEnabled(true);
+      setNotice(await testDevice());
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "Could not enable alerts.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function test() {
+    setBusy(true);
+    try {
+      setNotice(await testDevice());
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : "Test unavailable.");
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <div className="notebook">
       <h3>Official decision alerts</h3>
       <p>
-        Opt in on each device. A new official publication sends a
-        private-content-free notification; delivery depends on your browser and
-        device settings.
+        Alerts default to on. Allow notifications once on each device; we’ll
+        connect it automatically on future visits. You can turn them off here
+        anytime.
       </p>
       {supported ? (
-        <button
-          className="secondary"
-          disabled={busy}
-          onClick={() => void toggle()}
-        >
-          {busy
-            ? "Updating…"
-            : enabled
-              ? "Disable alerts on this device"
-              : "Enable official decision alerts"}
-        </button>
+        <>
+          <label className="alert-preference">
+            <span>
+              Alerts on this device
+              <strong>
+                {!wanted
+                  ? "Off"
+                  : enabled
+                    ? "On · connected"
+                    : permission === "denied"
+                      ? "On · blocked by browser"
+                      : "On · permission/setup needed"}
+              </strong>
+            </span>
+            <input
+              type="checkbox"
+              role="switch"
+              aria-label="Alerts on this device"
+              checked={wanted}
+              disabled={busy}
+              onChange={(e) => void change(e.target.checked)}
+            />
+          </label>
+          {wanted && !enabled && (
+            <button
+              className="primary"
+              disabled={busy || permission === "denied"}
+              onClick={() => void allow()}
+            >
+              {busy ? "Connecting…" : "Allow & send test"}
+            </button>
+          )}
+          {wanted && permission === "denied" && (
+            <p>
+              Notifications are blocked. Open your browser’s site settings for
+              vegasquant.app and allow notifications, then return here.
+            </p>
+          )}
+          {enabled && wanted && (
+            <button
+              className="secondary"
+              disabled={busy}
+              onClick={() => void test()}
+            >
+              {busy ? "Sending…" : "Send test alert"}
+            </button>
+          )}
+        </>
       ) : (
-        <p className="muted">
-          Install Vegas Quant on your Home Screen first. On iPhone,
-          notifications require an installed app and a supported iOS version.
+        <p>
+          Install Vegas Quant on your Home Screen and open it there.
+          Notification support depends on your browser and phone.
         </p>
       )}
+      <p className="muted">
+        Notifications contain no private research or bankroll details.
+      </p>
       <p role="status">{notice}</p>
     </div>
   );
