@@ -119,11 +119,13 @@ export default function PickAlerts() {
   }
   return (
     <div className="notebook">
-      <h3>Official decision alerts</h3>
+      <h3>Publication & research alerts</h3>
       <p>
         Alerts default to on. Allow notifications once on each device; we’ll
         connect it automatically on future visits. You can turn them off here
         anytime.
+        Research publications are grouped into one alert per update batch.
+        Administrators also receive private new-account alerts.
       </p>
       {supported ? (
         <>

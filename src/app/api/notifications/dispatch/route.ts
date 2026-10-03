@@ -37,6 +37,7 @@ export async function POST(req: Request) {
         claimed.data as {
           id: string;
           pick_id: string;
+          type: "official" | "research" | "signup";
           endpoint: string;
           keys: { p256dh: string; auth: string };
         }[]
@@ -48,7 +49,7 @@ export async function POST(req: Request) {
           else {
             await webpush.sendNotification(
               { endpoint: job.endpoint, keys: job.keys },
-              JSON.stringify({ pick_id: job.pick_id }),
+              JSON.stringify({ pick_id: job.pick_id, type: job.type }),
               {
                 TTL: 1800,
                 timeout: 8000,

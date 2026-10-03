@@ -35,19 +35,24 @@ self.addEventListener("fetch", (event) => {
 });
 self.addEventListener("push", (event) => {
   const data = event.data?.json() || {};
+  const url = data.type === "signup" ? "/admin/accounts" : data.type === "research" ? "/feed" : "/";
   event.waitUntil(
     self.registration.showNotification("Vegas Quant", {
       body:
         data.type === "test"
           ? "Test alert: your Vegas Quant notifications are connected."
+          : data.type === "signup"
+          ? "A new member joined Vegas Quant. Open Accounts to review."
+          : data.type === "research"
+            ? "New research is published. Open the Feed to see what changed."
           : "A new official decision is published. Open your challenge to review it.",
       icon: "/icons/icon-192.png",
       badge: "/icons/icon-192.png",
       tag:
         data.type === "test"
           ? "vq-test"
-          : "vq-official-" + (data.pick_id || "decision"),
-      data: { url: "/" },
+          : data.type === "signup" ? "vq-signup" : data.type === "research" ? "vq-research" : "vq-official-" + (data.pick_id || "decision"),
+      data: { url },
     }),
   );
 });
@@ -61,10 +66,10 @@ self.addEventListener("notificationclick", (event) => {
           (c) => new URL(c.url).origin === self.location.origin,
         );
         if (existing) {
-          await existing.navigate("/");
+          await existing.navigate(event.notification.data?.url === "/admin/accounts" ? "/admin/accounts" : event.notification.data?.url === "/feed" ? "/feed" : "/");
           return existing.focus();
         }
-        return self.clients.openWindow("/");
+        return self.clients.openWindow(event.notification.data?.url === "/admin/accounts" ? "/admin/accounts" : event.notification.data?.url === "/feed" ? "/feed" : "/");
       }),
   );
 });
