@@ -1554,3 +1554,22 @@ footer {
     gap: 18px;
   }
 }
+.community-home .challenge-run h1 {
+  letter-spacing: -0.035em;
+  line-height: 1.2;
+}
+@media (max-width: 1150px) {
+  .community-sidebar {
+    display: contents;
+  }
+  .community-sidebar > section:first-child {
+    grid-column: auto;
+    order: -1;
+  }
+  .community-main {
+    order: 0;
+  }
+  .community-sidebar > section:not(:first-child) {
+    order: 1;
+  }
+}
