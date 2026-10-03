@@ -2015,3 +2015,20 @@ footer {
     font-size: 18px;
   }
 }
+@media (max-width: 760px) {
+  .community-resume .pick-numbers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .community-resume .pick-numbers > div {
+    padding: 10px 7px;
+  }
+  .community-resume .pick-numbers b {
+    font-size: 17px;
+  }
+  .community-resume .number-track {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .community-resume .pick-bottom {
+    flex-wrap: wrap;
+  }
+}
