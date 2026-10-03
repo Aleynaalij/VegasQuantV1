@@ -14,6 +14,7 @@ export default function ChallengeRun({
   challenge,
   stages,
   member = false,
+  payoutPending = false,
   onMode,
 }: {
   challenge: {
@@ -24,6 +25,7 @@ export default function ChallengeRun({
   };
   stages: JourneyStage[];
   member?: boolean;
+  payoutPending?: boolean;
   onMode?: (mode: "follow" | "track") => void;
 }) {
   const [run, setRun] = useState<Run | null>(null),
@@ -206,6 +208,16 @@ export default function ChallengeRun({
           </p>
         </>
       )}
+      <p className="run-free">
+        Five qualifying stages · flexible game windows. Only cleared funds roll
+        forward. A missed window pauses your run, never counts as a loss.
+      </p>
+      {payoutPending && (
+        <p className="run-notice" role="status">
+          Payout pending — your run is paused. Other members may continue on
+          their own timing.
+        </p>
+      )}
       <div className="journey" aria-label="Five-stage journey">
         {stageLabels.map((label, i) => {
           const n = i + 1,
@@ -228,7 +240,7 @@ export default function ChallengeRun({
               }}
             >
               <span className="journey-dot">{done || won ? "✓" : n}</span>
-              <span>{label}</span>
+              <span>Stage {n}</span>
               <small>
                 {won
                   ? "Won"
@@ -236,12 +248,22 @@ export default function ChallengeRun({
                     ? "Followed"
                     : current
                       ? "Current"
-                      : "Stage " + n}
+                      : "Upcoming"}
               </small>
             </button>
           );
         })}
       </div>
+      <details className="balance-method">
+        <summary>Preferred game windows</summary>
+        <p>
+          {stageLabels.join(" → ")}. These are preferred windows, not deadlines.
+          If a payout is delayed or no play qualifies, wait for the next
+          qualifying official play. Do not chase a live line or add money to
+          bridge the gap. Personal runs may finish later than the published
+          challenge.
+        </p>
+      </details>
       <details className="run-actions" open={run && member ? undefined : true}>
         <summary>Stage check-in & sharing · {followed}/5 followed</summary>
         {run && (
@@ -270,7 +292,7 @@ export default function ChallengeRun({
         )}
         {run && selected !== challenge.current_stage && (
           <div className="run-next">
-            <h2>{stageLabels[selected - 1]}</h2>
+            <h2>Stage {selected}</h2>
             <p>
               {selectedStage?.status || "Upcoming"} ·{" "}
               {selected > challenge.current_stage

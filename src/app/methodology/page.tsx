@@ -26,6 +26,29 @@ export default function Methodology() {
           </p>
         </div>
       </Panel>
+      <Panel title="Five stages, flexible windows">
+        <div className="notebook">
+          <p>
+            Thursday night, Sunday early, Sunday late, Sunday night and Monday
+            night are preferred windows, not deadlines. Five qualifying stages
+            may take longer. No qualifying edge means WAIT or PASS.
+          </p>
+          <p>
+            Only settled, available sportsbook funds roll forward. If a payout
+            has not cleared, pause your personal run using Payout pending on
+            Home. A missed window is not a loss. Confirm Funds cleared when the
+            money is available, then wait for the next qualifying pregame
+            official play at its published entry limits. No extra deposit or
+            live wager to bridge the gap.
+          </p>
+          <p>
+            Results and payout availability are separate. We cannot verify your
+            sportsbook balance; payout status is self-reported and timestamped.
+            Pausing or resuming never changes a published pick, grades a result,
+            or adds money.
+          </p>
+        </div>
+      </Panel>
       <Panel title="Facts, inference and unknowns">
         <div className="notebook">
           <p>

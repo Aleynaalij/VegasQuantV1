@@ -9,6 +9,7 @@ export type HelpTopic = {
   link: string;
 };
 export const helpTopics: HelpTopic[] = [
+  {id:"payout-pending", title:"My payout has not cleared. Do I miss the next stage?", category:"Your run", phrases:["payout pending", "funds cleared", "payout", "late payout", "missed window", "pause my run", "settlement delay"], answer:"On Home, use Payout pending · Pause my run. Your recorded result and bankroll stay unchanged, and your next-entry action is held. Once your sportsbook releases the funds, tap My funds have cleared · Resume. This is self-reported; Vegas Quant cannot see your sportsbook balance. Five stages use flexible game windows. A missed window is not a loss. Wait for the next qualifying pregame official play at its published limits; do not add money or chase a live bet to bridge the gap. Pause and resume history is saved.", href:"/", link:"Open your run"},
  {id:"alerts",title:"How do official decision alerts work?",category:"Account",phrases:["alerts","push notifications","notify me","notifications"],answer:"Sign in and open Account → App notifications. Enable alerts on each device. On iPhone, install Vegas Quant on your Home Screen first. New official publications trigger a generic notification with no pick or bankroll details on your lock screen. Delivery depends on your browser and device; research updates are separate from official decisions. Disable alerts in Account.",href:"/membership",link:"Manage alerts"},
  {id:"install",title:"How do I install Vegas Quant?",category:"Account",phrases:["install","home screen","app store","download app"],answer:"Use Install app at the top of the site. On iPhone, open Safari, tap Share, then Add to Home Screen. Android browsers may offer an installation prompt. The installed app needs an internet connection for current research, prices and account tools. Updates are offered inside the app.",href:"/membership",link:"Open Account"},
  {id:"recovery",title:"I forgot my password",category:"Account",phrases:["forgot password","reset password","recover account"],answer:"Open Account, enter your email and tap Forgot password. Use the newest reset email and check spam. Requests can be rate limited to protect accounts. Never share passwords or reset links with Ask Vegas.",href:"/membership",link:"Recover your account"},
@@ -48,7 +49,7 @@ export const helpTopics: HelpTopic[] = [
       "five games",
     ],
     answer:
-      "The five windows are Thursday night, one Sunday 1 PM game, one Sunday late-afternoon game, Sunday night and Monday night. The suggested start is $20, but your run can use a different starting amount. The roughly $640 path is aspirational. Actual progression uses recorded stakes and odds. A stage can be passed; five scheduled windows do not mean five mandatory wagers.",
+      "The five windows are Thursday night, one Sunday 1 PM game, one Sunday late-afternoon game, Sunday night and Monday night. The suggested start is $20, but your run can use a different starting amount. The roughly $640 path is aspirational. Actual progression uses recorded stakes and odds. A stage can be passed; preferred game windows are not deadlines. Only cleared funds roll forward; a payout delay pauses your personal run without a loss.",
     href: "/",
     link: "See your run",
   },

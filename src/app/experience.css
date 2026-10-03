@@ -1281,3 +1281,24 @@ footer {
 .alert-preference input:checked::before {
   left: 26px;
 }
+
+.payout-status {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  margin: 20px 0;
+  border: 1px solid var(--border, #304249);
+  border-radius: 16px;
+  background: rgba(125, 220, 185, 0.04);
+}
+.payout-status p,
+.payout-status small {
+  margin: 0;
+  line-height: 1.6;
+}
+.payout-status small {
+  color: #a4b4bb;
+}
+.payout-status button {
+  justify-self: start;
+}

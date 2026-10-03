@@ -45,6 +45,10 @@ export default function PersonalChallenge({
   renderOfficial?: (entryAction: ReactNode) => ReactNode;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [payoutPending, setPayoutPending] = useState(false);
+  const [runEvents, setRunEvents] = useState<
+    { id: number; payout_pending: boolean; created_at: string }[]
+  >([]);
   const [adjustments, setAdjustments] = useState<
     { id: string; delta_cents: number; reason: string; created_at: string }[]
   >([]);
@@ -103,8 +107,18 @@ export default function PersonalChallenge({
             .order("created_at", { ascending: false })
         : { data: [], error: null };
       if (changes.error) throw changes.error;
+      const events = a.data
+        ? await supabase
+            .from("personal_run_events")
+            .select("id,payout_pending,created_at")
+            .eq("personal_challenge_id", a.data.id)
+            .order("id", { ascending: false })
+        : { data: [], error: null };
+      if (events.error) throw events.error;
       if (run === generation.current) {
         setAdjustments(changes.data || []);
+        setRunEvents(events.data || []);
+        setPayoutPending(events.data?.[0]?.payout_pending ?? false);
         setLoadError(false);
         setAccount(a.data);
         setEntries(es);
@@ -161,7 +175,7 @@ export default function PersonalChallenge({
   }
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!pick || saving) return;
+    if (!pick || saving || payoutPending) return;
     setSaving(true);
     setNotice("");
     const form = new FormData(event.currentTarget);
@@ -274,6 +288,30 @@ export default function PersonalChallenge({
       setSaving(false);
     }
   }
+  async function setPayoutPause(pending: boolean) {
+    if (!account || saving || loadError) return;
+    setSaving(true);
+    setNotice("");
+    try {
+      const r = await supabase.from("personal_run_events").insert({
+        personal_challenge_id: account.id,
+        payout_pending: pending,
+      });
+      if (r.error) throw r.error;
+      await load();
+      setNotice(
+        pending
+          ? "Your run is paused. Your result and bankroll are unchanged."
+          : "Funds confirmed cleared. Wait for the next qualifying pregame official play; no missed leg is backfilled.",
+      );
+    } catch (e) {
+      setNotice(
+        (e as { message?: string }).message || "Could not save payout status.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
   const outcomes = entryBalances(
     account ? totals.balance : Math.round(Number(starting) * 100),
     Math.round(Number(stake) * 100),
@@ -282,7 +320,12 @@ export default function PersonalChallenge({
   return (
     <section className="personal-challenge" aria-label="Challenge tracking">
       {renderOfficial?.(current ? entryAction : null)}
-      <ChallengeRun challenge={challenge} stages={stages} member />
+      <ChallengeRun
+        challenge={challenge}
+        stages={stages}
+        member
+        payoutPending={payoutPending}
+      />
       {!renderOfficial && current && entryAction}
       <section
         className={`one-bankroll ${totals.inPlay > 0 && account ? "is-in-play" : ""}`}
@@ -303,12 +346,42 @@ export default function PersonalChallenge({
                 <strong>{money(totals.balance)}</strong>
               </div>
               <Badge tone={totals.inPlay ? "green" : "muted"}>
-                {totals.inPlay
-                  ? "IN PLAY"
-                  : entries.length
-                    ? "SETTLED"
-                    : "READY"}
+                {payoutPending
+                  ? "PAYOUT PENDING"
+                  : totals.inPlay
+                    ? "IN PLAY"
+                    : entries.length
+                      ? "SETTLED"
+                      : "READY"}
               </Badge>
+            </div>
+            <div className="payout-status" role="status">
+              <strong>
+                {payoutPending
+                  ? "Payout pending — your run is paused"
+                  : "Waiting on a sportsbook payout?"}
+              </strong>
+              <p>
+                {payoutPending
+                  ? "Your recorded bankroll is unchanged. Available sportsbook funds are unconfirmed. Missed game windows are not losses."
+                  : "A graded win does not confirm your sportsbook has released the money. Pause here if your funds have not cleared."}
+              </p>
+              <button
+                className="secondary"
+                disabled={saving || loading}
+                onClick={() => void setPayoutPause(!payoutPending)}
+              >
+                {saving
+                  ? "Saving…"
+                  : payoutPending
+                    ? "My funds have cleared · Resume"
+                    : "Payout pending · Pause my run"}
+              </button>
+              <small>
+                Self-reported · Vegas Quant cannot see your sportsbook balance.
+                Resume only after the funds are available. No extra deposit or
+                live-bet replacement to bridge a missed window.
+              </small>
             </div>
             <button
               className="secondary bankroll-edit-button"
@@ -384,7 +457,8 @@ export default function PersonalChallenge({
             </p>
             <div className="balance-facts">
               <span>
-                Available <b>{money(totals.available)}</b>
+                {payoutPending ? "Sportsbook funds" : "Uncommitted (tracked)"}{" "}
+                <b>{payoutPending ? "Unconfirmed" : money(totals.available)}</b>
               </span>
               <span>
                 In play <b>{money(totals.inPlay)}</b>
@@ -408,11 +482,11 @@ export default function PersonalChallenge({
             ) : (
               <p className="personal-caption">
                 {entries.length
-                  ? "Your settled balance carries forward. The next entry uses the stake and odds you actually record."
+                  ? "Your tracked balance carries forward. Only cleared sportsbook funds can roll into the next qualifying entry."
                   : "Starting amount saved. No bets recorded yet."}
               </p>
             )}
-            {pick && !ended && !current && (
+            {pick && !ended && !current && !payoutPending && (
               <div className="bankroll-entry-action">
                 <button
                   className="primary"
@@ -468,6 +542,21 @@ export default function PersonalChallenge({
               {saving ? "Saving…" : "Save my starting bankroll"}
             </button>
           </form>
+        )}
+        {runEvents.length > 0 && (
+          <details className="personal-history">
+            <summary>Payout pause history ({runEvents.length})</summary>
+            {runEvents.map((e) => (
+              <article key={e.id}>
+                <strong>
+                  {e.payout_pending
+                    ? "Paused · payout pending"
+                    : "Resumed · funds confirmed cleared"}
+                </strong>
+                <small>{time(e.created_at)} · Self-reported</small>
+              </article>
+            ))}
+          </details>
         )}
         {adjustments.length > 0 && (
           <details className="personal-history">
