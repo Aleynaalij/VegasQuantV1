@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ExploreCards from "./explore-cards";
 import ResearchPulse from "./research-pulse";
 import ChallengeRun from "./challenge-run";
 import { Shell, Panel, Stat, Badge } from "./ui";
@@ -72,7 +73,10 @@ export default function PublicOverview({
               <p>
                 {game.slot} · {time(game.kickoff)}
               </p>
-              <p>Detailed research is available with an active research membership.</p>
+              <p>
+                Detailed research is available with an active research
+                membership.
+              </p>
             </div>
           </Panel>
         )}
@@ -126,7 +130,8 @@ export default function PublicOverview({
           <p>Loading the next run…</p>
         </div>
       )}
-      <ResearchPulse />
+      <ExploreCards />
+      <ResearchPulse proof />
       <details className="admin-section">
         <summary>How the challenge works</summary>
         <div className="notebook">

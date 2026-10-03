@@ -13,6 +13,7 @@ import {
 import { Shell, Badge, Panel, Empty } from "./ui";
 import SourceObservations from "./source-observations";
 import PickCard from "./pick-card";
+import ResearchSections from "./research-sections";
 import ResearchNotebook from "./research-notebook";
 import SourceStatus from "./source-status";
 function Fields({ value }: { value: unknown }) {
@@ -82,6 +83,7 @@ export default function MatchupIntelligence({
     ),
     [query, setQuery] = useState(""),
     [week, setWeek] = useState("current"),
+    [windowFilter, setWindowFilter] = useState("All games"),
     [selected, setSelected] = useState(""),
     [error, setError] = useState("");
   const epoch = useRef(0);
@@ -171,11 +173,13 @@ export default function MatchupIntelligence({
           : "Sunday Early";
     return "Other";
   }
-  const currentWeek = rows.find((r) => Date.parse(r.game.kickoff) > Date.now())
-    ?.game.week;
+  const currentWeek = [...rows]
+    .sort((a, b) => Date.parse(a.game.kickoff) - Date.parse(b.game.kickoff))
+    .find((r) => Date.parse(r.game.kickoff) > Date.now())?.game.week;
   const filtered = rows.filter(
     (r) =>
       searchMatchup(r.game, query) &&
+      (windowFilter === "All games" || group(r) === windowFilter) &&
       (!week ||
         String(r.game.week) ===
           (week === "current" ? String(currentWeek) : week)),
@@ -207,12 +211,12 @@ export default function MatchupIntelligence({
             <h1>
               {row
                 ? `${row.game.away_abbreviation || row.game.away_team} @ ${row.game.home_abbreviation || row.game.home_team}`
-                : "Search matchup"}
+                : "Scout the slate."}
             </h1>
             <p>
               {row
                 ? `${time(row.game.kickoff)} · ${row.game.venue}`
-                : "Every matchup. One clear research desk."}
+                : "Find your game. Follow the read. Know what we’re watching."}
             </p>
           </div>
         </div>
@@ -244,6 +248,26 @@ export default function MatchupIntelligence({
                 </select>
               </label>
             </div>
+            <div
+              className="slate-windows"
+              role="group"
+              aria-label="Filter game window"
+            >
+              {["All games", ...groups].map((window) => (
+                <button
+                  key={window}
+                  aria-pressed={windowFilter === window}
+                  className={windowFilter === window ? "selected" : ""}
+                  onClick={() => setWindowFilter(window)}
+                >
+                  {window}
+                </button>
+              ))}
+            </div>
+            <p className="slate-count" role="status">
+              {filtered.length} {filtered.length === 1 ? "matchup" : "matchups"}
+              {query ? ` matching “${query}”` : " on your board"}
+            </p>
             {!desk.access?.allowed && (
               <p className="mi-access">
                 <Link href="/membership">Sign in or get research access</Link>{" "}
@@ -285,6 +309,17 @@ export default function MatchupIntelligence({
                           {r.game.season || "NFL"}{" "}
                           {r.game.week ? `· Week ${r.game.week}` : ""}
                         </span>
+                        <div className="game-pair" aria-hidden="true">
+                          <strong>
+                            {r.game.away_abbreviation ||
+                              r.game.away_team.split(" ").at(-1)}
+                          </strong>
+                          <span>@</span>
+                          <strong>
+                            {r.game.home_abbreviation ||
+                              r.game.home_team.split(" ").at(-1)}
+                          </strong>
+                        </div>
                         <h3>
                           {r.game.away_team} @ {r.game.home_team}
                         </h3>
@@ -431,25 +466,29 @@ export default function MatchupIntelligence({
                         </div>
                       </Panel>
                     )}
-                    {[
-                      ["Market", intel.market],
-                      ["Model", intel.model],
-                      ["Injuries", intel.injuries],
-                      ["Matchup", intel.teams],
-                      ["Weather", intel.weather],
-                      ["Vegas", intel.vegas],
-                      ["Bias check", intel.bias],
-                    ].map(([name, value]) => (
-                      <details className="mi-section" key={String(name)}>
-                        <summary>{String(name)}</summary>
-                        {name === "Market" && (
-                          <p className="muted">
-                            Saved analyst snapshot; not a live quote.
-                          </p>
-                        )}
-                        <Fields value={value} />
-                      </details>
-                    ))}
+                    <ResearchSections
+                      sections={[
+                        ["Market", intel.market],
+                        ["Model", intel.model],
+                        ["Injuries", intel.injuries],
+                        ["Matchup", intel.teams],
+                        ["Weather", intel.weather],
+                        ["Vegas", intel.vegas],
+                        ["Bias check", intel.bias],
+                      ].map(([name, value]) => ({
+                        title: String(name),
+                        content: (
+                          <>
+                            {name === "Market" && (
+                              <p className="muted">
+                                Saved analyst snapshot; not a live quote.
+                              </p>
+                            )}
+                            <Fields value={value} />
+                          </>
+                        ),
+                      }))}
+                    />
                     <details className="mi-section">
                       <summary>
                         Vegas Quant Target Board · {intel.targets?.length || 0}

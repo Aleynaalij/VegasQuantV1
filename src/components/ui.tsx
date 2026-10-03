@@ -85,7 +85,10 @@ export function Shell({
   active?: string;
 }) {
   return (
-    <div className="shell">
+    <div className={`shell screen-${active}`}>
+      <a className="skip-link" href="#main-content">
+        Skip to content
+      </a>
       <aside className="sidebar">
         <Link className="brand" href="/">
           <span className="logo">
@@ -93,20 +96,29 @@ export function Shell({
           </span>
           <span>
             VEGAS <b>QUANT</b>
-            <small>THE RESEARCH DESK</small>
+            <small>RESEARCH. DECISIONS. PROGRESS.</small>
           </span>
         </Link>
-        <span className="nav-label">WORKSPACE</span>
-        <nav>
-          <Link className={active === "home" ? "active" : ""} href="/">
+        <span className="nav-label">YOUR PLAYBOOK</span>
+        <nav aria-label="Main navigation">
+          <Link
+            aria-current={active === "home" ? "page" : undefined}
+            className={active === "home" ? "active" : ""}
+            href="/"
+          >
             <LayoutDashboard size={18} />
             Home
           </Link>
-          <Link className={active === "game" ? "active" : ""} href="/matchups">
+          <Link
+            aria-current={active === "game" ? "page" : undefined}
+            className={active === "game" ? "active" : ""}
+            href="/matchups"
+          >
             <BookOpen size={18} />
-            Matchup desk
+            Matchups
           </Link>
           <Link
+            aria-current={active === "feed" ? "page" : undefined}
             className={`feed-nav-link ${active === "feed" ? "active" : ""}`}
             href="/feed"
           >
@@ -117,6 +129,9 @@ export function Shell({
             className={
               ["history", "performance"].includes(active) ? "active" : ""
             }
+            aria-current={
+              ["history", "performance"].includes(active) ? "page" : undefined
+            }
             href="/history"
           >
             <History size={18} />
@@ -124,6 +139,7 @@ export function Shell({
           </Link>
           <Link
             className={active === "account" ? "active" : ""}
+            aria-current={active === "account" ? "page" : undefined}
             href="/membership"
           >
             <LockKeyhole size={18} />
@@ -161,7 +177,7 @@ export function Shell({
             VEGAS QUANT
           </Link>
           <div className="breadcrumb">
-            Workspace <span>/</span>{" "}
+            Vegas Quant <span>/</span>{" "}
             <b>
               {(
                 {
@@ -183,7 +199,7 @@ export function Shell({
             <AccountLink />
           </div>
         </header>
-        <main>
+        <main id="main-content" tabIndex={-1}>
           {children}
           <footer>
             <span>
@@ -197,16 +213,25 @@ export function Shell({
             <Link href="/methodology">Methodology & transparency</Link>
           </footer>
         </main>
-        <nav className="mobile-nav">
-          <Link className={active === "home" ? "active" : ""} href="/">
+        <nav className="mobile-nav" aria-label="Main navigation">
+          <Link
+            aria-current={active === "home" ? "page" : undefined}
+            className={active === "home" ? "active" : ""}
+            href="/"
+          >
             <LayoutDashboard size={19} />
             Home
           </Link>
-          <Link className={active === "game" ? "active" : ""} href="/matchups">
+          <Link
+            aria-current={active === "game" ? "page" : undefined}
+            className={active === "game" ? "active" : ""}
+            href="/matchups"
+          >
             <BookOpen size={19} />
             Matchup
           </Link>
           <Link
+            aria-current={active === "feed" ? "page" : undefined}
             className={`feed-nav-link ${active === "feed" ? "active" : ""}`}
             href="/feed"
           >
@@ -217,6 +242,9 @@ export function Shell({
             className={
               ["history", "performance"].includes(active) ? "active" : ""
             }
+            aria-current={
+              ["history", "performance"].includes(active) ? "page" : undefined
+            }
             href="/history"
           >
             <History size={19} />
@@ -224,6 +252,7 @@ export function Shell({
           </Link>
           <Link
             className={active === "account" ? "active" : ""}
+            aria-current={active === "account" ? "page" : undefined}
             href="/membership"
           >
             <LockKeyhole size={19} />

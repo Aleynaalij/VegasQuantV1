@@ -178,9 +178,9 @@ export default function ChallengeRun({
           "The 5-Spot Challenge"
         ) : (
           <>
-            Can you complete
+            Five stages.
             <br />
-            the 5-Spot Challenge?
+            Make your run.
           </>
         )}
       </h1>
@@ -189,7 +189,7 @@ export default function ChallengeRun({
           ? run.mode === "follow"
             ? "Following along · no wager required"
             : "Tracking my bets · actual entries only"
-          : "Five stages. Your decisions. Track your run."}
+          : "The 5-Spot Challenge. Start with $20, follow the research and track every decision."}
       </p>
       {!run && (
         <>
@@ -202,7 +202,7 @@ export default function ChallengeRun({
           </button>
           <p className="run-free">
             Free to follow. No wager required. Detailed picks and research
-            require a season pass.
+            require a research membership.
           </p>
         </>
       )}
@@ -297,7 +297,7 @@ export default function ChallengeRun({
             </p>
             {run.mode === "track" && !member && (
               <Link href="/membership">
-                View season access to unlock the official slip →
+                View membership to unlock the official slip →
               </Link>
             )}
             <RunShare

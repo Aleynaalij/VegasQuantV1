@@ -34,6 +34,7 @@ import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
 import UpdateFeed from "./update-feed";
 import Performance from "./performance";
+import ExploreCards from "./explore-cards";
 import ResearchPulse from "./research-pulse";
 import SourceStatus from "./source-status";
 import ResearchNotebook from "./research-notebook";
@@ -131,10 +132,18 @@ export default function DeskApp({
       stages.some((s) => s.id === p.stage_id),
     ),
     m = metrics(d, challengePicks),
-    official = d.picks.find(
-      (p) =>
-        p.game_id === g?.id && (page === "game" || p.stage_id === stage?.id),
-    ) || (page === "home" ? [...challengePicks].sort((a, b) => b.created_at.localeCompare(a.created_at)).find((p) => d.results.some((r) => r.pick_id === p.id && r.result === "WIN")) : undefined),
+    official =
+      d.picks.find(
+        (p) =>
+          p.game_id === g?.id && (page === "game" || p.stage_id === stage?.id),
+      ) ||
+      (page === "home"
+        ? [...challengePicks]
+            .sort((a, b) => b.created_at.localeCompare(a.created_at))
+            .find((p) =>
+              d.results.some((r) => r.pick_id === p.id && r.result === "WIN"),
+            )
+        : undefined),
     gamePicks = d.picks.filter((p) => p.game_id === g?.id);
   const gameStatus =
     d.stages.find((s) => s.game_id === g?.id && s.challenge_id === ch?.id)
@@ -360,33 +369,16 @@ export default function DeskApp({
             />
           </>
         )}
-        {page === "home" && <ResearchPulse />}
         {page === "home" && (
-          <details className="admin-section home-explore">
-            <summary>Explore research & records</summary>
-            <div className="workspace-index">
-              <Link href="/matchups">
-                <span className="eyebrow">RESEARCH</span>
-                <h2>Matchup desk</h2>
-                <p>Analysis, market snapshots and the history of the read.</p>
-                <span>Open research →</span>
-              </Link>
-              <Link href="/history">
-                <span className="eyebrow">RECORDS</span>
-                <h2>Results & performance</h2>
-                <p>Every published pick, closing line and process review.</p>
-                <span>Open records →</span>
-              </Link>
-              {access.admin && (
-                <Link href="/admin/intelligence">
-                  <span className="eyebrow">PRIVATE</span>
-                  <h2>Data Intelligence</h2>
-                  <p>Market tape, consensus, news and execution quality.</p>
-                  <span>Open private workspace →</span>
-                </Link>
-              )}
-            </div>
-          </details>
+          <>
+            <ResearchPulse />
+            <ExploreCards />
+          </>
+        )}
+        {page === "home" && access.admin && (
+          <Link className="admin-workspace-link" href="/admin/intelligence">
+            Private Data Intelligence →
+          </Link>
         )}
         {page === "game" && g && (
           <MatchupWorkspace d={d} game={g} memberCode={access.member_code} />

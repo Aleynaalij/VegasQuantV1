@@ -46,13 +46,25 @@ export default function PickCard({
     (t) => t.pick_id === p.id && t.kind === "RESERVE",
   );
   return (
-    <article className={`official-card ${r?.result === "WIN" ? "official-card-won" : ""} ${share ? "share-card" : ""}`}>
+    <article
+      className={`official-card ${r?.result === "WIN" ? "official-card-won" : ""} ${share ? "share-card" : ""}`}
+    >
       {r?.result === "WIN" && (
         <div className="pick-win-banner" role="status">
-          <CircleCheck className="pick-win-check" size={80} aria-hidden="true" />
-          <div><span className="eyebrow">LEG {st?.stage_number ?? ""} · SETTLED</span>
-            <h2>WE WON</h2><p>{signedMoney(r.profit_cents)} official profit</p>
-            {st && st.stage_number < 5 && <p>On to Stage {st.stage_number + 1}</p>}
+          <CircleCheck
+            className="pick-win-check"
+            size={80}
+            aria-hidden="true"
+          />
+          <div>
+            <span className="eyebrow">
+              LEG {st?.stage_number ?? ""} · SETTLED
+            </span>
+            <h2>WE WON</h2>
+            <p>{signedMoney(r.profit_cents)} official profit</p>
+            {st && st.stage_number < 5 && (
+              <p>On to Stage {st.stage_number + 1}</p>
+            )}
           </div>
         </div>
       )}
@@ -159,7 +171,7 @@ export default function PickCard({
           {[
             ["Model probability", `${p.model_probability}%`],
             ["Market probability", `${p.market_probability}%`],
-            ["Analyst edge", `+${p.edge}%`],
+            ["Analyst edge", `+${p.edge} pp`],
             ["Confidence", `${p.confidence}/10`],
             ["Risk", `${p.risk}/10`],
             ["Fear index", `${p.fear_index}/10`],
@@ -272,7 +284,9 @@ export default function PickCard({
         </p>
       )}
       <div className="pick-bottom">
-        <small className="slip-brand-signature"><BrandMark /> Original publication preserved · Vegas Quant Ultra</small>
+        <small className="slip-brand-signature">
+          <BrandMark /> Original publication preserved · Vegas Quant Ultra
+        </small>
         {!share && allowShare && (
           <Link href={`/picks/${p.id}/share`}>
             Share Pick

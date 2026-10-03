@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "@/components/ask-vegas.css";
+import "./experience.css";
 import Welcome from "@/components/welcome";
 import AskVegas from "@/components/ask-vegas";
 export const metadata: Metadata = {
