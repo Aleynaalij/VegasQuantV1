@@ -17,6 +17,7 @@ import {
 import { Shell, Badge } from "./ui";
 import BrandMark from "./brand-mark";
 import CandidateTracker from "./candidate-tracker";
+import DailyUpdateNotice from "./daily-update-notice";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
 import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
@@ -188,6 +189,7 @@ export default function ResearchFeed() {
           </div>
         </header>
         <div id="candidate-tracker">
+          <DailyUpdateNotice />
           <CandidateTracker />
         </div>
         {!loading && edgeRelease && filter === "All" && (

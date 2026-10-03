@@ -33,6 +33,7 @@ import ChallengeRun from "./challenge-run";
 import PersonalChallenge from "./personal-challenge";
 import PickCard from "./pick-card";
 import CandidateTracker from "./candidate-tracker";
+import DailyUpdateNotice from "./daily-update-notice";
 import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
 import UpdateFeed from "./update-feed";
@@ -351,6 +352,7 @@ export default function DeskApp({
         {error && <div className="notice">{error}</div>}
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
+            <DailyUpdateNotice />
             {stage && !challengePicks.some((p) => p.stage_id === stage.id) && (
               <CandidateTracker stageId={stage.id} featured />
             )}
