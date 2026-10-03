@@ -2512,3 +2512,5 @@ body { background:radial-gradient(ellipse at 85% 0%,#14342950,transparent 650px)
 .bankroll-quick-edit>div { display:flex; flex-wrap:wrap; align-items:center; gap:20px; }
 .bankroll-quick-edit .primary { padding:12px 20px; }
 .proof-stats{display:flex;gap:18px;flex-wrap:wrap;align-items:center}.proof-stats strong{font-size:28px;color:var(--green,#76d9b2)}.proof-list{display:grid;gap:12px;margin:20px 0}.proof-list article{border:1px solid #29383f;border-radius:12px;padding:16px}.proof-list h3{margin:12px 0 6px}.proof-list small{color:#9aa8b0}.feed-summary small{letter-spacing:.12em;font-size:10px;color:#76d9b2}.top-actions{flex-wrap:wrap}.top-actions .notice{max-width:330px;font-size:13px}.journey-stop.followed .journey-dot{background:#153c30;color:#76d9b2;border-color:#76d9b2}@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;scroll-behavior:auto!important}}
+
+.top-actions .install-notice{position:fixed;top:78px;right:16px;width:min(330px,calc(100vw - 32px));z-index:100;box-shadow:0 12px 40px #0008;background:#101a20}.top-actions .text-link{white-space:nowrap}

@@ -499,8 +499,10 @@ export default function Membership() {
             </p>
             <p>
               You are buying sports analysis and tracking, not a wager or entry
-              into a prize pool. No outcome is guaranteed. Refund/support terms
-              will be provided before live checkout opens.
+              into a prize pool. No outcome is guaranteed. Billing questions and
+              refund requests should be directed to the platform administrator.
+              Cancellation stops future monthly renewals; it is separate from a
+              refund request.
             </p>
           </div>
         </Panel>

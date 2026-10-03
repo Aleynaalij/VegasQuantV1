@@ -308,13 +308,15 @@ export default function ChallengeRun({
             />
           </>
         )}
-        <p className="run-community">
-          {count === null
-            ? "Community count unavailable"
-            : count === 0
-              ? "Make it a shared experience. Invite a friend."
-              : `${count} ${count === 1 ? "person has" : "people have"} opted in to the community count.`}
-        </p>
+        {count !== null && count >= 3 && (
+          <p className="run-community">
+            {count === null
+              ? "Community count unavailable"
+              : count === 0
+                ? "Make it a shared experience. Invite a friend."
+                : `${count} ${count === 1 ? "person has" : "people have"} opted in to the community count.`}
+          </p>
+        )}
       </details>
       {notice && (
         <p role="status" className="run-notice">

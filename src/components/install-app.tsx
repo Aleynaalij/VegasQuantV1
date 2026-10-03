@@ -55,7 +55,7 @@ export default function InstallApp() {
   return (
     <>
       {offline && (
-        <div className="notice" role="status">
+        <div className="notice install-notice" role="status">
           Offline · Prices and balances may be outdated. Reconnect before making
           decisions.
         </div>
@@ -72,10 +72,10 @@ export default function InstallApp() {
             update.postMessage("ACTIVATE_UPDATE");
           }}
         >
-          Update Vegas Quant →
+          Update app →
         </button>
       )}
-      {!installed && (
+      {!installed && !update && (
         <>
           <button
             className="text-link"
@@ -91,7 +91,7 @@ export default function InstallApp() {
             Install app
           </button>
           {help && (
-            <div className="notice" role="status">
+            <div className="notice install-notice" role="status">
               {ios
                 ? "On iPhone: open this site in Safari, tap Share, then Add to Home Screen."
                 : "Open your browser menu and choose Install app or Add to Home Screen. Installation support depends on your browser."}

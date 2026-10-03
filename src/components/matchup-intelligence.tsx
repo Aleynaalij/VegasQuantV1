@@ -85,7 +85,10 @@ export default function MatchupIntelligence({
     [selected, setSelected] = useState(""),
     [error, setError] = useState("");
   const epoch = useRef(0);
-  useEffect(() => { const q = new URLSearchParams(window.location.search).get("q"); if(q) setQuery(q.slice(0,160)); }, []);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get("q");
+    if (q) setQuery(q.slice(0, 160));
+  }, []);
   useEffect(() => {
     let live = true;
     async function refresh() {
@@ -99,7 +102,18 @@ export default function MatchupIntelligence({
         if (directory.error || d.error)
           throw Error("Unable to refresh research. Please retry.");
         if (live && n === epoch.current) {
-          setRows(directory.data.map((row: DirectoryRow) => { const status=publicStatus.data?.games?.find((g: {game_id:string}) => g.game_id === row.game.id);return {...row,research_available:!!status,research_updated_at:status?.updated_at}; }));
+          setRows(
+            directory.data.map((row: DirectoryRow) => {
+              const status = publicStatus.data?.games?.find(
+                (g: { game_id: string }) => g.game_id === row.game.id,
+              );
+              return {
+                ...row,
+                research_available: publicStatus.error ? undefined : !!status,
+                research_updated_at: status?.updated_at,
+              };
+            }),
+          );
           setDesk(d.data);
           setError("");
         }
@@ -281,7 +295,15 @@ export default function MatchupIntelligence({
                         </p>
                         <Badge>
                           {r.analysis?.intelligence?.status ||
-                            (r.official ? "OFFICIAL PLAY" : r.analysis ? "INITIAL ANALYSIS" : r.research_available ? "RESEARCH AVAILABLE · MEMBERS" : "NOT ANALYZED")}
+                            (r.official
+                              ? "OFFICIAL PLAY"
+                              : r.analysis
+                                ? "INITIAL ANALYSIS"
+                                : r.research_available
+                                  ? "RESEARCH AVAILABLE · MEMBERS"
+                                  : r.research_available === undefined
+                                    ? "CHECKING RESEARCH"
+                                    : "NOT ANALYZED")}
                         </Badge>
                         {r.market && (
                           <p>
@@ -354,7 +376,11 @@ export default function MatchupIntelligence({
                         ? "OFFICIAL PLAY"
                         : current
                           ? "INITIAL ANALYSIS"
-                          : row?.research_available ? "RESEARCH AVAILABLE · MEMBERS" : "NOT ANALYZED")}
+                          : row?.research_available
+                            ? "RESEARCH AVAILABLE · MEMBERS"
+                            : row?.research_available === undefined
+                              ? "CHECKING RESEARCH"
+                              : "NOT ANALYZED")}
                   </Badge>
                   {current && <span>Updated {time(current.created_at)}</span>}
                 </div>
@@ -484,7 +510,10 @@ export default function MatchupIntelligence({
                     <button
                       className="mi-version"
                       key={a.id}
-                      onClick={() => {setSelected(a.id);window.scrollTo({top:0,behavior:"smooth"});}}
+                      onClick={() => {
+                        setSelected(a.id);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
                     >
                       <span>
                         {time(a.created_at)} · v{a.version}

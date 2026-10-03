@@ -14,10 +14,15 @@ export default function PickAlerts() {
       "Notification" in window;
     setSupported(ok);
     if (ok)
-      navigator.serviceWorker.ready
-        .then((reg) => reg.pushManager.getSubscription())
+      navigator.serviceWorker
+        .getRegistration()
+        .then((reg) => reg?.pushManager.getSubscription())
         .then((sub) => {
           if (live) setEnabled(!!sub);
+        })
+        .catch(() => {
+          if (live)
+            setNotice("Reload the app to initialize notification support.");
         });
     return () => {
       live = false;
@@ -29,7 +34,11 @@ export default function PickAlerts() {
     try {
       const { data } = await supabase.auth.getSession();
       if (!data.session) throw Error("Sign in first.");
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration?.active)
+        throw Error(
+          "Reload the app to initialize notification support, then retry.",
+        );
       if (enabled) {
         const sub = await registration.pushManager.getSubscription();
         if (sub) {
