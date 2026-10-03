@@ -54,7 +54,30 @@ export async function POST(req: Request) {
       return Response.json({ error: "No subscription found" }, { status: 404 });
     const stripe = stripeClient();
     // Customer comes exclusively from our server-side account mapping, never the browser.
+    // Ensure cancellation is available even before a Dashboard portal is configured.
+    const configs = await stripe.billingPortal.configurations.list({
+      active: true,
+      limit: 100,
+    });
+    let config = configs.data.find(
+      (c) => c.metadata?.vegas_quant === "membership-v1",
+    );
+    if (!config)
+      config = await stripe.billingPortal.configurations.create(
+        {
+          business_profile: { headline: "Manage your Vegas Quant membership" },
+          default_return_url: `${appOrigin()}/membership`,
+          features: {
+            payment_method_update: { enabled: true },
+            invoice_history: { enabled: true },
+            subscription_cancel: { enabled: true, mode: "at_period_end" },
+          },
+          metadata: { vegas_quant: "membership-v1" },
+        },
+        { idempotencyKey: "vq-portal-membership-v1" },
+      );
     const portal = await stripe.billingPortal.sessions.create({
+      configuration: config.id,
       customer: data.customer_id,
       return_url: `${appOrigin()}/membership`,
     });

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BrandMark from "./brand-mark";
+import InstallApp from "./install-app";
 import AccountLink from "./account-link";
 import {
   ArrowUpRight,
@@ -105,7 +106,13 @@ export function Shell({
             <BookOpen size={18} />
             Matchup desk
           </Link>
-          <Link className={`feed-nav-link ${active === "feed" ? "active" : ""}`} href="/feed"><BrandMark />Feed</Link>
+          <Link
+            className={`feed-nav-link ${active === "feed" ? "active" : ""}`}
+            href="/feed"
+          >
+            <BrandMark />
+            Feed
+          </Link>
           <Link
             className={
               ["history", "performance"].includes(active) ? "active" : ""
@@ -138,7 +145,9 @@ export function Shell({
           </div>
         </div>
         <div className="sidebar-bottom">
-          <span className="avatar"><BrandMark /></span>
+          <span className="avatar">
+            <BrandMark />
+          </span>
           <span>
             Vegas Quant Ultra<small>Analyst of record</small>
           </span>
@@ -169,8 +178,8 @@ export function Shell({
             </b>
           </div>
           <div className="top-actions">
-            <span className="live-dot" />{" "}
-            <span className="desktop">Research & execution</span>
+            <InstallApp />
+            <span className="desktop">Research desk</span>
             <AccountLink />
           </div>
         </header>
@@ -185,7 +194,7 @@ export function Shell({
               Entertainment challenge. No wager is guaranteed. A stage may be
               passed when no qualifying edge exists.
             </p>
-            <span>VEGAS QUANT / V1</span>
+            <Link href="/methodology">Methodology & transparency</Link>
           </footer>
         </main>
         <nav className="mobile-nav">
@@ -197,7 +206,13 @@ export function Shell({
             <BookOpen size={19} />
             Matchup
           </Link>
-          <Link className={`feed-nav-link ${active === "feed" ? "active" : ""}`} href="/feed"><BrandMark />Feed</Link>
+          <Link
+            className={`feed-nav-link ${active === "feed" ? "active" : ""}`}
+            href="/feed"
+          >
+            <BrandMark />
+            Feed
+          </Link>
           <Link
             className={
               ["history", "performance"].includes(active) ? "active" : ""

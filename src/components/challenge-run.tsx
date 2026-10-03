@@ -210,6 +210,7 @@ export default function ChallengeRun({
         {stageLabels.map((label, i) => {
           const n = i + 1,
             s = stages.find((s) => s.stage_number === n),
+            won = s?.status === "WON",
             done = checks.includes(n),
             current = n === challenge.current_stage;
           return (
@@ -217,7 +218,7 @@ export default function ChallengeRun({
               key={n}
               aria-label={`Stage ${n}: ${label}, ${done ? "followed" : s?.status || "upcoming"}`}
               aria-pressed={selected === n}
-              className={`journey-stop ${current ? "current" : ""} ${done ? "followed" : ""} ${selected === n ? "selected" : ""}`}
+              className={`journey-stop ${current ? "current" : ""} ${done || won ? "followed" : ""} ${selected === n ? "selected" : ""}`}
               onClick={(e) => {
                 setSelected(n);
                 const tools = e.currentTarget
@@ -226,10 +227,16 @@ export default function ChallengeRun({
                 if (tools) tools.setAttribute("open", "");
               }}
             >
-              <span className="journey-dot">{done ? "✓" : n}</span>
+              <span className="journey-dot">{done || won ? "✓" : n}</span>
               <span>{label}</span>
               <small>
-                {done ? "Followed" : current ? "Current" : "Stage " + n}
+                {won
+                  ? "Won"
+                  : done
+                    ? "Followed"
+                    : current
+                      ? "Current"
+                      : "Stage " + n}
               </small>
             </button>
           );

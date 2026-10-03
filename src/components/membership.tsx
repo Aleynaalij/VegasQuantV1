@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
 import { Shell, Panel } from "./ui";
 import FriendPass from "./friend-pass";
+import PickAlerts from "./pick-alerts";
 import BillingAccount from "./billing-account";
 import type { Session } from "@supabase/supabase-js";
 type Quote = {
@@ -99,6 +100,34 @@ export default function Membership() {
         router.replace("/");
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Sign in failed.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function recover(form: HTMLFormElement) {
+    const email = String(new FormData(form).get("email") || "").trim();
+    if (
+      !email ||
+      !form
+        .querySelector<HTMLInputElement>('input[name="email"]')
+        ?.checkValidity()
+    ) {
+      setNotice("Enter your account email first.");
+      return;
+    }
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${location.origin}/account/recovery`,
+      });
+      if (error) throw error;
+      setNotice(
+        "If an account exists for this email, a reset link will arrive. Check spam and use the newest link. Allow a few minutes before requesting another.",
+      );
+    } catch {
+      setNotice(
+        "Couldn’t send a reset link. Please wait a few minutes and retry.",
+      );
     } finally {
       setBusy(false);
     }
@@ -288,7 +317,25 @@ export default function Membership() {
                 ? "Already registered? Sign in"
                 : "New here? Create an account"}
             </button>
+            {!signup && (
+              <button
+                type="button"
+                className="text-link"
+                disabled={busy}
+                onClick={(e) => {
+                  const form = e.currentTarget.closest("form");
+                  if (form) void recover(form);
+                }}
+              >
+                Forgot password?
+              </button>
+            )}
           </form>
+        </Panel>
+      )}
+      {session && (
+        <Panel title="App notifications">
+          <PickAlerts />
         </Panel>
       )}
       {session && !access.admin_account && <FriendPass />}

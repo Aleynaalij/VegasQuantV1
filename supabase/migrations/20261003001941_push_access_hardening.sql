@@ -1,0 +1,11 @@
+alter function public.register_push(text,text,text) set schema private;
+revoke all on function private.register_push(text,text,text) from public,anon,authenticated;
+grant execute on function private.register_push(text,text,text) to authenticated;
+create function public.register_push(p_endpoint text,p_p256dh text,p_auth text) returns void language sql security invoker set search_path='' as $$ select private.register_push(p_endpoint,p_p256dh,p_auth); $$;
+revoke all on function public.register_push(text,text,text) from public,anon;
+grant execute on function public.register_push(text,text,text) to authenticated;
+create policy no_direct_push_config on private.push_config for all to anon,authenticated using(false) with check(false);
+create policy no_direct_push_delivery on private.push_deliveries for all to anon,authenticated using(false) with check(false);
+create index push_subscription_user_idx on public.push_subscriptions(user_id);
+create index push_delivery_pick_idx on private.push_deliveries(pick_id);
+create index push_delivery_pending_idx on private.push_deliveries(next_at) where sent_at is null and not failed;

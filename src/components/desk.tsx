@@ -34,6 +34,7 @@ import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
 import UpdateFeed from "./update-feed";
 import Performance from "./performance";
+import ResearchPulse from "./research-pulse";
 import SourceStatus from "./source-status";
 import ResearchNotebook from "./research-notebook";
 const pct = (v: number | null) => (v === null ? "—" : `${v.toFixed(2)}%`);
@@ -359,6 +360,7 @@ export default function DeskApp({
             />
           </>
         )}
+        {page === "home" && <ResearchPulse />}
         {page === "home" && (
           <details className="admin-section home-explore">
             <summary>Explore research & records</summary>

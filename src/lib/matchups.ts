@@ -35,6 +35,7 @@ export const targetSchema = z
     target_number: optional,
     playable_number: optional,
     pass_number: optional,
+    model_basis: text.min(40).optional(),
     model_probability: number.min(0).max(100).optional(),
     market_probability: number.min(0).max(100).optional(),
     edge: number.optional(),
@@ -60,6 +61,24 @@ export const targetSchema = z
     official_pick_id: z.string().uuid().optional(),
   })
   .strict()
+  .refine(
+    (t) =>
+      t.status === "OFFICIAL" ||
+      (t.model_probability == null &&
+        t.edge == null &&
+        t.status !== "BETTABLE") ||
+      !!t.model_basis,
+    "Numeric research estimates and BETTABLE targets require a documented model basis (inputs, assumptions and source).",
+  )
+  .refine(
+    (t) =>
+      t.status !== "BETTABLE" ||
+      (t.edge != null &&
+        t.edge >= 3 &&
+        t.model_probability != null &&
+        t.market_probability != null),
+    "BETTABLE requires supplied probabilities and at least 3 percentage points of edge.",
+  )
   .refine(
     (t) => t.status !== "OFFICIAL" || !!t.official_pick_id,
     "OFFICIAL must reference an already published pick",
@@ -142,6 +161,8 @@ export type MatchupAnalysis = import("./domain").Analysis & {
 };
 export type DirectoryRow = {
   official?: boolean;
+  research_available?: boolean;
+  research_updated_at?: string;
   game: MatchupGame;
   analysis: MatchupAnalysis | null;
   market: import("./domain").Market | null;

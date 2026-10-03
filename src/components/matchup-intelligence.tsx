@@ -91,14 +91,15 @@ export default function MatchupIntelligence({
     async function refresh() {
       const n = ++epoch.current;
       try {
-        const [directory, d] = await Promise.all([
+        const [directory, d, publicStatus] = await Promise.all([
           supabase.rpc("matchup_directory"),
           supabase.rpc("desk_data"),
+          supabase.rpc("public_research_status"),
         ]);
         if (directory.error || d.error)
           throw Error("Unable to refresh research. Please retry.");
         if (live && n === epoch.current) {
-          setRows(directory.data);
+          setRows(directory.data.map((row: DirectoryRow) => { const status=publicStatus.data?.games?.find((g: {game_id:string}) => g.game_id === row.game.id);return {...row,research_available:!!status,research_updated_at:status?.updated_at}; }));
           setDesk(d.data);
           setError("");
         }
@@ -280,7 +281,7 @@ export default function MatchupIntelligence({
                         </p>
                         <Badge>
                           {r.analysis?.intelligence?.status ||
-                            (r.official ? "OFFICIAL PLAY" : r.analysis ? "INITIAL ANALYSIS" : "NOT ANALYZED")}
+                            (r.official ? "OFFICIAL PLAY" : r.analysis ? "INITIAL ANALYSIS" : r.research_available ? "RESEARCH AVAILABLE · MEMBERS" : "NOT ANALYZED")}
                         </Badge>
                         {r.market && (
                           <p>
@@ -353,7 +354,7 @@ export default function MatchupIntelligence({
                         ? "OFFICIAL PLAY"
                         : current
                           ? "INITIAL ANALYSIS"
-                          : "NOT ANALYZED")}
+                          : row?.research_available ? "RESEARCH AVAILABLE · MEMBERS" : "NOT ANALYZED")}
                   </Badge>
                   {current && <span>Updated {time(current.created_at)}</span>}
                 </div>

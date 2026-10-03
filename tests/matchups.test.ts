@@ -90,3 +90,10 @@ test("odds only match same teams and kickoff, without changing recommendations",
     0,
   );
 });
+test("research estimates require documented basis and a bettable edge cannot be invented",()=>{
+ const base={status:'MONITORING',update_type:'INITIAL ANALYSIS',summary:'Research',raw_handoff:'Supplied analyst research'};
+ const target={market_type:'Total',selection:'Under 40',status:'BETTABLE',edge:4,model_probability:57,market_probability:53};
+ assert.equal(matchupUpdateSchema.safeParse({...base,targets:[target]}).success,false);
+ assert.equal(matchupUpdateSchema.safeParse({...base,targets:[{...target,model_basis:'Documented analyst inputs, assumptions, methodology and original source reference.'}]}).success,true);
+ assert.equal(matchupUpdateSchema.safeParse({...base,targets:[{...target,edge:2,model_basis:'Documented analyst inputs, assumptions, methodology and original source reference.'}]}).success,false);
+});

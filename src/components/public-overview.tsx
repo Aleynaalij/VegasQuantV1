@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import ResearchPulse from "./research-pulse";
 import ChallengeRun from "./challenge-run";
 import { Shell, Panel, Stat, Badge } from "./ui";
 import { money, time, type Game } from "@/lib/domain";
@@ -71,10 +72,11 @@ export default function PublicOverview({
               <p>
                 {game.slot} · {time(game.kickoff)}
               </p>
-              <p>Detailed research is available with an active season pass.</p>
+              <p>Detailed research is available with an active research membership.</p>
             </div>
           </Panel>
         )}
+        {["history", "performance"].includes(page) && <ResearchPulse proof />}
         <section className="membership-lock" aria-live="polite">
           <span className="eyebrow">MEMBER ACCESS</span>
           <h2>
@@ -92,7 +94,7 @@ export default function PublicOverview({
             {error ||
               (loading
                 ? "Your research will appear here if your account has access."
-                : "Sign in with an active season pass to view this page. Have a friends code? Activate it from your Account page. Administrators must complete verification.")}
+                : "Sign in with an active research membership to view this page. Have a friends code? Activate it from your Account page. Administrators must complete verification.")}
           </p>
           {!loading && (
             <Link href="/membership" className="primary">
@@ -124,6 +126,7 @@ export default function PublicOverview({
           <p>Loading the next run…</p>
         </div>
       )}
+      <ResearchPulse />
       <details className="admin-section">
         <summary>How the challenge works</summary>
         <div className="notebook">
@@ -138,7 +141,7 @@ export default function PublicOverview({
           </p>
           <p>
             Joining and checking in are free. There are no entry fees or prizes.
-            A season pass unlocks the analyst’s detailed research.
+            Research membership unlocks the analyst’s detailed research.
           </p>
         </div>
       </details>
