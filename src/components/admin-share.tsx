@@ -13,7 +13,7 @@ export default function AdminShare({ id }: { id: string }) {
       try {
         const { data } = await supabase.auth.getSession();
         if (!data.session)
-          throw new Error("Sign in with research access to share a pick.");
+          throw new Error("Sign in with your free account to share a pick.");
         const r = await fetch(`/picks/${id}/image`, {
           headers: { Authorization: `Bearer ${data.session.access_token}` },
           cache: "no-store",
@@ -22,7 +22,7 @@ export default function AdminShare({ id }: { id: string }) {
           throw new Error(
             r.status === 404
               ? "Pick not found."
-              : "Research access is required. Admins must complete verification.",
+              : "Could not generate the card. Check your sign-in and try again.",
           );
         const blob = await r.blob();
         if (!live) return;

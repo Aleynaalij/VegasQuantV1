@@ -29,6 +29,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
 import CommunityHome from "./community-home";
+import ChallengeRun from "./challenge-run";
 import PersonalChallenge from "./personal-challenge";
 import PickCard from "./pick-card";
 import PublicOverview from "./public-overview";
@@ -255,7 +256,11 @@ export default function DeskApp({
     URL.revokeObjectURL(url);
   }
   const access = (d as Desk & { access?: Access }).access || noAccess;
-  if (!access.allowed)
+  if (
+    !access.allowed &&
+    (!["home", "history"].includes(page) ||
+      !(d as Desk & { free_core?: boolean }).free_core)
+  )
     return (
       <PublicOverview
         page={page}
@@ -268,7 +273,7 @@ export default function DeskApp({
     );
   return (
     <div
-      className={access.admin ? "" : "member-watermarked"}
+      className={access.allowed && !access.admin ? "member-watermarked" : ""}
       style={
         {
           "--member-mark": JSON.stringify(
@@ -278,7 +283,7 @@ export default function DeskApp({
       }
     >
       <Shell active={page}>
-        {!access.admin && (
+        {access.allowed && !access.admin && (
           <div className="member-stamp">
             VEGAS QUANT · {access.member_code} · Personal access
           </div>
@@ -330,7 +335,7 @@ export default function DeskApp({
                 ))}
               </select>
             </label>
-          ) : page === "history" ? (
+          ) : page === "history" && access.allowed ? (
             <button className="secondary" onClick={exportLedger}>
               <Download size={15} />
               Export ledger
@@ -345,29 +350,40 @@ export default function DeskApp({
         {error && <div className="notice">{error}</div>}
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
-            <PersonalChallenge
-              renderOfficial={
-                official
-                  ? (entryAction) => (
-                      <div className="featured-official">
-                        <PickCard
-                          p={official}
-                          d={d}
-                          compact
-                          personalPath
-                          entryAction={entryAction}
-                        />
-                      </div>
-                    )
-                  : undefined
-              }
-              key={`${ch.id}:${access.member_code}`}
-              challenge={ch}
-              stages={stages}
-              pick={official}
-              picks={challengePicks}
-              results={d.results}
-            />
+            {access.member_code ? (
+              <PersonalChallenge
+                renderOfficial={
+                  official
+                    ? (entryAction) => (
+                        <div className="featured-official">
+                          <PickCard
+                            p={official}
+                            d={d}
+                            compact
+                            personalPath
+                            entryAction={entryAction}
+                          />
+                        </div>
+                      )
+                    : undefined
+                }
+                key={`${ch.id}:${access.member_code}`}
+                challenge={ch}
+                stages={stages}
+                pick={official}
+                picks={challengePicks}
+                results={d.results}
+              />
+            ) : (
+              <>
+                {official && <PickCard p={official} d={d} compact />}
+                <ChallengeRun challenge={ch} stages={stages} />
+                <p className="notice">
+                  <Link href="/membership">Create a free account</Link> to join
+                  Community and track your own bankroll.
+                </p>
+              </>
+            )}
           </CommunityHome>
         )}
         {page === "home" && (
@@ -585,7 +601,10 @@ export default function DeskApp({
                         </p>
                         <p>
                           Line CLV {v.points ?? "—"} · Process{" "}
-                          {review?.grade || "Not reviewed"}
+                          {review?.grade ||
+                            (access.allowed
+                              ? "Not reviewed"
+                              : "Premium research")}
                         </p>
                         <p>
                           Confidence {p.confidence}/10 · Edge {p.edge} pp

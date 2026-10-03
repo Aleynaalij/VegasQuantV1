@@ -247,8 +247,8 @@ export default function Membership() {
                   ? "Administrator · Full access"
                   : "Administrator · Complete verification to open your board. No paid pass needed."
                 : access.allowed
-                  ? "Access active"
-                  : "No active research pass"}
+                  ? "Premium research active"
+                  : "Free Community · Challenge, published picks and basic tracking included"}
               {access.expires_at
                 ? ` · Expires ${new Date(access.expires_at).toLocaleString("en-US", { timeZone: "America/New_York" })} ET`
                 : ""}
@@ -443,6 +443,28 @@ export default function Membership() {
         </p>
       )}
       {session && <BillingAccount token={session.access_token} />}
+      <Panel title="Free to follow. Premium to go deeper.">
+        <div className="notebook">
+          <h3>Free Community</h3>
+          <p>
+            The 5-Spot Challenge, official published picks and edge cards,
+            decision alerts, Community profiles, share cards, basic personal
+            bankroll tracking and the public official record—including losses
+            and passes.
+          </p>
+          <h3>Premium research · $5/month or $20 for the 2026 season</h3>
+          <p>
+            Full every-game matchup analysis, potential target boards, injury
+            and weather research, market history, timestamped analysis versions,
+            and detailed official process reviews and exports.
+          </p>
+          <p>
+            No daily pick is promised. If no qualifying edge exists, the
+            decision is WAIT/PASS. Admin intelligence and other members’
+            financial details remain private.
+          </p>
+        </div>
+      </Panel>
       {!access.allowed && !access.admin_account && (
         <>
           <div className="pass-grid">
@@ -450,7 +472,9 @@ export default function Membership() {
               <div key={q.plan}>
                 <strong>${q.amount / 100}</strong>
                 <h2>
-                  {q.plan === "full" ? "2026 Season Pass" : "Monthly Access"}
+                  {q.plan === "full"
+                    ? "2026 Premium Season Pass"
+                    : "Monthly Premium Research"}
                 </h2>
                 <p>
                   {q.recurring
@@ -493,10 +517,10 @@ export default function Membership() {
             <p>
               Monthly access is $5 per month and renews until canceled. The $20
               Season Pass covers the remaining 2026 season, playoffs, and Super
-              Bowl with no automatic renewal. Both include the same research and
-              tracking. Existing passes keep their original expiration dates. No
-              number of picks or result is guaranteed; passing is a valid
-              decision.
+              Bowl with no automatic renewal. Both include the same Premium
+              research. Community, published picks and basic tracking are free.
+              Existing passes keep their original expiration dates. No number of
+              picks or result is guaranteed; passing is a valid decision.
             </p>
             <p>
               Access is personal and includes account-specific watermarks.

@@ -84,20 +84,22 @@ export default function CommunityCard({
       }
       const stages = new Map<string, number>();
       if (entries.length) {
-        const p = await supabase
-          .from("official_picks")
-          .select("id,stage_id")
-          .in(
-            "id",
-            entries.map((e) => e.pick_id),
+        const published = await supabase.rpc("desk_data");
+        if (published.error || !published.data)
+          throw Error("Could not verify stage results.");
+        for (const pick of published.data.picks as {
+          id: string;
+          stage_id: string | null;
+        }[]) {
+          const stage = (
+            published.data.stages as {
+              id: string;
+              stage_number: number;
+              challenge_id: string;
+            }[]
+          ).find(
+            (x) => x.id === pick.stage_id && x.challenge_id === challengeId,
           );
-        const s = await supabase
-          .from("challenge_stages")
-          .select("id,stage_number")
-          .eq("challenge_id", challengeId);
-        if (p.error || s.error) throw Error("Could not verify stage results.");
-        for (const pick of p.data) {
-          const stage = s.data.find((x) => x.id === pick.stage_id);
           if (stage) stages.set(pick.id, stage.stage_number);
         }
       }

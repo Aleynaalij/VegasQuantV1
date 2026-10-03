@@ -9,11 +9,9 @@ export async function GET(
   const { id } = await params;
   const auth = await requestUser(_req);
   if (!auth) return new Response("Authentication required", { status: 401 });
-  const { data: allowed } = await auth.db.rpc("membership_status");
-  if (!allowed?.allowed)
-    return new Response("Research access required", { status: 403 });
   const { data: d } = await auth.db.rpc("desk_data");
   if (!d) return new Response("Unable to load pick", { status: 503 });
+  const allowed = d.access;
   const p = d.picks.find((p: import("@/lib/domain").Pick) => p.id === id);
   if (!p) return new Response("Pick not found", { status: 404 });
   const g = d.games.find(

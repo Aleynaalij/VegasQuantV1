@@ -73,9 +73,19 @@ export default function ResearchFeed() {
     }
     const current = a.data as Access;
     setAccess(current);
+    const edges = await supabase.rpc("published_edge_releases");
+    if (n !== epoch.current) return;
+    setEdgeRelease(
+      edges.error ? null : (edges.data?.[0] as EdgeRelease) || null,
+    );
     if (!current.allowed) {
       setPosts([]);
-      setEdgeRelease(null);
+      setHasMore(false);
+      setError(
+        edges.error
+          ? "Couldn’t refresh published edge picks. Please retry."
+          : "",
+      );
       setLoading(false);
       return;
     }
@@ -86,23 +96,8 @@ export default function ResearchFeed() {
       .order("id", { ascending: false })
       .limit(limit + 1);
     if (filter !== "All") query = query.eq("category", filter);
-    const [r, edges] = await Promise.all([
-      query,
-      supabase
-        .from("edge_releases")
-        .select("official_pick_id,created_at,items")
-        .order("created_at", { ascending: false })
-        .limit(1),
-    ]);
+    const r = await query;
     if (n !== epoch.current) return;
-    setEdgeRelease(
-      edges.error ? null : (edges.data?.[0] as EdgeRelease) || null,
-    );
-    if (edges.error) {
-      setError("Couldn’t refresh edge picks. Please retry.");
-      setLoading(false);
-      return;
-    }
     if (r.error) {
       setError("Couldn’t load the feed. Please retry.");
     } else {
@@ -191,25 +186,32 @@ export default function ResearchFeed() {
             <span>Research updates · A watchlist is not an official play.</span>
           </div>
         </header>
+        {!loading && edgeRelease && filter === "All" && (
+          <EdgeReleaseCard release={edgeRelease} />
+        )}
+        {!loading && !edgeRelease && !access.allowed && (
+          <p className="notice">
+            No edge release is available yet. Only qualifying published picks
+            appear here—WAIT/PASS is a valid decision.
+          </p>
+        )}
         {loading ? (
           <p role="status">Opening your feed…</p>
         ) : !access.allowed ? (
           <section className="feed-gate">
             <Eye size={32} />
-            <h2>A closer look at the next decision.</h2>
+            <h2>Go deeper with Premium research.</h2>
             <p>
-              Follow matchup watchlists, injury updates and the reasoning behind
-              each stage.
+              Published edge picks and the main challenge are free. Premium adds
+              every-game research, unpublished target watchlists, injury updates
+              and the timestamped analysis archive.
             </p>
             <Link className="primary" href="/membership">
-              Sign in or get research access <ArrowUpRight size={16} />
+              Explore Premium · $5/month <ArrowUpRight size={16} />
             </Link>
           </section>
         ) : (
           <>
-            {edgeRelease && filter === "All" && (
-              <EdgeReleaseCard release={edgeRelease} />
-            )}
             <nav className="feed-filters" aria-label="Filter feed">
               {categories.map((c) => (
                 <button
