@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Shell, Badge } from "./ui";
 import BrandMark from "./brand-mark";
+import CandidateTracker from "./candidate-tracker";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
 import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
@@ -186,6 +187,9 @@ export default function ResearchFeed() {
             <span>Research updates · A watchlist is not an official play.</span>
           </div>
         </header>
+        <div id="candidate-tracker">
+          <CandidateTracker />
+        </div>
         {!loading && edgeRelease && filter === "All" && (
           <EdgeReleaseCard release={edgeRelease} />
         )}

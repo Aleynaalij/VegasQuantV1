@@ -32,6 +32,7 @@ import CommunityHome from "./community-home";
 import ChallengeRun from "./challenge-run";
 import PersonalChallenge from "./personal-challenge";
 import PickCard from "./pick-card";
+import CandidateTracker from "./candidate-tracker";
 import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
 import UpdateFeed from "./update-feed";
@@ -350,19 +351,34 @@ export default function DeskApp({
         {error && <div className="notice">{error}</div>}
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
+            {stage && !challengePicks.some((p) => p.stage_id === stage.id) && (
+              <CandidateTracker stageId={stage.id} featured />
+            )}
             {access.member_code ? (
               <PersonalChallenge
                 renderOfficial={
                   official
                     ? (entryAction) => (
                         <div className="featured-official">
-                          <PickCard
-                            p={official}
-                            d={d}
-                            compact
-                            personalPath
-                            entryAction={entryAction}
-                          />
+                          <details
+                            className="previous-result"
+                            open={
+                              !d.results.some((r) => r.pick_id === official.id)
+                            }
+                          >
+                            <summary>
+                              {d.results.some((r) => r.pick_id === official.id)
+                                ? "Previous result · View the settled leg"
+                                : "Official play · Full slip"}
+                            </summary>
+                            <PickCard
+                              p={official}
+                              d={d}
+                              compact
+                              personalPath
+                              entryAction={entryAction}
+                            />
+                          </details>
                         </div>
                       )
                     : undefined
@@ -376,7 +392,15 @@ export default function DeskApp({
               />
             ) : (
               <>
-                {official && <PickCard p={official} d={d} compact />}
+                {official &&
+                  (d.results.some((r) => r.pick_id === official.id) ? (
+                    <details className="previous-result">
+                      <summary>Previous result · View the settled leg</summary>
+                      <PickCard p={official} d={d} compact />
+                    </details>
+                  ) : (
+                    <PickCard p={official} d={d} compact />
+                  ))}
                 <ChallengeRun challenge={ch} stages={stages} />
                 <p className="notice">
                   <Link href="/membership">Create a free account</Link> to join
