@@ -28,6 +28,7 @@ import {
 } from "@/lib/domain";
 import { Badge, Panel, Shell } from "./ui";
 import { publishingChecks, type PublishCheck } from "@/lib/publishing-checks";
+import { isGamblyUrl } from "@/lib/gambly";
 import { marketInfoUrls } from "@/lib/market-info";
 type InputDef = {
   name: string;
@@ -41,6 +42,7 @@ type InputDef = {
   step?: string;
 };
 const pickFields: InputDef[] = [
+  { name: "gambly_url", label: "Gambly share URL · optional", type: "url", required: false, placeholder: "Paste the actual Gambly-generated share link" },
   {
     name: "market_info_url",
     label: "View Market Info · optional informational page",
@@ -409,6 +411,7 @@ export default function Admin() {
         date("observed_at");
       }
       if (action === "pick") {
+        if (data.gambly_url && !isGamblyUrl(String(data.gambly_url))) throw new Error("Use an HTTPS share URL from gambly.com.");
         data.game_id = gameId;
         data.stage_id = data.stage_id || null;
         [

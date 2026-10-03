@@ -14,6 +14,8 @@ import {
 import { Badge, SourceLink } from "./ui";
 import { isMarketInfoUrl } from "@/lib/market-info";
 import SourceStatus from "./source-status";
+import GamblyLink from "./gambly-link";
+import { isGamblyUrl } from "@/lib/gambly";
 import CopyPick from "./copy-pick";
 import PickMoneySplits from "./pick-money-splits";
 import BrandMark from "./brand-mark";
@@ -142,6 +144,7 @@ export default function PickCard({
           }
         />
       )}
+      {!share && !r && isGamblyUrl(p.gambly_url) && <GamblyLink url={p.gambly_url!} />}
       {!share && <PickMoneySplits pickId={p.id} />}
       <SlipBody className="slip-details" {...(!compact ? { open: true } : {})}>
         <summary className={compact ? "slip-expand-cta" : ""}>

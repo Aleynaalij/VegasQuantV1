@@ -80,6 +80,7 @@ export type Analysis = {
 };
 export type Pick = {
   market_info_url?: string | null;
+  gambly_url?: string | null;
   id: string;
   game_id: string;
   stage_id: string | null;
