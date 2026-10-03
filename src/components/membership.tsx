@@ -93,12 +93,8 @@ export default function Membership() {
           ? "Confirm your email, then return here to sign in. If you entered a friends code, activate it below after signing in."
           : "Signed in.",
       );
-      const current = await refresh();
-      if (
-        !signup &&
-        (current.allowed || sessionStorage.getItem("vq-join-challenge"))
-      )
-        router.replace("/");
+      await refresh();
+      if (!signup) router.replace("/");
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Sign in failed.");
     } finally {

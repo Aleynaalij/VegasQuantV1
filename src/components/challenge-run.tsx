@@ -205,8 +205,8 @@ export default function ChallengeRun({
             {loading ? "Loading your run…" : "Join the Challenge →"}
           </button>
           <p className="run-free">
-            Free to follow. No wager required. Detailed picks and research
-            require a research membership.
+            Free to follow, view published picks and track your bankroll. No wager
+            required. Premium unlocks the full matchup research.
           </p>
         </>
       )}
@@ -287,7 +287,7 @@ export default function ChallengeRun({
             <h2>{msg.title}</h2>
             <p>
               {!member && challenge.status === "OFFICIAL PLAY"
-                ? "Members can view the official slip. Join free to follow the challenge’s progress."
+                ? "The official slip is free on Home. Join the challenge to track your progress."
                 : msg.body}
             </p>
           </div>
@@ -321,7 +321,7 @@ export default function ChallengeRun({
             </p>
             {run.mode === "track" && !member && (
               <Link href="/membership">
-                View membership to unlock the official slip →
+                Open your free account and tracking →
               </Link>
             )}
             <RunShare
