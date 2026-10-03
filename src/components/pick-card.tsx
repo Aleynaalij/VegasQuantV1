@@ -33,7 +33,7 @@ export default function PickCard({
   compact?: boolean;
   personalPath?: boolean;
 }) {
-  const SlipBody = compact ? "section" : "details";
+  const SlipBody = "details";
   const st = d.stages.find((s) => s.id === p.stage_id),
     ch = d.challenges.find((c) => c.id === st?.challenge_id),
     g = d.games.find((g) => g.id === p.game_id),
@@ -47,7 +47,7 @@ export default function PickCard({
   );
   return (
     <article
-      className={`official-card ${r?.result === "WIN" ? "official-card-won" : ""} ${share ? "share-card" : ""}`}
+      className={`official-card ${r?.result === "WIN" ? "official-card-won" : ""} ${share ? "share-card" : ""} ${compact ? "community-compact-slip" : ""}`}
     >
       {r?.result === "WIN" && (
         <div className="pick-win-banner" role="status">
@@ -90,7 +90,7 @@ export default function PickCard({
           Analyst edge: +{p.edge} pp · Confidence: {p.confidence}/10
         </p>
       )}
-      {compact && (
+      {!compact && (
         <p className="slip-why">
           <strong>The read</strong> {p.why_like.split(/\n\s*\n/)[0]}{" "}
           <Link href={`/games/${g?.slug}`}>See the research →</Link>
@@ -132,7 +132,11 @@ export default function PickCard({
         />
       )}
       <SlipBody className="slip-details" {...(!compact ? { open: true } : {})}>
-        {!compact && <summary>Full slip · stake, analysis & results</summary>}
+        <summary className={compact ? "slip-expand-cta" : ""}>
+          {compact
+            ? "OPEN FULL PICK & ANALYSIS ↓"
+            : "Full slip · stake, analysis & results"}
+        </summary>
         {personalPath ? (
           <p className="personal-caption">
             Original published stake: {money(p.stake_cents)}. Your actual stake

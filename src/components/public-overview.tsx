@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ExploreCards from "./explore-cards";
 import ResearchPulse from "./research-pulse";
+import CommunityHome from "./community-home";
 import ChallengeRun from "./challenge-run";
 import { Shell, Panel, Stat, Badge } from "./ui";
 import { money, time, type Game } from "@/lib/domain";
@@ -116,14 +117,16 @@ export default function PublicOverview({
   return (
     <Shell>
       {challenge ? (
-        <ChallengeRun
-          key={challenge.id}
-          challenge={challenge}
-          stages={
-            overview?.stages.filter((s) => s.challenge_id === challenge.id) ||
-            []
-          }
-        />
+        <CommunityHome challengeId={challenge.id} number={challenge.number}>
+          <ChallengeRun
+            key={challenge.id}
+            challenge={challenge}
+            stages={
+              overview?.stages.filter((s) => s.challenge_id === challenge.id) ||
+              []
+            }
+          />
+        </CommunityHome>
       ) : (
         <div className="heading">
           <h1>The 5-Spot Challenge</h1>
@@ -136,8 +139,9 @@ export default function PublicOverview({
         <summary>How the challenge works</summary>
         <div className="notebook">
           <p>
-            Five stages: Thursday night, Sunday early, Sunday late, Sunday night
-            and Monday night. Follow each decision at your own pace.
+            Five qualifying stages. Preferred windows: Thursday night, Sunday
+            early, Sunday late, Sunday night and Monday night. Follow each
+            decision at your own pace.
           </p>
           <p>
             The official experiment starts with $20. An approximately $640

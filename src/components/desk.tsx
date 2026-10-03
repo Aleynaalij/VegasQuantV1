@@ -28,6 +28,7 @@ import {
 } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
+import CommunityHome from "./community-home";
 import PersonalChallenge from "./personal-challenge";
 import PickCard from "./pick-card";
 import PublicOverview from "./public-overview";
@@ -343,7 +344,7 @@ export default function DeskApp({
         </div>
         {error && <div className="notice">{error}</div>}
         {page === "home" && ch && (
-          <>
+          <CommunityHome challengeId={ch.id} number={ch.number}>
             <PersonalChallenge
               renderOfficial={
                 official
@@ -367,7 +368,7 @@ export default function DeskApp({
               picks={challengePicks}
               results={d.results}
             />
-          </>
+          </CommunityHome>
         )}
         {page === "home" && (
           <>

@@ -125,6 +125,7 @@ export default function ChallengeRun({
       });
       if (r.error) throw r.error;
       setRun(r.data);
+      window.dispatchEvent(new Event("vq-community-changed"));
       callback.current?.(mode);
       dialog.current?.close();
       await refreshCount();
@@ -148,6 +149,7 @@ export default function ChallengeRun({
     else {
       setChecks((v) => Array.from(new Set([...v, selected])));
       setNotice("Stage followed. No wager was recorded.");
+      window.dispatchEvent(new Event("vq-community-changed"));
     }
     setBusy(false);
   }
