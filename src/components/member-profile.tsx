@@ -7,7 +7,7 @@ import { Avatar, SocialLinks } from "./community-home";
 import type { CommunityProfile } from "@/lib/community";
 type Member = CommunityProfile & {
   events: {
-    kind: "joined" | "followed";
+    kind: "joined" | "followed" | "won";
     challenge_number: number;
     stage_number: number | null;
     at: string;
@@ -97,8 +97,8 @@ export default function MemberProfile({ username }: { username: string }) {
               <span className="eyebrow">THEIR JOURNEY</span>
               <h2>Activity & milestones</h2>
               <p>
-                Shared challenge participation. Check-ins are not bets or
-                verified wager wins.
+                Stage wins reflect settled personal entries. Following a stage
+                is participation only; stakes and bankrolls remain private.
               </p>
             </header>
             {profile.events.length ? (
@@ -114,12 +114,16 @@ export default function MemberProfile({ username }: { username: string }) {
                     <h3>
                       {e.kind === "joined"
                         ? "Joined the challenge"
-                        : `Followed stage ${e.stage_number}`}
+                        : e.kind === "won"
+                          ? `Won stage ${e.stage_number}`
+                          : `Followed stage ${e.stage_number}`}
                     </h3>
                     <p>
                       {e.kind === "joined"
                         ? "A new five-stage journey begins."
-                        : "Checked in on the decision and followed the research."}
+                        : e.kind === "won"
+                          ? "Recorded entry settled as a win. Personal amounts stay private."
+                          : "Checked in on the decision and followed the research."}
                     </p>
                     <time dateTime={e.at}>
                       {new Date(e.at).toLocaleString("en-US", {

@@ -18,6 +18,7 @@ export type CommunityProfile = {
 export type CommunityMember = CommunityProfile & {
   joined_at: string;
   followed: number;
+  won: number;
   last_checkin: string | null;
 };
 export function runMilestone(wins: number[], open: boolean, losses: boolean) {

@@ -208,8 +208,8 @@ export default function CommunityHome({
             </span>
           </div>
           <p>
-            Community members in this challenge. Participation, not live online
-            status.
+            Stage wins come from recorded, settled entries. This is not live
+            online status.
           </p>
           {!ready ? (
             <p>Loading community…</p>
@@ -236,7 +236,7 @@ export default function CommunityHome({
                   <div>
                     <strong>@{m.username}</strong>
                     <small>{m.region || "Region private"}</small>
-                    <span>{m.followed}/5 stages followed</span>
+                    <span>{m.won ?? 0}/5 stages won</span>
                   </div>
                 </Link>
               ))}

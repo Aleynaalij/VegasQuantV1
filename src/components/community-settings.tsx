@@ -198,8 +198,8 @@ export default function CommunitySettings({ uid }: { uid: string }) {
           checked={draft.visible}
           onChange={(e) => setDraft({ ...draft, visible: e.target.checked })}
         />
-        Show my username, photo, region, social links, joins and check-ins to
-        signed-in community members.
+        Show my username, photo, region, social links, stage wins, joins and
+        check-ins to signed-in community members.
       </label>
       <small>
         On by default for new profiles. Your email, bets, stakes and balance
