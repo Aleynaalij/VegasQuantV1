@@ -139,10 +139,12 @@ export default function PersonalChallenge({
       if (document.visibilityState === "visible") void load();
     }, 30000);
     window.addEventListener("focus", load);
+    window.addEventListener("vq-personal-entry-changed", load);
     return () => {
       generation.current++;
       clearInterval(timer);
       window.removeEventListener("focus", load);
+      window.removeEventListener("vq-personal-entry-changed", load);
     };
   }, [load]);
   useEffect(() => {

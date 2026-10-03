@@ -14,8 +14,8 @@ export default function ExploreCards() {
       <Link href="/matchups">
         <BookOpen size={21} />
         <span>
-          <strong>Scout the slate</strong>
-          <small>Every matchup, one place</small>
+          <strong>Matchup Analysis</strong>
+          <small>Research, targets & game breakdowns</small>
         </span>
         <ArrowUpRight size={17} />
       </Link>

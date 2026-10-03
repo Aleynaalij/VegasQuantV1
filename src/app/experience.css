@@ -1948,3 +1948,40 @@ footer {
     min-width: 0;
   }
 }
+
+.pick-splits {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #30483f;
+  border-radius: 14px;
+  background: #101c20;
+}
+.pick-splits > strong {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  color: #91dcc1;
+}
+.pick-splits p,
+.pick-splits small {
+  color: #a8b8bb;
+  line-height: 1.5;
+}
+.split-observation {
+  padding: 14px 0;
+  border-bottom: 1px solid #30483f;
+}
+.split-observation span {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.split-observation meter {
+  display: block;
+  width: 100%;
+  height: 14px;
+  accent-color: #80dfbb;
+}
+.copy-pick .entry-dialog input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}

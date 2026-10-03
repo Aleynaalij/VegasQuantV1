@@ -15,6 +15,7 @@ import { Badge, SourceLink } from "./ui";
 import { isMarketInfoUrl } from "@/lib/market-info";
 import SourceStatus from "./source-status";
 import CopyPick from "./copy-pick";
+import PickMoneySplits from "./pick-money-splits";
 import BrandMark from "./brand-mark";
 export default function PickCard({
   p,
@@ -129,8 +130,19 @@ export default function PickCard({
           selection={p.selection}
           odds={p.odds}
           stakeCents={p.stake_cents}
+          track={
+            !r && ch && g
+              ? {
+                  pickId: p.id,
+                  challengeId: ch.id,
+                  line: p.recommended_line,
+                  kickoff: g.kickoff,
+                }
+              : undefined
+          }
         />
       )}
+      {!share && <PickMoneySplits pickId={p.id} />}
       <SlipBody className="slip-details" {...(!compact ? { open: true } : {})}>
         <summary className={compact ? "slip-expand-cta" : ""}>
           {compact

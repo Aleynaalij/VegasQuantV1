@@ -115,7 +115,7 @@ export function Shell({
             href="/matchups"
           >
             <BookOpen size={18} />
-            Matchups
+            Matchup Analysis
           </Link>
           <Link
             aria-current={active === "feed" ? "page" : undefined}
@@ -228,7 +228,7 @@ export function Shell({
             href="/matchups"
           >
             <BookOpen size={19} />
-            Matchup
+            <strong>Analysis</strong>
           </Link>
           <Link
             aria-current={active === "feed" ? "page" : undefined}

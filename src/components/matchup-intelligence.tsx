@@ -211,12 +211,12 @@ export default function MatchupIntelligence({
             <h1>
               {row
                 ? `${row.game.away_abbreviation || row.game.away_team} @ ${row.game.home_abbreviation || row.game.home_team}`
-                : "Scout the slate."}
+                : "Matchup Analysis"}
             </h1>
             <p>
               {row
                 ? `${time(row.game.kickoff)} · ${row.game.venue}`
-                : "Find your game. Follow the read. Know what we’re watching."}
+                : "Every game has a research desk: analysis, market context, injuries and potential legs."}
             </p>
           </div>
         </div>
