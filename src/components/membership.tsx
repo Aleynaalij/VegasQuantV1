@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
 import { Shell, Panel } from "./ui";
 import FriendPass from "./friend-pass";
+import CommunitySettings from "./community-settings";
 import PickAlerts from "./pick-alerts";
 import BillingAccount from "./billing-account";
 import type { Session } from "@supabase/supabase-js";
@@ -331,6 +332,11 @@ export default function Membership() {
               </button>
             )}
           </form>
+        </Panel>
+      )}
+      {session && (
+        <Panel title="Settings · Community profile">
+          <CommunitySettings key={session.user.id} uid={session.user.id} />
         </Panel>
       )}
       {session && (

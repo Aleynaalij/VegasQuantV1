@@ -12,6 +12,8 @@ export type CommunityProfile = {
   region: string;
   avatar: string | null;
   visible: boolean;
+  instagram_url?: string | null;
+  x_url?: string | null;
 };
 export type CommunityMember = CommunityProfile & {
   joined_at: string;
@@ -24,4 +26,20 @@ export function runMilestone(wins: number[], open: boolean, losses: boolean) {
   if (losses) return "RUN REVIEW";
   if (wins.length) return "LEG WON";
   return "FOLLOWING";
+}
+
+export function socialUrl(
+  value: string,
+  kind: "instagram" | "x",
+): string | null {
+  if (!value.trim()) return null;
+  const expression =
+    kind === "instagram"
+      ? /^https:\/\/(www\.)?instagram\.com\/[A-Za-z0-9_.]{1,30}\/?$/
+      : /^https:\/\/(www\.)?(x|twitter)\.com\/[A-Za-z0-9_]{1,15}\/?$/;
+  if (!expression.test(value.trim()))
+    throw new Error(
+      `Enter a full HTTPS ${kind === "instagram" ? "Instagram" : "X"} profile URL without query parameters.`,
+    );
+  return value.trim();
 }
