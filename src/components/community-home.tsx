@@ -105,6 +105,7 @@ export default function CommunityHome({
       );
       return;
     }
+    setNotice("");
     setProfile(p.data || blank);
     setMembers(r.data || []);
   }, [challengeId]);
@@ -183,63 +184,73 @@ export default function CommunityHome({
             </p>
           </div>
         </div>
-        <details className="profile-roster">
-          <summary>Riding with you · {members.length}</summary>{" "}
-          <section className="community-panel">
-            <div className="community-panel-head">
-              <div>
-                <span className="eyebrow">CHALLENGE #{number}</span>
-                <h2>In this together</h2>
-              </div>
-              <span className="community-count">
-                {members.length === 100 ? "100+" : members.length}
-              </span>
-            </div>
-            <p>
-              Members who chose to be visible. Participation, not live online
-              status.
-            </p>
-            {!ready ? (
-              <p>Loading community…</p>
-            ) : !uid ? (
-              <p>
-                Sign in to meet the community. Profiles are private until
-                members opt in.
-              </p>
-            ) : members.length === 0 ? (
-              <p>
-                The roster is just getting started. Create a profile, opt in,
-                and join this challenge to appear here.
-              </p>
-            ) : (
-              <div className={`community-roster ${expanded ? "expanded" : ""}`}>
-                {(expanded ? members : members.slice(0, 8)).map((m) => (
-                  <Link
-                    href={`/community/${encodeURIComponent(m.username)}`}
-                    className="community-person"
-                    key={m.username}
-                  >
-                    <Avatar profile={m} />
-                    <div>
-                      <strong>@{m.username}</strong>
-                      <small>{m.region || "Region private"}</small>
-                      <span>{m.followed}/5 stages followed</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-            {members.length > 8 && (
-              <button
-                className="text-link"
-                onClick={() => setExpanded(!expanded)}
-              >
-                {expanded ? "Show less" : "View community →"}
-              </button>
-            )}
-          </section>
-        </details>
       </aside>
+      <details className="profile-roster community-directory">
+        <summary>
+          <span>
+            Community{" "}
+            <span className="community-count">
+              {members.length === 100 ? "100+" : members.length}
+            </span>
+          </span>
+          <span className="community-directory-action">
+            View members <span aria-hidden="true">⌄</span>
+          </span>
+        </summary>
+        <section className="community-panel">
+          <div className="community-panel-head">
+            <div>
+              <span className="eyebrow">CHALLENGE #{number}</span>
+              <h2>In this together</h2>
+            </div>
+            <span className="community-count">
+              {members.length === 100 ? "100+" : members.length}
+            </span>
+          </div>
+          <p>
+            Members who chose to be visible. Participation, not live online
+            status.
+          </p>
+          {!ready ? (
+            <p>Loading community…</p>
+          ) : !uid ? (
+            <p>
+              Sign in to meet the community. Profiles are private until members
+              opt in.
+            </p>
+          ) : members.length === 0 ? (
+            <p>
+              The roster is just getting started. Create a profile, opt in, and
+              join this challenge to appear here.
+            </p>
+          ) : (
+            <div className={`community-roster ${expanded ? "expanded" : ""}`}>
+              {(expanded ? members : members.slice(0, 8)).map((m) => (
+                <Link
+                  href={`/community/${encodeURIComponent(m.username)}`}
+                  className="community-person"
+                  key={m.username}
+                >
+                  <Avatar profile={m} />
+                  <div>
+                    <strong>@{m.username}</strong>
+                    <small>{m.region || "Region private"}</small>
+                    <span>{m.followed}/5 stages followed</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+          {members.length > 8 && (
+            <button
+              className="text-link"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? "Show less" : "View community →"}
+            </button>
+          )}
+        </section>
+      </details>
       <div className="community-layout">
         <div className="community-main">{children}</div>
         <aside className="community-sidebar" aria-label="Challenge community">
