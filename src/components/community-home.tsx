@@ -208,20 +208,21 @@ export default function CommunityHome({
             </span>
           </div>
           <p>
-            Members who chose to be visible. Participation, not live online
+            Community members in this challenge. Participation, not live online
             status.
           </p>
           {!ready ? (
             <p>Loading community…</p>
           ) : !uid ? (
             <p>
-              Sign in to meet the community. Profiles are private until members
-              opt in.
+              Sign in to meet the community. Members can hide their profiles in
+              Account settings.
             </p>
           ) : members.length === 0 ? (
             <p>
-              The roster is just getting started. Create a profile, opt in, and
-              join this challenge to appear here.
+              The roster is just getting started. Save your profile and join
+              this challenge to appear here automatically, unless you turn
+              visibility off.
             </p>
           ) : (
             <div className={`community-roster ${expanded ? "expanded" : ""}`}>
@@ -285,8 +286,8 @@ export default function CommunityHome({
               ))
             ) : (
               <p>
-                Opted-in joins and stage check-ins will appear here. Following
-                never requires a wager.
+                Visible members’ joins and stage check-ins will appear here.
+                Following never requires a wager.
               </p>
             )}
           </section>

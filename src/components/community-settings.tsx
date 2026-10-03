@@ -7,7 +7,7 @@ const blank: CommunityProfile = {
   username: "",
   region: "",
   avatar: null,
-  visible: false,
+  visible: true,
 };
 export default function CommunitySettings({ uid }: { uid: string }) {
   const [draft, setDraft] = useState<CommunityProfile>(blank),
@@ -109,7 +109,11 @@ export default function CommunitySettings({ uid }: { uid: string }) {
     else {
       await load();
       window.dispatchEvent(new Event("vq-community-changed"));
-      setNotice("Profile saved. Community visibility is your choice.");
+      setNotice(
+        draft.visible
+          ? "Profile saved. You appear automatically in Community for challenges you join."
+          : "Profile saved. Your community profile is hidden.",
+      );
     }
     setBusy(false);
   }
@@ -198,9 +202,10 @@ export default function CommunitySettings({ uid }: { uid: string }) {
         signed-in community members.
       </label>
       <small>
-        Off by default. Your email, bets, stakes and balance stay private.
-        Opting out removes you from the roster and activity. Join a challenge
-        separately to participate.
+        On by default for new profiles. Your email, bets, stakes and balance
+        stay private. Turn this off to hide your profile from the roster and
+        activity. Once you join a challenge, your visible profile appears
+        automatically.
       </small>
       {notice && <p role="alert">{notice}</p>}
       <button className="primary" disabled={busy}>
