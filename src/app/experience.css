@@ -1228,3 +1228,13 @@ footer {
     text-align: left;
   }
 }
+/* Account controls use the available panel width without a vacant column. */
+.screen-account main {
+  max-width: 960px;
+}
+.screen-account .member-form {
+  max-width: none;
+}
+.screen-account .member-form input:not([type="checkbox"]) {
+  width: 100%;
+}
