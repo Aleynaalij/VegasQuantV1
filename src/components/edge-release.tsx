@@ -3,7 +3,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { time } from "@/lib/domain";
 import BrandMark from "./brand-mark";
-export type EdgeItem = {selection:string;number?:string;odds:number;edge:number;model_probability:number;market_probability:number;confidence:number;why_like:string;why_lose:string;playable_number:string;pass_number:string;slug:string;matchup:string;kickoff:string;source_at:string;role:string};
+import EdgeMarketInfo from "./edge-market-info";
+export type EdgeItem = {market_info_url?:string|null;selection:string;number?:string;odds:number;edge:number;model_probability:number;market_probability:number;confidence:number;why_like:string;why_lose:string;playable_number:string;pass_number:string;slug:string;matchup:string;kickoff:string;source_at:string;role:string};
 export type EdgeRelease = {official_pick_id:string;created_at:string;items:EdgeItem[]};
 export default function EdgeReleaseCard({release}:{release:EdgeRelease}) {
  const [copied,setCopied]=useState("");
@@ -21,6 +22,7 @@ export default function EdgeReleaseCard({release}:{release:EdgeRelease}) {
     <p className="edge-read">{p.why_like}</p>
     <details><summary>Price limits & risk</summary><p>Playable: {p.playable_number||'Not supplied'}</p><p>Pass: {p.pass_number||'Not supplied'}</p><p>{p.why_lose}</p><p>Analyst probability {p.model_probability}% · Market implied {p.market_probability}%</p><p>Source snapshot {time(p.source_at)}</p></details>
     <div className="edge-pick-actions"><Link href={i===0?'/':`/matchups/${p.slug}`}>{i===0?'View challenge slip':'Matchup research'} →</Link><button className="text-link" onClick={async()=>{try{await navigator.clipboard.writeText(`${p.selection}${p.number?` | Number: ${p.number}`:''} | ${p.odds>0?'+':''}${p.odds} | Published ${time(release.created_at)}`);setCopied(p.selection);}catch{setCopied('Copy unavailable. Select the pick text.');}}}>Copy pick</button></div>
+    <div className="edge-pick-actions"><EdgeMarketInfo url={p.market_info_url} /></div>
    </article>;
   })}</div>
   <p className="edge-copy-status" role="status">{copied?(copied.startsWith('Copy unavailable')?copied:'Pick copied.'):''}</p>
