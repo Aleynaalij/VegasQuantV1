@@ -243,7 +243,7 @@ export default function Membership() {
                   ? "Administrator · Full access"
                   : "Administrator · Complete verification to open your board. No paid pass needed."
                 : access.allowed
-                  ? "Premium research active"
+                  ? access.trial_active ? "Premium research active · 14-day signup trial included" : "Premium research active"
                   : "Free Community · Challenge, published picks and basic tracking included"}
               {access.expires_at
                 ? ` · Expires ${new Date(access.expires_at).toLocaleString("en-US", { timeZone: "America/New_York" })} ET`
@@ -441,6 +441,8 @@ export default function Membership() {
       {session && <BillingAccount token={session.access_token} />}
       <Panel title="Free to follow. Premium to go deeper.">
         <div className="notebook">
+          <h3>14 days of Premium, on us</h3>
+          <p>Every new account gets a free Premium trial for 14 days from signup. No card required and no automatic charge. After the trial, keep using Free Community or choose a paid Premium plan.</p>
           <h3>Free Community</h3>
           <p>
             The 5-Spot Challenge, official published picks and edge cards,

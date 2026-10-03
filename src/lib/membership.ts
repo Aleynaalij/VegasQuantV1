@@ -1,4 +1,6 @@
 export type Access = {
+  trial_active?: boolean;
+  trial_expires_at?: string | null;
   allowed: boolean;
   admin: boolean;
   admin_account?: boolean;
