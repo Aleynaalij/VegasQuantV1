@@ -1,0 +1,28 @@
+name: Verify probability engine
+on:
+  push:
+    paths: ['research/probability/**', 'tests/probability/**', '.github/workflows/probability.yml']
+  pull_request:
+    paths: ['research/probability/**', 'tests/probability/**', '.github/workflows/probability.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r research/probability/requirements.txt
+      - run: python -m unittest discover -s tests/probability -v
+      - if: github.event_name == 'workflow_dispatch'
+        run: |
+          python research/probability/fetch_history.py --output /tmp/vq-history
+          python research/probability/engine.py --data /tmp/vq-history/player_stats_2022.csv /tmp/vq-history/player_stats_2023.csv /tmp/vq-history/player_stats_2024.csv --output /tmp/vq-model
+      - if: github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: probability-shadow-validation
+          path: /tmp/vq-model/
