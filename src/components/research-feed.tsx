@@ -189,6 +189,7 @@ export default function ResearchFeed() {
           </div>
         </header>
         <DailyUpdateNotice />
+        <CandidateTracker activeOnly />
         {!loading && edgeRelease && filter === "All" && (
           <EdgeReleaseCard release={edgeRelease} />
         )}
@@ -323,7 +324,7 @@ export default function ResearchFeed() {
           </>
         )}
         <div id="candidate-tracker">
-          <CandidateTracker />
+          <CandidateTracker archiveOnly />
         </div>
         {error && (
           <div className="notice" role="alert">
