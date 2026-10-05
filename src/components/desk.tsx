@@ -353,11 +353,11 @@ export default function DeskApp({
         {error && <div className="notice">{error}</div>}
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
-            <DailyUpdateNotice />
             <DecisionBoard games={d.games} />
             {stage && !challengePicks.some((p) => p.stage_id === stage.id) && (
               <CandidateTracker stageId={stage.id} featured />
             )}
+            <DailyUpdateNotice />
             {access.member_code ? (
               <PersonalChallenge
                 renderOfficial={
