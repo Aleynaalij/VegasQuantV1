@@ -4,6 +4,7 @@ import Link from "next/link";
 import ExploreCards from "./explore-cards";
 import ResearchPulse from "./research-pulse";
 import CommunityHome from "./community-home";
+import DecisionBoard from "./decision-board";
 import ChallengeRun from "./challenge-run";
 import { Shell, Panel, Stat, Badge } from "./ui";
 import { money, time, type Game } from "@/lib/domain";
@@ -118,6 +119,7 @@ export default function PublicOverview({
     <Shell>
       {challenge ? (
         <CommunityHome challengeId={challenge.id} number={challenge.number}>
+          <DecisionBoard games={games} />
           <ChallengeRun
             key={challenge.id}
             challenge={challenge}

@@ -29,6 +29,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
 import CommunityHome from "./community-home";
+import DecisionBoard from "./decision-board";
 import ChallengeRun from "./challenge-run";
 import PersonalChallenge from "./personal-challenge";
 import PickCard from "./pick-card";
@@ -353,6 +354,7 @@ export default function DeskApp({
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
             <DailyUpdateNotice />
+            <DecisionBoard games={d.games} />
             {stage && !challengePicks.some((p) => p.stage_id === stage.id) && (
               <CandidateTracker stageId={stage.id} featured />
             )}

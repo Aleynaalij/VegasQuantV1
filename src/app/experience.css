@@ -2080,3 +2080,21 @@ footer {
     white-space: nowrap;
   }
 }
+
+.decision-board { margin: 0 0 1.5rem; padding: 1.35rem; border: 1px solid var(--border, #304441); border-radius: 24px; background: linear-gradient(145deg, #122623, #101c23); }
+.decision-board header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+.decision-board h2 { margin:.45rem 0; }
+.decision-board header p { margin:.3rem 0; }
+.decision-board label { min-width:145px; font-size:.85rem; }
+.decision-board select { width:100%; margin-top:.4rem; }
+.decision-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1rem; margin:1rem 0; }
+.decision-window { padding:1rem; border:1px solid #355049; border-radius:18px; background:rgba(6,16,18,.45); min-width:0; overflow-wrap:anywhere; }
+.decision-window-heading { display:flex; justify-content:space-between; align-items:center; gap:.7rem; }
+.decision-window h3 { font-size:1rem; margin:0; }
+.decision-window-heading .eyebrow { font-size:.65rem; color:#8ce3bf; }
+.decision-window p { font-size:.9rem; line-height:1.6; }
+.decision-window small { color:#a9bab6; line-height:1.5; }
+.decision-window a,.decision-window summary { color:#8ce3bf; }
+.decision-window details { margin-top:1rem; }
+@media(max-width:1000px) { .decision-grid { grid-template-columns:1fr; } }
+@media(max-width:600px) { .decision-board { padding:1rem; } .decision-board header { flex-direction:column; } .decision-board label { width:100%; } }
