@@ -19,9 +19,9 @@ export default function FeedHealth() {
     >([]),
     [games, setGames] = useState<Game[]>([]),
     [game, setGame] = useState("");
-  const [latestResearch,setLatestResearch]=useState<string|null>(null);
-  const [checkedAt,setCheckedAt]=useState(Date.now());
-  const [error,setError]=useState("");
+  const [latestResearch, setLatestResearch] = useState<string | null>(null);
+  const [checkedAt, setCheckedAt] = useState(Date.now());
+  const [error, setError] = useState("");
   useEffect(() => {
     let live = true;
     async function refresh() {
@@ -39,14 +39,22 @@ export default function FeedHealth() {
           .order("created_at", { ascending: false })
           .limit(100),
         supabase.from("games").select("*").order("kickoff"),
-        supabase.from("research_feed_posts").select("created_at").order("created_at",{ascending:false}).limit(1),
+        supabase
+          .from("research_feed_posts")
+          .select("created_at")
+          .order("created_at", { ascending: false })
+          .limit(1),
       ]);
       if (live) {
         setRows(r.data || []);
         setGames(g.data || []);
         setLatestResearch(research.data?.[0]?.created_at || null);
         setCheckedAt(Date.now());
-        setError(r.error || g.error || research.error ? "Health queries failed; coverage cannot be verified." : "");
+        setError(
+          r.error || g.error || research.error
+            ? "Health queries failed; coverage cannot be verified."
+            : "",
+        );
       }
     }
     void refresh();
@@ -67,10 +75,41 @@ export default function FeedHealth() {
           <Panel title="Needs attention">
             <div className="notebook" role="status">
               {error && <p>{error}</p>}
-              {feedAlerts(rows,checkedAt).map(a=><p key={a.provider}><strong>{a.provider}</strong> · {a.reason}</p>)}
-              {researchDeadline(latestResearch,checkedAt) && <p>{researchDeadline(latestResearch,checkedAt)}</p>}
-              {!error && !feedAlerts(rows,checkedAt).length && !researchDeadline(latestResearch,checkedAt) && <p>Required feeds and research publication checks are current.</p>}
-              <p>Checked {time(new Date(checkedAt).toISOString())}. This dashboard checks publication timing; it does not confirm every game was researched.</p>
+              {feedAlerts(rows, checkedAt).map((a) => (
+                <p key={a.provider}>
+                  <strong>{a.provider}</strong> · {a.reason}
+                </p>
+              ))}
+              {researchDeadline(latestResearch, checkedAt) && (
+                <p>{researchDeadline(latestResearch, checkedAt)}</p>
+              )}
+              {!error &&
+                !feedAlerts(rows, checkedAt).length &&
+                !researchDeadline(latestResearch, checkedAt) && (
+                  <p>
+                    Required feeds and research publication checks are current.
+                  </p>
+                )}
+              <p>
+                Checked {time(new Date(checkedAt).toISOString())}. This
+                dashboard checks publication timing; it does not confirm every
+                game was researched.
+              </p>
+            </div>
+          </Panel>
+          <Panel title="Admin phone alerts">
+            <div className="notebook">
+              <p>
+                Feed failures and missed publication windows are checked every
+                five minutes. One neutral alert is queued per incident for
+                administrator devices with notifications enabled and the updated
+                app active. Repeated checks of the same incident do not repeat
+                the alert.
+              </p>
+              <p>
+                Open the updated app on your phone to register this device.
+                Delivery depends on your browser and phone settings.
+              </p>
             </div>
           </Panel>
           <Panel title="Source coverage">
@@ -80,8 +119,8 @@ export default function FeedHealth() {
                 ESPN source ingestion. Optional FD/DK odds: The Odds API,
                 requiring a configured key and enabled feed. Rushing and
                 receiving props additionally require ODDS_PROPS_ENABLED and
-                provider access to those markets. Missing or partial coverage
-                is reported explicitly.
+                provider access to those markets. Missing or partial coverage is
+                reported explicitly.
               </p>
               <p>
                 Injury tiers, market interpretation and weather point

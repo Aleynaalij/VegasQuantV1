@@ -55,6 +55,22 @@ export function registerDevice(uid: string): Promise<PushSubscription | null> {
         "Could not register this device. Sign in again or remove a previous device.",
       );
     }
+    // Confirm the active worker understands health messages before enrolling this device.
+    const capable = await new Promise<boolean>((resolve) => {
+      const channel = new MessageChannel();
+      const timer = setTimeout(() => {
+        channel.port1.close();
+        resolve(false);
+      }, 1500);
+      channel.port1.onmessage = (event) => {
+        clearTimeout(timer);
+        channel.port1.close();
+        resolve(event.data?.health === true);
+      };
+      registration.active?.postMessage("PUSH_CAPABILITIES", [channel.port2]);
+    });
+    if (capable)
+      await supabase.rpc("enable_health_push", { p_endpoint: sub.endpoint });
     window.dispatchEvent(new Event("vq-alerts-changed"));
     return sub;
   })().finally(() => pending.delete(uid));

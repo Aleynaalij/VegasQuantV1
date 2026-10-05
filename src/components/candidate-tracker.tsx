@@ -6,6 +6,7 @@ import { time } from "@/lib/domain";
 
 type Candidate = {
   odds?: number;
+  quote_observed_at?: string;
   name: string;
   matchup: string;
   market: string;
@@ -64,11 +65,13 @@ export default function CandidateTracker({
       </p>
     ) : null;
   const expired = Date.now() >= new Date(release.expires_at).getTime();
-  const implied = release.candidates[0]?.odds
-    ? (release.candidates[0].odds! < 0
-        ? -release.candidates[0].odds! / (-release.candidates[0].odds! + 100)
-        : 100 / (release.candidates[0].odds! + 100)) * 100
-    : null;
+  const implied =
+    Number.isFinite(release.candidates[0]?.odds) &&
+    Math.abs(release.candidates[0]?.odds || 0) >= 100
+      ? (release.candidates[0].odds! < 0
+          ? -release.candidates[0].odds! / (-release.candidates[0].odds! + 100)
+          : 100 / (release.candidates[0].odds! + 100)) * 100
+      : null;
   const list = featured ? release.candidates.slice(0, 1) : release.candidates;
   return (
     <section
@@ -102,6 +105,35 @@ export default function CandidateTracker({
           <p>{c.market}</p>
           <strong className="candidate-price">{c.quote}</strong>
           <p className="candidate-context">{c.quote_context}</p>
+          <div className="candidate-facts">
+            <div>
+              <small>Quote observation</small>
+              <strong>
+                {c.quote_observed_at &&
+                Number.isFinite(Date.parse(c.quote_observed_at))
+                  ? time(c.quote_observed_at)
+                  : "Time not verified"}
+              </strong>
+            </div>
+            <div>
+              <small>Entry limit</small>
+              <strong>Not established</strong>
+            </div>
+            <div>
+              <small>Decision</small>
+              <strong>{expired ? "Archived" : "WAIT"}</strong>
+            </div>
+          </div>
+          <p className="notice">
+            <b>Waiting for</b>
+            <br />
+            {c.next ||
+              "Verified current price and a supported probability estimate."}
+          </p>
+          <small>
+            Publication time is not the quote time. Confirm availability at your
+            sportsbook; this research card does not authorize an entry.
+          </small>
           {featured && (
             <div className="candidate-facts">
               <div>
@@ -135,11 +167,6 @@ export default function CandidateTracker({
               <b>What could beat this read</b>
               <br />
               {c.risk}
-            </p>
-            <p>
-              <b>Before it qualifies</b>
-              <br />
-              {c.next}
             </p>
             {featured && (
               <p>

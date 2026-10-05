@@ -37,7 +37,7 @@ export async function POST(req: Request) {
         claimed.data as {
           id: string;
           pick_id: string;
-          type: "official" | "research" | "signup";
+          type: "official" | "research" | "signup" | "health";
           endpoint: string;
           keys: { p256dh: string; auth: string };
         }[]
