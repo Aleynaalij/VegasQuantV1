@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { upcomingPropEvents, propObservations } from "./props.ts";
 import {
   fixturesFromScoreboard,
   observationsFromScoreboard,
@@ -150,9 +151,43 @@ Deno.serve(async (req: Request) => {
         },
       },
     });
+    let propCount = 0;
+    const propsEnabled = Boolean(key && Deno.env.get("ODDS_FEED_ENABLED") === "true" && Deno.env.get("ODDS_PROPS_ENABLED") === "true");
+    if (propsEnabled) {
+      try {
+        const events = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events?apiKey=${encodeURIComponent(key!)}`);
+        const selection = upcomingPropEvents(events,upcoming || [],Date.now());
+        let failed = 0, empty = 0;
+        for (let i=0;i<selection.events.length;i+=3) {
+          const results = await Promise.allSettled(selection.events.slice(i,i+3).map(async event => {
+            const data = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/${event.id}/odds?apiKey=${encodeURIComponent(key!)}&markets=player_rush_yds,player_reception_yds&bookmakers=fanduel,draftkings&oddsFormat=american`);
+            const observations = propObservations(data,upcoming || [],Date.now());
+            for (const o of observations) o.fingerprint = await sha(JSON.stringify([o.game_id,o.kind,o.observed_at,o.payload]));
+            const r = await db.rpc("ingest_source",{p:{provider:"The Odds API props",observations}});
+            if (r.error) throw r.error;
+            return { inserted: r.data.inserted, empty: observations.length===0 };
+          }));
+          for (const r of results) {
+            if (r.status === "rejected") failed++;
+            else { propCount += r.value.inserted; if(r.value.empty) empty++; }
+          }
+        }
+        await db.rpc("ingest_source",{p:{provider:"The Odds API props",
+          status:failed || empty || selection.skipped ? "partial" : selection.events.length ? "ok" : "no upcoming events",
+          details:{events:selection.events.length,failed,empty,skipped:selection.skipped,inserted_quotes:propCount,
+            markets:["player_rush_yds","player_reception_yds"],books:["FanDuel","DraftKings"]}}});
+      } catch {
+        await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"error",details:{message:"Prop provider unavailable; prior observations retained"}}});
+      }
+    } else {
+      await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"not configured",
+        details:{required:["ODDS_API_KEY","ODDS_FEED_ENABLED=true","ODDS_PROPS_ENABLED=true"],message:"Player-prop provider access required; no prices generated"}}});
+    }
     return Response.json({
       ok: true,
       added,
+      prop_quotes_inserted: propCount,
+      props_configured: propsEnabled,
       odds_configured: Boolean(
         key && Deno.env.get("ODDS_FEED_ENABLED") === "true",
       ),

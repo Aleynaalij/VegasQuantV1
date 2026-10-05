@@ -103,3 +103,17 @@ The report compares conditional no-push forecast Brier to raw price and no-vig B
 The journal is implemented and tested but is not yet wired to a hosted price-feed collector or Supabase. Without actual timestamped observations it contains no live evidence. A healthy implementation is not equivalent to a profitable betting service.
 
 Availability verification now requires an `availability_source_url` when `availability_verified` is supplied. Quotes outside the evaluated 20.5–100.5 yard range remain research-only and receive an explicit extrapolation blocker. The data-readiness snapshot records current source hashes, excluded zero-contribution identity rows and unavailable feed coverage.
+
+## Full-slate scanner and live collection
+
+`scan.py` evaluates all historical RB/WR/TE candidates matching the supplied future games within seven days, with no fixed shortlist. Low-workload, new-team and missing-data cases remain visible as WAIT. Rookies without sufficient same-team history are unsupported; historical candidates are not a verified active roster. Exact, unambiguous player-name matching is required. Latest book/market snapshots supersede old lines, even if the newer snapshot removes a player. All outputs remain research-only. Potential price limits are derived from conditional no-push probability minus three percentage points, not an invitation to wager while blockers exist.
+
+```bash
+python research/probability/scan.py --data /path/stats_player_week_2025.csv /path/stats_player_week_2026.csv --model research/probability/artifacts/v0.3/model.json --games /path/games.json --observations /path/source-observations.json --output /path/scan.json --journal /persistent/path/research.sqlite
+```
+
+`games.json` contains the actual `games` table fields: id, season, week, kickoff, kickoff_tbd, away_abbreviation and home_abbreviation. `source-observations.json` contains game_id, kind, source, observed_at, recorded_at and payload from immutable source observations. An optional `--context` JSON maps player IDs to reviewed availability_source_url, availability_verified and role_change fields. Incoming injury observations are retained with timestamps and force review; lack of a listed injury does not establish healthy or unchanged role. News and weather interpretation remain analyst work.
+
+The existing scheduled Supabase source-sync worker now has a bounded, event-level rushing/receiving prop collector. It requires Supabase Edge Function secrets `ODDS_API_KEY`, `ODDS_FEED_ENABLED=true` and `ODDS_PROPS_ENABLED=true`, plus a suitable provider plan. Maximum 24 matched future events per refresh, three requests concurrently, with truncated/failed/empty coverage reported rather than hidden. No provider subscription or API key was created. Provider observation time remains distinct from database receipt time. Duplicate source observations are deduped by immutable fingerprints. Exact quotes are still provider snapshots, not guaranteed executable sportsbook offers.
+
+The prop collector is hosted; the Python scanner and prospective journal are implemented/tested CLI components, not yet a hosted scheduled prediction/publishing service. Do not describe a CLI scan as an automatically published slate. The admin health dashboard checks required feeds every 30 seconds and flags source problems, stale refreshes and missing publication records after the noon/3 PM/7 PM ET windows with fifteen-minute grace. These are dashboard alerts; phone failure notifications are not wired in this release.
