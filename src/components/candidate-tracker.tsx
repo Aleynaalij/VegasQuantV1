@@ -81,21 +81,22 @@ export default function CandidateTracker({
           : 100 / (release.candidates[0].odds! + 100)) * 100
       : null;
   const experimental = release.candidates[0]?.experimental === true;
-  const list = featured ? release.candidates.slice(0, 1) : release.candidates;
+  const list = featured && !experimental ? release.candidates.slice(0, 1) : release.candidates;
+  const multiple = list.length > 1;
   return (
     <section
       className="candidate-tracker"
-      aria-label={featured ? "Potential next leg" : "Edge candidate tracker"}
+      aria-label={multiple ? "Potential picks" : featured ? "Potential next leg" : "Edge candidate tracker"}
     >
       <header>
         <span className="eyebrow">
-          {experimental ? "EXPERIMENTAL PICK" : featured ? "NEXT LEG WATCH" : "EDGE TRACKER"} ·{" "}
+          {experimental ? (multiple ? "EXPERIMENTAL PICKS" : "EXPERIMENTAL PICK") : featured ? "NEXT LEG WATCH" : "EDGE TRACKER"} ·{" "}
           {expired ? "ARCHIVED RESEARCH" : experimental ? "SUBJECT TO CHANGE · NOT OFFICIAL" : "WAIT · NOT OFFICIAL"}
         </span>
         <h2>{featured && !experimental ? "Potential next leg" : release.title}</h2>
         <p>
           {experimental
-            ? "Experimental selection. Play at your own risk. No outcome is guaranteed. Revisions are published separately; this original stays on record."
+            ? "Experimental picks, subject to change. Play at your own risk. No outcome is guaranteed. These are individual research selections, not a four-leg parlay. Original publications stay on record."
             : featured
             ? "Our leading research candidate. Await the official decision before treating this as a challenge leg."
             : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
@@ -110,7 +111,7 @@ export default function CandidateTracker({
       {list.map((c, i) => (
         <article className="candidate-item" key={c.name}>
           <div className="eyebrow">
-            {i === 0 ? "LEADING CANDIDATE" : "WATCHLIST"} · {c.matchup}
+            {multiple ? `POTENTIAL PICK ${i + 1}` : i === 0 ? "LEADING CANDIDATE" : "WATCHLIST"} · {c.matchup}
           </div>
           <h3>{c.name}</h3>
           <p>{c.market}</p>
@@ -218,7 +219,7 @@ export default function CandidateTracker({
         3% guaranteed return. No qualifying edge has been established here.
       </p>}
       {featured && (
-        <Link className="secondary" href="/feed#candidate-tracker">
+        <Link className="secondary" href="/feed">
           View all candidate research →
         </Link>
       )}
