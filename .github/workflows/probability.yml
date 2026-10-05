@@ -19,8 +19,8 @@ jobs:
       - run: python -m unittest discover -s tests/probability -v
       - if: github.event_name == 'workflow_dispatch'
         run: |
-          python research/probability/fetch_history.py --output /tmp/vq-history
-          python research/probability/engine.py --data /tmp/vq-history/player_stats_2022.csv /tmp/vq-history/player_stats_2023.csv /tmp/vq-history/player_stats_2024.csv --output /tmp/vq-model
+          python research/probability/fetch_history.py --output /tmp/vq-history --years 2022 2023 2024 2025
+          python research/probability/engine.py --data /tmp/vq-history/player_stats_2022.csv /tmp/vq-history/player_stats_2023.csv /tmp/vq-history/player_stats_2024.csv /tmp/vq-history/stats_player_week_2025.csv --test-year 2025 --output /tmp/vq-model
       - if: github.event_name == 'workflow_dispatch'
         uses: actions/upload-artifact@v4
         with:

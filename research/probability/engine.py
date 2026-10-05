@@ -1,4 +1,4 @@
-"""Vegas Quant v0.2: pregame opportunity/efficiency distribution, research only.
+"""Vegas Quant v0.3: pregame opportunity/efficiency distribution, research only.
 
 Train, calibrate and test on disjoint chronological seasons. No market data is
 used in fitting. This module never publishes picks or alters account balances.
@@ -14,12 +14,33 @@ import pandas as pd
 from scipy.optimize import minimize
 from scipy.special import expit, logit
 
-VERSION = "vq-opportunity-efficiency-0.2"
+VERSION = "vq-opportunity-efficiency-0.3"
 MARKETS = {"rushing": ("carries", "rushing_yards", 6),
            "receiving": ("targets", "receiving_yards", 3)}
 FEATURES = ["intercept", "recent_opportunities", "long_opportunities",
             "opportunity_trend", "historical_efficiency", "opponent_yards_ratio",
             "opponent_opportunities_ratio", "history_size", "quarterback", "tight_end"]
+
+def normalize(frame):
+    """Support the upstream team rename without silently changing historical identity."""
+    d = frame.copy()
+    # New files include unidentified team/stat rows. Exclude only those with
+    # zero contribution to BOTH supported markets; never discard unknown yards.
+    if {"player_id","position","carries","rushing_yards","targets","receiving_yards"} <= set(d.columns):
+        unidentified = d.player_id.isna() | d.position.isna()
+        zero = (d[["carries","rushing_yards","targets","receiving_yards"]] == 0).all(axis=1)
+        if (unidentified & ~zero).any():
+            raise ValueError("Unidentified player has nonzero supported-market statistics")
+        d = d.loc[~(unidentified & zero)].copy()
+    if "team" in d:
+        if "recent_team" in d:
+            both = d.team.notna() & d.recent_team.notna()
+            if (d.loc[both,"team"] != d.loc[both,"recent_team"]).any():
+                raise ValueError("Conflicting team identity columns")
+            d["recent_team"] = d.recent_team.fillna(d.team)
+        else:
+            d["recent_team"] = d.team
+    return d
 
 def implied(odds):
     if not np.isfinite(odds) or abs(odds) < 100:
@@ -51,6 +72,7 @@ def feature(history, opponent_history, league_history, position, market):
         float(position == "QB"), float(position == "TE")])
 
 def prepare(frame, market):
+    frame = normalize(frame)
     required = {"player_id", "recent_team", "opponent_team", "season", "week",
                 "season_type", "position", *MARKETS[market][:2]}
     if required-set(frame.columns):
@@ -63,6 +85,8 @@ def prepare(frame, market):
     count, yards, minimum = MARKETS[market]
     if (d[count] < 0).any():
         raise ValueError("Negative opportunities")
+    if not np.isfinite(d[[count,yards]].to_numpy(dtype=float)).all():
+        raise ValueError("Nonfinite historical measurements")
     allowed_positions = {"RB"} if market == "rushing" else {"RB", "WR", "TE"}
     history, defense, league = defaultdict(list), defaultdict(list), defaultdict(list)
     result = []
@@ -73,6 +97,7 @@ def prepare(frame, market):
             if pos in allowed_positions and len(h) >= 4 and weighted([r[count] for r in h[-16:]]) >= minimum:
                 x = feature(h, defense[(row["opponent_team"], pos)], league[pos], pos, market)
                 result.append({"season": int(season), "week": int(week), "player_id": row["player_id"],
+                    "game_key": f"{int(season)}:{int(week)}:"+":".join(sorted([row["recent_team"],row["opponent_team"]])),
                     "team": row["recent_team"], "opponent": row["opponent_team"], "position": pos,
                     "count": float(row[count]), "yards": float(row[yards]), "x": x.tolist(),
                     "baseline": [float(r[yards]) for r in h[-16:]]})
@@ -165,11 +190,21 @@ def train(frame, train_end=2022, calibration_year=2023, test_year=2024):
         p, y, b = probabilities(model, sets[2], thresholds)
         score = metrics(calibrated(p, model["calibration"]), y)
         baseline = metrics(b, y)
-        # Player-game block bootstrap: thresholds from one row are correlated.
+        # NFL-game block bootstrap preserves correlations across thresholds AND players.
         delta = ((calibrated(p, model["calibration"])-y)**2-(b-y)**2).reshape(-1,len(thresholds)).mean(axis=1)
         rng = np.random.default_rng(1701)
-        means = [float(np.mean(rng.choice(delta, len(delta), replace=True))) for _ in range(1000)]
+        game_deltas = defaultdict(list)
+        for row, difference in zip(sets[2],delta):
+            game_deltas[row["game_key"]].append(difference)
+        sums = np.array([sum(v) for v in game_deltas.values()])
+        counts = np.array([len(v) for v in game_deltas.values()])
+        means = []
+        for _ in range(1000):
+            indices = rng.integers(0,len(sums),len(sums))
+            means.append(float(sums[indices].sum()/counts[indices].sum()))
         score["baseline_brier_difference_95pct"] = np.quantile(means, [.025, .975]).tolist()
+        score["bootstrap_cluster"] = "NFL game"
+        score["test_nfl_games"] = len(sums)
         report["markets"][market] = {"train_player_games": len(sets[0]),
             "calibration_player_games": len(sets[1]), "test_player_games": len(sets[2]),
             "thresholds": thresholds, "model": score, "empirical_player_baseline": baseline}
@@ -182,6 +217,25 @@ def train(frame, train_end=2022, calibration_year=2023, test_year=2024):
         report["markets"][market]["by_threshold"] = {
             str(t): metrics(calibrated_test[i::len(thresholds)], y[i::len(thresholds)])
             for i,t in enumerate(thresholds)}
+        yard_medians, yard_hits, yard_widths, volume_errors, volume_hits = [], [], [], [], []
+        for row in sets[2]:
+            values = distribution(model,row)
+            lower,upper = np.quantile(values,[.1,.9])
+            yard_medians.append(abs(float(np.median(values))-row["yards"]))
+            yard_hits.append(lower <= row["yards"] <= upper)
+            yard_widths.append(upper-lower)
+            residuals = np.array(model["residual_pairs"][row["position"]])
+            volume = np.maximum(0,np.rint(np.expm1(np.array(row["x"])@np.array(model["volume_coefficients"])+residuals[:,0])))
+            vlo,vhi = np.quantile(volume,[.1,.9])
+            volume_errors.append(abs(float(np.median(volume))-row["count"]))
+            volume_hits.append(vlo <= row["count"] <= vhi)
+        report["markets"][market]["distribution_diagnostics"] = {
+            "yard_median_absolute_error":float(np.mean(yard_medians)),
+            "raw_yard_80pct_interval_coverage":float(np.mean(yard_hits)),
+            "raw_yard_80pct_interval_mean_width":float(np.mean(yard_widths)),
+            "opportunity_median_absolute_error":float(np.mean(volume_errors)),
+            "raw_opportunity_80pct_interval_coverage":float(np.mean(volume_hits)),
+            "note":"Empirical intervals are uncalibrated and measured separately from calibrated threshold probabilities."}
         artifact["models"][market] = model
     artifact["splits"] = {"train_through": train_end, "calibration": calibration_year, "test": test_year}
     report["splits"] = artifact["splits"]
@@ -189,7 +243,7 @@ def train(frame, train_end=2022, calibration_year=2023, test_year=2024):
     report["blockers"] = ["No archived timestamped player-prop odds for held-out price/EV testing",
         "No prospective current-season validation", "Injury/role changes require verified manual review",
         "No tested prediction of spread, total, moneyline, touchdown or parlay probabilities"]
-    report["note"] = "Threshold tests are diagnostic yard forecasts, not historical sportsbook wagers. No ROI or edge is established. Bootstrap clusters by player-game, not NFL game; cross-player correlation remains a limitation."
+    report["note"] = "Threshold tests are diagnostic yard forecasts, not historical sportsbook wagers. No ROI or edge is established. Bootstrap clusters by NFL game, preserving within-game player/threshold correlation; repeated-player dependence across games remains a limitation."
     artifact["validation"] = report
     artifact["model_id"] = hashlib.sha256(json.dumps(artifact, sort_keys=True).encode()).hexdigest()
     return artifact, report
@@ -235,6 +289,8 @@ def evaluate_quote(artifact, row, quote, as_of):
     edge = (win/(1-push)-break_even)*100
     ev = win*profit-(1-win-push)
     blockers = list(artifact["validation"]["blockers"])
+    if not 20.5 <= threshold <= 100.5:
+        blockers.append("Quote line is outside the tested threshold range")
     no_vig, overround = None, None
     opposite = quote.get("opposite_quote")
     if opposite is not None:
@@ -268,9 +324,12 @@ def evaluate_quote(artifact, row, quote, as_of):
         blockers.append("Quote older than 15 minutes")
     if not quote.get("availability_verified"):
         blockers.append("Current player/role availability unverified")
+    elif not quote.get("availability_source_url", "").startswith("https://"):
+        blockers.append("Availability verification source is missing")
     if quote.get("role_change"):
         blockers.append("Role change outside validated feature assumptions")
-    return {"model_id": artifact["model_id"], "version": VERSION, "research_probability": win,
+    return {"model_id": artifact["model_id"], "version": artifact.get("version", VERSION), "research_probability": win,
+        "generated_as_of": at.isoformat(), "history_through": row.get("history_through"), "position": row["position"],
         "push_probability": push, "break_even_probability": break_even,
         "no_vig_market_probability": no_vig, "market_overround": overround,
         "estimated_difference_vs_no_vig_pp": None if no_vig is None else (win/(1-push)-no_vig)*100,
@@ -283,12 +342,18 @@ def evaluate_quote(artifact, row, quote, as_of):
 
 def forecast_inputs(frame, market, quote):
     """Construct live features using prior weeks only; no synthetic outcomes."""
+    frame = normalize(frame)
     target = (int(quote["season"]), int(quote["week"]))
     past = frame[(frame.season_type == "REG") &
         ((frame.season < target[0]) | ((frame.season == target[0]) & (frame.week < target[1])))].copy()
     past = past.sort_values(["season", "week", "player_id"])
     if past.duplicated(["player_id", "season", "week"]).any():
         raise ValueError("Duplicate historical records")
+    required = ["player_id", "recent_team", "opponent_team", "position", *MARKETS[market][:2]]
+    if past[required].isna().any().any() or not np.isfinite(past[list(MARKETS[market][:2])].to_numpy(dtype=float)).all():
+        raise ValueError("Incomplete or nonfinite historical measurements")
+    if (past[MARKETS[market][0]] < 0).any():
+        raise ValueError("Negative historical opportunities")
     history = past[(past.player_id == quote["player_id"]) & (past.recent_team == quote["team"])]
     if len(history) < 4:
         raise ValueError("At least four prior same-team games required")
@@ -313,9 +378,11 @@ def main():
     parser.add_argument("--model", help="Existing immutable model; skip fitting")
     parser.add_argument("--quotes", help="JSON array of timestamped exact-market quotes")
     parser.add_argument("--as-of", help="Timezone-aware quote evaluation timestamp")
+    parser.add_argument("--test-year",type=int,default=2024)
+    parser.add_argument("--journal",help="Append forecasts to a prospective research journal before kickoff")
     args = parser.parse_args()
     paths = [Path(p) for p in args.data]
-    frame = pd.concat([pd.read_csv(p) for p in paths], ignore_index=True)
+    frame = pd.concat([normalize(pd.read_csv(p,low_memory=False)) for p in paths], ignore_index=True)
     if args.model:
         if not args.quotes or not args.as_of:
             parser.error("--model requires --quotes and --as-of")
@@ -325,11 +392,21 @@ def main():
             raise ValueError("Model artifact integrity check failed")
         quotes = json.loads(Path(args.quotes).read_text())
         outputs = [evaluate_quote(artifact,forecast_inputs(frame,q["market"],q),q,args.as_of) for q in quotes]
+        for output in outputs:
+            output["input_sources"] = [{"file":p.name,"sha256":hashlib.sha256(p.read_bytes()).hexdigest()} for p in paths]
+        if args.journal:
+            from journal import Journal
+            journal = Journal(args.journal)
+            try:
+                for output in outputs:
+                    output["journal_forecast_id"], _ = journal.forecast(output)
+            finally:
+                journal.close()
         Path(args.output).write_text(json.dumps(outputs,indent=2,allow_nan=False)+"\n")
         print(json.dumps({"forecasts":len(outputs),"official_eligible":0}))
         return
-    artifact, report = train(frame)
-    manifest = [{"file": p.name, "source_url": "https://github.com/nflverse/nflverse-data/releases/download/player_stats/"+p.name,
+    artifact, report = train(frame,test_year=args.test_year)
+    manifest = [{"file": p.name, "source_url": "https://github.com/nflverse/nflverse-data/releases/download/"+("stats_player/" if p.name.startswith("stats_player_week_") else "player_stats/")+p.name,
         "sha256": hashlib.sha256(p.read_bytes()).hexdigest()} for p in paths]
     artifact["sources"] = manifest
     report["sources"] = manifest

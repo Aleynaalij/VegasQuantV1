@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]/"research"/"probability"))
-from engine import prepare, fit, distribution, calibrate, calibrated, evaluate_quote, forecast_inputs, implied
+from engine import prepare, fit, distribution, calibrate, calibrated, evaluate_quote, forecast_inputs, implied, normalize
 
 def logs():
     rows=[]
@@ -17,6 +17,17 @@ def logs():
     return pd.DataFrame(rows)
 
 class EngineTests(unittest.TestCase):
+    def test_new_upstream_team_schema(self):
+        d=logs();a=prepare(d,"rushing");b=prepare(d.rename(columns={"recent_team":"team"}),"rushing")
+        self.assertEqual(a,b)
+        d["team"]="BUF"
+        with self.assertRaises(ValueError):normalize(d)
+
+    def test_unknown_identity_cannot_hide_nonzero_stats(self):
+        d=logs();d.loc[0,"player_id"]=None
+        with self.assertRaises(ValueError):normalize(d)
+        d.loc[0,["carries","rushing_yards","targets","receiving_yards"]]=0
+        self.assertEqual(len(normalize(d)),len(d)-1)
     def test_future_outcomes_do_not_change_prior_features(self):
         d=logs(); a=prepare(d,"rushing")
         d.loc[(d.season==2023)&(d.week>=10),"rushing_yards"]=9000

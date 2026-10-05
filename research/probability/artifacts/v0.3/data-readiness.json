@@ -1,0 +1,25 @@
+{
+  "observed_at": "2026-10-05T21:09:29.910747+00:00",
+  "sources": [
+    {
+      "season": 2025,
+      "source_url": "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2025.csv",
+      "sha256": "e5e0615b3d96a3eaebfaee91e55afb4a4e7fe0caf057454177bcd7d6ad4bcfc2",
+      "regular_season_rows": 18522,
+      "through_week": 18,
+      "zero_contribution_unidentified_rows_excluded": 22
+    },
+    {
+      "season": 2026,
+      "source_url": "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2026.csv",
+      "sha256": "27a8a464687901340e87873010b3583443619fad723db828f745f71c8086ec9e",
+      "regular_season_rows": 4375,
+      "through_week": 4,
+      "zero_contribution_unidentified_rows_excluded": 4
+    }
+  ],
+  "live_quote_coverage": null,
+  "injury_feed_coverage": null,
+  "prospective_forecasts_recorded": 0,
+  "status": "SHADOW_ONLY"
+}

@@ -10,3 +10,6 @@ test-results/
 supabase/.temp/
 __pycache__/
 *.pyc
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal

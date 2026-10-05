@@ -1,4 +1,5 @@
 import { Panel, Shell } from "@/components/ui";
+import validation from "../../../research/probability/artifacts/v0.3/validation.json";
 export default function Methodology() {
   return (
     <Shell>
@@ -11,6 +12,34 @@ export default function Methodology() {
           </p>
         </div>
       </div>
+      <Panel title="Probability engine · Research testing">
+        <div className="notebook">
+          <p>
+            We forecast running-back rushing yards and RB, WR and TE receiving
+            yards using historical workload, efficiency and opponent context.
+            We trained on 2022, calibrated on 2023 and tested the unchanged model
+            on 2025. Earlier 2024 results remain in the research record.
+          </p>
+          <p>
+            The model&apos;s Brier score was {validation.markets.rushing.model.brier.toFixed(3)}
+            {" "}for {validation.markets.rushing.test_player_games} rushing player-games
+            and {validation.markets.receiving.model.brier.toFixed(3)} for
+            {" "}{validation.markets.receiving.test_player_games} receiving player-games.
+            Lower scores indicate better probability forecasts. Historical
+            hit-rate baselines scored {validation.markets.rushing.empirical_player_baseline.brier.toFixed(3)}
+            {" "}and {validation.markets.receiving.empirical_player_baseline.brier.toFixed(3)}, respectively.
+          </p>
+          <p>
+            These tests used fixed yard thresholds, not historical sportsbook
+            offers. They do not establish profitable bets or a verified edge.
+            Live qualification still requires current player and role checks,
+            executable prices and prospective evidence against the market.
+            Touchdowns, parlays and game sides are outside this model&apos;s scope.
+          </p>
+          <a href="https://github.com/Aleynaalij/VegasQuantV1/tree/main/research/probability"
+            target="_blank" rel="noopener noreferrer">Read the model methods and validation →</a>
+        </div>
+      </Panel>
       <Panel title="What membership buys">
         <div className="notebook">
           <p>
