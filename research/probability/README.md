@@ -1,4 +1,4 @@
-# Vegas Quant probability engine v0.1
+# Vegas Quant probability engine v0.2
 
 This is an executable, tested forecasting engine, not a hand-entered probability field. The checked-in release is **SHADOW_ONLY**. It does not publish picks, write to Supabase, alter bankrolls, or dispatch notifications. Its numerical outputs are experimental research estimates, not verified betting edges.
 
@@ -51,7 +51,7 @@ python research/probability/engine.py --data /tmp/vq-history/player_stats_2022.c
 To evaluate verified quotes using an existing artifact:
 
 ```bash
-python research/probability/engine.py --data /path/to/current-history.csv --model research/probability/artifacts/v0.1/model.json --quotes /path/to/verified-quotes.json --as-of 2026-10-05T17:00:00-04:00 --output /tmp/vq-forecasts
+python research/probability/engine.py --data /path/to/current-history.csv --model research/probability/artifacts/v0.2/model.json --quotes /path/to/verified-quotes.json --as-of 2026-10-05T17:00:00-04:00 --output /tmp/vq-forecasts
 ```
 
 Quote JSON is an array of objects with `player_id`, `team`, `opponent`, `season`, `week`, `market` (`rushing`/`receiving`), `direction` (`over`/`under`/`at_least`), `line`, `odds`, `sportsbook`, `source_url`, `observed_at`, `kickoff`, `availability_verified`, and `role_change`. Supply real observations; the command above is syntax guidance, not a live quote. Compare multiple books by supplying multiple exact-market quotes.
@@ -63,3 +63,11 @@ The GitHub Actions probability workflow runs behavioral tests on changes. A manu
 Current-season workload logs and current verified injury/role context must be supplied for prospective predictions. No automated injury feed, weather feature, explicit snap/route participation, depth-chart model, role-change refit or season-specific performance drift correction exists yet. Historical logs report games played; absence/DNP risk is handled by a separate availability gate, not fitted into the yard distribution. Marginal yard probabilities are calibrated, but workload/efficiency distributions themselves are not independently validated.
 
 Before live qualification: archive exact sportsbook observations without hindsight; run prospective forecasts before kickoff; assess calibration and coverage by market/position/line range; compare to same-time no-vig market baselines where both sides exist; evaluate executable price/EV outcomes and model uncertainty; document acceptance thresholds before examining that evaluation set. No unsupported market should inherit this module's validation.
+
+## v0.2 upgrade
+
+Validation now includes per-position and per-threshold Brier, log loss and calibration diagnostics. This is a reporting upgrade, not retraining to optimize the already viewed 2024 holdout; aggregate forecasts and scores are unchanged.
+
+An optional `opposite_quote` object supplies the complementary over/under price, with the same identifying fields and its own observation timestamp, source URL and odds. The engine requires the same sportsbook, market, player, team, opponent, game window, line and kickoff. Observations must be within one minute of each other and both within fifteen minutes of evaluation. A mismatched market is rejected; a stale/noncontemporaneous pair leaves no-vig probability unknown and blocks qualification. Proportional normalization removes the quoted overround; it does not identify a true win probability or a consensus across books. Whole-yard probabilities are conditional on no push for the price comparison.
+
+Current-season week three onward requires current-season player history. A gap greater than two weeks also blocks qualification; a bye or injury needs explicit availability/role review. The v0.1 model and report remain preserved in their original artifact directory.

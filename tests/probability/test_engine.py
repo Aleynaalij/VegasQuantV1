@@ -74,4 +74,23 @@ class EngineTests(unittest.TestCase):
         self.assertAlmostEqual(implied(150),.4)
         with self.assertRaises(ValueError):implied(0)
 
+    def test_exact_two_sided_price_comparison(self):
+        rows=prepare(logs(),"rushing");model=fit(rows);model["calibration"]=[0,1]
+        artifact=dict(model_id="test",models={"rushing":model},validation={"blockers":["shadow"]})
+        row=rows[-1];row["history_through"]=[2023,17]
+        q=dict(market="rushing",direction="over",player_id=row["player_id"],opponent="NO",
+            season=2023,week=18,line=60.5,odds=-110,sportsbook="Test fixture",
+            source_url="https://example.test/quote",observed_at="2023-01-01T12:00:00Z",
+            kickoff="2023-01-01T18:00:00Z")
+        other=dict(q,direction="under");q["opposite_quote"]=other
+        out=evaluate_quote(artifact,row,q,"2023-01-01T12:05:00Z")
+        self.assertAlmostEqual(out["no_vig_market_probability"],.5)
+        self.assertEqual(out["status"],"WAIT")
+        other["line"]=61.5
+        with self.assertRaises(ValueError):evaluate_quote(artifact,row,q,"2023-01-01T12:05:00Z")
+        other["line"]=60.5;other["observed_at"]="2023-01-01T11:58:00Z"
+        out=evaluate_quote(artifact,row,q,"2023-01-01T12:05:00Z")
+        self.assertIsNone(out["no_vig_market_probability"])
+        self.assertIn("Opposite price is stale or not contemporaneous",out["blockers"])
+
 if __name__=="__main__": unittest.main()

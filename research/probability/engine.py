@@ -1,4 +1,4 @@
-"""Vegas Quant v0.1: pregame opportunity/efficiency distribution, research only.
+"""Vegas Quant v0.2: pregame opportunity/efficiency distribution, research only.
 
 Train, calibrate and test on disjoint chronological seasons. No market data is
 used in fitting. This module never publishes picks or alters account balances.
@@ -14,7 +14,7 @@ import pandas as pd
 from scipy.optimize import minimize
 from scipy.special import expit, logit
 
-VERSION = "vq-opportunity-efficiency-0.1"
+VERSION = "vq-opportunity-efficiency-0.2"
 MARKETS = {"rushing": ("carries", "rushing_yards", 6),
            "receiving": ("targets", "receiving_yards", 3)}
 FEATURES = ["intercept", "recent_opportunities", "long_opportunities",
@@ -173,6 +173,15 @@ def train(frame, train_end=2022, calibration_year=2023, test_year=2024):
         report["markets"][market] = {"train_player_games": len(sets[0]),
             "calibration_player_games": len(sets[1]), "test_player_games": len(sets[2]),
             "thresholds": thresholds, "model": score, "empirical_player_baseline": baseline}
+        grouped = {}
+        calibrated_test = calibrated(p, model["calibration"])
+        for position in sorted({r["position"] for r in sets[2]}):
+            mask = np.repeat([r["position"] == position for r in sets[2]], len(thresholds))
+            grouped[position] = metrics(calibrated_test[mask], y[mask])
+        report["markets"][market]["by_position"] = grouped
+        report["markets"][market]["by_threshold"] = {
+            str(t): metrics(calibrated_test[i::len(thresholds)], y[i::len(thresholds)])
+            for i,t in enumerate(thresholds)}
         artifact["models"][market] = model
     artifact["splits"] = {"train_through": train_end, "calibration": calibration_year, "test": test_year}
     report["splits"] = artifact["splits"]
@@ -226,12 +235,33 @@ def evaluate_quote(artifact, row, quote, as_of):
     edge = (win/(1-push)-break_even)*100
     ev = win*profit-(1-win-push)
     blockers = list(artifact["validation"]["blockers"])
+    no_vig, overround = None, None
+    opposite = quote.get("opposite_quote")
+    if opposite is not None:
+        if quote["direction"] == "at_least":
+            raise ValueError("No-vig comparison requires complementary over/under markets")
+        for key in ["player_id", "team", "opponent", "season", "week", "market", "line", "sportsbook", "kickoff"]:
+            if opposite.get(key) != quote.get(key):
+                raise ValueError("Opposite quote must match the exact market and sportsbook")
+        if opposite.get("direction") != ("under" if quote["direction"] == "over" else "over"):
+            raise ValueError("Opposite quote is not complementary")
+        other_time = pd.Timestamp(opposite["observed_at"])
+        if other_time.tz is None or other_time > at or not opposite.get("source_url", "").startswith("https://"):
+            raise ValueError("Invalid opposite quote observation")
+        if abs(other_time-observed) > pd.Timedelta(minutes=1) or at-other_time > pd.Timedelta(minutes=15):
+            blockers.append("Opposite price is stale or not contemporaneous")
+        else:
+            other_implied = implied(float(opposite["odds"]))
+            overround = break_even + other_implied - 1
+            no_vig = break_even / (break_even + other_implied)
     if row.get("history_through") is None:
         blockers.append("Historical input cutoff is not documented")
     elif tuple(row["history_through"]) >= (quote["season"],quote["week"]):
         raise ValueError("Historical input contains target-week or future outcomes")
     elif row["history_through"][0] < quote["season"]-1:
         blockers.append("Player history is stale")
+    elif row["history_through"][0] < quote["season"] and quote["week"] >= 3:
+        blockers.append("Current-season workload history is missing")
     elif row["history_through"][0] == quote["season"] and quote["week"]-row["history_through"][1] > 2:
         blockers.append("Recent workload history is missing")
     if at-observed > pd.Timedelta(minutes=15):
@@ -242,6 +272,8 @@ def evaluate_quote(artifact, row, quote, as_of):
         blockers.append("Role change outside validated feature assumptions")
     return {"model_id": artifact["model_id"], "version": VERSION, "research_probability": win,
         "push_probability": push, "break_even_probability": break_even,
+        "no_vig_market_probability": no_vig, "market_overround": overround,
+        "estimated_difference_vs_no_vig_pp": None if no_vig is None else (win/(1-push)-no_vig)*100,
         "estimated_edge_pp": edge, "estimated_ev_per_unit": ev,
         "median_yards": float(np.median(values)), "yard_interval_10_90": np.quantile(values,[.1,.9]).tolist(),
         "quote": quote, "forecast_inputs": dict(zip(FEATURES,row["x"])),
