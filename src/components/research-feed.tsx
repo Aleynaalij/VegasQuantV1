@@ -188,10 +188,7 @@ export default function ResearchFeed() {
             <span>Research updates · A watchlist is not an official play.</span>
           </div>
         </header>
-        <div id="candidate-tracker">
-          <DailyUpdateNotice />
-          <CandidateTracker />
-        </div>
+        <DailyUpdateNotice />
         {!loading && edgeRelease && filter === "All" && (
           <EdgeReleaseCard release={edgeRelease} />
         )}
@@ -325,6 +322,9 @@ export default function ResearchFeed() {
             )}
           </>
         )}
+        <div id="candidate-tracker">
+          <CandidateTracker />
+        </div>
         {error && (
           <div className="notice" role="alert">
             {error}{" "}
