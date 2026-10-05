@@ -116,6 +116,14 @@ export default function CandidateTracker({
           <p>{c.market}</p>
           <strong className="candidate-price">{c.quote}</strong>
           <p className="candidate-context">{c.quote_context}</p>
+          {!expired && c.experimental && c.gambly_url && (
+            <div className="notice">
+              <GamblyLink url={c.gambly_url} selection={`${c.name} ${c.market} · ${c.matchup}`} />
+              <p>Copies the exact pick and opens Gambly. Paste it into the search box. No prefilled share slip is available. Confirm the exact line and price before acting; opening this link does not record a wager.</p>
+            </div>
+          )}
+          <details className="candidate-details">
+            <summary>Full pick analysis & risks ↓</summary>
           <div className="candidate-facts">
             <div>
               <small>Quote observation</small>
@@ -145,12 +153,6 @@ export default function CandidateTracker({
             Publication time is not the quote time. Confirm availability at your
             sportsbook; this research card does not authorize an entry.
           </small>
-          {!expired && c.experimental && c.gambly_url && (
-            <div className="notice">
-              <GamblyLink url={c.gambly_url} />
-              <p>Opens Gambly for manual entry. No prefilled share slip is available. Confirm the exact line and price before acting; opening this link does not record a wager.</p>
-            </div>
-          )}
           {featured && !experimental && (
             <div className="candidate-facts">
               <div>
@@ -206,6 +208,7 @@ export default function CandidateTracker({
                   </a>
                 ))}
             </div>
+          </details>
           </details>
         </article>
       ))}
