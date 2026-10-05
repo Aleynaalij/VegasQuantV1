@@ -1,10 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import GamblyLink from "./gambly-link";
 import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
 
 type Candidate = {
+  experimental?: boolean;
+  gambly_url?: string;
   odds?: number;
   quote_observed_at?: string;
   name: string;
@@ -27,9 +30,13 @@ type Release = {
 export default function CandidateTracker({
   stageId,
   featured = false,
+  archiveOnly = false,
+  activeOnly = false,
 }: {
   stageId?: string;
   featured?: boolean;
+  archiveOnly?: boolean;
+  activeOnly?: boolean;
 }) {
   const [release, setRelease] = useState<Release | null>(null);
   const [failed, setFailed] = useState(false);
@@ -42,7 +49,8 @@ export default function CandidateTracker({
         .order("created_at", { ascending: false })
         .limit(1);
       if (stageId) q = q.eq("stage_id", stageId);
-      if (featured) q = q.gt("expires_at", new Date().toISOString());
+      if (archiveOnly) q = q.lte("expires_at", new Date().toISOString());
+      if (featured || activeOnly) q = q.gt("expires_at", new Date().toISOString());
       const r = await q;
       if (live) {
         setFailed(!!r.error);
@@ -57,7 +65,7 @@ export default function CandidateTracker({
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
     };
-  }, [stageId, featured]);
+  }, [stageId, featured, archiveOnly, activeOnly]);
   if (!release)
     return failed ? (
       <p className="notice">
@@ -72,6 +80,7 @@ export default function CandidateTracker({
           ? -release.candidates[0].odds! / (-release.candidates[0].odds! + 100)
           : 100 / (release.candidates[0].odds! + 100)) * 100
       : null;
+  const experimental = release.candidates[0]?.experimental === true;
   const list = featured ? release.candidates.slice(0, 1) : release.candidates;
   return (
     <section
@@ -80,12 +89,14 @@ export default function CandidateTracker({
     >
       <header>
         <span className="eyebrow">
-          {featured ? "NEXT LEG WATCH" : "EDGE TRACKER"} ·{" "}
-          {expired ? "ARCHIVED RESEARCH" : "WAIT · NOT OFFICIAL"}
+          {experimental ? "EXPERIMENTAL PICK" : featured ? "NEXT LEG WATCH" : "EDGE TRACKER"} ·{" "}
+          {expired ? "ARCHIVED RESEARCH" : experimental ? "SUBJECT TO CHANGE · NOT OFFICIAL" : "WAIT · NOT OFFICIAL"}
         </span>
-        <h2>{featured ? "Potential next leg" : release.title}</h2>
+        <h2>{featured && !experimental ? "Potential next leg" : release.title}</h2>
         <p>
-          {featured
+          {experimental
+            ? "Experimental selection. Play at your own risk. No outcome is guaranteed. Revisions are published separately; this original stays on record."
+            : featured
             ? "Our leading research candidate. Await the official decision before treating this as a challenge leg."
             : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
         </p>
@@ -121,7 +132,7 @@ export default function CandidateTracker({
             </div>
             <div>
               <small>Decision</small>
-              <strong>{expired ? "Archived" : "WAIT"}</strong>
+              <strong>{expired ? "Archived" : experimental ? "Experimental" : "WAIT"}</strong>
             </div>
           </div>
           <p className="notice">
@@ -134,7 +145,13 @@ export default function CandidateTracker({
             Publication time is not the quote time. Confirm availability at your
             sportsbook; this research card does not authorize an entry.
           </small>
-          {featured && (
+          {!expired && c.experimental && c.gambly_url && (
+            <div className="notice">
+              <GamblyLink url={c.gambly_url} />
+              <p>Opens Gambly for manual entry. No prefilled share slip is available. Confirm the exact line and price before acting; opening this link does not record a wager.</p>
+            </div>
+          )}
+          {featured && !experimental && (
             <div className="candidate-facts">
               <div>
                 <small>Break-even at quoted odds</small>
@@ -192,11 +209,11 @@ export default function CandidateTracker({
           </details>
         </article>
       ))}
-      <p className="notice">
+      {!experimental && <p className="notice">
         <b>What “3% edge” means:</b> Our defensible estimated chance must exceed
         the price’s implied chance by at least 3 percentage points. It is not a
         3% guaranteed return. No qualifying edge has been established here.
-      </p>
+      </p>}
       {featured && (
         <Link className="secondary" href="/feed#candidate-tracker">
           View all candidate research →
