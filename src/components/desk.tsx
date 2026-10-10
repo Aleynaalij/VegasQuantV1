@@ -565,92 +565,101 @@ export default function DeskApp({
               title="Permanent betting ledger"
               aside={<Badge>{ledgerPicks.length} picks</Badge>}
             >
-              <div className="ledger-desktop table-scroll">
-                <table>
-                  <thead>
-                    <tr>
-                      {[
-                        "Date",
-                        "Game",
-                        "Stage",
-                        "Market",
-                        "Pick",
-                        "Recommended",
-                        "Bet line",
-                        "Odds",
-                        "Close",
-                        "Price CLV",
-                        "Line CLV",
-                        "Stake",
-                        "Result",
-                        "P/L",
-                        "Bankroll",
-                        "Confidence",
-                        "Edge",
-                        "Process",
-                      ].map((k) => (
-                        <th key={k}>{k}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {ledgerPicks.slice(0, ledgerLimit).map((p) => {
-                      const game = d.games.find((g) => g.id === p.game_id),
-                        st = d.stages.find((s) => s.id === p.stage_id),
-                        e = d.entries.find((e) => e.pick_id === p.id),
-                        close = d.closings.find((c) => c.pick_id === p.id),
-                        r = d.results.find((r) => r.pick_id === p.id),
-                        review = d.reviews.find((r) => r.pick_id === p.id),
-                        c = clv(p, e, close);
-                      return (
-                        <tr key={p.id}>
-                          <td>{time(p.created_at)}</td>
-                          <td>
-                            <Link href={`/games/${game?.slug}`}>
-                              {game?.away_team} @ {game?.home_team}
-                            </Link>
-                          </td>
-                          <td>{st?.stage_number || "Standalone"}</td>
-                          <td>{p.market}</td>
-                          <td>
-                            <Link href={`/picks/${p.id}/share`}>
-                              {p.selection}
-                            </Link>
-                          </td>
-                          <td>{lineText(p.recommended_line)}</td>
-                          <td>{e ? lineText(e.line) : "Unconfirmed"}</td>
-                          <td>{odd(e?.odds ?? p.odds)}</td>
-                          <td>
-                            {close
-                              ? `${lineText(close.line)} ${odd(close.odds)}`
-                              : "—"}
-                          </td>
-                          <td>{pct(c.price)}</td>
-                          <td>{c.points === null ? "—" : `${c.points} pts`}</td>
-                          <td>{money(p.stake_cents)}</td>
-                          <td>{r?.result || "OPEN"}</td>
-                          <td
-                            className={
-                              r && r.profit_cents < 0 ? "negative" : "positive"
-                            }
-                          >
-                            {r ? signedMoney(r.profit_cents) : "—"}
-                          </td>
-                          <td>
-                            {r?.bankroll_cents !== undefined &&
-                            r?.bankroll_cents !== null
-                              ? money(r.bankroll_cents)
-                              : "—"}
-                          </td>
-                          <td>{p.confidence}/10</td>
-                          <td>{p.edge}%</td>
-                          <td>{review?.grade || "—"}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <details className="ledger-desktop ledger-audit">
+                <summary>
+                  Full audit table · entries, closes & process ↓
+                </summary>
+                <div className="table-scroll">
+                  <table>
+                    <thead>
+                      <tr>
+                        {[
+                          "Date",
+                          "Game",
+                          "Stage",
+                          "Market",
+                          "Pick",
+                          "Recommended",
+                          "Bet line",
+                          "Odds",
+                          "Close",
+                          "Price CLV",
+                          "Line CLV",
+                          "Stake",
+                          "Result",
+                          "P/L",
+                          "Bankroll",
+                          "Confidence",
+                          "Edge",
+                          "Process",
+                        ].map((k) => (
+                          <th key={k}>{k}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ledgerPicks.slice(0, ledgerLimit).map((p) => {
+                        const game = d.games.find((g) => g.id === p.game_id),
+                          st = d.stages.find((s) => s.id === p.stage_id),
+                          e = d.entries.find((e) => e.pick_id === p.id),
+                          close = d.closings.find((c) => c.pick_id === p.id),
+                          r = d.results.find((r) => r.pick_id === p.id),
+                          review = d.reviews.find((r) => r.pick_id === p.id),
+                          c = clv(p, e, close);
+                        return (
+                          <tr key={p.id}>
+                            <td>{time(p.created_at)}</td>
+                            <td>
+                              <Link href={`/games/${game?.slug}`}>
+                                {game?.away_team} @ {game?.home_team}
+                              </Link>
+                            </td>
+                            <td>{st?.stage_number || "Standalone"}</td>
+                            <td>{p.market}</td>
+                            <td>
+                              <Link href={`/picks/${p.id}/share`}>
+                                {p.selection}
+                              </Link>
+                            </td>
+                            <td>{lineText(p.recommended_line)}</td>
+                            <td>{e ? lineText(e.line) : "Unconfirmed"}</td>
+                            <td>{odd(e?.odds ?? p.odds)}</td>
+                            <td>
+                              {close
+                                ? `${lineText(close.line)} ${odd(close.odds)}`
+                                : "—"}
+                            </td>
+                            <td>{pct(c.price)}</td>
+                            <td>
+                              {c.points === null ? "—" : `${c.points} pts`}
+                            </td>
+                            <td>{money(p.stake_cents)}</td>
+                            <td>{r?.result || "OPEN"}</td>
+                            <td
+                              className={
+                                r && r.profit_cents < 0
+                                  ? "negative"
+                                  : "positive"
+                              }
+                            >
+                              {r ? signedMoney(r.profit_cents) : "—"}
+                            </td>
+                            <td>
+                              {r?.bankroll_cents !== undefined &&
+                              r?.bankroll_cents !== null
+                                ? money(r.bankroll_cents)
+                                : "—"}
+                            </td>
+                            <td>{p.confidence}/10</td>
+                            <td>{p.edge}%</td>
+                            <td>{review?.grade || "—"}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
               <div className="ledger-mobile">
                 {ledgerPicks.slice(0, ledgerLimit).map((p) => {
                   const r = d.results.find((r) => r.pick_id === p.id),

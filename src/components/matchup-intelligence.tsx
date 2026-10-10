@@ -87,7 +87,7 @@ export default function MatchupIntelligence({
     [windowFilter, setWindowFilter] = useState("All games"),
     [selected, setSelected] = useState(""),
     [sort, setSort] = useState("kickoff"),
-    [futureOnly, setFutureOnly] = useState(false),
+    [futureOnly, setFutureOnly] = useState(true),
     [error, setError] = useState("");
   const epoch = useRef(0);
   useEffect(() => {
@@ -156,6 +156,7 @@ export default function MatchupIntelligence({
     ? desk.picks.filter((p) => p.game_id === row.game.id)
     : [];
   const groups = [
+    "International",
     "Thursday",
     "Sunday Early",
     "Sunday Late",
@@ -165,7 +166,7 @@ export default function MatchupIntelligence({
   ];
   function group(r: DirectoryRow) {
     const slot = r.game.slot.toLowerCase();
-    if (slot.includes("international")) return "Other";
+    if (slot.includes("international")) return "International";
     if (slot.includes("thursday")) return "Thursday";
     if (slot.includes("monday")) return "Monday Night";
     if (slot.includes("sunday"))

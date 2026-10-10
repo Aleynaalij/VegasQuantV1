@@ -159,7 +159,12 @@ export default function CandidateTracker({
                   : "WATCHLIST"}{" "}
             · {c.matchup}
           </div>
-          {!c.fun_play && <div className="candidate-player"><PlayerPortrait key={c.name} name={c.name} /><h3>{c.name}</h3></div>}
+          {!c.fun_play && (
+            <div className="candidate-player">
+              <PlayerPortrait key={c.name} name={c.name} />
+              <h3>{c.name}</h3>
+            </div>
+          )}
           {!c.fun_play && <p>{c.market}</p>}
           {c.fun_play ? (
             <div className="ticket-price-note">
@@ -175,7 +180,7 @@ export default function CandidateTracker({
           {c.fun_play && c.legs && (
             <>
               <div className="ticket-legs">
-                {c.legs.slice(0, 4).map((leg) => (
+                {c.legs.slice(0, featured ? 2 : 4).map((leg) => (
                   <div className="ticket-leg" key={leg.team}>
                     <TeamLogo team={leg.team} />
                     <div>

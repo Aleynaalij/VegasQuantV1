@@ -282,7 +282,7 @@ export default function Membership() {
               </nav>
             )}
             <Link className="primary" href="/">
-              Open my challenge →
+              Open the sports desk →
             </Link>{" "}
             <button
               className="research-more"

@@ -3,7 +3,11 @@ import { ArrowUpRight, CalendarDays, Radio, ShieldCheck } from "lucide-react";
 import type { Game } from "@/lib/domain";
 export default function HomeBrief({ games }: { games: Game[] }) {
   const upcoming = games
-    .filter((g) => Date.parse(g.kickoff) > Date.now())
+    .filter(
+      (g) =>
+        Date.parse(g.kickoff) > Date.now() &&
+        Date.parse(g.kickoff) <= Date.now() + 7 * 86400000,
+    )
     .sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff));
   const next = upcoming[0];
   return (
@@ -28,7 +32,7 @@ export default function HomeBrief({ games }: { games: Game[] }) {
         <Link href="/matchups">
           <CalendarDays size={18} />
           <span>
-            <b>{upcoming.length} upcoming games</b>
+            <b>{upcoming.length} games this week</b>
             <small>
               {next
                 ? new Date(next.kickoff).toLocaleDateString("en-US", {
