@@ -354,11 +354,11 @@ export default function DeskApp({
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
             <DecisionBoard games={d.games} />
-            {stage && !challengePicks.some((p) => p.stage_id === stage.id) && (
+            {ch.status === "PREP" ? <CandidateTracker activeOnly featured /> : stage && !challengePicks.some((p) => p.stage_id === stage.id) && (
               <CandidateTracker stageId={stage.id} featured />
             )}
             <DailyUpdateNotice />
-            {access.member_code ? (
+            {ch.status === "PREP" ? <ChallengeRun challenge={ch} stages={stages} /> : access.member_code ? (
               <PersonalChallenge
                 renderOfficial={
                   official
