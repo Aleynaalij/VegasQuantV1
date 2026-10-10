@@ -13,6 +13,7 @@ import {
 import { Shell, Badge, Panel, Empty } from "./ui";
 import SourceObservations from "./source-observations";
 import PickCard from "./pick-card";
+import TeamLogo from "./team-logo";
 import ResearchSections from "./research-sections";
 import ResearchNotebook from "./research-notebook";
 import SourceStatus from "./source-status";
@@ -310,11 +311,13 @@ export default function MatchupIntelligence({
                           {r.game.week ? `· Week ${r.game.week}` : ""}
                         </span>
                         <div className="game-pair" aria-hidden="true">
+                          <TeamLogo team={r.game.away_team} size={48} />
                           <strong>
                             {r.game.away_abbreviation ||
                               r.game.away_team.split(" ").at(-1)}
                           </strong>
                           <span>@</span>
+                          <TeamLogo team={r.game.home_team} size={48} />
                           <strong>
                             {r.game.home_abbreviation ||
                               r.game.home_team.split(" ").at(-1)}
