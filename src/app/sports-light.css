@@ -1,0 +1,722 @@
+/* Bright sports desk: white surfaces, electric blue actions, compact tickets. */
+:root {
+  color-scheme: light;
+  --bg: #f2f5fa;
+  --panel: #fff;
+  --panel2: #f5f8fd;
+  --line: #dce4ef;
+  --border: #dce4ef;
+  --text: #13243c;
+  --muted: #52657d;
+  --green: #0866d8;
+  --accent: #0866d8;
+  --gold: #8b5b08;
+  --red: #be2544;
+  --radius: 18px;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+}
+::selection {
+  background: #cce1ff;
+  color: #112b4b;
+}
+h1,
+h2,
+h3,
+h4 {
+  color: var(--text);
+  letter-spacing: -0.035em;
+}
+p,
+small {
+  color: var(--muted);
+}
+.sidebar,
+.topbar,
+.mobile-nav {
+  background: #fff !important;
+  border-color: var(--line) !important;
+  color: var(--text);
+}
+.topbar {
+  box-shadow: 0 2px 12px #16386008;
+}
+.brand,
+.mobile-brand,
+.logo,
+.vq-mark {
+  color: #0866d8;
+}
+.brand b {
+  font-weight: 800;
+}
+.brand small,
+.breadcrumb,
+.top-actions .desktop {
+  color: var(--muted);
+}
+.sidebar nav a,
+.mobile-nav a {
+  color: #63768f !important;
+}
+.sidebar nav a.active,
+.mobile-nav a.active {
+  background: #e8f1ff !important;
+  color: #0866d8 !important;
+}
+.sidebar nav a.active svg,
+.mobile-nav a.active svg {
+  color: #0866d8 !important;
+}
+.sidebar-rule,
+.sidebar-bottom,
+.profile-rail-note {
+  background: #f0f6ff !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+.sidebar-rule p,
+.sidebar-rule span {
+  color: var(--muted) !important;
+}
+main {
+  max-width: 1440px;
+}
+.eyebrow {
+  color: #0866d8 !important;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  font-size: 10px;
+}
+.panel,
+.official-card,
+.candidate-tracker,
+.mi-game,
+.mi-search,
+.community-panel,
+.community-profile-rail,
+.profile-roster,
+.one-bankroll,
+.intel-row,
+.mi-target,
+.mi-watch,
+.mi-section,
+.workspace-index > a,
+.research-notebook,
+.research-feed-card,
+.feed-post,
+.update-card,
+.entry-dialog,
+.ask-vegas-dialog,
+.welcome-dialog,
+.welcome-card,
+.admin-section,
+.balance-method,
+.run-actions,
+.decision-board,
+.decision-window,
+.sports-ticker,
+.source-observations,
+.account-card,
+.member-form,
+.auth-card,
+.feed-card {
+  background: #fff !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+  box-shadow: 0 4px 18px #16386006;
+}
+.panel,
+.candidate-tracker,
+.mi-game,
+.community-panel,
+.one-bankroll {
+  border-radius: 18px;
+}
+.panel-head,
+.candidate-item,
+.profile-roster summary,
+.mi-section summary,
+.ask-vegas-header,
+.ask-vegas-toolbar {
+  border-color: var(--line) !important;
+}
+.primary,
+.btn.primary,
+.join-run,
+.ask-vegas-form button {
+  background: #0866d8 !important;
+  color: #fff !important;
+  border-color: #0866d8 !important;
+  box-shadow: 0 4px 12px #0866d822;
+}
+.primary:hover,
+.btn.primary:hover {
+  background: #0756b7 !important;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: #0866d8;
+  color: #fff;
+  font-weight: 750;
+  border: 1px solid #0866d8;
+  gap: 8px;
+}
+.secondary,
+.text-link,
+.profile-view-link,
+.profile-socials a,
+.slate-windows button,
+.section-switch button,
+.account-tabs button {
+  background: #fff !important;
+  border-color: #cedbed !important;
+  color: #0866d8 !important;
+}
+.text-link {
+  background: transparent !important;
+}
+.secondary:hover {
+  background: #eef5ff !important;
+}
+input,
+select,
+textarea {
+  background: #fff !important;
+  color: var(--text) !important;
+  border-color: #cbd7e7 !important;
+  accent-color: #0866d8;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #788aa0;
+}
+.notice,
+.run-notice,
+.pick-odds-notice,
+.mi-historical,
+.mi-access,
+.daily-update-notice {
+  background: #fff7e8 !important;
+  color: #74510f !important;
+  border-color: #ead8ac !important;
+  box-shadow: none;
+}
+.notice p,
+.notice small {
+  color: #74510f !important;
+}
+.badge {
+  background: #eef3fa !important;
+  color: #50657e !important;
+  border-color: #dce4ef !important;
+}
+.badge.green,
+.badge.blue {
+  background: #e7f2ff !important;
+  color: #075ab9 !important;
+}
+.badge.red {
+  background: #fff0f3 !important;
+  color: #b52341 !important;
+}
+.candidate-tracker {
+  border-top: 4px solid #0866d8 !important;
+  padding: 24px !important;
+}
+.candidate-tracker > header {
+  padding-bottom: 16px;
+}
+.candidate-tracker > header h2 {
+  font-size: 26px;
+  line-height: 1.2;
+  margin: 12px 0;
+}
+.candidate-tracker > header p {
+  font-size: 14px;
+  line-height: 1.55;
+  margin-bottom: 10px;
+}
+.candidate-tracker > header small {
+  font-size: 11px;
+}
+.candidate-item {
+  padding: 18px 0 0;
+}
+.candidate-price,
+.official-price {
+  color: #0866d8 !important;
+}
+.candidate-context {
+  font-size: 13px;
+  line-height: 1.6;
+}
+.candidate-details > summary,
+.ticket-more > summary {
+  color: #0866d8;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.candidate-facts > div,
+.pick-numbers > div,
+.pick-finances > div,
+.stat {
+  background: #f5f8fd !important;
+  color: var(--text);
+  border-color: var(--line) !important;
+}
+.candidate-facts strong {
+  color: var(--text);
+}
+.fun-ticket {
+  overflow: hidden;
+}
+.fun-ticket > header {
+  border-bottom: 0 !important;
+}
+.fun-ticket .candidate-item > .eyebrow {
+  font-size: 9px;
+  line-height: 1.65;
+}
+.ticket-price-note {
+  font-size: 11px;
+  color: #61748c;
+  margin: 10px 0 14px;
+}
+.ticket-legs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.ticket-leg {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  padding: 12px 9px;
+  background: #f4f7fc;
+  border: 1px solid #e0e8f2;
+  border-radius: 12px;
+}
+.ticket-leg > div {
+  min-width: 0;
+  flex: 1;
+}
+.ticket-leg strong {
+  display: block;
+  font-size: 13px;
+  line-height: 1.25;
+  color: #182d49;
+}
+.ticket-leg small {
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+}
+.ticket-leg > b {
+  font-size: 13px;
+  color: #075ab9;
+  white-space: nowrap;
+}
+.team-logo {
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 2px #0000000d);
+}
+.team-logo-fallback {
+  display: grid;
+  place-items: center;
+  background: #dbeaff;
+  border-radius: 50%;
+  font-size: 10px;
+  color: #075ab9;
+}
+.ticket-legs-full {
+  grid-template-columns: 1fr;
+  padding: 8px 0;
+}
+.ticket-action {
+  padding: 12px 0 4px;
+}
+.ticket-action > .btn {
+  width: 100%;
+  background: #0866d8;
+  color: #fff;
+  font-size: 14px;
+}
+.ticket-action > p {
+  font-size: 10px;
+  text-align: center;
+  margin: 8px 0;
+}
+.fun-ticket .candidate-details {
+  border-top: 1px solid var(--line);
+  margin-top: 8px;
+}
+.game-pair {
+  align-items: center;
+  gap: 10px !important;
+}
+.game-pair strong {
+  font-size: 28px !important;
+}
+.game-pair > span {
+  font-size: 14px !important;
+  color: #71839a !important;
+}
+.mi-game {
+  position: relative;
+  transition:
+    transform 0.15s,
+    box-shadow 0.15s;
+  overflow: hidden;
+}
+.mi-game:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px #19478414;
+}
+.mi-game:before {
+  content: "";
+  height: 3px;
+  background: linear-gradient(90deg, #0866d8, #53b8fa);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+.mi-game h3 {
+  font-size: 13px !important;
+  color: #52657d !important;
+}
+.mi-game p {
+  font-size: 12px;
+}
+.mi-game .game-pair {
+  margin: 16px 0;
+}
+.slate-windows button.selected,
+.section-switch button.selected {
+  background: #0866d8 !important;
+  color: #fff !important;
+  border-color: #0866d8 !important;
+}
+.slate-windows {
+  gap: 8px;
+}
+.slate-windows button {
+  font-size: 12px;
+  padding: 10px 16px;
+}
+.community-profile-rail {
+  overflow: hidden;
+}
+.profile-cover {
+  background: linear-gradient(120deg, #0866d8, #2793ed) !important;
+  color: #fff !important;
+  height: 82px !important;
+}
+.profile-cover span {
+  color: #fff !important;
+}
+.profile-rail-content h1 {
+  font-size: 24px;
+}
+.community-avatar {
+  border: 2px solid #fff !important;
+  box-shadow: 0 0 0 2px #d9e7fc;
+}
+.initials {
+  background: #e8f1ff !important;
+  color: #0866d8 !important;
+}
+.profile-handle,
+.profile-view-link {
+  color: #0866d8 !important;
+}
+.community-count {
+  background: #e9f2ff !important;
+  color: #0866d8 !important;
+  border-color: #d0e2fc !important;
+}
+.community-person {
+  background: #f5f8fd !important;
+  border: 1px solid #e0e8f2;
+  border-radius: 12px;
+  padding: 12px !important;
+}
+.community-person strong {
+  color: #13243c;
+}
+.community-person span,
+.community-person small,
+.community-directory-action,
+.community-event p,
+.community-event time {
+  color: #64768e !important;
+}
+.community-panel-head h2 {
+  font-size: 21px;
+}
+.community-sidebar {
+  opacity: 1;
+}
+.community-event {
+  border-color: var(--line) !important;
+}
+.community-directory summary {
+  min-height: 64px;
+}
+.community-main {
+  min-width: 0;
+}
+.challenge-run {
+  background: #fff !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+.challenge-run:after {
+  opacity: 0.04;
+}
+.challenge-run[aria-disabled="true"] {
+  background: #f0f2f5 !important;
+  border-color: #d4dbe5 !important;
+  box-shadow: none;
+  color: #617087 !important;
+}
+.challenge-run[aria-disabled="true"] h1 {
+  color: #617087;
+}
+.challenge-run[aria-disabled="true"] .eyebrow {
+  color: #6e7d92 !important;
+}
+.challenge-run[aria-disabled="true"] .journey-dot {
+  background: #e3e8ef !important;
+  border-color: #c9d1dc !important;
+  color: #7b8799;
+}
+.challenge-run[aria-disabled="true"] .journey {
+  margin: 22px 0 14px;
+}
+.journey-dot {
+  background: #eef4ff !important;
+  color: #0866d8;
+  border-color: #c7dcf9;
+}
+.journey:before {
+  background: #d7e2ef !important;
+}
+.journey-stop {
+  color: #52657d;
+}
+.run-next {
+  background: #f4f8ff !important;
+  color: var(--text);
+}
+.ask-vegas-launcher {
+  background: #0866d8 !important;
+  color: white !important;
+  border: 0 !important;
+  box-shadow: 0 5px 18px #0866d830;
+  padding: 10px 14px;
+}
+.ask-vegas-launcher .vq-mark {
+  color: #fff !important;
+}
+.ask-vegas-header button,
+.ask-vegas-toolbar button,
+.ask-vegas-answer,
+.ask-vegas-topics button,
+.ask-vegas-suggestions button {
+  background: #f2f6fd !important;
+  color: #193b69 !important;
+  border-color: var(--line) !important;
+}
+.ask-vegas-header strong {
+  color: var(--text);
+}
+.ask-vegas-header small,
+.ask-vegas-answer p,
+.ask-vegas-privacy {
+  color: var(--muted) !important;
+}
+.ask-vegas-question {
+  background: #e7f1ff !important;
+  color: #183860 !important;
+}
+.ask-vegas-chat,
+.ask-vegas-form {
+  background: #fff !important;
+  border-color: var(--line) !important;
+}
+.sports-ticker {
+  background: #fff !important;
+  border-color: #dce4ef !important;
+  box-shadow: none;
+}
+.sports-ticker .ticker-label {
+  color: #0866d8 !important;
+  font-weight: 800;
+}
+.sports-ticker summary b,
+.sports-ticker .ticker-games a {
+  color: #0866d8 !important;
+}
+.sports-ticker .ticker-scroll {
+  color: #203852;
+}
+.sports-ticker .ticker-games small {
+  color: #52657d !important;
+}
+.sports-ticker .ticker-games > div {
+  border-color: var(--line) !important;
+}
+.decision-window a,
+.decision-window summary {
+  color: #0866d8 !important;
+}
+.explore-cards a,
+.research-pulse,
+.proof-card,
+.proof-stat,
+.profile-stat,
+.source-status,
+.market-card,
+.research-summary,
+.slip-why,
+.pick-publication,
+.slip-disclaimer,
+.pick-public-money,
+.public-money-card {
+  background: #fff !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+.explore-cards small,
+.research-pulse p,
+.source-status small {
+  color: var(--muted) !important;
+}
+table th {
+  background: #edf3fb !important;
+  color: #536981 !important;
+}
+table td {
+  border-color: #e2e9f2 !important;
+}
+.positive {
+  color: #0866d8 !important;
+}
+.negative {
+  color: #be2544 !important;
+}
+footer {
+  color: #60758e;
+  border-color: var(--line) !important;
+}
+@media (max-width: 760px) {
+  body {
+    font-size: 14px;
+  }
+  .topbar {
+    height: 64px !important;
+    min-height: 64px !important;
+  }
+  .mobile-brand {
+    font-size: 14px !important;
+  }
+  .mobile-brand svg {
+    width: 30px !important;
+  }
+  main {
+    padding-top: 16px !important;
+  }
+  .mobile-nav {
+    box-shadow: 0 -3px 18px #1638600a;
+  }
+  .mobile-nav a {
+    border-radius: 12px !important;
+  }
+  .candidate-tracker {
+    padding: 18px !important;
+    border-radius: 16px;
+  }
+  .candidate-tracker > header h2 {
+    font-size: 23px;
+  }
+  .candidate-tracker > header p {
+    font-size: 13px;
+  }
+  .candidate-tracker > header .eyebrow {
+    font-size: 9px;
+    line-height: 1.7;
+  }
+  .ticket-leg .team-logo {
+    width: 30px;
+    height: 30px;
+  }
+  .ticket-leg {
+    padding: 10px 8px;
+    gap: 7px;
+  }
+  .ticket-leg > b {
+    font-size: 12px;
+  }
+  .ticket-leg strong {
+    font-size: 12px;
+  }
+  .ticket-leg small {
+    font-size: 9px;
+  }
+  .community-profile-rail .profile-cover {
+    display: none;
+  }
+  .community-profile-rail {
+    margin-bottom: 12px !important;
+  }
+  .community-directory {
+    margin-bottom: 16px !important;
+  }
+  .community-person {
+    padding: 10px !important;
+  }
+  .game-pair .team-logo {
+    width: 40px;
+    height: 40px;
+  }
+  .mi-grid {
+    gap: 14px;
+  }
+  .ask-vegas-launcher {
+    font-size: 12px;
+    min-height: 40px;
+    right: 12px !important;
+  }
+  .challenge-run {
+    padding: 20px !important;
+  }
+  .challenge-run h1 {
+    font-size: 24px !important;
+  }
+  .heading h1 {
+    font-size: 28px;
+  }
+  .profile-roster summary {
+    padding: 14px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mi-game {
+    transition: none;
+  }
+}
