@@ -57,8 +57,8 @@ self.addEventListener("push", (event) => {
               : data.type === "research"
                 ? "New research is published. Open the Feed to see what changed."
                 : "A new official decision is published. Open your challenge to review it.",
-      icon: "/icons/icon-192.png?v=q-lens-2",
-      badge: "/icons/icon-192.png?v=q-lens-2",
+      icon: "/icons/q-lens-192.png",
+      badge: "/icons/q-lens-192.png",
       tag:
         data.type === "health"
           ? "vq-health"

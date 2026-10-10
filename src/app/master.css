@@ -1417,3 +1417,11 @@ footer {
     display: none;
   }
 }
+
+/* Keep identity in normal grid flow; legacy mobile rules positioned the photo. */
+.community-resume .profile-rail-content { min-height: 0 !important; grid-template-rows: auto auto; }
+.community-resume .profile-rail-content > .community-avatar { position: static !important; inset: auto !important; grid-column: 1; grid-row: 1 / 3; width: 52px; height: 52px; align-self: center; margin: 0 !important; border: 2px solid white; box-shadow: 0 0 0 1px #dce5f2; }
+.community-resume .profile-rail-content h1 { grid-row: 1; align-self: end; margin: 0 !important; }
+.community-resume .profile-rail-content > p { grid-row: 2; align-self: start; margin: 0 !important; }
+.community-resume .profile-view-link { grid-row: 1 / 3; }
+.community-resume .profile-rail-content { grid-template-columns: 52px minmax(0, 1fr) auto; column-gap: 14px; }

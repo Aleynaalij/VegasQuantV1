@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Vegas Quant",
   },
-  icons: { apple: "/icons/apple-touch-icon.png?v=q-lens-2" },
+  icons: { apple: "/icons/q-lens-apple.png" },
   title: "Vegas Quant | Sports Intelligence",
   description:
     "NFL research, live scores and transparent picks. Find the play. Understand the case. Keep the record.",
