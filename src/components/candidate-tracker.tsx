@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import GamblyLink from "./gambly-link";
 import TeamLogo from "./team-logo";
+import PlayerPortrait from "./player-portrait";
 import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
 
@@ -158,7 +159,7 @@ export default function CandidateTracker({
                   : "WATCHLIST"}{" "}
             · {c.matchup}
           </div>
-          {!c.fun_play && <h3>{c.name}</h3>}
+          {!c.fun_play && <div className="candidate-player"><PlayerPortrait key={c.name} name={c.name} /><h3>{c.name}</h3></div>}
           {!c.fun_play && <p>{c.market}</p>}
           {c.fun_play ? (
             <div className="ticket-price-note">
