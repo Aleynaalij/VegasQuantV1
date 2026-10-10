@@ -53,6 +53,7 @@ export default function PhoneContactPrompt() {
     setBusy(false);
     if (r.error) { setNotice("Could not save your number. Please try again."); return; }
     setNotice("Number saved privately. Text alerts are not active yet.");
+    setOpen(false);
   }
   async function remove() {
     if (!uid) return;
