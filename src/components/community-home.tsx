@@ -73,7 +73,8 @@ export default function CommunityHome({
     [members, setMembers] = useState<CommunityMember[]>([]),
     [notice, setNotice] = useState(""),
     [expanded, setExpanded] = useState(false),
-    [ready, setReady] = useState(false);
+    [ready, setReady] = useState(false),
+    [admin, setAdmin] = useState(false);
   const epoch = useRef(0);
   const load = useCallback(async () => {
     const version = ++epoch.current;
@@ -88,16 +89,18 @@ export default function CommunityHome({
       }
       return;
     }
-    const [p, r] = await Promise.all([
+    const [p, r, access] = await Promise.all([
       supabase
         .from("community_profiles")
         .select("username,region,avatar,visible,instagram_url,x_url")
         .eq("user_id", user)
         .maybeSingle(),
       supabase.rpc("community_roster", { p_challenge_id: challengeId }),
+      supabase.rpc("membership_status"),
     ]);
     if (version !== epoch.current) return;
     setUid(user);
+    setAdmin(access.data?.admin === true);
     setReady(true);
     if (p.error || r.error) {
       setNotice(
@@ -198,18 +201,23 @@ export default function CommunityHome({
           </span>
         </summary>
         <section className="community-panel">
+          {admin && (
+            <Link className="text-link" href="/admin/accounts">
+              Admin: all registered accounts →
+            </Link>
+          )}
           <div className="community-panel-head">
             <div>
-              <span className="eyebrow">CHALLENGE #{number}</span>
-              <h2>In this together</h2>
+              <span className="eyebrow">ALL MEMBERS</span>
+              <h2>Your Vegas Quant community</h2>
             </div>
             <span className="community-count">
               {members.length === 100 ? "100+" : members.length}
             </span>
           </div>
           <p>
-            Stage wins come from recorded, settled entries. This is not live
-            online status.
+            Everyone who registered belongs here — tailing is optional. This is
+            a member directory, not live online status.
           </p>
           {!ready ? (
             <p>Loading community…</p>
@@ -220,15 +228,18 @@ export default function CommunityHome({
             </p>
           ) : members.length === 0 ? (
             <p>
-              The roster is just getting started. Save your profile and join
-              this challenge to appear here automatically, unless you turn
-              visibility off.
+              Registered members appear here without joining or tailing a
+              challenge.
             </p>
           ) : (
             <div className={`community-roster ${expanded ? "expanded" : ""}`}>
               {(expanded ? members : members.slice(0, 8)).map((m) => (
                 <Link
-                  href={`/community/${encodeURIComponent(m.username)}`}
+                  href={
+                    m.visible === false
+                      ? "/membership"
+                      : `/community/${encodeURIComponent(m.username)}`
+                  }
                   className="community-person"
                   key={m.username}
                 >
@@ -236,7 +247,11 @@ export default function CommunityHome({
                   <div>
                     <strong>@{m.username}</strong>
                     <small>{m.region || "Region private"}</small>
-                    <span>{m.won ?? 0}/5 stages won</span>
+                    <span>
+                      {m.visible === false
+                        ? "Private member"
+                        : "Community member"}
+                    </span>
                   </div>
                 </Link>
               ))}
@@ -268,13 +283,19 @@ export default function CommunityHome({
             {recent.length ? (
               recent.map((m) => (
                 <div className="community-event" key={m.username}>
-                  <Link href={`/community/${encodeURIComponent(m.username)}`}>
+                  <Link
+                    href={
+                      m.visible === false
+                        ? "/membership"
+                        : `/community/${encodeURIComponent(m.username)}`
+                    }
+                  >
                     <strong>@{m.username}</strong>
                   </Link>
                   <p>
                     {m.last_checkin
                       ? `Followed ${m.followed} of 5 stages`
-                      : "Joined the challenge"}
+                      : "Joined Vegas Quant"}
                   </p>
                   <time>
                     {new Date(m.last_checkin || m.joined_at).toLocaleDateString(
