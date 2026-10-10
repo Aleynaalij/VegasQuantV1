@@ -1425,3 +1425,13 @@ footer {
 .community-resume .profile-rail-content > p { grid-row: 2; align-self: start; margin: 0 !important; }
 .community-resume .profile-view-link { grid-row: 1 / 3; }
 .community-resume .profile-rail-content { grid-template-columns: 52px minmax(0, 1fr) auto; column-gap: 14px; }
+
+/* A member directory, with undistorted portraits and readable names. */
+.community-resume .community-directory .community-roster,
+.community-resume .community-directory .community-roster:not(.expanded) { display: grid !important; grid-template-columns: 1fr !important; max-height: none !important; overflow: visible !important; gap: 0 !important; }
+.community-resume .community-directory .community-person { display: flex !important; align-items: center; gap: 14px; width: 100%; padding: 14px 0 !important; min-height: 76px; border: 0 !important; border-bottom: 1px solid #edf0f5 !important; border-radius: 0; background: white !important; }
+.community-resume .community-directory .community-person > .community-avatar { position: static !important; width: 48px !important; height: 48px !important; min-width: 48px; flex: 0 0 48px !important; aspect-ratio: 1; object-fit: cover; border-radius: 50% !important; margin: 0 !important; border: 0 !important; box-shadow: none !important; display: grid; place-items: center; font-size: 14px; background: #edf2ff; color: #2458ed; }
+.community-resume .community-directory .community-person > div { min-width: 0; display: grid; gap: 3px; }
+.community-resume .community-directory .community-person strong { white-space: normal; overflow-wrap: anywhere; font-size: 14px; line-height: 1.3; }
+.community-resume .community-directory .community-person small { color: #69788b; font-size: 11px; }
+.community-resume .community-directory .community-person div > span { display: none; }

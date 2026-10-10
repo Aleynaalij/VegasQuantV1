@@ -234,7 +234,7 @@ export default function CommunityHome({
             </p>
           ) : (
             <div className={`community-roster ${expanded ? "expanded" : ""}`}>
-              {(expanded ? members : members.slice(0, 8)).map((m) => (
+              {(expanded ? [...members].sort((a,b)=>Number(b.visible)-Number(a.visible)) : [...members].sort((a,b)=>Number(b.visible)-Number(a.visible)).slice(0, 8)).map((m) => (
                 <Link
                   href={
                     m.visible === false
@@ -247,7 +247,7 @@ export default function CommunityHome({
                   <Avatar profile={m} />
                   <div>
                     <strong>@{m.username}</strong>
-                    <small>{m.region || "Region private"}</small>
+                    <small>{m.region || "Vegas Quant member"}</small>
                     <span>
                       {m.visible === false
                         ? "Private member"
