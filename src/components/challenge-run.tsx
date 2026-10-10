@@ -161,6 +161,18 @@ export default function ChallengeRun({
     setCountMe(run?.count_me || false);
     dialog.current?.showModal();
   }
+  if (challenge.status === "PREP") return (
+    <section className="challenge-run" aria-label="5-Spot Challenge — not started" aria-disabled="true" style={{ background: "#171b1d", borderColor: "#596168", color: "#b9c0c4" }}>
+      <span className="eyebrow">NOT STARTED · 0/5 STAGES</span>
+      <h1>The 5-Spot Challenge</h1>
+      <p>Coming soon. Everyone starts fresh when the challenge officially launches.</p>
+      <div className="journey" aria-label="Five stages — not started">
+        {[1,2,3,4,5].map(n => <button key={n} className="journey-stop" disabled><span className="journey-dot">{n}</span><span>Stage {n}</span><small>Not started</small></button>)}
+      </div>
+      <button className="secondary" disabled>Challenge not yet open</button>
+      <p className="run-free">Research and Sunday fun plays remain available. They do not advance this challenge.</p>
+    </section>
+  );
   return (
     <section
       className={`challenge-run ${run ? "joined" : "not-joined"}`}
