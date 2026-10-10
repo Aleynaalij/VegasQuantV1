@@ -37,6 +37,7 @@ export async function POST(req: Request) {
         claimed.data as {
           id: string;
           pick_id: string;
+          event_key?: string;
           type: "official" | "research" | "signup" | "health";
           endpoint: string;
           keys: { p256dh: string; auth: string };
@@ -49,7 +50,7 @@ export async function POST(req: Request) {
           else {
             await webpush.sendNotification(
               { endpoint: job.endpoint, keys: job.keys },
-              JSON.stringify({ pick_id: job.pick_id, type: job.type }),
+              JSON.stringify({ pick_id: job.pick_id, type: job.type, ...(job.event_key?.startsWith("app-update:") ? { announcement: "Vegas Quant has been updated. Open the app for the new design, game board and community." } : {}) }),
               {
                 TTL: 1800,
                 timeout: 8000,

@@ -48,7 +48,7 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification("Vegas Quant", {
       body:
-        data.type === "health"
+        data.announcement || (data.type === "health"
           ? "Research data needs attention. Open Feed Health to review."
           : data.type === "test"
             ? "Test alert: your Vegas Quant notifications are connected."
@@ -56,7 +56,7 @@ self.addEventListener("push", (event) => {
               ? "A new member joined Vegas Quant. Open Accounts to review."
               : data.type === "research"
                 ? "New research is published. Open the Feed to see what changed."
-                : "A new official decision is published. Open your challenge to review it.",
+                : "A new official decision is published. Open your challenge to review it."),
       icon: "/icons/q-lens-192.png",
       badge: "/icons/q-lens-192.png",
       tag:
