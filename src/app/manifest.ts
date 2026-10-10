@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: "/",
     name: "Vegas Quant",
     short_name: "Vegas Quant",
-    description: "Your five-stage challenge and research desk",
+    description: "NFL research, live scores and transparent picks",
     start_url: "/",
     scope: "/",
     display: "standalone",

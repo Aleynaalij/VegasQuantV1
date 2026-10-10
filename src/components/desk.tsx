@@ -29,6 +29,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
 import CommunityHome from "./community-home";
+import HomeBrief from "./home-brief";
 import DecisionBoard from "./decision-board";
 import ChallengeRun from "./challenge-run";
 import PersonalChallenge from "./personal-challenge";
@@ -308,7 +309,7 @@ export default function DeskApp({
                 : page === "performance"
                   ? "Performance & process"
                   : page === "history"
-                    ? "The permanent ledger"
+                    ? "The record."
                     : g
                       ? `${g.away_team.replace("Pittsburgh ", "").replace("Cleveland ", "")} @ ${g.home_team.replace("Cleveland ", "")}`
                       : "Matchup desk"}
@@ -319,7 +320,7 @@ export default function DeskApp({
                 : page === "performance"
                   ? "Measured results. Transparent samples. Every outcome retained."
                   : page === "history"
-                    ? "Track execution. Grade the process. Keep the losses."
+                    ? "Published picks. Actual outcomes. Nothing erased."
                     : "The handicap, the market, and the full history of the read."}
             </p>
           </div>
@@ -351,14 +352,27 @@ export default function DeskApp({
           )}
         </div>
         {error && <div className="notice">{error}</div>}
+        {page === "home" && <HomeBrief games={d.games} />}
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
             <DecisionBoard games={d.games} />
-            {ch.status === "PREP" ? <CandidateTracker activeOnly featured /> : stage && !challengePicks.some((p) => p.stage_id === stage.id) && (
-              <CandidateTracker stageId={stage.id} featured />
+            {ch.status === "PREP" ? (
+              <CandidateTracker activeOnly featured />
+            ) : (
+              stage &&
+              !challengePicks.some((p) => p.stage_id === stage.id) && (
+                <CandidateTracker stageId={stage.id} featured />
+              )
             )}
             <DailyUpdateNotice />
-            {ch.status === "PREP" ? <ChallengeRun challenge={ch} stages={stages} /> : access.member_code ? (
+            {ch.status === "PREP" ? (
+              <details className="challenge-preview">
+                <summary>
+                  5-Spot Challenge <span>COMING SOON · 0/5</span>
+                </summary>
+                <ChallengeRun challenge={ch} stages={stages} />
+              </details>
+            ) : access.member_code ? (
               <PersonalChallenge
                 renderOfficial={
                   official
@@ -447,6 +461,57 @@ export default function DeskApp({
         {page === "performance" && <Performance desk={d} />}
         {page === "history" && (
           <>
+            <section
+              className="records-overview"
+              aria-label="Published pick results"
+            >
+              <div>
+                <small>Published picks</small>
+                <strong>{ledgerPicks.length}</strong>
+              </div>
+              <div>
+                <small>Wins / losses</small>
+                <strong>
+                  {
+                    ledgerPicks.filter((p) =>
+                      d.results.some(
+                        (r) => r.pick_id === p.id && r.result === "WIN",
+                      ),
+                    ).length
+                  }{" "}
+                  /{" "}
+                  {
+                    ledgerPicks.filter((p) =>
+                      d.results.some(
+                        (r) => r.pick_id === p.id && r.result === "LOSS",
+                      ),
+                    ).length
+                  }
+                </strong>
+              </div>
+              <div>
+                <small>Recorded net</small>
+                <strong>
+                  {signedMoney(
+                    d.results
+                      .filter((r) =>
+                        ledgerPicks.some((p) => p.id === r.pick_id),
+                      )
+                      .reduce((n, r) => n + r.profit_cents, 0),
+                  )}
+                </strong>
+              </div>
+              <div>
+                <small>Awaiting result</small>
+                <strong>
+                  {
+                    ledgerPicks.filter(
+                      (p) => !d.results.some((r) => r.pick_id === p.id),
+                    ).length
+                  }
+                </strong>
+              </div>
+            </section>
             <div className="filter-bar">
               <label className="field">
                 Find a game / pick

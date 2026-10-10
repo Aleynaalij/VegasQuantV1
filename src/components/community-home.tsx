@@ -188,7 +188,7 @@ export default function CommunityHome({
           </div>
         </div>
       </aside>
-      <details className="profile-roster community-directory">
+      <details className="profile-roster community-directory community-drawer">
         <summary>
           <span>
             Community{" "}
@@ -216,8 +216,9 @@ export default function CommunityHome({
             </span>
           </div>
           <p>
-            Everyone who registered belongs here — tailing is optional. This is
-            a member directory, not live online status.
+            Tailing is optional. Public profiles appear to members;
+            administrators can view every registered account. This directory
+            does not show live online status.
           </p>
           {!ready ? (
             <p>Loading community…</p>
@@ -271,47 +272,59 @@ export default function CommunityHome({
         <div className="community-main">{children}</div>
         <aside className="community-sidebar" aria-label="Challenge community">
           {uid && (
-            <CommunityCard
-              profile={profile}
-              challengeId={challengeId}
-              number={number}
-            />
+            <details>
+              <summary>
+                Your share card <span aria-hidden="true">↗</span>
+              </summary>
+              <CommunityCard
+                profile={profile}
+                challengeId={challengeId}
+                number={number}
+              />
+            </details>
           )}
-          <section className="community-panel">
-            <span className="eyebrow">COMMUNITY ACTIVITY</span>
-            <h2>Around the challenge</h2>
-            {recent.length ? (
-              recent.map((m) => (
-                <div className="community-event" key={m.username}>
-                  <Link
-                    href={
-                      m.visible === false
-                        ? "/membership"
-                        : `/community/${encodeURIComponent(m.username)}`
-                    }
-                  >
-                    <strong>@{m.username}</strong>
-                  </Link>
-                  <p>
-                    {m.last_checkin
-                      ? `Followed ${m.followed} of 5 stages`
-                      : "Joined Vegas Quant"}
-                  </p>
-                  <time>
-                    {new Date(m.last_checkin || m.joined_at).toLocaleDateString(
-                      "en-US",
-                      { month: "short", day: "numeric" },
-                    )}
-                  </time>
-                </div>
-              ))
-            ) : (
-              <p>
-                Visible members’ joins and stage check-ins will appear here.
-                Following never requires a wager.
-              </p>
-            )}
-          </section>
+          <details>
+            <summary>
+              Community activity <span aria-hidden="true">↓</span>
+            </summary>
+            <section className="community-panel">
+              <span className="eyebrow">COMMUNITY ACTIVITY</span>
+              <h2>Around the challenge</h2>
+              {recent.length ? (
+                recent.map((m) => (
+                  <div className="community-event" key={m.username}>
+                    <Link
+                      href={
+                        m.visible === false
+                          ? "/membership"
+                          : `/community/${encodeURIComponent(m.username)}`
+                      }
+                    >
+                      <strong>@{m.username}</strong>
+                    </Link>
+                    <p>
+                      {m.last_checkin
+                        ? `Followed ${m.followed} of 5 stages`
+                        : "Joined Vegas Quant"}
+                    </p>
+                    <time>
+                      {new Date(
+                        m.last_checkin || m.joined_at,
+                      ).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </time>
+                  </div>
+                ))
+              ) : (
+                <p>
+                  Visible members’ joins and stage check-ins will appear here.
+                  Following never requires a wager.
+                </p>
+              )}
+            </section>
+          </details>
         </aside>
       </div>
       {notice && <p role="status">{notice}</p>}

@@ -1,10 +1,36 @@
-/** Vector artwork based on the approved Vegas Quant brand mark. */
+/** Vegas Quant: the Q Lens — a research lens crossed by a rising price line. */
 export default function BrandMark({ className = "" }: { className?: string }) {
   return (
-    <svg className={`vq-mark ${className}`} viewBox="0 0 900 570" fill="currentColor" aria-hidden="true" focusable="false">
-      <path d="M0 0h165l232 435-61 105Z" />
-      <path d="m300 180 120-180h300l167 233-114 199-69-118 62-81-70-116H486L369 318Z" />
-      <path d="M454 275h137l223 281H665Z" />
+    <svg
+      className={`vq-mark ${className}`}
+      viewBox="0 0 64 64"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <rect width="64" height="64" rx="17" fill="#2458ed" />
+      <circle
+        cx="30"
+        cy="29"
+        r="17"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="6"
+      />
+      <path
+        d="m37 39 13 13"
+        fill="none"
+        stroke="#fff"
+        strokeWidth="6"
+        strokeLinecap="round"
+      />
+      <path
+        d="m17 34 10-10 7 6 14-15"
+        fill="none"
+        stroke="#a8f0b1"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

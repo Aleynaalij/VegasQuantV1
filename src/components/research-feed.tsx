@@ -181,15 +181,20 @@ export default function ResearchFeed() {
             <BrandMark />
             <span>VEGAS QUANT ULTRA · THE FEED</span>
           </div>
-          <h1>Inside the read.</h1>
-          <p>What we’re watching. What changed. What comes next.</p>
+          <h1>The latest read.</h1>
+          <p>Fresh observations. Clear reasoning. Every update on record.</p>
           <div className="feed-rule">
             <ShieldCheck size={16} />
             <span>Research updates · A watchlist is not an official play.</span>
           </div>
         </header>
         <DailyUpdateNotice />
-        <CandidateTracker activeOnly />
+        <details className="feed-featured">
+          <summary>
+            Featured research ticket <span>View picks ↓</span>
+          </summary>
+          <CandidateTracker activeOnly />
+        </details>
         {!loading && edgeRelease && filter === "All" && (
           <EdgeReleaseCard release={edgeRelease} />
         )}
@@ -251,59 +256,62 @@ export default function ResearchFeed() {
                     <small>WHAT CHANGED</small>
                     <p>{p.summary}</p>
                   </div>
-                  <div className="feed-summary">
-                    <small>WHY IT MATTERS · ANALYST READ</small>
-                    <p>{p.why_watch}</p>
-                  </div>
-                  <div className="feed-matchup">
-                    <div className="feed-teams">
-                      <strong>{p.away_code}</strong>
-                      <span>@</span>
-                      <strong>{p.home_code}</strong>
-                      <span className="feed-watch">
-                        <Eye size={14} /> WATCHING
-                      </span>
+                  <details className="feed-post-details">
+                    <summary>Read the case, market & next check ↓</summary>
+                    <div className="feed-summary">
+                      <small>WHY IT MATTERS · ANALYST READ</small>
+                      <p>{p.why_watch}</p>
                     </div>
-                    <p>{p.matchup}</p>
-                    <div className="feed-price">
-                      <small>OBSERVED MARKET · NOT A RECOMMENDATION</small>
-                      <strong>{p.market_label}</strong>
-                      <time dateTime={p.source_at}>
-                        Snapshot {time(p.source_at)} · Prices may change
-                      </time>
+                    <div className="feed-matchup">
+                      <div className="feed-teams">
+                        <strong>{p.away_code}</strong>
+                        <span>@</span>
+                        <strong>{p.home_code}</strong>
+                        <span className="feed-watch">
+                          <Eye size={14} /> WATCHING
+                        </span>
+                      </div>
+                      <p>{p.matchup}</p>
+                      <div className="feed-price">
+                        <small>OBSERVED MARKET · NOT A RECOMMENDATION</small>
+                        <strong>{p.market_label}</strong>
+                        <time dateTime={p.source_at}>
+                          Snapshot {time(p.source_at)} · Prices may change
+                        </time>
+                      </div>
                     </div>
-                  </div>
-                  <div className="feed-next">
-                    <Clock3 size={17} />
-                    <div>
-                      <small>NEXT CHECK</small>
-                      <p>{p.next_check}</p>
+                    <div className="feed-next">
+                      <Clock3 size={17} />
+                      <div>
+                        <small>NEXT CHECK</small>
+                        <p>{p.next_check}</p>
+                      </div>
                     </div>
-                  </div>
-                  <details className="feed-context">
-                    <summary>
-                      Sources & uncertainty <ChevronDown size={16} />
-                    </summary>
-                    <h3>What could change the read</h3>
-                    <p>{p.caution}</p>
-                    <a
-                      href={p.source_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <details className="feed-context">
+                      <summary>
+                        Sources & uncertainty <ChevronDown size={16} />
+                      </summary>
+                      <h3>What could change the read</h3>
+                      <p>{p.caution}</p>
+                      <a
+                        href={p.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Source <ArrowUpRight size={14} />
+                      </a>
+                    </details>
+                    <Link
+                      className="feed-research"
+                      href={
+                        p.game?.slug
+                          ? `/matchups/${p.game.slug}`
+                          : `/matchups?q=${encodeURIComponent(p.matchup.split(" @ ")[0])}`
+                      }
                     >
-                      Source <ArrowUpRight size={14} />
-                    </a>
+                      Open matchup research <ArrowUpRight size={16} />
+                    </Link>
                   </details>
-                  <Link
-                    className="feed-research"
-                    href={
-                      p.game?.slug
-                        ? `/matchups/${p.game.slug}`
-                        : `/matchups?q=${encodeURIComponent(p.matchup.split(" @ ")[0])}`
-                    }
-                  >
-                    Open matchup research <ArrowUpRight size={16} />
-                  </Link>
                 </article>
               ))}
             </div>
@@ -323,9 +331,12 @@ export default function ResearchFeed() {
             )}
           </>
         )}
-        <div id="candidate-tracker">
+        <details id="candidate-tracker" className="feed-featured">
+          <summary>
+            Research archive <span>Previous tickets ↓</span>
+          </summary>
           <CandidateTracker archiveOnly />
-        </div>
+        </details>
         {error && (
           <div className="notice" role="alert">
             {error}{" "}

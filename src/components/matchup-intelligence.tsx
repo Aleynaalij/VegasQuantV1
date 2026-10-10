@@ -86,6 +86,8 @@ export default function MatchupIntelligence({
     [week, setWeek] = useState("current"),
     [windowFilter, setWindowFilter] = useState("All games"),
     [selected, setSelected] = useState(""),
+    [sort, setSort] = useState("kickoff"),
+    [futureOnly, setFutureOnly] = useState(false),
     [error, setError] = useState("");
   const epoch = useRef(0);
   useEffect(() => {
@@ -180,6 +182,7 @@ export default function MatchupIntelligence({
   const filtered = rows.filter(
     (r) =>
       searchMatchup(r.game, query) &&
+      (!futureOnly || Date.parse(r.game.kickoff) > Date.now()) &&
       (windowFilter === "All games" || group(r) === windowFilter) &&
       (!week ||
         String(r.game.week) ===
@@ -212,12 +215,12 @@ export default function MatchupIntelligence({
             <h1>
               {row
                 ? `${row.game.away_abbreviation || row.game.away_team} @ ${row.game.home_abbreviation || row.game.home_team}`
-                : "Matchup Analysis"}
+                : "The game board."}
             </h1>
             <p>
               {row
                 ? `${time(row.game.kickoff)} · ${row.game.venue}`
-                : "Every game has a research desk: analysis, market context, injuries and potential legs."}
+                : "Find your game. Compare the market. Open the full research."}
             </p>
           </div>
         </div>
@@ -294,8 +297,47 @@ export default function MatchupIntelligence({
                 ))}
               </details>
             )}
+            <div className="analysis-tools">
+              <label>
+                Sort by
+                <select
+                  aria-label="Sort matchups"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                >
+                  <option value="kickoff">Kickoff time</option>
+                  <option value="updated">Latest research</option>
+                </select>
+              </label>
+              <button
+                className="secondary"
+                aria-pressed={futureOnly}
+                onClick={() => setFutureOnly((v) => !v)}
+              >
+                {futureOnly ? "Upcoming only ✓" : "Upcoming only"}
+              </button>
+            </div>
             {groups.map((g) => {
-              const list = filtered.filter((r) => group(r) === g);
+              const list = filtered
+                .filter(
+                  (r) =>
+                    group(r) === g &&
+                    (!futureOnly || Date.parse(r.game.kickoff) > Date.now()),
+                )
+                .sort((a, b) =>
+                  sort === "updated"
+                    ? Date.parse(
+                        b.analysis?.created_at ||
+                          b.research_updated_at ||
+                          "1970-01-01",
+                      ) -
+                      Date.parse(
+                        a.analysis?.created_at ||
+                          a.research_updated_at ||
+                          "1970-01-01",
+                      )
+                    : Date.parse(a.game.kickoff) - Date.parse(b.game.kickoff),
+                );
               return list.length ? (
                 <section key={g} className="mi-group">
                   <h2>{g}</h2>
@@ -371,6 +413,9 @@ export default function MatchupIntelligence({
                             </small>
                           </>
                         )}
+                        <span className="mi-card-action">
+                          Open game research <span aria-hidden="true">↗</span>
+                        </span>
                       </Link>
                     ))}
                   </div>

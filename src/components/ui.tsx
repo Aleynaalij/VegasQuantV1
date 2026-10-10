@@ -21,18 +21,20 @@ export function Badge({
   return <span className={`badge ${tone}`}>{children}</span>;
 }
 export function Panel({
+  id,
   title,
   aside,
   children,
   className = "",
 }: {
+  id?: string;
   title: string;
   aside?: ReactNode;
   children: ReactNode;
   className?: string;
 }) {
   return (
-    <section className={`panel ${className}`}>
+    <section id={id} className={`panel ${className}`}>
       <div className="panel-head">
         <h2>{title}</h2>
         {aside}
@@ -96,10 +98,10 @@ export function Shell({
           </span>
           <span>
             VEGAS <b>QUANT</b>
-            <small>RESEARCH. DECISIONS. PROGRESS.</small>
+            <small>SPORTS INTELLIGENCE</small>
           </span>
         </Link>
-        <span className="nav-label">YOUR PLAYBOOK</span>
+        <span className="nav-label">YOUR RESEARCH DESK</span>
         <nav aria-label="Main navigation">
           <Link
             aria-current={active === "home" ? "page" : undefined}
@@ -115,7 +117,7 @@ export function Shell({
             href="/matchups"
           >
             <BookOpen size={18} />
-            Matchup Analysis
+            Game board
           </Link>
           <Link
             aria-current={active === "feed" ? "page" : undefined}
@@ -148,9 +150,9 @@ export function Shell({
         </nav>
         <div className="sidebar-rule">
           <ShieldCheck size={23} />
-          <h3>Discipline is the edge.</h3>
+          <h3>Know your number.</h3>
           <p>
-            Research first. Price second.
+            A clear case. A verified price.
             <br />A pass is a valid decision.
           </p>
           <div>
@@ -181,8 +183,8 @@ export function Shell({
             <b>
               {(
                 {
-                  home: "Home",
-                  game: "Matchup",
+                  home: "Sports desk",
+                  game: "Game board",
                   feed: "The Feed",
                   history: "Records",
                   performance: "Performance",

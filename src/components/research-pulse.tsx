@@ -28,10 +28,27 @@ export default function ResearchPulse({ proof = false }: { proof?: boolean }) {
   useEffect(() => {
     let live = true;
     async function refresh() {
-      const r = await supabase.rpc("public_research_status");
+      const [r, latest] = await Promise.all([
+        supabase.rpc("public_research_status"),
+        supabase
+          .from("research_feed_posts")
+          .select("created_at")
+          .order("created_at", { ascending: false })
+          .limit(1),
+      ]);
       if (live) {
         setError(!!r.error);
-        if (!r.error) setStatus(r.data);
+        if (!r.error) {
+          const feedAt = latest.error ? null : latest.data?.[0]?.created_at;
+          setStatus({
+            ...r.data,
+            updated_at:
+              feedAt &&
+              Date.parse(feedAt) > Date.parse(r.data.updated_at || "1970-01-01")
+                ? feedAt
+                : r.data.updated_at,
+          });
+        }
         setNow(Date.now());
       }
     }
@@ -59,7 +76,8 @@ export default function ResearchPulse({ proof = false }: { proof?: boolean }) {
       .reduce((sum, r) => sum + (r.stake_cents || 0), 0);
   return (
     <Panel
-      title={proof ? "The record, in public" : "From the research desk"}
+      title={proof ? "The record, in public" : "Research checkpoint"}
+      className="research-pulse"
       aside={<Badge tone={age.tone}>{age.label}</Badge>}
     >
       <div className="notebook">

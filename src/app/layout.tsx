@@ -3,6 +3,7 @@ import "./globals.css";
 import "@/components/ask-vegas.css";
 import "./experience.css";
 import "./sports-light.css";
+import "./master.css";
 import NotificationBootstrap from "@/components/notification-bootstrap";
 import Welcome from "@/components/welcome";
 import AskVegas from "@/components/ask-vegas";
@@ -15,9 +16,9 @@ export const metadata: Metadata = {
     title: "Vegas Quant",
   },
   icons: { apple: "/icons/apple-touch-icon.png" },
-  title: "Vegas Quant | 5-Spot Challenge",
+  title: "Vegas Quant | Sports Intelligence",
   description:
-    "A disciplined research desk. Five stages. Every decision accounted for.",
+    "NFL research, live scores and transparent picks. Find the play. Understand the case. Keep the record.",
 };
 export const viewport: Viewport = {
   width: "device-width",
