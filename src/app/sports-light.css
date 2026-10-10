@@ -720,3 +720,12 @@ footer {
     transition: none;
   }
 }
+
+/* Maintain readable contrast for legacy dark-theme text rules. */
+main p, main small, .sidebar small, .topbar a, .feed-trust, .community-panel summary { color: #52657d !important; }
+.feed-filters { background: #f2f5faf5 !important; }
+.feed-matchup, .feed-gate { background: #fff !important; border-color: #dce4ef !important; }
+.feed-next { background: #fff8e8 !important; border-color: #ead9b0 !important; color: #69511e !important; }
+.sports-ticker summary { display: flex; align-items: center; gap: 14px; padding: 13px 16px; min-height: 52px; }
+.sports-ticker { border: 1px solid #dce4ef; border-radius: 14px; overflow: hidden; }
+.sports-ticker .ticker-scroll { flex: 1; min-width: 0; overflow: hidden; }
