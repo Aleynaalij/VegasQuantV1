@@ -365,6 +365,7 @@ export default function Membership() {
           className="notification-settings"
         >
           <PickAlerts />
+          <button className="text-link" onClick={() => window.dispatchEvent(new Event("vq:phone-settings"))}>Mobile number &amp; future text alerts →</button>
         </Panel>
       )}
       {session && !access.admin_account && <FriendPass />}

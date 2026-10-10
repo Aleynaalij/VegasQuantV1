@@ -1435,3 +1435,13 @@ footer {
 .community-resume .community-directory .community-person strong { white-space: normal; overflow-wrap: anywhere; font-size: 14px; line-height: 1.3; }
 .community-resume .community-directory .community-person small { color: #69788b; font-size: 11px; }
 .community-resume .community-directory .community-person div > span { display: none; }
+
+.phone-contact-dialog { width: min(440px, calc(100% - 32px)); margin: auto; padding: 26px; border: 1px solid #dce5f2; border-radius: 20px; background: white; color: #14233a; box-shadow: 0 24px 80px #14233a33; }
+.phone-contact-dialog::backdrop { background: #14233a66; backdrop-filter: blur(4px); }
+.phone-contact-dialog h2 { font-size: 24px; margin: 12px 0; }
+.phone-contact-dialog p { font-size: 13px; line-height: 1.6; color: #69788b; }
+.phone-contact-dialog form { display: grid; gap: 14px; }
+.phone-contact-dialog label { font-size: 12px; }
+.phone-contact-dialog input[type=tel] { width: 100%; padding: 14px; border: 1px solid #dce5f2; border-radius: 10px; background: #f7f9fc; color: #14233a; }
+.phone-contact-consent { display: flex; gap: 10px; align-items: flex-start; line-height: 1.5; }
+.phone-contact-consent input { margin-top: 3px; flex-shrink: 0; }
