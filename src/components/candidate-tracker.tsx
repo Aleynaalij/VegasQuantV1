@@ -7,6 +7,9 @@ import { time } from "@/lib/domain";
 
 type Candidate = {
   experimental?: boolean;
+  fun_play?: boolean;
+  copy_text?: string;
+  legs?: { team: string; matchup: string; odds: number; why: string; risk: string }[];
   gambly_url?: string;
   odds?: number;
   quote_observed_at?: string;
@@ -81,6 +84,7 @@ export default function CandidateTracker({
           : 100 / (release.candidates[0].odds! + 100)) * 100
       : null;
   const experimental = release.candidates[0]?.experimental === true;
+  const funPlay = release.candidates[0]?.fun_play === true;
   const list = featured && !experimental ? release.candidates.slice(0, 1) : release.candidates;
   const multiple = list.length > 1;
   return (
@@ -90,12 +94,14 @@ export default function CandidateTracker({
     >
       <header>
         <span className="eyebrow">
-          {experimental ? (multiple ? "EXPERIMENTAL PICKS" : "EXPERIMENTAL PICK") : featured ? "NEXT LEG WATCH" : "EDGE TRACKER"} ·{" "}
+          {funPlay ? "HAIL MARY · SUNDAY FUN PLAY" : experimental ? (multiple ? "EXPERIMENTAL PICKS" : "EXPERIMENTAL PICK") : featured ? "NEXT LEG WATCH" : "EDGE TRACKER"} ·{" "}
           {expired ? "ARCHIVED RESEARCH" : experimental ? "SUBJECT TO CHANGE · NOT OFFICIAL" : "WAIT · NOT OFFICIAL"}
         </span>
         <h2>{featured && !experimental ? "Potential next leg" : release.title}</h2>
         <p>
-          {experimental
+          {funPlay
+            ? "One high-risk moneyline parlay for the listed Sunday slate. For entertainment; subject to change. One losing leg loses the ticket. No validated probability or edge is established, and this is separate from the 5-Spot Challenge."
+            : experimental
             ? "Experimental picks, subject to change. Play at your own risk. No outcome is guaranteed. These are individual research selections, not a four-leg parlay. Original publications stay on record."
             : featured
             ? "Our leading research candidate. Await the official decision before treating this as a challenge leg."
@@ -111,15 +117,23 @@ export default function CandidateTracker({
       {list.map((c, i) => (
         <article className="candidate-item" key={c.name}>
           <div className="eyebrow">
-            {multiple ? `POTENTIAL PICK ${i + 1}` : i === 0 ? "LEADING CANDIDATE" : "WATCHLIST"} · {c.matchup}
+            {c.fun_play ? "ONE PARLAY · ALL LEGS MUST WIN" : multiple ? `POTENTIAL PICK ${i + 1}` : i === 0 ? "LEADING CANDIDATE" : "WATCHLIST"} · {c.matchup}
           </div>
           <h3>{c.name}</h3>
           <p>{c.market}</p>
           <strong className="candidate-price">{c.quote}</strong>
           <p className="candidate-context">{c.quote_context}</p>
+          {c.fun_play && c.legs && <div className="notice">
+            <ol style={{ paddingLeft: 22, margin: 0 }}>
+              {c.legs.map(leg => <li key={leg.team} style={{ marginBottom: 8 }}>
+                <strong>{leg.team} ML {leg.odds > 0 ? "+" : ""}{leg.odds}</strong>
+                <small style={{ display: "block" }}>{leg.matchup}</small>
+              </li>)}
+            </ol>
+          </div>}
           {!expired && c.experimental && c.gambly_url && (
             <div className="notice">
-              <GamblyLink url={c.gambly_url} selection={`${c.name} ${c.market} · ${c.matchup}`} />
+              <GamblyLink url={c.gambly_url} selection={c.copy_text || `${c.name} ${c.market} · ${c.matchup}`} />
               <p>Copies the exact pick and opens Gambly. Paste it into the search box. No prefilled share slip is available. Confirm the exact line and price before acting; opening this link does not record a wager.</p>
             </div>
           )}
@@ -176,6 +190,14 @@ export default function CandidateTracker({
               </div>
             </div>
           )}
+          {c.fun_play && c.legs && <div>
+            <h4>Every leg: case & failure risk</h4>
+            {c.legs.map(leg => <div key={leg.team} style={{ marginBottom: 16 }}>
+              <strong>{leg.team}</strong>
+              <p>{leg.why}</p>
+              <p><b>Risk:</b> {leg.risk}</p>
+            </div>)}
+          </div>}
           <p>
             <b>Why we’re watching</b>
             <br />
