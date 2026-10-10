@@ -729,3 +729,8 @@ main p, main small, .sidebar small, .topbar a, .feed-trust, .community-panel sum
 .sports-ticker summary { display: flex; align-items: center; gap: 14px; padding: 13px 16px; min-height: 52px; }
 .sports-ticker { border: 1px solid #dce4ef; border-radius: 14px; overflow: hidden; }
 .sports-ticker .ticker-scroll { flex: 1; min-width: 0; overflow: hidden; }
+
+.candidate-player { display: flex; align-items: center; gap: 14px; margin: 14px 0 8px; }
+.candidate-player h3 { margin: 0; }
+.player-portrait { display: grid; place-items: center; flex: 0 0 88px; width: 88px; height: 64px; overflow: hidden; border-radius: 14px; background: linear-gradient(145deg,#e0edff,#f7faff); border: 1px solid #cbdcf1; color: #0866d8; font-size: 20px; font-weight: 800; }
+.player-portrait img { width: 88px; height: 64px; object-fit: contain; object-position: center bottom; }
