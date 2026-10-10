@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import GamblyLink from "./gambly-link";
+import TeamLogo from "./team-logo";
 import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
 
@@ -9,7 +10,13 @@ type Candidate = {
   experimental?: boolean;
   fun_play?: boolean;
   copy_text?: string;
-  legs?: { team: string; matchup: string; odds: number; why: string; risk: string }[];
+  legs?: {
+    team: string;
+    matchup: string;
+    odds: number;
+    why: string;
+    risk: string;
+  }[];
   gambly_url?: string;
   odds?: number;
   quote_observed_at?: string;
@@ -53,7 +60,8 @@ export default function CandidateTracker({
         .limit(1);
       if (stageId) q = q.eq("stage_id", stageId);
       if (archiveOnly) q = q.lte("expires_at", new Date().toISOString());
-      if (featured || activeOnly) q = q.gt("expires_at", new Date().toISOString());
+      if (featured || activeOnly)
+        q = q.gt("expires_at", new Date().toISOString());
       const r = await q;
       if (live) {
         setFailed(!!r.error);
@@ -85,27 +93,51 @@ export default function CandidateTracker({
       : null;
   const experimental = release.candidates[0]?.experimental === true;
   const funPlay = release.candidates[0]?.fun_play === true;
-  const list = featured && !experimental ? release.candidates.slice(0, 1) : release.candidates;
+  const list =
+    featured && !experimental
+      ? release.candidates.slice(0, 1)
+      : release.candidates;
   const multiple = list.length > 1;
   return (
     <section
-      className="candidate-tracker"
-      aria-label={multiple ? "Potential picks" : featured ? "Potential next leg" : "Edge candidate tracker"}
+      className={`candidate-tracker ${funPlay ? "fun-ticket" : ""}`}
+      aria-label={
+        multiple
+          ? "Potential picks"
+          : featured
+            ? "Potential next leg"
+            : "Edge candidate tracker"
+      }
     >
       <header>
         <span className="eyebrow">
-          {funPlay ? "HAIL MARY · SUNDAY FUN PLAY" : experimental ? (multiple ? "EXPERIMENTAL PICKS" : "EXPERIMENTAL PICK") : featured ? "NEXT LEG WATCH" : "EDGE TRACKER"} ·{" "}
-          {expired ? "ARCHIVED RESEARCH" : experimental ? "SUBJECT TO CHANGE · NOT OFFICIAL" : "WAIT · NOT OFFICIAL"}
+          {funPlay
+            ? "HAIL MARY · SUNDAY FUN PLAY"
+            : experimental
+              ? multiple
+                ? "EXPERIMENTAL PICKS"
+                : "EXPERIMENTAL PICK"
+              : featured
+                ? "NEXT LEG WATCH"
+                : "EDGE TRACKER"}{" "}
+          ·{" "}
+          {expired
+            ? "ARCHIVED RESEARCH"
+            : experimental
+              ? "SUBJECT TO CHANGE · NOT OFFICIAL"
+              : "WAIT · NOT OFFICIAL"}
         </span>
-        <h2>{featured && !experimental ? "Potential next leg" : release.title}</h2>
+        <h2>
+          {featured && !experimental ? "Potential next leg" : release.title}
+        </h2>
         <p>
           {funPlay
-            ? "One high-risk moneyline parlay for the listed Sunday slate. For entertainment; subject to change. One losing leg loses the ticket. No validated probability or edge is established, and this is separate from the 5-Spot Challenge."
+            ? "11 moneylines. One Sunday. A high-risk fun play — one losing leg loses the ticket. Subject to change; separate from the 5-Spot Challenge."
             : experimental
-            ? "Experimental picks, subject to change. Play at your own risk. No outcome is guaranteed. These are individual research selections, not a four-leg parlay. Original publications stay on record."
-            : featured
-            ? "Our leading research candidate. Await the official decision before treating this as a challenge leg."
-            : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
+              ? "Experimental picks, subject to change. Play at your own risk. No outcome is guaranteed. These are individual research selections, not a four-leg parlay. Original publications stay on record."
+              : featured
+                ? "Our leading research candidate. Await the official decision before treating this as a challenge leg."
+                : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
         </p>
         <small>
           Published {time(release.created_at)} ·{" "}
@@ -117,129 +149,198 @@ export default function CandidateTracker({
       {list.map((c, i) => (
         <article className="candidate-item" key={c.name}>
           <div className="eyebrow">
-            {c.fun_play ? "ONE PARLAY · ALL LEGS MUST WIN" : multiple ? `POTENTIAL PICK ${i + 1}` : i === 0 ? "LEADING CANDIDATE" : "WATCHLIST"} · {c.matchup}
+            {c.fun_play
+              ? "ONE PARLAY · ALL LEGS MUST WIN"
+              : multiple
+                ? `POTENTIAL PICK ${i + 1}`
+                : i === 0
+                  ? "LEADING CANDIDATE"
+                  : "WATCHLIST"}{" "}
+            · {c.matchup}
           </div>
-          <h3>{c.name}</h3>
-          <p>{c.market}</p>
-          <strong className="candidate-price">{c.quote}</strong>
-          <p className="candidate-context">{c.quote_context}</p>
-          {c.fun_play && c.legs && <div className="notice">
-            <ol style={{ paddingLeft: 22, margin: 0 }}>
-              {c.legs.map(leg => <li key={leg.team} style={{ marginBottom: 8 }}>
-                <strong>{leg.team} ML {leg.odds > 0 ? "+" : ""}{leg.odds}</strong>
-                <small style={{ display: "block" }}>{leg.matchup}</small>
-              </li>)}
-            </ol>
-          </div>}
+          {!c.fun_play && <h3>{c.name}</h3>}
+          {!c.fun_play && <p>{c.market}</p>}
+          {c.fun_play ? (
+            <div className="ticket-price-note">
+              Combined odds & boost unverified · individual prices are
+              historical observations
+            </div>
+          ) : (
+            <>
+              <strong className="candidate-price">{c.quote}</strong>
+              <p className="candidate-context">{c.quote_context}</p>
+            </>
+          )}
+          {c.fun_play && c.legs && (
+            <>
+              <div className="ticket-legs">
+                {c.legs.slice(0, 4).map((leg) => (
+                  <div className="ticket-leg" key={leg.team}>
+                    <TeamLogo team={leg.team} />
+                    <div>
+                      <strong>{leg.team.split(" ").at(-1)}</strong>
+                      <small>Moneyline</small>
+                    </div>
+                    <b>
+                      {leg.odds > 0 ? "+" : ""}
+                      {leg.odds}
+                    </b>
+                  </div>
+                ))}
+              </div>
+              <details className="ticket-more">
+                <summary>View all {c.legs.length} legs & game times</summary>
+                <div className="ticket-legs ticket-legs-full">
+                  {c.legs.map((leg) => (
+                    <div className="ticket-leg" key={leg.team}>
+                      <TeamLogo team={leg.team} />
+                      <div>
+                        <strong>{leg.team}</strong>
+                        <small>{leg.matchup}</small>
+                      </div>
+                      <b>
+                        {leg.odds > 0 ? "+" : ""}
+                        {leg.odds}
+                      </b>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            </>
+          )}
           {!expired && c.experimental && c.gambly_url && (
-            <div className="notice">
-              <GamblyLink url={c.gambly_url} selection={c.copy_text || `${c.name} ${c.market} · ${c.matchup}`} />
-              <p>Copies the exact pick and opens Gambly. Paste it into the search box. No prefilled share slip is available. Confirm the exact line and price before acting; opening this link does not record a wager.</p>
+            <div className="ticket-action">
+              <GamblyLink
+                url={c.gambly_url}
+                selection={
+                  c.copy_text || `${c.name} ${c.market} · ${c.matchup}`
+                }
+              />
+              <p>
+                18+ · Copy, open Gambly, then paste. Verify every line and
+                price.
+              </p>
             </div>
           )}
           <details className="candidate-details">
             <summary>Full pick analysis & risks ↓</summary>
-          <div className="candidate-facts">
-            <div>
-              <small>Quote observation</small>
-              <strong>
-                {c.quote_observed_at &&
-                Number.isFinite(Date.parse(c.quote_observed_at))
-                  ? time(c.quote_observed_at)
-                  : "Time not verified"}
-              </strong>
-            </div>
-            <div>
-              <small>Entry limit</small>
-              <strong>Not established</strong>
-            </div>
-            <div>
-              <small>Decision</small>
-              <strong>{expired ? "Archived" : experimental ? "Experimental" : "WAIT"}</strong>
-            </div>
-          </div>
-          <p className="notice">
-            <b>Waiting for</b>
-            <br />
-            {c.next ||
-              "Verified current price and a supported probability estimate."}
-          </p>
-          <small>
-            Publication time is not the quote time. Confirm availability at your
-            sportsbook; this research card does not authorize an entry.
-          </small>
-          {featured && !experimental && (
+            <p className="candidate-context">{c.quote_context}</p>
             <div className="candidate-facts">
               <div>
-                <small>Break-even at quoted odds</small>
+                <small>Quote observation</small>
                 <strong>
-                  {implied === null ? "Unknown" : `${implied.toFixed(2)}%`}
+                  {c.quote_observed_at &&
+                  Number.isFinite(Date.parse(c.quote_observed_at))
+                    ? time(c.quote_observed_at)
+                    : "Time not verified"}
                 </strong>
               </div>
               <div>
-                <small>Model probability needed for +3 pp</small>
-                <strong>
-                  {implied === null
-                    ? "Unknown"
-                    : `${(implied + 3).toFixed(2)}%`}
-                </strong>
+                <small>Entry limit</small>
+                <strong>Not established</strong>
               </div>
               <div>
-                <small>Verified model / edge</small>
-                <strong>Unknown</strong>
+                <small>Decision</small>
+                <strong>
+                  {expired
+                    ? "Archived"
+                    : experimental
+                      ? "Experimental"
+                      : "WAIT"}
+                </strong>
               </div>
             </div>
-          )}
-          {c.fun_play && c.legs && <div>
-            <h4>Every leg: case & failure risk</h4>
-            {c.legs.map(leg => <div key={leg.team} style={{ marginBottom: 16 }}>
-              <strong>{leg.team}</strong>
-              <p>{leg.why}</p>
-              <p><b>Risk:</b> {leg.risk}</p>
-            </div>)}
-          </div>}
-          <p>
-            <b>Why we’re watching</b>
-            <br />
-            {c.why}
-          </p>
-          <details className="candidate-details" open={featured}>
-            <summary>Read the case, risks & next checks ↓</summary>
-            <p>
-              <b>What could beat this read</b>
+            <p className="notice">
+              <b>Waiting for</b>
               <br />
-              {c.risk}
+              {c.next ||
+                "Verified current price and a supported probability estimate."}
             </p>
-            {featured && (
-              <p>
-                Projection, confidence, risk score, EV, fair price, playable
-                limit and predicted close: not established. No stake assigned.
-                Exact-prop ticket and money splits unavailable.
-              </p>
+            <small>
+              Publication time is not the quote time. Confirm availability at
+              your sportsbook; this research card does not authorize an entry.
+            </small>
+            {featured && !experimental && (
+              <div className="candidate-facts">
+                <div>
+                  <small>Break-even at quoted odds</small>
+                  <strong>
+                    {implied === null ? "Unknown" : `${implied.toFixed(2)}%`}
+                  </strong>
+                </div>
+                <div>
+                  <small>Model probability needed for +3 pp</small>
+                  <strong>
+                    {implied === null
+                      ? "Unknown"
+                      : `${(implied + 3).toFixed(2)}%`}
+                  </strong>
+                </div>
+                <div>
+                  <small>Verified model / edge</small>
+                  <strong>Unknown</strong>
+                </div>
+              </div>
             )}
-            <div className="candidate-sources">
-              {c.sources
-                .filter((s) => s.url.startsWith("https://"))
-                .map((s) => (
-                  <a
-                    key={s.url}
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {s.label} ↗
-                  </a>
+            {c.fun_play && c.legs && (
+              <div>
+                <h4>Every leg: case & failure risk</h4>
+                {c.legs.map((leg) => (
+                  <div key={leg.team} style={{ marginBottom: 16 }}>
+                    <strong>{leg.team}</strong>
+                    <p>{leg.why}</p>
+                    <p>
+                      <b>Risk:</b> {leg.risk}
+                    </p>
+                  </div>
                 ))}
-            </div>
-          </details>
+              </div>
+            )}
+            <p>
+              <b>Why we’re watching</b>
+              <br />
+              {c.why}
+            </p>
+            <details className="candidate-details" open={featured}>
+              <summary>Read the case, risks & next checks ↓</summary>
+              <p>
+                <b>What could beat this read</b>
+                <br />
+                {c.risk}
+              </p>
+              {featured && (
+                <p>
+                  Projection, confidence, risk score, EV, fair price, playable
+                  limit and predicted close: not established. No stake assigned.
+                  Exact-prop ticket and money splits unavailable.
+                </p>
+              )}
+              <div className="candidate-sources">
+                {c.sources
+                  .filter((s) => s.url.startsWith("https://"))
+                  .map((s) => (
+                    <a
+                      key={s.url}
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {s.label} ↗
+                    </a>
+                  ))}
+              </div>
+            </details>
           </details>
         </article>
       ))}
-      {!experimental && <p className="notice">
-        <b>What “3% edge” means:</b> Our defensible estimated chance must exceed
-        the price’s implied chance by at least 3 percentage points. It is not a
-        3% guaranteed return. No qualifying edge has been established here.
-      </p>}
+      {!experimental && (
+        <p className="notice">
+          <b>What “3% edge” means:</b> Our defensible estimated chance must
+          exceed the price’s implied chance by at least 3 percentage points. It
+          is not a 3% guaranteed return. No qualifying edge has been established
+          here.
+        </p>
+      )}
       {featured && (
         <Link className="secondary" href="/feed">
           View all candidate research →
