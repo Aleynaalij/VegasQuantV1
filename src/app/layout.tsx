@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "@/components/ask-vegas.css";
 import "./experience.css";
+import "./sports-light.css";
 import NotificationBootstrap from "@/components/notification-bootstrap";
 import Welcome from "@/components/welcome";
 import AskVegas from "@/components/ask-vegas";
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "black-translucent",
+    statusBarStyle: "default",
     title: "Vegas Quant",
   },
   icons: { apple: "/icons/apple-touch-icon.png" },
@@ -21,7 +22,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#080e12",
+  themeColor: "#ffffff",
 };
 export default function RootLayout({
   children,
