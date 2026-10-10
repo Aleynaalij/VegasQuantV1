@@ -216,9 +216,9 @@ export default function CommunityHome({
             </span>
           </div>
           <p>
-            Tailing is optional. Public profiles appear to members;
-            administrators can view every registered account. This directory
-            does not show live online status.
+            Everyone is here, whether they tail or not. Private profiles appear
+            under a generic member name. This directory does not show live
+            online status.
           </p>
           {!ready ? (
             <p>Loading community…</p>

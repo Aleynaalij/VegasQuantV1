@@ -1,5 +1,5 @@
 // Only the neutral offline page is cached. Never store picks, sessions or API responses.
-const CACHE = "vq-offline-v1";
+const CACHE = "vq-offline-v2";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => cache.add("/offline.html")),
@@ -57,8 +57,8 @@ self.addEventListener("push", (event) => {
               : data.type === "research"
                 ? "New research is published. Open the Feed to see what changed."
                 : "A new official decision is published. Open your challenge to review it.",
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
+      icon: "/icons/icon-192.png?v=q-lens-2",
+      badge: "/icons/icon-192.png?v=q-lens-2",
       tag:
         data.type === "health"
           ? "vq-health"

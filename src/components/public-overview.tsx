@@ -118,9 +118,10 @@ export default function PublicOverview({
     );
   return (
     <Shell>
-      <HomeBrief games={games} />
+      {!challenge && <HomeBrief games={games} />}
       {challenge ? (
         <CommunityHome challengeId={challenge.id} number={challenge.number}>
+          <HomeBrief games={games} />
           <DecisionBoard games={games} />
           <ChallengeRun
             key={challenge.id}

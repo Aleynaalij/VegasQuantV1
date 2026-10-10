@@ -352,9 +352,10 @@ export default function DeskApp({
           )}
         </div>
         {error && <div className="notice">{error}</div>}
-        {page === "home" && <HomeBrief games={d.games} />}
+        {page === "home" && !ch && <HomeBrief games={d.games} />}
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
+            <HomeBrief games={d.games} />
             <DecisionBoard games={d.games} />
             {ch.status === "PREP" ? (
               <CandidateTracker activeOnly featured />
