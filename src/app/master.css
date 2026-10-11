@@ -1617,3 +1617,17 @@ html[data-theme="dark"] .ticket-price-note :is(p,small,strong) { color:#f5dda1 !
 html[data-theme="dark"] :is(.profile-view-link,.profile-socials a,.section-switch button,.account-tabs button) { background:var(--panel) !important; color:#9cb7ff !important; border-color:var(--line) !important; }
 html[data-theme="dark"] .sports-ticker .ticker-scroll { color:var(--text) !important; }
 html[data-theme="dark"] .sports-ticker summary b { color:#9cb7ff !important; }
+
+/* Mint accents for dark-mode exploration and quote context. */
+html[data-theme="dark"] .zone-expand { color:#8ce3bd; }
+html[data-theme="dark"] .zone-expand > span { animation-name:zone-mint-pulse; }
+@keyframes zone-mint-pulse { 0%,100% { box-shadow:0 0 0 0 #8ce3bd00; } 35% { box-shadow:0 0 0 6px #8ce3bd30,0 0 18px #8ce3bd50; } 75% { box-shadow:0 0 0 12px #8ce3bd00; } }
+html[data-theme="dark"] :is(.price-freshness.stale,.price-freshness.unknown,.ticket-price-note,.feed-next) { background:#15352f !important; border-color:#548a78 !important; color:#b7f2d6 !important; }
+html[data-theme="dark"] :is(.price-freshness.stale,.price-freshness.unknown,.ticket-price-note,.feed-next) :is(p,small,strong,b) { color:#b7f2d6 !important; }
+html[data-theme="dark"] :is(.challenge-run,.community-panel,.entry-dialog) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
+html[data-theme="dark"] .journey-dot { background:var(--panel2) !important; color:var(--text) !important; border-color:var(--line) !important; }
+.community-directory .community-roster { display:grid !important; grid-template-columns:1fr !important; gap:0 !important; width:100%; }
+.community-directory .community-person { display:flex !important; align-items:center; text-align:left; gap:14px; width:100%; box-sizing:border-box; padding:14px !important; }
+.community-directory .community-person > div { min-width:0; flex:1; }
+.community-directory .community-person strong { overflow-wrap:anywhere; }
+@media(prefers-reduced-motion:reduce) { html[data-theme="dark"] .zone-expand > span { animation:none; } }
