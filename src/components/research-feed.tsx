@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Shell, Badge } from "./ui";
 import BrandMark from "./brand-mark";
+import LondonWinningSlip from "./london-winning-slip";
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
@@ -237,7 +238,9 @@ export default function ResearchFeed() {
             <div className="feed-stream">
               {timeline.slice(0, limit).map((item) => {
                 const p = item.kind === "post" ? item.value : null;
-                return p ? (
+                return p?.market_label === "zone-win:london-q1-20261011" ? (
+                  <LondonWinningSlip key={p.id} publishedAt={p.created_at} />
+                ) : p ? (
                   <article className="feed-post" key={p.id}>
                     <div className="feed-byline">
                       <span className="feed-avatar">

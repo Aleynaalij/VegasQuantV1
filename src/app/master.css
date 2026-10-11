@@ -1644,3 +1644,27 @@ html[data-theme="dark"] .profile-setup-dialog .photo-status { color:#8ce3bd !imp
 .profile-setup-dialog .member-form { width:100%; box-sizing:border-box; }
 .profile-setup-dialog input[type="file"] { max-width:100%; }
 .profile-setup-dialog .photo-status { font-size:13px; line-height:1.5; }
+
+/* The Zone's own combined win slip, with readable light and dark palettes. */
+.zone-winning-slip { padding:24px; border:1px solid #69cba3; border-radius:24px; background:radial-gradient(ellipse at top right,#8ce3bd25,transparent 65%),var(--panel); color:var(--text); box-shadow:0 8px 32px #15986b12; }
+.zone-winning-slip header,.zone-winning-slip footer,.win-price { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+.win-brand { display:flex; align-items:center; gap:8px; font-size:11px; letter-spacing:.08em; font-weight:800; }
+.win-brand svg { width:28px; height:28px; }
+.zone-winning-slip h2 { font-size:28px; line-height:1.15; margin:16px 0 8px; }
+.win-badge { display:inline-flex; background:#8ce3bd; color:#0b3025 !important; padding:8px 12px; border-radius:999px; font-size:12px; font-weight:800; }
+.win-price { margin:20px 0; padding:18px; border:1px solid #69cba366; border-radius:16px; background:#8ce3bd15; }
+.win-price > div { display:grid; gap:6px; }
+.win-price strong { font-size:40px; letter-spacing:-1px; color:#08714b !important; }
+.zone-winning-slip small { color:var(--muted); font-size:11px; }
+.zone-winning-slip ol { list-style:none; padding:0; margin:0; }
+.zone-winning-slip li { display:flex; align-items:center; gap:12px; padding:14px 0; border-top:1px solid var(--line); }
+.zone-winning-slip li > div { flex:1; min-width:0; display:grid; gap:4px; }
+.zone-winning-slip li strong { font-size:17px; }
+.zone-winning-slip li span { font-size:14px; }
+.zone-winning-slip .team-helmet { width:52px; height:44px; }
+.zone-winning-slip .win-leg-status { display:grid; place-items:center; flex-shrink:0; width:28px; height:28px; border-radius:50%; background:#8ce3bd; color:#0b3025; font-size:18px; font-weight:800; }
+.zone-winning-slip footer { margin-top:12px; padding-top:18px; border-top:1px solid var(--line); font-size:11px; }
+.zone-winning-slip footer strong { color:#08714b !important; letter-spacing:.06em; }
+.zone-winning-slip time { color:var(--muted); }
+html[data-theme="dark"] .zone-winning-slip :is(.win-price strong,footer strong) { color:#8ce3bd !important; }
+@media(max-width:500px) { .zone-winning-slip { padding:18px; } .zone-winning-slip h2 { font-size:25px; } }
