@@ -15,6 +15,8 @@ Scope: Home, Analysis, Feed, Records, Account, notification inbox, saved/tailing
 - Saved/publication boards offer Retry and clear search-empty states; account changes clear personal rows. Network exceptions no longer leave phone save/remove controls indefinitely busy.
 - Phone/push prompts remain dismissible when browser storage is unavailable. Successful notification setup closes the prompt. Service-worker update listeners clean up on navigation and update controls show progress.
 
+- Final live review corrected the Home freshness checkpoint to include published selection releases, and labeled Hail Mary tickets as entertainment rather than experimental analysis.
+
 ## Validation
 
 - TypeScript check and production build passed.
@@ -22,7 +24,7 @@ Scope: Home, Analysis, Feed, Records, Account, notification inbox, saved/tailing
 - A live, rolled-back database transaction verified authenticated receipt insertion, read-back, duplicate suppression and denial of another account's receipt insertion. No test rows remain.
 - The Feed history RPC was verified under the anonymous role; responses are bounded and the original Home snapshot remains consistent.
 - Inspected live RLS policies for phone contacts, push subscriptions, saved legs and update receipts. Personal contact and subscription data remain owner-scoped.
-- Public browser review covered Analysis, Feed, Records and Account entry, with final post-deployment Home and interaction checks performed separately.
+- Public browser review covered Analysis, Feed, Records and Account entry. After deployment, the inbox opened/closed correctly, Home retained the 11-leg Hail Mary, the newest four-leg publication appeared first in Feed, and all four NFL team images loaded.
 
 ## Limits and follow-up scope
 

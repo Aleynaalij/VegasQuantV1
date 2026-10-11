@@ -28,10 +28,15 @@ export default function ResearchPulse({ proof = false }: { proof?: boolean }) {
   useEffect(() => {
     let live = true;
     async function refresh() {
-      const [r, latest] = await Promise.all([
+      const [r, latest, selections] = await Promise.all([
         supabase.rpc("public_research_status"),
         supabase
           .from("research_feed_posts")
+          .select("created_at")
+          .order("created_at", { ascending: false })
+          .limit(1),
+        supabase
+          .from("candidate_releases")
           .select("created_at")
           .order("created_at", { ascending: false })
           .limit(1),
@@ -39,14 +44,18 @@ export default function ResearchPulse({ proof = false }: { proof?: boolean }) {
       if (live) {
         setError(!!r.error);
         if (!r.error) {
-          const feedAt = latest.error ? null : latest.data?.[0]?.created_at;
+          const dates = [
+            r.data.updated_at,
+            latest.error ? null : latest.data?.[0]?.created_at,
+            selections.error ? null : selections.data?.[0]?.created_at,
+          ].filter(
+            (value): value is string =>
+              !!value && Number.isFinite(Date.parse(value)),
+          );
           setStatus({
             ...r.data,
             updated_at:
-              feedAt &&
-              Date.parse(feedAt) > Date.parse(r.data.updated_at || "1970-01-01")
-                ? feedAt
-                : r.data.updated_at,
+              dates.sort((a, b) => Date.parse(b) - Date.parse(a))[0] || null,
           });
         }
         setNow(Date.now());
@@ -84,7 +93,7 @@ export default function ResearchPulse({ proof = false }: { proof?: boolean }) {
         <p>
           {status.updated_at ? (
             <>
-              <strong>Last research publication</strong> ·{" "}
+              <strong>Latest available publication</strong> ·{" "}
               <time dateTime={status.updated_at}>
                 {time(status.updated_at)}
               </time>

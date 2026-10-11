@@ -136,11 +136,13 @@ export default function CandidateTracker({
     <section
       className={`candidate-tracker ${funPlay ? "fun-ticket" : ""}`}
       aria-label={
-        multiple
-          ? "Potential picks"
-          : featured
-            ? "Potential next leg"
-            : "Edge candidate tracker"
+        funPlay
+          ? "Hail Mary ticket"
+          : multiple
+            ? "Potential picks"
+            : featured
+              ? "Potential next leg"
+              : "Edge candidate tracker"
       }
     >
       <header>
@@ -161,11 +163,13 @@ export default function CandidateTracker({
           ·{" "}
           {expired
             ? "ARCHIVED RESEARCH"
-            : editorial
-              ? "ANALYST SELECTIONS"
-              : experimental
-                ? "EXPERIMENTAL ANALYSIS"
-                : "RESEARCH"}
+            : funPlay
+              ? "ENTERTAINMENT"
+              : editorial
+                ? "ANALYST SELECTIONS"
+                : experimental
+                  ? "EXPERIMENTAL ANALYSIS"
+                  : "RESEARCH"}
         </span>
         <h2>
           {featured && !experimental && !funPlay
