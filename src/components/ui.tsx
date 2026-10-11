@@ -126,7 +126,7 @@ export function Shell({
             href="/feed"
           >
             <BrandMark />
-            Feed
+            The Zone
           </Link>
           <Link
             className={
@@ -186,7 +186,7 @@ export function Shell({
                 {
                   home: "Sports desk",
                   game: "Game board",
-                  feed: "The Feed",
+                  feed: "The Zone",
                   history: "Records",
                   performance: "Performance",
                   account: "Account",
@@ -240,7 +240,7 @@ export function Shell({
             href="/feed"
           >
             <BrandMark />
-            Feed
+            The Zone
           </Link>
           <Link
             className={

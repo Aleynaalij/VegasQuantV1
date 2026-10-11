@@ -8,6 +8,7 @@ import NotificationBootstrap from "@/components/notification-bootstrap";
 import ProfileSetupGate from "@/components/profile-setup-gate";
 import PhoneContactPrompt from "@/components/phone-contact-prompt";
 import Welcome from "@/components/welcome";
+import ThemePrompt from "@/components/theme-settings";
 import AskVegas from "@/components/ask-vegas";
 export const metadata: Metadata = {
   applicationName: "Vegas Quant",
@@ -33,8 +34,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('vq-theme-v1');if(t==='dark'||t==='light'){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}}catch(e){}" }} />
+        <ThemePrompt />
         {children}
         <Welcome />
         <ProfileSetupGate />

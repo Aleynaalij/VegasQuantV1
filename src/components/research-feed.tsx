@@ -50,7 +50,7 @@ const categories = [
   "Market update",
   "Decision",
 ];
-const pageSize = 12;
+const pageSize = 6;
 export default function ResearchFeed() {
   const [posts, setPosts] = useState<Post[]>([]),
     [access, setAccess] = useState<Access>(noAccess),
@@ -186,17 +186,17 @@ export default function ResearchFeed() {
         <header className="feed-hero">
           <div className="feed-kicker">
             <BrandMark />
-            <span>VEGAS QUANT ULTRA · THE FEED</span>
+            <span>VEGAS QUANT ULTRA · THE ZONE</span>
           </div>
-          <h1 className="sr-only">The Feed</h1>
-          <p>Game by game. The selection, the case and the risk.</p>
+          <h1>The Zone<span className="zone-signal" aria-hidden="true"> ✦</span></h1>
+          <p>Lock into the game. Explore the picks. Follow the story.</p>
           <div className="feed-rule">
             <ShieldCheck size={16} />
             <span>Individual game legs · Pick of the Day lives on Home.</span>
           </div>
         </header>
         <Link href="/saved" className="text-link">
-          Your saved legs →
+          Saved legs →
         </Link>
         <details
           className="feed-featured"
@@ -231,7 +231,7 @@ export default function ResearchFeed() {
             see member research updates.
           </p>
         )}
-        {loading && <p role="status">Opening your feed…</p>}
+        {loading && <p role="status">Entering The Zone…</p>}
         {!loading && (
           <>
             <div className="feed-stream">
@@ -316,7 +316,10 @@ export default function ResearchFeed() {
                 ) : item.kind === "edge" ? (
                   <EdgeReleaseCard key={item.key} release={item.value} />
                 ) : item.kind === "selection" ? (
-                  <CandidateTracker key={item.key} snapshot={item.value} />
+                  <details className="zone-drop" key={item.key}>
+                    <summary><span className="eyebrow">PICK DROP · {time(item.value.created_at)}</span><strong>{item.value.title}</strong><span>{item.value.candidates.length} selections · Tap to explore ↗</span></summary>
+                    <CandidateTracker snapshot={item.value} />
+                  </details>
                 ) : null;
               })}
             </div>
