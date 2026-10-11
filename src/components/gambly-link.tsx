@@ -2,7 +2,7 @@
 import { useId, useRef, useState } from "react";
 import { isGamblyUrl } from "@/lib/gambly";
 
-export default function GamblyLink({ url, selection }: { url: string; selection?: string }) {
+export default function GamblyLink({ url, selection, label }: { url: string; selection?: string; label?: string }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [confirmed, setConfirmed] = useState(false);
   const [copyError, setCopyError] = useState(false);
@@ -20,7 +20,7 @@ export default function GamblyLink({ url, selection }: { url: string; selection?
   }
   if (!isGamblyUrl(url)) return null;
   return <>
-    <button className="btn" onClick={() => { setConfirmed(false); setCopyError(false); setCopied(false); dialog.current?.showModal(); }}>{selection ? "Copy pick & open Gambly ↗" : "Open in Gambly ↗"}</button>
+    <button className="btn" onClick={() => { setConfirmed(false); setCopyError(false); setCopied(false); dialog.current?.showModal(); }}>{label || (selection ? "Copy pick & open Gambly ↗" : "Open in Gambly ↗")}</button>
     <dialog className="entry-dialog" ref={dialog} aria-labelledby={title}>
       <h2 id={title}>{selection ? "Copy here. Paste in Gambly." : "You must be 18 or older"}</h2>
       {selection && <p className="notice"><strong>Before you leave: copy the pick below. On Gambly, press and hold the chat box, tap PASTE, then press Enter or Send. The pick will not appear there automatically.</strong></p>}
