@@ -10,7 +10,8 @@ export default function InstallApp() {
     [installed, setInstalled] = useState(false),
     [help, setHelp] = useState(false),
     [update, setUpdate] = useState<ServiceWorker | null>(null),
-    [offline, setOffline] = useState(false);
+    [offline, setOffline] = useState(false),
+    [updating, setUpdating] = useState(false);
   useEffect(() => {
     setInstalled(
       window.matchMedia("(display-mode: standalone)").matches ||
@@ -28,24 +29,40 @@ export default function InstallApp() {
     window.addEventListener("appinstalled", done);
     window.addEventListener("online", network);
     window.addEventListener("offline", network);
+    let live = true;
+    let registration: ServiceWorkerRegistration | undefined;
+    const workers = new Map<ServiceWorker, () => void>();
+    const watch = (worker: ServiceWorker | null) => {
+      if (!worker || workers.has(worker)) return;
+      const changed = () => {
+        if (!live) return;
+        if (worker.state === "installed" && navigator.serviceWorker.controller)
+          setUpdate(worker);
+        if (worker.state === "activated" || worker.state === "redundant")
+          setUpdate((current) => (current === worker ? null : current));
+      };
+      workers.set(worker, changed);
+      worker.addEventListener("statechange", changed);
+      changed();
+    };
+    const found = () => watch(registration?.installing || null);
     if ("serviceWorker" in navigator)
       navigator.serviceWorker
         .register("/sw.js", { updateViaCache: "none" })
         .then((reg) => {
-          if (reg.waiting) setUpdate(reg.waiting);
-          reg.addEventListener("updatefound", () => {
-            const worker = reg.installing;
-            worker?.addEventListener("statechange", () => {
-              if (
-                worker.state === "installed" &&
-                navigator.serviceWorker.controller
-              )
-                setUpdate(worker);
-            });
-          });
+          if (!live) return;
+          registration = reg;
+          watch(reg.waiting);
+          watch(reg.installing);
+          reg.addEventListener("updatefound", found);
         })
         .catch(() => {});
     return () => {
+      live = false;
+      registration?.removeEventListener("updatefound", found);
+      workers.forEach((listener, worker) =>
+        worker.removeEventListener("statechange", listener),
+      );
       window.removeEventListener("beforeinstallprompt", install);
       window.removeEventListener("appinstalled", done);
       window.removeEventListener("online", network);
@@ -63,7 +80,13 @@ export default function InstallApp() {
       {update && (
         <button
           className="text-link"
+          disabled={updating}
           onClick={() => {
+            setUpdating(true);
+            if (update.state === "activated" || update.state === "redundant") {
+              location.reload();
+              return;
+            }
             navigator.serviceWorker.addEventListener(
               "controllerchange",
               () => location.reload(),
@@ -72,7 +95,7 @@ export default function InstallApp() {
             update.postMessage("ACTIVATE_UPDATE");
           }}
         >
-          Update app →
+          {updating ? "Updating…" : "Update app →"}
         </button>
       )}
       {!installed && !update && (

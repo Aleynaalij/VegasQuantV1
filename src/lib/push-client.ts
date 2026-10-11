@@ -5,11 +5,21 @@ export const supportsPush = () =>
   "PushManager" in window &&
   "Notification" in window;
 const preferenceKey = (uid: string) => `vq-alerts-v1:${uid}`;
+const sessionPreferences = new Map<string, boolean>();
 export function alertsWanted(uid: string) {
-  return localStorage.getItem(preferenceKey(uid)) !== "off";
+  try {
+    return localStorage.getItem(preferenceKey(uid)) !== "off";
+  } catch {
+    return sessionPreferences.get(uid) ?? true;
+  }
 }
 export function setAlertsWanted(uid: string, on: boolean) {
-  localStorage.setItem(preferenceKey(uid), on ? "on" : "off");
+  sessionPreferences.set(uid, on);
+  try {
+    localStorage.setItem(preferenceKey(uid), on ? "on" : "off");
+  } catch {
+    /* Keep the choice for this session. */
+  }
 }
 export function registerDevice(uid: string): Promise<PushSubscription | null> {
   const existing = pending.get(uid);

@@ -5,11 +5,13 @@ import LegActions from "./leg-actions";
 import PriceFreshness from "./price-freshness";
 import GamblyLink from "./gambly-link";
 import TeamLogo from "./team-logo";
+import { nflTeamCode } from "@/lib/nfl-teams";
 import PlayerPortrait from "./player-portrait";
 import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
 
 type Candidate = {
+  analysis_kind?: string;
   pick_of_day?: boolean;
   experimental?: boolean;
   fun_play?: boolean;
@@ -34,7 +36,7 @@ type Candidate = {
   next: string;
   sources: { label: string; url: string }[];
 };
-type Release = {
+export type CandidateRelease = {
   id: string;
   title: string;
   candidates: Candidate[];
@@ -44,6 +46,7 @@ type Release = {
 export default function CandidateTracker({
   stageId,
   releaseId,
+  snapshot,
   pickOfDay = false,
   funPlayOnly = false,
   featured = false,
@@ -52,15 +55,18 @@ export default function CandidateTracker({
 }: {
   stageId?: string;
   releaseId?: string;
+  snapshot?: CandidateRelease;
   pickOfDay?: boolean;
   funPlayOnly?: boolean;
   featured?: boolean;
   archiveOnly?: boolean;
   activeOnly?: boolean;
 }) {
-  const [release, setRelease] = useState<Release | null>(null);
+  const [fetchedRelease, setRelease] = useState<CandidateRelease | null>(null);
+  const release = snapshot || fetchedRelease;
   const [failed, setFailed] = useState(false);
   useEffect(() => {
+    if (snapshot) return;
     let live = true;
     async function refresh() {
       let q = supabase
@@ -70,8 +76,10 @@ export default function CandidateTracker({
         .limit(1);
       if (releaseId) q = q.eq("id", releaseId);
       if (stageId) q = q.eq("stage_id", stageId);
-      if (pickOfDay) q = q.contains("candidates", JSON.stringify([{ pick_of_day: true }]));
-      if (funPlayOnly) q = q.contains("candidates", JSON.stringify([{ fun_play: true }]));
+      if (pickOfDay)
+        q = q.contains("candidates", JSON.stringify([{ pick_of_day: true }]));
+      if (funPlayOnly)
+        q = q.contains("candidates", JSON.stringify([{ fun_play: true }]));
       if (archiveOnly) q = q.lte("expires_at", new Date().toISOString());
       if (featured || activeOnly)
         q = q.gt("expires_at", new Date().toISOString());
@@ -89,7 +97,16 @@ export default function CandidateTracker({
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
     };
-  }, [releaseId, stageId, featured, archiveOnly, activeOnly, pickOfDay, funPlayOnly]);
+  }, [
+    snapshot,
+    releaseId,
+    stageId,
+    featured,
+    archiveOnly,
+    activeOnly,
+    pickOfDay,
+    funPlayOnly,
+  ]);
   if (!release)
     return failed ? (
       <p className="notice">
@@ -105,11 +122,13 @@ export default function CandidateTracker({
           : 100 / (release.candidates[0].odds! + 100)) * 100
       : null;
   const experimental = release.candidates[0]?.experimental === true;
+  const editorial = release.candidates.every(
+    (c) => c.analysis_kind === "QUALITATIVE_EDITORIAL",
+  );
   const funPlay = release.candidates[0]?.fun_play === true;
-  const list =
-    pickOfDay
-      ? release.candidates.filter(c => c.pick_of_day).slice(0, 1)
-      : featured && !experimental
+  const list = pickOfDay
+    ? release.candidates.filter((c) => c.pick_of_day).slice(0, 1)
+    : featured && !experimental
       ? release.candidates.slice(0, 1)
       : release.candidates;
   const multiple = list.length > 1;
@@ -126,33 +145,43 @@ export default function CandidateTracker({
     >
       <header>
         <span className="eyebrow">
-          {pickOfDay ? "PICK OF THE DAY" : funPlay
-            ? "HAIL MARY · SUNDAY FUN PLAY"
-            : experimental
-              ? multiple
-                ? "EXPERIMENTAL PICKS"
-                : "EXPERIMENTAL PICK"
-              : featured
-                ? "NEXT LEG WATCH"
-                : "EDGE TRACKER"}{" "}
+          {pickOfDay
+            ? "PICK OF THE DAY"
+            : funPlay
+              ? "HAIL MARY · SUNDAY FUN PLAY"
+              : editorial
+                ? "LEGS WE LIKE"
+                : experimental
+                  ? multiple
+                    ? "EXPERIMENTAL PICKS"
+                    : "EXPERIMENTAL PICK"
+                  : featured
+                    ? "NEXT LEG WATCH"
+                    : "EDGE TRACKER"}{" "}
           ·{" "}
           {expired
             ? "ARCHIVED RESEARCH"
-            : experimental
-              ? "EXPERIMENTAL ANALYSIS"
-              : "RESEARCH"}
+            : editorial
+              ? "ANALYST SELECTIONS"
+              : experimental
+                ? "EXPERIMENTAL ANALYSIS"
+                : "RESEARCH"}
         </span>
         <h2>
-          {featured && !experimental && !funPlay ? "Potential next leg" : release.title}
+          {featured && !experimental && !funPlay
+            ? "Potential next leg"
+            : release.title}
         </h2>
         <p>
           {funPlay
             ? "One Sunday moneyline ticket. One losing leg loses the parlay. Separate from the 5-Spot Challenge."
-            : experimental
-              ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
-              : featured
-                ? "Our leading research candidate. Await the official decision before treating this as a challenge leg."
-                : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
+            : editorial
+              ? "Individual selections with the matchup case, observed price and risk for each game."
+              : experimental
+                ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
+                : featured
+                  ? "Our leading research candidate. Await the official decision before treating this as a challenge leg."
+                  : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
         </p>
         <small>
           Published {time(release.created_at)} ·{" "}
@@ -175,7 +204,11 @@ export default function CandidateTracker({
           </div>
           {!c.fun_play && (
             <div className="candidate-player">
-              <PlayerPortrait key={c.name} name={c.name} />
+              {nflTeamCode(c.name) ? (
+                <TeamLogo team={c.name} size={48} />
+              ) : (
+                <PlayerPortrait key={c.name} name={c.name} />
+              )}
               <h3>{c.name}</h3>
             </div>
           )}
@@ -243,7 +276,10 @@ export default function CandidateTracker({
               </p>
             </div>
           )}
-          <LegActions legKey={`candidate:${release.id}:${release.candidates.indexOf(c)+1}`} expired={expired} />
+          <LegActions
+            legKey={`candidate:${release.id}:${release.candidates.indexOf(c) + 1}`}
+            expired={expired}
+          />
           <details className="candidate-details">
             <summary>Full pick analysis & risks ↓</summary>
             <p className="candidate-context">{c.quote_context}</p>
@@ -266,9 +302,11 @@ export default function CandidateTracker({
                 <strong>
                   {expired
                     ? "Archived"
-                    : experimental
-                      ? "Experimental"
-                      : "WAIT"}
+                    : c.analysis_kind === "QUALITATIVE_EDITORIAL"
+                      ? "Analyst selection"
+                      : experimental
+                        ? "Experimental"
+                        : "WAIT"}
                 </strong>
               </div>
             </div>

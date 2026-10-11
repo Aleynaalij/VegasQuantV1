@@ -1480,3 +1480,13 @@ footer {
  .leg-actions { gap:8px; }
  .leg-actions small { font-size:10px; }
 }
+
+/* Inbox content is visible on open; compact, accessible controls on mobile. */
+.update-inbox .app-update h3 { font-size: 15px; line-height: 1.45; margin: 0; }
+.update-inbox .app-update time { color: #5c6b80; font-size: 11px; }
+.update-inbox > .primary { margin-top: 20px; min-height: 44px; }
+.update-inbox .app-update p { overflow-wrap: anywhere; }
+.update-inbox .text-link { min-height: 44px; }
+.feed-access-note { color: #596a81; font-size: 12px; margin: 0 0 16px; }
+.candidate-player .team-logo { flex: 0 0 48px; object-fit: contain; }
+.leg-actions button { min-height: 44px; }
