@@ -44,12 +44,14 @@ type Release = {
 export default function CandidateTracker({
   stageId,
   pickOfDay = false,
+  funPlayOnly = false,
   featured = false,
   archiveOnly = false,
   activeOnly = false,
 }: {
   stageId?: string;
   pickOfDay?: boolean;
+  funPlayOnly?: boolean;
   featured?: boolean;
   archiveOnly?: boolean;
   activeOnly?: boolean;
@@ -65,7 +67,8 @@ export default function CandidateTracker({
         .order("created_at", { ascending: false })
         .limit(1);
       if (stageId) q = q.eq("stage_id", stageId);
-      if (pickOfDay) q = q.contains("candidates", [{ pick_of_day: true }]);
+      if (pickOfDay) q = q.contains("candidates", JSON.stringify([{ pick_of_day: true }]));
+      if (funPlayOnly) q = q.contains("candidates", JSON.stringify([{ fun_play: true }]));
       if (archiveOnly) q = q.lte("expires_at", new Date().toISOString());
       if (featured || activeOnly)
         q = q.gt("expires_at", new Date().toISOString());
@@ -83,7 +86,7 @@ export default function CandidateTracker({
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
     };
-  }, [stageId, featured, archiveOnly, activeOnly, pickOfDay]);
+  }, [stageId, featured, archiveOnly, activeOnly, pickOfDay, funPlayOnly]);
   if (!release)
     return failed ? (
       <p className="notice">
@@ -137,7 +140,7 @@ export default function CandidateTracker({
               : "RESEARCH"}
         </span>
         <h2>
-          {featured && !experimental ? "Potential next leg" : release.title}
+          {featured && !experimental && !funPlay ? "Potential next leg" : release.title}
         </h2>
         <p>
           {funPlay

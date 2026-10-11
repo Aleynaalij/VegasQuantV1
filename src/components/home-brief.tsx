@@ -18,9 +18,9 @@ export default function HomeBrief({ games }: { games: Game[] }) {
       <div className="desk-title-row">
         <div>
           <h1>
-            Your next read.
+            Your game day.
             <br />
-            <em>Your better decision.</em>
+            <em>The Vegas Quant read.</em>
           </h1>
           <p>Find the play. Understand the case. Keep the record.</p>
         </div>

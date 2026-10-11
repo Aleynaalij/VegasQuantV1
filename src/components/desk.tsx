@@ -358,6 +358,7 @@ export default function DeskApp({
           <CommunityHome challengeId={ch.id} number={ch.number}>
             <HomeBrief games={d.games} />
             <DecisionBoard games={d.games} />
+            <CandidateTracker activeOnly featured funPlayOnly />
             <CandidateTracker activeOnly featured pickOfDay />
             <Link className="text-link" href="/feed">Legs we like · See the game board →</Link>
             <DailyUpdateNotice />
