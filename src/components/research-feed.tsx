@@ -190,14 +190,17 @@ export default function ResearchFeed() {
             <span>Individual game legs · Pick of the Day lives on Home.</span>
           </div>
         </header>
-        <nav aria-label="Feed sections" style={{display:"flex",gap:8,padding:6,background:"#eaf0ff",borderRadius:16,marginBottom:20}}>
-          {[ ["legs","Legs we like"], ["research","Research updates"], ["board","All published legs"] ].map(([key,label]) => <button key={key} aria-pressed={view===key} onClick={()=>setView(key)} style={{flex:1,minHeight:52,border:0,borderRadius:12,padding:"10px 8px",background:view===key?"#2454ed":"transparent",color:view===key?"#fff":"#44516b",fontWeight:750,fontSize:14,boxShadow:view===key?"0 4px 12px #2454ed26":"none"}}>{label}</button>)}
+        <nav aria-label="Feed sections" style={{display:"flex",gap:20,borderBottom:"1px solid #dce2eb",marginBottom:18,overflowX:"auto"}}>
+          {[ ["legs","Legs we like"], ["research","Updates"], ["board","Leg board"] ].map(([key,label]) => <button key={key} aria-pressed={view===key} onClick={()=>setView(key)} style={{flexShrink:0,minHeight:42,border:0,borderBottom:view===key?"2px solid #2454ed":"2px solid transparent",borderRadius:0,padding:"8px 0",background:"transparent",color:view===key?"#2454ed":"#667387",fontWeight:view===key?750:550,fontSize:13}}>{label}</button>)}
         </nav>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
-          <strong>{view==="legs"?"Latest selections":view==="board"?"The leg board":"From the research desk"}</strong>
-          <Link href="/saved" className="text-link">Saved legs →</Link>
-        </div>
-        {view === "legs" && <section aria-label="Legs we like"><CandidateTracker activeOnly /></section>}
+        <Link href="/saved" className="text-link">Your saved legs →</Link>
+        {view === "legs" && <>
+          <DailyUpdateNotice />
+          <details className="feed-featured">
+            <summary>Latest game selections <span>View legs ↓</span></summary>
+            <CandidateTracker activeOnly />
+          </details>
+        </>}
         {view === "board" && <PublishedLegBoard />}
         {view === "research" && <>
         <DailyUpdateNotice />
