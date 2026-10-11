@@ -317,7 +317,7 @@ export default function ResearchFeed() {
                   <EdgeReleaseCard key={item.key} release={item.value} />
                 ) : item.kind === "selection" ? (
                   <details className="zone-drop" key={item.key}>
-                    <summary><span className="eyebrow">PICK DROP · {time(item.value.created_at)}</span><strong>{item.value.title}</strong><span>{item.value.candidates.length} selections · Tap to explore ↗</span></summary>
+                    <summary><span className="eyebrow">PICK DROP · {time(item.value.created_at)}</span><strong>{item.value.title}</strong><span>{item.value.candidates.length} {item.value.candidates.length === 1 ? "selection" : "selections"} · Tap to explore ↗</span></summary>
                     <CandidateTracker snapshot={item.value} />
                   </details>
                 ) : null;
