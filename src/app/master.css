@@ -1,4 +1,43 @@
 /* Vegas Quant / Sports intelligence, rebuilt for the small screen first. */
+.alert-preference {
+  background: #f0f5ff;
+  border-color: #c7d5ef;
+  color: #14233a;
+}
+.alert-preference > span {
+  min-width: 0;
+  font-weight: 600;
+}
+.alert-preference strong {
+  color: #174ac6;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.alert-preference input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 50px;
+  min-width: 50px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: #64748b;
+  border-radius: 20px;
+}
+.alert-preference input[type="checkbox"]:checked {
+  background: #2458ed;
+}
+.alert-preference input[type="checkbox"]:focus-visible {
+  outline: 3px solid #174ac6;
+  outline-offset: 4px;
+}
+.alert-preference input[type="checkbox"]:disabled {
+  opacity: .65;
+  cursor: wait;
+}
 :root {
   --bg: #f6f7f9;
   --panel: #fff;
