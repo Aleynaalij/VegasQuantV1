@@ -330,7 +330,7 @@ function IntelligenceWorkspace({ desk: d }: { desk: Desk }) {
         <div className="notebook">
           <p>
             {retailView
-              ? "DraftKings / FanDuel / BetMGM"
+              ? retailBooks.join(" / ")
               : "Configured market-maker references: Circa / Pinnacle / Bookmaker"}
             . {market?.selection} at {selectedLine}. Only matching observed
             quotes from the prior 15 minutes qualify.

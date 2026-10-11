@@ -4,9 +4,13 @@ type Edge = { official_pick_id: string; created_at: string };
 /** Merge publication streams before paging; edits never change publication order. */
 export function feedTimeline<
   P extends Dated & { category: string },
-  S extends Dated,
+  S extends Dated & { candidates?: { supersedes_release_id?: string }[] },
   E extends Edge,
 >(posts: P[], selections: S[], edges: E[], filter: string) {
+  // Show the latest price revision in the feed; original publications remain in Records.
+  const superseded = new Set(selections.flatMap(s =>
+    (s.candidates || []).flatMap(c => c.supersedes_release_id ? [c.supersedes_release_id] : []),
+  ));
   const items = [
     ...posts
       .filter((p) => filter === "All" || p.category === filter)
@@ -16,7 +20,7 @@ export function feedTimeline<
         created_at: value.created_at,
         value,
       })),
-    ...(filter === "All" || filter === "Watchlist" ? selections : []).map(
+    ...(filter === "All" || filter === "Watchlist" ? selections.filter(s => !superseded.has(s.id)) : []).map(
       (value) => ({
         kind: "selection" as const,
         key: `selection:${value.id}`,

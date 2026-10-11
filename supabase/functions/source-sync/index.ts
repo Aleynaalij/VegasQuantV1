@@ -120,15 +120,19 @@ Deno.serve(async (req: Request) => {
       }
     }
     const key = Deno.env.get("ODDS_API_KEY");
+    let oddsCount = 0, missingFanDuelEvents = 0;
     if (key && Deno.env.get("ODDS_FEED_ENABLED") === "true") {
       const events = await json(
-        `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${encodeURIComponent(key)}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=fanduel,draftkings`,
+        `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${encodeURIComponent(key)}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=fanduel`,
       );
       const { data: games, error } = await db
         .from("games")
         .select("id,away_team,home_team,kickoff");
       if (error) throw error;
       const observations = oddsObservations(events, games || []);
+      oddsCount = observations.length;
+      const coveredEvents = new Set(observations.filter(o => o.payload.outcomes.length > 0).map(o => o.payload.event_id));
+      missingFanDuelEvents = events.filter((event: { id: string }) => !coveredEvents.has(event.id)).length;
       for (const o of observations)
         o.fingerprint = await sha(
           JSON.stringify([o.game_id, o.kind, o.payload]),
@@ -143,10 +147,13 @@ Deno.serve(async (req: Request) => {
         provider: "The Odds API",
         status:
           key && Deno.env.get("ODDS_FEED_ENABLED") === "true"
-            ? "ok"
+            ? oddsCount && !missingFanDuelEvents ? "ok" : "partial"
             : "not configured",
         details: {
-          books: ["FanDuel", "DraftKings"],
+          books: ["FanDuel"],
+          quoted_markets: oddsCount,
+          missing_fanduel_events: missingFanDuelEvents,
+          fallback_book: null,
           props: "Requires enabled event-level prop feed",
         },
       },
@@ -160,7 +167,7 @@ Deno.serve(async (req: Request) => {
         let failed = 0, empty = 0;
         for (let i=0;i<selection.events.length;i+=3) {
           const results = await Promise.allSettled(selection.events.slice(i,i+3).map(async event => {
-            const data = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/${event.id}/odds?apiKey=${encodeURIComponent(key!)}&markets=player_rush_yds,player_reception_yds&bookmakers=fanduel,draftkings&oddsFormat=american`);
+            const data = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/${event.id}/odds?apiKey=${encodeURIComponent(key!)}&markets=player_rush_yds,player_reception_yds&bookmakers=fanduel&oddsFormat=american`);
             const observations = propObservations(data,upcoming || [],Date.now());
             for (const o of observations) o.fingerprint = await sha(JSON.stringify([o.game_id,o.kind,o.observed_at,o.payload]));
             const r = await db.rpc("ingest_source",{p:{provider:"The Odds API props",observations}});
@@ -175,13 +182,13 @@ Deno.serve(async (req: Request) => {
         await db.rpc("ingest_source",{p:{provider:"The Odds API props",
           status:failed || empty || selection.skipped ? "partial" : selection.events.length ? "ok" : "no upcoming events",
           details:{events:selection.events.length,failed,empty,skipped:selection.skipped,inserted_quotes:propCount,
-            markets:["player_rush_yds","player_reception_yds"],books:["FanDuel","DraftKings"]}}});
+            markets:["player_rush_yds","player_reception_yds"],books:["FanDuel"]}}});
       } catch {
         await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"error",details:{message:"Prop provider unavailable; prior observations retained"}}});
       }
     } else {
       await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"not configured",
-        details:{required:["ODDS_API_KEY","ODDS_FEED_ENABLED=true","ODDS_PROPS_ENABLED=true"],message:"Player-prop provider access required; no prices generated"}}});
+        details:{books:["FanDuel"],required:["ODDS_API_KEY","ODDS_FEED_ENABLED=true","ODDS_PROPS_ENABLED=true"],message:"Player-prop provider access required; no prices generated"}}});
     }
     return Response.json({
       ok: true,

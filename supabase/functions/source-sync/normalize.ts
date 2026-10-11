@@ -165,7 +165,7 @@ export function oddsObservations(
     );
     if (!g) return [];
     return e.bookmakers
-      .filter((b) => ["fanduel", "draftkings"].includes(b.key))
+      .filter((b) => b.key === "fanduel")
       .flatMap((b) =>
         b.markets.map((m) => ({
           game_id: g.id,

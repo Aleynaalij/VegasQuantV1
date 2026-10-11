@@ -7,6 +7,18 @@ const posts = [
 ];
 const selections = [{ id: "3", created_at: "2026-10-11T01:43:00Z" }];
 const edges = [{ official_pick_id: "4", created_at: "2026-10-11T00:40:00Z" }];
+test("a price revision replaces its displayed predecessor without mutating history", () => {
+  const revisions = [
+    {...selections[0],candidates:[]},
+    {id:"revision",created_at:"2026-10-11T02:00:00Z",candidates:[{supersedes_release_id:"3"}]},
+  ];
+  for (const filter of ["All","Watchlist"]) {
+    const rows=feedTimeline([],revisions,[],filter);
+    assert.deepEqual(rows.map(r => r.key),["selection:revision"]);
+  }
+  assert.equal(revisions.length,2);
+  assert.equal(revisions[0].id,"3");
+});
 test("All interleaves every publication newest first, including newest legs", () => {
   assert.deepEqual(
     feedTimeline(posts, selections, edges, "All").map((x) => x.key),

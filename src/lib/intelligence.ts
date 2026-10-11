@@ -9,8 +9,9 @@ export const sections = [
   "CLV Tracker",
 ] as const;
 export const sharpBooks = ["Circa", "Pinnacle", "Bookmaker"];
-export const retailBooks = ["DraftKings", "FanDuel", "BetMGM"];
-export const books = [...sharpBooks, ...retailBooks];
+export const primaryBook = "FanDuel";
+export const retailBooks = [primaryBook, "DraftKings", "BetMGM"];
+export const books = [primaryBook, ...sharpBooks, ...retailBooks.filter(b => b !== primaryBook)];
 export type IntelMarket = {
   id: string;
   game_id: string;

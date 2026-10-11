@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   books,
+  primaryBook,
   inputSchemas,
   type IntelKind,
   type IntelMarket,
@@ -62,7 +63,7 @@ const fieldSets: Record<IntelKind, Field[]> = {
     },
   ],
   quotes: [
-    book,
+    { ...book, value: primaryBook, label: "Sportsbook · confirm the source of this quote" },
     line,
     { key: "odds", label: "Selected outcome American odds", numeric: true },
     {
@@ -323,7 +324,7 @@ export default function IntelligenceEntry({
                     {!f.optional ? " *" : ""}
                   </span>
                   {f.options ? (
-                    <select name={f.key} required defaultValue="">
+                    <select name={f.key} required defaultValue={f.value ?? ""}>
                       <option value="" disabled>
                         Select…
                       </option>

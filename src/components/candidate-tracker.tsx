@@ -11,6 +11,12 @@ import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
 
 type Candidate = {
+  book?: string;
+  supersedes_release_id?: string;
+  original_published_at?: string;
+  original_quote?: string;
+  original_leg_key?: string;
+  original_legs?: { team: string; odds: number }[];
   analysis_kind?: string;
   pick_of_day?: boolean;
   experimental?: boolean;
@@ -19,12 +25,12 @@ type Candidate = {
   legs?: {
     team: string;
     matchup: string;
-    odds: number;
+    odds: number | null;
     why: string;
     risk: string;
   }[];
   gambly_url?: string;
-  odds?: number;
+  odds?: number | null;
   quote_observed_at?: string;
   name: string;
   matchup: string;
@@ -188,7 +194,7 @@ export default function CandidateTracker({
                   : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
         </p>
         <small>
-          Published {time(release.created_at)} ·{" "}
+          {release.candidates[0]?.supersedes_release_id ? "Prices updated" : "Published"} {time(release.created_at)} ·{" "}
           {expired
             ? "Past game window. These are historical quotes."
             : "Odds may change. Original observations are preserved."}
@@ -219,8 +225,8 @@ export default function CandidateTracker({
           {!c.fun_play && <p>{c.market}</p>}
           {c.fun_play ? (
             <div className="ticket-price-note">
-              Combined odds & boost unverified · individual prices are
-              historical observations
+              {c.book ? `${c.book} Research snapshots · combined odds & boost unverified` : "Combined odds & boost unverified · individual prices are historical observations"}
+              {c.book && <p>{c.quote_context}</p>}
             </div>
           ) : (
             <>
@@ -237,11 +243,10 @@ export default function CandidateTracker({
                     <TeamLogo team={leg.team} />
                     <div>
                       <strong>{leg.team.split(" ").at(-1)}</strong>
-                      <small>Moneyline</small>
+                      <small>Moneyline{c.book ? ` · ${c.book}` : ""}</small>
                     </div>
                     <b>
-                      {leg.odds > 0 ? "+" : ""}
-                      {leg.odds}
+                      {leg.odds == null ? "Unavailable" : `${leg.odds > 0 ? "+" : ""}${leg.odds}`}
                     </b>
                   </div>
                 ))}
@@ -257,8 +262,7 @@ export default function CandidateTracker({
                         <small>{leg.matchup}</small>
                       </div>
                       <b>
-                        {leg.odds > 0 ? "+" : ""}
-                        {leg.odds}
+                        {leg.odds == null ? "Unavailable" : `${leg.odds > 0 ? "+" : ""}${leg.odds}`}
                       </b>
                     </div>
                   ))}
@@ -281,11 +285,19 @@ export default function CandidateTracker({
             </div>
           )}
           <LegActions
-            legKey={`candidate:${release.id}:${release.candidates.indexOf(c) + 1}`}
+            legKey={c.original_leg_key || `candidate:${release.id}:${release.candidates.indexOf(c) + 1}`}
             expired={expired}
           />
           <details className="candidate-details">
             <summary>Full pick analysis & risks ↓</summary>
+            {c.supersedes_release_id && (
+              <details>
+                <summary>Original published prices</summary>
+                <p>Original publication{c.original_published_at ? ` · ${time(c.original_published_at)}` : ""}. Selections are unchanged.</p>
+                <p>{c.original_quote}</p>
+                {c.original_legs?.map(leg => <p key={leg.team}>{leg.team}: {leg.odds > 0 ? "+" : ""}{leg.odds}</p>)}
+              </details>
+            )}
             <p className="candidate-context">{c.quote_context}</p>
             <div className="candidate-facts">
               <div>

@@ -29,6 +29,7 @@ import {
 import { Badge, Panel, Shell } from "./ui";
 import { publishingChecks, type PublishCheck } from "@/lib/publishing-checks";
 import { isGamblyUrl } from "@/lib/gambly";
+import { primaryBook } from "@/lib/intelligence";
 import { marketInfoUrls } from "@/lib/market-info";
 type InputDef = {
   name: string;
@@ -129,7 +130,7 @@ const pickFields: InputDef[] = [
     max: 10,
     step: "any",
   },
-  { name: "book", label: "Sportsbook" },
+  { name: "book", label: "Sportsbook · confirm the quoted source" },
   { name: "predicted_close", label: "Predicted closing line" },
   { name: "best_number", label: "Best available number" },
   { name: "bet_grade", label: "Bet grade" },
@@ -626,7 +627,7 @@ export default function Admin() {
             .slice(0, 16),
         }
       : action === "pick"
-        ? importDefaults
+        ? { book: primaryBook, ...importDefaults }
         : {};
   return (
     <Shell active="admin">
