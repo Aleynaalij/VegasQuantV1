@@ -99,7 +99,7 @@ export default function CandidateTracker({
       if (funPlayOnly)
         q = q.contains("candidates", JSON.stringify([{ fun_play: true }]));
       if (archiveOnly) q = q.lte("expires_at", new Date().toISOString());
-      if (featured || activeOnly)
+      if ((featured || activeOnly) && !funPlayOnly)
         q = q.gt("expires_at", new Date().toISOString());
       const r = await q;
       if (live) {
@@ -195,7 +195,7 @@ export default function CandidateTracker({
                   : "RESEARCH"}
         </span>
         <h2>
-          {featured && !experimental && !funPlay
+          {featured && !experimental && !funPlay && !pickOfDay
             ? "Potential next leg"
             : release.title}
         </h2>
@@ -203,7 +203,7 @@ export default function CandidateTracker({
           {funPlay
             ? "One Sunday moneyline ticket. One losing leg loses the parlay. Separate from the 5-Spot Challenge."
             : editorial
-              ? "Individual selections with the matchup case, observed price and risk for each game."
+              ? "Individual selections with the matchup case and risk. Analyst stat targets and observed sportsbook prices are labeled separately."
               : experimental
                 ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
                 : featured
@@ -262,7 +262,7 @@ export default function CandidateTracker({
               {c.odds_status !== "USER_SCREENSHOT_QUOTE_TIME_UNKNOWN" && (
                 <p className="candidate-context">{c.quote_context}</p>
               )}
-              <PriceFreshness at={c.quote_observed_at} />
+              {c.odds_status !== "UNPRICED_ANALYST_TARGET" && <PriceFreshness at={c.quote_observed_at} />}
             </>
           )}
           {c.fun_play && c.legs && (
