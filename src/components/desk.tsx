@@ -357,14 +357,8 @@ export default function DeskApp({
           <CommunityHome challengeId={ch.id} number={ch.number}>
             <HomeBrief games={d.games} />
             <DecisionBoard games={d.games} />
-            {ch.status === "PREP" ? (
-              <CandidateTracker activeOnly featured />
-            ) : (
-              stage &&
-              !challengePicks.some((p) => p.stage_id === stage.id) && (
-                <CandidateTracker stageId={stage.id} featured />
-              )
-            )}
+            <CandidateTracker activeOnly featured pickOfDay />
+            <Link className="text-link" href="/feed">Legs we like · See the game board →</Link>
             <DailyUpdateNotice />
             {ch.status === "PREP" ? (
               <details className="challenge-preview">

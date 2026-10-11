@@ -34,7 +34,7 @@ export default function PhoneContactPrompt() {
   }, []);
   useEffect(() => {
     const el = dialog.current;
-    const show = () => { if (open && el && !el.open && !document.querySelector(".vq-welcome[open]")) el.showModal(); };
+    const show = () => { if (open && el && !el.open && !document.querySelector('dialog[open], [data-profile-required="true"]')) el.showModal(); };
     show();
     const timer = open ? setInterval(show, 300) : undefined;
     if (!open && el?.open) el.close();

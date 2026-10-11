@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
 
 type Candidate = {
+  pick_of_day?: boolean;
   experimental?: boolean;
   fun_play?: boolean;
   copy_text?: string;
@@ -40,11 +41,13 @@ type Release = {
 };
 export default function CandidateTracker({
   stageId,
+  pickOfDay = false,
   featured = false,
   archiveOnly = false,
   activeOnly = false,
 }: {
   stageId?: string;
+  pickOfDay?: boolean;
   featured?: boolean;
   archiveOnly?: boolean;
   activeOnly?: boolean;
@@ -60,6 +63,7 @@ export default function CandidateTracker({
         .order("created_at", { ascending: false })
         .limit(1);
       if (stageId) q = q.eq("stage_id", stageId);
+      if (pickOfDay) q = q.contains("candidates", [{ pick_of_day: true }]);
       if (archiveOnly) q = q.lte("expires_at", new Date().toISOString());
       if (featured || activeOnly)
         q = q.gt("expires_at", new Date().toISOString());
@@ -77,7 +81,7 @@ export default function CandidateTracker({
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
     };
-  }, [stageId, featured, archiveOnly, activeOnly]);
+  }, [stageId, featured, archiveOnly, activeOnly, pickOfDay]);
   if (!release)
     return failed ? (
       <p className="notice">
@@ -95,7 +99,9 @@ export default function CandidateTracker({
   const experimental = release.candidates[0]?.experimental === true;
   const funPlay = release.candidates[0]?.fun_play === true;
   const list =
-    featured && !experimental
+    pickOfDay
+      ? release.candidates.filter(c => c.pick_of_day).slice(0, 1)
+      : featured && !experimental
       ? release.candidates.slice(0, 1)
       : release.candidates;
   const multiple = list.length > 1;
@@ -112,7 +118,7 @@ export default function CandidateTracker({
     >
       <header>
         <span className="eyebrow">
-          {funPlay
+          {pickOfDay ? "PICK OF THE DAY" : funPlay
             ? "HAIL MARY · SUNDAY FUN PLAY"
             : experimental
               ? multiple
@@ -125,17 +131,17 @@ export default function CandidateTracker({
           {expired
             ? "ARCHIVED RESEARCH"
             : experimental
-              ? "SUBJECT TO CHANGE · NOT OFFICIAL"
-              : "WAIT · NOT OFFICIAL"}
+              ? "EXPERIMENTAL ANALYSIS"
+              : "RESEARCH"}
         </span>
         <h2>
           {featured && !experimental ? "Potential next leg" : release.title}
         </h2>
         <p>
           {funPlay
-            ? "11 moneylines. One Sunday. A high-risk fun play — one losing leg loses the ticket. Subject to change; separate from the 5-Spot Challenge."
+            ? "One Sunday moneyline ticket. One losing leg loses the parlay. Separate from the 5-Spot Challenge."
             : experimental
-              ? "Experimental picks, subject to change. Play at your own risk. No outcome is guaranteed. These are individual research selections, not a four-leg parlay. Original publications stay on record."
+              ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
               : featured
                 ? "Our leading research candidate. Await the official decision before treating this as a challenge leg."
                 : "Candidates under review. None has a verified 3-percentage-point edge in this release."}

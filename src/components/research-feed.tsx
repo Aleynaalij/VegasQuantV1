@@ -181,17 +181,17 @@ export default function ResearchFeed() {
             <BrandMark />
             <span>VEGAS QUANT ULTRA · THE FEED</span>
           </div>
-          <h1>The latest read.</h1>
-          <p>Fresh observations. Clear reasoning. Every update on record.</p>
+          <h1>Legs we like.</h1>
+          <p>Game by game. The selection, the case and the risk.</p>
           <div className="feed-rule">
             <ShieldCheck size={16} />
-            <span>Research updates · A watchlist is not an official play.</span>
+            <span>Individual game legs · Pick of the Day lives on Home.</span>
           </div>
         </header>
         <DailyUpdateNotice />
         <details className="feed-featured">
           <summary>
-            Featured research ticket <span>View picks ↓</span>
+            Latest game selections <span>View legs ↓</span>
           </summary>
           <CandidateTracker activeOnly />
         </details>

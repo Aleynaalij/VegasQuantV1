@@ -9,7 +9,7 @@ const blank: CommunityProfile = {
   avatar: null,
   visible: true,
 };
-export default function CommunitySettings({ uid }: { uid: string }) {
+export default function CommunitySettings({ uid, required = false, onSaved }: { uid: string; required?: boolean; onSaved?: () => void }) {
   const [draft, setDraft] = useState<CommunityProfile>(blank),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
@@ -78,6 +78,11 @@ export default function CommunitySettings({ uid }: { uid: string }) {
   async function save(e: FormEvent) {
     e.preventDefault();
     if (!uid || busy) return;
+    if (!/^[A-Za-z0-9_]{3,24}$/.test(draft.username.trim()) || /^Member_[a-f0-9]{8}$/i.test(draft.username.trim())) {
+      setNotice("Choose your own username: 3–24 letters, numbers or underscores.");
+      return;
+    }
+    if (!draft.avatar) { setNotice("Add a profile photo before saving."); return; }
     setBusy(true);
     setNotice("");
     let instagram: string | null, x: string | null;
@@ -109,6 +114,7 @@ export default function CommunitySettings({ uid }: { uid: string }) {
     else {
       await load();
       window.dispatchEvent(new Event("vq-community-changed"));
+      onSaved?.();
       setNotice(
         draft.visible
           ? "Profile saved. You appear automatically in Community for challenges you join."
@@ -126,7 +132,8 @@ export default function CommunitySettings({ uid }: { uid: string }) {
     );
   return (
     <form className="member-form" onSubmit={save} id="community-settings">
-      <h2 id="community-profile-title">Your community identity</h2>
+      <h2 id="community-profile-title">{required ? "Make your profile yours" : "Your community identity"}</h2>
+      {required && <p>Choose a username and add a profile photo to continue. A nickname is fine; no legal name or identity check is required.</p>}
       <Avatar profile={draft} />
       <label>
         Username
@@ -156,10 +163,11 @@ export default function CommunitySettings({ uid }: { uid: string }) {
         </select>
       </label>
       <label>
-        Photo (optional)
+        Profile photo (required)
         <input
           type="file"
           accept="image/jpeg,image/png,image/webp"
+          required={!draft.avatar}
           onChange={(e) => void photo(e.target.files?.[0])}
         />
       </label>
@@ -209,7 +217,7 @@ export default function CommunitySettings({ uid }: { uid: string }) {
       </small>
       {notice && <p role="alert">{notice}</p>}
       <button className="primary" disabled={busy}>
-        {busy ? "Saving…" : "Save profile"}
+        {busy ? "Saving…" : required ? "Save profile & continue" : "Save profile"}
       </button>
     </form>
   );

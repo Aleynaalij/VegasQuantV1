@@ -5,6 +5,7 @@ import "./experience.css";
 import "./sports-light.css";
 import "./master.css";
 import NotificationBootstrap from "@/components/notification-bootstrap";
+import ProfileSetupGate from "@/components/profile-setup-gate";
 import PhoneContactPrompt from "@/components/phone-contact-prompt";
 import Welcome from "@/components/welcome";
 import AskVegas from "@/components/ask-vegas";
@@ -36,6 +37,7 @@ export default function RootLayout({
       <body>
         {children}
         <Welcome />
+        <ProfileSetupGate />
         <NotificationBootstrap />
         <PhoneContactPrompt />
         <AskVegas />
