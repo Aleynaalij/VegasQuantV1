@@ -6,7 +6,7 @@ import PriceFreshness from "./price-freshness";
 import GamblyLink from "./gambly-link";
 import TeamLogo from "./team-logo";
 import { nflTeamCode } from "@/lib/nfl-teams";
-import PlayerPortrait from "./player-portrait";
+import TeamHelmet from "./team-helmet";
 import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
 
@@ -218,7 +218,7 @@ export default function CandidateTracker({
               {nflTeamCode(c.name) ? (
                 <TeamLogo team={c.name} size={48} />
               ) : (
-                <PlayerPortrait key={c.name} name={c.name} />
+                <TeamHelmet name={c.name} />
               )}
               <h3>{c.name}</h3>
             </div>

@@ -1598,3 +1598,22 @@ html[data-theme="dark"] :is(.feed-gate,.feed-matchup) { background:var(--panel) 
 html[data-theme="dark"] .feed-next { background:#302b1b !important; border-color:#756332 !important; color:#f5dda1 !important; }
 html[data-theme="dark"] .feed-next :is(p,small,strong) { color:#f5dda1 !important; }
 @media(max-width:700px) { .vq-feed .feed-filters { top:60px; } }
+
+/* Complete dark surfaces for Home, the game board and expanded research. */
+html[data-theme="dark"] :is(.mi-game,.mi-access,.desk-shortcuts > a,.community-sidebar > details,.challenge-preview,.profile-rail-content > a,.community-profile-rail > a,.feed-featured,.notebook,.mi-target,.mi-item,.mi-section,.filter-chip,.slate-windows button) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
+html[data-theme="dark"] :is(.desk-shortcuts b,.desk-overline,.mi-game .game-pair,.mi-game .game-pair strong,.community-sidebar summary,.challenge-preview summary,.sports-ticker .ticker-track,.sports-ticker .ticker-track span,.sports-ticker .ticker-games a) { color:var(--text) !important; }
+html[data-theme="dark"] :is(.desk-shortcuts small,.mi-game p,.mi-game small,.community-drawer summary > span,.sports-ticker .ticker-games small) { color:var(--muted) !important; }
+html[data-theme="dark"] :is(.ticket-leg-preview > div > :last-child,.desk-title-row em,.ticker-expand) { color:#9cb7ff !important; }
+html[data-theme="dark"] .slate-windows button.selected { background:#2458ed !important; color:white !important; }
+html[data-theme="dark"] .ticket-price-note :is(p,small,strong) { color:#f5dda1 !important; }
+.zone-expand { display:inline-flex; align-items:center; gap:9px; color:var(--accent); font-weight:700; }
+.zone-expand > span { display:inline-grid; place-items:center; width:27px; height:27px; border:1px solid currentColor; border-radius:50%; animation:zone-expand-pulse 2.4s ease-out infinite; }
+.zone-drop[open] .zone-expand > span { animation:none; transform:rotate(45deg); }
+@keyframes zone-expand-pulse { 0%,100% { box-shadow:0 0 0 0 #5279ff00; } 35% { box-shadow:0 0 0 6px #5279ff30,0 0 16px #5279ff40; } 75% { box-shadow:0 0 0 12px #5279ff00; } }
+@media(prefers-reduced-motion:reduce) { .zone-expand > span { animation:none; } }
+.team-helmet { width:76px; height:62px; flex-shrink:0; filter:drop-shadow(0 4px 5px #0003); }
+.candidate-player .team-helmet { width:76px !important; height:62px !important; }
+
+html[data-theme="dark"] :is(.profile-view-link,.profile-socials a,.section-switch button,.account-tabs button) { background:var(--panel) !important; color:#9cb7ff !important; border-color:var(--line) !important; }
+html[data-theme="dark"] .sports-ticker .ticker-scroll { color:var(--text) !important; }
+html[data-theme="dark"] .sports-ticker summary b { color:#9cb7ff !important; }
