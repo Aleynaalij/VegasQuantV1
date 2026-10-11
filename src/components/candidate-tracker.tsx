@@ -43,6 +43,15 @@ type Candidate = {
   next: string;
   sources: { label: string; url: string }[];
 };
+function copySelection(c: Candidate): string {
+  if (c.fun_play && c.legs) return c.legs.map(leg => `${leg.team} Moneyline`).join("\n");
+  const stat = c.market
+    .replace(/^(?:FULL GAME TOTAL|Full game|1st quarter)\s*[·:—-]\s*/i, "")
+    .split(" · ")[0]
+    .replace(/\s+total\s+/gi, " ")
+    .trim();
+  return `${c.name} ${stat}`;
+}
 export type CandidateRelease = {
   id: string;
   title: string;
@@ -141,7 +150,7 @@ export default function CandidateTracker({
       ? release.candidates.slice(0, 1)
       : release.candidates;
   const multiple = list.length > 1;
-  const allLegsText = list.map(c => c.copy_text || `${c.name} ${c.market} · ${c.matchup}`).join("\n");
+  const allLegsText = list.map(copySelection).join("\n");
   async function copyAllLegs() {
     try { await navigator.clipboard.writeText(allLegsText); setAllCopied(true); setCopyFallback(false); }
     catch { setCopyFallback(true); }
@@ -209,12 +218,14 @@ export default function CandidateTracker({
         </small>
       </header>
       {multiple && !expired && (
-        <div className="ticket-action">
-          <button className="primary" onClick={() => void copyAllLegs()}>Copy all {list.length} legs</button>
-          {allCopied && <p role="status">All legs copied. Paste into your preferred app and verify the exact full-game markets.</p>}
+        <div className="ticket-action" style={{ display: "grid", gap: 12 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
+          <button className="secondary" onClick={() => void copyAllLegs()}>Copy all {list.length} legs</button>
+          <GamblyLink url="https://gambly.com/" selection={allLegsText} label="Copy all & open Gambly ↗" />
+          </div>
+          {allCopied && <p role="status">Copied. Paste into Gambly.</p>}
           {copyFallback && <textarea aria-label="All legs to copy" readOnly value={allLegsText} onFocus={e => e.currentTarget.select()} />}
-          <GamblyLink url="https://gambly.com/" selection={allLegsText} />
-          <p>Combined price is not established. Apps may offer different thresholds; do not treat them as equivalent.</p>
+          <p>Full-game totals · Check available lines in your app.</p>
         </div>
       )}
       {list.map((c, i) => (
@@ -294,7 +305,7 @@ export default function CandidateTracker({
               <GamblyLink
                 url={c.gambly_url}
                 selection={
-                  c.copy_text || `${c.name} ${c.market} · ${c.matchup}`
+                  copySelection(c)
                 }
               />
               <p>
