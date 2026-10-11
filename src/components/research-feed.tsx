@@ -238,7 +238,9 @@ export default function ResearchFeed() {
             <div className="feed-stream">
               {timeline.slice(0, limit).map((item) => {
                 const p = item.kind === "post" ? item.value : null;
-                return p?.market_label === "zone-win:london-q1-20261011" ? (
+                return p?.market_label === "zone-win:london-live6-20261011" ? (
+                  <LondonWinningSlip key={p.id} publishedAt={p.created_at} variant="live-six" />
+                ) : p?.market_label === "zone-win:london-q1-20261011" ? (
                   <LondonWinningSlip key={p.id} publishedAt={p.created_at} />
                 ) : p ? (
                   <article className="feed-post" key={p.id}>

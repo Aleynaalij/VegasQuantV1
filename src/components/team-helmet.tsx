@@ -2,7 +2,7 @@ import { nflTeamCode } from "@/lib/nfl-teams";
 const playerTeams: Record<string, string> = {
   "bhayshul tuten":"jax", "trevor lawrence":"jax", "brenton strange":"jax",
   "parker washington":"jax", "jakobi meyers":"jax", "brian thomas jr.":"jax",
-  "jalen hurts":"phi", "dallas goedert":"phi", "will shipley":"phi",
+  "dontayvion wicks":"phi", "darius cooper":"phi", "jalen hurts":"phi", "dallas goedert":"phi", "will shipley":"phi",
   "chris olave":"no", "juwan johnson":"no", "alvin kamara":"no",
   "drake london":"atl", "james cook":"buf", "james cook iii":"buf", "jaylen warren":"pit",
 };
