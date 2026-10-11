@@ -60,6 +60,7 @@ export default function ResearchFeed() {
     [hasMore, setHasMore] = useState(false),
     [saving, setSaving] = useState(false),
     [notice, setNotice] = useState("");
+  const [view, setView] = useState("legs");
   const [edgeRelease, setEdgeRelease] = useState<EdgeRelease | null>(null);
   const epoch = useRef(0);
   async function refresh() {
@@ -189,15 +190,17 @@ export default function ResearchFeed() {
             <span>Individual game legs · Pick of the Day lives on Home.</span>
           </div>
         </header>
-        <Link href="/saved" className="text-link">Your saved legs →</Link>
-        <details className="feed-featured"><summary>Published leg board · All selections</summary><PublishedLegBoard /></details>
+        <nav aria-label="Feed sections" style={{display:"flex",gap:8,padding:6,background:"#eaf0ff",borderRadius:16,marginBottom:20}}>
+          {[ ["legs","Legs we like"], ["research","Research updates"], ["board","All published legs"] ].map(([key,label]) => <button key={key} aria-pressed={view===key} onClick={()=>setView(key)} style={{flex:1,minHeight:52,border:0,borderRadius:12,padding:"10px 8px",background:view===key?"#2454ed":"transparent",color:view===key?"#fff":"#44516b",fontWeight:750,fontSize:14,boxShadow:view===key?"0 4px 12px #2454ed26":"none"}}>{label}</button>)}
+        </nav>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:16}}>
+          <strong>{view==="legs"?"Latest selections":view==="board"?"The leg board":"From the research desk"}</strong>
+          <Link href="/saved" className="text-link">Saved legs →</Link>
+        </div>
+        {view === "legs" && <section aria-label="Legs we like"><CandidateTracker activeOnly /></section>}
+        {view === "board" && <PublishedLegBoard />}
+        {view === "research" && <>
         <DailyUpdateNotice />
-        <details className="feed-featured">
-          <summary>
-            Latest game selections <span>View legs ↓</span>
-          </summary>
-          <CandidateTracker activeOnly />
-        </details>
         {!loading && edgeRelease && filter === "All" && (
           <EdgeReleaseCard release={edgeRelease} />
         )}
@@ -334,6 +337,7 @@ export default function ResearchFeed() {
             )}
           </>
         )}
+        </>}
         <details id="candidate-tracker" className="feed-featured">
           <summary>
             Research archive <span>Previous tickets ↓</span>
