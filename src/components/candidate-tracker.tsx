@@ -72,6 +72,8 @@ export default function CandidateTracker({
   const [fetchedRelease, setRelease] = useState<CandidateRelease | null>(null);
   const release = snapshot || fetchedRelease;
   const [failed, setFailed] = useState(false);
+  const [allCopied, setAllCopied] = useState(false);
+  const [copyFallback, setCopyFallback] = useState(false);
   useEffect(() => {
     if (snapshot) return;
     let live = true;
@@ -139,6 +141,11 @@ export default function CandidateTracker({
       ? release.candidates.slice(0, 1)
       : release.candidates;
   const multiple = list.length > 1;
+  const allLegsText = list.map(c => c.copy_text || `${c.name} ${c.market} · ${c.matchup}`).join("\n");
+  async function copyAllLegs() {
+    try { await navigator.clipboard.writeText(allLegsText); setAllCopied(true); setCopyFallback(false); }
+    catch { setCopyFallback(true); }
+  }
   return (
     <section
       className={`candidate-tracker ${funPlay ? "fun-ticket" : ""}`}
@@ -201,6 +208,15 @@ export default function CandidateTracker({
             : "Odds may change. Original observations are preserved."}
         </small>
       </header>
+      {multiple && !expired && (
+        <div className="ticket-action">
+          <button className="primary" onClick={() => void copyAllLegs()}>Copy all {list.length} legs</button>
+          {allCopied && <p role="status">All legs copied. Paste into your preferred app and verify the exact full-game markets.</p>}
+          {copyFallback && <textarea aria-label="All legs to copy" readOnly value={allLegsText} onFocus={e => e.currentTarget.select()} />}
+          <GamblyLink url="https://gambly.com/" selection={allLegsText} />
+          <p>Combined price is not established. Apps may offer different thresholds; do not treat them as equivalent.</p>
+        </div>
+      )}
       {list.map((c, i) => (
         <article className="candidate-item" key={c.name}>
           <div className="eyebrow">
@@ -273,7 +289,7 @@ export default function CandidateTracker({
               </details>
             </>
           )}
-          {!expired && c.experimental && c.gambly_url && (
+          {!expired && (c.experimental || editorial) && c.gambly_url && (
             <div className="ticket-action">
               <GamblyLink
                 url={c.gambly_url}
