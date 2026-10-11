@@ -60,7 +60,6 @@ export default function ResearchFeed() {
     [hasMore, setHasMore] = useState(false),
     [saving, setSaving] = useState(false),
     [notice, setNotice] = useState("");
-  const [view, setView] = useState("legs");
   const [edgeRelease, setEdgeRelease] = useState<EdgeRelease | null>(null);
   const epoch = useRef(0);
   async function refresh() {
@@ -190,20 +189,28 @@ export default function ResearchFeed() {
             <span>Individual game legs · Pick of the Day lives on Home.</span>
           </div>
         </header>
-        <nav aria-label="Feed sections" style={{display:"flex",gap:20,borderBottom:"1px solid #dce2eb",marginBottom:18,overflowX:"auto"}}>
-          {[ ["legs","Legs we like"], ["research","Updates"], ["board","Leg board"] ].map(([key,label]) => <button key={key} aria-pressed={view===key} onClick={()=>setView(key)} style={{flexShrink:0,minHeight:42,border:0,borderBottom:view===key?"2px solid #2454ed":"2px solid transparent",borderRadius:0,padding:"8px 0",background:"transparent",color:view===key?"#2454ed":"#667387",fontWeight:view===key?750:550,fontSize:13}}>{label}</button>)}
-        </nav>
         <Link href="/saved" className="text-link">Your saved legs →</Link>
-        {view === "legs" && <>
-          <DailyUpdateNotice />
-          <details className="feed-featured">
-            <summary>Latest game selections <span>View legs ↓</span></summary>
-            <CandidateTracker activeOnly />
-          </details>
-        </>}
-        {view === "board" && <PublishedLegBoard />}
-        {view === "research" && <>
+        <details className="feed-featured"><summary>Published leg board · All selections</summary><PublishedLegBoard /></details>
         <DailyUpdateNotice />
+            <nav className="feed-filters" aria-label="Filter feed">
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  aria-pressed={filter === c}
+                  className={filter === c ? "selected" : ""}
+                  onClick={() => {
+                    if (c === filter) return;
+                    setFilter(c);
+                    setLimit(pageSize);
+                    setLoading(true);
+                  }}
+                >
+                  {c}
+                </button>
+              ))}
+            </nav>
+
+        {filter === "Watchlist" && <CandidateTracker activeOnly />}
         {!loading && edgeRelease && filter === "All" && (
           <EdgeReleaseCard release={edgeRelease} />
         )}
@@ -230,23 +237,6 @@ export default function ResearchFeed() {
           </section>
         ) : (
           <>
-            <nav className="feed-filters" aria-label="Filter feed">
-              {categories.map((c) => (
-                <button
-                  key={c}
-                  aria-pressed={filter === c}
-                  className={filter === c ? "selected" : ""}
-                  onClick={() => {
-                    if (c === filter) return;
-                    setFilter(c);
-                    setLimit(pageSize);
-                    setLoading(true);
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
-            </nav>
             <div className="feed-stream">
               {posts.map((p) => (
                 <article className="feed-post" key={p.id}>
@@ -340,7 +330,6 @@ export default function ResearchFeed() {
             )}
           </>
         )}
-        </>}
         <details id="candidate-tracker" className="feed-featured">
           <summary>
             Research archive <span>Previous tickets ↓</span>
