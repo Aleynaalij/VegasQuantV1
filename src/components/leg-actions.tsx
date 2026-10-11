@@ -1,0 +1,11 @@
+"use client";
+import {useEffect,useState} from 'react';
+import {Bookmark,Flame} from 'lucide-react';
+import {supabase} from '@/lib/supabase';
+export default function LegActions({legKey,expired=false}:{legKey:string;expired?:boolean}) {
+ const [uid,setUid]=useState<string|null>(null),[saved,setSaved]=useState(false),[tail,setTail]=useState(false),[count,setCount]=useState(0),[busy,setBusy]=useState(false),[notice,setNotice]=useState('');
+ useEffect(()=>{let live=true;let epoch=0;async function load(){const n=++epoch;const s=await supabase.auth.getSession();if(!live||n!==epoch)return;const id=s.data.session?.user.id;setUid(id||null);setSaved(false);setTail(false);if(!id)return;const [a,b,c]=await Promise.all([supabase.from('saved_legs').select('leg_key').eq('user_id',id).eq('leg_key',legKey).maybeSingle(),supabase.from('leg_tails').select('leg_key').eq('user_id',id).eq('leg_key',legKey).maybeSingle(),supabase.rpc('leg_tail_count',{p_leg:legKey})]);if(live&&n===epoch){setSaved(!!a.data);setTail(!!b.data);setCount(Number(c.data||0));}}
+ void load();const auth=supabase.auth.onAuthStateChange(()=>setTimeout(()=>void load(),0));return()=>{live=false;auth.data.subscription.unsubscribe()}},[legKey]);
+ async function toggle(kind:'saved_legs'|'leg_tails'){if(!uid){setNotice('Sign in to save or tail a leg.');return;}setBusy(true);setNotice('');const on=kind==='saved_legs'?saved:tail;const r=on?await supabase.from(kind).delete().eq('user_id',uid).eq('leg_key',legKey):await supabase.from(kind).insert({user_id:uid,leg_key:legKey});setBusy(false);if(r.error){setNotice('Could not update this leg. Please retry.');return;}if(kind==='saved_legs')setSaved(!on);else{setTail(!on);setCount(n=>Math.max(0,n+(on?-1:1)));}window.dispatchEvent(new Event('vq-saved-changed'));}
+ return <div className="leg-actions"><button aria-pressed={saved} disabled={busy} onClick={()=>void toggle('saved_legs')}><Bookmark size={16}/>{saved?'Saved':'Save leg'}</button><button aria-pressed={tail} disabled={busy||expired&&!tail} onClick={()=>void toggle('leg_tails')}><Flame size={16}/>{tail?'Tailing':"I’m tailing"}{count>0?` · ${count}`:''}</button><small>Tailing is community interest; it does not record a wager.</small>{notice&&<p role="status">{notice}</p>}</div>;
+}

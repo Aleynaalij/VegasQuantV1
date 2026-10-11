@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Shell, Badge } from "./ui";
 import BrandMark from "./brand-mark";
+import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker from "./candidate-tracker";
 import DailyUpdateNotice from "./daily-update-notice";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
@@ -188,6 +189,8 @@ export default function ResearchFeed() {
             <span>Individual game legs · Pick of the Day lives on Home.</span>
           </div>
         </header>
+        <Link href="/saved" className="text-link">Your saved legs →</Link>
+        <details className="feed-featured"><summary>Published leg board · All selections</summary><PublishedLegBoard /></details>
         <DailyUpdateNotice />
         <details className="feed-featured">
           <summary>

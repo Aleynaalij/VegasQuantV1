@@ -34,6 +34,7 @@ import DecisionBoard from "./decision-board";
 import ChallengeRun from "./challenge-run";
 import PersonalChallenge from "./personal-challenge";
 import PickCard from "./pick-card";
+import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker from "./candidate-tracker";
 import DailyUpdateNotice from "./daily-update-notice";
 import PublicOverview from "./public-overview";
@@ -456,6 +457,7 @@ export default function DeskApp({
         {page === "performance" && <Performance desk={d} />}
         {page === "history" && (
           <>
+            <PublishedLegBoard />
             <section
               className="records-overview"
               aria-label="Published pick results"

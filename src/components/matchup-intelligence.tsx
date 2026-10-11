@@ -12,6 +12,7 @@ import {
 } from "@/lib/matchups";
 import { Shell, Badge, Panel, Empty } from "./ui";
 import SourceObservations from "./source-observations";
+import GameThread from "./game-thread";
 import PickCard from "./pick-card";
 import TeamLogo from "./team-logo";
 import ResearchSections from "./research-sections";
@@ -623,6 +624,7 @@ export default function MatchupIntelligence({
             )}
           </>
         )}
+        {row && <GameThread gameId={row.game.id} />}
       </Shell>
     </div>
   );

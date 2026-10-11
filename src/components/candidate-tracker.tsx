@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import LegActions from "./leg-actions";
+import PriceFreshness from "./price-freshness";
 import GamblyLink from "./gambly-link";
 import TeamLogo from "./team-logo";
 import PlayerPortrait from "./player-portrait";
@@ -181,6 +183,7 @@ export default function CandidateTracker({
             <>
               <strong className="candidate-price">{c.quote}</strong>
               <p className="candidate-context">{c.quote_context}</p>
+              <PriceFreshness at={c.quote_observed_at} />
             </>
           )}
           {c.fun_play && c.legs && (
@@ -234,6 +237,7 @@ export default function CandidateTracker({
               </p>
             </div>
           )}
+          <LegActions legKey={`candidate:${release.id}:${release.candidates.indexOf(c)+1}`} expired={expired} />
           <details className="candidate-details">
             <summary>Full pick analysis & risks ↓</summary>
             <p className="candidate-context">{c.quote_context}</p>

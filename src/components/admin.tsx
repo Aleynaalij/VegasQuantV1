@@ -633,7 +633,8 @@ export default function Admin() {
       <div className="heading">
         <div>
           <span className="eyebrow">PRIVATE PUBLISHING DESK</span>
-          <h1>Publish with intention.</h1>
+          <a className="text-link" href="/admin/engagement">Member activation metrics →</a>
+      <h1>Publish with intention.</h1>
           <p>Vegas Quant Ultra supplies the read. This desk preserves it.</p>
         </div>
         {session && (

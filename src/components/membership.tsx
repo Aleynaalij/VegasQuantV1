@@ -1,4 +1,5 @@
 "use client";
+import FollowTopics from "./follow-topics";
 import { useEffect, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -365,6 +366,8 @@ export default function Membership() {
           className="notification-settings"
         >
           <PickAlerts />
+          <FollowTopics />
+          <Link className="text-link" href="/saved">Your saved legs →</Link>
           <button className="text-link" onClick={() => window.dispatchEvent(new Event("vq:phone-settings"))}>Mobile number &amp; future text alerts →</button>
         </Panel>
       )}

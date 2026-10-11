@@ -16,6 +16,8 @@ import { isMarketInfoUrl } from "@/lib/market-info";
 import SourceStatus from "./source-status";
 import GamblyLink from "./gambly-link";
 import { isGamblyUrl } from "@/lib/gambly";
+import LegActions from "./leg-actions";
+import PriceFreshness from "./price-freshness";
 import CopyPick from "./copy-pick";
 import PickMoneySplits from "./pick-money-splits";
 import BrandMark from "./brand-mark";
@@ -114,6 +116,8 @@ export default function PickCard({
         </time>{" "}
         · Vegas Quant Ultra
       </p>
+      {!share && <LegActions legKey={`official:${p.id}`} expired={!!d.results.find(r=>r.pick_id===p.id)} />}
+      <PriceFreshness at={typeof p.known_at_publication?.quote_observed_at === "string" ? p.known_at_publication.quote_observed_at : null} />
       <p className="pick-odds-notice">
         Odds and available lines may change. This card preserves the original
         published selection, line, odds, and stake; later sportsbook prices do

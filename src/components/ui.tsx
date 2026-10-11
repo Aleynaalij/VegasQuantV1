@@ -1,6 +1,7 @@
 import Link from "next/link";
 import BrandMark from "./brand-mark";
 import InstallApp from "./install-app";
+import UpdateInbox from "./update-inbox";
 import AccountLink from "./account-link";
 import {
   ArrowUpRight,
@@ -197,6 +198,7 @@ export function Shell({
           </div>
           <div className="top-actions">
             <InstallApp />
+            <UpdateInbox />
             <span className="desktop">Research desk</span>
             <AccountLink />
           </div>
