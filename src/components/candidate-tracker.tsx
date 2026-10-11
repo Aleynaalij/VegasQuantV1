@@ -31,6 +31,7 @@ type Candidate = {
   }[];
   gambly_url?: string;
   odds?: number | null;
+  odds_status?: string;
   quote_observed_at?: string;
   name: string;
   matchup: string;
@@ -231,7 +232,9 @@ export default function CandidateTracker({
           ) : (
             <>
               <strong className="candidate-price">{c.quote}</strong>
-              <p className="candidate-context">{c.quote_context}</p>
+              {c.odds_status !== "USER_SCREENSHOT_QUOTE_TIME_UNKNOWN" && (
+                <p className="candidate-context">{c.quote_context}</p>
+              )}
               <PriceFreshness at={c.quote_observed_at} />
             </>
           )}
