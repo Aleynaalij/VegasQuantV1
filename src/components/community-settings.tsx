@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase";
 import { regions, socialUrl, type CommunityProfile } from "@/lib/community";
 import { Avatar } from "./community-home";
@@ -15,6 +15,10 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(true),
     [failed, setFailed] = useState(false);
+  const avatarRef = useRef<string | null>(null);
+  const photoTask = useRef<Promise<void> | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [photoError, setPhotoError] = useState("");
   async function load() {
     const r = await supabase
       .from("community_profiles")
@@ -25,6 +29,7 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
       setFailed(true);
       setNotice("Could not load profile settings. Try again.");
     } else {
+      avatarRef.current = r.data?.avatar || null;
       setDraft(r.data || blank);
       setFailed(false);
     }
@@ -36,13 +41,15 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
   async function photo(file?: File) {
     if (!file) return;
     if (
-      !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+      !["image/jpeg", "image/png", "image/webp"].includes(file.type) && !(file.type === "" && /\.(jpe?g|png|webp)$/i.test(file.name)) ||
       file.size > 5_000_000
     ) {
-      setNotice("Choose a JPG, PNG or WebP under 5 MB.");
+      setPhotoError("Choose a JPG, PNG or WebP under 5 MB.");
       return;
     }
-    setBusy(true);
+    setPreparing(true);
+    setPhotoError("");
+    setNotice("");
     const url = URL.createObjectURL(file);
     try {
       const img = new Image();
@@ -67,12 +74,13 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
       );
       const avatar = canvas.toDataURL("image/jpeg", 0.8);
       if (avatar.length > 120000) throw Error();
+      avatarRef.current = avatar;
       setDraft((v) => ({ ...v, avatar }));
     } catch {
-      setNotice("Could not prepare that photo. Try a smaller image.");
+      setPhotoError("Could not prepare that photo. Choose another JPG, PNG or WebP.");
     } finally {
       URL.revokeObjectURL(url);
-      setBusy(false);
+      setPreparing(false);
     }
   }
   async function save(e: FormEvent) {
@@ -82,7 +90,9 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
       setNotice("Choose your own username: 3–24 letters, numbers or underscores.");
       return;
     }
-    if (!draft.avatar) { setNotice("Add a profile photo before saving."); return; }
+    await photoTask.current;
+    const avatar = avatarRef.current || draft.avatar;
+    if (!avatar) { setNotice("Your photo is not ready. Choose a supported photo and wait for the preview."); return; }
     setBusy(true);
     setNotice("");
     let instagram: string | null, x: string | null;
@@ -94,10 +104,12 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
       setBusy(false);
       return;
     }
+    try {
     const r = await supabase.from("community_profiles").upsert(
       {
         user_id: uid,
         ...draft,
+        avatar,
         instagram_url: instagram,
         x_url: x,
         username: draft.username.trim(),
@@ -121,7 +133,11 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
           : "Profile saved. Your community profile is hidden.",
       );
     }
-    setBusy(false);
+    } catch {
+      setNotice("Could not save your profile. Check your connection and try again. Your photo is still ready.");
+    } finally {
+      setBusy(false);
+    }
   }
   if (loading) return <p>Loading profile settings…</p>;
   if (failed)
@@ -143,7 +159,7 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
           minLength={3}
           maxLength={24}
           value={draft.username}
-          onChange={(e) => setDraft({ ...draft, username: e.target.value })}
+          onChange={(e) => setDraft((v) => ({ ...v, username: e.target.value }))}
         />
       </label>
       <small>
@@ -154,7 +170,7 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
         Region (optional)
         <select
           value={draft.region}
-          onChange={(e) => setDraft({ ...draft, region: e.target.value })}
+          onChange={(e) => setDraft((v) => ({ ...v, region: e.target.value }))}
         >
           <option value="">Keep private</option>
           {regions.map((r) => (
@@ -168,14 +184,17 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
           type="file"
           accept="image/jpeg,image/png,image/webp"
           required={!draft.avatar}
-          onChange={(e) => void photo(e.target.files?.[0])}
+          disabled={busy || preparing}
+          onChange={(e) => { photoTask.current = photo(e.target.files?.[0]); }}
         />
       </label>
+      <p className="photo-status" role="status" aria-live="polite">{preparing ? "Preparing your photo…" : photoError || (draft.avatar ? "Photo ready. Save your profile to continue." : "Choose a JPG, PNG or WebP under 5 MB.")}</p>
       {draft.avatar && (
         <button
           type="button"
           className="text-link"
-          onClick={() => setDraft({ ...draft, avatar: null })}
+          disabled={busy || preparing}
+          onClick={() => { avatarRef.current = null; setDraft((v) => ({ ...v, avatar: null })); }}
         >
           Remove photo
         </button>
@@ -187,7 +206,7 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
           placeholder="https://instagram.com/yourname"
           value={draft.instagram_url || ""}
           onChange={(e) =>
-            setDraft({ ...draft, instagram_url: e.target.value })
+            setDraft((v) => ({ ...v, instagram_url: e.target.value }))
           }
         />
       </label>
@@ -197,14 +216,14 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
           type="url"
           placeholder="https://x.com/yourname"
           value={draft.x_url || ""}
-          onChange={(e) => setDraft({ ...draft, x_url: e.target.value })}
+          onChange={(e) => setDraft((v) => ({ ...v, x_url: e.target.value }))}
         />
       </label>
       <label className="entry-confirm">
         <input
           type="checkbox"
           checked={draft.visible}
-          onChange={(e) => setDraft({ ...draft, visible: e.target.checked })}
+          onChange={(e) => setDraft((v) => ({ ...v, visible: e.target.checked }))}
         />
         Show my username, photo, region, social links, stage wins, joins and
         check-ins to signed-in community members.
@@ -216,8 +235,8 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
         automatically.
       </small>
       {notice && <p role="alert">{notice}</p>}
-      <button className="primary" disabled={busy}>
-        {busy ? "Saving…" : required ? "Save profile & continue" : "Save profile"}
+      <button className="primary" disabled={busy || preparing}>
+        {preparing ? "Preparing photo…" : busy ? "Saving…" : required ? "Save profile & continue" : "Save profile"}
       </button>
     </form>
   );

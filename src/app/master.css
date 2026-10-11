@@ -1634,3 +1634,13 @@ html[data-theme="dark"] .journey-dot { background:var(--panel2) !important; colo
 
 /* Matching mint labels on Home. */
 html[data-theme="dark"] :is(.challenge-preview > summary span,.desk-overline > span:last-child,.sports-ticker .ticker-label) { background:#8ce3bd !important; color:#0b3025 !important; border-color:#8ce3bd !important; }
+
+/* Profile setup stays readable inside the native modal in either appearance. */
+html[data-theme="dark"] .profile-setup-dialog,
+html[data-theme="dark"] .profile-setup-dialog .member-form { background:#131e30 !important; color:#edf3ff !important; border-color:#34435c !important; }
+html[data-theme="dark"] .profile-setup-dialog :is(p,small) { color:#b2bfd3 !important; }
+html[data-theme="dark"] .profile-setup-dialog :is(label,h2) { color:#edf3ff !important; }
+html[data-theme="dark"] .profile-setup-dialog .photo-status { color:#8ce3bd !important; }
+.profile-setup-dialog .member-form { width:100%; box-sizing:border-box; }
+.profile-setup-dialog input[type="file"] { max-width:100%; }
+.profile-setup-dialog .photo-status { font-size:13px; line-height:1.5; }
