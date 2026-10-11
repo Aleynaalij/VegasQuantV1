@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 const key = "vq-theme-v1";
 function apply(theme: string) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#0b1220" : "#ffffff");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#131e30" : "#ffffff");
   try { localStorage.setItem(key, theme); } catch {}
   window.dispatchEvent(new Event("vq-theme"));
 }
@@ -21,6 +22,11 @@ export function ThemeSettings() {
   </div>;
 }
 export default function ThemePrompt() {
+  const pathname = usePathname();
+  useEffect(() => {
+    const theme = document.documentElement.dataset.theme || "light";
+    document.querySelectorAll('meta[name="theme-color"]').forEach(meta => meta.setAttribute("content", theme === "dark" ? "#131e30" : "#ffffff"));
+  }, [pathname]);
   const dialog = useRef<HTMLDialogElement>(null);
   const [uid, setUid] = useState<string | null>(null);
   useEffect(() => {

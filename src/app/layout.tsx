@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('vq-theme-v1');if(t==='dark'||t==='light'){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}}catch(e){}" }} />
+        <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('vq-theme-v1');if(t==='dark'||t==='light'){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t;document.querySelector('meta[name=\"theme-color\"]')?.setAttribute('content',t==='dark'?'#131e30':'#ffffff')}}catch(e){}" }} />
         <ThemePrompt />
         {children}
         <Welcome />
