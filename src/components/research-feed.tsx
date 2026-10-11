@@ -60,10 +60,14 @@ export default function ResearchFeed() {
     [hasMore, setHasMore] = useState(false),
     [saving, setSaving] = useState(false),
     [notice, setNotice] = useState("");
+  const [releases, setReleases] = useState<{id:string;created_at:string}[]>([]);
   const [edgeRelease, setEdgeRelease] = useState<EdgeRelease | null>(null);
   const epoch = useRef(0);
   async function refresh() {
     const n = ++epoch.current;
+    const legs = await supabase.from("candidate_releases").select("id,created_at").order("created_at",{ascending:false}).order("id",{ascending:false}).limit(limit+1);
+    if (n !== epoch.current) return;
+    if (!legs.error) setReleases(legs.data || []);
     const a = await supabase.rpc("membership_status");
     if (n !== epoch.current) return;
     if (a.error) {
@@ -182,7 +186,7 @@ export default function ResearchFeed() {
             <BrandMark />
             <span>VEGAS QUANT ULTRA · THE FEED</span>
           </div>
-          <h1>Legs we like.</h1>
+          <h1 className="sr-only">The Feed</h1>
           <p>Game by game. The selection, the case and the risk.</p>
           <div className="feed-rule">
             <ShieldCheck size={16} />
@@ -210,35 +214,17 @@ export default function ResearchFeed() {
               ))}
             </nav>
 
-        {filter === "Watchlist" && <CandidateTracker activeOnly />}
-        {!loading && edgeRelease && filter === "All" && (
-          <EdgeReleaseCard release={edgeRelease} />
-        )}
+
         {!loading && !edgeRelease && !access.allowed && (
           <p className="notice">
             No edge release is available yet. Only qualifying published picks
             appear here—WAIT/PASS is a valid decision.
           </p>
         )}
-        {loading ? (
-          <p role="status">Opening your feed…</p>
-        ) : !access.allowed ? (
-          <section className="feed-gate">
-            <Eye size={32} />
-            <h2>Go deeper with Premium research.</h2>
-            <p>
-              Published edge picks and the main challenge are free. Premium adds
-              every-game research, unpublished target watchlists, injury updates
-              and the timestamped analysis archive.
-            </p>
-            <Link className="primary" href="/membership">
-              Explore Premium · $5/month <ArrowUpRight size={16} />
-            </Link>
-          </section>
-        ) : (
-          <>
+        {loading && <p role="status">Opening your feed…</p>}
+        {!loading && <>
             <div className="feed-stream">
-              {posts.map((p) => (
+              {[...posts.map(p=>({id:p.id,created_at:p.created_at,post:p,edge:null as EdgeRelease|null})), ...((filter==="All"||filter==="Watchlist")?releases.map(r=>({...r,post:null,edge:null as EdgeRelease|null})):[]), ...((filter==="All"||filter==="Decision")&&edgeRelease?[{id:edgeRelease.official_pick_id,created_at:edgeRelease.created_at,post:null,edge:edgeRelease}]:[])].sort((a,b)=>Date.parse(b.created_at)-Date.parse(a.created_at)||b.id.localeCompare(a.id)).slice(0,limit).map(item => { const p=item.post; return p ? (
                 <article className="feed-post" key={p.id}>
                   <div className="feed-byline">
                     <span className="feed-avatar">
@@ -312,15 +298,15 @@ export default function ResearchFeed() {
                     </Link>
                   </details>
                 </article>
-              ))}
+              ) : item.edge ? <EdgeReleaseCard key={item.id} release={item.edge} /> : <CandidateTracker key={item.id} releaseId={item.id} />; })}
             </div>
-            {!posts.length && !error && (
+            {!posts.length && !(filter === "All" || filter === "Watchlist" ? releases.length : 0) && !error && (
               <p className="feed-empty">
                 No updates in this category yet. Check back as the next decision
                 develops.
               </p>
             )}
-            {hasMore && (
+            {(hasMore || ((filter === "All" || filter === "Watchlist") && releases.length > limit) || posts.length + ((filter === "All" || filter === "Watchlist") ? releases.length : 0) > limit) && (
               <button
                 className="secondary feed-more"
                 onClick={() => setLimit((l) => l + pageSize)}
@@ -328,8 +314,7 @@ export default function ResearchFeed() {
                 Load more updates
               </button>
             )}
-          </>
-        )}
+        </>}
         <details id="candidate-tracker" className="feed-featured">
           <summary>
             Research archive <span>Previous tickets ↓</span>

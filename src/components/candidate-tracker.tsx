@@ -43,6 +43,7 @@ type Release = {
 };
 export default function CandidateTracker({
   stageId,
+  releaseId,
   pickOfDay = false,
   funPlayOnly = false,
   featured = false,
@@ -50,6 +51,7 @@ export default function CandidateTracker({
   activeOnly = false,
 }: {
   stageId?: string;
+  releaseId?: string;
   pickOfDay?: boolean;
   funPlayOnly?: boolean;
   featured?: boolean;
@@ -66,6 +68,7 @@ export default function CandidateTracker({
         .select("id,title,candidates,created_at,expires_at")
         .order("created_at", { ascending: false })
         .limit(1);
+      if (releaseId) q = q.eq("id", releaseId);
       if (stageId) q = q.eq("stage_id", stageId);
       if (pickOfDay) q = q.contains("candidates", JSON.stringify([{ pick_of_day: true }]));
       if (funPlayOnly) q = q.contains("candidates", JSON.stringify([{ fun_play: true }]));
@@ -86,7 +89,7 @@ export default function CandidateTracker({
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
     };
-  }, [stageId, featured, archiveOnly, activeOnly, pickOfDay, funPlayOnly]);
+  }, [releaseId, stageId, featured, archiveOnly, activeOnly, pickOfDay, funPlayOnly]);
   if (!release)
     return failed ? (
       <p className="notice">
