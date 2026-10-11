@@ -1631,3 +1631,6 @@ html[data-theme="dark"] .journey-dot { background:var(--panel2) !important; colo
 .community-directory .community-person > div { min-width:0; flex:1; }
 .community-directory .community-person strong { overflow-wrap:anywhere; }
 @media(prefers-reduced-motion:reduce) { html[data-theme="dark"] .zone-expand > span { animation:none; } }
+
+/* Matching mint labels on Home. */
+html[data-theme="dark"] :is(.challenge-preview > summary span,.desk-overline > span:last-child,.sports-ticker .ticker-label) { background:#8ce3bd !important; color:#0b3025 !important; border-color:#8ce3bd !important; }
