@@ -1589,3 +1589,12 @@ html[data-theme="dark"] .alert-preference input[type="checkbox"]:checked { backg
 html[data-theme="dark"] :is(.community-profile-rail,.sports-ticker,.candidate-tracker.fun-ticket,.ticket-leg-preview > div,.mi-search,.records-overview > div,.filter-bar,.account-wayfinding a,.leg-record,.game-comment,.leg-actions button,.board-filters button,.follow-chips button,.community-resume .community-directory .community-person,.activation-grid article) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] .price-freshness { background:var(--panel2); color:var(--muted); }
 html[data-theme="dark"] .price-freshness:is(.stale,.unknown) { background:#302b1b; color:#f5dda1; }
+
+/* Keep legacy light-only rules from leaking into The Zone's dark palette. */
+.vq-feed .feed-hero { padding:20px !important; }
+.vq-feed .feed-filters { top:68px; background:var(--bg) !important; }
+html[data-theme="dark"] :is(main p,main small,.sidebar small,.topbar a,.feed-trust,.community-panel summary,.feed-rule,.feed-summary,.feed-next p,.feed-matchup p) { color:var(--muted) !important; }
+html[data-theme="dark"] :is(.feed-gate,.feed-matchup) { background:var(--panel) !important; border-color:var(--line) !important; }
+html[data-theme="dark"] .feed-next { background:#302b1b !important; border-color:#756332 !important; color:#f5dda1 !important; }
+html[data-theme="dark"] .feed-next :is(p,small,strong) { color:#f5dda1 !important; }
+@media(max-width:700px) { .vq-feed .feed-filters { top:60px; } }
