@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { time } from "@/lib/domain";
 import BrandMark from "./brand-mark";
+import DownloadCard from "./download-card";
 import EdgeMarketInfo from "./edge-market-info";
 export type EdgeItem = {market_info_url?:string|null;selection:string;number?:string;odds:number;edge:number;model_probability:number;market_probability:number;confidence:number;why_like:string;why_lose:string;playable_number:string;pass_number:string;slug:string;matchup:string;kickoff:string;source_at:string;role:string};
 export type EdgeRelease = {official_pick_id:string;created_at:string;items:EdgeItem[]};
@@ -22,6 +23,13 @@ export default function EdgeReleaseCard({release}:{release:EdgeRelease}) {
     <p className="edge-read">{p.why_like}</p>
     <details><summary>Price limits & risk</summary><p>Playable: {p.playable_number||'Not supplied'}</p><p>Pass: {p.pass_number||'Not supplied'}</p><p>{p.why_lose}</p><p>Analyst probability {p.model_probability}% · Market implied {p.market_probability}%</p><p>Source snapshot {time(p.source_at)}</p></details>
     <div className="edge-pick-actions"><Link href={i===0?'/':`/matchups/${p.slug}`}>{i===0?'View challenge slip':'Matchup research'} →</Link><button className="text-link" onClick={async()=>{try{await navigator.clipboard.writeText(`${p.selection}${p.number?` | Number: ${p.number}`:''} | ${p.odds>0?'+':''}${p.odds} | Published ${time(release.created_at)}`);setCopied(p.selection);}catch{setCopied('Copy unavailable. Select the pick text.');}}}>Copy pick</button></div>
+    <DownloadCard title={p.selection} subtitle={p.matchup} publishedAt={release.created_at} sections={[
+      {heading:"Published market",text:`${p.number || ''} | Odds ${p.odds > 0 ? '+' : ''}${p.odds} | Source snapshot ${time(p.source_at)}`},
+      {heading:"Analyst case",text:p.why_like},
+      {heading:"Risk",text:p.why_lose},
+      {heading:"Price limits",text:`Playable: ${p.playable_number || 'Not supplied'} | Pass: ${p.pass_number || 'Not supplied'}`},
+      {heading:"Published estimates",text:`Analyst probability ${p.model_probability}% | Market implied ${p.market_probability}% | Edge ${p.edge} percentage points. Estimates, not a guaranteed return.`},
+    ]} />
     <div className="edge-pick-actions"><EdgeMarketInfo url={p.market_info_url} /></div>
    </article>;
   })}</div>

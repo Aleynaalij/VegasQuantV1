@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import LegActions from "./leg-actions";
+import DownloadCard from "./download-card";
 import PriceFreshness from "./price-freshness";
 import GamblyLink from "./gambly-link";
 import TeamLogo from "./team-logo";
@@ -217,6 +218,19 @@ export default function CandidateTracker({
             : "Odds may change. Original observations are preserved."}
         </small>
       </header>
+      {multiple && <DownloadCard
+        title={release.title}
+        subtitle="Individual published selections"
+        publishedAt={release.created_at}
+        label={`Download all ${list.length} legs`}
+        sections={list.flatMap(c => [
+          { heading: copySelection(c), text: c.matchup + "\n" + c.quote + "\n" + c.quote_context },
+          { heading: "Case", text: c.why },
+          { heading: "Risk", text: c.risk },
+          { heading: "Next check", text: c.next },
+          { heading: "Sources", text: c.sources.map(s => s.label + ": " + s.url).join("\n") },
+        ])}
+      />}
       {multiple && !expired && (
         <div className="ticket-action" style={{ display: "grid", gap: 12 }}>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
@@ -314,6 +328,20 @@ export default function CandidateTracker({
               </p>
             </div>
           )}
+          <DownloadCard
+            title={c.fun_play ? release.title : copySelection(c)}
+            subtitle={c.matchup}
+            publishedAt={release.created_at}
+            sections={[
+                  { heading: "Selection", text: copySelection(c) },
+                  { heading: "Matchup", text: c.matchup },
+                  { heading: "Published price / context", text: c.quote + "\n" + c.quote_context },
+                  { heading: "Why we like it", text: c.why },
+                  { heading: "Why it could lose", text: c.risk },
+                  { heading: "Next check", text: c.next },
+                  { heading: "Sources", text: c.sources.map(s => s.label + ": " + s.url).join("\n") },
+                ]}
+          />
           <LegActions
             legKey={c.original_leg_key || `candidate:${release.id}:${release.candidates.indexOf(c) + 1}`}
             expired={expired}

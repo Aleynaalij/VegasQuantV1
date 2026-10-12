@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Shell, Badge } from "./ui";
 import BrandMark from "./brand-mark";
+import DownloadCard from "./download-card";
 import LondonWinningSlip from "./london-winning-slip";
 import RavensWinningSlip from "./ravens-winning-slip";
 import PublishedLegBoard from "./published-leg-board";
@@ -239,7 +240,7 @@ export default function ResearchFeed() {
             <div className="feed-stream">
               {timeline.slice(0, limit).map((item) => {
                 const p = item.kind === "post" ? item.value : null;
-                return p?.market_label === "zone-win:ravens-falcons-full5-20261011" ? (
+                const content = p?.market_label === "zone-win:ravens-falcons-full5-20261011" ? (
                   <RavensWinningSlip key={p.id} publishedAt={p.created_at} />
                 ) : p?.market_label === "zone-win:london-live6-20261011" ? (
                   <LondonWinningSlip key={p.id} publishedAt={p.created_at} variant="live-six" />
@@ -329,6 +330,22 @@ export default function ResearchFeed() {
                     <CandidateTracker snapshot={item.value} />
                   </details>
                 ) : null;
+                return <div key={item.key}>
+                  {content}
+                  {p && <DownloadCard
+                    title={p.title}
+                    subtitle={p.matchup}
+                    publishedAt={p.created_at}
+                    sections={[
+                      { heading: p.market_label.startsWith("zone-win:") ? "Result" : "Summary", text: p.summary },
+                      { heading: p.market_label.startsWith("zone-win:") ? "Winning legs" : "Analyst case", text: p.why_watch.split(" Original pregame release:")[0] },
+                      ...(!p.market_label.startsWith("zone-win:") ? [{ heading: "Observed market", text: p.market_label }] : []),
+                      { heading: "Source / uncertainty", text: p.caution },
+                      { heading: "Next check", text: p.next_check },
+                      { heading: "Source", text: p.source_url },
+                    ]}
+                  />}
+                </div>;
               })}
             </div>
             {!timeline.length && !error && (
