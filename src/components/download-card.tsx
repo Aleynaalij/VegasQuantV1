@@ -164,7 +164,7 @@ export default function DownloadCard({ title, subtitle, publishedAt, sections, l
     <button type="button" className="secondary" onClick={() => void preview()} disabled={busy}>
       <Download size={18} aria-hidden="true" /> {busy ? "Creating cards…" : label}
     </button>
-    {pages.length > 0 && <div aria-label="Phone-size card preview" style={{ marginTop: 16, maxWidth: 390 }}>
+    {pages.length > 0 && <div aria-label="Phone-size card preview" tabIndex={0} onKeyDown={e => { if (e.key === "ArrowRight" || e.key === "ArrowLeft") { e.preventDefault(); setActive(index => Math.max(0, Math.min(pages.length - 1, index + (e.key === "ArrowRight" ? 1 : -1)))); } }} style={{ marginTop: 16, maxWidth: 390 }}>
       <div onTouchStart={e => { touchStart.current = e.changedTouches[0].clientX; }}
         onTouchEnd={e => { const start = touchStart.current; touchStart.current = null; if (start === null) return; const delta = e.changedTouches[0].clientX - start; if (Math.abs(delta) > 40) setActive(index => Math.max(0, Math.min(pages.length - 1, index + (delta < 0 ? 1 : -1)))); }}>
         {/* Local canvas-generated image; a fixed 9:16 page, never a scrolling screenshot. */}
