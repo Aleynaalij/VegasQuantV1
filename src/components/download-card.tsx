@@ -73,9 +73,10 @@ export default function DownloadCard({ title, subtitle, publishedAt, sections, l
       }
       function nextPage() { if (rows.length) sheets.push(rows); rows = []; header(); }
       header();
+      const sectionLabels = new Set(["Selection", "Matchup", "Published price / context", "Why we like it", "Why it could lose", "Next check", "Sources", "Source", "Case", "Risk", "Published market", "Analyst case", "Price limits", "Published estimates", "Winning legs", "Result", "Summary", "Observed market", "Source / uncertainty"]);
       for (const section of sections) {
         if (!section.text.trim()) continue;
-        if (!new Set(["Selection", "Matchup", "Published price / context", "Why we like it", "Why it could lose", "Next check", "Sources", "Source", "Case", "Risk", "Published market", "Analyst case", "Price limits", "Published estimates", "Winning legs", "Result", "Summary", "Observed market", "Source / uncertainty"]).has(section.heading)) currentSelection = section.heading;
+        if (!sectionLabels.has(section.heading)) currentSelection = section.heading;
         // Sources stay readable on a phone; full clickable URLs remain in The Zone.
         const text = section.heading === "Sources" || section.heading === "Source"
           ? section.text.replace(/https:\/\/[^\s]+/g, url => { try { return new URL(url).hostname; } catch { return url; } })
