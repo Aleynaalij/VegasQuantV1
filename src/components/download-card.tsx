@@ -33,6 +33,7 @@ export default function DownloadCard({ title, subtitle, publishedAt, sections, l
       type Row = { text: string; y: number; font: string; color: string };
       const sheets: Row[][] = [];
       let rows: Row[] = [], y = 0;
+      let currentSelection = "";
       const date = new Date(publishedAt);
       const stamp = Number.isFinite(date.getTime())
         ? date.toLocaleString("en-US", { timeZone: "America/New_York", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + " ET"
@@ -63,7 +64,7 @@ export default function DownloadCard({ title, subtitle, publishedAt, sections, l
           rows.push({ text, y, font: "bold 52px Arial", color: "#f0f4fc" }); y += 68;
         }
         y += 12;
-        if (subtitle) for (const text of wrap(subtitle, "32px Arial")) {
+        if (currentSelection || subtitle) for (const text of wrap(currentSelection || subtitle || "", "32px Arial")) {
           rows.push({ text, y, font: "32px Arial", color: "#b5c2d6" }); y += 45;
         }
         y += 16;
@@ -74,6 +75,7 @@ export default function DownloadCard({ title, subtitle, publishedAt, sections, l
       header();
       for (const section of sections) {
         if (!section.text.trim()) continue;
+        if (!new Set(["Selection", "Matchup", "Published price / context", "Why we like it", "Why it could lose", "Next check", "Sources", "Source", "Case", "Risk", "Published market", "Analyst case", "Price limits", "Published estimates", "Winning legs", "Result", "Summary", "Observed market", "Source / uncertainty"]).has(section.heading)) currentSelection = section.heading;
         // Sources stay readable on a phone; full clickable URLs remain in The Zone.
         const text = section.heading === "Sources" || section.heading === "Source"
           ? section.text.replace(/https:\/\/[^\s]+/g, url => { try { return new URL(url).hostname; } catch { return url; } })
