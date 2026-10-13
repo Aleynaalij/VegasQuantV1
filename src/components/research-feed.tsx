@@ -19,6 +19,7 @@ import BrandMark from "./brand-mark";
 import DownloadCard from "./download-card";
 import LondonWinningSlip from "./london-winning-slip";
 import RavensWinningSlip from "./ravens-winning-slip";
+import BillsWinningSlip from "./bills-winning-slip";
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
@@ -324,6 +325,8 @@ export default function ResearchFeed() {
                   </article>
                 ) : item.kind === "edge" ? (
                   <EdgeReleaseCard key={item.key} release={item.value} />
+                ) : item.kind === "selection" && ["62bfa07e-6280-4520-abd2-30595429bc6e", "0d8e8f5a-2470-473b-9271-c396829bb429"].includes(item.value.id) ? (
+                  <BillsWinningSlip publishedAt={item.value.created_at} halftime={item.value.id === "0d8e8f5a-2470-473b-9271-c396829bb429"} />
                 ) : item.kind === "selection" ? (
                   <details className="zone-drop" key={item.key}>
                     <summary><span className="eyebrow">PICK DROP · {time(item.value.created_at)}</span><strong>{item.value.title}</strong><span>{item.value.candidates.length} {item.value.candidates.length === 1 ? "selection" : "selections"} · <span className="zone-expand"><span aria-hidden="true">＋</span> Expand</span></span></summary>
