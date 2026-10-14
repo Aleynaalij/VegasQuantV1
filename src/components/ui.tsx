@@ -147,7 +147,7 @@ export function Shell({
             href={board}
           >
             <BookOpen size={18} />
-            Game board
+            Analysis
           </Link>
           <Link
             aria-current={active === "feed" ? "page" : undefined}
@@ -224,7 +224,7 @@ export function Shell({
               {(
                 {
                   home: sport === "nba" ? "NBA desk" : "Sports desk",
-                  game: "Game board",
+                  game: "Analysis",
                   feed: "The Zone",
                   history: "Records",
                   performance: "Performance",
