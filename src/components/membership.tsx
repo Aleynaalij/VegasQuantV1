@@ -9,6 +9,7 @@ import { Shell, Panel } from "./ui";
 import FriendPass from "./friend-pass";
 import CommunitySettings from "./community-settings";
 import PickAlerts from "./pick-alerts";
+import AccountDeletion from "./account-deletion";
 import BillingAccount from "./billing-account";
 import type { Session } from "@supabase/supabase-js";
 type Quote = {
@@ -70,6 +71,11 @@ export default function Membership() {
     setBusy(true);
     setNotice("");
     const f = new FormData(e.currentTarget);
+    if (signup && f.get("legal_consent") !== "on") {
+      setNotice("Confirm that you are 21 or older and accept the Terms of Use before registering.");
+      setBusy(false);
+      return;
+    }
     const credentials = {
       email: String(f.get("email")),
       password: String(f.get("password")),
@@ -78,7 +84,7 @@ export default function Membership() {
       const r = signup
         ? await supabase.auth.signUp({
             ...credentials,
-            options: { emailRedirectTo: location.origin },
+            options: { emailRedirectTo: location.origin, data: { vq_terms_version: "2026-10-14", vq_terms_accepted_at: new Date().toISOString(), vq_age_21_self_attested: true } },
           })
         : await supabase.auth.signInWithPassword(credentials);
       if (r.error) throw r.error;
@@ -326,6 +332,7 @@ export default function Membership() {
                 </small>
               </label>
             )}
+            {signup ? <label className="vq-legal-consent"><input type="checkbox" name="legal_consent" required /><span>I am 21 or older and agree to the <Link href="/terms" target="_blank">Terms of Use</Link>. I have read the <Link href="/privacy" target="_blank">Privacy Notice</Link> and understand that selections can lose. This is a self-declaration, not identity verification.</span></label> : null}
             <button className="primary" disabled={busy}>
               {signup ? "Register" : "Sign in"}
             </button>
@@ -470,6 +477,7 @@ export default function Membership() {
         </p>
       )}
       {session && <BillingAccount token={session.access_token} />}
+      {session && <AccountDeletion key={session.user.id} uid={session.user.id} />}
       <Panel title="Free to follow. Premium to go deeper.">
         <div className="notebook">
           <h3>14 days of Premium, on us</h3>

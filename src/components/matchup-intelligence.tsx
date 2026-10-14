@@ -13,6 +13,7 @@ import {
 import { Shell, Badge, Panel, Empty } from "./ui";
 import SourceObservations from "./source-observations";
 import GameThread from "./game-thread";
+import ZoneNav from "./zone-nav";
 import PickCard from "./pick-card";
 import TeamLogo from "./team-logo";
 import ResearchSections from "./research-sections";
@@ -187,8 +188,11 @@ export default function MatchupIntelligence({
       (!futureOnly || Date.parse(r.game.kickoff) > Date.now()) &&
       (windowFilter === "All games" || group(r) === windowFilter) &&
       (!week ||
-        String(r.game.week) ===
-          (week === "current" ? String(currentWeek) : week)),
+        (week === "current" && currentWeek == null
+          ? Date.parse(r.game.kickoff) > Date.now() &&
+            Date.parse(r.game.kickoff) <= Date.now() + 7 * 86400000
+          : String(r.game.week) ===
+            (week === "current" ? String(currentWeek) : week))),
   );
   const ranked = filtered
     .flatMap((r) =>
@@ -211,18 +215,19 @@ export default function MatchupIntelligence({
       }
     >
       <Shell active="game">
+        <ZoneNav active="Games" />
         <div className="heading">
           <div>
             <span className="eyebrow">VEGAS QUANT INTELLIGENCE</span>
             <h1>
               {row
                 ? `${row.game.away_abbreviation || row.game.away_team} @ ${row.game.home_abbreviation || row.game.home_team}`
-                : "The game board."}
+                : "The Zone · Games"}
             </h1>
             <p>
               {row
                 ? `${time(row.game.kickoff)} · ${row.game.venue}`
-                : "Find your game. Compare the market. Open the full research."}
+                : "Choose your game for the case, injury updates, sources and discussion."}
             </p>
           </div>
         </div>

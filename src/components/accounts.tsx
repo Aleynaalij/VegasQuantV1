@@ -6,6 +6,7 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import AdminDeletionQueue from "./admin-deletion-queue";
 import AdminCorrections from "./admin-corrections";
 import AccountTails from "./account-tails";
 import Link from "next/link";
@@ -120,6 +121,7 @@ export default function Accounts() {
       ) : (
         <>
           <AdminCorrections />
+          <AdminDeletionQueue />
           <Panel title="Friends · full season">
             <div className="notebook">
               {data.promos.map((p) => (
