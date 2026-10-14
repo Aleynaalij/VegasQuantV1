@@ -28,6 +28,12 @@ export default function HomeBrief({ games }: { games: Game[] }) {
           Q<span>+</span>
         </div>
       </div>
+      <Link href="/nba" className="nba-home-announcement">
+        <span className="badge">PLATFORM UPDATE</span>
+        <strong>NBA is coming to Vegas Quant.</strong>
+        <span>Explore the new basketball desk. We’re building now—NBA pregame picks begin after the regular season starts and the research is ready.</span>
+        <b>Explore NBA →</b>
+      </Link>
       <nav className="desk-shortcuts" aria-label="Sports desk shortcuts">
         <Link href="/matchups">
           <CalendarDays size={18} />

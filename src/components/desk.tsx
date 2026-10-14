@@ -1,4 +1,5 @@
 "use client";
+import { isCurrentHomeWeek } from "@/lib/home-week";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -142,12 +143,14 @@ export default function DeskApp({
     official =
       d.picks.find(
         (p) =>
-          p.game_id === g?.id && (page === "game" || p.stage_id === stage?.id),
+          p.game_id === g?.id && (page === "game" || p.stage_id === stage?.id) &&
+          (page !== "home" || isCurrentHomeWeek(d.games.find(game => game.id === p.game_id)?.kickoff)),
       ) ||
       (page === "home"
         ? [...challengePicks]
             .sort((a, b) => b.created_at.localeCompare(a.created_at))
             .find((p) =>
+              isCurrentHomeWeek(d.games.find(game => game.id === p.game_id)?.kickoff) &&
               d.results.some((r) => r.pick_id === p.id && r.result === "WIN"),
             )
         : undefined),

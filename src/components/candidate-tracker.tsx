@@ -10,6 +10,7 @@ import { nflTeamCode } from "@/lib/nfl-teams";
 import TeamHelmet from "./team-helmet";
 import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
+import { homeWeekStart, isCurrentHomeWeek } from "@/lib/home-week";
 
 type Candidate = {
   book?: string;
@@ -93,6 +94,7 @@ export default function CandidateTracker({
         .select("id,title,candidates,created_at,expires_at")
         .order("created_at", { ascending: false })
         .limit(1);
+      if (featured) q = q.gte("created_at", homeWeekStart());
       if (releaseId) q = q.eq("id", releaseId);
       if (stageId) q = q.eq("stage_id", stageId);
       if (pickOfDay)
@@ -126,6 +128,7 @@ export default function CandidateTracker({
     pickOfDay,
     funPlayOnly,
   ]);
+  if (release && featured && !isCurrentHomeWeek(release.created_at)) return null;
   if (!release)
     return failed ? (
       <p className="notice">
