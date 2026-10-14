@@ -56,7 +56,11 @@ export async function synchronizeAge(user: string, attempt: AgeAttempt) {
     attempt.provider_session,
     { expand: ["verified_outputs.dob"] },
   );
-  const state = verificationOutcome(s as AgeProviderSession, user, attempt.id);
+  // A failed earlier erasure can leave an already-redacted attempt. Its DB
+  // reference is trusted, but redaction must never be mistaken for age proof.
+  const state = s.redaction
+    ? "needs_review"
+    : verificationOutcome(s as AgeProviderSession, user, attempt.id);
   const result = await serviceDb().rpc("finish_age_check", {
     p_user: user,
     p_attempt: attempt.id,
