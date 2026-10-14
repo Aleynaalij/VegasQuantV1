@@ -137,7 +137,11 @@ const pickFields: InputDef[] = [
   { name: "timing", label: "Bet timing · exactly as supplied" },
   { name: "playable_number", label: "Playable number" },
   { name: "pass_number", label: "Pass number" },
-  { name: "why_like", label: "Why we like it", type: "textarea" },
+  {
+    name: "why_like",
+    label: "Why we like it · NBA picks must cite Bible rules, e.g. R-01, R-07",
+    type: "textarea",
+  },
   { name: "why_lose", label: "Why it could lose", type: "textarea" },
   {
     name: "raw_handoff",

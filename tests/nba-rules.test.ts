@@ -23,3 +23,10 @@ test("cited rules are found in order, deduplicated, across fields", () => {
 test("unknown or malformed rule references are ignored", () => {
   assert.deepEqual(citedRules("R-41, R-00, R7, BR-12x, PR-1"), []);
 });
+
+test("stored rule ids win over text, invalid stored ids are dropped", async () => {
+  const { pickRules } = await import("../src/lib/nba-rules");
+  assert.deepEqual(pickRules(["R-20", "R-99"], "R-01").map((r) => r.id), ["R-20"]);
+  assert.deepEqual(pickRules([], "Pass per R-20").map((r) => r.id), ["R-20"]);
+  assert.deepEqual(pickRules(undefined, "nothing"), []);
+});

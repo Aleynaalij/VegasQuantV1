@@ -1,4 +1,5 @@
 export type Game = {
+  sport?: "nfl" | "nba";
   id: string;
   slug: string;
   away_team: string;
@@ -79,6 +80,8 @@ export type Analysis = {
   created_at: string;
 };
 export type Pick = {
+  /** NBA Betting Bible rules cited (R-01…R-40); filled by the database from the case/risk text. */
+  rule_ids?: string[];
   market_info_url?: string | null;
   gambly_url?: string | null;
   id: string;

@@ -23,7 +23,7 @@ import PickMoneySplits from "./pick-money-splits";
 import BrandMark from "./brand-mark";
 import TeamLogo from "./team-logo";
 import RuleChips from "./rule-chips";
-import { citedRules } from "@/lib/nba-rules";
+import { pickRules } from "@/lib/nba-rules";
 export default function PickCard({
   p,
   d,
@@ -122,7 +122,7 @@ export default function PickCard({
           <dd>{compact ? `${p.confidence}/10` : p.bet_grade}</dd>
         </div>
       </dl>
-      <RuleChips rules={citedRules(p.why_like, p.why_lose)} />
+      <RuleChips rules={pickRules(p.rule_ids, p.why_like, p.why_lose)} />
       {!r && entryAction}
       {!compact && (
         <p className="slip-why">

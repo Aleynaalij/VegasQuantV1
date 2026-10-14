@@ -238,3 +238,12 @@ export function citedRules(
   }
   return out;
 }
+
+/** Stored rule IDs (from the database) when present, otherwise rules cited in the text. */
+export function pickRules(
+  ids: string[] | null | undefined,
+  ...texts: (string | null | undefined)[]
+): BibleRule[] {
+  const stored = (ids || []).map(findRule).filter((r): r is BibleRule => !!r);
+  return stored.length ? stored : citedRules(...texts);
+}
