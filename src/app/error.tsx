@@ -1,9 +1,11 @@
 "use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Shell } from "@/components/ui";
 export default function ErrorPage({ reset }: { reset: () => void }) {
+  const nba = usePathname()?.startsWith("/nba") ?? false;
   return (
-    <Shell active="error">
+    <Shell active="error" sport={nba ? "nba" : "nfl"}>
       <div className="fatal" role="alert">
         <h1>The desk hit a snag.</h1>
         <p>

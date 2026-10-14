@@ -1,9 +1,11 @@
+"use client";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Shell } from "@/components/ui";
-export const metadata = { title: "Page not found | Vegas Quant" };
 export default function NotFound() {
+  const nba = usePathname()?.startsWith("/nba") ?? false;
   return (
-    <Shell active="missing">
+    <Shell active="missing" sport={nba ? "nba" : "nfl"}>
       <div className="fatal">
         <h1>That page isn’t on the board.</h1>
         <p>

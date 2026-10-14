@@ -35,7 +35,7 @@ export default function PublishedLegBoard({
     [limit, setLimit] = useState(30),
     [retry, setRetry] = useState(0),
     [failed, setFailed] = useState(false),
-    [signedOut, setSignedOut] = useState(false);
+    [signedIn, setSignedIn] = useState<boolean | null>(null);
   useEffect(() => {
     let live = true;
     let epoch = 0;
@@ -47,7 +47,7 @@ export default function PublishedLegBoard({
         if (!s.data.session) {
           if (live) {
             setFailed(false);
-            setSignedOut(true);
+            setSignedIn(false);
             setRows([]);
             setNotice(
               "Sign in to view published selections and your saved legs.",
@@ -55,7 +55,7 @@ export default function PublishedLegBoard({
           }
           return;
         }
-        setSignedOut(false);
+        setSignedIn(true);
         let q = supabase
           .from("published_legs")
           .select("*")
@@ -108,7 +108,10 @@ export default function PublishedLegBoard({
     window.addEventListener("vq-saved-changed", refresh);
     const auth = supabase.auth.onAuthStateChange((event) => {
       ++epoch;
-      if (event === "SIGNED_OUT" || event === "SIGNED_IN") setRows([]);
+      if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
+        setRows([]);
+        setSignedIn(null);
+      }
       setTimeout(refresh, 0);
     });
     return () => {
@@ -132,7 +135,9 @@ export default function PublishedLegBoard({
         and Hail Mary tickets are shown separately. Unverified outcomes stay
         ungraded.
       </p>
-      {signedOut ? (
+      {signedIn === null ? (
+        <p role="status">Loading publication snapshots…</p>
+      ) : !signedIn ? (
         <p role="status">
           {notice}{" "}
           <Link className="text-link" href="/membership">
