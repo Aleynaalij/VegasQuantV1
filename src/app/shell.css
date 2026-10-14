@@ -580,7 +580,7 @@
 .entry-dialog .member-form { padding:0; }
 .entry-dialog input,.entry-dialog select { min-width:0; width:100%; box-sizing:border-box; }
 .entry-confirm { display:flex!important; align-items:flex-start; gap:10px; font-size:13px; line-height:1.5; }
-.entry-confirm input { width:20px!important; min-height:20px; flex-shrink:0; }
+.entry-confirm input { width:20px; min-height:20px; flex-shrink:0; }
 @media (max-width:520px) {
   .personal-toolbar > .primary { width:100%; }
 }
@@ -1019,7 +1019,7 @@
 }
 .sidebar-rule p,
 .sidebar-rule span {
-  color: var(--muted) !important;
+  color: var(--muted);
 }
 .eyebrow {
   font-weight: 800;
@@ -1036,7 +1036,7 @@
 .primary, .ask-vegas-form button {
   background: #0866d8 !important;
   color: #fff !important;
-  border-color: #0866d8 !important;
+  border-color: #0866d8;
   box-shadow: 0 4px 12px #0866d822;
 }
 .primary:hover {
@@ -1048,7 +1048,7 @@
   color: #0866d8 !important;
 }
 .text-link {
-  background: transparent !important;
+  background: transparent;
 }
 .secondary:hover {
   background: #eef5ff !important;
@@ -1057,7 +1057,7 @@
   color: #74510f !important;
 }
 .badge {
-  border-color: #dce4ef !important;
+  border-color: #dce4ef;
 }
 .candidate-tracker > header {
   padding-bottom: 16px;
@@ -1079,11 +1079,11 @@
   background: #d7e2ef !important;
 }
 .ask-vegas-launcher {
-  color: white !important;
-  border: 0 !important;
+  color: white;
+  border: 0;
 }
 .ask-vegas-launcher .vq-mark {
-  color: #fff !important;
+  color: #fff;
 }
 .ask-vegas-header button,
 .ask-vegas-toolbar button,
@@ -1100,7 +1100,7 @@
 .ask-vegas-header small,
 .ask-vegas-answer p,
 .ask-vegas-privacy {
-  color: var(--muted) !important;
+  color: var(--muted);
 }
 .ask-vegas-question {
   background: #e7f1ff !important;
@@ -1125,14 +1125,14 @@
 }
 @media (max-width: 760px) {
   .topbar {
-    height: 64px !important;
-    min-height: 64px !important;
+    height: 64px;
+    min-height: 64px;
   }
   .mobile-brand {
-    font-size: 14px !important;
+    font-size: 14px;
   }
   .mobile-brand svg {
-    width: 30px !important;
+    width: 30px;
   }
   .mobile-nav {
     box-shadow: 0 -3px 18px #1638600a;
@@ -1172,7 +1172,7 @@
 .eyebrow {
   font-size: 11px;
   letter-spacing: 0.12em;
-  color: #2458ed !important;
+  color: #2458ed;
 }
 .topbar {
   height: 68px;
@@ -1234,7 +1234,7 @@
   border-radius: 14px;
   padding: 18px;
   margin-top: 32px;
-  background: #f7f9ff !important;
+  background: #f7f9ff;
 }
 .sidebar-rule h3 {
   font-size: 15px;
@@ -1246,7 +1246,7 @@
   border-color: var(--line);
 }
 .sidebar-bottom {
-  background: none !important;
+  background: none;
   border-top: 1px solid var(--line);
   padding: 18px 0;
 }
@@ -1261,9 +1261,9 @@
   display: none;
 }
 .panel, .candidate-tracker {
-  border-radius: 16px !important;
+  border-radius: 16px;
   border: 1px solid var(--line) !important;
-  box-shadow: 0 2px 3px #14233a03 !important;
+  box-shadow: 0 2px 3px #14233a03;
 }
 .panel-head {
   padding: 20px 24px;
@@ -1276,12 +1276,12 @@
   padding: 24px;
 }
 .badge {
-  border: 0 !important;
+  border: 0;
   border-radius: 6px;
   font-size: 11px;
   letter-spacing: 0.05em;
-  background: #edf1f6 !important;
-  color: #596b83 !important;
+  background: #edf1f6;
+  color: #596b83;
   padding: 7px 9px;
 }
 .badge.red {
@@ -1301,31 +1301,31 @@
 .secondary {
   background: #fff !important;
   border: 1px solid #d6deeb !important;
-  box-shadow: none !important;
+  box-shadow: none;
   color: #2458ed !important;
 }
 .candidate-tracker {
-  margin: 0 !important;
+  margin: 0;
   padding: 24px !important;
   border-top: 3px solid #2458ed !important;
 }
 .candidate-tracker > header {
-  padding: 0 !important;
-  margin-bottom: 16px !important;
+  padding: 0;
+  margin-bottom: 16px;
 }
 .candidate-tracker > header h2 {
-  font-size: 25px !important;
+  font-size: 25px;
   line-height: 1.15;
-  margin: 10px 0 !important;
+  margin: 10px 0;
 }
 .candidate-tracker > header p {
   font-size: 12px !important;
   line-height: 1.6 !important;
-  margin: 0 0 10px !important;
+  margin: 0 0 10px;
   max-width: 700px;
 }
 .candidate-tracker > header small {
-  font-size: 11px !important;
+  font-size: 11px;
   line-height: 1.5;
 }
 .notice[aria-label="Daily publication schedule"] {
@@ -1357,15 +1357,15 @@
   font-size: 13px;
 }
 .ask-vegas-launcher {
-  border-radius: 12px !important;
-  background: #2458ed !important;
-  box-shadow: 0 6px 20px #2458ed20 !important;
-  padding: 12px 15px !important;
+  border-radius: 12px;
+  background: #2458ed;
+  box-shadow: 0 6px 20px #2458ed20;
+  padding: 12px 15px;
   min-height: 44px;
 }
 .ask-vegas-launcher .vq-mark {
-  width: 24px !important;
-  height: 24px !important;
+  width: 24px;
+  height: 24px;
 }
 .ask-vegas-launcher span {
   font-size: 12px;
@@ -1387,8 +1387,8 @@
     gap: 9px;
   }
   .mobile-brand .vq-mark {
-    width: 30px !important;
-    height: 30px !important;
+    width: 30px;
+    height: 30px;
   }
   .heading {
     margin-bottom: 20px;
@@ -1409,7 +1409,7 @@
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     padding: 7px 8px calc(7px + env(safe-area-inset-bottom)) !important;
-    height: auto !important;
+    height: auto;
     min-height: 66px;
     background: #ffffffef !important;
     backdrop-filter: blur(18px);
@@ -1420,7 +1420,7 @@
     gap: 5px;
     font-size: 11px;
     min-height: 48px;
-    padding: 6px 0 !important;
+    padding: 6px 0;
     font-weight: 650;
   }
   .mobile-nav a svg {
@@ -1434,13 +1434,13 @@
     padding: 18px !important;
   }
   .candidate-tracker > header h2 {
-    font-size: 23px !important;
+    font-size: 23px;
   }
   .candidate-tracker > header p {
     font-size: 11px !important;
   }
   .candidate-tracker > header small {
-    font-size: 11px !important;
+    font-size: 11px;
   }
   .notice[aria-label="Daily publication schedule"] {
     display: block;
@@ -1460,8 +1460,8 @@
     font-size: 18px;
   }
   .ask-vegas-launcher {
-    bottom: calc(79px + env(safe-area-inset-bottom)) !important;
-    right: 16px !important;
+    bottom: calc(79px + env(safe-area-inset-bottom));
+    right: 16px;
     padding: 10px 12px !important;
   }
   .ask-vegas-launcher span {
@@ -1535,7 +1535,7 @@ html[data-theme="dark"] .price-freshness:is(.stale, .unknown) { background:#302b
 html[data-theme="dark"] :is(main p, main small, .sidebar small, .topbar a, .community-panel summary, .feed-summary, .feed-next p, .feed-matchup p) { color:var(--muted) !important; }
 html[data-theme="dark"] :is(.mi-game, .mi-access, .community-sidebar > details, .profile-rail-content > a, .community-profile-rail > a, .feed-featured, .notebook, .mi-target, .mi-item, .mi-section, .slate-windows button) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] :is(.mi-game .game-pair, .mi-game .game-pair strong, .community-sidebar summary, .sports-ticker .ticker-track, .sports-ticker .ticker-track span, .sports-ticker .ticker-games a) { color:var(--text) !important; }
-html[data-theme="dark"] :is(.mi-game p, .mi-game small, .community-drawer summary > span, .sports-ticker .ticker-games small) { color:var(--muted) !important; }
+html[data-theme="dark"] :is(.mi-game p, .mi-game small, .community-drawer summary > span, .sports-ticker .ticker-games small) { color:var(--muted); }
 .team-helmet { width:76px; height:62px; flex-shrink:0; filter:drop-shadow(0 4px 5px #0003); }
 html[data-theme="dark"] :is(.profile-view-link, .profile-socials a, .section-switch button) { background:var(--panel) !important; color:#9cb7ff !important; border-color:var(--line) !important; }
 html[data-theme="dark"] :is(.price-freshness.stale, .price-freshness.unknown, .ticket-price-note, .feed-next) { background:#15352f !important; border-color:#548a78 !important; color:#b7f2d6 !important; }
@@ -1543,11 +1543,11 @@ html[data-theme="dark"] :is(.price-freshness.stale, .price-freshness.unknown, .t
 html[data-theme="dark"] :is(.challenge-run, .community-panel, .entry-dialog) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] .profile-setup-dialog,
 html[data-theme="dark"] .profile-setup-dialog .member-form { background:#131e30 !important; color:#edf3ff !important; border-color:#34435c !important; }
-html[data-theme="dark"] .profile-setup-dialog :is(p, small) { color:#b2bfd3 !important; }
+html[data-theme="dark"] .profile-setup-dialog :is(p, small) { color:#b2bfd3; }
 html[data-theme="dark"] .profile-setup-dialog :is(label, h2) { color:#edf3ff !important; }
 .profile-setup-dialog .member-form { width:100%; box-sizing:border-box; }
 .profile-setup-dialog input[type="file"] { max-width:100%; }
-html .skip-link, html[data-theme="dark"] .skip-link { color:#fff !important; background:#2458ed !important; }
+html .skip-link, html[data-theme="dark"] .skip-link { color:#fff !important; background:#2458ed; }
 html[data-theme="dark"] .sport-switch a.selected { color:#fff !important; }
 html[data-theme="dark"] .notice[aria-label="Daily publication schedule"] p { color:var(--muted) !important; }
 .pass-grid h2 { color:var(--text); }

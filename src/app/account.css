@@ -209,15 +209,15 @@ html[data-theme="dark"] .alert-preference input[type="checkbox"]:checked {
 
 /* Green is for wins: Account links and hints use the brand blue / muted text. */
 html[data-theme] body .vq-welcome-about {
-  color: var(--brand-ink) !important;
+  color: var(--brand-ink);
   border-color: var(--line-strong) !important;
   background: var(--panel) !important;
   font-weight: 700;
 }
 html[data-theme] body .screen-account .research-more {
-  color: var(--brand-ink) !important;
+  color: var(--brand-ink);
   font-weight: 700;
 }
 html[data-theme] body .photo-status {
-  color: var(--muted) !important;
+  color: var(--muted);
 }

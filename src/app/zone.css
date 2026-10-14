@@ -380,7 +380,7 @@
   align-items: center;
 }
 .candidate-facts > div {
-  background: #f5f8fd !important;
+  background: #f5f8fd;
   color: var(--text);
   border-color: var(--line) !important;
 }
@@ -496,7 +496,7 @@
   margin-top: 20px !important;
 }
 .candidate-item > .eyebrow {
-  font-size: 11px !important;
+  font-size: 11px;
   line-height: 1.6;
 }
 .ticket-price-note {
@@ -512,14 +512,14 @@
 .candidate-price {
   display: block;
   color: #0866d8 !important;
-  font-size: 22px !important;
+  font-size: 22px;
 }
 .candidate-player h3 {
   margin: 0;
   font-size: 23px;
 }
 .vq-feed {
-  max-width: 900px !important;
+  max-width: 900px;
   margin: 0 auto;
 }
 .feed-filters {
@@ -571,14 +571,14 @@
 .feed-post {
   color: var(--text) !important;
   border-radius: 16px !important;
-  padding: 22px !important;
+  padding: 22px;
   position: relative;
 }
 .feed-byline {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  margin-bottom: 12px !important;
+  margin-bottom: 12px;
   gap: 10px;
 }
 .feed-avatar {
@@ -601,7 +601,7 @@
   font-size: 11px;
 }
 .feed-post > h2 {
-  font-size: 22px !important;
+  font-size: 22px;
   margin: 10px 0;
   line-height: 1.2;
 }
@@ -617,7 +617,7 @@
   font-size: 11px;
 }
 .feed-matchup {
-  padding: 16px !important;
+  padding: 16px;
   border: 1px solid var(--line);
   border-radius: 10px;
 }
@@ -662,7 +662,7 @@
   border-radius: 13px;
   color: #69511e !important;
   margin-top: 14px;
-  padding: 12px !important;
+  padding: 12px;
 }
 @media (max-width: 760px) {
   .candidate-item {
@@ -674,10 +674,10 @@
     padding: 14px 16px !important;
   }
   .feed-post {
-    padding: 18px !important;
+    padding: 18px;
   }
   .feed-post > h2 {
-    font-size: 21px !important;
+    font-size: 21px;
   }
   .feed-summary p {
     font-size: 12px;
@@ -687,7 +687,7 @@
     font-size: 11px;
   }
   .feed-matchup {
-    padding: 14px !important;
+    padding: 14px;
   }
 }
 @media (max-width: 767px) {
@@ -790,8 +790,8 @@ html[data-theme="dark"] .feed-next {
   }
 }
 .candidate-player .team-helmet {
-  width: 76px !important;
-  height: 62px !important;
+  width: 76px;
+  height: 62px;
 }
 html[data-theme="dark"] .zone-expand {
   color: #8ce3bd;
@@ -934,7 +934,7 @@ html[data-theme="dark"] .zone-expand > span {
   }
 }
 html[data-theme="dark"] .feed-featured > summary span {
-  color: #9cb7ff !important;
+  color: #9cb7ff;
 }
 
 /* Premium polish (2026-10-14). */

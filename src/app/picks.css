@@ -381,10 +381,10 @@
 }
 .slip-expand-cta {
   padding: 18px !important;
-  margin: 16px 0 !important;
+  margin: 16px 0;
   text-align: center;
   border-radius: 12px;
-  color: #adf5d7 !important;
+  color: #adf5d7;
   font-weight: 800;
   font-size: 14px;
   box-shadow: 0 0 18px #83dfb91c;
@@ -402,7 +402,7 @@
 }
 @media (max-width: 600px) {
   .community-compact-slip {
-    padding: 20px !important;
+    padding: 20px;
   }
 }
 .pick-splits {
@@ -471,10 +471,10 @@
   color: #74510f !important;
 }
 .official-price {
-  color: #0866d8 !important;
+  color: #0866d8;
 }
 .pick-numbers > div, .pick-finances > div {
-  background: #f5f8fd !important;
+  background: #f5f8fd;
   color: var(--text);
   border-color: var(--line) !important;
 }
@@ -492,9 +492,9 @@
 .player-portrait { display: grid; place-items: center; flex: 0 0 88px; width: 88px; height: 64px; overflow: hidden; border-radius: 14px; background: linear-gradient(145deg,#e0edff,#f7faff); border: 1px solid #cbdcf1; color: #0866d8; font-size: 20px; font-weight: 800; }
 .player-portrait img { width: 88px; height: 64px; object-fit: contain; object-position: center bottom; }
 .official-card {
-  border-radius: 16px !important;
+  border-radius: 16px;
   border: 1px solid var(--line) !important;
-  box-shadow: 0 2px 3px #14233a03 !important;
+  box-shadow: 0 2px 3px #14233a03;
 }
 .game-comment{background:#fff;border:1px solid #e0e5ee;border-radius:16px;padding:20px;margin:14px 0}
 .game-comment header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}

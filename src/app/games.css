@@ -114,16 +114,16 @@
   display: flex;
   margin: 22px 0 6px;
   align-items: center;
-  gap: 10px !important;
+  gap: 10px;
 }
 .game-pair strong {
   font-family: var(--font-display), Arial, sans-serif;
   letter-spacing: -1px;
-  font-size: 28px !important;
+  font-size: 28px;
 }
 .game-pair > span {
-  font-size: 14px !important;
-  color: #71839a !important;
+  font-size: 14px;
+  color: #71839a;
 }
 .mi-game:before {
   content: "";
@@ -144,8 +144,8 @@
   border: 1px solid #2c4049;
   color: var(--text) !important;
   box-shadow: 0 4px 18px #16386006;
-  padding: 18px !important;
-  border-radius: 14px !important;
+  padding: 18px;
+  border-radius: 14px;
   gap: 14px;
   margin-bottom: 14px;
 }
@@ -208,8 +208,8 @@
   color: var(--text) !important;
   position: relative;
   overflow: hidden;
-  border-radius: 16px !important;
-  padding: 20px !important;
+  border-radius: 16px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -232,8 +232,8 @@
 }
 .mi-game h3 {
   line-height: 1.5;
-  color: #52657d !important;
-  font-size: 11px !important;
+  color: #52657d;
+  font-size: 11px;
   font-weight: 500;
   margin: 0;
 }
@@ -338,7 +338,7 @@ html[data-theme="dark"] .slate-windows button.selected {
 @media (max-width: 760px) {
   .mi-search {
     padding: 14px !important;
-    grid-template-columns: 1fr !important;
+    grid-template-columns: 1fr;
     gap: 10px;
   }
   .mi-grid {
@@ -365,7 +365,7 @@ html[data-theme="dark"] .slate-windows button.selected {
     justify-content: flex-start;
   }
   .mi-game .game-pair strong {
-    font-size: 28px !important;
+    font-size: 28px;
   }
   .mi-game .game-pair .team-logo {
     width: 40px !important;
@@ -407,8 +407,8 @@ html[data-theme="dark"] .slate-windows button.selected {
   container-type: inline-size;
 }
 .mi-game .game-pair strong {
-  font-size: 20px !important;
-  font-size: clamp(14px, 6.6cqi, 25px) !important;
+  font-size: 20px;
+  font-size: clamp(14px, 6.6cqi, 25px);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -425,6 +425,6 @@ html[data-theme="dark"] .slate-windows button.selected {
 }
 /* Letter badges shown when a team logo can't load: dark text on the light badge. */
 html[data-theme] body .game-pair .team-logo-fallback {
-  color: #1d3a8a !important;
+  color: #1d3a8a;
   font-weight: 800;
 }
