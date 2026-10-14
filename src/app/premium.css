@@ -38,7 +38,7 @@ html[data-theme="dark"] body {
     radial-gradient(1200px 500px at 85% -10%, #2f6bff1f, transparent 60%),
     radial-gradient(900px 400px at -10% 10%, #1ed8830d, transparent 60%),
     var(--bg) !important;
-  background-attachment: fixed;
+  background-attachment: fixed !important;
   color: var(--text);
   -webkit-font-smoothing: antialiased;
 }
