@@ -177,7 +177,6 @@ p {
 }
 .panel,
 .candidate-tracker,
-.mi-game,
 .community-panel,
 .community-profile-rail,
 .official-card,
@@ -507,114 +506,6 @@ summary:focus-visible {
   font-size: 11px;
   margin-top: 18px;
 }
-.mi-search {
-  padding: 18px !important;
-  border-radius: 14px !important;
-  gap: 14px;
-  background: white !important;
-  margin-bottom: 14px;
-}
-.mi-search label {
-  font-size: 11px;
-  letter-spacing: 0.05em;
-}
-.mi-search input,
-.mi-search select {
-  min-height: 46px;
-}
-.slate-windows {
-  overflow-x: auto;
-  gap: 8px;
-  padding: 0 0 12px;
-}
-.slate-windows button {
-  padding: 9px 16px;
-  font-size: 12px;
-  min-height: 40px;
-  border-radius: 8px;
-}
-.slate-count {
-  font-size: 11px;
-  margin: 10px 0 20px;
-}
-.mi-group > h2 {
-  font-size: 16px;
-  margin: 22px 0 12px;
-}
-.mi-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-}
-.mi-game {
-  padding: 20px !important;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  transition:
-    transform 0.16s,
-    border-color 0.16s;
-}
-.mi-game:hover {
-  transform: translateY(-3px);
-  border-color: #9db7ff !important;
-}
-.mi-game .game-pair {
-  gap: 8px !important;
-  margin: 5px 0 0;
-}
-.mi-game .game-pair strong {
-  font-size: 25px !important;
-}
-.mi-game .game-pair .team-logo {
-  width: 36px !important;
-  height: 36px !important;
-}
-.mi-game h3 {
-  font-size: 11px !important;
-  font-weight: 500;
-  color: #637086;
-  margin: 0;
-}
-.mi-game p {
-  font-size: 11px;
-  margin: 0;
-}
-.mi-game .badge {
-  align-self: flex-start;
-}
-.mi-game small {
-  font-size: 11px;
-}
-.mi-card-action {
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid var(--line);
-  font-size: 11px;
-  font-weight: 750;
-  color: #2458ed;
-}
-.analysis-tools {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 0 16px;
-}
-.analysis-tools label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-}
-.analysis-tools select {
-  min-height: 38px;
-  padding: 7px 10px;
-}
-.analysis-tools .secondary {
-  margin-left: auto;
-  font-size: 11px;
-  min-height: 38px;
-}
 [id$="settings"] {
   scroll-margin-top: 88px;
 }
@@ -679,9 +570,6 @@ footer {
   font-size: 11px;
 }
 @media (max-width: 1100px) {
-  .mi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .community-roster {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -831,55 +719,6 @@ footer {
   .community-sidebar > details > summary {
     padding: 16px;
   }
-  .mi-search {
-    padding: 14px !important;
-    grid-template-columns: 1fr !important;
-    gap: 10px;
-  }
-  .mi-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .mi-game {
-    padding: 18px !important;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-  }
-  .mi-game .eyebrow,
-  .mi-game .game-pair,
-  .mi-game h3,
-  .mi-game .mi-card-action {
-    grid-column: 1 / -1;
-  }
-  .mi-game .game-pair {
-    justify-content: flex-start;
-  }
-  .mi-game .game-pair strong {
-    font-size: 28px !important;
-  }
-  .mi-game .game-pair .team-logo {
-    width: 40px !important;
-    height: 40px !important;
-  }
-  .mi-game .badge {
-    font-size: 11px;
-  }
-  .mi-group > h2 {
-    font-size: 15px;
-  }
-  .analysis-tools {
-    gap: 6px;
-  }
-  .analysis-tools label {
-    font-size: 11px;
-  }
-  .analysis-tools select {
-    font-size: 11px;
-  }
-  .analysis-tools .secondary {
-    font-size: 11px;
-    padding: 6px 8px;
-  }
   .panel-head {
     padding: 17px 18px;
   }
@@ -918,11 +757,6 @@ footer {
   }
   footer p {
     margin: 8px 0;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .mi-game {
-    transition: none;
   }
 }
 
@@ -1040,7 +874,6 @@ html[data-theme="dark"] .feed-next :is(p, small, strong) { color:#f5dda1 !import
 html[data-theme="dark"] :is(.mi-game, .mi-access, .community-sidebar > details, .challenge-preview, .profile-rail-content > a, .community-profile-rail > a, .feed-featured, .notebook, .mi-target, .mi-item, .mi-section, .slate-windows button) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] :is(.mi-game .game-pair, .mi-game .game-pair strong, .community-sidebar summary, .challenge-preview summary, .sports-ticker .ticker-track, .sports-ticker .ticker-track span, .sports-ticker .ticker-games a) { color:var(--text) !important; }
 html[data-theme="dark"] :is(.mi-game p, .mi-game small, .community-drawer summary > span, .sports-ticker .ticker-games small) { color:var(--muted) !important; }
-html[data-theme="dark"] .slate-windows button.selected { background:#2458ed !important; color:white !important; }
 html[data-theme="dark"] .ticket-price-note :is(p, small, strong) { color:#f5dda1 !important; }
 @keyframes zone-expand-pulse { 0%,100% { box-shadow:0 0 0 0 #5279ff00; } 35% { box-shadow:0 0 0 6px #5279ff30,0 0 16px #5279ff40; } 75% { box-shadow:0 0 0 12px #5279ff00; } }
 .team-helmet { width:76px; height:62px; flex-shrink:0; filter:drop-shadow(0 4px 5px #0003); }

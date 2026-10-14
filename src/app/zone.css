@@ -1066,3 +1066,8 @@ html[data-theme="dark"] body .notice[aria-label="Daily publication schedule"] st
 .zone-item > .zone-winning-slip + .download-card {
   margin-top: -8px !important;
 }
+
+/* Selected Zone view tab: white text on the blue pill (was light blue, 2.9:1). */
+html[data-theme] body .zone-views a.selected {
+  color: #fff !important;
+}

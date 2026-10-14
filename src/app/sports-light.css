@@ -93,17 +93,12 @@ main {
 .panel,
 .official-card,
 .candidate-tracker,
-.mi-game,
-.mi-search,
 .community-panel,
 .community-profile-rail,
 .profile-roster,
 .one-bankroll,
 .intel-row,
-.mi-target,
-.mi-watch,
 .mi-section,
-.workspace-index > a,
 .research-notebook,
 .entry-dialog,
 .ask-vegas-dialog,
@@ -121,7 +116,6 @@ main {
 }
 .panel,
 .candidate-tracker,
-.mi-game,
 .community-panel,
 .one-bankroll {
   border-radius: 18px;
@@ -162,8 +156,7 @@ main {
 .secondary,
 .text-link,
 .profile-view-link,
-.profile-socials a,
-.slate-windows button {
+.profile-socials a {
   background: #fff !important;
   border-color: #cedbed !important;
   color: #0866d8 !important;
@@ -189,8 +182,6 @@ textarea::placeholder {
 .notice,
 .run-notice,
 .pick-odds-notice,
-.mi-historical,
-.mi-access,
 .daily-update-notice {
   background: #fff7e8 !important;
   color: #74510f !important;
@@ -256,59 +247,6 @@ textarea::placeholder {
   border-radius: 50%;
   font-size: 11px;
   color: #075ab9;
-}
-.game-pair {
-  align-items: center;
-  gap: 10px !important;
-}
-.game-pair strong {
-  font-size: 28px !important;
-}
-.game-pair > span {
-  font-size: 14px !important;
-  color: #71839a !important;
-}
-.mi-game {
-  position: relative;
-  transition:
-    transform 0.15s,
-    box-shadow 0.15s;
-  overflow: hidden;
-}
-.mi-game:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px #19478414;
-}
-.mi-game:before {
-  content: "";
-  height: 3px;
-  background: linear-gradient(90deg, #0866d8, #53b8fa);
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-}
-.mi-game h3 {
-  font-size: 13px !important;
-  color: #52657d !important;
-}
-.mi-game p {
-  font-size: 12px;
-}
-.mi-game .game-pair {
-  margin: 16px 0;
-}
-.slate-windows button.selected {
-  background: #0866d8 !important;
-  color: #fff !important;
-  border-color: #0866d8 !important;
-}
-.slate-windows {
-  gap: 8px;
-}
-.slate-windows button {
-  font-size: 12px;
-  padding: 10px 16px;
 }
 .community-profile-rail {
   overflow: hidden;
@@ -553,13 +491,6 @@ footer {
   .community-person {
     padding: 10px !important;
   }
-  .game-pair .team-logo {
-    width: 40px;
-    height: 40px;
-  }
-  .mi-grid {
-    gap: 14px;
-  }
   .ask-vegas-launcher {
     font-size: 12px;
     min-height: 40px;
@@ -576,11 +507,6 @@ footer {
   }
   .profile-roster summary {
     padding: 14px !important;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .mi-game {
-    transition: none;
   }
 }
 

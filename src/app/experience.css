@@ -559,24 +559,6 @@ main:focus {
   border: 1px solid #304e40;
 }
 /* Research directory and focused reader. */
-.mi-search {
-  padding: 20px;
-  background: #111e26;
-  border: 1px solid #2c4049;
-  border-radius: 18px;
-  gap: 20px;
-}
-.mi-search label {
-  color: #b4c4c9;
-}
-.mi-search input,
-.mi-search select {
-  background: #0a131a;
-  border-color: #3a515a;
-  border-radius: 11px;
-  font-size: 15px;
-}
-.slate-windows,
 .topic-tabs {
   display: flex;
   gap: 8px;
@@ -584,7 +566,6 @@ main:focus {
   scrollbar-width: thin;
   padding: 4px 0 12px;
 }
-.slate-windows button,
 .topic-tabs button {
   flex-shrink: 0;
   min-height: 44px;
@@ -594,70 +575,11 @@ main:focus {
   background: #121e26;
   color: #b2c2c9;
 }
-.slate-windows button.selected,
 .topic-tabs button[aria-selected="true"] {
   background: #d7eddf;
   border-color: #d7eddf;
   color: #152a20;
   font-weight: 700;
-}
-.slate-count {
-  font-size: 12px;
-  margin: 5px 0 22px;
-}
-.mi-group {
-  margin-top: 32px;
-}
-.mi-group > h2 {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 17px;
-  margin-bottom: 16px;
-}
-.mi-group > h2::after {
-  content: "";
-  height: 1px;
-  flex: 1;
-  background: #2c3c44;
-}
-.mi-grid {
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr));
-  gap: 16px;
-}
-.mi-game {
-  position: relative;
-  border-radius: 20px;
-  padding: 23px;
-  background: linear-gradient(145deg, #172730, #101b23);
-  border-color: #31464f;
-}
-.game-pair {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin: 22px 0 6px;
-}
-.game-pair strong {
-  font-family: Manrope, Arial, sans-serif;
-  font-size: 32px;
-  letter-spacing: -1px;
-}
-.game-pair span {
-  font-size: 15px;
-  color: #829b9c;
-}
-.mi-game h3 {
-  font-size: 13px;
-  font-weight: 500;
-  color: #b4c7cc;
-  line-height: 1.5;
-}
-.mi-game > .badge {
-  margin: 6px 0 12px;
-}
-.mi-game p {
-  font-size: 12px;
 }
 .topic-reader {
   border: 1px solid #30434b;
@@ -819,7 +741,6 @@ footer {
   padding: 10px 14px;
 }
 @media (hover: hover) {
-  .mi-game:hover,
   .explore-cards a:hover {
     border-color: #6da388;
     background: #192e32;
@@ -834,7 +755,6 @@ footer {
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .mi-game,
   .explore-cards a,
   .primary,
   .secondary {
@@ -1058,17 +978,6 @@ footer {
   }
   .one-bankroll {
     padding: 23px 18px;
-  }
-  .mi-search {
-    padding: 16px;
-    gap: 12px;
-  }
-  .mi-search input,
-  .mi-search select {
-    font-size: 16px;
-  }
-  .mi-game {
-    padding: 21px;
   }
   .topic-heading {
     padding: 20px 20px 8px;
