@@ -54,11 +54,14 @@ export default function ForYou({ games }: { games: ForYouGame[] }) {
       );
       if (!t.error && t.data?.length) {
         const keys = t.data.map((x) => x.leg_key);
-        const results: { result: string | null }[] = [];
+        const results: {
+          result: string | null;
+          result_source: string | null;
+        }[] = [];
         for (let i = 0; i < keys.length; i += 100) {
           const r = await supabase
             .from("published_legs")
-            .select("result")
+            .select("result,result_source")
             .in("leg_key", keys.slice(i, i + 100));
           if (r.error) return;
           results.push(...(r.data || []));
