@@ -19,7 +19,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: "Manrope", sans-serif;
+  font-family: var(--font-display), sans-serif;
   font-size: 17px;
   font-weight: 800;
   letter-spacing: -0.7px;
@@ -236,7 +236,7 @@
   letter-spacing: -1px;
   line-height: 1.4;
   display: block;
-  font-family: "Manrope", sans-serif;
+  font-family: var(--font-display), sans-serif;
   margin: 9px 0 4px;
   font-variant-numeric: tabular-nums;
 }
@@ -811,7 +811,7 @@
 .primary { box-shadow:0 4px 18px #73dcb316; }
 .ask-vegas-launcher .vq-mark { width:25px; height:19px; color:inherit; }
 @media (max-width:950px) {
-  .mobile-brand { font-family:"Manrope",sans-serif; letter-spacing:-.45px; font-size:14px; gap:10px; }
+  .mobile-brand { font-family:var(--font-display),sans-serif; letter-spacing:-.45px; font-size:14px; gap:10px; }
   .mobile-brand .vq-mark { width:37px; height:27px; }
   .mobile-nav { background:#0c161df5; border-top-color:#73dcb32e; box-shadow:0 -8px 28px #00000025; }
   .mobile-nav a { border-radius:12px; padding:3px 10px; }

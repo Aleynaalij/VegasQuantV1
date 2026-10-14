@@ -671,3 +671,89 @@ html[data-theme] body .top-actions .top-profile:focus-visible { outline: 3px sol
 .vq-legal-consent input { width:20px!important; min-width:20px; margin-top:4px; }
 .vq-footer-links { margin:18px 0; }
 main > footer small { display:block; color:var(--muted); font-size:12px; line-height:1.8; }
+
+/* ---------- Less reading: one "How it works" card, compact headers, one-line footer ---------- */
+.vq-how { border:1px solid var(--line); background:var(--panel); border-radius:14px; margin:16px 0; }
+.vq-how > summary { list-style:none; cursor:pointer; display:flex; align-items:center; gap:4px 10px; flex-wrap:wrap; padding:12px 44px 12px 16px; min-height:48px; position:relative; }
+.vq-how > summary::-webkit-details-marker { display:none; }
+.vq-how > summary::after { content:"+"; position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:20px; line-height:1; color:var(--muted); }
+.vq-how[open] > summary::after { content:"−"; }
+html[data-theme] body .vq-how summary b { font-size:14px; color:var(--text) !important; }
+html[data-theme] body .vq-how summary small { font-size:12.5px; color:var(--muted) !important; }
+.vq-how-body { padding:0 16px 16px; display:grid; gap:14px; }
+.vq-how-body section { margin:0; padding:0; border:0; background:none; }
+html[data-theme] body .vq-how h3 { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--brand-ink) !important; margin:0 0 4px; }
+html[data-theme] body .vq-how p { margin:0; font-size:13.5px; line-height:1.65; color:var(--muted) !important; }
+html[data-theme] body .vq-how p strong { color:var(--text) !important; }
+.vq-how-note { border-top:1px solid var(--line); padding-top:12px; }
+@media (min-width:900px) { .vq-how-body { grid-template-columns:repeat(3,minmax(0,1fr)); } .vq-how-note { grid-column:1 / -1; } }
+
+.feed-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:18px 0 4px; }
+html[data-theme] body .feed-head h1 { font-size:clamp(26px,5vw,34px); letter-spacing:-.03em; line-height:1.1; margin:0; color:var(--text) !important; }
+html[data-theme] body .feed-head p { margin:4px 0 0; font-size:14px; color:var(--muted) !important; }
+.feed-head .text-link { white-space:nowrap; font-size:13px; font-weight:600; }
+
+html[data-theme] body .vq-updated { display:flex; align-items:center; flex-wrap:wrap; gap:6px 10px; margin:18px 0; font-size:13px; color:var(--muted) !important; }
+.vq-updated a { margin-left:auto; font-weight:600; }
+.vq-dot { width:8px; height:8px; border-radius:50%; flex:none; background:#3ddc97; box-shadow:0 0 0 3px #3ddc9722; }
+.vq-dot.gold { background:#f5b84b; box-shadow:0 0 0 3px #f5b84b22; }
+.vq-dot.red { background:#ff6b6b; box-shadow:0 0 0 3px #ff6b6b22; }
+
+main > footer.vq-footer { display:block; margin:32px 0 0; padding:22px 0 26px; border-top:1px solid var(--line); text-align:left; }
+html[data-theme] body main > footer.vq-footer > p { display:flex; gap:8px; align-items:flex-start; max-width:760px; margin:0; text-align:left; font-size:12.5px; line-height:1.6; color:var(--muted) !important; }
+main > footer.vq-footer > p svg { flex:none; margin-top:3px; color:var(--brand-ink); }
+html[data-theme] body main > footer.vq-footer b { color:var(--text) !important; font-weight:700; }
+main > footer.vq-footer .vq-footer-links { margin:14px 0 10px; gap:8px 16px; }
+main > footer.vq-footer .vq-footer-links a { font-size:13px; }
+@media (max-width:950px) { main > footer.vq-footer { padding-bottom:95px; } }
+
+/* ---------- Home "Today": live legs grouped by kickoff window ---------- */
+.vq-today { border:1px solid var(--line); background:var(--panel); border-radius:18px; padding:16px 16px 8px; margin:16px 0; }
+.vq-today > header { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+html[data-theme] body .vq-today h2 { font-size:18px; margin:0; color:var(--text) !important; }
+.vq-today > header a { font-size:13px; font-weight:600; white-space:nowrap; }
+html[data-theme] body .vq-today h3 { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--brand-ink) !important; margin:14px 0 2px; }
+.vq-today ul { list-style:none; margin:0; padding:0; }
+html[data-theme] body .vq-today li a { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:52px; padding:10px 0; border-top:1px solid var(--line); color:var(--text) !important; text-decoration:none; }
+.vq-today-window ul:first-of-type li:first-child a { border-top:0; }
+.vq-today li span { min-width:0; }
+html[data-theme] body .vq-today li b { display:block; font-size:15px; color:var(--text) !important; }
+html[data-theme] body .vq-today li small { display:block; font-size:12.5px; line-height:1.45; color:var(--muted) !important; }
+html[data-theme] body .vq-today li em { flex:none; font-style:normal; font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; padding:3px 8px; border:1px solid var(--line-strong); border-radius:8px; color:var(--text) !important; }
+.vq-today li a:hover b, .vq-today li a:focus-visible b { text-decoration:underline; text-underline-offset:3px; }
+.vq-edge-note { margin:12px 0 4px; }
+html[data-theme] body .vq-edge-note summary { cursor:pointer; font-size:12.5px; color:var(--muted) !important; text-decoration:underline dotted; text-underline-offset:3px; }
+html[data-theme] body .vq-edge-note p { font-size:12.5px; line-height:1.6; margin:6px 0 0; color:var(--muted) !important; }
+
+/* ---------- Records: sample size, streaks, grading time ---------- */
+.records-proof { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.records-proof > div { display:grid; gap:4px; align-content:start; padding:14px 16px; border-radius:16px; border:1px solid var(--line); background:var(--panel); }
+html[data-theme] body .records-proof small { font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted) !important; }
+html[data-theme] body .records-proof strong { font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--text) !important; }
+html[data-theme] body .records-proof span { font-size:12px; line-height:1.45; color:var(--muted) !important; }
+@media (max-width:700px) { .records-proof { gap:8px; } .records-proof > div { padding:12px; } html[data-theme] body .records-proof small { font-size:10px; letter-spacing:.06em; } html[data-theme] body .records-proof strong { font-size:17px; } html[data-theme] body .records-proof span { font-size:11.5px; } }
+html[data-theme] body .records-title { font-size:18px; margin:20px 0 0; color:var(--text) !important; }
+.tail-record > :not(.panel-head) { margin-left:20px; margin-right:20px; }
+.tail-record > :last-child { margin-bottom:20px; }
+
+/* ---------- Soft failure notices: a section or the live data is retrying ---------- */
+html[data-theme] body .vq-soft-notice { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:12px 0; padding:12px 14px; border:1px dashed var(--line-strong); border-radius:12px; background:transparent; font-size:13px; line-height:1.5; color:var(--muted) !important; }
+.vq-soft-notice .text-link { padding:0; border:0; background:none; font-weight:700; cursor:pointer; }
+
+/* ---------- Home "For you": follows and tailed-pick record ---------- */
+.vq-foryou { border:1px solid var(--line); background:var(--panel); border-radius:18px; padding:16px; margin:16px 0; }
+.vq-foryou > header { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:10px; }
+html[data-theme] body .vq-foryou h2 { font-size:18px; margin:0; color:var(--text) !important; }
+.vq-foryou > header a { font-size:13px; font-weight:600; white-space:nowrap; }
+html[data-theme] body .vq-foryou-tails { display:flex; align-items:baseline; gap:10px; padding:12px 14px; margin-bottom:10px; border-radius:12px; background:var(--panel2); border:1px solid var(--line); color:var(--text) !important; text-decoration:none; }
+html[data-theme] body .vq-foryou-tails span { font-size:13px; color:var(--muted) !important; flex:1; }
+html[data-theme] body .vq-foryou-tails b { font-size:18px; font-variant-numeric:tabular-nums; color:var(--text) !important; }
+html[data-theme] body .vq-foryou-tails small { font-size:12px; color:var(--muted) !important; }
+.vq-foryou ul { list-style:none; margin:0; padding:0; }
+.vq-foryou li { display:grid; gap:3px; padding:10px 0; border-top:1px solid var(--line); }
+.vq-foryou li:first-child { border-top:0; }
+html[data-theme] body .vq-foryou li b { font-size:15px; color:var(--text) !important; }
+html[data-theme] body .vq-foryou li a, html[data-theme] body .vq-foryou li small { font-size:13px; line-height:1.45; }
+html[data-theme] body .vq-foryou li small, html[data-theme] body .vq-foryou p { color:var(--muted) !important; }
+html[data-theme] body .vq-foryou p { font-size:13.5px; line-height:1.6; margin:0; }
+html[data-theme] body .ask-vegas-source { display:block; margin-top:8px; font-size:11.5px; color:var(--muted) !important; }

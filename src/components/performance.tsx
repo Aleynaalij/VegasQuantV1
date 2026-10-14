@@ -8,7 +8,7 @@ import {
   time,
   type Desk,
 } from "@/lib/domain";
-import { performance } from "@/lib/performance";
+import { performance, sportPicks } from "@/lib/performance";
 import { Panel, Stat, Empty } from "./ui";
 const pct = (n: number | null) => (n === null ? "—" : `${n.toFixed(2)}%`);
 export default function Performance({ desk: d }: { desk: Desk }) {
@@ -193,6 +193,46 @@ export default function Performance({ desk: d }: { desk: Desk }) {
           </table>
         </div>
       </Panel>
+      <Panel title="By sport">
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                {["Sport", "Settled", "Record", "Units", "ROI", "Price CLV"].map(
+                  (x) => (
+                    <th key={x}>{x}</th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {(["nfl", "nba"] as const).map((v) => {
+                const group = sportPicks(d, picks, v),
+                  s = performance(d, group);
+                return (
+                  <tr key={v}>
+                    <td>{v.toUpperCase()}</td>
+                    <td>
+                      {s.settled.length}/{group.length}
+                    </td>
+                    <td>
+                      {s.wins}–{s.losses}
+                    </td>
+                    <td>
+                      {s.units > 0 ? "+" : ""}
+                      {s.units.toFixed(2)}u
+                    </td>
+                    <td>{pct(s.roi)}</td>
+                    <td>
+                      {pct(s.avgClv)} ({s.clvCount})
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Panel>
       <Panel title="Decision quality">
         <div className="notebook">
           {classifications.map((c) => (
@@ -222,6 +262,13 @@ export default function Performance({ desk: d }: { desk: Desk }) {
             line is identical. Different numbers are not treated as comparable
             prices. Positive-CLV rate includes zero-CLV observations in its
             denominator. Line CLV remains in the ledger.
+          </p>
+          <p>
+            The 95% range is a Wilson interval on decided picks (wins and
+            losses). It shows how far the true win rate could sit from the
+            observed one; it narrows only as the sample grows. Streaks skip
+            pushes and voids. Grading time is the median hours from kickoff to
+            the recorded result.
           </p>
           <p>
             Process averages use the latest saved review for each pick: A = 4, B

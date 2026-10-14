@@ -210,17 +210,19 @@ export default function CandidateTracker({
             ? "Potential next leg"
             : release.title}
         </h2>
-        <p>
-          {funPlay
-            ? "One Sunday moneyline ticket. One losing leg loses the parlay. Separate from Pick of the Day."
-            : editorial
-              ? "Individual selections with the matchup case and risk. Analyst stat targets and observed sportsbook prices are labeled separately."
-              : experimental
-                ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
-                : featured
-                  ? "Our leading research candidate. Review its sources and risks; a research candidate is not a finalized pick."
-                  : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
-        </p>
+        {!pickOfDay && (
+          <p>
+            {funPlay
+              ? "One Sunday moneyline ticket. One losing leg loses the parlay. Separate from Pick of the Day."
+              : editorial
+                ? "Individual selections with the matchup case and risk. Analyst stat targets and observed sportsbook prices are labeled separately."
+                : experimental
+                  ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
+                  : featured
+                    ? "Our leading research candidate. Review its sources and risks; a research candidate is not a finalized pick."
+                    : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
+          </p>
+        )}
         <small>
           {release.candidates[0]?.supersedes_release_id
             ? "Prices updated"
@@ -531,7 +533,7 @@ export default function CandidateTracker({
           </details>
         </article>
       ))}
-      {!experimental && (
+      {!experimental && !pickOfDay && (
         <p className="notice">
           <b>What “3% edge” means:</b> Our defensible estimated chance must
           exceed the price’s implied chance by at least 3 percentage points. It
@@ -539,7 +541,17 @@ export default function CandidateTracker({
           here.
         </p>
       )}
-      {featured && (
+      {!experimental && pickOfDay && (
+        <details className="vq-edge-note">
+          <summary>No qualifying 3% edge is established for this pick.</summary>
+          <p>
+            Our defensible estimated chance must exceed the price’s implied
+            chance by at least 3 percentage points. It is not a 3% guaranteed
+            return.
+          </p>
+        </details>
+      )}
+      {featured && !pickOfDay && (
         <Link className="secondary" href="/feed">
           View all candidate research →
         </Link>

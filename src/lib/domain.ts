@@ -168,6 +168,8 @@ export type Audit = {
   created_at: string;
 };
 export type Desk = {
+  /** Set when the server could not load the desk; the browser keeps retrying. */
+  unavailable?: boolean;
   games: Game[];
   challenges: Challenge[];
   stages: Stage[];

@@ -83,9 +83,19 @@ export default function ResearchPulse({ proof = false }: { proof?: boolean }) {
     stake = settled
       .filter((r) => r.result !== "VOID")
       .reduce((sum, r) => sum + (r.stake_cents || 0), 0);
+  if (!proof)
+    return (
+      <p className="vq-updated" role="status">
+        <span className={`vq-dot ${age.tone}`} aria-hidden="true" />
+        {status.updated_at
+          ? `Research updated ${age.label}`
+          : "Research publication pending"}
+        <Link href="/feed">See what changed →</Link>
+      </p>
+    );
   return (
     <Panel
-      title={proof ? "The record, in public" : "Research checkpoint"}
+      title="The record, in public"
       className="research-pulse"
       aside={<Badge tone={age.tone}>{age.label}</Badge>}
     >
@@ -102,70 +112,52 @@ export default function ResearchPulse({ proof = false }: { proof?: boolean }) {
             "Research publication pending."
           )}
         </p>
-        {!proof && (
-          <>
-            <p>
-              {status.games.length} matchups have research histories. Watchlists
-              stay provisional until an official package is published; WAIT and
-              PASS are valid outcomes.
-            </p>
-            <Link className="text-link" href="/feed">
-              See what changed →
-            </Link>
-          </>
-        )}
-        {proof && (
-          <>
-            <div className="proof-stats">
-              <strong>
-                {wins}W / {losses}L
-              </strong>
-              <span>
-                {settled.length} settled ·{" "}
-                {status.results.length - settled.length} pending
-              </span>
-              <span>
-                {money(profit)} net ·{" "}
-                {stake ? `${((profit / stake) * 100).toFixed(1)}%` : "—"} ROI
-              </span>
-            </div>
-            <p className="muted">
-              All published decisions are included. A small sample does not
-              establish predictive accuracy. Missing closing data stays unknown.
-            </p>
-            <div className="proof-list">
-              {status.results.map((r) => (
-                <article key={r.id}>
-                  <Badge
-                    tone={
-                      r.result === "WIN"
-                        ? "green"
-                        : r.result === "LOSS"
-                          ? "red"
-                          : "muted"
-                    }
-                  >
-                    {r.result}
-                  </Badge>
-                  <h3>
-                    {r.selection || "Published decision · member details"}
-                  </h3>
-                  <p>
-                    {r.game}
-                    {r.odds !== null ? ` · ${odd(r.odds)}` : ""}
-                  </p>
-                  <small>
-                    Published {time(r.published_at)} ·{" "}
-                    {r.closing_recorded
-                      ? "Closing observation recorded"
-                      : "CLV unverified — closing observation missing"}
-                  </small>
-                </article>
-              ))}
-            </div>
-            <Link href="/methodology">How we measure decisions →</Link>
-          </>
-        )}
+        <div className="proof-stats">
+          <strong>
+            {wins}W / {losses}L
+          </strong>
+          <span>
+            {settled.length} settled · {status.results.length - settled.length}{" "}
+            pending
+          </span>
+          <span>
+            {money(profit)} net ·{" "}
+            {stake ? `${((profit / stake) * 100).toFixed(1)}%` : "—"} ROI
+          </span>
+        </div>
+        <p className="muted">
+          All published decisions are included. A small sample does not
+          establish predictive accuracy. Missing closing data stays unknown.
+        </p>
+        <div className="proof-list">
+          {status.results.map((r) => (
+            <article key={r.id}>
+              <Badge
+                tone={
+                  r.result === "WIN"
+                    ? "green"
+                    : r.result === "LOSS"
+                      ? "red"
+                      : "muted"
+                }
+              >
+                {r.result}
+              </Badge>
+              <h3>{r.selection || "Published decision · member details"}</h3>
+              <p>
+                {r.game}
+                {r.odds !== null ? ` · ${odd(r.odds)}` : ""}
+              </p>
+              <small>
+                Published {time(r.published_at)} ·{" "}
+                {r.closing_recorded
+                  ? "Closing observation recorded"
+                  : "CLV unverified — closing observation missing"}
+              </small>
+            </article>
+          ))}
+        </div>
+        <Link href="/methodology">How we measure decisions →</Link>
       </div>
     </Panel>
   );

@@ -88,7 +88,7 @@ export default function PublicOverview({
             {loading
               ? "Checking your access…"
               : error
-                ? "Unable to check access"
+                ? "Couldn’t check access just now"
                 : page === "game"
                   ? "Unlock the matchup research"
                   : page === "performance"

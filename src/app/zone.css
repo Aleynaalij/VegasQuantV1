@@ -33,7 +33,7 @@
   gap: 12px;
 }
 .feed-teams > strong {
-  font-family: Manrope, sans-serif;
+  font-family: var(--font-display), sans-serif;
   font-size: 29px;
   letter-spacing: -1px;
 }

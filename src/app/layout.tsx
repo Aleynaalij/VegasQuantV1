@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { DM_Sans, Manrope } from "next/font/google";
 import "./base.css";
 import "@/components/ask-vegas.css";
 import "./shell.css";
@@ -23,6 +24,20 @@ import ThemePrompt from "@/components/theme-settings";
 import BrandOpening from "@/components/brand-opening";
 import AskVegas from "@/components/ask-vegas";
 import AgeAccessBoundary from "@/components/age-access-boundary";
+
+// Self-hosted at build time and preloaded (replaces the render-blocking Google Fonts @import).
+const body = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-body",
+});
+const display = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-display",
+});
 export const metadata: Metadata = {
   applicationName: "Vegas Quant",
   manifest: "/manifest.webmanifest",
@@ -49,6 +64,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      className={`${body.variable} ${display.variable}`}
       data-theme="dark"
       style={{ colorScheme: "dark" }}
       suppressHydrationWarning

@@ -87,36 +87,48 @@ export default function AgeAccessBoundary({
     <main className="age-access-gate">
       <section className="panel">
         <span className="eyebrow">VEGAS QUANT · 21+</span>
-        <h1>
-          {mode === "checking"
-            ? "Checking account access…"
-            : mode === "error"
-              ? "We couldn’t verify account access"
-              : "Verify your age to continue"}
-        </h1>
-        <p>
-          {mode === "required"
-            ? "All accounts must complete the same independent 21+ age check before using account features."
-            : "Account access stays pending until its verification status can be checked."}
-        </p>
-        <Link className="primary" href="/account/verify-age">
-          Open age verification →
-        </Link>{" "}
-        <Link className="secondary" href="/membership">
-          Manage account
-        </Link>
-        <p>
-          <Link href="/support">Help & support</Link>
-        </p>
-        {mode === "error" ? (
-          <button
-            type="button"
-            className="secondary"
-            onClick={() => setRetry((v) => v + 1)}
-          >
-            Retry access check
-          </button>
-        ) : null}
+        {mode === "checking" ? (
+          <>
+            <h1>Checking your account…</h1>
+            <p>This only takes a moment.</p>
+          </>
+        ) : mode === "error" ? (
+          <>
+            <h1>We’re having trouble checking your account</h1>
+            <p>
+              This is usually a brief connection problem. Nothing on your
+              account has changed. Try again in a moment.
+            </p>
+            <button
+              type="button"
+              className="primary"
+              onClick={() => setRetry((v) => v + 1)}
+            >
+              Try again
+            </button>
+            <p>
+              <Link href="/account/verify-age">Age verification</Link> ·{" "}
+              <Link href="/support">Help & support</Link>
+            </p>
+          </>
+        ) : (
+          <>
+            <h1>Verify your age to continue</h1>
+            <p>
+              All accounts must complete the same independent 21+ age check
+              before using account features.
+            </p>
+            <Link className="primary" href="/account/verify-age">
+              Open age verification →
+            </Link>{" "}
+            <Link className="secondary" href="/membership">
+              Manage account
+            </Link>
+            <p>
+              <Link href="/support">Help & support</Link>
+            </p>
+          </>
+        )}
         <button
           type="button"
           className="text-link"

@@ -155,6 +155,7 @@ const gameFields: InputDef[] = [
     label: "Public URL slug",
     placeholder: "team-team-2026-10-01",
   },
+  { name: "sport", label: "Sport", options: ["NFL", "NBA"] },
   { name: "away_team", label: "Away team" },
   { name: "home_team", label: "Home team" },
   {
@@ -502,17 +503,29 @@ export default function Admin() {
         setConfirmed(false);
         throw new Error("New warnings appeared. Review and confirm again.");
       }
-      const { error } = await supabase.rpc("publish", {
+      const { data: receipt, error } = await supabase.rpc("publish", {
         p_action: action,
         p_payload: preview,
         p_request_id: requestId,
       });
       if (error) throw error;
+      // Games default to NFL in the database; an NBA game is marked separately.
+      let sportNote = "";
+      if (action === "game" && receipt?.id) {
+        const sport = String(preview.sport || "NFL").toLowerCase();
+        const set = await supabase.rpc("set_game_sport", {
+          p_game: receipt.id,
+          p_sport: sport,
+        });
+        if (set.error)
+          sportNote = ` The sport could not be set (${set.error.message}); the game is saved as NFL.`;
+      }
       await refresh();
       setPreview(null);
       setFormKey((v) => v + 1);
       setNotice(
-        "Published. The public site has been updated and the audit event saved.",
+        "Published. The public site has been updated and the audit event saved." +
+          sportNote,
       );
     } catch (e) {
       setNotice(
@@ -623,6 +636,7 @@ export default function Admin() {
     action === "game" && editingGame && game
       ? {
           ...game,
+          sport: (game.sport || "nfl").toUpperCase(),
           kickoff: new Date(
             new Date(game.kickoff).getTime() -
               new Date(game.kickoff).getTimezoneOffset() * 60000,

@@ -7,13 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Eye,
-  Clock3,
-  ShieldCheck,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowUpRight, Eye, Clock3, ChevronDown } from "lucide-react";
 import { Shell, Badge } from "./ui";
 import BrandMark from "./brand-mark";
 import DownloadCard from "./download-card";
@@ -24,7 +18,8 @@ import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
 import ZoneNav from "./zone-nav";
-import DailyUpdateNotice from "./daily-update-notice";
+import HowItWorks from "./how-it-works";
+import SectionBoundary from "./section-boundary";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
 import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
@@ -61,6 +56,7 @@ export default function ResearchFeed() {
     [access, setAccess] = useState<Access>(noAccess),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
+    [openRelease, setOpenRelease] = useState(""),
     [filter, setFilter] = useState("All"),
     [limit, setLimit] = useState(pageSize),
     [saving, setSaving] = useState(false),
@@ -86,7 +82,22 @@ export default function ResearchFeed() {
       if (n !== epoch.current) return;
       const failures: string[] = [];
       if (legs.error) failures.push("Selections could not refresh.");
-      else setReleases((legs.data || []) as CandidateRelease[]);
+      else {
+        let list = (legs.data || []) as CandidateRelease[];
+        // A link from Home may point past the first page: fetch that release too.
+        const wanted = window.location.hash.match(/^#release-([\w-]+)$/)?.[1];
+        if (wanted && !list.some((r) => r.id === wanted)) {
+          const one = await supabase
+            .from("candidate_releases")
+            .select("id,title,candidates,created_at,expires_at")
+            .eq("id", wanted)
+            .limit(1);
+          if (n !== epoch.current) return;
+          if (!one.error && one.data?.length)
+            list = [...list, ...(one.data as CandidateRelease[])];
+        }
+        setReleases(list);
+      }
       if (edges.error) failures.push("Official releases could not refresh.");
       else setEdgeReleases((edges.data || []) as EdgeRelease[]);
       const current = membership.error ? noAccess : (membership.data as Access);
@@ -178,6 +189,26 @@ export default function ResearchFeed() {
   const timeline = feedTimeline(posts, releases, edgeReleases, filter);
   const [zoneView, setZoneView] = useState("Latest");
   useEffect(() => {
+    const hash = window.location.hash.match(/^#release-([\w-]+)$/);
+    if (hash) setOpenRelease(hash[1]);
+  }, []);
+  const scrolledTo = useRef("");
+  useEffect(() => {
+    if (!openRelease || loading || scrolledTo.current === openRelease) return;
+    // Show enough items to reach the linked release, then scroll to it once.
+    const i = visibleTimeline.findIndex(
+      (x) => x.kind === "selection" && x.value.id === openRelease,
+    );
+    if (i >= limit) {
+      setLimit(i + 1);
+      return;
+    }
+    const el = document.getElementById(`release-${openRelease}`);
+    if (!el) return;
+    el.scrollIntoView({ block: "start" });
+    scrolledTo.current = openRelease;
+  });
+  useEffect(() => {
     const view = new URLSearchParams(window.location.search).get("view");
     setZoneView(
       view === "legs" ? "Legs" : view === "injury" ? "Injury watch" : "Latest",
@@ -201,38 +232,16 @@ export default function ResearchFeed() {
           } as CSSProperties
         }
       >
-        <header className="feed-hero">
-          <div className="feed-kicker">
-            <BrandMark />
-            <span>VEGAS QUANT ULTRA · THE ZONE</span>
+        <header className="feed-head">
+          <div>
+            <h1>The Zone</h1>
+            <p>Research, injury news and legs we like.</p>
           </div>
-          <h1>
-            The Zone
-            <span className="zone-signal" aria-hidden="true">
-              {" "}
-              ✦
-            </span>
-          </h1>
-          <p>
-            Your game research, injury updates and legs we like—all in one
-            place.
-          </p>
-          <div className="feed-rule">
-            <ShieldCheck size={16} />
-            <span>Individual game legs · Pick of the Day lives on Home.</span>
-          </div>
+          <Link href="/saved" className="text-link">
+            Saved legs →
+          </Link>
         </header>
-        <Link href="/saved" className="text-link">
-          Saved legs →
-        </Link>
-        <details
-          className="feed-featured"
-          onToggle={(e) => setBoardOpen(e.currentTarget.open)}
-        >
-          <summary>Published leg board · All selections</summary>
-          {boardOpen && <PublishedLegBoard />}
-        </details>
-        <DailyUpdateNotice />
+        <HowItWorks />
         <details className="zone-extra-filters">
           <summary>More research filters</summary>
           <nav className="feed-filters" aria-label="Filter feed">
@@ -371,7 +380,12 @@ export default function ResearchFeed() {
                       }
                     />
                   ) : item.kind === "selection" ? (
-                    <details className="zone-drop" key={item.key}>
+                    <details
+                      className="zone-drop"
+                      key={item.key}
+                      id={`release-${item.value.id}`}
+                      open={openRelease === item.value.id || undefined}
+                    >
                       <summary>
                         <span className="eyebrow">
                           PICK DROP · {time(item.value.created_at)}
@@ -393,7 +407,9 @@ export default function ResearchFeed() {
                   ) : null;
                 return (
                   <div className="zone-item" key={item.key}>
-                    {content}
+                    <SectionBoundary name="This update">
+                      {content}
+                    </SectionBoundary>
                     {p && (
                       <DownloadCard
                         title={p.title}
@@ -448,6 +464,13 @@ export default function ResearchFeed() {
             )}
           </>
         )}
+        <details
+          className="feed-featured"
+          onToggle={(e) => setBoardOpen(e.currentTarget.open)}
+        >
+          <summary>Published leg board · All selections</summary>
+          {boardOpen && <PublishedLegBoard />}
+        </details>
         <details
           id="candidate-tracker"
           className="feed-featured"
