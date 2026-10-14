@@ -724,3 +724,14 @@ html[data-theme] body .vq-today li em { flex:none; font-style:normal; font-weigh
 .vq-edge-note { margin:12px 0 4px; }
 html[data-theme] body .vq-edge-note summary { cursor:pointer; font-size:12.5px; color:var(--muted) !important; text-decoration:underline dotted; text-underline-offset:3px; }
 html[data-theme] body .vq-edge-note p { font-size:12.5px; line-height:1.6; margin:6px 0 0; color:var(--muted) !important; }
+
+/* ---------- Records: sample size, streaks, grading time ---------- */
+.records-proof { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.records-proof > div { display:grid; gap:4px; align-content:start; padding:14px 16px; border-radius:16px; border:1px solid var(--line); background:var(--panel); }
+html[data-theme] body .records-proof small { font-size:11px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted) !important; }
+html[data-theme] body .records-proof strong { font-size:20px; font-weight:800; font-variant-numeric:tabular-nums; color:var(--text) !important; }
+html[data-theme] body .records-proof span { font-size:12px; line-height:1.45; color:var(--muted) !important; }
+@media (max-width:700px) { .records-proof { gap:8px; } .records-proof > div { padding:12px; } html[data-theme] body .records-proof small { font-size:10px; letter-spacing:.06em; } html[data-theme] body .records-proof strong { font-size:17px; } html[data-theme] body .records-proof span { font-size:11.5px; } }
+html[data-theme] body .records-title { font-size:18px; margin:20px 0 0; color:var(--text) !important; }
+.tail-record > :not(.panel-head) { margin-left:20px; margin-right:20px; }
+.tail-record > :last-child { margin-bottom:20px; }

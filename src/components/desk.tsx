@@ -391,12 +391,11 @@ export default function DeskApp({
         {page === "performance" && <Performance desk={d} />}
         {page === "history" && (
           <>
+            <h2 className="records-title">Vegas Quant published record</h2>
+            <RecordsDashboard d={d} picks={ledgerPicks} />
             <MyTailRecord />
             <details className="admin-section">
-              <summary>
-                Vegas Quant published record & historical ledger ↓
-              </summary>
-              <RecordsDashboard d={d} picks={ledgerPicks} />
+              <summary>Full ledger, leg board & audit ↓</summary>
               <PublishedLegBoard />
               <div className="filter-bar">
                 <label className="field">

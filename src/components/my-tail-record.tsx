@@ -129,7 +129,7 @@ export default function MyTailRecord() {
   }, []);
   const summary = summarizeTails(rows);
   return (
-    <Panel title="My tailed picks">
+    <Panel title="My tailed picks" className="tail-record">
       <p>
         Your record follows the picks you tail, using their verified published
         outcomes. No assumed stakes, profit or wagers. Unverified results stay

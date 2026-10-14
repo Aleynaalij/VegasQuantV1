@@ -121,6 +121,35 @@ export default function RecordsDashboard({
           </p>
         )}
       </div>
+      <div className="records-proof" aria-label="Sample and consistency">
+        <div>
+          <small>Sample</small>
+          <strong>{m.wins + m.losses} decided</strong>
+          <span>
+            {m.winRange
+              ? `Win rate likely ${Math.round(m.winRange[0])}–${Math.round(m.winRange[1])}% (95% range)`
+              : "No decided picks yet"}
+          </span>
+        </div>
+        <div>
+          <small>Worst run</small>
+          <strong>
+            {m.streaks.longestLoss}{" "}
+            {m.streaks.longestLoss === 1 ? "loss" : "losses"}
+          </strong>
+          <span>
+            Best run: {m.streaks.longestWin}{" "}
+            {m.streaks.longestWin === 1 ? "win" : "wins"}
+          </span>
+        </div>
+        <div>
+          <small>Graded</small>
+          <strong>
+            {m.gradeLagHours === null ? "—" : `${m.gradeLagHours.toFixed(1)}h`}
+          </strong>
+          <span>Median time from kickoff to result</span>
+        </div>
+      </div>
       {form.length > 0 && (
         <div className="records-form" aria-label="Recent results, oldest first">
           <small>Recent form</small>
