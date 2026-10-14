@@ -261,20 +261,20 @@ export function Shell({
           </div>
         </header>
         <nav className="sport-switch" aria-label="Sport selection">
-          <Link
+          <a
             href={nflHref}
             aria-current={sport === "nfl" ? "page" : undefined}
             className={sport === "nfl" ? "selected" : ""}
           >
             NFL
-          </Link>
-          <Link
+          </a>
+          <a
             href={nbaHref}
             aria-current={sport === "nba" ? "page" : undefined}
             className={sport === "nba" ? "selected" : ""}
           >
             NBA
-          </Link>
+          </a>
           {sport === "nba" ? <span>Preparation mode</span> : null}
         </nav>
         <main id="main-content" tabIndex={-1}>
