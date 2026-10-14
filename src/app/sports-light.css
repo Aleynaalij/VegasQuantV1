@@ -105,7 +105,6 @@ main {
 .mi-section,
 .workspace-index > a,
 .research-notebook,
-.feed-post,
 .entry-dialog,
 .ask-vegas-dialog,
 .admin-section,
@@ -128,7 +127,6 @@ main {
   border-radius: 18px;
 }
 .panel-head,
-.candidate-item,
 .profile-roster summary,
 .mi-section summary,
 .ask-vegas-header,
@@ -237,87 +235,15 @@ textarea::placeholder {
 .candidate-tracker > header small {
   font-size: 11px;
 }
-.candidate-item {
-  padding: 18px 0 0;
-}
-.candidate-price,
 .official-price {
   color: #0866d8 !important;
 }
-.candidate-context {
-  font-size: 13px;
-  line-height: 1.6;
-}
-.candidate-details > summary,
-.ticket-more > summary {
-  color: #0866d8;
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-}
-.candidate-facts > div,
 .pick-numbers > div,
 .pick-finances > div,
 .stat {
   background: #f5f8fd !important;
   color: var(--text);
   border-color: var(--line) !important;
-}
-.candidate-facts strong {
-  color: var(--text);
-}
-.fun-ticket {
-  overflow: hidden;
-}
-.fun-ticket > header {
-  border-bottom: 0 !important;
-}
-.fun-ticket .candidate-item > .eyebrow {
-  font-size: 11px;
-  line-height: 1.65;
-}
-.ticket-price-note {
-  font-size: 11px;
-  color: #61748c;
-  margin: 10px 0 14px;
-}
-.ticket-legs {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.ticket-leg {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  min-width: 0;
-  padding: 12px 9px;
-  background: #f4f7fc;
-  border: 1px solid #e0e8f2;
-  border-radius: 12px;
-}
-.ticket-leg > div {
-  min-width: 0;
-  flex: 1;
-}
-.ticket-leg strong {
-  display: block;
-  font-size: 13px;
-  line-height: 1.25;
-  color: #182d49;
-}
-.ticket-leg small {
-  display: block;
-  font-size: 11px;
-  margin-top: 3px;
-}
-.ticket-leg > b {
-  font-size: 13px;
-  color: #075ab9;
-  white-space: nowrap;
 }
 .team-logo {
   object-fit: contain;
@@ -331,28 +257,6 @@ textarea::placeholder {
   border-radius: 50%;
   font-size: 11px;
   color: #075ab9;
-}
-.ticket-legs-full {
-  grid-template-columns: 1fr;
-  padding: 8px 0;
-}
-.ticket-action {
-  padding: 12px 0 4px;
-}
-.ticket-action > .btn {
-  width: 100%;
-  background: #0866d8;
-  color: #fff;
-  font-size: 14px;
-}
-.ticket-action > p {
-  font-size: 11px;
-  text-align: center;
-  margin: 8px 0;
-}
-.fun-ticket .candidate-details {
-  border-top: 1px solid var(--line);
-  margin-top: 8px;
 }
 .game-pair {
   align-items: center;
@@ -639,23 +543,6 @@ footer {
     font-size: 11px;
     line-height: 1.7;
   }
-  .ticket-leg .team-logo {
-    width: 30px;
-    height: 30px;
-  }
-  .ticket-leg {
-    padding: 10px 8px;
-    gap: 7px;
-  }
-  .ticket-leg > b {
-    font-size: 12px;
-  }
-  .ticket-leg strong {
-    font-size: 12px;
-  }
-  .ticket-leg small {
-    font-size: 11px;
-  }
   .community-profile-rail .profile-cover {
     display: none;
   }
@@ -701,14 +588,8 @@ footer {
 
 /* Maintain readable contrast for legacy dark-theme text rules. */
 main p, main small, .sidebar small, .topbar a, .community-panel summary { color: #52657d !important; }
-.feed-filters { background: #f2f5faf5 !important; }
-.feed-matchup { background: #fff !important; border-color: #dce4ef !important; }
-.feed-next { background: #fff8e8 !important; border-color: #ead9b0 !important; color: #69511e !important; }
 .sports-ticker summary { display: flex; align-items: center; gap: 14px; padding: 13px 16px; min-height: 52px; }
 .sports-ticker { border: 1px solid #dce4ef; border-radius: 14px; overflow: hidden; }
 .sports-ticker .ticker-scroll { flex: 1; min-width: 0; overflow: hidden; }
-
-.candidate-player { display: flex; align-items: center; gap: 14px; margin: 14px 0 8px; }
-.candidate-player h3 { margin: 0; }
 .player-portrait { display: grid; place-items: center; flex: 0 0 88px; width: 88px; height: 64px; overflow: hidden; border-radius: 14px; background: linear-gradient(145deg,#e0edff,#f7faff); border: 1px solid #cbdcf1; color: #0866d8; font-size: 20px; font-weight: 800; }
 .player-portrait img { width: 88px; height: 64px; object-fit: contain; object-position: center bottom; }
