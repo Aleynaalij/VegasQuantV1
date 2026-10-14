@@ -59,3 +59,18 @@ test("unsourced, unsafe and unknown outcomes remain pending", () => {
     3,
   );
 });
+
+test("provider correction flag excludes prior outcome from settled summary", () => {
+  assert.equal(
+    summarizeTails([
+      {
+        publication: {
+          result: "WIN",
+          result_source: "https://example.com",
+          review_status: "CONFLICT",
+        },
+      },
+    ]).pending,
+    1,
+  );
+});

@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import LegResultStatus, { useReleaseResults } from "./leg-result-status";
 import LegActions from "./leg-actions";
 import DownloadCard from "./download-card";
 import PriceFreshness from "./price-freshness";
@@ -83,6 +84,10 @@ export default function CandidateTracker({
 }) {
   const [fetchedRelease, setRelease] = useState<CandidateRelease | null>(null);
   const release = snapshot || fetchedRelease;
+  const resultStates = useReleaseResults(
+    release?.id,
+    release?.candidates.length || 0,
+  );
   const [failed, setFailed] = useState(false);
   const [allCopied, setAllCopied] = useState(false);
   const [copyFallback, setCopyFallback] = useState(false);
@@ -308,6 +313,13 @@ export default function CandidateTracker({
             </div>
           )}
           {!c.fun_play && <p>{c.market}</p>}
+          <LegResultStatus
+            state={
+              resultStates[
+                `candidate:${release.id}:${release.candidates.indexOf(c) + 1}`
+              ]
+            }
+          />
           {c.fun_play ? (
             <div className="ticket-price-note">
               {c.book

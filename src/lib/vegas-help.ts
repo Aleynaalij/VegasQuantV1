@@ -478,7 +478,7 @@ export const helpTopics: HelpTopic[] = [
       "new bankroll",
     ],
     answer:
-      "A tailed pick shows the verified result of its exact published selection when that result is available. Missing or unverified results remain pending; a final score alone does not settle every player prop. A different sportsbook number may settle differently. Tail results do not change a bankroll or invent profit. Older recorded wagers retain their separate settlement records.",
+      "Supported published NFL full-game player yardage and reception legs are checked automatically every five minutes. Live target reached is provisional; final Records update after ESPN final stats match nflverse weekly stats. Missing, conflicting or unsupported results remain pending; a final score alone does not settle every player prop. A different sportsbook number may settle differently. Tail results do not change a bankroll or invent profit. Older recorded wagers retain their separate settlement records.",
     href: "/history",
     link: "Check my tailed picks",
   },

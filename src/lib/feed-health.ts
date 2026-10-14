@@ -11,6 +11,7 @@ export function feedAlerts(rows: FeedRun[], now: number) {
     "ESPN news",
     "The Odds API",
     "The Odds API props",
+    "Editorial result sync",
   ];
   return required.flatMap((provider) => {
     const latest = rows

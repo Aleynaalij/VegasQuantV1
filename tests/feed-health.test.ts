@@ -14,7 +14,7 @@ test("feed health rejects stale, missing and partial providers", () => {
     ],
     now,
   );
-  assert.equal(alerts.length, 5);
+  assert.equal(alerts.length, 6);
   assert.ok(alerts.some((a) => a.reason === "partial"));
 });
 test("research deadlines use Eastern time, grace period and actual publications", () => {
