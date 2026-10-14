@@ -190,9 +190,6 @@
 html[data-theme="dark"] .alert-preference input[type="checkbox"]:checked {
   background: #2458ed !important;
 }
-html[data-theme="dark"] .profile-setup-dialog .photo-status {
-  color: #8ce3bd !important;
-}
 .profile-setup-dialog .photo-status {
   font-size: 13px;
   line-height: 1.5;
