@@ -263,7 +263,7 @@ html[data-theme="dark"] body .vq-feed .feed-filters {
 /* Board sort label stays on one line. */
 .analysis-tools label { white-space: nowrap; }
 
-/* ---------- Home hero (both themes; tokens fall back for light) ---------- */
+/* ---------- Home hero ---------- */
 .vq-sr {
   position: absolute !important;
   width: 1px;
@@ -502,10 +502,8 @@ html[data-theme] body .vq-home :is(.vq-slate-teams small, .vq-slate time, .vq-ti
 html[data-theme] body .journey-stop .journey-dot { background: var(--panel2, #eef2f8) !important; color: var(--text, #14233a) !important; border-color: var(--line-strong, #c5cfdd) !important; }
 html[data-theme] body .journey-stop > span:not(.journey-dot), html[data-theme] body .journey-stop small { color: var(--muted, #52657d) !important; }
 html[data-theme] body .challenge-run .eyebrow { color: var(--muted, #52657d) !important; }
-html[data-theme="light"] body .challenge-preview > summary span { background: #e8eefc !important; color: #23408f !important; border: 1px solid #c9d5f5 !important; }
 html[data-theme] body .vq-home .team-logo-fallback { color: var(--text, #14233a) !important; font-size: 10px; font-weight: 800; }
 html[data-theme] body .vq-hero .team-logo-fallback { color: #fff !important; font-size: 16px; }
-html[data-theme="light"] body :is(.journey-stop > span:not(.journey-dot), .journey-stop small, .challenge-run .eyebrow) { color: #4f6079 !important; }
 
 /* ---------- Pick card as a betting slip ---------- */
 .slip-matchup { display: flex; align-items: center; gap: 8px; margin: 14px 0 6px; font-size: 13px; font-weight: 700; color: var(--muted, #637086); }
@@ -563,9 +561,6 @@ html[data-theme] body .rule-chips a:hover { border-color: var(--brand, #2458ed);
 .nba-opening { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-top: 22px; padding: 14px 16px; border-radius: 14px; background: var(--panel2, #f4f7ff); border: 1px solid var(--line, #e1e5ec); }
 .nba-opening > span { font-size: 14px; color: var(--muted, #637086); }
 .nba-opening b { color: var(--text, #14233a); }
-html[data-theme="light"] .nba-opening .vq-countdown > span { background: #fff; border-color: var(--line, #e1e5ec); }
-html[data-theme="light"] .nba-opening .vq-countdown b { color: var(--text, #14233a); }
-html[data-theme="light"] .nba-opening .vq-countdown small { color: var(--muted, #637086) !important; }
 html[data-theme="dark"] body .nba-hero { background: radial-gradient(120% 90% at 100% 0%, #ff8a3d26, transparent 55%), linear-gradient(160deg, #111a2e, #0a0f1b) !important; border-color: #ff8a3d40 !important; }
 .nba-grading { padding: 4px 24px 18px; }
 .nba-grading p { margin: 12px 0 4px; color: var(--muted, #637086); font-size: 14px; line-height: 1.6; }
@@ -632,12 +627,6 @@ html[data-theme="dark"] body .copy-pick button {
 .records-form > span.form-win { background: #0b7a49; }
 html[data-theme] body .slip-matchup .team-logo-fallback { color: var(--text, #14233a) !important; }
 html[data-theme="dark"] body .community-count { color: var(--brand-ink) !important; }
-html[data-theme="light"] body .member-stamp { color: #4f6079 !important; }
-html[data-theme="light"] body :is(.pick-numbers span, .admin-section dt) { color: #4f6079 !important; }
-html[data-theme="light"] body .pick-reason h3 { color: #23408f !important; }
-html[data-theme="light"] body :is(.price-rules, .pick-public-money, .public-money-card, .pick-splits) { background: var(--panel2, #f4f7ff) !important; border-color: var(--line) !important; color: var(--text) !important; }
-html[data-theme="light"] body :is(.price-rules, .pick-public-money, .public-money-card, .pick-splits) :is(p, small, span) { color: #4f6079 !important; }
-html[data-theme="light"] body :is(.price-rules, .pick-public-money, .public-money-card, .pick-splits) :is(strong, b, h3) { color: var(--text) !important; }
 
 /* Signed-in identity lives in the top bar: your photo opens your profile. */
 html[data-theme] body .top-actions .top-profile {

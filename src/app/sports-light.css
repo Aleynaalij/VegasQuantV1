@@ -1,18 +1,6 @@
-/* Bright sports desk: white surfaces, electric blue actions, compact tickets. */
+/* Legacy base layer (originally the light "sports desk" theme; its light colors were removed 2026-10-14). */
 :root {
-  color-scheme: light;
-  --bg: #f2f5fa;
-  --panel: #fff;
-  --panel2: #f5f8fd;
-  --line: #dce4ef;
   --border: #dce4ef;
-  --text: #13243c;
-  --muted: #52657d;
-  --green: #0866d8;
-  --accent: #0866d8;
-  --gold: #8b5b08;
-  --red: #be2544;
-  --radius: 18px;
 }
 body {
   background: var(--bg);
@@ -175,23 +163,12 @@ textarea::placeholder {
 .run-notice,
 .pick-odds-notice,
 .daily-update-notice {
-  background: #fff7e8 !important;
-  color: #74510f !important;
-  border-color: #ead8ac !important;
-  box-shadow: none;
-}
-.notice p,
-.notice small {
   color: #74510f !important;
 }
 .badge {
   background: #eef3fa !important;
   color: #50657e !important;
   border-color: #dce4ef !important;
-}
-.badge.green {
-  background: #e7f2ff !important;
-  color: #075ab9 !important;
 }
 .badge.red {
   background: #fff0f3 !important;
@@ -241,37 +218,22 @@ textarea::placeholder {
   color: #075ab9;
 }
 .challenge-run {
-  background: #fff !important;
-  border-color: var(--line) !important;
   color: var(--text) !important;
 }
 .challenge-run:after {
   opacity: 0.04;
 }
 .challenge-run[aria-disabled="true"] {
-  background: #f0f2f5 !important;
-  border-color: #d4dbe5 !important;
-  box-shadow: none;
   color: #617087 !important;
 }
-.challenge-run[aria-disabled="true"] h1 {
-  color: #617087;
-}
-.challenge-run[aria-disabled="true"] .eyebrow {
-  color: #6e7d92 !important;
-}
 .challenge-run[aria-disabled="true"] .journey-dot {
-  background: #e3e8ef !important;
-  border-color: #c9d1dc !important;
   color: #7b8799;
 }
 .challenge-run[aria-disabled="true"] .journey {
   margin: 22px 0 14px;
 }
 .journey-dot {
-  background: #eef4ff !important;
   color: #0866d8;
-  border-color: #c7dcf9;
 }
 .journey:before {
   background: #d7e2ef !important;
@@ -319,24 +281,12 @@ textarea::placeholder {
   background: #fff !important;
   border-color: var(--line) !important;
 }
-.sports-ticker {
-  background: #fff !important;
-  border-color: #dce4ef !important;
-  box-shadow: none;
-}
 .sports-ticker .ticker-label {
-  color: #0866d8 !important;
   font-weight: 800;
 }
 .sports-ticker summary b,
 .sports-ticker .ticker-games a {
   color: #0866d8 !important;
-}
-.sports-ticker .ticker-scroll {
-  color: #203852;
-}
-.sports-ticker .ticker-games small {
-  color: #52657d !important;
 }
 .sports-ticker .ticker-games > div {
   border-color: var(--line) !important;
@@ -346,8 +296,6 @@ textarea::placeholder {
 .source-status,
 .slip-why,
 .pick-publication {
-  background: #fff !important;
-  border-color: var(--line) !important;
   color: var(--text) !important;
 }
 .explore-cards small,
@@ -428,7 +376,7 @@ footer {
 /* Maintain readable contrast for legacy dark-theme text rules. */
 main p, main small, .sidebar small, .topbar a { color: #52657d !important; }
 .sports-ticker summary { display: flex; align-items: center; gap: 14px; padding: 13px 16px; min-height: 52px; }
-.sports-ticker { border: 1px solid #dce4ef; border-radius: 14px; overflow: hidden; }
+.sports-ticker { border-radius: 14px; overflow: hidden; }
 .sports-ticker .ticker-scroll { flex: 1; min-width: 0; overflow: hidden; }
 .player-portrait { display: grid; place-items: center; flex: 0 0 88px; width: 88px; height: 64px; overflow: hidden; border-radius: 14px; background: linear-gradient(145deg,#e0edff,#f7faff); border: 1px solid #cbdcf1; color: #0866d8; font-size: 20px; font-weight: 800; }
 .player-portrait img { width: 88px; height: 64px; object-fit: contain; object-position: center bottom; }

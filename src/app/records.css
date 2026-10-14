@@ -133,7 +133,6 @@
   justify-content: space-between;
   margin: 24px 0;
   padding: 18px;
-  background: white;
   border: 1px solid var(--line);
   border-radius: 14px;
   gap: 12px;
@@ -168,7 +167,6 @@
   padding: 16px 0;
   font-size: 11px;
   font-weight: 700;
-  color: #2458ed;
   cursor: pointer;
 }
 .ledger-audit .table-scroll {
@@ -182,7 +180,6 @@
 .ledger-mobile article {
   padding: 20px 24px;
   border-bottom: 1px solid var(--line);
-  background: none !important;
   border-radius: 0 !important;
   border-right: 1px solid var(--line);
 }

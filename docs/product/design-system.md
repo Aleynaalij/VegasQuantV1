@@ -4,7 +4,7 @@ Sportsbook-style and dark only. Defined in `src/app/premium.css`, loaded after e
 
 ## Theme
 - Vegas Quant is dark only (2026-10-14). `<html>` renders with `data-theme="dark"` from the server, the Light mode and Appearance setting were removed, and old saved theme choices are cleared on load.
-- Light-theme rules (all of `sports-light.css`, plus `html[data-theme="light"]` and light fallbacks elsewhere) no longer apply and can be deleted as each page is migrated.
+- Light-theme styles were deleted on 2026-10-14: every `html[data-theme="light"]` and `html:not([data-theme="dark"])` rule, the theme picker's CSS, and 245 light color declarations in the legacy files that the dark theme always overrode. Deletion was checked in the browser (computed styles of every element on 20 pages, phone and desktop, signed in and out) and by pixel-identical screenshots. Light colors that remain in legacy files are either still visible (no dark override) or only reached in hover/focus states the check could not see; remove those as each page is migrated.
 - Tokens live on `html[data-theme="dark"]:root`. Change colors here, not in components.
 
 | Token | Use |

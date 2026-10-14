@@ -97,7 +97,6 @@
   margin: 10px 0;
 }
 .member-activity-feed header p {
-  color: #aabfb4;
   line-height: 1.6;
 }
 .member-feed-card {
@@ -139,7 +138,6 @@
   cursor: pointer;
 }
 .profile-roster .community-panel {
-  border: 0;
   border-radius: 0;
   padding: 0 14px 18px;
 }
@@ -192,7 +190,6 @@
   min-width: 0;
   border: 1px solid #304740;
   border-radius: 18px;
-  background: #101d21;
   overflow: hidden;
 }
 .community-directory > summary {
@@ -227,13 +224,8 @@
 }
 .profile-roster {
   border-top: 1px solid #294239;
-  background: #fff !important;
-  border-color: var(--line) !important;
   color: var(--text) !important;
   box-shadow: 0 4px 18px #16386006;
-}
-.profile-roster summary {
-  border-color: var(--line) !important;
 }
 .profile-socials a {
   font-size: 12px;
@@ -264,7 +256,6 @@
 .community-directory-action {
   font-size: 12px;
   font-weight: 400;
-  color: #64768e !important;
 }
 .community-panel-head h2 {
   font-size: 21px;
@@ -277,12 +268,8 @@
 }
 .community-panel {
   padding: 23px;
-  background: #fff !important;
-  border-color: var(--line) !important;
   color: var(--text) !important;
   border-radius: 16px !important;
-  border: 1px solid var(--line) !important;
-  box-shadow: 0 2px 3px #14233a03 !important;
 }
 .community-home.community-resume {
   display: flex !important;
@@ -303,7 +290,6 @@
 }
 .community-profile-rail {
   min-width: 0;
-  border-color: var(--line) !important;
   color: var(--text) !important;
   overflow: hidden;
   border-radius: 16px !important;
@@ -313,7 +299,6 @@
   display: flex;
   align-items: center;
   padding: 18px 22px;
-  background: white !important;
   min-height: 0;
 }
 .profile-cover {
@@ -329,8 +314,6 @@
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid #294239;
-  background: #f0f6ff !important;
-  border-color: var(--line) !important;
   color: var(--text) !important;
   display: none !important;
 }
@@ -393,13 +376,10 @@
   margin: 0 !important;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: white;
 }
 .community-drawer > summary {
   padding: 18px 22px !important;
   min-height: 60px;
-  border: 0 !important;
-  background: transparent !important;
   border-radius: 14px;
   color: #14233a !important;
 }
@@ -407,17 +387,11 @@
   color: #14233a !important;
 }
 .community-drawer .community-panel {
-  border: 0 !important;
-  box-shadow: none !important;
   margin: 0;
 }
 .community-count {
   padding: 8px 12px;
   border-radius: 12px;
-  border-color: #d0e2fc !important;
-  background: #eef2ff !important;
-  color: #2458ed !important;
-  border: 0;
 }
 .community-roster {
   display: grid;
@@ -461,8 +435,6 @@
   gap: 14px;
 }
 .community-sidebar > details {
-  background: white;
-  border: 1px solid var(--line);
   border-radius: 14px;
   overflow: hidden;
 }
@@ -473,7 +445,6 @@
   cursor: pointer;
 }
 .community-sidebar .community-panel {
-  border: 0 !important;
   margin: 0;
 }
 .community-event {
