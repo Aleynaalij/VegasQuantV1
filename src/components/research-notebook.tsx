@@ -93,6 +93,21 @@ export default function ResearchNotebook({
         {active === 0 ? (
           <>
             <h3>{analysis.title}</h3>
+            {[
+              ["Game Summary", "The quick read"],
+              ["Injuries", "Availability"],
+              ["Edge Analysis", "What we’re watching"],
+            ].map(([key, heading]) => {
+              const read = analysis.sections[key];
+              return read ? (
+                <section key={key}>
+                  <h4>{heading}</h4>
+                  <p className="preserve">
+                    {read.length > 900 ? read.slice(0, 900) + "…" : read}
+                  </p>
+                </section>
+              ) : null;
+            })}
             <div className="research-fair-lines">
               {[
                 ["True spread", "true_spread"],
@@ -102,14 +117,14 @@ export default function ResearchNotebook({
                 <div key={key}>
                   <span>{name}</span>
                   <strong>
-                    {analysis.projections[key] || "Awaiting analyst"}
+                    {analysis.projections[key] || "No supported estimate"}
                   </strong>
                 </div>
               ))}
             </div>
             <p className="research-hint">
-              Choose a category above for the analyst’s read. Leans and
-              watchlists are not official wagers.
+              Open a category for more detail and sources. Leans and watchlists
+              are not official wagers.
             </p>
           </>
         ) : (

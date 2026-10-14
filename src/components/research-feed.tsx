@@ -23,6 +23,7 @@ import BillsWinningSlip from "./bills-winning-slip";
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
+import ZoneNav from "./zone-nav";
 import DailyUpdateNotice from "./daily-update-notice";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
 import { supabase } from "@/lib/supabase";
@@ -175,8 +176,21 @@ export default function ResearchFeed() {
     }
   }
   const timeline = feedTimeline(posts, releases, edgeReleases, filter);
+  const [zoneView, setZoneView] = useState("Latest");
+  useEffect(() => {
+    const view = new URLSearchParams(window.location.search).get("view");
+    setZoneView(
+      view === "legs" ? "Legs" : view === "injury" ? "Injury watch" : "Latest",
+    );
+    setFilter(view === "injury" ? "Injury watch" : "All");
+  }, []);
+  const visibleTimeline =
+    zoneView === "Legs"
+      ? timeline.filter((item) => item.kind !== "post")
+      : timeline;
   return (
     <Shell active="feed">
+      <ZoneNav active={zoneView} />
       <div
         className={`vq-feed ${access.allowed && !access.admin ? "member-watermarked" : ""}`}
         style={
@@ -192,8 +206,17 @@ export default function ResearchFeed() {
             <BrandMark />
             <span>VEGAS QUANT ULTRA · THE ZONE</span>
           </div>
-          <h1>The Zone<span className="zone-signal" aria-hidden="true"> ✦</span></h1>
-          <p>Lock into the game. Explore the picks. Follow the story.</p>
+          <h1>
+            The Zone
+            <span className="zone-signal" aria-hidden="true">
+              {" "}
+              ✦
+            </span>
+          </h1>
+          <p>
+            Your game research, injury updates and legs we like—all in one
+            place.
+          </p>
           <div className="feed-rule">
             <ShieldCheck size={16} />
             <span>Individual game legs · Pick of the Day lives on Home.</span>
@@ -210,24 +233,27 @@ export default function ResearchFeed() {
           {boardOpen && <PublishedLegBoard />}
         </details>
         <DailyUpdateNotice />
-        <nav className="feed-filters" aria-label="Filter feed">
-          {categories.map((c) => (
-            <button
-              key={c}
-              aria-pressed={filter === c}
-              className={filter === c ? "selected" : ""}
-              onClick={() => {
-                if (c === filter) return;
-                setPosts([]);
-                setFilter(c);
-                setLimit(pageSize);
-                setLoading(true);
-              }}
-            >
-              {c}
-            </button>
-          ))}
-        </nav>
+        <details className="zone-extra-filters">
+          <summary>More research filters</summary>
+          <nav className="feed-filters" aria-label="Filter feed">
+            {categories.map((c) => (
+              <button
+                key={c}
+                aria-pressed={filter === c}
+                className={filter === c ? "selected" : ""}
+                onClick={() => {
+                  if (c === filter) return;
+                  setPosts([]);
+                  setFilter(c);
+                  setLimit(pageSize);
+                  setLoading(true);
+                }}
+              >
+                {c}
+              </button>
+            ))}
+          </nav>
+        </details>
 
         {!loading && !access.allowed && !error && (
           <p className="feed-access-note">
@@ -239,125 +265,180 @@ export default function ResearchFeed() {
         {!loading && (
           <>
             <div className="feed-stream">
-              {timeline.slice(0, limit).map((item) => {
+              {visibleTimeline.slice(0, limit).map((item) => {
                 const p = item.kind === "post" ? item.value : null;
-                const content = p?.market_label === "zone-win:ravens-falcons-full5-20261011" ? (
-                  <RavensWinningSlip key={p.id} publishedAt={p.created_at} />
-                ) : p?.market_label === "zone-win:london-live6-20261011" ? (
-                  <LondonWinningSlip key={p.id} publishedAt={p.created_at} variant="live-six" />
-                ) : p?.market_label === "zone-win:london-q1-20261011" ? (
-                  <LondonWinningSlip key={p.id} publishedAt={p.created_at} />
-                ) : p ? (
-                  <article className="feed-post" key={p.id}>
-                    <div className="feed-byline">
-                      <span className="feed-avatar">
-                        <BrandMark />
-                      </span>
-                      <div>
-                        <strong>Vegas Quant Ultra</strong>
-                        <time dateTime={p.created_at}>
-                          {time(p.created_at)}
-                        </time>
-                      </div>
-                      <Badge>{p.category}</Badge>
-                    </div>
-                    <h2>{p.title}</h2>
-                    <div className="feed-summary">
-                      <small>WHAT CHANGED</small>
-                      <p>{p.summary}</p>
-                    </div>
-                    <details className="feed-post-details">
-                      <summary>Read the case, market & next check ↓</summary>
-                      <div className="feed-summary">
-                        <small>WHY IT MATTERS · ANALYST READ</small>
-                        <p>{p.why_watch}</p>
-                      </div>
-                      <div className="feed-matchup">
-                        <div className="feed-teams">
-                          <strong>{p.away_code}</strong>
-                          <span>@</span>
-                          <strong>{p.home_code}</strong>
-                          <span className="feed-watch">
-                            <Eye size={14} /> WATCHING
-                          </span>
-                        </div>
-                        <p>{p.matchup}</p>
-                        <div className="feed-price">
-                          <small>OBSERVED MARKET · NOT A RECOMMENDATION</small>
-                          <strong>{p.market_label}</strong>
-                          <time dateTime={p.source_at}>
-                            Snapshot {time(p.source_at)} · Prices may change
+                const content =
+                  p?.market_label ===
+                  "zone-win:ravens-falcons-full5-20261011" ? (
+                    <RavensWinningSlip key={p.id} publishedAt={p.created_at} />
+                  ) : p?.market_label === "zone-win:london-live6-20261011" ? (
+                    <LondonWinningSlip
+                      key={p.id}
+                      publishedAt={p.created_at}
+                      variant="live-six"
+                    />
+                  ) : p?.market_label === "zone-win:london-q1-20261011" ? (
+                    <LondonWinningSlip key={p.id} publishedAt={p.created_at} />
+                  ) : p ? (
+                    <article className="feed-post" key={p.id}>
+                      <div className="feed-byline">
+                        <span className="feed-avatar">
+                          <BrandMark />
+                        </span>
+                        <div>
+                          <strong>Vegas Quant Ultra</strong>
+                          <time dateTime={p.created_at}>
+                            {time(p.created_at)}
                           </time>
                         </div>
+                        <Badge>{p.category}</Badge>
                       </div>
-                      <div className="feed-next">
-                        <Clock3 size={17} />
-                        <div>
-                          <small>NEXT CHECK</small>
-                          <p>{p.next_check}</p>
+                      <h2>{p.title}</h2>
+                      <div className="feed-summary">
+                        <small>WHAT CHANGED</small>
+                        <p>{p.summary}</p>
+                      </div>
+                      <details className="feed-post-details">
+                        <summary>Read the case, market & next check ↓</summary>
+                        <div className="feed-summary">
+                          <small>WHY IT MATTERS · ANALYST READ</small>
+                          <p>{p.why_watch}</p>
                         </div>
-                      </div>
-                      <details className="feed-context">
-                        <summary>
-                          Sources & uncertainty <ChevronDown size={16} />
-                        </summary>
-                        <h3>What could change the read</h3>
-                        <p>{p.caution}</p>
-                        <a
-                          href={p.source_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <div className="feed-matchup">
+                          <div className="feed-teams">
+                            <strong>{p.away_code}</strong>
+                            <span>@</span>
+                            <strong>{p.home_code}</strong>
+                            <span className="feed-watch">
+                              <Eye size={14} /> WATCHING
+                            </span>
+                          </div>
+                          <p>{p.matchup}</p>
+                          <div className="feed-price">
+                            <small>
+                              OBSERVED MARKET · NOT A RECOMMENDATION
+                            </small>
+                            <strong>{p.market_label}</strong>
+                            <time dateTime={p.source_at}>
+                              Snapshot {time(p.source_at)} · Prices may change
+                            </time>
+                          </div>
+                        </div>
+                        <div className="feed-next">
+                          <Clock3 size={17} />
+                          <div>
+                            <small>NEXT CHECK</small>
+                            <p>{p.next_check}</p>
+                          </div>
+                        </div>
+                        <details className="feed-context">
+                          <summary>
+                            Sources & uncertainty <ChevronDown size={16} />
+                          </summary>
+                          <h3>What could change the read</h3>
+                          <p>{p.caution}</p>
+                          <a
+                            href={p.source_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            Source <ArrowUpRight size={14} />
+                          </a>
+                        </details>
+                        <Link
+                          className="feed-research"
+                          href={
+                            p.game?.slug
+                              ? `/matchups/${p.game.slug}`
+                              : `/matchups?q=${encodeURIComponent(p.matchup.split(" @ ")[0])}`
+                          }
                         >
-                          Source <ArrowUpRight size={14} />
-                        </a>
+                          Open matchup research <ArrowUpRight size={16} />
+                        </Link>
                       </details>
-                      <Link
-                        className="feed-research"
-                        href={
-                          p.game?.slug
-                            ? `/matchups/${p.game.slug}`
-                            : `/matchups?q=${encodeURIComponent(p.matchup.split(" @ ")[0])}`
-                        }
-                      >
-                        Open matchup research <ArrowUpRight size={16} />
-                      </Link>
+                    </article>
+                  ) : item.kind === "edge" ? (
+                    <EdgeReleaseCard key={item.key} release={item.value} />
+                  ) : item.kind === "selection" &&
+                    [
+                      "62bfa07e-6280-4520-abd2-30595429bc6e",
+                      "0d8e8f5a-2470-473b-9271-c396829bb429",
+                    ].includes(item.value.id) ? (
+                    <BillsWinningSlip
+                      publishedAt={item.value.created_at}
+                      halftime={
+                        item.value.id === "0d8e8f5a-2470-473b-9271-c396829bb429"
+                      }
+                    />
+                  ) : item.kind === "selection" ? (
+                    <details className="zone-drop" key={item.key}>
+                      <summary>
+                        <span className="eyebrow">
+                          PICK DROP · {time(item.value.created_at)}
+                        </span>
+                        <strong>{item.value.title}</strong>
+                        <span>
+                          {item.value.candidates.length}{" "}
+                          {item.value.candidates.length === 1
+                            ? "selection"
+                            : "selections"}{" "}
+                          ·{" "}
+                          <span className="zone-expand">
+                            <span aria-hidden="true">＋</span> Expand
+                          </span>
+                        </span>
+                      </summary>
+                      <CandidateTracker snapshot={item.value} />
                     </details>
-                  </article>
-                ) : item.kind === "edge" ? (
-                  <EdgeReleaseCard key={item.key} release={item.value} />
-                ) : item.kind === "selection" && ["62bfa07e-6280-4520-abd2-30595429bc6e", "0d8e8f5a-2470-473b-9271-c396829bb429"].includes(item.value.id) ? (
-                  <BillsWinningSlip publishedAt={item.value.created_at} halftime={item.value.id === "0d8e8f5a-2470-473b-9271-c396829bb429"} />
-                ) : item.kind === "selection" ? (
-                  <details className="zone-drop" key={item.key}>
-                    <summary><span className="eyebrow">PICK DROP · {time(item.value.created_at)}</span><strong>{item.value.title}</strong><span>{item.value.candidates.length} {item.value.candidates.length === 1 ? "selection" : "selections"} · <span className="zone-expand"><span aria-hidden="true">＋</span> Expand</span></span></summary>
-                    <CandidateTracker snapshot={item.value} />
-                  </details>
-                ) : null;
-                return <div className="zone-item" key={item.key}>
-                  {content}
-                  {p && <DownloadCard
-                    title={p.title}
-                    subtitle={p.matchup}
-                    publishedAt={p.created_at}
-                    sections={[
-                      { heading: p.market_label.startsWith("zone-win:") ? "Result" : "Summary", text: p.summary },
-                      { heading: p.market_label.startsWith("zone-win:") ? "Winning legs" : "Analyst case", text: p.why_watch.split(" Original pregame release:")[0] },
-                      ...(!p.market_label.startsWith("zone-win:") ? [{ heading: "Observed market", text: p.market_label }] : []),
-                      { heading: "Source / uncertainty", text: p.caution },
-                      { heading: "Next check", text: p.next_check },
-                      { heading: "Source", text: p.source_url },
-                    ]}
-                  />}
-                </div>;
+                  ) : null;
+                return (
+                  <div className="zone-item" key={item.key}>
+                    {content}
+                    {p && (
+                      <DownloadCard
+                        title={p.title}
+                        subtitle={p.matchup}
+                        publishedAt={p.created_at}
+                        sections={[
+                          {
+                            heading: p.market_label.startsWith("zone-win:")
+                              ? "Result"
+                              : "Summary",
+                            text: p.summary,
+                          },
+                          {
+                            heading: p.market_label.startsWith("zone-win:")
+                              ? "Winning legs"
+                              : "Analyst case",
+                            text: p.why_watch.split(
+                              " Original pregame release:",
+                            )[0],
+                          },
+                          ...(!p.market_label.startsWith("zone-win:")
+                            ? [
+                                {
+                                  heading: "Observed market",
+                                  text: p.market_label,
+                                },
+                              ]
+                            : []),
+                          { heading: "Source / uncertainty", text: p.caution },
+                          { heading: "Next check", text: p.next_check },
+                          { heading: "Source", text: p.source_url },
+                        ]}
+                      />
+                    )}
+                  </div>
+                );
               })}
             </div>
-            {!timeline.length && !error && (
+            {!visibleTimeline.length && !error && (
               <p className="feed-empty">
                 No updates in this category yet. Check back as the next decision
                 develops.
               </p>
             )}
-            {timeline.length > limit && (
+            {visibleTimeline.length > limit && (
               <button
                 className="secondary feed-more"
                 onClick={() => setLimit((l) => l + pageSize)}

@@ -6,6 +6,7 @@ import AccountLink from "./account-link";
 import {
   ArrowUpRight,
   BookOpen,
+  Users,
   History,
   LayoutDashboard,
   LockKeyhole,
@@ -90,16 +91,21 @@ export function Shell({
   sport?: "nfl" | "nba";
 }) {
   const home = sport === "nba" ? "/nba" : "/";
-  const board = sport === "nba" ? "/nba/analysis" : "/matchups";
+  const community = sport === "nba" ? "/community?sport=nba" : "/community";
   const feed = sport === "nba" ? "/nba/zone" : "/feed";
   const records = sport === "nba" ? "/nba/records" : "/history";
-  const sportSection = ["game", "feed", "history", "performance"].includes(
-    active,
-  )
+  const sportSection = [
+    "game",
+    "feed",
+    "history",
+    "performance",
+    "community",
+  ].includes(active)
     ? active
     : "home";
   const nflHref = (
     {
+      community: "/community",
       home: "/",
       game: "/matchups",
       feed: "/feed",
@@ -109,6 +115,7 @@ export function Shell({
   )[sportSection];
   const nbaHref = (
     {
+      community: "/community?sport=nba",
       home: "/nba",
       game: "/nba/analysis",
       feed: "/nba/zone",
@@ -142,20 +149,22 @@ export function Shell({
             Home
           </Link>
           <Link
-            aria-current={active === "game" ? "page" : undefined}
-            className={active === "game" ? "active" : ""}
-            href={board}
-          >
-            <BookOpen size={18} />
-            Analysis
-          </Link>
-          <Link
-            aria-current={active === "feed" ? "page" : undefined}
-            className={`feed-nav-link ${active === "feed" ? "active" : ""}`}
+            aria-current={
+              ["feed", "game"].includes(active) ? "page" : undefined
+            }
+            className={`feed-nav-link ${["feed", "game"].includes(active) ? "active" : ""}`}
             href={feed}
           >
             <BrandMark />
             The Zone
+          </Link>
+          <Link
+            aria-current={active === "community" ? "page" : undefined}
+            className={active === "community" ? "active" : ""}
+            href={community}
+          >
+            <Users size={19} />
+            Community
           </Link>
           <Link
             className={
@@ -228,7 +237,8 @@ export function Shell({
               {(
                 {
                   home: sport === "nba" ? "NBA desk" : "Sports desk",
-                  game: "Analysis",
+                  game: "The Zone",
+                  community: "Community",
                   feed: "The Zone",
                   history: "Records",
                   performance: "Performance",
@@ -292,20 +302,22 @@ export function Shell({
             Home
           </Link>
           <Link
-            aria-current={active === "game" ? "page" : undefined}
-            className={active === "game" ? "active" : ""}
-            href={board}
-          >
-            <BookOpen size={19} />
-            <strong>Analysis</strong>
-          </Link>
-          <Link
-            aria-current={active === "feed" ? "page" : undefined}
-            className={`feed-nav-link ${active === "feed" ? "active" : ""}`}
+            aria-current={
+              ["feed", "game"].includes(active) ? "page" : undefined
+            }
+            className={`feed-nav-link ${["feed", "game"].includes(active) ? "active" : ""}`}
             href={feed}
           >
             <BrandMark />
             The Zone
+          </Link>
+          <Link
+            aria-current={active === "community" ? "page" : undefined}
+            className={active === "community" ? "active" : ""}
+            href={community}
+          >
+            <Users size={19} />
+            Community
           </Link>
           <Link
             className={
