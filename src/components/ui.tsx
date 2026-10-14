@@ -83,17 +83,46 @@ export function Stat({
 export function Shell({
   children,
   active = "home",
+  sport = "nfl",
 }: {
   children: ReactNode;
   active?: string;
+  sport?: "nfl" | "nba";
 }) {
+  const home = sport === "nba" ? "/nba" : "/";
+  const board = sport === "nba" ? "/nba/analysis" : "/matchups";
+  const feed = sport === "nba" ? "/nba/zone" : "/feed";
+  const records = sport === "nba" ? "/nba/records" : "/history";
+  const sportSection = ["game", "feed", "history", "performance"].includes(
+    active,
+  )
+    ? active
+    : "home";
+  const nflHref = (
+    {
+      home: "/",
+      game: "/matchups",
+      feed: "/feed",
+      history: "/history",
+      performance: "/history",
+    } as Record<string, string>
+  )[sportSection];
+  const nbaHref = (
+    {
+      home: "/nba",
+      game: "/nba/analysis",
+      feed: "/nba/zone",
+      history: "/nba/records",
+      performance: "/nba/records",
+    } as Record<string, string>
+  )[sportSection];
   return (
     <div className={`shell screen-${active}`}>
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
       <aside className="sidebar">
-        <Link className="brand" href="/">
+        <Link className="brand" href={home}>
           <span className="logo">
             <BrandMark />
           </span>
@@ -107,7 +136,7 @@ export function Shell({
           <Link
             aria-current={active === "home" ? "page" : undefined}
             className={active === "home" ? "active" : ""}
-            href="/"
+            href={home}
           >
             <LayoutDashboard size={18} />
             Home
@@ -115,7 +144,7 @@ export function Shell({
           <Link
             aria-current={active === "game" ? "page" : undefined}
             className={active === "game" ? "active" : ""}
-            href="/matchups"
+            href={board}
           >
             <BookOpen size={18} />
             Game board
@@ -123,7 +152,7 @@ export function Shell({
           <Link
             aria-current={active === "feed" ? "page" : undefined}
             className={`feed-nav-link ${active === "feed" ? "active" : ""}`}
-            href="/feed"
+            href={feed}
           >
             <BrandMark />
             The Zone
@@ -135,7 +164,7 @@ export function Shell({
             aria-current={
               ["history", "performance"].includes(active) ? "page" : undefined
             }
-            href="/history"
+            href={records}
           >
             <History size={18} />
             Records
@@ -151,17 +180,27 @@ export function Shell({
         </nav>
         <div className="sidebar-rule">
           <ShieldCheck size={23} />
-          <h3>Know your number.</h3>
+          <h3>
+            {sport === "nba" ? "Build the foundation." : "Know your number."}
+          </h3>
           <p>
-            A clear case. A verified price.
-            <br />A pass is a valid decision.
+            {sport === "nba" ? (
+              "Minutes, role and opportunity before selections."
+            ) : (
+              <>
+                A clear case. A verified price.
+                <br />A pass is a valid decision.
+              </>
+            )}
           </p>
-          <div>
-            <span>MINIMUM EDGE</span>
-            <strong>
-              3.0<small>%</small>
-            </strong>
-          </div>
+          {sport === "nfl" ? (
+            <div>
+              <span>MINIMUM EDGE</span>
+              <strong>
+                3.0<small>%</small>
+              </strong>
+            </div>
+          ) : null}
         </div>
         <div className="sidebar-bottom">
           <span className="avatar">
@@ -175,7 +214,7 @@ export function Shell({
       </aside>
       <div className="main-wrap">
         <header className="topbar">
-          <Link href="/" className="mobile-brand">
+          <Link href={home} className="mobile-brand">
             <BrandMark />
             VEGAS QUANT
           </Link>
@@ -203,6 +242,23 @@ export function Shell({
             <AccountLink />
           </div>
         </header>
+        <nav className="sport-switch" aria-label="Sport selection">
+          <Link
+            href={nflHref}
+            aria-current={sport === "nfl" ? "page" : undefined}
+            className={sport === "nfl" ? "selected" : ""}
+          >
+            NFL
+          </Link>
+          <Link
+            href={nbaHref}
+            aria-current={sport === "nba" ? "page" : undefined}
+            className={sport === "nba" ? "selected" : ""}
+          >
+            NBA
+          </Link>
+          {sport === "nba" ? <span>Preparation mode</span> : null}
+        </nav>
         <main id="main-content" tabIndex={-1}>
           {children}
           <footer>
@@ -221,7 +277,7 @@ export function Shell({
           <Link
             aria-current={active === "home" ? "page" : undefined}
             className={active === "home" ? "active" : ""}
-            href="/"
+            href={home}
           >
             <LayoutDashboard size={19} />
             Home
@@ -229,7 +285,7 @@ export function Shell({
           <Link
             aria-current={active === "game" ? "page" : undefined}
             className={active === "game" ? "active" : ""}
-            href="/matchups"
+            href={board}
           >
             <BookOpen size={19} />
             <strong>Analysis</strong>
@@ -237,7 +293,7 @@ export function Shell({
           <Link
             aria-current={active === "feed" ? "page" : undefined}
             className={`feed-nav-link ${active === "feed" ? "active" : ""}`}
-            href="/feed"
+            href={feed}
           >
             <BrandMark />
             The Zone
@@ -249,7 +305,7 @@ export function Shell({
             aria-current={
               ["history", "performance"].includes(active) ? "page" : undefined
             }
-            href="/history"
+            href={records}
           >
             <History size={19} />
             Records
