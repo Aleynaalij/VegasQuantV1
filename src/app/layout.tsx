@@ -5,6 +5,7 @@ import "./experience.css";
 import "./sports-light.css";
 import "./master.css";
 import "./zone.css";
+import "./records.css";
 import "./nba.css";
 import "./dark-surfaces.css";
 import "./premium.css";
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Vegas Quant",
   },
-  icons: { apple: "/icons/q-lens-apple.png" },
+  icons: { apple: "/icons/vq-diamond-apple.png" },
   title: "Vegas Quant | Sports Intelligence",
   description:
     "NFL research, live scores and transparent picks. Find the play. Understand the case. Keep the record.",
