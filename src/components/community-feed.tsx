@@ -9,6 +9,8 @@ import {
 import Link from "next/link";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
+import CommunityPhoto from "./community-photo";
+import { COMMUNITY_PHOTO_BUCKET, MAX_PHOTO_BYTES } from "@/lib/community-photo";
 import { time } from "@/lib/domain";
 type Post = {
   id: string;
@@ -25,6 +27,7 @@ type Post = {
   reacted: boolean;
   comments: number;
   following: boolean;
+  photo_path: string | null;
 };
 type Comment = {
   id: string;
@@ -119,7 +122,14 @@ function Comments({
           <strong>@{c.author_name}</strong>
           <small> · {time(c.created_at)}</small>
           <p>{c.body}</p>
-          {uid !== c.user_id ? <button className="text-link" onClick={() => void onBlock(c.user_id,c.author_name)}>Block member</button> : null}
+          {uid !== c.user_id ? (
+            <button
+              className="text-link"
+              onClick={() => void onBlock(c.user_id, c.author_name)}
+            >
+              Block member
+            </button>
+          ) : null}
           {(uid === c.user_id || admin) && (
             <button className="text-link" onClick={() => void remove(c.id)}>
               Remove comment
@@ -140,7 +150,9 @@ export default function CommunityFeed() {
     [followingOnly, setFollowingOnly] = useState(false),
     [limit, setLimit] = useState(20),
     [rows, setRows] = useState<Post[]>([]),
-    [blocked, setBlocked] = useState<{target_user_id:string;label:string}[]>([]),
+    [blocked, setBlocked] = useState<
+      { target_user_id: string; label: string }[]
+    >([]),
     [kind, setKind] = useState("talk"),
     [title, setTitle] = useState(""),
     [body, setBody] = useState(""),
@@ -154,6 +166,19 @@ export default function CommunityFeed() {
     [reports, setReports] = useState<
       { id: string; post_id: string; reason: string }[]
     >([]);
+  const [photo, setPhoto] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
+  const photoInput = useRef<HTMLInputElement>(null);
+  const mutationEpoch = useRef(0);
+  useEffect(() => {
+    if (!photo) {
+      setPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(photo);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
   const epoch = useRef(0);
   const sessionUid = useRef<string | null | undefined>(undefined);
   useEffect(() => {
@@ -164,6 +189,14 @@ export default function CommunityFeed() {
       if (!live || sessionUid.current === id) return;
       sessionUid.current = id;
       epoch.current++;
+      mutationEpoch.current++;
+      if (photoInput.current) photoInput.current.value = "";
+      setPhoto(null);
+      setTitle("");
+      setBody("");
+      setLegs("");
+      setStake("");
+      setBusy(false);
       setUid(id);
       setRows([]);
       setOpenComments(null);
@@ -182,6 +215,7 @@ export default function CommunityFeed() {
     );
     return () => {
       live = false;
+      mutationEpoch.current++;
       epoch.current++;
       a.data.subscription.unsubscribe();
     };
@@ -208,8 +242,11 @@ export default function CommunityFeed() {
       return;
     }
     setRows(r.data || []);
-    const blocks = await supabase.from("member_blocks").select("target_user_id,label").eq("user_id",uid);
-    if(n===epoch.current) setBlocked(blocks.data || []);
+    const blocks = await supabase
+      .from("member_blocks")
+      .select("target_user_id,label")
+      .eq("user_id", uid);
+    if (n === epoch.current) setBlocked(blocks.data || []);
     if (a.data === true) {
       const flags = await supabase
         .from("community_reports")
@@ -241,29 +278,72 @@ export default function CommunityFeed() {
       setNotice("Use up to twelve selections, each under 180 characters.");
       return;
     }
+    if (busy) return;
+    const generation = mutationEpoch.current;
+    const postId = crypto.randomUUID();
+    let uploaded: string | null = null;
     setBusy(true);
-    const r = await supabase.from("community_posts").insert({
-      user_id: uid,
-      sport,
-      kind,
-      title: title.trim(),
-      body: body.trim(),
-      legs: kind === "talk" ? [] : selections,
-      stake: kind === "talk" || stake === "" ? null : Number(stake),
-    });
-    setBusy(false);
-    if (r.error) {
-      setNotice(
-        "Could not publish. Complete and enable your community profile in Account, add your selections, and allow thirty seconds between posts.",
-      );
-      return;
+    setNotice("");
+    try {
+      if (photo) {
+        const session = await supabase.auth.getSession();
+        if (generation !== mutationEpoch.current) return;
+        if (session.data.session?.user.id !== uid)
+          throw Error("Sign in again before posting.");
+        const form = new FormData();
+        form.set("photo", photo);
+        const response = await fetch(`/api/community/photo?post=${postId}`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.data.session.access_token}`,
+          },
+          body: form,
+        });
+        const data = await response.json();
+        if (!response.ok || !data.path)
+          throw Error(data.error || "Photo upload failed.");
+        uploaded = data.path;
+      }
+      if (generation !== mutationEpoch.current) return;
+      const r = await supabase.from("community_posts").insert({
+        id: postId,
+        user_id: uid,
+        sport,
+        kind,
+        title: title.trim(),
+        body: body.trim(),
+        legs: kind === "talk" ? [] : selections,
+        stake: kind === "talk" || stake === "" ? null : Number(stake),
+        photo_path: uploaded,
+      });
+      if (r.error) {
+        if (uploaded)
+          await supabase.storage
+            .from(COMMUNITY_PHOTO_BUCKET)
+            .remove([uploaded]);
+        throw Error(
+          "Could not publish. Complete your visible profile and allow thirty seconds between posts. Your draft is kept; retry.",
+        );
+      }
+      if (generation !== mutationEpoch.current) return;
+      setTitle("");
+      setBody("");
+      setLegs("");
+      setStake("");
+      setPhoto(null);
+      if (photoInput.current) photoInput.current.value = "";
+      setNotice("Posted to Community. This does not record a wager.");
+      await refresh();
+    } catch (error) {
+      if (generation === mutationEpoch.current)
+        setNotice(
+          error instanceof Error
+            ? error.message
+            : "Could not publish. Your draft is kept; retry.",
+        );
+    } finally {
+      if (generation === mutationEpoch.current) setBusy(false);
     }
-    setTitle("");
-    setBody("");
-    setLegs("");
-    setStake("");
-    setNotice("Posted to Community. This does not record a wager.");
-    await refresh();
   }
   async function react(p: Post) {
     if (!uid || busy) return;
@@ -298,34 +378,77 @@ export default function CommunityFeed() {
     else await refresh();
   }
   async function block(id: string, label: string) {
-    if(!uid || busy) return;
+    if (!uid || busy) return;
     setBusy(true);
-    const r=await supabase.from("member_blocks").insert({user_id:uid,target_user_id:id,label});
+    const r = await supabase
+      .from("member_blocks")
+      .insert({ user_id: uid, target_user_id: id, label });
     setBusy(false);
-    setNotice(r.error ? "Could not block this member." : "Member blocked. Their posts and comments are hidden from your community feed.");
-    if(!r.error) { setOpenComments(null); await refresh(); }
+    setNotice(
+      r.error
+        ? "Could not block this member."
+        : "Member blocked. Their posts and comments are hidden from your community feed.",
+    );
+    if (!r.error) {
+      setOpenComments(null);
+      await refresh();
+    }
   }
   async function unblock(id: string) {
-    if(!uid || busy) return;
+    if (!uid || busy) return;
     setBusy(true);
-    const r=await supabase.from("member_blocks").delete().eq("user_id",uid).eq("target_user_id",id);
+    const r = await supabase
+      .from("member_blocks")
+      .delete()
+      .eq("user_id", uid)
+      .eq("target_user_id", id);
     setBusy(false);
     setNotice(r.error ? "Could not unblock member." : "Member unblocked.");
-    if(!r.error) await refresh();
+    if (!r.error) await refresh();
   }
   async function restrict(id: string, restricted: boolean) {
-    if(!admin || busy) return;
+    if (!admin || busy) return;
     setBusy(true);
-    const r=await supabase.rpc("restrict_community_member",{p_user:id,p_reason:"Moderator action following community review",p_restricted:restricted});
+    const r = await supabase.rpc("restrict_community_member", {
+      p_user: id,
+      p_reason: "Moderator action following community review",
+      p_restricted: restricted,
+    });
     setBusy(false);
-    setNotice(r.error ? "Could not change posting access." : restricted ? "Member posting restricted." : "Member posting restored.");
+    setNotice(
+      r.error
+        ? "Could not change posting access."
+        : restricted
+          ? "Member posting restricted."
+          : "Member posting restored.",
+    );
   }
   async function remove(id: string) {
-    const r = await supabase.from("community_posts").delete().eq("id", id);
-    if (r.error) setNotice("Could not remove post.");
-    else {
-      setNotice("Post removed.");
+    if (busy) return;
+    setBusy(true);
+    const generation = mutationEpoch.current;
+    try {
+      const session = await supabase.auth.getSession();
+      if (!session.data.session || session.data.session.user.id !== uid)
+        throw Error("Sign in again.");
+      const r = await fetch(`/api/community/posts/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.data.session.access_token}`,
+        },
+      });
+      const data = await r.json();
+      if (!r.ok) throw Error(data.error || "Could not remove post.");
+      if (generation !== mutationEpoch.current) return;
+      setNotice("Post and attached photo removed.");
       await refresh();
+    } catch (error) {
+      if (generation === mutationEpoch.current)
+        setNotice(
+          error instanceof Error ? error.message : "Could not remove post.",
+        );
+    } finally {
+      if (generation === mutationEpoch.current) setBusy(false);
     }
   }
   async function report(e: FormEvent<HTMLFormElement>, postId: string) {
@@ -348,8 +471,27 @@ export default function CommunityFeed() {
       <div className="community-feed">
         <header>
           <span className="eyebrow">YOUR PEOPLE · YOUR PERSPECTIVE</span>
-          <p>Keep it respectful. No threats, scams or guaranteed-return claims. Reporting and blocking are available on member posts.</p>
-          {blocked.length ? <details><summary>Blocked members · {blocked.length}</summary>{blocked.map(b=><p key={b.target_user_id}>@{b.label} <button className="secondary" disabled={busy} onClick={() => void unblock(b.target_user_id)}>Unblock</button></p>)}</details> : null}
+          <p>
+            Keep it respectful. No threats, scams or guaranteed-return claims.
+            Reporting and blocking are available on member posts.
+          </p>
+          {blocked.length ? (
+            <details>
+              <summary>Blocked members · {blocked.length}</summary>
+              {blocked.map((b) => (
+                <p key={b.target_user_id}>
+                  @{b.label}{" "}
+                  <button
+                    className="secondary"
+                    disabled={busy}
+                    onClick={() => void unblock(b.target_user_id)}
+                  >
+                    Unblock
+                  </button>
+                </p>
+              ))}
+            </details>
+          ) : null}
           <h1>Community</h1>
           <p>Share a slip. Talk through a game. Explain your thinking.</p>
           <p className="notice">
@@ -401,76 +543,129 @@ export default function CommunityFeed() {
           <>
             <form className="community-composer" onSubmit={post}>
               <h2>Start a conversation</h2>
-              <p>
-                Your profile username is published with your post. Avoid account
-                numbers and private ticket details. Sharing your stake is
-                optional.
-              </p>
-              <label>
-                Post type
-                <select value={kind} onChange={(e) => setKind(e.target.value)}>
-                  {Object.entries(kinds).map(([v, label]) => (
-                    <option
-                      key={v}
-                      value={v}
-                      disabled={sport === "nba" && v !== "talk"}
+              <fieldset disabled={busy}>
+                <p>
+                  Your profile username is published with your post. Avoid
+                  account numbers and private ticket details. Sharing your stake
+                  is optional.
+                </p>
+                <label>
+                  Post type
+                  <select
+                    value={kind}
+                    onChange={(e) => setKind(e.target.value)}
+                  >
+                    {Object.entries(kinds).map(([v, label]) => (
+                      <option
+                        key={v}
+                        value={v}
+                        disabled={sport === "nba" && v !== "talk"}
+                      >
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Headline
+                  <input
+                    required
+                    maxLength={120}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="What are you watching tonight?"
+                  />
+                </label>
+                <label>
+                  Caption or reasoning
+                  <textarea
+                    required
+                    maxLength={2000}
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    placeholder="Why you like it—and what could go wrong."
+                  />
+                </label>
+                <label>
+                  Add a photo · optional
+                  <input
+                    ref={photoInput}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) {
+                        setPhoto(null);
+                        return;
+                      }
+                      if (
+                        file.size > MAX_PHOTO_BYTES ||
+                        !["image/jpeg", "image/png", "image/webp"].includes(
+                          file.type,
+                        )
+                      ) {
+                        setNotice("Choose a JPG, PNG or WebP under 5 MB.");
+                        e.target.value = "";
+                        setPhoto(null);
+                        return;
+                      }
+                      setPhoto(file);
+                      setNotice("");
+                    }}
+                  />
+                </label>
+                <small>
+                  Cover account numbers, balances, barcodes and private ticket
+                  details before sharing. Photo metadata is removed during
+                  upload. Members can still screenshot shared photos.
+                </small>
+                {preview ? (
+                  <div className="community-photo-preview">
+                    <img src={preview} alt="Photo preview before publishing" />
+                    <button
+                      className="secondary"
+                      type="button"
+                      onClick={() => {
+                        setPhoto(null);
+                        if (photoInput.current) photoInput.current.value = "";
+                      }}
                     >
-                      {label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Headline
-                <input
-                  required
-                  maxLength={120}
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="What are you watching tonight?"
-                />
-              </label>
-              <label>
-                Your reasoning
-                <textarea
-                  required
-                  maxLength={2000}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  placeholder="Why you like it—and what could go wrong."
-                />
-              </label>
-              {kind !== "talk" ? (
-                <>
-                  <label>
-                    Selections · one per line
-                    <textarea
-                      required={kind === "slip"}
-                      maxLength={2160}
-                      value={legs}
-                      onChange={(e) => setLegs(e.target.value)}
-                      placeholder="Player · market · target"
-                    />
-                  </label>
-                  <label>
-                    Stake to share · optional
-                    <input
-                      type="number"
-                      min="0"
-                      max="1000000"
-                      step="0.01"
-                      value={stake}
-                      onChange={(e) => setStake(e.target.value)}
-                    />
-                  </label>
-                </>
-              ) : null}
-              <button
-                className="primary"
-                disabled={busy || (sport === "nba" && kind !== "talk")}
-              >
-                {busy ? "Publishing…" : "Post to Community"}
-              </button>
+                      Remove photo
+                    </button>
+                  </div>
+                ) : null}
+                {kind !== "talk" ? (
+                  <>
+                    <label>
+                      Selections · one per line
+                      <textarea
+                        required={kind === "slip" && !photo}
+                        maxLength={2160}
+                        value={legs}
+                        onChange={(e) => setLegs(e.target.value)}
+                        placeholder="Player · market · target"
+                      />
+                    </label>
+                    <label>
+                      Stake to share · optional
+                      <input
+                        type="number"
+                        min="0"
+                        max="1000000"
+                        step="0.01"
+                        value={stake}
+                        onChange={(e) => setStake(e.target.value)}
+                      />
+                    </label>
+                  </>
+                ) : null}
+                <button
+                  className="primary"
+                  disabled={busy || (sport === "nba" && kind !== "talk")}
+                >
+                  {busy ? "Publishing…" : "Post to Community"}
+                </button>
+              </fieldset>
               <Link href="/membership">
                 Complete or manage your community profile →
               </Link>
@@ -545,6 +740,13 @@ export default function CommunityFeed() {
                 </span>
                 <h2>{p.title}</h2>
                 <p>{p.body}</p>
+                {p.photo_path ? (
+                  <CommunityPhoto
+                    key={`${uid}:${p.id}`}
+                    path={p.photo_path}
+                    title={p.title}
+                  />
+                ) : null}
                 {p.legs.length ? (
                   <ol>
                     {p.legs.map((leg, i) => (
@@ -558,8 +760,33 @@ export default function CommunityFeed() {
                   </small>
                 ) : null}
                 <div className="social-actions">
-                  {uid !== p.user_id ? <button className="secondary" disabled={busy} onClick={() => void block(p.user_id,p.author_name)}>Block member</button> : null}
-                  {admin && uid !== p.user_id ? <><button className="secondary" disabled={busy} onClick={() => void restrict(p.user_id,true)}>Restrict posting</button><button className="secondary" disabled={busy} onClick={() => void restrict(p.user_id,false)}>Restore posting</button></> : null}
+                  {uid !== p.user_id ? (
+                    <button
+                      className="secondary"
+                      disabled={busy}
+                      onClick={() => void block(p.user_id, p.author_name)}
+                    >
+                      Block member
+                    </button>
+                  ) : null}
+                  {admin && uid !== p.user_id ? (
+                    <>
+                      <button
+                        className="secondary"
+                        disabled={busy}
+                        onClick={() => void restrict(p.user_id, true)}
+                      >
+                        Restrict posting
+                      </button>
+                      <button
+                        className="secondary"
+                        disabled={busy}
+                        onClick={() => void restrict(p.user_id, false)}
+                      >
+                        Restore posting
+                      </button>
+                    </>
+                  ) : null}
                   <button
                     className="secondary"
                     disabled={busy}
