@@ -7,7 +7,7 @@ create function private.immutable()returns trigger language plpgsql as $$begin r
 create table candidate_releases(id uuid,candidates jsonb);create table research_leg_results(leg_key text primary key,result text,source_url text);
 create view published_legs with(security_invoker=true)as select CASE WHEN (c.value ->> 'fun_play'::text) = 'true'::text THEN 'HAIL_MARY'::text ELSE 'SINGLE'::text END kind from candidate_releases r cross join lateral jsonb_array_elements(r.candidates)c(value);
 `);
-await db.exec(fs.readFileSync("/tmp/vq-parlay.sql", "utf8"));
+await db.exec(fs.readFileSync(new URL("../../supabase/migrations/20261014183212_editorial_parlay_tracking.sql", import.meta.url), "utf8"));
 const id = "00000000-0000-4000-8000-000000000001",
   key = "candidate:" + id + ":1";
 await db.query("insert into candidate_releases values($1,$2::jsonb)", [
