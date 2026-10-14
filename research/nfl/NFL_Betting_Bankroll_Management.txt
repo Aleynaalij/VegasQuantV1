@@ -1,0 +1,60 @@
+NFL BETTING BANKROLL MANAGEMENT
+
+Primary Objective:
+Preserve bankroll and maximize long-term ROI.
+
+Bankroll:
+100 Units
+
+Unit Sizing:
+
+1 Unit
+Small edge (3-4%)
+
+2 Units
+Moderate edge (4-5%)
+
+3 Units
+Strong edge (5-7%)
+
+4 Units
+Elite edge (7-10%)
+
+5 Units
+Rare edge (10%+)
+
+Rules:
+
+Never risk more than 5 units on a single wager.
+
+Never chase losses.
+
+Do not increase bet size due to recent wins.
+
+Unit size must be based on edge and confidence only.
+
+No Martingale strategies.
+
+Preserve capital during uncertainty.
+
+Profitability is more important than action.
+
+Pass is a winning decision when no edge exists.
+
+Weekly Exposure:
+
+Conservative:
+10-15 Units
+
+Moderate:
+15-25 Units
+
+Aggressive:
+25-40 Units
+
+Maximum Weekly Exposure:
+40 Units
+
+CLV (Closing Line Value) is a key performance metric.
+
+Evaluate decision quality based on expected value, not results.

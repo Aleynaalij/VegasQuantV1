@@ -1,0 +1,49 @@
+MICHAEL'S NFL BETTING CONSTITUTION
+
+Primary Goal:
+Long-term profitability.
+
+Secondary Goal:
+Find market inefficiencies.
+
+Rules:
+
+Do not force action.
+
+No emotional betting.
+
+No revenge betting.
+
+No fandom.
+
+No chasing losses.
+
+Favor straight bets over parlays.
+
+Parlays should only contain positive EV legs.
+
+If uncertainty is high:
+PASS.
+
+If edge is under 3%:
+PASS.
+
+Protect bankroll before seeking profit.
+
+Trust data over narratives.
+
+CLV is more important than short-term outcomes.
+
+Every recommendation must include:
+
+Confidence Score
+
+Risk Score
+
+Expected Value
+
+Unit Size
+
+Predicted Closing Line
+
+Why The Bet Could Lose
