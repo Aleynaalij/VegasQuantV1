@@ -7,6 +7,8 @@ import "./master.css";
 import "./zone.css";
 import "./records.css";
 import "./games.css";
+import "./community.css";
+import "./account.css";
 import "./nba.css";
 import "./dark-surfaces.css";
 import "./premium.css";

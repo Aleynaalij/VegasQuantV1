@@ -71,8 +71,7 @@ small {
   color: #0866d8 !important;
 }
 .sidebar-rule,
-.sidebar-bottom,
-.profile-rail-note {
+.sidebar-bottom {
   background: #f0f6ff !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
@@ -93,9 +92,6 @@ main {
 .panel,
 .official-card,
 .candidate-tracker,
-.community-panel,
-.community-profile-rail,
-.profile-roster,
 .one-bankroll,
 .intel-row,
 .mi-section,
@@ -116,12 +112,10 @@ main {
 }
 .panel,
 .candidate-tracker,
-.community-panel,
 .one-bankroll {
   border-radius: 18px;
 }
 .panel-head,
-.profile-roster summary,
 .mi-section summary,
 .ask-vegas-header,
 .ask-vegas-toolbar {
@@ -154,9 +148,7 @@ main {
   gap: 8px;
 }
 .secondary,
-.text-link,
-.profile-view-link,
-.profile-socials a {
+.text-link {
   background: #fff !important;
   border-color: #cedbed !important;
   color: #0866d8 !important;
@@ -247,68 +239,6 @@ textarea::placeholder {
   border-radius: 50%;
   font-size: 11px;
   color: #075ab9;
-}
-.community-profile-rail {
-  overflow: hidden;
-}
-.profile-cover {
-  background: linear-gradient(120deg, #0866d8, #2793ed) !important;
-  color: #fff !important;
-  height: 82px !important;
-}
-.profile-cover span {
-  color: #fff !important;
-}
-.profile-rail-content h1 {
-  font-size: 24px;
-}
-.community-avatar {
-  border: 2px solid #fff !important;
-  box-shadow: 0 0 0 2px #d9e7fc;
-}
-.initials {
-  background: #e8f1ff !important;
-  color: #0866d8 !important;
-}
-.profile-handle,
-.profile-view-link {
-  color: #0866d8 !important;
-}
-.community-count {
-  background: #e9f2ff !important;
-  color: #0866d8 !important;
-  border-color: #d0e2fc !important;
-}
-.community-person {
-  background: #f5f8fd !important;
-  border: 1px solid #e0e8f2;
-  border-radius: 12px;
-  padding: 12px !important;
-}
-.community-person strong {
-  color: #13243c;
-}
-.community-person span,
-.community-person small,
-.community-directory-action,
-.community-event p,
-.community-event time {
-  color: #64768e !important;
-}
-.community-panel-head h2 {
-  font-size: 21px;
-}
-.community-sidebar {
-  opacity: 1;
-}
-.community-event {
-  border-color: var(--line) !important;
-}
-.community-directory summary {
-  min-height: 64px;
-}
-.community-main {
-  min-width: 0;
 }
 .challenge-run {
   background: #fff !important;
@@ -479,18 +409,6 @@ footer {
     font-size: 11px;
     line-height: 1.7;
   }
-  .community-profile-rail .profile-cover {
-    display: none;
-  }
-  .community-profile-rail {
-    margin-bottom: 12px !important;
-  }
-  .community-directory {
-    margin-bottom: 16px !important;
-  }
-  .community-person {
-    padding: 10px !important;
-  }
   .ask-vegas-launcher {
     font-size: 12px;
     min-height: 40px;
@@ -505,13 +423,10 @@ footer {
   .heading h1 {
     font-size: 28px;
   }
-  .profile-roster summary {
-    padding: 14px !important;
-  }
 }
 
 /* Maintain readable contrast for legacy dark-theme text rules. */
-main p, main small, .sidebar small, .topbar a, .community-panel summary { color: #52657d !important; }
+main p, main small, .sidebar small, .topbar a { color: #52657d !important; }
 .sports-ticker summary { display: flex; align-items: center; gap: 14px; padding: 13px 16px; min-height: 52px; }
 .sports-ticker { border: 1px solid #dce4ef; border-radius: 14px; overflow: hidden; }
 .sports-ticker .ticker-scroll { flex: 1; min-width: 0; overflow: hidden; }
