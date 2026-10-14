@@ -188,8 +188,11 @@ export default function MatchupIntelligence({
       (!futureOnly || Date.parse(r.game.kickoff) > Date.now()) &&
       (windowFilter === "All games" || group(r) === windowFilter) &&
       (!week ||
-        String(r.game.week) ===
-          (week === "current" ? String(currentWeek) : week)),
+        (week === "current" && currentWeek == null
+          ? Date.parse(r.game.kickoff) > Date.now() &&
+            Date.parse(r.game.kickoff) <= Date.now() + 7 * 86400000
+          : String(r.game.week) ===
+            (week === "current" ? String(currentWeek) : week))),
   );
   const ranked = filtered
     .flatMap((r) =>
