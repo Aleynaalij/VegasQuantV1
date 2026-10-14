@@ -21,7 +21,7 @@ const pages = [
 ];
 const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
-  { path: "/", expect: ["Pick of the Day", "Legs we like", "For you"] },
+  { path: "/", expect: ["Pick of the Day", "For you", "Your tailed parlays"] },
   { path: "/community", expect: ["Tail leaderboard", "SampleMember"] },
 ];
 const session = () => {
