@@ -614,23 +614,23 @@
 }
 .sports-ticker {
   margin: 0 !important;
-  border-radius: 11px;
+  border-radius: 11px !important;
 }
 .sports-ticker summary {
-  min-height: 48px;
-  padding: 12px 16px;
+  min-height: 48px !important;
+  padding: 12px 16px !important;
 }
 .sports-ticker .ticker-label {
   border-radius: 5px;
   padding: 6px 8px;
-  font-size: 11px;
+  font-size: 11px !important;
 }
 .sports-ticker .live-dot {
   color: #0c9362 !important;
 }
 .sports-ticker .ticker-games {
   grid-template-columns: repeat(3, 1fr);
-  padding: 16px;
+  padding: 16px !important;
 }
 .sports-ticker .ticker-games > div {
   padding: 12px;
@@ -649,29 +649,29 @@
     padding: 0 0 20px;
   }
   .sports-ticker summary {
-    gap: 9px;
-    padding: 11px 12px;
+    gap: 9px !important;
+    padding: 11px 12px !important;
   }
   .sports-ticker .ticker-label {
-    font-size: 11px;
+    font-size: 11px !important;
   }
   .sports-ticker .ticker-scroll {
-    font-size: 11px;
+    font-size: 11px !important;
   }
   .sports-ticker summary b {
-    font-size: 11px;
+    font-size: 11px !important;
   }
   .sports-ticker .ticker-games {
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 8px !important;
   }
 }
 @media (max-width:767px) {
   .home-brief { margin:22px 0 18px; padding:0; }
 }
 html[data-theme="dark"] .ticket-price-note :is(p, small, strong) { color:#f5dda1 !important; }
-html[data-theme="dark"] .sports-ticker .ticker-scroll { color:var(--text); }
+html[data-theme="dark"] .sports-ticker .ticker-scroll { color:var(--text) !important; }
 html[data-theme="dark"] .sports-ticker summary b { color:#9cb7ff !important; }
 html[data-theme="dark"] .journey-dot { background:var(--panel2) !important; color:var(--text) !important; border-color:var(--line) !important; }
-html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd; color:#0b3025; border-color:#8ce3bd; }
+html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd !important; color:#0b3025 !important; border-color:#8ce3bd !important; }
 html[data-theme="dark"] .zone-winning-slip :is(.win-price strong, footer strong) { color:#8ce3bd !important; }

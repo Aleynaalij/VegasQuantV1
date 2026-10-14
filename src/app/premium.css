@@ -123,7 +123,7 @@ html[data-theme="dark"] body :is(.panel, .feed-post, .candidate-tracker, .feed-f
   background: linear-gradient(180deg, #ffffff06, transparent 40%), var(--panel) !important;
   border: 1px solid var(--line) !important;
   border-radius: var(--radius) !important;
-  box-shadow: var(--shadow);
+  box-shadow: var(--shadow) !important;
 }
 html[data-theme="dark"] body .panel-head { border-color: var(--line) !important; }
 html[data-theme="dark"] body :is(h1, .heading h1) { letter-spacing: -0.035em; }
@@ -186,8 +186,8 @@ html[data-theme="dark"] body .badge {
 }
 html[data-theme="dark"] body :is(.sports-ticker .ticker-label) {
   background: var(--money-soft) !important;
-  color: var(--money);
-  border: 1px solid #1ed88355;
+  color: var(--money) !important;
+  border: 1px solid #1ed88355 !important;
 }
 
 /* Results read like a sportsbook: green wins, red losses. */
