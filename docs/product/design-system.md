@@ -47,7 +47,7 @@ Citations are required for NBA official picks (migration `20261014015003_nba_bib
 - `games.sport` is `'nfl'` or `'nba'`; every existing game is NFL.
 - `official_picks.rule_ids` is filled by a trigger from the case/risk text (`why_like`, `why_lose`) when empty, and validated against R-01..R-40.
 - An NBA pick with no citation is rejected at publish time. NFL picks are unaffected.
-- To publish an NBA pick, the game must be stored with `sport = 'nba'`. The admin "Add game" form has a Sport choice (NFL / NBA); after `publish` saves the game it calls `set_game_sport` (migration `20261014170000_admin_game_sport.sql`), which follows the same locks: admin only, not after an official pick, not after kickoff.
+- To publish an NBA pick, the game must be stored with `sport = 'nba'`. The admin "Add game" form has a Sport choice (NFL / NBA); after `publish` saves the game it calls `set_game_sport` (migration `20261014170710_admin_game_sport.sql`), which follows the same locks: admin only, not after an official pick, not after kickoff.
 
 ## Legacy stylesheets
 - `dark-surfaces.css` is generated from the legacy files: every element they force onto a white or cream background gets a dark surface in dark mode. Remove entries as legacy rules are retired.
