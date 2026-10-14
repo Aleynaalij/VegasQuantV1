@@ -9,8 +9,10 @@ export default function AccountLink() {
   const [me, setMe] = useState<Me>(null);
   useEffect(() => {
     let active = true;
+    let generation = 0;
     async function load(userId: string | undefined) {
       if (!active) return;
+      const request = ++generation;
       setSignedIn(Boolean(userId));
       if (!userId) return setMe(null);
       const { data } = await supabase
@@ -18,7 +20,8 @@ export default function AccountLink() {
         .select("username,avatar")
         .eq("user_id", userId)
         .maybeSingle();
-      if (active) setMe(data?.username ? data : null);
+      // Ignore responses that an account switch or newer refresh has superseded.
+      if (active && request === generation) setMe(data?.username ? data : null);
     }
     const refresh = () => {
       void supabase.auth
