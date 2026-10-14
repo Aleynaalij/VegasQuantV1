@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Panel } from "./ui";
-import { time } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
 type Ticket = {
   leg_key: string;
@@ -92,40 +90,13 @@ export default function TailedParlays() {
     };
   }, []);
   if (!signedIn) return null;
-  return (
-    <Panel
-      title={
-        notice
-          ? "Your tailed parlays"
-          : `Tailing ${rows.length} ${rows.length === 1 ? "parlay" : "parlays"}`
-      }
-    >
-      <p>
-        Upcoming and recent unresolved tickets you’re following. A tail records
-        interest, not a placed wager.
-      </p>
-      {notice ? (
-        <p role="status">{notice}</p>
-      ) : rows.length ? (
-        rows.map((r) => (
-          <article className="ledger-card" key={r.leg_key}>
-            <h3>{r.name}</h3>
-            <p>{r.matchup}</p>
-            <p>
-              {r.market} ·{" "}
-              {Date.parse(r.expires_at) > Date.now()
-                ? `Starts ${time(r.expires_at)}`
-                : "In play / awaiting final results"}
-            </p>
-            <Link href={`/feed#release-${r.release_id}`}>
-              Open original parlay →
-            </Link>
-          </article>
-        ))
-      ) : (
-        <p>Tap I’m tailing on a parlay in The Zone to add it here.</p>
-      )}
-      <Link href="/history">Your complete tail record →</Link>
-    </Panel>
+  return notice ? (
+    <p role="status">{notice}</p>
+  ) : (
+    <Link className="vq-foryou-tails" href={rows.length === 1 ? `/feed#release-${rows[0].release_id}` : "/history"}>
+      <span>Your tailed parlays</span>
+      <b>{rows.length}</b>
+      <small>{rows.length === 1 ? "parlay" : "parlays"}</small>
+    </Link>
   );
 }

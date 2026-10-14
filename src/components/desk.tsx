@@ -31,14 +31,12 @@ import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
 import WeeklyPerformance from "./weekly-performance";
 import MyTailRecord from "./my-tail-record";
-import TailedParlays from "./tailed-parlays";
 import HomeBrief from "./home-brief";
 import DecisionBoard from "./decision-board";
 import PickCard from "./pick-card";
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker from "./candidate-tracker";
 import HowItWorks from "./how-it-works";
-import TodayLegs from "./today-legs";
 import SectionBoundary from "./section-boundary";
 import ForYou from "./for-you";
 import PublicOverview from "./public-overview";
@@ -362,12 +360,6 @@ export default function DeskApp({
           <>
             <SectionBoundary name="Pick of the Day">
               <CandidateTracker activeOnly featured pickOfDay />
-            </SectionBoundary>
-            <SectionBoundary name="Your tailed parlays">
-              <TailedParlays />
-            </SectionBoundary>
-            <SectionBoundary name="Today’s legs">
-              <TodayLegs />
             </SectionBoundary>
             <SectionBoundary name="For you">
               <ForYou games={d.games} />
