@@ -1,0 +1,19 @@
+.age-access-gate {
+  width: min(100% - 32px, 760px);
+  margin: 10vh auto 48px;
+}
+.age-access-gate .panel {
+  padding: clamp(24px, 5vw, 44px);
+}
+.age-access-gate h1 {
+  margin: 18px 0;
+  font-size: clamp(26px, 5vw, 38px);
+}
+.age-access-gate p {
+  line-height: 1.7;
+}
+.age-access-gate .primary,
+.age-access-gate .secondary {
+  display: inline-flex;
+  margin: 12px 8px 8px 0;
+}

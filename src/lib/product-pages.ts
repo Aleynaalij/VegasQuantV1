@@ -115,8 +115,12 @@ export const productPages = {
         "Help & Support shows the current contact status; a monitored JourneyBuilt support contact is still being prepared. Signed-in members can permanently delete their account in Account after password verification. Administrator accounts must transfer access first. Signing out, uninstalling or removing a home-screen shortcut does not delete server-side account information.",
       ],
       [
+        "Independent age verification",
+        "Vegas Quant is preparing Stripe Identity age verification for new and existing accounts. When activated, users continue to Stripe to capture a government-issued photo ID and matching selfie. Stripe processes identity and facial information; the server uses the verified birth date to check 21+. Vegas Quant stores the outcome, provider reference, policy/consent version and timestamps, without storing ID photos, selfies or full birth dates. An incomplete, failed or unknown result cannot grant verified access. Account deletion requests provider redaction where supported; processing must finish first, and Stripe redaction can take up to four days. Billing cancellation, account deletion and policy/support pages remain available during the age gate. Provider consent and retention rules also apply.",
+      ],
+      [
         "Audience and changes",
-        "Vegas Quant is intended for adults 21 and older. The signup age declaration is self-attestation, not identity verification. We will update this notice when practices change. The native app will require a separate review of all SDKs and Apple privacy declarations before release.",
+        "Vegas Quant is intended for adults 21 and older. The signup declaration is self-attestation. Independent ID-and-selfie age verification is being prepared for all new and existing accounts; it is not active until provider setup and activation are complete. We will update this notice when practices change. The native app will require a separate review of all SDKs and Apple privacy declarations before release.",
       ],
     ],
   },

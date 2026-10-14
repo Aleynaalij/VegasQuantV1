@@ -16,7 +16,7 @@ Updated October 14, 2026. Owner authorized launch preparation, not submission.
 5. Community moderation: reports exist; add block-member flow, objectionable-content filtering and tested operational response. Verify admin removal/restriction and public contact. No invented community posts.
 6. Review paid digital access under Apple 3.1, territory-specific exceptions and storefront rules. Current Stripe web checkout is NOT automatically an approved iOS purchase implementation. Implement permitted native billing or an approved alternative before review.
 7. Audit provider/SDK data flows, analytics events, storage/cookies, international processing, retention and security controls. Complete App Store privacy labels, privacy manifests/required-reason APIs where applicable, age rating and tracking declarations from the final native build. Do not claim ATT or no tracking without verification.
-8. Server-authoritative versioned consent/age eligibility policy and enforcement plan; UI self-attestation is not ID/age verification. Do not use user_metadata for access control.
+8. Activate and accept-test the prepared independent 21+ verification flow (age-verification.md): provider approval, restricted credentials, webhook, reviewed ID/biometric notices, support/alternative process and enforcement rollout. The prepared server proof ignores editable user_metadata; the signup checkbox alone is not verification.
 9. Accessibility, offline, permission-denial, purchases/restore/cancel, auth recovery, deletion and community safety E2E tests on real iPhones; review demo account, screenshots and review notes.
 10. Brand/trademark and third-party sports imagery/data licensing review. Update design-system documentation from old Diamond Q identity.
 

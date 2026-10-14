@@ -1,3 +1,5 @@
+import { identityClient } from "@/lib/age-server";
+import { redactIdentityAttempts } from "@/lib/age-erasure";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import {
@@ -98,6 +100,17 @@ export async function POST(req: Request) {
     }
     const plan = begun.data as ErasurePlan;
     lease = plan.lease;
+    const identityRows = await db.rpc("age_check_sessions", {
+      p_user: auth.user.id,
+    });
+    if (identityRows.error) throw Error("Identity inventory unavailable");
+    if (identityRows.data?.length) {
+      const identity = identityClient();
+      await redactIdentityAttempts(auth.user.id, identityRows.data, {
+        retrieve: (id) => identity.identity.verificationSessions.retrieve(id),
+        redact: (id) => identity.identity.verificationSessions.redact(id),
+      });
+    }
     if (plan.subscriptions.length || plan.orders.some((o) => o.checkout_id)) {
       if (!billingEnabled()) throw Error("Billing unavailable");
       const stripe = stripeClient();
@@ -129,7 +142,7 @@ export async function POST(req: Request) {
     return reply(
       {
         error:
-          "Your account was not deleted. A membership cancellation may already have succeeded. Sign in again and retry deletion; no refund was issued.",
+          "Your account was not deleted. A membership cancellation or identity redaction may already have started. If identity verification is processing, wait for it to finish, then sign in and retry deletion; no refund was issued.",
       },
       503,
     );
