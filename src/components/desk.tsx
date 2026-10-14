@@ -29,6 +29,7 @@ import {
 } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
+import WeeklyPerformance from "./weekly-performance";
 import MyTailRecord from "./my-tail-record";
 import HomeBrief from "./home-brief";
 import DecisionBoard from "./decision-board";
@@ -413,6 +414,9 @@ export default function DeskApp({
         {page === "history" && (
           <>
             <h2 className="records-title">Vegas Quant published record</h2>
+            <SectionBoundary name="Weekly performance">
+              <WeeklyPerformance />
+            </SectionBoundary>
             <SectionBoundary name="The record summary">
               <RecordsDashboard d={d} picks={ledgerPicks} />
             </SectionBoundary>

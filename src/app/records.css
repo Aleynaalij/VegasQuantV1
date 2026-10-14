@@ -267,3 +267,10 @@
     border-bottom: 0;
   }
 }
+
+.weekly-card-strip { display:flex; gap:18px; overflow-x:auto; scroll-snap-type:x mandatory; padding:12px 0; }
+.weekly-flashcard { position:relative; flex:0 0 min(100%,430px); min-width:0; scroll-snap-align:start; padding:24px; border:1px solid #334155; border-top:5px solid #87dfbf; border-radius:20px; background:#142033; overflow:hidden; }
+.weekly-flashcard::after { content:"VegasQuant"; position:absolute; left:10%; top:54%; transform:rotate(-35deg); font-size:50px; font-weight:800; opacity:.09; pointer-events:none; }
+.weekly-flashcard header { display:flex; align-items:center; gap:10px; font-size:12px; font-weight:700; }.weekly-flashcard header svg { width:28px; height:28px; }
+.weekly-flashcard ol { list-style:none; padding:0; }.weekly-flashcard li { display:grid; gap:5px; padding:14px 0; border-bottom:1px solid #334155; }.weekly-flashcard small { color:#a8b4c7; }.weekly-flashcard strong { color:#87dfbf; }.weekly-flashcard footer { margin-top:18px; font-size:12px; color:#a8b4c7; }
+.weekly-misses { border-top-color:#fca5a5; }.weekly-misses strong { color:#fca5a5; }
