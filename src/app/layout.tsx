@@ -23,6 +23,7 @@ import Welcome from "@/components/welcome";
 import ThemePrompt from "@/components/theme-settings";
 import BrandOpening from "@/components/brand-opening";
 import AskVegas from "@/components/ask-vegas";
+import DailyLuck from "@/components/daily-luck";
 import AgeAccessBoundary from "@/components/age-access-boundary";
 
 // Self-hosted at build time and preloaded (replaces the render-blocking Google Fonts @import).
@@ -86,6 +87,7 @@ export default function RootLayout({
               <NotificationBootstrap />
               <PhoneContactPrompt />
               <AskVegas />
+              <DailyLuck />
             </>
           }
         >
