@@ -46,7 +46,8 @@ type Candidate = {
   sources: { label: string; url: string }[];
 };
 function copySelection(c: Candidate): string {
-  if (c.fun_play && c.legs) return c.legs.map(leg => `${leg.team} Moneyline`).join("\n");
+  if (c.fun_play && c.legs)
+    return c.legs.map((leg) => `${leg.team} Moneyline`).join("\n");
   const stat = c.market
     .replace(/^(?:FULL GAME TOTAL|Full game|1st quarter)\s*[·:—-]\s*/i, "")
     .split(" · ")[0]
@@ -128,7 +129,8 @@ export default function CandidateTracker({
     pickOfDay,
     funPlayOnly,
   ]);
-  if (release && featured && !isCurrentHomeWeek(release.created_at)) return null;
+  if (release && featured && !isCurrentHomeWeek(release.created_at))
+    return null;
   if (!release)
     return failed ? (
       <p className="notice">
@@ -156,8 +158,13 @@ export default function CandidateTracker({
   const multiple = list.length > 1;
   const allLegsText = list.map(copySelection).join("\n");
   async function copyAllLegs() {
-    try { await navigator.clipboard.writeText(allLegsText); setAllCopied(true); setCopyFallback(false); }
-    catch { setCopyFallback(true); }
+    try {
+      await navigator.clipboard.writeText(allLegsText);
+      setAllCopied(true);
+      setCopyFallback(false);
+    } catch {
+      setCopyFallback(true);
+    }
   }
   return (
     <section
@@ -205,43 +212,74 @@ export default function CandidateTracker({
         </h2>
         <p>
           {funPlay
-            ? "One Sunday moneyline ticket. One losing leg loses the parlay. Separate from the 5-Spot Challenge."
+            ? "One Sunday moneyline ticket. One losing leg loses the parlay. Separate from Pick of the Day."
             : editorial
               ? "Individual selections with the matchup case and risk. Analyst stat targets and observed sportsbook prices are labeled separately."
               : experimental
                 ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
                 : featured
-                  ? "Our leading research candidate. Await the official decision before treating this as a challenge leg."
+                  ? "Our leading research candidate. Review its sources and risks; a research candidate is not a finalized pick."
                   : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
         </p>
         <small>
-          {release.candidates[0]?.supersedes_release_id ? "Prices updated" : "Published"} {time(release.created_at)} ·{" "}
+          {release.candidates[0]?.supersedes_release_id
+            ? "Prices updated"
+            : "Published"}{" "}
+          {time(release.created_at)} ·{" "}
           {expired
             ? "Past game window. These are historical quotes."
             : "Odds may change. Original observations are preserved."}
         </small>
       </header>
-      {multiple && <DownloadCard
-        title={release.title}
-        subtitle="Individual published selections"
-        publishedAt={release.created_at}
-        label={`Download all ${list.length} legs`}
-        sections={list.flatMap(c => [
-          { heading: copySelection(c), text: c.matchup + "\n" + c.quote + "\n" + c.quote_context },
-          { heading: "Case", text: c.why },
-          { heading: "Risk", text: c.risk },
-          { heading: "Next check", text: c.next },
-          { heading: "Sources", text: c.sources.map(s => s.label + ": " + s.url).join("\n") },
-        ])}
-      />}
+      {multiple && (
+        <DownloadCard
+          title={release.title}
+          subtitle="Individual published selections"
+          publishedAt={release.created_at}
+          label={`Download all ${list.length} legs`}
+          sections={list.flatMap((c) => [
+            {
+              heading: copySelection(c),
+              text: c.matchup + "\n" + c.quote + "\n" + c.quote_context,
+            },
+            { heading: "Case", text: c.why },
+            { heading: "Risk", text: c.risk },
+            { heading: "Next check", text: c.next },
+            {
+              heading: "Sources",
+              text: c.sources.map((s) => s.label + ": " + s.url).join("\n"),
+            },
+          ])}
+        />
+      )}
       {multiple && !expired && (
         <div className="ticket-action" style={{ display: "grid", gap: 12 }}>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
-          <button className="secondary" onClick={() => void copyAllLegs()}>Copy all {list.length} legs</button>
-          <GamblyLink url="https://gambly.com/" selection={allLegsText} label="Copy all & open Gambly ↗" />
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 12,
+              alignItems: "center",
+            }}
+          >
+            <button className="secondary" onClick={() => void copyAllLegs()}>
+              Copy all {list.length} legs
+            </button>
+            <GamblyLink
+              url="https://gambly.com/"
+              selection={allLegsText}
+              label="Copy all & open Gambly ↗"
+            />
           </div>
           {allCopied && <p role="status">Copied. Paste into Gambly.</p>}
-          {copyFallback && <textarea aria-label="All legs to copy" readOnly value={allLegsText} onFocus={e => e.currentTarget.select()} />}
+          {copyFallback && (
+            <textarea
+              aria-label="All legs to copy"
+              readOnly
+              value={allLegsText}
+              onFocus={(e) => e.currentTarget.select()}
+            />
+          )}
           <p>Full-game totals · Check available lines in your app.</p>
         </div>
       )}
@@ -270,7 +308,9 @@ export default function CandidateTracker({
           {!c.fun_play && <p>{c.market}</p>}
           {c.fun_play ? (
             <div className="ticket-price-note">
-              {c.book ? `${c.book} Research snapshots · combined odds & boost unverified` : "Combined odds & boost unverified · individual prices are historical observations"}
+              {c.book
+                ? `${c.book} Research snapshots · combined odds & boost unverified`
+                : "Combined odds & boost unverified · individual prices are historical observations"}
               {c.book && <p>{c.quote_context}</p>}
             </div>
           ) : (
@@ -279,7 +319,9 @@ export default function CandidateTracker({
               {c.odds_status !== "USER_SCREENSHOT_QUOTE_TIME_UNKNOWN" && (
                 <p className="candidate-context">{c.quote_context}</p>
               )}
-              {c.odds_status !== "UNPRICED_ANALYST_TARGET" && <PriceFreshness at={c.quote_observed_at} />}
+              {c.odds_status !== "UNPRICED_ANALYST_TARGET" && (
+                <PriceFreshness at={c.quote_observed_at} />
+              )}
             </>
           )}
           {c.fun_play && c.legs && (
@@ -293,7 +335,9 @@ export default function CandidateTracker({
                       <small>Moneyline{c.book ? ` · ${c.book}` : ""}</small>
                     </div>
                     <b>
-                      {leg.odds == null ? "Unavailable" : `${leg.odds > 0 ? "+" : ""}${leg.odds}`}
+                      {leg.odds == null
+                        ? "Unavailable"
+                        : `${leg.odds > 0 ? "+" : ""}${leg.odds}`}
                     </b>
                   </div>
                 ))}
@@ -309,7 +353,9 @@ export default function CandidateTracker({
                         <small>{leg.matchup}</small>
                       </div>
                       <b>
-                        {leg.odds == null ? "Unavailable" : `${leg.odds > 0 ? "+" : ""}${leg.odds}`}
+                        {leg.odds == null
+                          ? "Unavailable"
+                          : `${leg.odds > 0 ? "+" : ""}${leg.odds}`}
                       </b>
                     </div>
                   ))}
@@ -319,12 +365,7 @@ export default function CandidateTracker({
           )}
           {!expired && (c.experimental || editorial) && c.gambly_url && (
             <div className="ticket-action">
-              <GamblyLink
-                url={c.gambly_url}
-                selection={
-                  copySelection(c)
-                }
-              />
+              <GamblyLink url={c.gambly_url} selection={copySelection(c)} />
               <p>
                 18+ · Copy, open Gambly, then paste. Verify every line and
                 price.
@@ -336,17 +377,26 @@ export default function CandidateTracker({
             subtitle={c.matchup}
             publishedAt={release.created_at}
             sections={[
-                  { heading: "Selection", text: copySelection(c) },
-                  { heading: "Matchup", text: c.matchup },
-                  { heading: "Published price / context", text: c.quote + "\n" + c.quote_context },
-                  { heading: "Why we like it", text: c.why },
-                  { heading: "Why it could lose", text: c.risk },
-                  { heading: "Next check", text: c.next },
-                  { heading: "Sources", text: c.sources.map(s => s.label + ": " + s.url).join("\n") },
-                ]}
+              { heading: "Selection", text: copySelection(c) },
+              { heading: "Matchup", text: c.matchup },
+              {
+                heading: "Published price / context",
+                text: c.quote + "\n" + c.quote_context,
+              },
+              { heading: "Why we like it", text: c.why },
+              { heading: "Why it could lose", text: c.risk },
+              { heading: "Next check", text: c.next },
+              {
+                heading: "Sources",
+                text: c.sources.map((s) => s.label + ": " + s.url).join("\n"),
+              },
+            ]}
           />
           <LegActions
-            legKey={c.original_leg_key || `candidate:${release.id}:${release.candidates.indexOf(c) + 1}`}
+            legKey={
+              c.original_leg_key ||
+              `candidate:${release.id}:${release.candidates.indexOf(c) + 1}`
+            }
             expired={expired}
           />
           <details className="candidate-details">
@@ -354,9 +404,20 @@ export default function CandidateTracker({
             {c.supersedes_release_id && (
               <details>
                 <summary>Original published prices</summary>
-                <p>Original publication{c.original_published_at ? ` · ${time(c.original_published_at)}` : ""}. Selections are unchanged.</p>
+                <p>
+                  Original publication
+                  {c.original_published_at
+                    ? ` · ${time(c.original_published_at)}`
+                    : ""}
+                  . Selections are unchanged.
+                </p>
                 <p>{c.original_quote}</p>
-                {c.original_legs?.map(leg => <p key={leg.team}>{leg.team}: {leg.odds > 0 ? "+" : ""}{leg.odds}</p>)}
+                {c.original_legs?.map((leg) => (
+                  <p key={leg.team}>
+                    {leg.team}: {leg.odds > 0 ? "+" : ""}
+                    {leg.odds}
+                  </p>
+                ))}
               </details>
             )}
             <p className="candidate-context">{c.quote_context}</p>

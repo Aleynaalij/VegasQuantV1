@@ -132,6 +132,7 @@ export default function LegActions({
             .delete()
             .eq("user_id", uid)
             .eq("leg_key", legKey)
+            .select("leg_key")
         : await supabase
             .from(kind)
             .upsert(
@@ -140,6 +141,8 @@ export default function LegActions({
             );
       if (version !== current.current.version) return;
       if (result.error) throw result.error;
+      if (on && !result.data?.length)
+        throw new Error("Tail is retained after kickoff");
       if (kind === "saved_legs") setSaved(!on);
       else {
         setTail(!on);
@@ -154,7 +157,7 @@ export default function LegActions({
             : "Leg saved."
           : on
             ? "No longer tailing."
-            : "You’re tailing this leg.",
+            : "Added to your personal Records.",
       );
       window.dispatchEvent(new Event("vq-saved-changed"));
     } catch {
@@ -179,14 +182,17 @@ export default function LegActions({
       </button>
       <button
         aria-pressed={tail}
-        disabled={busy || !ready || (expired && !tail)}
+        disabled={busy || !ready || expired}
         onClick={() => void toggle("leg_tails")}
       >
         <Flame size={16} />
-        {tail ? "Tailing" : "I’m tailing"}
+        {tail ? (expired ? "In your Records" : "Tailing") : "I’m tailing"}
         {count > 0 ? ` · ${count}` : ""}
       </button>
-      <small>Tailing is community interest; it does not record a wager.</small>
+      <small>
+        Tailing adds this pick to <Link href="/history">your Records</Link>. It
+        does not place or record a wager.
+      </small>
       {notice && (
         <p role="status">
           {notice} {!uid && <Link href="/membership">Sign in →</Link>}
