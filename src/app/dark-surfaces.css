@@ -22,7 +22,6 @@ html[data-theme="dark"] body .board-filters button,
 html[data-theme="dark"] body .candidate-facts > div,
 html[data-theme="dark"] body .candidate-tracker,
 html[data-theme="dark"] body .candidate-tracker.fun-ticket,
-html[data-theme="dark"] body .challenge-preview,
 html[data-theme="dark"] body .challenge-run,
 html[data-theme="dark"] body .challenge-run[aria-disabled="true"],
 html[data-theme="dark"] body .challenge-run[aria-disabled="true"] .journey-dot,
@@ -89,7 +88,6 @@ html[data-theme="dark"] body .workspace-index > a {
 }
 
 /* Warm light notice boxes become amber cautions. */
-html[data-theme="dark"] body .daily-update-notice,
 html[data-theme="dark"] body .feed-next,
 html[data-theme="dark"] body .mi-access,
 html[data-theme="dark"] body .mi-historical,
@@ -100,12 +98,6 @@ html[data-theme="dark"] body .run-notice {
   border-color: #ffb54755 !important;
   color: #ffd79a !important;
 }
-html[data-theme="dark"] body .daily-update-notice :is(p, small, strong, b),
-html[data-theme="dark"] body .feed-next :is(p, small, strong, b),
-html[data-theme="dark"] body .mi-access :is(p, small, strong, b),
-html[data-theme="dark"] body .mi-historical :is(p, small, strong, b),
-html[data-theme="dark"] body .notice :is(p, small, strong, b),
-html[data-theme="dark"] body .pick-odds-notice :is(p, small, strong, b),
-html[data-theme="dark"] body .run-notice :is(p, small, strong, b) {
+html[data-theme="dark"] body .feed-next :is(p, small, strong, b), html[data-theme="dark"] body .mi-access :is(p, small, strong, b), html[data-theme="dark"] body .mi-historical :is(p, small, strong, b), html[data-theme="dark"] body .notice :is(p, small, strong, b), html[data-theme="dark"] body .pick-odds-notice :is(p, small, strong, b), html[data-theme="dark"] body .run-notice :is(p, small, strong, b) {
   color: #ffd79a !important;
 }

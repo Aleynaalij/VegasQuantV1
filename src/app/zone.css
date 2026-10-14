@@ -1,13 +1,5 @@
 /* The Zone (feed, selections, tickets, win slips) — consolidated from the legacy stylesheets on 2026-10-14.
  * Generated in cascade order; repeated selectors merged. Edit here. */
-.feed-hero > p {
-  font-size: 16px;
-  max-width: 36ch;
-}
-.feed-rule svg {
-  flex-shrink: 0;
-  color: var(--green);
-}
 .feed-filters button.selected {
   font-weight: 700;
 }
@@ -21,9 +13,7 @@
   white-space: nowrap;
 }
 .feed-post > h2 {
-  font-size: 25px;
   letter-spacing: -0.8px;
-  line-height: 1.2;
   margin-bottom: 12px;
 }
 .feed-teams {
@@ -124,9 +114,6 @@
   }
   .feed-matchup {
     padding: 15px;
-  }
-  .feed-hero {
-    padding-top: 3px;
   }
 }
 .edge-release-heading {
@@ -317,9 +304,6 @@
   }
   .feed-summary {
     font-size: 14px;
-  }
-  .feed-hero h1 {
-    font-size: 46px;
   }
 }
 .candidate-item h3 {
@@ -538,41 +522,6 @@
   max-width: 900px !important;
   margin: 0 auto;
 }
-.feed-hero {
-  padding-bottom: 30px;
-  padding: 0 0 24px !important;
-}
-.feed-kicker {
-  display: flex;
-  align-items: center;
-  font-weight: 700;
-  letter-spacing: 1.6px;
-  color: var(--brand-ink, var(--accent, #2458ed));
-  font-size: 11px;
-  gap: 8px;
-}
-.feed-kicker .vq-mark {
-  width: 24px;
-  height: 24px;
-}
-.feed-hero h1 {
-  letter-spacing: -2px;
-  line-height: 1.05;
-  font-size: clamp(32px, 4vw, 44px) !important;
-  margin: 12px 0;
-}
-.feed-hero > p {
-  font-size: 13px;
-  margin: 0;
-}
-.feed-rule {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: #a3b6af;
-  margin-top: 12px;
-  font-size: 11px;
-}
 .feed-filters {
   scrollbar-width: thin;
   position: sticky;
@@ -719,15 +668,6 @@
   .candidate-item {
     padding-top: 14px !important;
   }
-  .feed-hero h1 {
-    font-size: 32px !important;
-  }
-  .feed-hero {
-    padding-bottom: 18px !important;
-  }
-  .feed-hero > p {
-    font-size: 12px;
-  }
   .feed-filters {
     top: 62px;
     margin: 0 -16px;
@@ -773,14 +713,6 @@
   flex: 0 0 48px;
   object-fit: contain;
 }
-.vq-feed .feed-hero h1 {
-  font-size: 32px;
-  margin: 12px 0;
-  letter-spacing: -1px;
-}
-.zone-signal {
-  color: var(--accent);
-}
 .zone-drop {
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -813,15 +745,6 @@
 }
 .vq-feed .feed-filters button {
   white-space: nowrap;
-}
-.vq-feed .feed-hero {
-  border: 1px solid var(--line);
-  border-radius: 20px;
-  background:
-    radial-gradient(ellipse at top right, #2458ed22, transparent 65%),
-    var(--panel);
-  margin-bottom: 18px;
-  padding: 20px !important;
 }
 .vq-feed .feed-filters {
   position: sticky;

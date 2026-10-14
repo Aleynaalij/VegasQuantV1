@@ -22,9 +22,6 @@
 .mi-search label:first-child {
   flex: 1;
 }
-.mi-group > h2 {
-  font-size: 18px;
-}
 .mi-official {
   border-color: #79dfb8;
 }
@@ -229,9 +226,6 @@
   gap: 8px !important;
   margin: 5px 0 0;
 }
-.mi-game .game-pair strong {
-  font-size: 25px !important;
-}
 .mi-game .game-pair .team-logo {
   width: 36px !important;
   height: 36px !important;
@@ -325,12 +319,6 @@ html[data-theme="dark"] .slate-windows button.selected {
   .mi-search {
     padding: 16px;
     gap: 12px;
-  }
-  .mi-search input {
-    font-size: 16px;
-  }
-  .mi-search select {
-    font-size: 16px;
   }
   .mi-game {
     padding: 21px;

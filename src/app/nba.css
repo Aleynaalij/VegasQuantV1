@@ -32,7 +32,6 @@
 .zone-views { display:flex; gap:8px; overflow-x:auto; padding:8px 0; }
 .zone-views a { flex-shrink:0; padding:12px 18px; border:1px solid var(--line); border-radius:12px; color:var(--text); text-decoration:none; font-weight:700; }
 .zone-views .selected { background:#2458ed; color:white; }
-.zone-guide { font-size:14px; line-height:1.6; margin:8px 0 24px; }
 .community-feed { display:grid; gap:20px; max-width:900px; margin:auto; }
 .community-composer, .social-post { border:1px solid var(--line); background:var(--panel); padding:24px; border-radius:16px; display:grid; gap:14px; }
 .community-composer label { display:grid; gap:7px; }
@@ -45,7 +44,4 @@
 .social-comments { border-top:1px solid var(--line); padding-top:16px; display:grid; gap:12px; }
 .social-comments form { display:grid; gap:10px; }
 .social-comments article { border-left:2px solid var(--line); padding-left:12px; }
-.home-start-guide { border:1px solid var(--line); background:var(--panel); border-radius:14px; padding:20px; margin:20px 0; }
-.home-start-guide h2 { font-size:18px; margin:0 0 10px; }
-.home-start-guide p { color:var(--muted); line-height:1.7; margin:0; font-size:14px; }
 .zone-views a:focus-visible { outline:3px solid #8daaff; outline-offset:3px; }
