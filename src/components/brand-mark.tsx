@@ -1,28 +1,4 @@
-/** Vegas Quant: the Diamond Q — a playing-card diamond (Vegas) cut into a Q, with a money-green tail (the edge). */
+/** Original prestige VQ monogram, shared by app chrome and published cards. */
 export default function BrandMark({ className = "" }: { className?: string }) {
-  return (
-    <svg
-      className={`vq-mark ${className}`}
-      viewBox="0 0 64 64"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <rect width="64" height="64" rx="15" fill="#101a33" />
-      <path d="M32 8 53 32 32 56 11 32Z" fill="#2f6bff" />
-      <path d="M32 8 53 32H11Z" fill="#5a8bff" />
-      <path d="M32 18 44 32 32 46 20 32Z" fill="#101a33" />
-      <path
-        d="M35 35 50 50"
-        stroke="#101a33"
-        strokeWidth="10"
-        strokeLinecap="round"
-      />
-      <path
-        d="M35 35 50 50"
-        stroke="#1ed883"
-        strokeWidth="5.5"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
+  return <svg className={`vq-mark ${className}`} viewBox="0 0 480 360" aria-hidden="true" focusable="false"><path fill="#E4EAF4" d="M260 35C182 32 130 98 130 174C130 257 182 312 258 312C337 312 388 253 388 173C388 96 337 37 260 35ZM258 46C311 46 348 100 348 174C348 247 314 301 259 301C205 301 169 248 169 174C169 101 204 46 258 46Z"/><path fill="#4378FF" d="M208 237C255 223 286 251 321 282C350 307 391 339 444 310C414 349 365 342 326 325C282 305 257 258 208 237Z"/><path fill="#E4EAF4" d="M23 8H118V12C96 14 97 29 105 48L172 223L243 44C251 23 246 15 225 12V8H305V12C281 15 270 29 260 51L159 304L57 50C47 25 43 15 23 12Z"/><path fill="#4378FF" d="M107 19C95 24 102 42 108 58L173 220L158 257L90 69C82 45 82 25 107 19Z"/></svg>;
 }

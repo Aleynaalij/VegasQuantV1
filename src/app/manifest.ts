@@ -12,19 +12,19 @@ export default function manifest(): MetadataRoute.Manifest {
     theme_color: "#070b14",
     icons: [
       {
-        src: "/icons/vq-diamond-192.png",
+        src: "/icons/vq-prestige-192.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/vq-diamond-512.png",
+        src: "/icons/vq-prestige-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
       },
       {
-        src: "/icons/vq-diamond-maskable-512.png",
+        src: "/icons/vq-prestige-maskable-512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

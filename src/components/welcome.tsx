@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
+import BrandMark from "./brand-mark";
+
 const VERSION = 1;
 
 export default function Welcome() {
@@ -79,6 +81,7 @@ export default function Welcome() {
       onCancel={(event) => event.preventDefault()}
     >
       <div className="vq-welcome-content">
+        <BrandMark className="vq-welcome-mark" />
         <p className="vq-welcome-eyebrow">WELCOME TO VEGAS QUANT</p>
         <h2 id="welcome-title">
           Find your game.
