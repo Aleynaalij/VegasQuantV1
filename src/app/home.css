@@ -588,7 +588,7 @@
   color: var(--text) !important;
 }
 .explore-cards small {
-  color: var(--muted) !important;
+  color: var(--muted);
 }
 @media (max-width: 760px) {
   .challenge-run {
@@ -607,7 +607,7 @@
   box-shadow: 0 2px 3px #14233a03 !important;
 }
 .screen-home .home-heading {
-  display: none !important;
+  display: none;
 }
 .home-brief {
   padding: 8px 0 24px;

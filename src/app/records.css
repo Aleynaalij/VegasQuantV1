@@ -180,7 +180,7 @@
 .ledger-mobile article {
   padding: 20px 24px;
   border-bottom: 1px solid var(--line);
-  border-radius: 0 !important;
+  border-radius: 0;
   border-right: 1px solid var(--line);
 }
 @media (max-width: 760px) {

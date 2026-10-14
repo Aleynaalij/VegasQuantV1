@@ -238,7 +238,7 @@
   color: #0866d8 !important;
 }
 .profile-cover span {
-  color: #fff !important;
+  color: #fff;
 }
 .community-avatar {
   width: 56px;
@@ -269,7 +269,7 @@
 .community-panel {
   padding: 23px;
   color: var(--text) !important;
-  border-radius: 16px !important;
+  border-radius: 16px;
 }
 .community-home.community-resume {
   display: flex !important;
@@ -292,9 +292,9 @@
   min-width: 0;
   color: var(--text) !important;
   overflow: hidden;
-  border-radius: 16px !important;
+  border-radius: 16px;
   border: 1px solid var(--line) !important;
-  box-shadow: 0 2px 3px #14233a03 !important;
+  box-shadow: 0 2px 3px #14233a03;
   order: -1;
   display: flex;
   align-items: center;
@@ -305,17 +305,17 @@
   padding: 16px;
   font-size: 11px;
   letter-spacing: 0.2em;
-  background: linear-gradient(120deg, #0866d8, #2793ed) !important;
-  color: #fff !important;
+  background: linear-gradient(120deg, #0866d8, #2793ed);
+  color: #fff;
   height: 82px !important;
-  display: none !important;
+  display: none;
 }
 .profile-rail-note {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid #294239;
   color: var(--text) !important;
-  display: none !important;
+  display: none;
 }
 .profile-rail-content > .eyebrow {
   font-size: 11px;
@@ -339,13 +339,13 @@
 .profile-rail-content h1 {
   letter-spacing: -0.025em;
   overflow-wrap: anywhere;
-  font-size: 19px !important;
+  font-size: 19px;
   margin: 0;
   grid-column: 2;
 }
 .profile-handle {
   font-size: 13px;
-  color: #0866d8 !important;
+  color: #0866d8;
   display: none;
 }
 .profile-rail-content > p {
@@ -357,7 +357,7 @@
   flex-wrap: wrap;
   gap: 10px;
   margin: 18px 0;
-  display: none !important;
+  display: none;
 }
 .profile-view-link {
   display: block;
@@ -758,8 +758,8 @@
     gap: 14px;
   }
   .community-profile-rail {
-    margin-bottom: 12px !important;
-    padding: 16px !important;
+    margin-bottom: 12px;
+    padding: 16px;
   }
   .profile-rail-content {
     position: relative;
@@ -774,7 +774,7 @@
   }
   .profile-rail-content h1 {
     margin-top: 4px;
-    font-size: 17px !important;
+    font-size: 17px;
   }
   .community-sidebar {
     grid-template-columns: 1fr;
