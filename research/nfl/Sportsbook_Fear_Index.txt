@@ -1,0 +1,39 @@
+SPORTSBOOK FEAR INDEX
+
+For every game determine:
+
+Public Side
+
+Sharp Side
+
+Most Dangerous Side
+
+Largest Liability Risk
+
+Line Most Likely To Move
+
+Potential Trap Line
+
+Key Questions
+
+Which side would the public likely prefer?
+
+Which side would professional bettors likely attack?
+
+Which side would create the most sportsbook exposure?
+
+Which line appears inefficient?
+
+Output:
+
+Public Side
+
+Sharp Side
+
+Dangerous Side
+
+Trap Risk
+
+Line Move Prediction
+
+Sportsbook Exposure Rating
