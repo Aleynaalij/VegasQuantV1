@@ -17,7 +17,10 @@ const pages = [
   { path: "/methodology", expect: [] },
   { path: "/no-such-page", expect: [] },
 ];
-const signedIn = [{ path: "/", expect: ["Pick of the Day", "Legs we like", "For you"] }];
+const signedIn = [
+  { path: "/", expect: ["Pick of the Day", "Legs we like", "For you"] },
+  { path: "/community", expect: ["Tail leaderboard", "SampleMember"] },
+];
 const session = () => {
   const exp = Math.floor(Date.now() / 1000) + 86400 * 400;
   localStorage.setItem("sb-127-auth-token", JSON.stringify({ access_token: "smoke", token_type: "bearer", expires_in: 86400, expires_at: exp, refresh_token: "smoke", user: { id: "00000000-0000-0000-0000-000000000001", aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: {}, created_at: "2026-10-01T00:00:00Z" } }));

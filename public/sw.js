@@ -37,6 +37,10 @@ self.addEventListener("fetch", (event) => {
 });
 self.addEventListener("push", (event) => {
   const data = event.data?.json() || {};
+  const release =
+    data.type === "price" && /^[0-9a-f-]{36}$/.test(data.release || "")
+      ? data.release
+      : null;
   const url =
     data.type === "health"
       ? "/admin/feeds"
@@ -44,7 +48,11 @@ self.addEventListener("push", (event) => {
         ? "/admin/accounts"
         : data.type === "research"
           ? "/feed"
-          : "/";
+          : release
+            ? `/feed?view=legs#release-${release}`
+            : data.type === "price"
+              ? "/feed?view=legs"
+              : "/";
   event.waitUntil(
     self.registration.showNotification("Vegas Quant", {
       body:
@@ -56,7 +64,9 @@ self.addEventListener("push", (event) => {
               ? "A new member joined Vegas Quant. Open Accounts to review."
               : data.type === "research"
                 ? "New research is published. Open the Feed to see what changed."
-                : "A new official decision is published. Open your challenge to review it."),
+                : data.type === "price"
+                  ? "A price moved on a leg you tailed or saved. Open the updated case before you decide."
+                  : "A new official decision is published. Open your challenge to review it."),
       icon: "/icons/vq-prestige-192.png",
       badge: "/icons/vq-prestige-192.png",
       tag:
@@ -68,13 +78,22 @@ self.addEventListener("push", (event) => {
               ? "vq-signup"
               : data.type === "research"
                 ? "vq-research"
-                : "vq-official-" + (data.pick_id || "decision"),
+                : data.type === "price"
+                  ? "vq-price-" + (release || "update")
+                  : "vq-official-" + (data.pick_id || "decision"),
       data: { url },
     }),
   );
 });
+// Only known in-app destinations; a price alert may open one release in The Zone.
+const safeTarget = (url) =>
+  ["/admin/feeds", "/admin/accounts", "/feed", "/feed?view=legs"].includes(url) ||
+  /^\/feed\?view=legs#release-[0-9a-f-]{36}$/.test(url || "")
+    ? url
+    : "/";
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
+  const target = safeTarget(event.notification.data?.url);
   event.waitUntil(
     self.clients
       .matchAll({ type: "window", includeUncontrolled: true })
@@ -83,26 +102,10 @@ self.addEventListener("notificationclick", (event) => {
           (c) => new URL(c.url).origin === self.location.origin,
         );
         if (existing) {
-          await existing.navigate(
-            event.notification.data?.url === "/admin/feeds"
-              ? "/admin/feeds"
-              : event.notification.data?.url === "/admin/accounts"
-                ? "/admin/accounts"
-                : event.notification.data?.url === "/feed"
-                  ? "/feed"
-                  : "/",
-          );
+          await existing.navigate(target);
           return existing.focus();
         }
-        return self.clients.openWindow(
-          event.notification.data?.url === "/admin/feeds"
-            ? "/admin/feeds"
-            : event.notification.data?.url === "/admin/accounts"
-              ? "/admin/accounts"
-              : event.notification.data?.url === "/feed"
-                ? "/feed"
-                : "/",
-        );
+        return self.clients.openWindow(target);
       }),
   );
 });

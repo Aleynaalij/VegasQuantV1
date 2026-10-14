@@ -16,3 +16,29 @@ export function validPushEndpoint(value: string) {
     return false;
   }
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Release a price alert points to ("price:<release id>"), or null. */
+export function priceAlertRelease(eventKey: string | null | undefined) {
+  const id = eventKey?.startsWith("price:") ? eventKey.slice(6) : "";
+  return UUID.test(id) ? id.toLowerCase() : null;
+}
+/** The JSON sent to the service worker for one queued delivery. */
+export function pushPayload(job: {
+  pick_id: string | null;
+  type: string;
+  event_key?: string | null;
+}) {
+  const release = job.type === "price" ? priceAlertRelease(job.event_key) : null;
+  return {
+    pick_id: job.pick_id,
+    type: job.type,
+    ...(release ? { release } : {}),
+    ...(job.event_key?.startsWith("app-update:")
+      ? {
+          announcement:
+            "Vegas Quant has been updated. Open the app for the new design, game board and community.",
+        }
+      : {}),
+  };
+}
