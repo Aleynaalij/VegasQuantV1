@@ -70,7 +70,7 @@ textarea {
   font-size: 16px;
 }
 .brand small {
-  font-size: 7px;
+  font-size: 11px;
   letter-spacing: 1px;
   color: #a0b7ad;
 }
@@ -165,7 +165,7 @@ main:focus {
   max-width: 58ch;
 }
 .eyebrow {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 1.7px;
   color: #a7c1b6;
 }
@@ -190,7 +190,7 @@ main:focus {
 }
 .badge {
   border-radius: 7px;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.6px;
   line-height: 1.4;
   padding: 7px 9px;
@@ -940,7 +940,7 @@ footer {
     gap: 9px;
   }
   .explore-cards small {
-    font-size: 10px;
+    font-size: 11px;
   }
 }
 @media (max-width: 950px) {
@@ -982,7 +982,7 @@ footer {
     min-height: 54px;
     border-radius: 14px;
     gap: 5px;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     color: #a8babd;
     justify-content: center;
@@ -1056,7 +1056,7 @@ footer {
     width: 100%;
   }
   .run-heading .eyebrow {
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 1.1px;
   }
   .challenge-run.joined {
@@ -1076,12 +1076,12 @@ footer {
     top: 39px;
   }
   .journey-stop {
-    font-size: 9px;
+    font-size: 11px;
     gap: 8px;
     min-height: 80px;
   }
   .journey-stop small {
-    font-size: 9px;
+    font-size: 11px;
   }
   .explore-cards {
     grid-template-columns: 1fr;
@@ -1119,7 +1119,7 @@ footer {
     font-size: 19px;
   }
   .pick-numbers span {
-    font-size: 10px;
+    font-size: 11px;
   }
   .pick-finances {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1533,7 +1533,7 @@ footer {
     flex-basis: 56px;
   }
   .community-welcome .eyebrow {
-    font-size: 10px;
+    font-size: 11px;
   }
   .community-welcome h1 {
     font-size: 25px;
@@ -1592,7 +1592,7 @@ footer {
   background: linear-gradient(125deg, #245b45, #102b25 65%, #43765e);
   padding: 16px;
   color: #9deac7;
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.2em;
 }
 .profile-rail-content {
@@ -1608,7 +1608,7 @@ footer {
   box-shadow: 0 0 0 1px #75d8af;
 }
 .profile-rail-content > .eyebrow {
-  font-size: 9px;
+  font-size: 11px;
   display: block;
   line-height: 1.7;
 }

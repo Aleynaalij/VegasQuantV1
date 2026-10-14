@@ -18,11 +18,16 @@
 .nba-priorities article { padding: 18px; border: 1px solid var(--line); border-radius: 12px; }
 .nba-priorities h3 { margin: 0 0 10px; }
 .nba-priorities p { margin: 0; }
+.nba-readiness { padding: 4px 24px 8px; }
 .nba-readiness p { display: grid; gap: 6px; padding: 16px 0; margin: 0; border-bottom: 1px solid var(--line); }
+.nba-readiness strong { color: var(--text); }
+.nba-priorities { padding: 20px 24px 24px; }
 .nba-readiness p:last-child { border-bottom: 0; }
 @media (max-width: 600px) {
   .sport-switch { padding: 10px 16px; }
   .nba-destinations, .nba-priorities { grid-template-columns: 1fr; }
+  .nba-readiness { padding: 0 20px 4px; }
+  .nba-priorities { padding: 16px 20px 20px; gap: 12px; }
 }
 .nba-home-announcement { display: grid; gap: 12px; margin: 24px 0; padding: 24px; border: 1px solid var(--line); border-left: 4px solid #2458ed; border-radius: 16px; background: var(--panel); color: var(--text); text-decoration: none; }
 .nba-home-announcement > strong { font-size: clamp(22px, 4vw, 30px); line-height: 1.2; }

@@ -34,7 +34,8 @@ export default function PublishedLegBoard({
     [notice, setNotice] = useState("Loading publication snapshots…"),
     [limit, setLimit] = useState(30),
     [retry, setRetry] = useState(0),
-    [failed, setFailed] = useState(false);
+    [failed, setFailed] = useState(false),
+    [signedOut, setSignedOut] = useState(false);
   useEffect(() => {
     let live = true;
     let epoch = 0;
@@ -46,6 +47,7 @@ export default function PublishedLegBoard({
         if (!s.data.session) {
           if (live) {
             setFailed(false);
+            setSignedOut(true);
             setRows([]);
             setNotice(
               "Sign in to view published selections and your saved legs.",
@@ -53,6 +55,7 @@ export default function PublishedLegBoard({
           }
           return;
         }
+        setSignedOut(false);
         let q = supabase
           .from("published_legs")
           .select("*")
@@ -129,102 +132,123 @@ export default function PublishedLegBoard({
         and Hail Mary tickets are shown separately. Unverified outcomes stay
         ungraded.
       </p>
-      <input
-        aria-label="Search published selections"
-        placeholder="Search player, team or matchup"
-        value={search}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setLimit(30);
-        }}
-      />
-      <div className="board-filters">
-        {["ALL", "SINGLE", "PICK_OF_DAY", "HAIL_MARY", "OFFICIAL"].map((f) => (
-          <button
-            key={f}
-            aria-pressed={filter === f}
-            onClick={() => {
-              setFilter(f);
-              setLimit(30);
-            }}
-          >
-            {f.replaceAll("_", " ")}
-          </button>
-        ))}
-      </div>
-      <p>
-        {visible.length} publication snapshots ·{" "}
-        {visible.filter((r) => r.result && r.result_source).length} sourced
-        results
-      </p>
-      {notice && (
+      {signedOut ? (
         <p role="status">
           {notice}{" "}
-          {failed && (
-            <button
-              className="text-link"
-              onClick={() => setRetry((n) => n + 1)}
-            >
-              Retry
+          <Link className="text-link" href="/membership">
+            Sign in or create a free account →
+          </Link>
+        </p>
+      ) : (
+        <>
+          <input
+            aria-label="Search published selections"
+            placeholder="Search player, team or matchup"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setLimit(30);
+            }}
+          />
+          <div className="board-filters">
+            {["ALL", "SINGLE", "PICK_OF_DAY", "HAIL_MARY", "OFFICIAL"].map(
+              (f) => (
+                <button
+                  key={f}
+                  aria-pressed={filter === f}
+                  onClick={() => {
+                    setFilter(f);
+                    setLimit(30);
+                  }}
+                >
+                  {f.replaceAll("_", " ")}
+                </button>
+              ),
+            )}
+          </div>
+          {!notice && (
+            <p>
+              {visible.length} publication snapshots ·{" "}
+              {visible.filter((r) => r.result && r.result_source).length}{" "}
+              sourced results
+            </p>
+          )}
+          {notice && (
+            <p role="status">
+              {notice}{" "}
+              {failed && (
+                <button
+                  className="text-link"
+                  onClick={() => setRetry((n) => n + 1)}
+                >
+                  Retry
+                </button>
+              )}
+            </p>
+          )}
+          {!notice && !visible.length && (
+            <p role="status">No selections match this search or filter.</p>
+          )}
+          {visible.slice(0, limit).map((r) => (
+            <article className="leg-record" key={r.leg_key}>
+              <div className="record-meta">
+                <span>{r.kind.replaceAll("_", " ")}</span>
+                <strong>
+                  {r.result && r.result_source ? r.result : "UNGRADED"}
+                </strong>
+              </div>
+              <h3>
+                {r.name} · {r.market}
+              </h3>
+              <p>{r.matchup}</p>
+              <b>{r.quote || "Price not verified"}</b>
+              <PriceFreshness at={r.quote_observed_at} />
+              <small>
+                Published{" "}
+                {new Date(r.published_at).toLocaleString("en-US", {
+                  timeZone: "America/New_York",
+                })}{" "}
+                ET · ID {r.leg_key}
+              </small>
+              <details>
+                <summary>Case & loss risk</summary>
+                <p>{r.why}</p>
+                <p>
+                  <strong>Could lose:</strong> {r.risk}
+                </p>
+              </details>
+              {r.result_source && /^https:\/\//.test(r.result_source) && (
+                <a
+                  href={r.result_source}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Result source ↗
+                </a>
+              )}
+              <LegActions
+                legKey={r.leg_key}
+                expired={Date.parse(r.expires_at) <= Date.now()}
+              />
+              {r.gambly_url && Date.parse(r.expires_at) > Date.now() && (
+                <GamblyLink
+                  url={r.gambly_url}
+                  selection={
+                    r.copy_text || `${r.name} ${r.market} · ${r.matchup}`
+                  }
+                />
+              )}
+              {r.game_id && (
+                <Link href={`/sweat/${r.game_id}`}>Open game discussion →</Link>
+              )}
+            </article>
+          ))}
+          {visible.length > limit && (
+            <button onClick={() => setLimit((l) => l + 30)}>
+              Show more publications
             </button>
           )}
-        </p>
-      )}
-      {!notice && !visible.length && (
-        <p role="status">No selections match this search or filter.</p>
-      )}
-      {visible.slice(0, limit).map((r) => (
-        <article className="leg-record" key={r.leg_key}>
-          <div className="record-meta">
-            <span>{r.kind.replaceAll("_", " ")}</span>
-            <strong>
-              {r.result && r.result_source ? r.result : "UNGRADED"}
-            </strong>
-          </div>
-          <h3>
-            {r.name} · {r.market}
-          </h3>
-          <p>{r.matchup}</p>
-          <b>{r.quote || "Price not verified"}</b>
-          <PriceFreshness at={r.quote_observed_at} />
-          <small>
-            Published{" "}
-            {new Date(r.published_at).toLocaleString("en-US", {
-              timeZone: "America/New_York",
-            })}{" "}
-            ET · ID {r.leg_key}
-          </small>
-          <details>
-            <summary>Case & loss risk</summary>
-            <p>{r.why}</p>
-            <p>
-              <strong>Could lose:</strong> {r.risk}
-            </p>
-          </details>
-          {r.result_source && /^https:\/\//.test(r.result_source) && (
-            <a href={r.result_source} target="_blank" rel="noopener noreferrer">
-              Result source ↗
-            </a>
-          )}
-          <LegActions
-            legKey={r.leg_key}
-            expired={Date.parse(r.expires_at) <= Date.now()}
-          />
-          {r.gambly_url && Date.parse(r.expires_at) > Date.now() && (
-            <GamblyLink
-              url={r.gambly_url}
-              selection={r.copy_text || `${r.name} ${r.market} · ${r.matchup}`}
-            />
-          )}
-          {r.game_id && (
-            <Link href={`/sweat/${r.game_id}`}>Open game discussion →</Link>
-          )}
-        </article>
-      ))}
-      {visible.length > limit && (
-        <button onClick={() => setLimit((l) => l + 30)}>
-          Show more publications
-        </button>
+        </>
       )}
     </section>
   );

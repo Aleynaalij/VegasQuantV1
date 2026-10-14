@@ -223,7 +223,7 @@ export function Shell({
             <b>
               {(
                 {
-                  home: "Sports desk",
+                  home: sport === "nba" ? "NBA desk" : "Sports desk",
                   game: "Game board",
                   feed: "The Zone",
                   history: "Records",
@@ -231,6 +231,9 @@ export function Shell({
                   account: "Account",
                   admin: "Publishing",
                   intelligence: "Data Intelligence",
+                  methodology: "Methodology",
+                  error: "Something went wrong",
+                  missing: "Not found",
                 } as Record<string, string>
               )[active] || "Workspace"}
             </b>
@@ -267,8 +270,9 @@ export function Shell({
               Process over outcome.
             </span>
             <p>
-              Entertainment challenge. No wager is guaranteed. A stage may be
-              passed when no qualifying edge exists.
+              {sport === "nba"
+                ? "Research, not a guarantee. NBA selections publish only after the data is verified, and a pass is a valid decision."
+                : "Entertainment challenge. No wager is guaranteed. A stage may be passed when no qualifying edge exists."}
             </p>
             <Link href="/methodology">Methodology & transparency</Link>
           </footer>
