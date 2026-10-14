@@ -1,5 +1,5 @@
 // Only the neutral offline page is cached. Never store picks, sessions or API responses.
-const CACHE = "vq-offline-v3";
+const CACHE = "vq-offline-v4";
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE).then((cache) => cache.add("/offline.html")),
