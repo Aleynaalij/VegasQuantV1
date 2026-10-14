@@ -1,5 +1,6 @@
 export type ErasurePlan = {
   lease: string;
+  storage_paths?: string[];
   orders: { id: string; checkout_id: string | null }[];
   subscriptions: { id: string; order_id: string; customer_id: string }[];
 };

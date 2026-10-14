@@ -4,10 +4,30 @@ import { summarizeTails } from "../src/lib/tail-record";
 test("personal record retains losses and separates unsettled and unavailable publications", () => {
   assert.deepEqual(
     summarizeTails([
-      { publication: { result: "WIN" } },
-      { publication: { result: "LOSS" } },
-      { publication: { result: "PUSH" } },
-      { publication: { result: "VOID" } },
+      {
+        publication: {
+          result: "WIN",
+          result_source: "https://example.com/result",
+        },
+      },
+      {
+        publication: {
+          result: "LOSS",
+          result_source: "https://example.com/result",
+        },
+      },
+      {
+        publication: {
+          result: "PUSH",
+          result_source: "https://example.com/result",
+        },
+      },
+      {
+        publication: {
+          result: "VOID",
+          result_source: "https://example.com/result",
+        },
+      },
       { publication: { result: null } },
       {},
     ]),
@@ -22,4 +42,20 @@ test("empty records do not inherit public wins or invent profit", () => {
     voids: 0,
     pending: 0,
   });
+});
+
+test("unsourced, unsafe and unknown outcomes remain pending", () => {
+  assert.equal(
+    summarizeTails([
+      { publication: { result: "WIN" } },
+      { publication: { result: "LOSS", result_source: "javascript:alert(1)" } },
+      {
+        publication: {
+          result: "unexpected",
+          result_source: "https://example.com",
+        },
+      },
+    ]).pending,
+    3,
+  );
 });

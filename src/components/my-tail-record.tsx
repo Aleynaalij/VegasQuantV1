@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Panel } from "./ui";
-import { summarizeTails } from "@/lib/tail-record";
+import { summarizeTails, verifiedTailResult } from "@/lib/tail-record";
 type Tail = { leg_key: string; created_at: string };
 type Publication = {
   leg_key: string;
@@ -159,7 +159,7 @@ export default function MyTailRecord() {
           <p>
             {row.publication?.market} {row.publication?.matchup}
           </p>
-          <strong>{row.publication?.result || "PENDING"}</strong>
+          <strong>{verifiedTailResult(row.publication)}</strong>
           <p>Tailed {new Date(row.created_at).toLocaleString()}</p>
           {row.publication?.result_source?.startsWith("https://") && (
             <a

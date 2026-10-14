@@ -22,7 +22,7 @@ Detailed setup: [age-verification.md](age-verification.md).
 2. Counsel review of policy drafts, research/betting-aid classification, external Gambly/sportsbook flows, marketing claims and distribution jurisdictions. A disclaimer does not establish regulatory compliance.
 3. Native iOS app/package, organization developer enrollment for JourneyBuilt, LLC, bundle ID, signing, TestFlight and device testing. Current product is a web/PWA app.
 4. Data export and final real-device account-deletion acceptance tests. Password-verified erasure, session revocation, atomic app cleanup and linked Stripe cancellation are implemented; see account-deletion.md for validation boundaries and retention exceptions.
-5. Community moderation: reports exist; add block-member flow, objectionable-content filtering and tested operational response. Verify admin removal/restriction and public contact. No invented community posts.
+5. Community moderation: blocks, reports, posting restrictions and basic filtering are implemented. Complete real-device safety acceptance and an operational response process, including photo reports, admin removal/restriction and monitored public contact. No invented community posts.
 6. Review paid digital access under Apple 3.1, territory-specific exceptions and storefront rules. Current Stripe web checkout is NOT automatically an approved iOS purchase implementation. Implement permitted native billing or an approved alternative before review.
 7. Audit provider/SDK data flows, analytics events, storage/cookies, international processing, retention and security controls. Complete App Store privacy labels, privacy manifests/required-reason APIs where applicable, age rating and tracking declarations from the final native build. Do not claim ATT or no tracking without verification.
 8. Activate and accept-test the prepared independent 21+ verification flow (age-verification.md): provider approval, restricted credentials, webhook, reviewed ID/biometric notices, support/alternative process and enforcement rollout. The prepared server proof ignores editable user_metadata; the signup checkbox alone is not verification.
@@ -43,3 +43,13 @@ Supabase account/email; profile/region/avatar/social links; personal tracking an
 - Posting restrictions are admin-only; basic server-side phrase filtering covers selected direct threats, executable-link markers and guaranteed-return claims. This is not comprehensive semantic moderation.
 - Account now offers immediate permanent deletion with password verification and typed confirmation. A server-only lease authorizes atomic Auth/application cleanup, and verified Stripe resources are canceled first. Legacy requests remain visible for review. See account-deletion.md for testing and operator safeguards.
 - Support inbox is not active: email hosting account/provider and Vercel domain DNS access are missing.
+
+## Reliability sprint · October 14, 2026
+
+- Delivered: Admin → Data feed health now tracks both FanDuel game odds and player props; intermediate ingestion success cannot supersede a completed failure/partial run when identified as an insertion-only record.
+- Delivered: read-only oldest-first queue for published selections with missing results, six hours after expiration. Operators must verify the exact market against a primary source before immutable result publication. No result records changed in this sprint.
+- Delivered: personal tail summaries and cards keep unsourced/unknown outcomes pending.
+- FanDuel activation still requires an approved provider account/key and Edge Function secret configuration. Do not purchase subscriptions or expose credentials in client code. Require actual completed-run coverage and exact quote provenance before calling the feed active.
+- Age-verification activation remains the owner's separate pending task above. Support provider/DNS setup, counsel approval and real-device acceptance remain outstanding.
+- Community photos are implemented in a private bucket with short-lived signed URLs and metadata removal; visible sensitive information is not automatically redacted. Include authenticated photo upload, reporting, blocking and deletion in acceptance testing.
+- Dashboard availability is not verified phone/SMS delivery. No such alert is claimed sent.
