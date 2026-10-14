@@ -37,6 +37,7 @@ import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker from "./candidate-tracker";
 import HowItWorks from "./how-it-works";
 import TodayLegs from "./today-legs";
+import SectionBoundary from "./section-boundary";
 import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
 import UpdateFeed from "./update-feed";
@@ -79,7 +80,7 @@ export default function DeskApp({
         if (error) {
           setD({ ...initial, access: noAccess } as Desk);
           setError(
-            "We couldn’t check your research access. Refresh the page to try again, or open Account to check your sign-in.",
+            "We couldn’t confirm your research access just now. We’ll retry automatically; you can also refresh or open Account to check your sign-in.",
           );
         } else {
           setD(data);
@@ -348,20 +349,36 @@ export default function DeskApp({
           )}
         </div>
         {error && <div className="notice">{error}</div>}
-        {page === "home" && (
-          <>
-            <CandidateTracker activeOnly featured pickOfDay />
-            <TodayLegs />
-            <HomeBrief games={d.games} />
-            <DecisionBoard games={d.games} />
-            <CandidateTracker activeOnly featured funPlayOnly />
-            <HowItWorks />
-          </>
+        {d.unavailable && !error && (
+          <p className="vq-soft-notice" role="status">
+            Live data is taking longer than usual. We’ll keep retrying; nothing
+            on your account has changed.
+          </p>
         )}
         {page === "home" && (
           <>
-            <ResearchPulse />
-            <ExploreCards />
+            <SectionBoundary name="Pick of the Day">
+              <CandidateTracker activeOnly featured pickOfDay />
+            </SectionBoundary>
+            <SectionBoundary name="Today’s legs">
+              <TodayLegs />
+            </SectionBoundary>
+            <SectionBoundary name="Next kickoff">
+              <HomeBrief games={d.games} />
+            </SectionBoundary>
+            <SectionBoundary name="Scores">
+              <DecisionBoard games={d.games} />
+            </SectionBoundary>
+            <SectionBoundary name="Hail Mary">
+              <CandidateTracker activeOnly featured funPlayOnly />
+            </SectionBoundary>
+            <HowItWorks />
+            <SectionBoundary name="Research updates">
+              <ResearchPulse />
+            </SectionBoundary>
+            <SectionBoundary name="Explore">
+              <ExploreCards />
+            </SectionBoundary>
           </>
         )}
         {page === "home" && access.admin && (
@@ -392,8 +409,12 @@ export default function DeskApp({
         {page === "history" && (
           <>
             <h2 className="records-title">Vegas Quant published record</h2>
-            <RecordsDashboard d={d} picks={ledgerPicks} />
-            <MyTailRecord />
+            <SectionBoundary name="The record summary">
+              <RecordsDashboard d={d} picks={ledgerPicks} />
+            </SectionBoundary>
+            <SectionBoundary name="My tailed picks">
+              <MyTailRecord />
+            </SectionBoundary>
             <details className="admin-section">
               <summary>Full ledger, leg board & audit ↓</summary>
               <PublishedLegBoard />

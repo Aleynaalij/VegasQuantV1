@@ -19,6 +19,7 @@ import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
 import ZoneNav from "./zone-nav";
 import HowItWorks from "./how-it-works";
+import SectionBoundary from "./section-boundary";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
 import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
@@ -178,7 +179,9 @@ export default function ResearchFeed() {
   }, []);
   useEffect(() => {
     if (!openRelease || loading) return;
-    document.getElementById(`release-${openRelease}`)?.scrollIntoView({ block: "start" });
+    document
+      .getElementById(`release-${openRelease}`)
+      ?.scrollIntoView({ block: "start" });
   }, [openRelease, loading]);
   useEffect(() => {
     const view = new URLSearchParams(window.location.search).get("view");
@@ -379,7 +382,9 @@ export default function ResearchFeed() {
                   ) : null;
                 return (
                   <div className="zone-item" key={item.key}>
-                    {content}
+                    <SectionBoundary name="This update">
+                      {content}
+                    </SectionBoundary>
                     {p && (
                       <DownloadCard
                         title={p.title}

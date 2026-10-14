@@ -735,3 +735,7 @@ html[data-theme] body .records-proof span { font-size:12px; line-height:1.45; co
 html[data-theme] body .records-title { font-size:18px; margin:20px 0 0; color:var(--text) !important; }
 .tail-record > :not(.panel-head) { margin-left:20px; margin-right:20px; }
 .tail-record > :last-child { margin-bottom:20px; }
+
+/* ---------- Soft failure notices: a section or the live data is retrying ---------- */
+html[data-theme] body .vq-soft-notice { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:12px 0; padding:12px 14px; border:1px dashed var(--line-strong); border-radius:12px; background:transparent; font-size:13px; line-height:1.5; color:var(--muted) !important; }
+.vq-soft-notice .text-link { padding:0; border:0; background:none; font-weight:700; cursor:pointer; }
