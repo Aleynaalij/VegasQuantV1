@@ -9,6 +9,7 @@ import "./records.css";
 import "./games.css";
 import "./community.css";
 import "./account.css";
+import "./age-verification.css";
 import "./nba.css";
 import "./dark-surfaces.css";
 import "./premium.css";
@@ -19,6 +20,7 @@ import Welcome from "@/components/welcome";
 import ThemePrompt from "@/components/theme-settings";
 import BrandOpening from "@/components/brand-opening";
 import AskVegas from "@/components/ask-vegas";
+import AgeAccessBoundary from "@/components/age-access-boundary";
 export const metadata: Metadata = {
   applicationName: "Vegas Quant",
   manifest: "/manifest.webmanifest",
@@ -43,17 +45,34 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="dark" style={{ colorScheme: "dark" }} suppressHydrationWarning>
+    <html
+      lang="en"
+      data-theme="dark"
+      style={{ colorScheme: "dark" }}
+      suppressHydrationWarning
+    >
       <body>
-        <script dangerouslySetInnerHTML={{ __html: "try{localStorage.removeItem('vq-theme-v1');localStorage.removeItem('vq-theme-v2')}catch(e){}" }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{localStorage.removeItem('vq-theme-v1');localStorage.removeItem('vq-theme-v2')}catch(e){}",
+          }}
+        />
         <ThemePrompt />
         <BrandOpening />
-        {children}
-        <Welcome />
-        <ProfileSetupGate />
-        <NotificationBootstrap />
-        <PhoneContactPrompt />
-        <AskVegas />
+        <AgeAccessBoundary
+          extras={
+            <>
+              <Welcome />
+              <ProfileSetupGate />
+              <NotificationBootstrap />
+              <PhoneContactPrompt />
+              <AskVegas />
+            </>
+          }
+        >
+          {children}
+        </AgeAccessBoundary>
       </body>
     </html>
   );

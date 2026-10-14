@@ -1,0 +1,45 @@
+-- Disposable rollback fixtures. Test on an isolated database first.
+begin;
+do $$
+declare u uuid:=gen_random_uuid();other_user uuid:=gen_random_uuid();s uuid:=gen_random_uuid();attempt jsonb;blocked boolean:=false;
+begin
+ if has_function_privilege('authenticated','public.finish_age_check(uuid,uuid,text,text)','EXECUTE') or has_function_privilege('anon','public.begin_age_check(uuid,uuid,text)','EXECUTE') or has_function_privilege('authenticated','private.before_age_has_membership()','EXECUTE') then raise exception 'Age authorization privileges too broad';end if;
+ insert into auth.users(id,email,email_confirmed_at,raw_user_meta_data) values(u,'age-test-'||u||'@example.invalid',now(),'{"age_verified":true,"vq_age_21_self_attested":true}');
+ insert into auth.users(id,email,email_confirmed_at) values(other_user,'age-other-'||other_user||'@example.invalid',now());
+ insert into auth.sessions(id,user_id) values(s,u);
+ update private.age_policy set enforced=true;
+ perform set_config('request.jwt.claim.sub',u::text,true);
+ perform set_config('request.jwt.claim.session_id',s::text,true);
+ if private.age_eligible(u) then raise exception 'User metadata bypassed verification';end if;
+ if private.has_membership() then raise exception 'Membership bypassed verification';end if;
+ begin perform private.begin_age_check(other_user,s,'2026-10-14');exception when raise_exception then blocked=true;end;
+ if not blocked then raise exception 'Foreign account session accepted';end if;
+ attempt=private.begin_age_check(u,s,'2026-10-14');
+ perform private.bind_age_check(u,(attempt->>'id')::uuid,'vs_fixtureAge');
+ if private.age_eligible(u) then raise exception 'Pending verification granted access';end if;
+ perform private.finish_age_check(u,(attempt->>'id')::uuid,'vs_fixtureAge','processing');
+ if private.age_eligible(u) then raise exception 'Processing granted access';end if;
+ perform private.finish_age_check(u,(attempt->>'id')::uuid,'vs_fixtureAge','verified');
+ if not private.age_eligible(u) or private.age_eligible(other_user) then raise exception 'Verified access missing or leaked across accounts';end if;
+ update private.age_policy set version=version+1;
+ if private.age_eligible(u) then raise exception 'Old policy result remained valid';end if;
+ update private.age_policy set version=version-1;
+ blocked=false;
+ begin perform private.finish_age_check(other_user,(attempt->>'id')::uuid,'vs_fixtureAge','verified');exception when raise_exception then blocked=true;end;
+ if not blocked then raise exception 'Foreign account result changed';end if;
+ insert into auth.sessions(id,user_id) values(gen_random_uuid(),other_user) returning id into s;
+ attempt=private.begin_age_check(other_user,s,'2026-10-14');
+ perform private.bind_age_check(other_user,(attempt->>'id')::uuid,'vs_UnderageFixture');
+ perform private.finish_age_check(other_user,(attempt->>'id')::uuid,'vs_UnderageFixture','underage');
+ update private.age_policy set enforced=false;
+ if private.age_eligible(other_user) then raise exception 'Known underage account passed staged policy';end if;
+ blocked=false;
+ begin perform private.begin_age_check(other_user,s,'2026-10-14');exception when raise_exception then blocked=true;end;
+ if not blocked then raise exception 'Underage result immediately retried';end if;
+ update private.age_checks set checked_at=now()-interval '2 days' where id=(attempt->>'id')::uuid;
+ attempt=private.begin_age_check(other_user,s,'2026-10-14');
+ perform private.bind_age_check(other_user,(attempt->>'id')::uuid,'vs_ReverifiedFixture');
+ perform private.finish_age_check(other_user,(attempt->>'id')::uuid,'vs_ReverifiedFixture','verified');
+ if not private.age_eligible(other_user) then raise exception 'Fresh verified result did not restore eligibility';end if;
+end $$;
+rollback;

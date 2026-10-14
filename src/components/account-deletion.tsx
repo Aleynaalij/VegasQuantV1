@@ -69,9 +69,11 @@ export default function AccountDeletion({ uid }: { uid: string }) {
         <p>
           Deletion ends paid access and cancels linked recurring memberships
           immediately. It does not issue a refund or delete receipts held by
-          Stripe. Published Vegas Quant research and official results remain.
-          Provider security logs and backups follow their own retention
-          policies.
+          Stripe. Published Vegas Quant research and official results remain. If
+          you used age verification, deletion requests Stripe Identity redaction
+          first; completion may take up to four days. A processing verification
+          must finish before deletion can continue. Provider security logs and
+          backups follow their own retention policies.
         </p>
         {!open ? (
           <button className="secondary" onClick={() => setOpen(true)}>

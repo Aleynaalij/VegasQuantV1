@@ -29,11 +29,9 @@ import {
 } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
-import CommunityHome from "./community-home";
+import MyTailRecord from "./my-tail-record";
 import HomeBrief from "./home-brief";
 import DecisionBoard from "./decision-board";
-import ChallengeRun from "./challenge-run";
-import PersonalChallenge from "./personal-challenge";
 import PickCard from "./pick-card";
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker from "./candidate-tracker";
@@ -317,7 +315,7 @@ export default function DeskApp({
             </div>
             <h1>
               {page === "home"
-                ? "The 5-Spot Challenge"
+                ? "Vegas Quant"
                 : page === "performance"
                   ? "Performance & process"
                   : page === "history"
@@ -328,114 +326,38 @@ export default function DeskApp({
             </h1>
             <p>
               {page === "home"
-                ? "5 games. 5 decisions. $20 starting bankroll."
+                ? "Sports research. Picks we like. A community on the record."
                 : page === "performance"
                   ? "Measured results. Transparent samples. Every outcome retained."
                   : page === "history"
-                    ? "Published picks. Actual outcomes. Nothing erased."
+                    ? "Your tailed picks and the Vegas Quant published record."
                     : "The handicap, the market, and the full history of the read."}
             </p>
           </div>
-          {page === "home" ? (
-            <label className="challenge-select">
-              <Flag size={16} />
-              <select
-                aria-label="Select challenge"
-                value={ch?.id || ""}
-                onChange={(e) => setSelectedChallenge(e.target.value)}
-              >
-                {d.challenges.map((c) => (
-                  <option value={c.id} key={c.id}>
-                    Challenge #{c.number}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : page === "history" && access.allowed ? (
+          {page === "history" && access.allowed ? (
             <button className="secondary" onClick={exportLedger}>
               <Download size={15} />
               Export ledger
             </button>
           ) : (
             <Link className="secondary" href="/">
-              The challenge
+              Home
               <ArrowRight size={15} />
             </Link>
           )}
         </div>
         {error && <div className="notice">{error}</div>}
         {page === "home" && <HomeBrief games={d.games} />}
-        {page === "home" && ch && (
-          <CommunityHome challengeId={ch.id} number={ch.number}>
+        {page === "home" && (
+          <>
             <DecisionBoard games={d.games} />
             <CandidateTracker activeOnly featured funPlayOnly />
             <CandidateTracker activeOnly featured pickOfDay />
             <Link className="text-link" href="/feed">
-              Legs we like · See the game board →
+              Legs we like · Open The Zone →
             </Link>
             <DailyUpdateNotice />
-            {ch.status === "PREP" ? (
-              <details className="challenge-preview">
-                <summary>
-                  5-Spot Challenge <span>COMING SOON · 0/5</span>
-                </summary>
-                <ChallengeRun challenge={ch} stages={stages} />
-              </details>
-            ) : access.member_code ? (
-              <PersonalChallenge
-                renderOfficial={
-                  official
-                    ? (entryAction) => (
-                        <div className="featured-official">
-                          <details
-                            className="previous-result"
-                            open={
-                              !d.results.some((r) => r.pick_id === official.id)
-                            }
-                          >
-                            <summary>
-                              {d.results.some((r) => r.pick_id === official.id)
-                                ? "Previous result · View the settled leg"
-                                : "Official play · Full slip"}
-                            </summary>
-                            <PickCard
-                              p={official}
-                              d={d}
-                              compact
-                              personalPath
-                              entryAction={entryAction}
-                            />
-                          </details>
-                        </div>
-                      )
-                    : undefined
-                }
-                key={`${ch.id}:${access.member_code}`}
-                challenge={ch}
-                stages={stages}
-                pick={official}
-                picks={challengePicks}
-                results={d.results}
-              />
-            ) : (
-              <>
-                {official &&
-                  (d.results.some((r) => r.pick_id === official.id) ? (
-                    <details className="previous-result">
-                      <summary>Previous result · View the settled leg</summary>
-                      <PickCard p={official} d={d} compact />
-                    </details>
-                  ) : (
-                    <PickCard p={official} d={d} compact />
-                  ))}
-                <ChallengeRun challenge={ch} stages={stages} />
-                <p className="notice">
-                  <Link href="/membership">Create a free account</Link> to join
-                  Community and track your own bankroll.
-                </p>
-              </>
-            )}
-          </CommunityHome>
+          </>
         )}
         {page === "home" && (
           <>
@@ -470,243 +392,251 @@ export default function DeskApp({
         {page === "performance" && <Performance desk={d} />}
         {page === "history" && (
           <>
-            <RecordsDashboard d={d} picks={ledgerPicks} />
-            <PublishedLegBoard />
-            <div className="filter-bar">
-              <label className="field">
-                Find a game / pick
-                <input
-                  type="search"
-                  value={ledgerSearch}
-                  onChange={(e) => {
-                    setLedgerSearch(e.target.value);
-                    setLedgerLimit(25);
-                  }}
-                />
-              </label>
-              <label className="field">
-                Filter
+            <MyTailRecord />
+            <details className="admin-section">
+              <summary>
+                Vegas Quant published record & historical ledger ↓
+              </summary>
+              <RecordsDashboard d={d} picks={ledgerPicks} />
+              <PublishedLegBoard />
+              <div className="filter-bar">
+                <label className="field">
+                  Find a game / pick
+                  <input
+                    type="search"
+                    value={ledgerSearch}
+                    onChange={(e) => {
+                      setLedgerSearch(e.target.value);
+                      setLedgerLimit(25);
+                    }}
+                  />
+                </label>
+                <label className="field">
+                  Filter
+                  <select
+                    value={filter}
+                    onChange={(e) => {
+                      setFilter(e.target.value);
+                      setLedgerLimit(25);
+                    }}
+                  >
+                    {[
+                      "All",
+                      "Sides",
+                      "Totals",
+                      "Player Props",
+                      "Wins",
+                      "Losses",
+                      "Positive CLV",
+                      "Negative CLV",
+                    ].map((f) => (
+                      <option key={f}>{f}</option>
+                    ))}
+                  </select>
+                </label>
                 <select
-                  value={filter}
-                  onChange={(e) => {
-                    setFilter(e.target.value);
-                    setLedgerLimit(25);
-                  }}
+                  aria-label="Filter by challenge"
+                  value={challengeFilter}
+                  onChange={(e) => setChallengeFilter(e.target.value)}
                 >
-                  {[
-                    "All",
-                    "Sides",
-                    "Totals",
-                    "Player Props",
-                    "Wins",
-                    "Losses",
-                    "Positive CLV",
-                    "Negative CLV",
-                  ].map((f) => (
-                    <option key={f}>{f}</option>
+                  <option value="All">All archived groups</option>
+                  <option value="Standalone">Standalone / long-term</option>
+                  {d.challenges.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      Archived challenge #{c.number}
+                    </option>
                   ))}
                 </select>
-              </label>
-              <select
-                aria-label="Filter by challenge"
-                value={challengeFilter}
-                onChange={(e) => setChallengeFilter(e.target.value)}
+              </div>
+              <Panel
+                title="Archived publication ledger"
+                aside={<Badge>{ledgerPicks.length} picks</Badge>}
               >
-                <option value="All">All challenges & standalone</option>
-                <option value="Standalone">Standalone / long-term</option>
-                {d.challenges.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    Challenge #{c.number}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <Panel
-              title="Permanent betting ledger"
-              aside={<Badge>{ledgerPicks.length} picks</Badge>}
-            >
-              <details className="ledger-desktop ledger-audit">
-                <summary>
-                  Full audit table · entries, closes & process ↓
-                </summary>
-                <div className="table-scroll">
-                  <table>
-                    <thead>
-                      <tr>
-                        {[
-                          "Date",
-                          "Game",
-                          "Stage",
-                          "Market",
-                          "Pick",
-                          "Recommended",
-                          "Bet line",
-                          "Odds",
-                          "Close",
-                          "Price CLV",
-                          "Line CLV",
-                          "Stake",
-                          "Result",
-                          "P/L",
-                          "Bankroll",
-                          "Confidence",
-                          "Edge",
-                          "Process",
-                        ].map((k) => (
-                          <th key={k}>{k}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {ledgerPicks.slice(0, ledgerLimit).map((p) => {
-                        const game = d.games.find((g) => g.id === p.game_id),
-                          st = d.stages.find((s) => s.id === p.stage_id),
-                          e = d.entries.find((e) => e.pick_id === p.id),
-                          close = d.closings.find((c) => c.pick_id === p.id),
-                          r = d.results.find((r) => r.pick_id === p.id),
-                          review = d.reviews.find((r) => r.pick_id === p.id),
-                          c = clv(p, e, close);
-                        return (
-                          <tr key={p.id}>
-                            <td>{time(p.created_at)}</td>
-                            <td>
-                              <Link href={`/games/${game?.slug}`}>
-                                {game?.away_team} @ {game?.home_team}
-                              </Link>
-                            </td>
-                            <td>{st?.stage_number || "Standalone"}</td>
-                            <td>{p.market}</td>
-                            <td>
-                              <Link href={`/picks/${p.id}/share`}>
-                                {p.selection}
-                              </Link>
-                            </td>
-                            <td>{lineText(p.recommended_line)}</td>
-                            <td>{e ? lineText(e.line) : "Unconfirmed"}</td>
-                            <td>{odd(e?.odds ?? p.odds)}</td>
-                            <td>
-                              {close
-                                ? `${lineText(close.line)} ${odd(close.odds)}`
-                                : "—"}
-                            </td>
-                            <td>{pct(c.price)}</td>
-                            <td>
-                              {c.points === null ? "—" : `${c.points} pts`}
-                            </td>
-                            <td>{money(p.stake_cents)}</td>
-                            <td>{r?.result || "OPEN"}</td>
-                            <td
-                              className={
-                                r && r.profit_cents < 0
-                                  ? "negative"
-                                  : "positive"
-                              }
-                            >
-                              {r ? signedMoney(r.profit_cents) : "—"}
-                            </td>
-                            <td>
-                              {r?.bankroll_cents !== undefined &&
-                              r?.bankroll_cents !== null
-                                ? money(r.bankroll_cents)
-                                : "—"}
-                            </td>
-                            <td>{p.confidence}/10</td>
-                            <td>{p.edge}%</td>
-                            <td>{review?.grade || "—"}</td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                <details className="ledger-desktop ledger-audit">
+                  <summary>
+                    Full audit table · entries, closes & process ↓
+                  </summary>
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          {[
+                            "Date",
+                            "Game",
+                            "Stage",
+                            "Market",
+                            "Pick",
+                            "Recommended",
+                            "Bet line",
+                            "Odds",
+                            "Close",
+                            "Price CLV",
+                            "Line CLV",
+                            "Stake",
+                            "Result",
+                            "P/L",
+                            "Bankroll",
+                            "Confidence",
+                            "Edge",
+                            "Process",
+                          ].map((k) => (
+                            <th key={k}>{k}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {ledgerPicks.slice(0, ledgerLimit).map((p) => {
+                          const game = d.games.find((g) => g.id === p.game_id),
+                            st = d.stages.find((s) => s.id === p.stage_id),
+                            e = d.entries.find((e) => e.pick_id === p.id),
+                            close = d.closings.find((c) => c.pick_id === p.id),
+                            r = d.results.find((r) => r.pick_id === p.id),
+                            review = d.reviews.find((r) => r.pick_id === p.id),
+                            c = clv(p, e, close);
+                          return (
+                            <tr key={p.id}>
+                              <td>{time(p.created_at)}</td>
+                              <td>
+                                <Link href={`/games/${game?.slug}`}>
+                                  {game?.away_team} @ {game?.home_team}
+                                </Link>
+                              </td>
+                              <td>{st?.stage_number || "Standalone"}</td>
+                              <td>{p.market}</td>
+                              <td>
+                                <Link href={`/picks/${p.id}/share`}>
+                                  {p.selection}
+                                </Link>
+                              </td>
+                              <td>{lineText(p.recommended_line)}</td>
+                              <td>{e ? lineText(e.line) : "Unconfirmed"}</td>
+                              <td>{odd(e?.odds ?? p.odds)}</td>
+                              <td>
+                                {close
+                                  ? `${lineText(close.line)} ${odd(close.odds)}`
+                                  : "—"}
+                              </td>
+                              <td>{pct(c.price)}</td>
+                              <td>
+                                {c.points === null ? "—" : `${c.points} pts`}
+                              </td>
+                              <td>{money(p.stake_cents)}</td>
+                              <td>{r?.result || "OPEN"}</td>
+                              <td
+                                className={
+                                  r && r.profit_cents < 0
+                                    ? "negative"
+                                    : "positive"
+                                }
+                              >
+                                {r ? signedMoney(r.profit_cents) : "—"}
+                              </td>
+                              <td>
+                                {r?.bankroll_cents !== undefined &&
+                                r?.bankroll_cents !== null
+                                  ? money(r.bankroll_cents)
+                                  : "—"}
+                              </td>
+                              <td>{p.confidence}/10</td>
+                              <td>{p.edge}%</td>
+                              <td>{review?.grade || "—"}</td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
+                <div className="ledger-mobile">
+                  {ledgerPicks.slice(0, ledgerLimit).map((p) => {
+                    const r = d.results.find((r) => r.pick_id === p.id),
+                      e = d.entries.find((e) => e.pick_id === p.id),
+                      c = d.closings.find((c) => c.pick_id === p.id),
+                      v = clv(p, e, c),
+                      review = d.reviews.find((r) => r.pick_id === p.id);
+                    return (
+                      <article className="intel-row" key={p.id}>
+                        <Badge tone={r?.result === "LOSS" ? "red" : "muted"}>
+                          {r?.result || "OPEN"}
+                        </Badge>
+                        <h3>
+                          <Link href={`/picks/${p.id}/share`}>
+                            {p.selection}
+                          </Link>
+                        </h3>
+                        <p>
+                          {time(p.created_at)} · {money(p.stake_cents)} ·{" "}
+                          {odd(p.odds)} published
+                        </p>
+                        <p>
+                          {r ? signedMoney(r.profit_cents) : "Awaiting result"}{" "}
+                          · Price CLV {pct(v.price)}
+                        </p>
+                        <details>
+                          <summary>Entry, close & process</summary>
+                          <p>
+                            Recommended {lineText(p.recommended_line)}{" "}
+                            {odd(p.odds)}
+                          </p>
+                          <p>
+                            Actual{" "}
+                            {e
+                              ? `${lineText(e.line)} ${odd(e.odds)}`
+                              : "Not confirmed"}
+                          </p>
+                          <p>
+                            Close{" "}
+                            {c
+                              ? `${lineText(c.line)} ${odd(c.odds)}`
+                              : "Not recorded"}
+                          </p>
+                          <p>
+                            Line CLV {v.points ?? "—"} · Process{" "}
+                            {review?.grade ||
+                              (access.allowed
+                                ? "Not reviewed"
+                                : "Premium research")}
+                          </p>
+                          <p>
+                            Confidence {p.confidence}/10 · Edge {p.edge} pp
+                          </p>
+                          {review && <p>{review.lessons}</p>}
+                        </details>
+                      </article>
+                    );
+                  })}
+                </div>
+                {ledgerPicks.length > ledgerLimit && (
+                  <button
+                    className="secondary"
+                    onClick={() => setLedgerLimit((n) => n + 25)}
+                  >
+                    Show 25 more picks
+                  </button>
+                )}
+                {!ledgerPicks.length && (
+                  <Empty title="No official positions yet.">
+                    All official picks—including losses—will remain in this
+                    ledger permanently.
+                  </Empty>
+                )}
+              </Panel>
+              <details className="admin-section">
+                <summary>Historical accounting rules</summary>
+                <div className="notebook">
+                  <p>
+                    Challenge bankrolls and standalone picks are tracked
+                    separately. Each challenge starts with $20 and uses actual
+                    entry odds. A pass pauses progression; the approximately
+                    $640 target is aspirational.
+                  </p>
+                  <p>
+                    Missing entries and closes stay unconfirmed. Original
+                    recommendations, losing picks and previous reviews are never
+                    deleted.
+                  </p>
                 </div>
               </details>
-              <div className="ledger-mobile">
-                {ledgerPicks.slice(0, ledgerLimit).map((p) => {
-                  const r = d.results.find((r) => r.pick_id === p.id),
-                    e = d.entries.find((e) => e.pick_id === p.id),
-                    c = d.closings.find((c) => c.pick_id === p.id),
-                    v = clv(p, e, c),
-                    review = d.reviews.find((r) => r.pick_id === p.id);
-                  return (
-                    <article className="intel-row" key={p.id}>
-                      <Badge tone={r?.result === "LOSS" ? "red" : "muted"}>
-                        {r?.result || "OPEN"}
-                      </Badge>
-                      <h3>
-                        <Link href={`/picks/${p.id}/share`}>{p.selection}</Link>
-                      </h3>
-                      <p>
-                        {time(p.created_at)} · {money(p.stake_cents)} ·{" "}
-                        {odd(p.odds)} published
-                      </p>
-                      <p>
-                        {r ? signedMoney(r.profit_cents) : "Awaiting result"} ·
-                        Price CLV {pct(v.price)}
-                      </p>
-                      <details>
-                        <summary>Entry, close & process</summary>
-                        <p>
-                          Recommended {lineText(p.recommended_line)}{" "}
-                          {odd(p.odds)}
-                        </p>
-                        <p>
-                          Actual{" "}
-                          {e
-                            ? `${lineText(e.line)} ${odd(e.odds)}`
-                            : "Not confirmed"}
-                        </p>
-                        <p>
-                          Close{" "}
-                          {c
-                            ? `${lineText(c.line)} ${odd(c.odds)}`
-                            : "Not recorded"}
-                        </p>
-                        <p>
-                          Line CLV {v.points ?? "—"} · Process{" "}
-                          {review?.grade ||
-                            (access.allowed
-                              ? "Not reviewed"
-                              : "Premium research")}
-                        </p>
-                        <p>
-                          Confidence {p.confidence}/10 · Edge {p.edge} pp
-                        </p>
-                        {review && <p>{review.lessons}</p>}
-                      </details>
-                    </article>
-                  );
-                })}
-              </div>
-              {ledgerPicks.length > ledgerLimit && (
-                <button
-                  className="secondary"
-                  onClick={() => setLedgerLimit((n) => n + 25)}
-                >
-                  Show 25 more picks
-                </button>
-              )}
-              {!ledgerPicks.length && (
-                <Empty title="No official positions yet.">
-                  All official picks—including losses—will remain in this ledger
-                  permanently.
-                </Empty>
-              )}
-            </Panel>
-            <details className="admin-section">
-              <summary>Accounting rules</summary>
-              <div className="notebook">
-                <p>
-                  Challenge bankrolls and standalone picks are tracked
-                  separately. Each challenge starts with $20 and uses actual
-                  entry odds. A pass pauses progression; the approximately $640
-                  target is aspirational.
-                </p>
-                <p>
-                  Missing entries and closes stay unconfirmed. Original
-                  recommendations, losing picks and previous reviews are never
-                  deleted.
-                </p>
-              </div>
             </details>
           </>
         )}
@@ -979,7 +909,7 @@ function MatchupWorkspace({
                     </Link>
                   </p>
                 ))}
-                <Link href="/">Current challenge & personal entry →</Link>
+                <Link href="/">View current research →</Link>
               </details>
             )}
           </div>

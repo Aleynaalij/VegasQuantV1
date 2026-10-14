@@ -28,3 +28,7 @@ Do not call policies “legally reviewed,” privacy labels verified, deletion c
 - https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion
 - https://developer.apple.com/app-store/app-privacy-details/
 - https://www.ncpgambling.org/help-treatment/about-the-national-problem-gambling-helpline/
+
+## Independent age verification preparation
+
+See age-verification.md: ID/selfie flow, service-only proof, current-policy age gates, guarded RPCs and checkout/notification restrictions are prepared. Mandatory enforcement remains off pending provider/fee approval, restricted credentials, webhook delivery, consent/retention review and live acceptance tests. Existing accounts have not been declared verified.

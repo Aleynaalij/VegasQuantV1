@@ -23,6 +23,17 @@ export async function POST(req: Request) {
       { status: 401 },
     );
   try {
+    const age = await auth.db.rpc("age_verification_status");
+    if (age.error)
+      return Response.json(
+        { error: "Age verification status is unavailable." },
+        { status: 503 },
+      );
+    if (age.data.required && !age.data.verified)
+      return Response.json(
+        { error: "Verify your age before starting checkout." },
+        { status: 403 },
+      );
     const body = await req.json();
     if (!["full", "monthly"].includes(body.plan))
       return Response.json({ error: "Invalid pass." }, { status: 400 });
