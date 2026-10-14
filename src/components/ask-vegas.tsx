@@ -126,25 +126,27 @@ export default function AskVegas() {
             <div className="ask-vegas-answer">
               <strong>Make yourself at home.</strong>
               <p>
-                Ask how the challenge, tabs, bankroll or Copy Pick work. I use
-                built-in answers—not live AI—and can point you to the research
-                for game questions.
+                Ask about The Zone, Community, your tailed-pick Records or NBA.
+                I use built-in answers—not live AI—and can point you to the
+                research for game questions.
               </p>
             </div>
             {!messages.length && (
               <div className="ask-vegas-suggestions">
-                {["purpose", "copy", "bankroll", "targets"].map((id) => {
-                  const t = helpTopics.find((x) => x.id === id)!;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => ask(t.title, t)}
-                    >
-                      {t.title}
-                    </button>
-                  );
-                })}
+                {["navigation", "join", "community-posting", "nba"].map(
+                  (id) => {
+                    const t = helpTopics.find((x) => x.id === id)!;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => ask(t.title, t)}
+                      >
+                        {t.title}
+                      </button>
+                    );
+                  },
+                )}
               </div>
             )}
             {messages.map((m, i) => (
@@ -156,7 +158,7 @@ export default function AskVegas() {
                   </strong>
                   <p>
                     {m.topic?.answer ||
-                      "I don’t have a built-in answer for that wording. Try a short topic such as ‘copy pick’, ‘bankroll’ or ‘account access’, or browse all topics. I can’t see your account, answer general questions or make changes for you."}
+                      "I don’t have a built-in answer for that wording. Try a short topic such as ‘tail a pick’, ‘NBA’ or ‘account access’, or browse all topics. I can’t see your account, answer general questions or make changes for you."}
                   </p>
                   {m.topic ? (
                     <Link href={m.topic.href} onClick={close}>
@@ -169,7 +171,8 @@ export default function AskVegas() {
                   )}
                   {m.topic?.id === "pick-routing" && (
                     <Link href="/" onClick={close}>
-                      See the official slip <ArrowUpRight size={15} />
+                      View Pick of the Day & Hail Mary{" "}
+                      <ArrowUpRight size={15} />
                     </Link>
                   )}
                 </div>

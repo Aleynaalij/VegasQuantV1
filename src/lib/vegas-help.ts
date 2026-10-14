@@ -10,6 +10,112 @@ export type HelpTopic = {
 };
 export const helpTopics: HelpTopic[] = [
   {
+    id: "navigation",
+    title: "Where do I start in the redesigned app?",
+    category: "App guide",
+    phrases: [
+      "navigation",
+      "tabs",
+      "analysis tab",
+      "redesigned app",
+      "where do i start",
+      "new app",
+    ],
+    answer:
+      "Home shows the next kickoff, game research, Pick of the Day and the separate Hail Mary feature. The Zone is the main analyst feed and research hub. Community is for member slips and discussion. Records opens with your tailed picks; Account manages profile, access, notifications and deletion. The sport switch at the top changes between NFL and NBA.",
+    href: "/feed",
+    link: "Start in The Zone",
+  },
+  {
+    id: "nba",
+    title: "How do I switch to NBA?",
+    category: "App guide",
+    phrases: ["nba", "basketball", "sport switch", "switch sports"],
+    answer:
+      "Use the NFL / NBA tabs at the top. NBA has its own Home, analysis, Zone, Records and rules pages. It is in preparation: discussion and research foundations are available, but pregame picks will not publish until the NBA regular season starts. NFL publications and histories stay separate.",
+    href: "/nba",
+    link: "Open NBA",
+  },
+  {
+    id: "pick-of-day",
+    title: "What is Pick of the Day?",
+    category: "App guide",
+    phrases: ["pick of the day", "pick of day", "pod"],
+    answer:
+      "Pick of the Day is the single strongest supported editorial selection featured on Home. Ordinary Legs we like belong in The Zone. Hail Mary has its own separate Home slot. Pick of the Day is not automatically an OFFICIAL wager or a validated edge; read the target, source times, case and risks.",
+    href: "/",
+    link: "View Home features",
+  },
+  {
+    id: "hail-mary",
+    title: "What is the Hail Mary?",
+    category: "App guide",
+    phrases: ["hail mary", "hailmary"],
+    answer:
+      "Hail Mary is a separate featured ticket on Home. It is distinct from Pick of the Day and individual liked legs. A parlay needs every included leg to settle successfully under the sportsbook rules; correlated legs have shared failure paths. Original published tickets and prices are preserved, and later observations do not rewrite them.",
+    href: "/",
+    link: "Open Home",
+  },
+  {
+    id: "moderation",
+    title: "How do I report or block someone?",
+    category: "App guide",
+    phrases: ["report", "block", "moderation", "harassment", "scam"],
+    answer:
+      "Use the report or block controls on member posts in Community. Reporting submits content for moderation; it does not guarantee immediate removal. Blocking hides that member\u2019s posts and comments from your community feed, and blocked members can be managed there. Keep discussion respectful: threats, scams and guaranteed-return claims are prohibited. Member-reported wins are not verified Vegas Quant picks.",
+    href: "/community",
+    link: "Open Community",
+  },
+  {
+    id: "account-deletion",
+    title: "How do I delete my account?",
+    category: "App guide",
+    phrases: [
+      "delete account",
+      "delete my account",
+      "account deletion",
+      "erase account",
+    ],
+    answer:
+      "Open Account \u2192 Delete account, enter your current password and type DELETE. Successful deletion removes your account data and cancels linked recurring memberships; it is not a refund. Published analyst history is retained with personal attribution handled separately. Administrators must transfer their role before deletion. Ask Vegas cannot delete an account for you.",
+    href: "/membership",
+    link: "Open account deletion",
+  },
+  {
+    id: "age-verification",
+    title: "How does age verification work?",
+    category: "App guide",
+    phrases: [
+      "age verification",
+      "verify my age",
+      "verify age",
+      "21",
+      "age check",
+    ],
+    answer:
+      "Vegas Quant is for adults 21+. The verification flow is prepared under Account, but mandatory enforcement is not activated yet. When enabled after launch checks, new and existing accounts will need the age check; a birthday checkbox alone is not proof. Follow the secure verification screen rather than sending identity documents to Ask Vegas or posting them in Community. Current rollout instructions appear on the verification page.",
+    href: "/account/verify-age",
+    link: "Open age verification",
+  },
+  {
+    id: "support",
+    title: "Who operates Vegas Quant and where is support?",
+    category: "App guide",
+    phrases: [
+      "support",
+      "journeybuilt",
+      "llc",
+      "privacy",
+      "terms",
+      "faq",
+      "disclaimer",
+    ],
+    answer:
+      "Vegas Quant is a product of JourneyBuilt, LLC. Help and legal links are available in the footer: About, FAQs, Support, Privacy, Terms and Responsible play. Use Support for the currently available contact route; do not assume an email inbox or SMS support is active. Ask Vegas cannot inspect accounts or payments.",
+    href: "/support",
+    link: "Open Help & Support",
+  },
+  {
     id: "free-premium",
     title: "What is free and what is Premium?",
     category: "Account & access",
@@ -21,9 +127,9 @@ export const helpTopics: HelpTopic[] = [
       "free picks",
     ],
     answer:
-      "The main challenge, published official picks and edge cards, decision alerts, Community, share cards, basic personal bankroll tracking and the public official record are free. Sign in for personal tools. Premium research costs $5/month or $20 for the 2026 season and includes full every-game analysis, potential target boards, injury/weather research, market history, analysis versions, and detailed official process reviews and exports. No daily pick is guaranteed: WAIT/PASS is valid. Private admin intelligence is never included. Advanced personal CLV tools are not promised as current features.",
+      "The Zone contains published picks and analyst updates; Community is for member posts, comments and follows. Signed-in members can save and tail published picks and view their personal Records. Premium unlocks detailed research. New accounts receive a 14-day Premium trial with no card or automatic charge; current paid plans and access status appear in Account. NBA is in preparation, with no pregame picks until its regular season begins. No daily pick, outcome or profit is promised.",
     href: "/membership",
-    link: "Compare free and Premium",
+    link: "Compare access options",
   },
   {
     id: "community",
@@ -41,13 +147,13 @@ export const helpTopics: HelpTopic[] = [
     ],
     answer:
       "Community is where members post tickets, discuss games and follow each other. Manage your username, optional photo and profile visibility under Account settings. Your email, bets and balance stay private. The Zone contains Vegas Quant research. Tail a published pick before kickoff to add it to your personal Records; verified outcomes appear there without assumed wager amounts.",
-    href: "/",
-    link: "Open community",
+    href: "/community",
+    link: "Open Community",
   },
   {
     id: "payout-pending",
     title: "My payout has not cleared. Do I miss the next stage?",
-    category: "Your run",
+    category: "Personal Records",
     phrases: [
       "payout pending",
       "funds cleared",
@@ -58,9 +164,9 @@ export const helpTopics: HelpTopic[] = [
       "settlement delay",
     ],
     answer:
-      "On Home, use Payout pending · Pause my run. Your recorded result and bankroll stay unchanged, and your next-entry action is held. Once your sportsbook releases the funds, tap My funds have cleared · Resume. This is self-reported; Vegas Quant cannot see your sportsbook balance. Five stages use flexible game windows. A missed window is not a loss. Wait for the next qualifying pregame official play at its published limits; do not add money or chase a live bet to bridge the gap. Pause and resume history is saved.",
-    href: "/",
-    link: "Open your run",
+      "Vegas Quant does not hold betting funds or control sportsbook payouts. The 5-Spot Challenge and its pause/resume controls have been retired. Check your sportsbook directly for settlement and payment delays. Past recorded wagers remain under Records → Previous recorded wager history; a delayed payout is not a new loss.",
+    href: "/history",
+    link: "Review previous wagers",
   },
   {
     id: "alerts",
@@ -150,7 +256,7 @@ export const helpTopics: HelpTopic[] = [
       "get started",
     ],
     answer:
-      "Vegas Quant is an NFL research and decision-tracking platform. The value is seeing the reasoning, the original price, what changed, and what we learned—not just a list of picks. Your personal Records follow the published picks you tail. Results, price quality and decision quality stay on record. It is entertainment and analysis; no outcome or profit is guaranteed.",
+      "Vegas Quant is a sports research and community platform operated by JourneyBuilt, LLC. Home highlights the next kickoff, Pick of the Day and a separate Hail Mary. The Zone holds analyst research and Legs we like. Community lets members share slips and discuss games. Records shows the picks you tail and retains the published history. Use the NFL/NBA switch at the top; NBA is being prepared and is not publishing pregame picks yet. It is research, not a sportsbook.",
     href: "/",
     link: "Explore Vegas Quant",
   },
@@ -168,9 +274,16 @@ export const helpTopics: HelpTopic[] = [
     id: "join",
     title: "How do I track picks I tail?",
     category: "Start here",
-    phrases: ["join", "tail", "follow along", "my record", "start my run"],
+    phrases: [
+      "join",
+      "tail",
+      "follow along",
+      "my record",
+      "my tailed picks",
+      "start my run",
+    ],
     answer:
-      "Sign in and tap I’m tailing on a pick in The Zone before it starts. My tailed picks in Records shows verified published outcomes, with unverified results pending. Tailing does not place a wager or assume a stake or profit.",
+      "Sign in and tap I’m tailing on a published pick before kickoff. Records → My tailed picks shows its verified published outcome: win, loss, push, void or pending. Existing tails are included. You can cancel a tail before kickoff; once started it stays on your record, including losses. Saving or copying a pick is separate from tailing. No wager, stake or profit is assumed.",
     href: "/history",
     link: "Open my Records",
   },
@@ -198,9 +311,9 @@ export const helpTopics: HelpTopic[] = [
       "intel",
     ],
     answer:
-      "Open Matchup and search for the team or game. Each game groups its market snapshot, model notes, availability, weather, bias checks and target board into expandable sections. Use the update history to review earlier versions. A snapshot is timestamped research, not a promise of a currently available price. Detailed research requires account access.",
-    href: "/matchups",
-    link: "Open Matchup",
+      "Start in The Zone for research updates, injury watches and Legs we like. Home → Open game research or Full board opens the game notebook and searchable slate. Each notebook groups sources, availability, weather, market observations and target legs, with prior analysis versions retained. Timestamps identify the observation; a historical quote is not a current executable price. Detailed research depends on account access.",
+    href: "/feed",
+    link: "Open The Zone",
   },
   {
     id: "targets",
@@ -217,13 +330,13 @@ export const helpTopics: HelpTopic[] = [
       "not official",
     ],
     answer:
-      "No. Potential legs are research candidates. WATCH, WAIT, injury-dependent and weather-dependent labels tell you what still needs checking. A review number is not automatically a playable price. Only an explicitly published OFFICIAL PLAY enters the official challenge record. Targets do not reserve your bankroll or create a wager.",
-    href: "/matchups",
-    link: "Read the target board",
+      "Potential targets are research candidates, with role, injury or weather blockers still to check. Legs we like are editorial selections; an analyst-selected stat target is separate from a verified sportsbook line. Pick of the Day is one editorial feature on Home, not automatically an OFFICIAL or qualifying-edge release. Research targets do not reserve money or create a wager.",
+    href: "/feed",
+    link: "Read picks and watch targets",
   },
   {
     id: "pass",
-    title: "Why did the challenge pass or pause?",
+    title: "Why is there no pick?",
     category: "Understand the research",
     phrases: [
       "pass",
@@ -235,9 +348,9 @@ export const helpTopics: HelpTopic[] = [
       "why no play",
     ],
     answer:
-      "A pass is intentional. The analyst may pass when supported edge is below 3 percentage points, price value has disappeared, or injury, weather or data uncertainty is too high. A paused stage leaves the bankroll unchanged. There is no random replacement simply to keep the challenge moving.",
-    href: "/matchups",
-    link: "Read the current decision",
+      "A watch target is not a finalized pick. We may publish no selection when role, availability, sources or matchup evidence are insufficient. Qualitative Legs we like can be unpriced, with analyst stat targets clearly separated from sportsbook lines. The three-percentage-point requirement applies to qualifying-edge releases, not every qualitative liked leg. A desired parlay leg count does not justify forcing picks.",
+    href: "/feed",
+    link: "Read the latest research",
   },
   {
     id: "copy",
@@ -245,19 +358,27 @@ export const helpTopics: HelpTopic[] = [
     category: "Use a slip",
     phrases: ["copy", "clipboard", "paste", "copy pick"],
     answer:
-      "On Home, find the OFFICIAL PLAY slip and tap Copy Pick. It copies the published selection, odds and stake. If your browser blocks clipboard access, a text box appears: select its text and copy manually. Copying does not place a wager or create a personal entry. The copied stake is the published stake, which may differ from yours.",
-    href: "/",
-    link: "Go to the official slip",
+      "On a published card in The Zone, use its Copy / Gambly control. Copy the selection text, open Gambly and paste it when prompted; do not assume the external service automatically inserts or finds the exact market. Verify every player, target, sportsbook price and rule there. Copying, saving and opening Gambly do not place a bet or add a tail. Tap I’m tailing separately to add the publication to your Records.",
+    href: "/feed",
+    link: "Open cards in The Zone",
   },
   {
     id: "share",
     title: "How do sharing and screenshots work?",
     category: "Use a slip",
-    phrases: ["share", "screenshot", "watermark", "share card"],
+    phrases: [
+      "download card",
+      "download this page",
+      "export card",
+      "share",
+      "screenshot",
+      "watermark",
+      "share card",
+    ],
     answer:
-      "Use the share controls available on your run or slip. Official pick share cards are currently restricted to admins. Access to member research does not automatically give public sharing permission. A watermark identifies content; a website cannot reliably block or detect every screenshot. Ask Vegas does not monitor screenshots.",
-    href: "/",
-    link: "Open your run",
+      "Use Download card on supported published cards in The Zone. It generates watermarked Vegas Quant images in phone-sized 9:16 pages; browse the pages and choose Download this page or the available multi-page export. This is a designed card, not a long page screenshot. Member slips can be posted separately in Community. A watermark identifies the brand but cannot prevent screenshots or copying.",
+    href: "/feed",
+    link: "Download a published card",
   },
   {
     id: "sportsbook",
@@ -276,14 +397,14 @@ export const helpTopics: HelpTopic[] = [
       "betslip",
     ],
     answer:
-      "Vegas Quant records research and entries; it does not place a wager, hold your betting funds or confirm sportsbook acceptance. Copy Pick copies text only. Informational market links do not execute a bet. If you already placed a wager elsewhere, record the actual line, odds and stake on Home. Never assume a later sportsbook price matches the published slip.",
-    href: "/",
-    link: "Open the slip and your run",
+      "Vegas Quant is research and community, not a sportsbook. It does not place bets, accept betting deposits, hold gambling funds or confirm sportsbook acceptance. Copy/Gambly helps transfer selection text to an external service; confirm the exact market, rules and price there. Tailing adds a published selection to your Records, without assuming a wager or stake.",
+    href: "/feed",
+    link: "Review published selections",
   },
   {
     id: "bankroll",
     title: "How do I update my bankroll?",
-    category: "Your run",
+    category: "Personal Records",
     phrases: [
       "bankroll",
       "starting amount",
@@ -294,14 +415,14 @@ export const helpTopics: HelpTopic[] = [
       "formula",
     ],
     answer:
-      "On Home, enter your starting bankroll. $20 is suggested, not required. Your one personal path uses the entries you actually record. Use Update bankroll beside your balance to enter a new total and choose deposit, withdrawal, or balance correction. Each adjustment is preserved separately from bet results. Bankroll equals starting amount plus adjustments plus settled profit/loss; available funds exclude stakes still in play. An “if win” value is only a possible outcome. Saving a starting amount does not automatically place or record future bets.",
-    href: "/",
-    link: "Manage your bankroll",
+      "The old challenge bankroll controls have been retired from Home. My tailed picks in Records tracks followed selections and verified outcomes without assuming a stake, balance or profit. Previous recorded wagers remain accessible separately in Records. Vegas Quant cannot see your sportsbook balance and does not manage betting funds.",
+    href: "/history",
+    link: "Open personal Records",
   },
   {
     id: "entry",
     title: "How do I record a wager I already placed?",
-    category: "Your run",
+    category: "Personal Records",
     phrases: [
       "record",
       "actual entry",
@@ -318,14 +439,14 @@ export const helpTopics: HelpTopic[] = [
       "glow",
     ],
     answer:
-      "After setting your bankroll on Home, use Record my actual entry for the current official leg. Enter your actual number, signed American odds (such as -110 or +120) and stake. Review the calculated profit and total return before saving. Total return includes your stake. An open recorded entry shows IN PLAY and highlights the bankroll. This is tracking only; the platform cannot verify your sportsbook ticket.",
-    href: "/",
-    link: "Record an actual entry",
+      "Tap I’m tailing before kickoff to track a published selection in My tailed picks. This records following that exact published target, not a sportsbook wager or your actual odds and stake. The retired challenge entry form is no longer on Home. Older recorded entries remain under Previous recorded wager history. Check your sportsbook for actual tickets and balances.",
+    href: "/history",
+    link: "Open personal Records",
   },
   {
     id: "correction",
     title: "I entered the wrong odds or stake",
-    category: "Your run",
+    category: "Personal Records",
     phrases: [
       "wrong odds",
       "wrong stake",
@@ -336,14 +457,14 @@ export const helpTopics: HelpTopic[] = [
       "delete bet",
     ],
     answer:
-      "Use the entry correction controls available for your recorded entry. Corrections preserve an audit trail; they do not rewrite the analyst’s published recommendation. If the entry is locked or the correction option is unavailable, ask the platform administrator to review it. Ask Vegas cannot change your account or ledger.",
-    href: "/",
-    link: "Review your entry",
+      "Original publications and previous recorded wagers are preserved. The old challenge correction controls are no longer on Home. Review your previous recorded wager history in Records and use Support for an incorrect historical entry. Ask Vegas cannot edit grades, wagers or your account. You can cancel a current tail before kickoff; started tails remain recorded.",
+    href: "/support",
+    link: "Get help with a historical entry",
   },
   {
     id: "settlement",
     title: "When does my result or balance update?",
-    category: "Your run",
+    category: "Personal Records",
     phrases: [
       "result",
       "settle",
@@ -357,9 +478,9 @@ export const helpTopics: HelpTopic[] = [
       "new bankroll",
     ],
     answer:
-      "An entry remains open until its applicable result is graded. A win adds actual profit; a loss subtracts the recorded stake; a push or void returns the stake. Different recorded numbers can need separate grading, so an official win does not always mean your entry won. Source scores are not the same as a settled player prop. Check Records and your run for the recorded status.",
+      "A tailed pick shows the verified result of its exact published selection when that result is available. Missing or unverified results remain pending; a final score alone does not settle every player prop. A different sportsbook number may settle differently. Tail results do not change a bankroll or invent profit. Older recorded wagers retain their separate settlement records.",
     href: "/history",
-    link: "Open Records",
+    link: "Check my tailed picks",
   },
   {
     id: "records",
@@ -378,7 +499,7 @@ export const helpTopics: HelpTopic[] = [
       "units",
     ],
     answer:
-      "Records preserves official selections, entry and closing prices, stakes, results, profit/loss and process grades, including losses. Filters help narrow the ledger; Export downloads the available ledger. The Performance view summarizes settled outcomes and decision quality. Your personal bankroll on Home uses your actual entries, not the official stake. Empty statistics mean there is not enough recorded data yet.",
+      "Records opens with My tailed picks: only the published selections you have tailed, using verified outcomes. Unverified or unavailable publications remain pending. It does not calculate winnings from a tail. Previous recorded wager history preserves your older actual entries separately. Expand Vegas Quant published record & historical ledger to review the platform record, archived challenge picks, source results and the historical ledger export. Performance summarizes platform publications, not your personal bets.",
     href: "/history",
     link: "Open Records",
   },
@@ -416,9 +537,9 @@ export const helpTopics: HelpTopic[] = [
       "fair line",
     ],
     answer:
-      "Edge compares the analyst’s probability with the market’s implied probability, in percentage points. Confidence and risk are analyst assessments, not guarantees. A process grade reviews decision quality after the game, separately from winning or losing. Fair lines and Fear Index are research assessments, not a sportsbook’s internal data. Missing estimates stay blank rather than being invented.",
-    href: "/matchups",
-    link: "Read the analysis context",
+      "A qualifying edge compares a documented estimate with the comparison market probability in percentage points. Qualitative liked legs are editorial stat targets and do not claim validated EV, confidence scores or numerical edge. Experimental SHADOW_ONLY output is not validated or BETTABLE. The three-point threshold does not apply to merely displaying a defensible qualitative liked leg. Missing estimates remain unknown.",
+    href: "/methodology",
+    link: "Read the research standards",
   },
   {
     id: "updates",
@@ -575,9 +696,11 @@ export function normalizeHelp(text: string) {
 export function findHelp(question: string): HelpTopic | null {
   const q = ` ${normalizeHelp(question)} `;
   if (!q.trim()) return null;
+  if (/^what is (the )?pick of (the )?day$/.test(q.trim()))
+    return helpTopics.find((t) => t.id === "pick-of-day")!;
   // Actual predictions/selection advice always route away, including compound prompts.
   if (
-    /\b(who (will|wins|should win)|should i (bet|tail|play|take)|best (bet|pick|prop)|what (is|are|s) (the |your |our )?(pick|play|lean)|will .* (hit|win|cover)|predict|parlay|cash out|lock of|tonights pick|todays pick)\b/.test(
+    /\b(who (will|wins|should win)|should i (bet|tail|play|take)|best (bet|pick|prop)|what (is|are|s) (the |your |our )?(pick|play|lean)|will .* (hit|win|cover)|predict|build (me )?(a )?parlay|cash out|lock of|tonights pick|todays pick)\b/.test(
       q,
     )
   )
@@ -611,7 +734,7 @@ export const pickHelp: HelpTopic = {
   category: "Research",
   phrases: [],
   answer:
-    "I explain the platform; I don’t analyze games, recommend wagers or provide live odds. Open Matchup for game research and potential legs. The current published OFFICIAL PLAY is on Home. Check its timestamp and original price—an informational target is not an official wager.",
-  href: "/matchups",
-  link: "Open Matchup research",
+    "I explain the platform; I do not analyze games or provide live odds. Open The Zone for analyst research and Legs we like. Home features Pick of the Day and the separate Hail Mary. Check source times, targets and risks; an analyst stat target is not a verified sportsbook quote.",
+  href: "/feed",
+  link: "Open The Zone",
 };

@@ -41,5 +41,60 @@ test("unknown questions fall back and keyword substrings do not hallucinate answ
 test("knowledge uses unique topics and internal destinations", () => {
   assert.equal(new Set(helpTopics.map((t) => t.id)).size, helpTopics.length);
   for (const t of helpTopics)
-    assert.ok(["/", "/membership", "/history", "/matchups", "/feed", "/methodology", "/community"].includes(t.href));
+    assert.ok(
+      [
+        "/",
+        "/membership",
+        "/history",
+        "/matchups",
+        "/feed",
+        "/methodology",
+        "/community",
+        "/nba",
+        "/support",
+        "/account/verify-age",
+      ].includes(t.href),
+    );
+});
+
+test("redesigned app routes navigation, member actions and safety questions correctly", () => {
+  for (const [question, id] of [
+    ["Where do I start in the redesigned app?", "navigation"],
+    ["How do I post parlay in Community?", "community-posting"],
+    ["How do I switch to NBA?", "nba"],
+    ["Where are my tailed picks?", "join"],
+    ["Download card", "share"],
+    ["What is Pick of the Day?", "pick-of-day"],
+    ["What is Hail Mary?", "hail-mary"],
+    ["How do I report or block someone?", "moderation"],
+    ["Delete my account", "account-deletion"],
+    ["Verify my age", "age-verification"],
+    ["Who is JourneyBuilt?", "support"],
+    ["Build me a parlay", "pick-routing"],
+  ])
+    assert.equal(findHelp(question)?.id, id, question);
+});
+test("current help does not advertise retired challenge entry controls", () => {
+  for (const id of [
+    "payout-pending",
+    "bankroll",
+    "entry",
+    "copy",
+    "records",
+    "home",
+  ]) {
+    const topic = helpTopics.find((t) => t.id === id)!;
+    assert.doesNotMatch(
+      topic.answer,
+      /use Record my actual entry|enter your starting bankroll|tap My funds have cleared|Home is your challenge hub/,
+    );
+  }
+  assert.match(
+    helpTopics.find((t) => t.id === "join")!.answer,
+    /including losses/,
+  );
+  assert.match(
+    helpTopics.find((t) => t.id === "age-verification")!.answer,
+    /not activated yet/,
+  );
 });
