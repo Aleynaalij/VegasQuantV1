@@ -4,6 +4,7 @@ import "@/components/ask-vegas.css";
 import "./experience.css";
 import "./sports-light.css";
 import "./master.css";
+import "./nba.css";
 import NotificationBootstrap from "@/components/notification-bootstrap";
 import ProfileSetupGate from "@/components/profile-setup-gate";
 import PhoneContactPrompt from "@/components/phone-contact-prompt";
