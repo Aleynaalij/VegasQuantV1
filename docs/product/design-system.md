@@ -3,7 +3,7 @@
 Sportsbook-style, dark-first. Defined in `src/app/premium.css`, loaded after every legacy stylesheet.
 
 ## Theme
-- Dark is the default everywhere. On 2026-10-14 every saved choice was reset to dark (the storage key moved to `vq-theme-v2`). Members can still switch to Light in Account → Appearance, and that choice is remembered. The first-login "Choose your look" pop-up is retired.
+- Vegas Quant is dark only (2026-10-14). Light mode and the Appearance setting were removed; old saved theme choices are cleared on load. Legacy light-theme CSS is dormant and can be deleted as each page is migrated.
 - Tokens live on `html[data-theme="dark"]:root`. Change colors here, not in components.
 
 | Token | Use |
