@@ -1,4 +1,4 @@
-/** Vegas Quant: the Q Lens — a research lens crossed by a rising price line. */
+/** Vegas Quant: the Diamond Q — a playing-card diamond (Vegas) cut into a Q, with a money-green tail (the edge). */
 export default function BrandMark({ className = "" }: { className?: string }) {
   return (
     <svg
@@ -7,29 +7,21 @@ export default function BrandMark({ className = "" }: { className?: string }) {
       aria-hidden="true"
       focusable="false"
     >
-      <rect width="64" height="64" rx="17" fill="#2458ed" />
-      <circle
-        cx="30"
-        cy="29"
-        r="17"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="6"
-      />
+      <rect width="64" height="64" rx="15" fill="#101a33" />
+      <path d="M32 8 53 32 32 56 11 32Z" fill="#2f6bff" />
+      <path d="M32 8 53 32H11Z" fill="#5a8bff" />
+      <path d="M32 18 44 32 32 46 20 32Z" fill="#101a33" />
       <path
-        d="m37 39 13 13"
-        fill="none"
-        stroke="#fff"
-        strokeWidth="6"
+        d="M35 35 50 50"
+        stroke="#101a33"
+        strokeWidth="10"
         strokeLinecap="round"
       />
       <path
-        d="m17 34 10-10 7 6 14-15"
-        fill="none"
-        stroke="#a8f0b1"
-        strokeWidth="5"
+        d="M35 35 50 50"
+        stroke="#1ed883"
+        strokeWidth="5.5"
         strokeLinecap="round"
-        strokeLinejoin="round"
       />
     </svg>
   );
