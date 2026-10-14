@@ -13,6 +13,9 @@ import BrandMark from "./brand-mark";
 import DownloadCard from "./download-card";
 import LondonWinningSlip from "./london-winning-slip";
 import RavensWinningSlip from "./ravens-winning-slip";
+import AutomaticResultCard, {
+  type AutomaticResult,
+} from "./automatic-result-card";
 import BillsWinningSlip from "./bills-winning-slip";
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
@@ -26,6 +29,8 @@ import { noAccess, type Access } from "@/lib/membership";
 import { time } from "@/lib/domain";
 
 type Post = {
+  result_leg_key?: string | null;
+  result_details?: AutomaticResult | null;
   id: string;
   game: { slug: string } | null;
   game_id: string | null;
@@ -288,6 +293,13 @@ export default function ResearchFeed() {
                     />
                   ) : p?.market_label === "zone-win:london-q1-20261011" ? (
                     <LondonWinningSlip key={p.id} publishedAt={p.created_at} />
+                  ) : p?.result_leg_key && p.result_details ? (
+                    <AutomaticResultCard
+                      key={p.id}
+                      details={p.result_details}
+                      matchup={p.matchup}
+                      publishedAt={p.created_at}
+                    />
                   ) : p ? (
                     <article className="feed-post" key={p.id}>
                       <div className="feed-byline">

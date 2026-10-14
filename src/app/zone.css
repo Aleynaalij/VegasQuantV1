@@ -1033,3 +1033,6 @@ html[data-theme="dark"] body .notice[aria-label="Daily publication schedule"] st
 html[data-theme] body .zone-views a.selected {
   color: #fff !important;
 }
+
+.zone-winning-slip.result-miss { border-color: #b86c77; }
+.zone-winning-slip.result-miss .win-badge { background: #fca5a5; color: #41121a; }

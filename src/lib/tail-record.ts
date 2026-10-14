@@ -1,9 +1,11 @@
 export type TailPublication = {
   result: string | null;
   result_source?: string | null;
+  review_status?: string;
 };
 export function verifiedTailResult(publication?: TailPublication) {
   if (
+    publication?.review_status === "CONFLICT" ||
     !publication?.result_source ||
     !/^https:\/\//.test(publication.result_source)
   )

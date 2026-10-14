@@ -12,6 +12,7 @@ type Publication = {
   matchup: string;
   result: string | null;
   result_source: string | null;
+  review_status?: string;
 };
 type Row = Tail & { publication?: Publication };
 type OldEntry = {
@@ -74,6 +75,19 @@ export default function MyTailRecord() {
           if (!live || request !== epoch) return;
           if (result.error) throw result.error;
           for (const p of result.data || []) publications.set(p.leg_key, p);
+          const progress = await supabase
+            .from("leg_result_progress")
+            .select("leg_key,status")
+            .in(
+              "leg_key",
+              tails.slice(offset, offset + 50).map((t) => t.leg_key),
+            );
+          if (!live || request !== epoch) return;
+          if (progress.error) throw progress.error;
+          for (const p of progress.data || []) {
+            const publication = publications.get(p.leg_key);
+            if (publication) publication.review_status = p.status;
+          }
         }
         const archived = await supabase
           .from("personal_entry_state")
@@ -160,6 +174,11 @@ export default function MyTailRecord() {
             {row.publication?.market} {row.publication?.matchup}
           </p>
           <strong>{verifiedTailResult(row.publication)}</strong>
+          {row.publication?.review_status === "CONFLICT" && (
+            <p>
+              Provider discrepancy · prior recorded outcome retained for review.
+            </p>
+          )}
           <p>Tailed {new Date(row.created_at).toLocaleString()}</p>
           {row.publication?.result_source?.startsWith("https://") && (
             <a

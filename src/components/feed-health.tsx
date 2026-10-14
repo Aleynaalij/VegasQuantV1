@@ -149,10 +149,12 @@ export default function FeedHealth() {
               </p>
               <h3>2 · Verify outcomes</h3>
               <p>
-                Review the queue below against the exact published market and
-                source. A final score alone does not settle a player prop.
-                Missing evidence stays pending in member Records; no stakes or
-                profit are assumed.
+                The scheduled worker verifies supported full-game NFL player
+                stats automatically. Review unsupported or blocked selections in
+                the latest Editorial result sync run and the queue below against
+                the exact published market and source. A final score alone does
+                not settle a player prop. Missing evidence stays pending in
+                member Records; no stakes or profit are assumed.
               </p>
               <h3>3 · Finish launch acceptance</h3>
               <p>
