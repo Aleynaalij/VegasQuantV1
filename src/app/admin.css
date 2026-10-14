@@ -97,8 +97,6 @@
   padding: 0 0 18px;
 }
 .publish-review pre {
-  max-height: 480px;
-  overflow: auto;
   background: #0c1410;
   padding: 18px;
   border-radius: 5px;

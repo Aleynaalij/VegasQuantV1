@@ -1,9 +1,4 @@
 /* Picks: pick cards, legs, alerts, prices, team marks. Split from the legacy stylesheets on 2026-10-14, in their cascade order. */
-.official-card {
-  border: 1px solid #477360;
-  border-radius: 9px;
-  padding: 22px;
-}
 .official-card .panel-head {
   padding: 0 0 14px;
   border: 0;
@@ -14,27 +9,21 @@
 }
 .official-card > h2 {
   font-size: 30px;
-  letter-spacing: -1px;
   margin: 13px 0;
 }
 .official-price {
-  font-size: 29px;
-  color: var(--green);
   font-weight: 700;
 }
 .official-price span {
-  font-size: 11px;
   margin-left: 9px;
   font-weight: 400;
 }
 .pick-finances {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
   border-top: 1px solid #35473d;
   border-bottom: 1px solid #35473d;
   padding: 20px 0;
-  margin: 23px 0;
 }
 .pick-finances span,
 .pick-numbers span {
@@ -48,12 +37,7 @@
   margin-top: 4px;
 }
 .pick-numbers {
-  display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 17px 10px;
-}
-.pick-numbers b {
-  font-size: 15px;
 }
 .number-track {
   display: grid;
@@ -84,21 +68,11 @@
   color: var(--muted);
   margin: 16px 0;
 }
-.pick-reason h3 {
-  font-size: 11px;
-  letter-spacing: 1px;
-  margin: 18px 0 7px;
-}
 .pick-reason p,
 .review-block p {
   font-size: 12px;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-}
-.price-rules {
-  padding: 12px;
-  background: #0c1517;
-  border-radius: 6px;
 }
 .price-rules p {
   display: flex;
@@ -137,7 +111,6 @@
 .pick-bottom {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
   align-items: center;
   font-size: 11px;
   color: var(--muted);
@@ -207,13 +180,11 @@
 .copy-pick textarea { width: 100%; font-size: 14px; }
 .slip-details { border-top:1px solid var(--border,#29383e); margin-top:16px; }
 .slip-details > summary { cursor:pointer; padding:16px 0; font-weight:600; }
-.slip-why{font-size:14px;line-height:1.7;max-width:65ch}
+.slip-why{font-size:14px;line-height:1.7}
 .slip-why strong{color:#79dfb8;margin-right:7px}
 .slip-why a{display:block;margin-top:6px}
-.featured-official .pick-odds-notice{font-size:11px;line-height:1.5}
-.featured-official .official-card{border-radius:22px}
-.pick-win-banner { display:flex; align-items:center; gap:20px; padding:24px 16px; margin-bottom:24px; border:1px solid #73dcb366; border-radius:18px; background:linear-gradient(135deg,#163e31,#0e201b); color:#87edbd; }
-.pick-win-banner h2 { margin:4px 0; font-size:clamp(28px,7vw,42px); letter-spacing:.06em; }
+.pick-win-banner { display:flex; align-items:center; margin-bottom:24px; border-radius:18px; color:#87edbd; }
+.pick-win-banner h2 { margin:4px 0; }
 .pick-win-banner p { margin:4px 0; }
 .pick-win-check { flex-shrink:0; filter:drop-shadow(0 0 12px #73dcb366); animation:pick-win-pop 700ms ease-out both; }
 @media (prefers-reduced-motion:reduce) {
@@ -225,10 +196,7 @@
 }
 .slip-brand-signature { display:flex; align-items:center; gap:9px; }
 .slip-brand-signature .vq-mark { width:26px; height:20px; }
-.official-card,
-.featured-official .official-card {
-  border: 1px solid #497661;
-  border-radius: 24px;
+.official-card {
   padding: 28px;
 }
 .official-card > .panel-head {
@@ -258,14 +226,12 @@
 }
 .slip-why {
   max-width: 70ch;
-  color: #bacdc1;
 }
 .pick-odds-notice {
   border: 0;
   border-left: 2px solid #4a6555;
   border-radius: 0;
   padding: 8px 12px;
-  color: #a8bdb0;
   max-width: 75ch;
 }
 .pick-publication {
@@ -296,7 +262,6 @@
   margin: 20px 0;
 }
 .pick-finances > div {
-  background: #0c1913;
   padding: 18px;
   border-radius: 14px;
 }
@@ -342,8 +307,7 @@
   letter-spacing: -0.7px;
 }
 @media (max-width: 600px) {
-  .official-card,
-  .featured-official .official-card {
+  .official-card {
     padding: 22px 18px;
     border-radius: 23px;
   }
@@ -480,7 +444,6 @@
   background: #fff !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
-  box-shadow: 0 4px 18px #16386006;
 }
 .btn.primary {
   background: #0866d8 !important;

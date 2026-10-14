@@ -119,7 +119,7 @@ html[data-theme="dark"] body .mobile-nav a.active::before {
 html[data-theme="dark"] body .mobile-nav a.active svg { color: var(--brand-ink); }
 
 /* ---------- Primitives ---------- */
-html[data-theme="dark"] body :is(.panel, .feed-post, .candidate-tracker, .feed-featured, .mi-game, .leg-record, .community-panel, .challenge-preview, .sports-ticker, .notebook, .community-sidebar > details, .official-card) {
+html[data-theme="dark"] body :is(.panel, .feed-post, .candidate-tracker, .feed-featured, .mi-game, .leg-record, .community-panel, .sports-ticker, .notebook, .community-sidebar > details, .official-card) {
   background: linear-gradient(180deg, #ffffff06, transparent 40%), var(--panel) !important;
   border: 1px solid var(--line) !important;
   border-radius: var(--radius) !important;
@@ -184,7 +184,7 @@ html[data-theme="dark"] body .badge {
   font-weight: 800;
   letter-spacing: 0.06em;
 }
-html[data-theme="dark"] body :is(.challenge-preview > summary span, .sports-ticker .ticker-label) {
+html[data-theme="dark"] body :is(.sports-ticker .ticker-label) {
   background: var(--money-soft) !important;
   color: var(--money) !important;
   border: 1px solid #1ed88355 !important;
@@ -597,7 +597,6 @@ html[data-theme] body .rule-jump a b { color: var(--brand-ink, #2458ed); }
 .records-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 13px; }
 .records-form small { margin-right: 4px; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted, #637086); }
 .records-form > span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; font-weight: 900; font-size: 13px; color: #fff; background: #7d8aa3; }
-.records-form > span.form-win { background: #12a866; }
 .records-form > span.form-loss { background: #d93a4e; }
 .records-form a { margin-left: auto; font-weight: 700; }
 html[data-theme="dark"] body .records-kpis > div { background: linear-gradient(180deg, #ffffff06, transparent 50%), var(--panel) !important; box-shadow: var(--shadow); }
