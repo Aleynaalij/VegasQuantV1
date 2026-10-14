@@ -57,6 +57,13 @@ export async function POST(req: Request) {
     ) {
       const object = event.data.object as Stripe.Checkout.Session;
       const session = await stripe.checkout.sessions.retrieve(object.id);
+      if (session.metadata?.order_id) {
+        const present = await db.rpc("billing_order_present", {
+          p_order: session.metadata.order_id,
+        });
+        if (present.error) throw present.error;
+        if (!present.data) return Response.json({ received: true });
+      }
       if (session.mode === "subscription") {
         const sid = idOf(session.subscription);
         if (sid) await syncSubscription(stripe, sid, event);

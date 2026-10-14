@@ -10,6 +10,11 @@ export async function syncSubscription(
 ) {
   const sub = await stripe.subscriptions.retrieve(id);
   if (!sub.metadata.order_id) return; // Other products on the owner's Stripe account.
+  const present = await serviceDb().rpc("billing_order_present", {
+    p_order: sub.metadata.order_id,
+  });
+  if (present.error) throw present.error;
+  if (!present.data) return; // A completed erasure must never recreate access from a late webhook.
   const item = sub.items.data[0];
   if (
     sub.items.data.length !== 1 ||
