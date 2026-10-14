@@ -7,9 +7,11 @@ import { supabase } from "@/lib/supabase";
 export default function LegActions({
   legKey,
   expired = false,
+  parlay = false,
 }: {
   legKey: string;
   expired?: boolean;
+  parlay?: boolean;
 }) {
   const [uid, setUid] = useState<string | null>(null);
   const [saved, setSaved] = useState(false),
@@ -157,7 +159,9 @@ export default function LegActions({
             : "Leg saved."
           : on
             ? "No longer tailing."
-            : "Added to your personal Records.",
+            : parlay
+              ? "Parlay added to Home and your personal Records."
+              : "Added to your personal Records.",
       );
       window.dispatchEvent(new Event("vq-saved-changed"));
     } catch {
@@ -178,7 +182,7 @@ export default function LegActions({
         onClick={() => void toggle("saved_legs")}
       >
         <Bookmark size={16} />
-        {saved ? "Saved" : "Save leg"}
+        {saved ? "Saved" : parlay ? "Save parlay" : "Save leg"}
       </button>
       <button
         aria-pressed={tail}
@@ -190,8 +194,17 @@ export default function LegActions({
         {count > 0 ? ` · ${count}` : ""}
       </button>
       <small>
-        Tailing adds this pick to <Link href="/history">your Records</Link>. It
-        does not place or record a wager.
+        {parlay ? (
+          <>
+            Tailing adds this parlay to <Link href="/">Home</Link> and{" "}
+            <Link href="/history">your Records</Link>.
+          </>
+        ) : (
+          <>
+            Tailing adds this pick to <Link href="/history">your Records</Link>.
+          </>
+        )}{" "}
+        It does not place or record a wager.
       </small>
       {notice && (
         <p role="status">

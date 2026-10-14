@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
-import { summarizeTails } from "@/lib/tail-record";
+import TailedParlays from "./tailed-parlays";
 import {
   forYou,
   type Follow,
@@ -15,10 +15,7 @@ import {
 // Signed-in Home block: followed teams and players, plus the member's tailed-pick record.
 export default function ForYou({ games }: { games: ForYouGame[] }) {
   const [uid, setUid] = useState<string | null>(null),
-    [items, setItems] = useState<ForYouItem[] | null>(null),
-    [tails, setTails] = useState<ReturnType<typeof summarizeTails> | null>(
-      null,
-    );
+    [items, setItems] = useState<ForYouItem[] | null>(null);
   useEffect(() => {
     let live = true,
       epoch = 0;
@@ -29,18 +26,13 @@ export default function ForYou({ games }: { games: ForYouGame[] }) {
       if (!live || n !== epoch) return;
       setUid(id);
       if (!id) return;
-      const [f, p, t] = await Promise.all([
+      const [f, p] = await Promise.all([
         supabase.from("topic_follows").select("kind,topic").eq("user_id", id),
         supabase
           .from("research_feed_posts")
           .select("id,title,matchup,summary,game_id,created_at")
           .order("created_at", { ascending: false })
           .limit(40),
-        supabase
-          .from("leg_tails")
-          .select("leg_key")
-          .eq("user_id", id)
-          .limit(500),
       ]);
       if (!live || n !== epoch) return;
       setItems(
@@ -52,25 +44,7 @@ export default function ForYou({ games }: { games: ForYouGame[] }) {
               (p.data || []) as ForYouPost[],
             ),
       );
-      if (!t.error && t.data?.length) {
-        const keys = t.data.map((x) => x.leg_key);
-        const results: {
-          result: string | null;
-          result_source: string | null;
-        }[] = [];
-        for (let i = 0; i < keys.length; i += 100) {
-          const r = await supabase
-            .from("published_legs")
-            .select("result,result_source")
-            .in("leg_key", keys.slice(i, i + 100));
-          if (r.error) return;
-          results.push(...(r.data || []));
-        }
-        if (live && n === epoch)
-          setTails(
-            summarizeTails(results.map((publication) => ({ publication }))),
-          );
-      } else setTails(null);
+
     }
     void load();
     const auth = supabase.auth.onAuthStateChange(() =>
@@ -90,16 +64,7 @@ export default function ForYou({ games }: { games: ForYouGame[] }) {
           {items.length ? "Edit follows" : "Follow teams"} →
         </Link>
       </header>
-      {tails && (
-        <Link className="vq-foryou-tails" href="/history">
-          <span>Your tailed picks</span>
-          <b>
-            {tails.wins}–{tails.losses}
-            {tails.pushes ? `–${tails.pushes}` : ""}
-          </b>
-          <small>{tails.pending} pending</small>
-        </Link>
-      )}
+      <TailedParlays />
       {items.length ? (
         <ul>
           {items.slice(0, 5).map(({ follow, game, post }) => (

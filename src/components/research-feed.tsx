@@ -404,10 +404,9 @@ export default function ResearchFeed() {
                         </span>
                         <strong>{item.value.title}</strong>
                         <span>
-                          {item.value.candidates.length}{" "}
-                          {item.value.candidates.length === 1
-                            ? "selection"
-                            : "selections"}{" "}
+                          {item.value.candidates[0]?.parlay
+                            ? `One parlay · ${item.value.candidates.filter(c => !c.parlay).length} legs`
+                            : `${item.value.candidates.length} ${item.value.candidates.length === 1 ? "selection" : "selections"}`}{" "}
                           ·{" "}
                           <span className="zone-expand">
                             <span aria-hidden="true">＋</span> Expand

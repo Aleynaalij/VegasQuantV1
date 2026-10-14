@@ -43,3 +43,12 @@ test("Today drops a release once a price revision supersedes it", () => {
   ], now);
   assert.deepEqual(w.flatMap((x) => x.releases.map((r) => r.id)), ["new"]);
 });
+
+test("Today lists individual targets without counting their parlay bundle as a leg", () => {
+  const w = todayWindows([release("ticket", "2026-10-16T00:15:00Z", [
+    leg("Six-leg parlay", { parlay: true }),
+    leg("JSN"),
+    leg("Wilson"),
+  ])], Date.parse("2026-10-14T18:00:00Z"));
+  assert.deepEqual(w[0].releases[0].candidates.map(c => c.name), ["JSN", "Wilson"]);
+});

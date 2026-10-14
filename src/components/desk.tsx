@@ -37,7 +37,6 @@ import PickCard from "./pick-card";
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker from "./candidate-tracker";
 import HowItWorks from "./how-it-works";
-import TodayLegs from "./today-legs";
 import SectionBoundary from "./section-boundary";
 import ForYou from "./for-you";
 import PublicOverview from "./public-overview";
@@ -361,9 +360,6 @@ export default function DeskApp({
           <>
             <SectionBoundary name="Pick of the Day">
               <CandidateTracker activeOnly featured pickOfDay />
-            </SectionBoundary>
-            <SectionBoundary name="Today’s legs">
-              <TodayLegs />
             </SectionBoundary>
             <SectionBoundary name="For you">
               <ForYou games={d.games} />
