@@ -638,3 +638,23 @@ html[data-theme="light"] body .pick-reason h3 { color: #23408f !important; }
 html[data-theme="light"] body :is(.price-rules, .pick-public-money, .public-money-card, .pick-splits) { background: var(--panel2, #f4f7ff) !important; border-color: var(--line) !important; color: var(--text) !important; }
 html[data-theme="light"] body :is(.price-rules, .pick-public-money, .public-money-card, .pick-splits) :is(p, small, span) { color: #4f6079 !important; }
 html[data-theme="light"] body :is(.price-rules, .pick-public-money, .public-money-card, .pick-splits) :is(strong, b, h3) { color: var(--text) !important; }
+
+/* Signed-in identity lives in the top bar: your photo opens your profile. */
+html[data-theme] body .top-actions .top-profile {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--brand, #2458ed);
+  background: var(--panel2, #eef2f8);
+  overflow: hidden;
+  flex-shrink: 0;
+  color: var(--text, #14233a) !important;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+html[data-theme] body .top-actions .top-profile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+html[data-theme] body .top-actions .top-profile:focus-visible { outline: 3px solid #8daaff; outline-offset: 2px; }

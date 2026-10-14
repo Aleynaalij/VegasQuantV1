@@ -139,55 +139,58 @@ export default function CommunityHome({
     .slice(0, 5);
   return (
     <section className="community-home community-resume">
-      <aside
-        className="community-profile-rail"
-        aria-label="Your community profile"
-      >
-        <div className="profile-cover">
-          <span>VQ / COMMUNITY</span>
-        </div>
-        <div className="profile-rail-content">
-          <Avatar profile={profile} />
-          <span className="eyebrow">VEGAS QUANT COMMUNITY</span>
-          <h1>
-            {profile.username || (uid ? "Your profile" : "Find your people.")}
-          </h1>
-          {profile.username && (
-            <span className="profile-handle">@{profile.username}</span>
-          )}
-          <p>{profile.region || "Research together. Follow at your pace."}</p>
-          <SocialLinks profile={profile} />
-          {uid ? (
-            profile.username ? (
-              <Link
-                className="profile-view-link"
-                href={`/community/${encodeURIComponent(profile.username)}`}
-              >
-                My activity →
-              </Link>
-            ) : (
-              <Link
-                className="profile-view-link"
-                href="/membership#community-settings"
-              >
-                Set up your identity in Account →
-              </Link>
-            )
-          ) : (
-            <Link className="primary" href="/membership">
-              Join the community →
-            </Link>
-          )}
-          <div className="profile-rail-note">
-            <span className="eyebrow">THE 5-SPOT CHALLENGE</span>
-            <p>
-              Five qualifying stages.
-              <br />
-              Your own pace.
-            </p>
+      {/* Members with a profile reach it from the photo in the top bar, so Home stays about the games. */}
+      {!(uid && profile.username) && (
+        <aside
+          className="community-profile-rail"
+          aria-label="Your community profile"
+        >
+          <div className="profile-cover">
+            <span>VQ / COMMUNITY</span>
           </div>
-        </div>
-      </aside>
+          <div className="profile-rail-content">
+            <Avatar profile={profile} />
+            <span className="eyebrow">VEGAS QUANT COMMUNITY</span>
+            <h1>
+              {profile.username || (uid ? "Your profile" : "Find your people.")}
+            </h1>
+            {profile.username && (
+              <span className="profile-handle">@{profile.username}</span>
+            )}
+            <p>{profile.region || "Research together. Follow at your pace."}</p>
+            <SocialLinks profile={profile} />
+            {uid ? (
+              profile.username ? (
+                <Link
+                  className="profile-view-link"
+                  href={`/community/${encodeURIComponent(profile.username)}`}
+                >
+                  My activity →
+                </Link>
+              ) : (
+                <Link
+                  className="profile-view-link"
+                  href="/membership#community-settings"
+                >
+                  Set up your identity in Account →
+                </Link>
+              )
+            ) : (
+              <Link className="primary" href="/membership">
+                Join the community →
+              </Link>
+            )}
+            <div className="profile-rail-note">
+              <span className="eyebrow">THE 5-SPOT CHALLENGE</span>
+              <p>
+                Five qualifying stages.
+                <br />
+                Your own pace.
+              </p>
+            </div>
+          </div>
+        </aside>
+      )}
       <details className="profile-roster community-directory community-drawer">
         <summary>
           <span>
@@ -234,7 +237,14 @@ export default function CommunityHome({
             </p>
           ) : (
             <div className={`community-roster ${expanded ? "expanded" : ""}`}>
-              {(expanded ? [...members].sort((a,b)=>Number(b.visible)-Number(a.visible)) : [...members].sort((a,b)=>Number(b.visible)-Number(a.visible)).slice(0, 8)).map((m) => (
+              {(expanded
+                ? [...members].sort(
+                    (a, b) => Number(b.visible) - Number(a.visible),
+                  )
+                : [...members]
+                    .sort((a, b) => Number(b.visible) - Number(a.visible))
+                    .slice(0, 8)
+              ).map((m) => (
                 <Link
                   href={
                     m.visible === false
