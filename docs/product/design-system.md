@@ -1,9 +1,10 @@
 # Vegas Quant Premium design system
 
-Sportsbook-style, dark-first. Defined in `src/app/premium.css`, loaded after every legacy stylesheet.
+Sportsbook-style and dark only. Defined in `src/app/premium.css`, loaded after every legacy stylesheet. Navigation: Home / The Zone / Community / Records / Account, with separate NFL and NBA desks (see `community-zone.md`).
 
 ## Theme
-- Vegas Quant is dark only (2026-10-14). Light mode and the Appearance setting were removed; old saved theme choices are cleared on load. Legacy light-theme CSS is dormant and can be deleted as each page is migrated.
+- Vegas Quant is dark only (2026-10-14). `<html>` renders with `data-theme="dark"` from the server, the Light mode and Appearance setting were removed, and old saved theme choices are cleared on load.
+- Light-theme rules (all of `sports-light.css`, plus `html[data-theme="light"]` and light fallbacks elsewhere) no longer apply and can be deleted as each page is migrated.
 - Tokens live on `html[data-theme="dark"]:root`. Change colors here, not in components.
 
 | Token | Use |
@@ -22,7 +23,7 @@ Sportsbook-style, dark-first. Defined in `src/app/premium.css`, loaded after eve
 - One primary (blue gradient) action per card. Secondary actions use the ghost style.
 - Selected chips and tabs are solid (`--text` background); unselected chips are outlined.
 - Numbers use tabular figures so prices and countdowns don't jitter.
-- Minimum text size is 11px. All text meets WCAG AA contrast in both themes.
+- Minimum text size is 11px. All text meets WCAG AA contrast on the dark theme.
 
 ## Brand
 The logo is the **prestige VQ**: an original interlocking serif VQ monogram, drawn in `BrandMark` and `public/brand/vq-mark.svg`. Cool silver `#E4EAF4`, royal blue `#4378FF`, midnight navy `#0B1220`. Installed app assets are `public/icons/vq-prestige-*.png`; legacy icon URLs also resolve to the current mark. Use the monogram for small icons and a spaced VEGAS QUANT wordmark for opening screens. Vegas Quant is a product of JourneyBuilt, LLC.
@@ -53,4 +54,4 @@ Citations are required for NBA official picks (migration `20261014015003_nba_bib
 - Dead CSS (selectors whose classes appear nowhere in the code) was removed from the legacy files on 2026-10-14. That cut about 950 lines and 280 selectors, and was checked by pixel-comparing 60 renders (15 pages × phone/desktop × dark/light) before and after.
 - **The Zone moved (2026-10-14):** every rule for the 56 Zone-only classes (feed, selections, tickets, win slips) was moved out of the four legacy files into `src/app/zone.css`, in cascade order. 257 selectors merged into 200 rules, and the legacy files lost about 600 lines. Pixel comparison of all 60 renders showed zero changes. Grouped `:is()` rules stay in the legacy files for now, because splitting them would change specificity.
 - **Records moved (2026-10-14):** 14 Records-only classes moved to `src/app/records.css` (63 selectors merged into 50 rules). Element-level comparison caught three cascade-order differences, which are pinned in the file. All 60 renders match.
-- Next pages: matchups/game board, Home community, Account. Use the same method: find the classes used only by that page's components, move them, merge, then pixel-compare.
+- Next pages: the Zone's Games view (`/matchups`, `matchup-intelligence.tsx`), Community, Account. Use the same method: find the classes used only by that page's components, move them, merge, then pixel-compare. Comparisons only need the dark theme now.
