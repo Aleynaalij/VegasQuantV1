@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabase";
-const key = "vq-theme-v1";
+/** v2 resets everyone to dark once (Oct 2026); only an explicit Light choice is stored. */
+const key = "vq-theme-v2";
 function apply(theme: string) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
@@ -21,38 +21,12 @@ export function ThemeSettings() {
     {["light", "dark"].map(t => <button key={t} type="button" aria-pressed={theme === t} className={theme === t ? "selected" : ""} onClick={() => apply(t)}>{t === "light" ? "☀ Light" : "☾ Dark"}</button>)}
   </div>;
 }
+/** Keeps the browser theme-color in sync with the active theme. Dark is the default; Light lives in Account → Appearance. */
 export default function ThemePrompt() {
   const pathname = usePathname();
   useEffect(() => {
     const theme = document.documentElement.dataset.theme || "dark";
     document.querySelectorAll('meta[name="theme-color"]').forEach(meta => meta.setAttribute("content", theme === "dark" ? "#070b14" : "#ffffff"));
   }, [pathname]);
-  const dialog = useRef<HTMLDialogElement>(null);
-  const [uid, setUid] = useState<string | null>(null);
-  useEffect(() => {
-    let live = true;
-    const check = (id?: string) => {
-      if (!live) return;
-      let chosen = false;
-      try { chosen = !!localStorage.getItem(`vq-theme-choice-v1:${id}`); } catch {}
-      setUid(id && !chosen ? id : null);
-    };
-    void supabase.auth.getSession().then(({data}) => check(data.session?.user.id));
-    const {data} = supabase.auth.onAuthStateChange((_e,s) => check(s?.user.id));
-    return () => { live = false; data.subscription.unsubscribe(); };
-  }, []);
-  useEffect(() => {
-    if (uid) dialog.current?.showModal(); else dialog.current?.close();
-  }, [uid]);
-  function done() {
-    if (uid) try { localStorage.setItem(`vq-theme-choice-v1:${uid}`, "1"); } catch {}
-    setUid(null);
-  }
-  return <dialog ref={dialog} className="theme-dialog" aria-labelledby="theme-heading" onCancel={done}>
-    <span className="eyebrow">YOUR VIEW. YOUR ZONE.</span>
-    <h2 id="theme-heading">Choose your look</h2>
-    <p>Bright and clear, or dark and focused. You can change this anytime in Account → Appearance.</p>
-    <ThemeSettings />
-    <button className="primary" onClick={done}>Continue</button>
-  </dialog>;
+  return null;
 }
