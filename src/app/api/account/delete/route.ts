@@ -89,11 +89,13 @@ export async function POST(req: Request) {
         {
           error: msg.includes("administrator")
             ? "Transfer administrator access before deleting this account."
-            : msg.includes("initializing")
-              ? "A checkout is still initializing. Wait for it to finish or expire, then retry."
-              : msg.includes("already in progress")
-                ? "Deletion is already in progress. Please wait before retrying."
-                : "Deletion could not start. Sign in again and retry; no account data was deleted.",
+            : msg.includes("Age verification")
+              ? "An age check is still initializing. Wait for it to finish or expire, then retry deletion."
+              : msg.includes("initializing")
+                ? "A checkout is still initializing. Wait for it to finish or expire, then retry."
+                : msg.includes("already in progress")
+                  ? "Deletion is already in progress. Please wait before retrying."
+                  : "Deletion could not start. Sign in again and retry; no account data was deleted.",
         },
         409,
       );
