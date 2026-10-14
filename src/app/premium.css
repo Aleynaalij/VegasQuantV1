@@ -739,3 +739,20 @@ html[data-theme] body .records-title { font-size:18px; margin:20px 0 0; color:va
 /* ---------- Soft failure notices: a section or the live data is retrying ---------- */
 html[data-theme] body .vq-soft-notice { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin:12px 0; padding:12px 14px; border:1px dashed var(--line-strong); border-radius:12px; background:transparent; font-size:13px; line-height:1.5; color:var(--muted) !important; }
 .vq-soft-notice .text-link { padding:0; border:0; background:none; font-weight:700; cursor:pointer; }
+
+/* ---------- Home "For you": follows and tailed-pick record ---------- */
+.vq-foryou { border:1px solid var(--line); background:var(--panel); border-radius:18px; padding:16px; margin:16px 0; }
+.vq-foryou > header { display:flex; justify-content:space-between; align-items:baseline; gap:10px; margin-bottom:10px; }
+html[data-theme] body .vq-foryou h2 { font-size:18px; margin:0; color:var(--text) !important; }
+.vq-foryou > header a { font-size:13px; font-weight:600; white-space:nowrap; }
+html[data-theme] body .vq-foryou-tails { display:flex; align-items:baseline; gap:10px; padding:12px 14px; margin-bottom:10px; border-radius:12px; background:var(--panel2); border:1px solid var(--line); color:var(--text) !important; text-decoration:none; }
+html[data-theme] body .vq-foryou-tails span { font-size:13px; color:var(--muted) !important; flex:1; }
+html[data-theme] body .vq-foryou-tails b { font-size:18px; font-variant-numeric:tabular-nums; color:var(--text) !important; }
+html[data-theme] body .vq-foryou-tails small { font-size:12px; color:var(--muted) !important; }
+.vq-foryou ul { list-style:none; margin:0; padding:0; }
+.vq-foryou li { display:grid; gap:3px; padding:10px 0; border-top:1px solid var(--line); }
+.vq-foryou li:first-child { border-top:0; }
+html[data-theme] body .vq-foryou li b { font-size:15px; color:var(--text) !important; }
+html[data-theme] body .vq-foryou li a, html[data-theme] body .vq-foryou li small { font-size:13px; line-height:1.45; }
+html[data-theme] body .vq-foryou li small, html[data-theme] body .vq-foryou p { color:var(--muted) !important; }
+html[data-theme] body .vq-foryou p { font-size:13.5px; line-height:1.6; margin:0; }

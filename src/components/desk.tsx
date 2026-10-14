@@ -38,6 +38,7 @@ import CandidateTracker from "./candidate-tracker";
 import HowItWorks from "./how-it-works";
 import TodayLegs from "./today-legs";
 import SectionBoundary from "./section-boundary";
+import ForYou from "./for-you";
 import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
 import UpdateFeed from "./update-feed";
@@ -362,6 +363,9 @@ export default function DeskApp({
             </SectionBoundary>
             <SectionBoundary name="Today’s legs">
               <TodayLegs />
+            </SectionBoundary>
+            <SectionBoundary name="For you">
+              <ForYou games={d.games} />
             </SectionBoundary>
             <SectionBoundary name="Next kickoff">
               <HomeBrief games={d.games} />
