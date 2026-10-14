@@ -584,10 +584,9 @@ export default function Membership() {
           </p>
           <h3>Free Community</h3>
           <p>
-            The 5-Spot Challenge, official published picks and edge cards,
-            decision alerts, Community profiles, share cards, basic personal
-            bankroll tracking and the public official record—including losses
-            and passes.
+            Published picks and research cards, decision alerts, Community
+            profiles, share cards, personal tailed-pick records and the public
+            official record—including losses and passes.
           </p>
           <h3>Premium research · $5/month or $20 for the 2026 season</h3>
           <p>

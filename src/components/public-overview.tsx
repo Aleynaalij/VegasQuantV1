@@ -3,10 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ExploreCards from "./explore-cards";
 import ResearchPulse from "./research-pulse";
-import CommunityHome from "./community-home";
 import HomeBrief from "./home-brief";
 import DecisionBoard from "./decision-board";
-import ChallengeRun from "./challenge-run";
 import { Shell, Panel, Stat, Badge } from "./ui";
 import { money, time, type Game } from "@/lib/domain";
 import type { Overview } from "@/lib/membership";
@@ -118,47 +116,14 @@ export default function PublicOverview({
     );
   return (
     <Shell>
-      {!challenge && <HomeBrief games={games} />}
-      {challenge ? (
-        <CommunityHome challengeId={challenge.id} number={challenge.number}>
-          <HomeBrief games={games} />
-          <DecisionBoard games={games} />
-          <ChallengeRun
-            key={challenge.id}
-            challenge={challenge}
-            stages={
-              overview?.stages.filter((s) => s.challenge_id === challenge.id) ||
-              []
-            }
-          />
-        </CommunityHome>
-      ) : (
-        <div className="heading">
-          <h1>The 5-Spot Challenge</h1>
-          <p>Loading the next run…</p>
-        </div>
-      )}
+      <HomeBrief games={games} />
+      <DecisionBoard games={games} />
+      <div className="heading">
+        <h1>Vegas Quant</h1>
+        <p>Current sports research, picks we like and community.</p>
+      </div>
       <ExploreCards />
       <ResearchPulse proof />
-      <details className="admin-section">
-        <summary>How the challenge works</summary>
-        <div className="notebook">
-          <p>
-            Five qualifying stages. Preferred windows: Thursday night, Sunday
-            early, Sunday late, Sunday night and Monday night. Follow each
-            decision at your own pace.
-          </p>
-          <p>
-            The official experiment starts with $20. An approximately $640
-            target is aspirational; actual balances use real odds. A stage
-            pauses when there is no qualifying edge.
-          </p>
-          <p>
-            Joining and checking in are free. There are no entry fees or prizes.
-            Research membership unlocks the analyst’s detailed research.
-          </p>
-        </div>
-      </details>
       <details className="admin-section">
         <summary>Explore the research membership</summary>
         <section className="membership-lock">
