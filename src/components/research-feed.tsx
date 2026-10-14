@@ -55,6 +55,7 @@ export default function ResearchFeed() {
     [access, setAccess] = useState<Access>(noAccess),
     [loading, setLoading] = useState(true),
     [error, setError] = useState(""),
+    [openRelease, setOpenRelease] = useState(""),
     [filter, setFilter] = useState("All"),
     [limit, setLimit] = useState(pageSize),
     [saving, setSaving] = useState(false),
@@ -171,6 +172,14 @@ export default function ResearchFeed() {
   }
   const timeline = feedTimeline(posts, releases, edgeReleases, filter);
   const [zoneView, setZoneView] = useState("Latest");
+  useEffect(() => {
+    const hash = window.location.hash.match(/^#release-([\w-]+)$/);
+    if (hash) setOpenRelease(hash[1]);
+  }, []);
+  useEffect(() => {
+    if (!openRelease || loading) return;
+    document.getElementById(`release-${openRelease}`)?.scrollIntoView({ block: "start" });
+  }, [openRelease, loading]);
   useEffect(() => {
     const view = new URLSearchParams(window.location.search).get("view");
     setZoneView(
@@ -343,7 +352,12 @@ export default function ResearchFeed() {
                       }
                     />
                   ) : item.kind === "selection" ? (
-                    <details className="zone-drop" key={item.key}>
+                    <details
+                      className="zone-drop"
+                      key={item.key}
+                      id={`release-${item.value.id}`}
+                      open={openRelease === item.value.id || undefined}
+                    >
                       <summary>
                         <span className="eyebrow">
                           PICK DROP · {time(item.value.created_at)}
