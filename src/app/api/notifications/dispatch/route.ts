@@ -46,11 +46,25 @@ export async function POST(req: Request) {
         let delivered = false,
           expired = false;
         try {
+          const eligible = await db.rpc("age_push_delivery_allowed", {
+            p_delivery: job.id,
+          });
+          if (eligible.error) throw Error("Age eligibility unavailable");
+          if (!eligible.data) return; // Keep research out of unverified accounts, including queued deliveries.
           if (!validPushEndpoint(job.endpoint)) expired = true;
           else {
             await webpush.sendNotification(
               { endpoint: job.endpoint, keys: job.keys },
-              JSON.stringify({ pick_id: job.pick_id, type: job.type, ...(job.event_key?.startsWith("app-update:") ? { announcement: "Vegas Quant has been updated. Open the app for the new design, game board and community." } : {}) }),
+              JSON.stringify({
+                pick_id: job.pick_id,
+                type: job.type,
+                ...(job.event_key?.startsWith("app-update:")
+                  ? {
+                      announcement:
+                        "Vegas Quant has been updated. Open the app for the new design, game board and community.",
+                    }
+                  : {}),
+              }),
               {
                 TTL: 1800,
                 timeout: 8000,

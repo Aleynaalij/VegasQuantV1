@@ -1,6 +1,6 @@
 "use client";
 import FollowTopics from "./follow-topics";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
@@ -10,6 +10,8 @@ import FriendPass from "./friend-pass";
 import CommunitySettings from "./community-settings";
 import PickAlerts from "./pick-alerts";
 import AccountDeletion from "./account-deletion";
+import AgeVerificationPanel from "./age-verification-panel";
+import type { AgeStatus } from "@/lib/age-verification";
 import BillingAccount from "./billing-account";
 import type { Session } from "@supabase/supabase-js";
 type Quote = {
@@ -20,6 +22,7 @@ type Quote = {
 };
 export default function Membership() {
   const router = useRouter();
+  const [age, setAge] = useState<AgeStatus | null>(null);
   const [session, setSession] = useState<Session | null>(null),
     [access, setAccess] = useState<Access>(noAccess),
     [signup, setSignup] = useState(false),
@@ -31,15 +34,30 @@ export default function Membership() {
     [factor, setFactor] = useState(""),
     [qr, setQr] = useState(""),
     [setupKey, setSetupKey] = useState("");
+  const refreshGeneration = useRef(0),
+    accountId = useRef<string | null>(null);
   async function refresh() {
+    const current = ++refreshGeneration.current;
     const { data } = await supabase.auth.getSession();
+    if (current !== refreshGeneration.current) return noAccess;
+    if (accountId.current !== (data.session?.user.id || null)) {
+      accountId.current = data.session?.user.id || null;
+      setAge(null);
+      setAccess(noAccess);
+    }
     setSession(data.session);
     if (!data.session) {
       setFactor("");
       setQr("");
       setSetupKey("");
     }
+    if (data.session) {
+      const ageResult = await supabase.rpc("age_verification_status");
+      if (current !== refreshGeneration.current) return noAccess;
+      setAge(ageResult.error ? null : ageResult.data);
+    } else setAge(null);
     const r = await supabase.rpc("membership_status");
+    if (current !== refreshGeneration.current) return noAccess;
     setAccess(r.error ? noAccess : r.data);
     return r.error ? noAccess : (r.data as Access);
   }
@@ -53,7 +71,12 @@ export default function Membership() {
         "Payment submitted. Access appears after payment verification. Test checkouts never unlock production research.",
       );
     void refresh();
-    const { data } = supabase.auth.onAuthStateChange(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, next) => {
+      refreshGeneration.current++;
+      if (accountId.current !== (next?.user.id || null)) {
+        setAge(null);
+        setAccess(noAccess);
+      }
       setTimeout(() => void refresh(), 0);
     });
     fetch("/api/billing/quote")
@@ -66,6 +89,7 @@ export default function Membership() {
       .catch(() => setNotice("Membership pricing is temporarily unavailable."));
     const timer = setInterval(() => void refresh(), 30000);
     return () => {
+      refreshGeneration.current++;
       data.subscription.unsubscribe();
       clearInterval(timer);
     };
@@ -114,7 +138,14 @@ export default function Membership() {
           : "Signed in.",
       );
       await refresh();
-      if (!signup) router.replace("/");
+      if (!signup) {
+        const gate = await supabase.rpc("age_verification_status");
+        router.replace(
+          gate.error || (gate.data.required && !gate.data.verified)
+            ? "/account/verify-age"
+            : "/",
+        );
+      }
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Sign in failed.");
     } finally {
@@ -232,6 +263,28 @@ export default function Membership() {
       setBusy(false);
     }
   }
+  if (session && (!age || (age.required && !age.verified)))
+    return (
+      <Shell active="account">
+        <div className="page-heading">
+          <span className="eyebrow">ACCOUNT SECURITY</span>
+          <h1>Verify your age to continue</h1>
+        </div>
+        <AgeVerificationPanel key={session.user.id} uid={session.user.id} />
+        <Panel title="Account controls">
+          <p>{session.user.email}</p>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => void supabase.auth.signOut()}
+          >
+            Sign out
+          </button>
+        </Panel>
+        <BillingAccount token={session.access_token} />
+        <AccountDeletion uid={session.user.id} />
+      </Shell>
+    );
   return (
     <Shell active="account">
       <div className="heading">
@@ -358,7 +411,9 @@ export default function Membership() {
                     Privacy Notice
                   </Link>{" "}
                   and understand that selections can lose. This is a
-                  self-declaration, not identity verification.
+                  self-declaration. Independent ID-and-selfie age verification
+                  is being introduced for new and existing accounts; this
+                  checkbox does not complete it.
                 </span>
               </label>
             ) : null}
@@ -389,6 +444,9 @@ export default function Membership() {
             )}
           </form>
         </Panel>
+      )}
+      {session && (
+        <AgeVerificationPanel key={session.user.id} uid={session.user.id} />
       )}
       {session && (
         <Panel title="Settings · Community profile">
