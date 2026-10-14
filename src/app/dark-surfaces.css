@@ -1,0 +1,111 @@
+/*
+ * GENERATED from the legacy stylesheets (globals, experience, sports-light, master) on 2026-10-14.
+ * Those files force light backgrounds with !important on every theme. These rules give the same
+ * elements dark surfaces in dark mode. Loaded before premium.css so component styles still win.
+ * Delete entries here as each legacy rule is retired.
+ */
+html[data-theme="dark"] body .account-wayfinding a,
+html[data-theme="dark"] body .activation-grid article,
+html[data-theme="dark"] body .admin-section,
+html[data-theme="dark"] body .alert-preference,
+html[data-theme="dark"] body .ask-vegas-answer,
+html[data-theme="dark"] body .ask-vegas-chat,
+html[data-theme="dark"] body .ask-vegas-dialog,
+html[data-theme="dark"] body .ask-vegas-form,
+html[data-theme="dark"] body .ask-vegas-header button,
+html[data-theme="dark"] body .ask-vegas-question,
+html[data-theme="dark"] body .ask-vegas-suggestions button,
+html[data-theme="dark"] body .ask-vegas-toolbar button,
+html[data-theme="dark"] body .ask-vegas-topics button,
+html[data-theme="dark"] body .balance-method,
+html[data-theme="dark"] body .board-filters button,
+html[data-theme="dark"] body .candidate-facts > div,
+html[data-theme="dark"] body .candidate-tracker,
+html[data-theme="dark"] body .candidate-tracker.fun-ticket,
+html[data-theme="dark"] body .challenge-preview,
+html[data-theme="dark"] body .challenge-run,
+html[data-theme="dark"] body .challenge-run[aria-disabled="true"],
+html[data-theme="dark"] body .challenge-run[aria-disabled="true"] .journey-dot,
+html[data-theme="dark"] body .community-count,
+html[data-theme="dark"] body .community-drawer,
+html[data-theme="dark"] body .community-panel,
+html[data-theme="dark"] body .community-person,
+html[data-theme="dark"] body .community-profile-rail,
+html[data-theme="dark"] body .community-resume .community-directory .community-person,
+html[data-theme="dark"] body .decision-board,
+html[data-theme="dark"] body .entry-dialog,
+html[data-theme="dark"] body .explore-cards a,
+html[data-theme="dark"] body .feed-featured,
+html[data-theme="dark"] body .feed-filters,
+html[data-theme="dark"] body .feed-matchup,
+html[data-theme="dark"] body .feed-post,
+html[data-theme="dark"] body .filter-bar,
+html[data-theme="dark"] body .follow-chips button,
+html[data-theme="dark"] body .follow-topics input,
+html[data-theme="dark"] body .follow-topics select,
+html[data-theme="dark"] body .game-comment,
+html[data-theme="dark"] body .game-thread textarea,
+html[data-theme="dark"] body .intel-row,
+html[data-theme="dark"] body .journey-dot,
+html[data-theme="dark"] body .leg-actions button,
+html[data-theme="dark"] body .leg-record,
+html[data-theme="dark"] body .member-form,
+html[data-theme="dark"] body .mi-game,
+html[data-theme="dark"] body .mi-search,
+html[data-theme="dark"] body .mi-section,
+html[data-theme="dark"] body .mi-target,
+html[data-theme="dark"] body .mi-watch,
+html[data-theme="dark"] body .official-card,
+html[data-theme="dark"] body .one-bankroll,
+html[data-theme="dark"] body .panel,
+html[data-theme="dark"] body .phone-contact-dialog,
+html[data-theme="dark"] body .phone-contact-dialog input[type=tel],
+html[data-theme="dark"] body .pick-finances > div,
+html[data-theme="dark"] body .pick-numbers > div,
+html[data-theme="dark"] body .pick-publication,
+html[data-theme="dark"] body .profile-rail-note,
+html[data-theme="dark"] body .profile-roster,
+html[data-theme="dark"] body .profile-socials a,
+html[data-theme="dark"] body .profile-view-link,
+html[data-theme="dark"] body .published-board>input,
+html[data-theme="dark"] body .research-notebook,
+html[data-theme="dark"] body .research-pulse,
+html[data-theme="dark"] body .run-actions,
+html[data-theme="dark"] body .run-next,
+html[data-theme="dark"] body .secondary,
+html[data-theme="dark"] body .section-switch button,
+html[data-theme="dark"] body .slate-windows button,
+html[data-theme="dark"] body .slip-why,
+html[data-theme="dark"] body .source-observations,
+html[data-theme="dark"] body .source-status,
+html[data-theme="dark"] body .sports-ticker,
+html[data-theme="dark"] body .stat,
+html[data-theme="dark"] body .ticket-leg,
+html[data-theme="dark"] body .update-bell,
+html[data-theme="dark"] body .workspace-index > a {
+  background: var(--panel) !important;
+  border-color: var(--line) !important;
+  color: var(--text);
+}
+
+/* Warm light notice boxes become amber cautions. */
+html[data-theme="dark"] body .daily-update-notice,
+html[data-theme="dark"] body .feed-next,
+html[data-theme="dark"] body .mi-access,
+html[data-theme="dark"] body .mi-historical,
+html[data-theme="dark"] body .notice,
+html[data-theme="dark"] body .pick-odds-notice,
+html[data-theme="dark"] body .run-notice {
+  background: var(--warn-soft, #ffb54720) !important;
+  border-color: #ffb54755 !important;
+  color: #ffd79a !important;
+}
+html[data-theme="dark"] body .daily-update-notice :is(p, small, strong, b),
+html[data-theme="dark"] body .feed-next :is(p, small, strong, b),
+html[data-theme="dark"] body .mi-access :is(p, small, strong, b),
+html[data-theme="dark"] body .mi-historical :is(p, small, strong, b),
+html[data-theme="dark"] body .notice :is(p, small, strong, b),
+html[data-theme="dark"] body .pick-odds-notice :is(p, small, strong, b),
+html[data-theme="dark"] body .run-notice :is(p, small, strong, b) {
+  color: #ffd79a !important;
+}

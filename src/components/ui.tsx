@@ -147,7 +147,7 @@ export function Shell({
             href={board}
           >
             <BookOpen size={18} />
-            Game board
+            Analysis
           </Link>
           <Link
             aria-current={active === "feed" ? "page" : undefined}
@@ -185,7 +185,11 @@ export function Shell({
           </h3>
           <p>
             {sport === "nba" ? (
-              "Minutes, role and opportunity before selections."
+              <>
+                Minutes, role and opportunity before selections.
+                <br />
+                <Link href="/nba/rules">Read the rulebook →</Link>
+              </>
             ) : (
               <>
                 A clear case. A verified price.
@@ -223,14 +227,18 @@ export function Shell({
             <b>
               {(
                 {
-                  home: "Sports desk",
-                  game: "Game board",
+                  home: sport === "nba" ? "NBA desk" : "Sports desk",
+                  game: "Analysis",
                   feed: "The Zone",
                   history: "Records",
                   performance: "Performance",
                   account: "Account",
                   admin: "Publishing",
                   intelligence: "Data Intelligence",
+                  methodology: "Methodology",
+                  error: "Something went wrong",
+                  missing: "Not found",
+                  rules: "Rulebook",
                 } as Record<string, string>
               )[active] || "Workspace"}
             </b>
@@ -267,8 +275,9 @@ export function Shell({
               Process over outcome.
             </span>
             <p>
-              Entertainment challenge. No wager is guaranteed. A stage may be
-              passed when no qualifying edge exists.
+              {sport === "nba"
+                ? "Research, not a guarantee. NBA selections publish only after the data is verified, and a pass is a valid decision."
+                : "Entertainment challenge. No wager is guaranteed. A stage may be passed when no qualifying edge exists."}
             </p>
             <Link href="/methodology">Methodology & transparency</Link>
           </footer>

@@ -2,7 +2,7 @@ import { Panel, Shell } from "@/components/ui";
 import validation from "../../../research/probability/artifacts/v0.3/validation.json";
 export default function Methodology() {
   return (
-    <Shell>
+    <Shell active="methodology">
       <div className="heading">
         <div>
           <span className="eyebrow">TRANSPARENCY</span>

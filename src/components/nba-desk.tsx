@@ -1,5 +1,14 @@
 import Link from "next/link";
-import { Activity, BookOpen, CalendarDays, ShieldCheck } from "lucide-react";
+import {
+  Activity,
+  BookMarked,
+  BookOpen,
+  CalendarDays,
+  ShieldCheck,
+} from "lucide-react";
+import KickoffCountdown from "./kickoff-countdown";
+import RuleChips from "./rule-chips";
+import { findRule, type BibleRule } from "@/lib/nba-rules";
 import { Empty, Panel, Shell } from "./ui";
 
 type NbaView = "home" | "game" | "feed" | "history";
@@ -42,6 +51,11 @@ const priorities = [
     text: "Exact sportsbook quotes, correlation, failure paths and a separate NBA validation record.",
   },
 ];
+/** Regular season opens October 20, 2026 (The NBA Betting Bible, Part III). Midnight ET. */
+const openingDay = "2026-10-20T04:00:00Z";
+const gradingRules = ["R-01", "R-02", "R-07", "R-20", "R-30", "R-39"]
+  .map(findRule)
+  .filter((rule): rule is BibleRule => !!rule);
 export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
   const copy = views[view];
   return (
@@ -52,6 +66,16 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
           <span className="badge muted">Preparation mode</span>
           <h1>{copy.title}</h1>
           <p>{copy.intro}</p>
+          <div className="nba-opening">
+            <span>
+              <b>Opening night</b> · Tue, Oct 20, 2026
+            </span>
+            <KickoffCountdown
+              kickoff={openingDay}
+              label="Time to NBA opening day"
+              liveLabel="Season underway"
+            />
+          </div>
           <div className="nba-launch-note">
             <ShieldCheck size={20} aria-hidden="true" />
             <span>
@@ -73,7 +97,21 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
                 <strong>The NBA Zone</strong>
                 <span>A dedicated feed for basketball →</span>
               </Link>
+              <Link href="/nba/rules">
+                <BookMarked aria-hidden="true" />
+                <strong>The rulebook</strong>
+                <span>The 40 commandments behind every play →</span>
+              </Link>
             </div>
+            <Panel title="How every NBA play and pass is graded">
+              <div className="nba-grading">
+                <p>
+                  Each NBA play and each pass cites the Bible rules behind it.
+                  Tap a rule to read it. These six apply to every decision:
+                </p>
+                <RuleChips rules={gradingRules} label="Core rules" />
+              </div>
+            </Panel>
             <Panel title="Building toward opening night">
               <div className="nba-readiness">
                 <p>

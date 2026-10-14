@@ -46,6 +46,7 @@ import ExploreCards from "./explore-cards";
 import ResearchPulse from "./research-pulse";
 import SourceStatus from "./source-status";
 import ResearchNotebook from "./research-notebook";
+import RecordsDashboard from "./records-dashboard";
 const pct = (v: number | null) => (v === null ? "—" : `${v.toFixed(2)}%`);
 const value = (s: unknown) =>
   s === undefined || s === null || s === "" ? "Awaiting analyst" : String(s);
@@ -143,15 +144,22 @@ export default function DeskApp({
     official =
       d.picks.find(
         (p) =>
-          p.game_id === g?.id && (page === "game" || p.stage_id === stage?.id) &&
-          (page !== "home" || isCurrentHomeWeek(d.games.find(game => game.id === p.game_id)?.kickoff)),
+          p.game_id === g?.id &&
+          (page === "game" || p.stage_id === stage?.id) &&
+          (page !== "home" ||
+            isCurrentHomeWeek(
+              d.games.find((game) => game.id === p.game_id)?.kickoff,
+            )),
       ) ||
       (page === "home"
         ? [...challengePicks]
             .sort((a, b) => b.created_at.localeCompare(a.created_at))
-            .find((p) =>
-              isCurrentHomeWeek(d.games.find(game => game.id === p.game_id)?.kickoff) &&
-              d.results.some((r) => r.pick_id === p.id && r.result === "WIN"),
+            .find(
+              (p) =>
+                isCurrentHomeWeek(
+                  d.games.find((game) => game.id === p.game_id)?.kickoff,
+                ) &&
+                d.results.some((r) => r.pick_id === p.id && r.result === "WIN"),
             )
         : undefined),
     gamePicks = d.picks.filter((p) => p.game_id === g?.id);
@@ -356,14 +364,15 @@ export default function DeskApp({
           )}
         </div>
         {error && <div className="notice">{error}</div>}
-        {page === "home" && !ch && <HomeBrief games={d.games} />}
+        {page === "home" && <HomeBrief games={d.games} />}
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
-            <HomeBrief games={d.games} />
             <DecisionBoard games={d.games} />
             <CandidateTracker activeOnly featured funPlayOnly />
             <CandidateTracker activeOnly featured pickOfDay />
-            <Link className="text-link" href="/feed">Legs we like · See the game board →</Link>
+            <Link className="text-link" href="/feed">
+              Legs we like · See the game board →
+            </Link>
             <DailyUpdateNotice />
             {ch.status === "PREP" ? (
               <details className="challenge-preview">
@@ -461,58 +470,8 @@ export default function DeskApp({
         {page === "performance" && <Performance desk={d} />}
         {page === "history" && (
           <>
+            <RecordsDashboard d={d} picks={ledgerPicks} />
             <PublishedLegBoard />
-            <section
-              className="records-overview"
-              aria-label="Published pick results"
-            >
-              <div>
-                <small>Published picks</small>
-                <strong>{ledgerPicks.length}</strong>
-              </div>
-              <div>
-                <small>Wins / losses</small>
-                <strong>
-                  {
-                    ledgerPicks.filter((p) =>
-                      d.results.some(
-                        (r) => r.pick_id === p.id && r.result === "WIN",
-                      ),
-                    ).length
-                  }{" "}
-                  /{" "}
-                  {
-                    ledgerPicks.filter((p) =>
-                      d.results.some(
-                        (r) => r.pick_id === p.id && r.result === "LOSS",
-                      ),
-                    ).length
-                  }
-                </strong>
-              </div>
-              <div>
-                <small>Recorded net</small>
-                <strong>
-                  {signedMoney(
-                    d.results
-                      .filter((r) =>
-                        ledgerPicks.some((p) => p.id === r.pick_id),
-                      )
-                      .reduce((n, r) => n + r.profit_cents, 0),
-                  )}
-                </strong>
-              </div>
-              <div>
-                <small>Awaiting result</small>
-                <strong>
-                  {
-                    ledgerPicks.filter(
-                      (p) => !d.results.some((r) => r.pick_id === p.id),
-                    ).length
-                  }
-                </strong>
-              </div>
-            </section>
             <div className="filter-bar">
               <label className="field">
                 Find a game / pick

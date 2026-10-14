@@ -4,7 +4,10 @@ import "@/components/ask-vegas.css";
 import "./experience.css";
 import "./sports-light.css";
 import "./master.css";
+import "./zone.css";
 import "./nba.css";
+import "./dark-surfaces.css";
+import "./premium.css";
 import NotificationBootstrap from "@/components/notification-bootstrap";
 import ProfileSetupGate from "@/components/profile-setup-gate";
 import PhoneContactPrompt from "@/components/phone-contact-prompt";
@@ -27,7 +30,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#070b14",
 };
 export default function RootLayout({
   children,
@@ -37,7 +40,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('vq-theme-v1');if(t==='dark'||t==='light'){document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t;document.querySelector('meta[name=\"theme-color\"]')?.setAttribute('content',t==='dark'?'#131e30':'#ffffff')}}catch(e){}" }} />
+        <script dangerouslySetInnerHTML={{ __html: "try{var t=localStorage.getItem('vq-theme-v1');if(t!=='light')t='dark';{document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t;document.querySelector('meta[name=\"theme-color\"]')?.setAttribute('content',t==='dark'?'#070b14':'#ffffff')}}catch(e){document.documentElement.dataset.theme='dark'}" }} />
         <ThemePrompt />
         {children}
         <Welcome />

@@ -333,7 +333,7 @@ export default function ResearchFeed() {
                     <CandidateTracker snapshot={item.value} />
                   </details>
                 ) : null;
-                return <div key={item.key}>
+                return <div className="zone-item" key={item.key}>
                   {content}
                   {p && <DownloadCard
                     title={p.title}
