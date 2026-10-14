@@ -270,7 +270,10 @@ export default function Membership() {
           <span className="eyebrow">ACCOUNT SECURITY</span>
           <h1>Verify your age to continue</h1>
         </div>
-        <AgeVerificationPanel key={session.user.id} uid={session.user.id} />
+        <AgeVerificationPanel
+          key={`age-${session.user.id}`}
+          uid={session.user.id}
+        />
         <Panel title="Account controls">
           <p>{session.user.email}</p>
           <button
@@ -337,10 +340,12 @@ export default function Membership() {
                   ? "Administrator · Full access"
                   : "Administrator · Complete verification to open your board. No paid pass needed."
                 : access.allowed
-                  ? access.trial_active
-                    ? "Premium research active · 14-day signup trial included"
-                    : "Premium research active"
-                  : "Free Community · Challenge, published picks and basic tracking included"}
+                  ? access.complimentary_premium
+                    ? "Complimentary Premium active · Existing member"
+                    : access.trial_active
+                      ? "Premium research active · 14-day signup trial included"
+                      : "Premium research active"
+                  : "Free Community · Published picks and personal tracking included"}
               {access.expires_at
                 ? ` · Expires ${new Date(access.expires_at).toLocaleString("en-US", { timeZone: "America/New_York" })} ET`
                 : ""}
@@ -446,11 +451,17 @@ export default function Membership() {
         </Panel>
       )}
       {session && (
-        <AgeVerificationPanel key={session.user.id} uid={session.user.id} />
+        <AgeVerificationPanel
+          key={`age-${session.user.id}`}
+          uid={session.user.id}
+        />
       )}
       {session && (
         <Panel title="Settings · Community profile">
-          <CommunitySettings key={session.user.id} uid={session.user.id} />
+          <CommunitySettings
+            key={`profile-${session.user.id}`}
+            uid={session.user.id}
+          />
         </Panel>
       )}
       {session && (
@@ -472,7 +483,7 @@ export default function Membership() {
           </button>
         </Panel>
       )}
-      {session && !access.admin_account && <FriendPass />}
+      {session && !access.allowed && !access.admin_account && <FriendPass />}
       {access.admin_account && !access.admin && (
         <Panel title="Admin security · Two-step verification">
           <div className="notebook">
@@ -572,35 +583,61 @@ export default function Membership() {
       )}
       {session && <BillingAccount token={session.access_token} />}
       {session && (
-        <AccountDeletion key={session.user.id} uid={session.user.id} />
+        <AccountDeletion
+          key={`delete-${session.user.id}`}
+          uid={session.user.id}
+        />
       )}
-      <Panel title="Free to follow. Premium to go deeper.">
-        <div className="notebook">
-          <h3>14 days of Premium, on us</h3>
-          <p>
-            Every new account gets a free Premium trial for 14 days from signup.
-            No card required and no automatic charge. After the trial, keep
-            using Free Community or choose a paid Premium plan.
-          </p>
-          <h3>Free Community</h3>
-          <p>
-            Published picks and research cards, decision alerts, Community
-            profiles, share cards, personal tailed-pick records and the public
-            official record—including losses and passes.
-          </p>
-          <h3>Premium research · $5/month or $20 for the 2026 season</h3>
-          <p>
-            Full every-game matchup analysis, potential target boards, injury
-            and weather research, market history, timestamped analysis versions,
-            and detailed official process reviews and exports.
-          </p>
-          <p>
-            No daily pick is promised. If no qualifying edge exists, the
-            decision is WAIT/PASS. Admin intelligence and other members’
-            financial details remain private.
-          </p>
-        </div>
-      </Panel>
+      {session && access.allowed ? (
+        <Panel
+          title={
+            access.complimentary_premium
+              ? "Your complimentary Premium access"
+              : "Your Premium research access"
+          }
+        >
+          <div className="notebook">
+            <p>
+              {access.complimentary_premium
+                ? "You’re an existing Vegas Quant member. Your account has complimentary Premium access with no trial expiration or paid pass required."
+                : "Premium research is active on your account."}
+            </p>
+            <p>
+              Full matchup analysis, injury and weather research, target boards,
+              market history and research exports are included. Administrator
+              tools remain restricted to administrators.
+            </p>
+          </div>
+        </Panel>
+      ) : (
+        <Panel title="Free to follow. Premium to go deeper.">
+          <div className="notebook">
+            <h3>14 days of Premium, on us</h3>
+            <p>
+              Every new account gets a free Premium trial for 14 days from
+              signup. No card required and no automatic charge. After the trial,
+              keep using Free Community or choose a paid Premium plan.
+            </p>
+            <h3>Free Community</h3>
+            <p>
+              Published picks and research cards, decision alerts, Community
+              profiles, share cards, personal tailed-pick records and the public
+              official record—including losses and passes.
+            </p>
+            <h3>Premium research · $5/month or $20 for the 2026 season</h3>
+            <p>
+              Full every-game matchup analysis, potential target boards, injury
+              and weather research, market history, timestamped analysis
+              versions, and detailed official process reviews and exports.
+            </p>
+            <p>
+              No daily pick is promised. If no qualifying edge exists, the
+              decision is WAIT/PASS. Admin intelligence and other members’
+              financial details remain private.
+            </p>
+          </div>
+        </Panel>
+      )}
       {!access.allowed && !access.admin_account && (
         <>
           <div className="pass-grid">
@@ -647,7 +684,7 @@ export default function Membership() {
           </p>
         </>
       )}
-      {!access.admin_account && (
+      {!access.allowed && !access.admin_account && (
         <Panel title="How season access works">
           <div className="notebook">
             <p>
