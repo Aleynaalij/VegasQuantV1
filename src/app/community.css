@@ -1,5 +1,5 @@
 /* Community (feed, member profiles, roster, profile rail) — consolidated from the legacy stylesheets on 2026-10-14.
- * Generated in cascade order; repeated selectors merged. Edit here, not in the legacy files. */
+ * Generated in cascade order; repeated selectors merged. Edit here. */
 .community-avatar.initials {
   display: grid;
   place-items: center;

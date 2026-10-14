@@ -1,5 +1,5 @@
 /* The Zone · Games view (matchup board, game research workspace) — consolidated from the legacy stylesheets on 2026-10-14.
- * Generated in cascade order; repeated selectors merged. Edit here, not in the legacy files. */
+ * Generated in cascade order; repeated selectors merged. Edit here. */
 .workspace-index {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));

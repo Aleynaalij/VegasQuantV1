@@ -1,5 +1,5 @@
 /*
- * GENERATED from the legacy stylesheets (globals, experience, sports-light, master) on 2026-10-14.
+ * GENERATED from the former legacy stylesheets (globals, experience, sports-light, master; now split into base/shell/home/picks/research/admin) on 2026-10-14.
  * Those files force light backgrounds with !important on every theme. These rules give the same
  * elements dark surfaces in dark mode. Loaded before premium.css so component styles still win.
  * Delete entries here as each legacy rule is retired.
