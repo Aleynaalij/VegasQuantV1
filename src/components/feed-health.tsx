@@ -22,17 +22,30 @@ export default function FeedHealth() {
   const [latestResearch, setLatestResearch] = useState<string | null>(null);
   const [checkedAt, setCheckedAt] = useState(Date.now());
   const [error, setError] = useState("");
+  const [pendingResults, setPendingResults] = useState<
+    {
+      leg_key: string;
+      name: string;
+      market: string;
+      matchup: string;
+      expires_at: string;
+    }[]
+  >([]);
+  const [resultError, setResultError] = useState("");
   useEffect(() => {
-    let live = true;
+    let live = true,
+      epoch = 0;
     async function refresh() {
+      const request = ++epoch;
       const a = await supabase.rpc("is_admin");
-      if (!live) return;
+      if (!live || request !== epoch) return;
       setAllowed(a.data === true);
       if (!a.data) {
         setRows([]);
+        setPendingResults([]);
         return;
       }
-      const [r, g, research] = await Promise.all([
+      const [r, g, research, results] = await Promise.all([
         supabase
           .from("feed_runs")
           .select("*")
@@ -44,8 +57,19 @@ export default function FeedHealth() {
           .select("created_at")
           .order("created_at", { ascending: false })
           .limit(1),
+        supabase
+          .from("published_legs")
+          .select("leg_key,name,market,matchup,expires_at")
+          .is("result", null)
+          .lt("expires_at", new Date(Date.now() - 6 * 3600000).toISOString())
+          .order("expires_at", { ascending: true })
+          .limit(100),
       ]);
-      if (live) {
+      if (live && request === epoch) {
+        setPendingResults(results.error ? [] : results.data || []);
+        setResultError(
+          results.error ? "Result review queue could not load." : "",
+        );
         setRows(r.data || []);
         setGames(g.data || []);
         setLatestResearch(research.data?.[0]?.created_at || null);
@@ -59,8 +83,19 @@ export default function FeedHealth() {
     }
     void refresh();
     const t = setInterval(refresh, 30000);
+    const auth = supabase.auth.onAuthStateChange(() => {
+      ++epoch;
+      setAllowed(false);
+      setRows([]);
+      setPendingResults([]);
+      setTimeout(() => {
+        if (live) void refresh();
+      }, 0);
+    });
     return () => {
       live = false;
+      ++epoch;
+      auth.data.subscription.unsubscribe();
       clearInterval(t);
     };
   }, []);
@@ -97,30 +132,75 @@ export default function FeedHealth() {
               </p>
             </div>
           </Panel>
-          <Panel title="Admin phone alerts">
+          <Panel title="Launch and reliability priorities">
             <div className="notebook">
+              <h3>1 · Connect FanDuel coverage</h3>
               <p>
-                Feed failures and missed publication windows are checked every
-                five minutes. One neutral alert is queued per incident for
-                administrator devices with notifications enabled and the updated
-                app active. Repeated checks of the same incident do not repeat
-                the alert.
+                Add the approved provider key securely to Supabase Edge Function
+                secrets, then enable ODDS_FEED_ENABLED and ODDS_PROPS_ENABLED.
+                Verify a completed run and exact FanDuel quotes, provider
+                timestamps and retrieval times. Deployment alone is not evidence
+                of coverage.
               </p>
               <p>
-                Open the updated app on your phone to register this device.
-                Delivery depends on your browser and phone settings.
+                Do not put API keys in chat or browser code. Supported unpriced
+                editorial targets may still publish; missing odds are displayed
+                as unknown.
               </p>
+              <h3>2 · Verify outcomes</h3>
+              <p>
+                Review the queue below against the exact published market and
+                source. A final score alone does not settle a player prop.
+                Missing evidence stays pending in member Records; no stakes or
+                profit are assumed.
+              </p>
+              <h3>3 · Finish launch acceptance</h3>
+              <p>
+                Age enforcement remains off pending provider activation and live
+                testing. Complete the monitored support inbox, counsel review,
+                real-device deletion and moderation tests, then native iOS
+                packaging and billing review. These items are not certified
+                complete by this dashboard.
+              </p>
+              <p>
+                Phone feed-failure delivery is not verified. Use this dashboard
+                for feed checks; do not rely on a phone alert or SMS.
+              </p>
+              <Link href="/admin/accounts">Account operations →</Link>
             </div>
+          </Panel>
+          <Panel title="Published picks awaiting result review">
+            <p>
+              Up to 100 oldest ungraded selections whose window ended more than
+              six hours ago. This delay is a review filter, not proof the game
+              is final. This queue never grades picks automatically.
+            </p>
+            {resultError ? (
+              <p role="status">{resultError}</p>
+            ) : !pendingResults.length ? (
+              <p>No ungraded selections in this review window.</p>
+            ) : (
+              pendingResults.map((p) => (
+                <article className="ledger-card" key={p.leg_key}>
+                  <h3>{p.name}</h3>
+                  <p>
+                    {p.market} · {p.matchup}
+                  </p>
+                  <p>Window ended {time(p.expires_at)}</p>
+                  <code>{p.leg_key}</code>
+                </article>
+              ))
+            )}
           </Panel>
           <Panel title="Source coverage">
             <div className="notebook">
               <p>
                 Schedule, scores, injury statuses and linked news headlines:
-                ESPN source ingestion. Optional FD/DK odds: The Odds API,
-                requiring a configured key and enabled feed. Rushing and
-                receiving props additionally require ODDS_PROPS_ENABLED and
-                provider access to those markets. Missing or partial coverage is
-                reported explicitly.
+                ESPN source ingestion. FanDuel odds: The Odds API, requiring a
+                configured key and enabled feed. Rushing and receiving props
+                additionally require ODDS_PROPS_ENABLED and provider access to
+                those markets. Missing or partial coverage is reported
+                explicitly.
               </p>
               <p>
                 Injury tiers, market interpretation and weather point
