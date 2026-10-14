@@ -35,7 +35,7 @@ import DecisionBoard from "./decision-board";
 import PickCard from "./pick-card";
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker from "./candidate-tracker";
-import DailyUpdateNotice from "./daily-update-notice";
+import HowItWorks from "./how-it-works";
 import PublicOverview from "./public-overview";
 import { noAccess, type Access, type Overview } from "@/lib/membership";
 import UpdateFeed from "./update-feed";
@@ -356,7 +356,7 @@ export default function DeskApp({
             <Link className="text-link" href="/feed">
               Legs we like · Open The Zone →
             </Link>
-            <DailyUpdateNotice />
+            <HowItWorks />
           </>
         )}
         {page === "home" && (

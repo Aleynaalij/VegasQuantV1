@@ -7,13 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
-import {
-  ArrowUpRight,
-  Eye,
-  Clock3,
-  ShieldCheck,
-  ChevronDown,
-} from "lucide-react";
+import { ArrowUpRight, Eye, Clock3, ChevronDown } from "lucide-react";
 import { Shell, Badge } from "./ui";
 import BrandMark from "./brand-mark";
 import DownloadCard from "./download-card";
@@ -24,7 +18,7 @@ import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
 import ZoneNav from "./zone-nav";
-import DailyUpdateNotice from "./daily-update-notice";
+import HowItWorks from "./how-it-works";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
 import { supabase } from "@/lib/supabase";
 import { noAccess, type Access } from "@/lib/membership";
@@ -201,38 +195,16 @@ export default function ResearchFeed() {
           } as CSSProperties
         }
       >
-        <header className="feed-hero">
-          <div className="feed-kicker">
-            <BrandMark />
-            <span>VEGAS QUANT ULTRA · THE ZONE</span>
+        <header className="feed-head">
+          <div>
+            <h1>The Zone</h1>
+            <p>Research, injury news and legs we like.</p>
           </div>
-          <h1>
-            The Zone
-            <span className="zone-signal" aria-hidden="true">
-              {" "}
-              ✦
-            </span>
-          </h1>
-          <p>
-            Your game research, injury updates and legs we like—all in one
-            place.
-          </p>
-          <div className="feed-rule">
-            <ShieldCheck size={16} />
-            <span>Individual game legs · Pick of the Day lives on Home.</span>
-          </div>
+          <Link href="/saved" className="text-link">
+            Saved legs →
+          </Link>
         </header>
-        <Link href="/saved" className="text-link">
-          Saved legs →
-        </Link>
-        <details
-          className="feed-featured"
-          onToggle={(e) => setBoardOpen(e.currentTarget.open)}
-        >
-          <summary>Published leg board · All selections</summary>
-          {boardOpen && <PublishedLegBoard />}
-        </details>
-        <DailyUpdateNotice />
+        <HowItWorks />
         <details className="zone-extra-filters">
           <summary>More research filters</summary>
           <nav className="feed-filters" aria-label="Filter feed">
@@ -448,6 +420,13 @@ export default function ResearchFeed() {
             )}
           </>
         )}
+        <details
+          className="feed-featured"
+          onToggle={(e) => setBoardOpen(e.currentTarget.open)}
+        >
+          <summary>Published leg board · All selections</summary>
+          {boardOpen && <PublishedLegBoard />}
+        </details>
         <details
           id="candidate-tracker"
           className="feed-featured"

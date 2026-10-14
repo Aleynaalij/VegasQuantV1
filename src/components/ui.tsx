@@ -279,18 +279,19 @@ export function Shell({
         </nav>
         <main id="main-content" tabIndex={-1}>
           {children}
-          <footer>
-            <span>
-              <ShieldCheck size={14} />
-              Process over outcome.
-            </span>
+          <footer className="vq-footer">
             <p>
-              {sport === "nba"
-                ? "Research, not a guarantee. NBA selections publish only after the data is verified, and a pass is a valid decision."
-                : "Sports research and community. No wager or profit is guaranteed."}
+              <ShieldCheck size={14} aria-hidden="true" />
+              <span>
+                <b>Process over outcome.</b>{" "}
+                {sport === "nba"
+                  ? "Research, not a sportsbook or a guarantee: NBA selections publish only after the data is verified, and a pass is a valid decision."
+                  : "Sports research and community, not a sportsbook. No wager or profit is guaranteed."}{" "}
+                21+.
+              </span>
             </p>
-            <Link href="/methodology">Methodology & transparency</Link>
             <nav className="vq-footer-links" aria-label="Help and legal">
+              <Link href="/methodology">Methodology</Link>
               <Link href="/about">About</Link>
               <Link href="/faq">FAQs</Link>
               <Link href="/support">Support</Link>
@@ -299,11 +300,8 @@ export function Shell({
               <Link href="/responsible-play">Responsible play</Link>
             </nav>
             <small>
-              21+ · Research and community, not a sportsbook. No guaranteed
-              winnings.
-              <br />
-              Vegas Quant is a product of JourneyBuilt, LLC. ©{" "}
-              {new Date().getFullYear()} JourneyBuilt, LLC.
+              © {new Date().getFullYear()} JourneyBuilt, LLC. Vegas Quant is a
+              product of JourneyBuilt, LLC.
             </small>
           </footer>
         </main>
