@@ -1,4 +1,5 @@
 export type Access = {
+  complimentary_premium?: boolean;
   trial_active?: boolean;
   trial_expires_at?: string | null;
   allowed: boolean;
