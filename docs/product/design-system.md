@@ -25,7 +25,7 @@ Sportsbook-style, dark-first. Defined in `src/app/premium.css`, loaded after eve
 - Minimum text size is 11px. All text meets WCAG AA contrast in both themes.
 
 ## Brand
-The logo is the **Diamond Q**: a playing-card diamond (Vegas) cut into a Q (Quant), with a money-green tail (the edge). It is drawn once in `BrandMark` and in `public/brand/vq-mark.svg`. App icons are `public/icons/vq-diamond-*.png`. Colors: navy `#101a33` tile, diamond `#2f6bff` / facet `#5a8bff`, tail `#1ed883`.
+The logo is the **prestige VQ**: an original interlocking serif VQ monogram, drawn in `BrandMark` and `public/brand/vq-mark.svg`. Cool silver `#E4EAF4`, royal blue `#4378FF`, midnight navy `#0B1220`. Installed app assets are `public/icons/vq-prestige-*.png`; legacy icon URLs also resolve to the current mark. Use the monogram for small icons and a spaced VEGAS QUANT wordmark for opening screens. Vegas Quant is a product of JourneyBuilt, LLC.
 
 ## Identity
 Signed-in members with a community profile see their photo in the top bar, linking to their profile and activity. Home doesn't show the profile card to them; signed-out visitors still see the Join the community card.
