@@ -14,7 +14,7 @@ Owner identifies Vegas Quant as a JourneyBuilt, LLC product. Entity registration
 | Memberships | Web Stripe monthly renewal and one-time season access | Approve refund policy and disclosures, native storefront-specific purchase flow; preserve mandatory consumer rights |
 | Data | Email, profile, community, personal tracking, phone consent, push, feature events, billing IDs | Verify deployed providers, controller responsibilities, data transfers, processor contracts and final native SDK inventory |
 | Retention | No approved schedule; immutable personal tracking and billing references | Decide per-category periods, lawful exceptions, backup lifecycle and proof of erasure |
-| Deletion | In-app request/cancel + admin queue | Implement tested completion, auth/session removal, avatar storage and subscription handling; a pending queue is not account deletion |
+| Deletion | Password-verified permanent deletion, atomic application/Auth cleanup, linked Stripe cancellation; legacy admin queue retained | Final disposable hosted Auth/Stripe and iPhone acceptance tests; export flow and approved provider retention disclosures |
 | Community | Reports, blocks, limited phrase rules, MFA-admin restriction | Approve community rules and response ownership; test comments, member profiles, evasion and appeals |
 | Liability and disputes | Plain limitations without sweeping waiver | Counsel choose enforceable governing law, venue, limitations and dispute process; no jurisdiction invented |
 | Brand and content | Original VQ identity; team/source marks | Trademark clearance, brand ownership, league/team image and data licensing |
