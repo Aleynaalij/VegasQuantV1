@@ -5,12 +5,106 @@ import Link from "next/link";
 import BrandMark from "./brand-mark";
 import { X, ArrowUpRight, Send, BookOpen } from "lucide-react";
 import { findHelp, helpTopics, type HelpTopic } from "@/lib/vegas-help";
+import { citeIntent, recordLine, type CiteIntent } from "@/lib/ask-cite";
+import { findRule } from "@/lib/nba-rules";
+import { legMarket, legMatchup } from "@/lib/today";
+import { time } from "@/lib/domain";
+import { supabase } from "@/lib/supabase";
 
-type Message = { question: string; topic: HelpTopic | null };
+type Message = {
+  id: number;
+  question: string;
+  topic: HelpTopic | null;
+  source?: string;
+  pending?: boolean;
+};
+const cited = (
+  title: string,
+  answer: string,
+  href: string,
+  link: string,
+): HelpTopic => ({
+  id: "cited",
+  category: "Cited",
+  phrases: [],
+  title,
+  answer,
+  href,
+  link,
+});
+
+/** Looks up the rule, record or published pick a question asks about, with its source. */
+async function cite(
+  intent: NonNullable<CiteIntent>,
+  fallback: HelpTopic | null,
+): Promise<{ topic: HelpTopic | null; source?: string }> {
+  try {
+    if (intent.kind === "rule") {
+      const r = findRule(intent.id)!;
+      return {
+        topic: cited(
+          `${r.id} · ${r.title}`,
+          r.text,
+          `/nba/rules#${r.id}`,
+          "Open the NBA rules",
+        ),
+        source: "The NBA Betting Bible, 2026–27 Edition",
+      };
+    }
+    if (intent.kind === "record") {
+      const r = await supabase.rpc("public_research_status");
+      if (r.error || !r.data) return { topic: fallback };
+      const line = recordLine(r.data.results || []);
+      return {
+        topic: cited(
+          "The published record",
+          `${line.text}${line.pending ? `, ${line.pending} pending` : ""}. Every published decision is included, wins and losses. A small sample doesn’t prove an edge.`,
+          "/history",
+          "See every result on Records",
+        ),
+        source: r.data.updated_at
+          ? `Published record · updated ${time(r.data.updated_at)}`
+          : "Published record",
+      };
+    }
+    const r = await supabase
+      .from("candidate_releases")
+      .select("candidates,created_at,expires_at")
+      .contains("candidates", JSON.stringify([{ pick_of_day: true }]))
+      .gt("expires_at", new Date().toISOString())
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const release = r.error ? null : r.data?.[0];
+    const c = release?.candidates?.find(
+      (x: { pick_of_day?: boolean }) => x.pick_of_day,
+    );
+    if (!release || !c)
+      return {
+        topic: cited(
+          "No Pick of the Day is live right now",
+          "Picks publish in game windows. Home shows the next one as soon as it’s out; members see it there and in The Zone.",
+          "/",
+          "Open Home",
+        ),
+      };
+    return {
+      topic: cited(
+        "Today’s published Pick of the Day",
+        `${c.name} · ${legMarket(c.market)} (${legMatchup(c.matchup)}). This is research, not a guarantee or advice to bet. Read the case and risks before deciding.`,
+        "/",
+        "Read the case on Home",
+      ),
+      source: `Pick of the Day · published ${time(release.created_at)}`,
+    };
+  } catch {
+    return { topic: fallback };
+  }
+}
 export default function AskVegas() {
   const dialog = useRef<HTMLDialogElement>(null);
   const launcher = useRef<HTMLButtonElement>(null);
   const end = useRef<HTMLDivElement>(null);
+  const nextId = useRef(0);
   const [open, setOpen] = useState(false);
   const [browse, setBrowse] = useState(false);
   const [question, setQuestion] = useState("");
@@ -30,10 +124,24 @@ export default function AskVegas() {
   }
   function ask(text: string, topic?: HelpTopic) {
     if (!text.trim()) return;
+    const id = ++nextId.current,
+      intent = topic ? null : citeIntent(text),
+      fallback = topic || findHelp(text);
     setMessages((old) => [
       ...old.slice(-19),
-      { question: text.trim().slice(0, 400), topic: topic || findHelp(text) },
+      {
+        id,
+        question: text.trim().slice(0, 400),
+        topic: intent ? null : fallback,
+        pending: !!intent,
+      },
     ]);
+    if (intent)
+      void cite(intent, fallback).then((r) =>
+        setMessages((old) =>
+          old.map((m) => (m.id === id ? { ...m, ...r, pending: false } : m)),
+        ),
+      );
     setQuestion("");
     setBrowse(false);
   }
@@ -127,8 +235,9 @@ export default function AskVegas() {
               <strong>Make yourself at home.</strong>
               <p>
                 Ask about The Zone, Community, your tailed-pick Records or NBA.
-                I use built-in answers—not live AI—and can point you to the
-                research for game questions.
+                I use built-in answers, not live AI. I can quote an NBA rule
+                (“What is R-12?”), the published record and today’s published
+                pick, with the source, but I don’t give betting advice.
               </p>
             </div>
             {!messages.length && (
@@ -149,33 +258,44 @@ export default function AskVegas() {
                 )}
               </div>
             )}
-            {messages.map((m, i) => (
-              <div key={i} className="ask-vegas-exchange">
+            {messages.map((m) => (
+              <div key={m.id} className="ask-vegas-exchange">
                 <p className="ask-vegas-question">{m.question}</p>
-                <div className="ask-vegas-answer">
-                  <strong>
-                    {m.topic?.title || "Let’s find the right guide."}
-                  </strong>
-                  <p>
-                    {m.topic?.answer ||
-                      "I don’t have a built-in answer for that wording. Try a short topic such as ‘tail a pick’, ‘NBA’ or ‘account access’, or browse all topics. I can’t see your account, answer general questions or make changes for you."}
-                  </p>
-                  {m.topic ? (
-                    <Link href={m.topic.href} onClick={close}>
-                      {m.topic.link} <ArrowUpRight size={15} />
-                    </Link>
-                  ) : (
-                    <button type="button" onClick={() => setBrowse(true)}>
-                      Browse all topics
-                    </button>
-                  )}
-                  {m.topic?.id === "pick-routing" && (
-                    <Link href="/" onClick={close}>
-                      View Pick of the Day & Hail Mary{" "}
-                      <ArrowUpRight size={15} />
-                    </Link>
-                  )}
-                </div>
+                {m.pending ? (
+                  <div className="ask-vegas-answer" role="status">
+                    <p>Looking that up…</p>
+                  </div>
+                ) : (
+                  <div className="ask-vegas-answer">
+                    <strong>
+                      {m.topic?.title || "Let’s find the right guide."}
+                    </strong>
+                    <p>
+                      {m.topic?.answer ||
+                        "I don’t have a built-in answer for that wording. Try a short topic such as ‘tail a pick’, ‘NBA’ or ‘account access’, or browse all topics. I can’t see your account, answer general questions or make changes for you."}
+                    </p>
+                    {m.topic ? (
+                      <Link href={m.topic.href} onClick={close}>
+                        {m.topic.link} <ArrowUpRight size={15} />
+                      </Link>
+                    ) : (
+                      <button type="button" onClick={() => setBrowse(true)}>
+                        Browse all topics
+                      </button>
+                    )}
+                    {m.topic?.id === "pick-routing" && (
+                      <Link href="/" onClick={close}>
+                        View Pick of the Day & Hail Mary{" "}
+                        <ArrowUpRight size={15} />
+                      </Link>
+                    )}
+                    {m.source && (
+                      <small className="ask-vegas-source">
+                        Source: {m.source}
+                      </small>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
             <div ref={end} />

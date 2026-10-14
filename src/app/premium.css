@@ -756,3 +756,4 @@ html[data-theme] body .vq-foryou li b { font-size:15px; color:var(--text) !impor
 html[data-theme] body .vq-foryou li a, html[data-theme] body .vq-foryou li small { font-size:13px; line-height:1.45; }
 html[data-theme] body .vq-foryou li small, html[data-theme] body .vq-foryou p { color:var(--muted) !important; }
 html[data-theme] body .vq-foryou p { font-size:13.5px; line-height:1.6; margin:0; }
+html[data-theme] body .ask-vegas-source { display:block; margin-top:8px; font-size:11.5px; color:var(--muted) !important; }
