@@ -149,6 +149,15 @@ export default function HomeBrief({ games }: { games: Game[] }) {
         </span>
         <ArrowUpRight size={18} aria-hidden="true" />
       </Link>
+      <section className="home-start-guide" aria-label="Start here">
+        <h2>New here? Start with the sport.</h2>
+        <p>
+          <Link href="/feed">The Zone</Link> has game research, injury news and
+          legs we like. <Link href="/community">Community</Link> is where
+          members share slips and discuss the games.{" "}
+          <Link href="/history">Records</Link> keeps the outcomes transparent.
+        </p>
+      </section>
     </header>
   );
 }
