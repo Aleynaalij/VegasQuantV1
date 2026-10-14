@@ -14,6 +14,7 @@ import ProfileSetupGate from "@/components/profile-setup-gate";
 import PhoneContactPrompt from "@/components/phone-contact-prompt";
 import Welcome from "@/components/welcome";
 import ThemePrompt from "@/components/theme-settings";
+import BrandOpening from "@/components/brand-opening";
 import AskVegas from "@/components/ask-vegas";
 export const metadata: Metadata = {
   applicationName: "Vegas Quant",
@@ -23,7 +24,7 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Vegas Quant",
   },
-  icons: { apple: "/icons/vq-diamond-apple.png" },
+  icons: { apple: "/icons/vq-prestige-apple.png" },
   title: "Vegas Quant | Sports Intelligence",
   description:
     "NFL research, live scores and transparent picks. Find the play. Understand the case. Keep the record.",
@@ -43,6 +44,7 @@ export default function RootLayout({
       <body>
         <script dangerouslySetInnerHTML={{ __html: "try{localStorage.removeItem('vq-theme-v1');localStorage.removeItem('vq-theme-v2')}catch(e){}" }} />
         <ThemePrompt />
+        <BrandOpening />
         {children}
         <Welcome />
         <ProfileSetupGate />
