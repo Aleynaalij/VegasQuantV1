@@ -31,6 +31,7 @@ import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
 import WeeklyPerformance from "./weekly-performance";
 import MyTailRecord from "./my-tail-record";
+import TailedParlays from "./tailed-parlays";
 import HomeBrief from "./home-brief";
 import DecisionBoard from "./decision-board";
 import PickCard from "./pick-card";
@@ -361,6 +362,9 @@ export default function DeskApp({
           <>
             <SectionBoundary name="Pick of the Day">
               <CandidateTracker activeOnly featured pickOfDay />
+            </SectionBoundary>
+            <SectionBoundary name="Your tailed parlays">
+              <TailedParlays />
             </SectionBoundary>
             <SectionBoundary name="Today’s legs">
               <TodayLegs />
