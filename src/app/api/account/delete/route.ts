@@ -1,3 +1,7 @@
+import {
+  COMMUNITY_PHOTO_BUCKET,
+  eraseCommunityPhotos,
+} from "@/lib/community-photo";
 import { identityClient } from "@/lib/age-server";
 import { redactIdentityAttempts } from "@/lib/age-erasure";
 import { createClient } from "@supabase/supabase-js";
@@ -127,6 +131,11 @@ export async function POST(req: Request) {
         },
       });
     }
+    await eraseCommunityPhotos(
+      auth.user.id,
+      plan.storage_paths || [],
+      (paths) => db!.storage.from(COMMUNITY_PHOTO_BUCKET).remove(paths),
+    );
     const ready = await db.rpc("authorize_account_erasure", {
       p_user: auth.user.id,
       p_lease: lease,
@@ -144,7 +153,7 @@ export async function POST(req: Request) {
     return reply(
       {
         error:
-          "Your account was not deleted. A membership cancellation or identity redaction may already have started. If identity verification is processing, wait for it to finish, then sign in and retry deletion; no refund was issued.",
+          "Your account was not deleted. A membership cancellation, identity redaction or photo cleanup may already have started. If identity verification is processing, wait for it to finish, then sign in and retry deletion; no refund was issued.",
       },
       503,
     );

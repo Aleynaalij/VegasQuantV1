@@ -220,7 +220,7 @@ export const helpTopics: HelpTopic[] = [
       "comment",
     ],
     answer:
-      "Open Community to share an NFL slip, discuss a game, or post a member-reported result. Sign in and complete your visible profile first. You can comment, react and follow members. Member posts are separate from Vegas Quant analyst picks; no social action records a wager. NBA is discussion-only during preparation.",
+      "Open Community to share an NFL slip, discuss a game, or post a member-reported result. Add a photo optionally, preview it and add a caption. JPG, PNG and WebP images under 5 MB are supported; cover private ticket details first. A slip photo can replace typed selections. Tap the published image to open it at full size. Sign in and complete your visible profile first. You can comment, react and follow members. Member posts are separate from Vegas Quant analyst picks; no social action records a wager. NBA is discussion-only during preparation.",
     href: "/community",
     link: "Join Community",
   },

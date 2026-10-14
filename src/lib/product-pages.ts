@@ -84,7 +84,7 @@ export const productPages = {
     sections: [
       [
         "Information you provide",
-        "Account email and authentication information; profile username, avatar, region and optional social links; member posts, comments, follows, reactions and reports; saved selections and personal tracking records; and subscription-related identifiers and status. A mobile number and contact consent may be supplied through the optional phone prompt. SMS delivery and phone verification are not active.",
+        "Account email and authentication information; profile username, avatar, region and optional social links; member posts and uploaded photos, comments, follows, reactions and reports; saved selections and personal tracking records; and subscription-related identifiers and status. A mobile number and contact consent may be supplied through the optional phone prompt. SMS delivery and phone verification are not active.",
       ],
       [
         "How we use information",
@@ -92,7 +92,7 @@ export const productPages = {
       ],
       [
         "What others can see",
-        "Community profile fields, published posts, comments and shared participation can be visible to other members. Some editorial content and shared cards are public. Personal bankroll values and account email are not intended as public community fields. Do not include passwords, payment details or sensitive personal information in posts.",
+        "Community profile fields, published posts and photos, comments and shared participation can be visible to other members. Community photos use private storage and short-lived access links; members can still save or screenshot what you share. Our upload flow removes embedded photo metadata, but it does not redact visible account numbers, barcodes or private ticket details. Cover those before uploading. Some editorial content and shared cards are public. Personal bankroll values and account email are not intended as public community fields. Do not include passwords, payment details or sensitive personal information in posts.",
       ],
       [
         "Providers and external services",
