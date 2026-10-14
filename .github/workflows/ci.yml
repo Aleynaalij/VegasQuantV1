@@ -13,3 +13,22 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
+  ui-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - run: npm install --no-save playwright@1.56.1 && npx playwright install --with-deps chromium
+      - name: Run UI smoke test against a synthetic data stub
+        run: |
+          node scripts/ui-smoke/stub.mjs &
+          npx next start -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
+          npm run ui:smoke
