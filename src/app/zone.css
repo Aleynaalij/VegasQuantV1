@@ -1,5 +1,5 @@
 /* The Zone (feed, selections, tickets, win slips) — consolidated from the legacy stylesheets on 2026-10-14.
- * Generated in cascade order; repeated selectors merged. Edit here, not in the legacy files. */
+ * Generated in cascade order; repeated selectors merged. Edit here. */
 .feed-hero > p {
   font-size: 16px;
   max-width: 36ch;

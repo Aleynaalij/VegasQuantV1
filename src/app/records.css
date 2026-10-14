@@ -1,5 +1,5 @@
 /* Records (ledger, performance, published board) — consolidated from the legacy stylesheets on 2026-10-14.
- * Generated in cascade order; repeated selectors merged. Edit here, not in the legacy files. */
+ * Generated in cascade order; repeated selectors merged. Edit here. */
 .ledger-stats {
   grid-template-columns: repeat(3, 1fr);
 }

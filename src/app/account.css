@@ -1,5 +1,5 @@
 /* Account (sign-in, settings, MFA, alerts, followed topics) — consolidated from the legacy stylesheets on 2026-10-14.
- * Generated in cascade order; repeated selectors merged. Edit here, not in the legacy files. */
+ * Generated in cascade order; repeated selectors merged. Edit here. */
 .member-notice {
   padding: 16px;
   border: 1px solid #3e5c4b;

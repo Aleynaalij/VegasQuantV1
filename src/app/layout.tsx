@@ -1,9 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import "./globals.css";
+import "./base.css";
 import "@/components/ask-vegas.css";
-import "./experience.css";
-import "./sports-light.css";
-import "./master.css";
+import "./shell.css";
+import "./home.css";
+import "./picks.css";
+import "./research.css";
+import "./admin.css";
 import "./zone.css";
 import "./records.css";
 import "./games.css";
