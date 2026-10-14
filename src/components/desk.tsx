@@ -46,6 +46,7 @@ import ExploreCards from "./explore-cards";
 import ResearchPulse from "./research-pulse";
 import SourceStatus from "./source-status";
 import ResearchNotebook from "./research-notebook";
+import RecordsDashboard from "./records-dashboard";
 const pct = (v: number | null) => (v === null ? "—" : `${v.toFixed(2)}%`);
 const value = (s: unknown) =>
   s === undefined || s === null || s === "" ? "Awaiting analyst" : String(s);
@@ -469,58 +470,8 @@ export default function DeskApp({
         {page === "performance" && <Performance desk={d} />}
         {page === "history" && (
           <>
+            <RecordsDashboard d={d} picks={ledgerPicks} />
             <PublishedLegBoard />
-            <section
-              className="records-overview"
-              aria-label="Published pick results"
-            >
-              <div>
-                <small>Published picks</small>
-                <strong>{ledgerPicks.length}</strong>
-              </div>
-              <div>
-                <small>Wins / losses</small>
-                <strong>
-                  {
-                    ledgerPicks.filter((p) =>
-                      d.results.some(
-                        (r) => r.pick_id === p.id && r.result === "WIN",
-                      ),
-                    ).length
-                  }{" "}
-                  /{" "}
-                  {
-                    ledgerPicks.filter((p) =>
-                      d.results.some(
-                        (r) => r.pick_id === p.id && r.result === "LOSS",
-                      ),
-                    ).length
-                  }
-                </strong>
-              </div>
-              <div>
-                <small>Recorded net</small>
-                <strong>
-                  {signedMoney(
-                    d.results
-                      .filter((r) =>
-                        ledgerPicks.some((p) => p.id === r.pick_id),
-                      )
-                      .reduce((n, r) => n + r.profit_cents, 0),
-                  )}
-                </strong>
-              </div>
-              <div>
-                <small>Awaiting result</small>
-                <strong>
-                  {
-                    ledgerPicks.filter(
-                      (p) => !d.results.some((r) => r.pick_id === p.id),
-                    ).length
-                  }
-                </strong>
-              </div>
-            </section>
             <div className="filter-bar">
               <label className="field">
                 Find a game / pick

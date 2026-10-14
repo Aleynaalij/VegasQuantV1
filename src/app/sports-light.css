@@ -105,24 +105,16 @@ main {
 .mi-section,
 .workspace-index > a,
 .research-notebook,
-.research-feed-card,
 .feed-post,
-.update-card,
 .entry-dialog,
 .ask-vegas-dialog,
-.welcome-dialog,
-.welcome-card,
 .admin-section,
 .balance-method,
 .run-actions,
 .decision-board,
-.decision-window,
 .sports-ticker,
 .source-observations,
-.account-card,
-.member-form,
-.auth-card,
-.feed-card {
+.member-form {
   background: #fff !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
@@ -174,8 +166,7 @@ main {
 .profile-view-link,
 .profile-socials a,
 .slate-windows button,
-.section-switch button,
-.account-tabs button {
+.section-switch button {
   background: #fff !important;
   border-color: #cedbed !important;
   color: #0866d8 !important;
@@ -218,8 +209,7 @@ textarea::placeholder {
   color: #50657e !important;
   border-color: #dce4ef !important;
 }
-.badge.green,
-.badge.blue {
+.badge.green {
   background: #e7f2ff !important;
   color: #075ab9 !important;
 }
@@ -581,23 +571,11 @@ textarea::placeholder {
 .sports-ticker .ticker-games > div {
   border-color: var(--line) !important;
 }
-.decision-window a,
-.decision-window summary {
-  color: #0866d8 !important;
-}
 .explore-cards a,
 .research-pulse,
-.proof-card,
-.proof-stat,
-.profile-stat,
 .source-status,
-.market-card,
-.research-summary,
 .slip-why,
-.pick-publication,
-.slip-disclaimer,
-.pick-public-money,
-.public-money-card {
+.pick-publication {
   background: #fff !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
@@ -722,9 +700,9 @@ footer {
 }
 
 /* Maintain readable contrast for legacy dark-theme text rules. */
-main p, main small, .sidebar small, .topbar a, .feed-trust, .community-panel summary { color: #52657d !important; }
+main p, main small, .sidebar small, .topbar a, .community-panel summary { color: #52657d !important; }
 .feed-filters { background: #f2f5faf5 !important; }
-.feed-matchup, .feed-gate { background: #fff !important; border-color: #dce4ef !important; }
+.feed-matchup { background: #fff !important; border-color: #dce4ef !important; }
 .feed-next { background: #fff8e8 !important; border-color: #ead9b0 !important; color: #69511e !important; }
 .sports-ticker summary { display: flex; align-items: center; gap: 14px; padding: 13px 16px; min-height: 52px; }
 .sports-ticker { border: 1px solid #dce4ef; border-radius: 14px; overflow: hidden; }

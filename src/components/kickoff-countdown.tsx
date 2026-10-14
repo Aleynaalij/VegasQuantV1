@@ -10,7 +10,15 @@ function parts(ms: number) {
   };
 }
 /** Live countdown to kickoff. Renders nothing until mounted to avoid hydration drift. */
-export default function KickoffCountdown({ kickoff }: { kickoff: string }) {
+export default function KickoffCountdown({
+  kickoff,
+  liveLabel = "Kicked off",
+  label = "Time to kickoff",
+}: {
+  kickoff: string;
+  liveLabel?: string;
+  label?: string;
+}) {
   const target = Date.parse(kickoff);
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
@@ -22,7 +30,7 @@ export default function KickoffCountdown({ kickoff }: { kickoff: string }) {
   if (target <= now)
     return (
       <span className="vq-countdown live">
-        <i aria-hidden="true" /> Kicked off
+        <i aria-hidden="true" /> {liveLabel}
       </span>
     );
   const p = parts(target - now);
@@ -38,7 +46,7 @@ export default function KickoffCountdown({ kickoff }: { kickoff: string }) {
         [p.s, "s"],
       ];
   return (
-    <span className="vq-countdown" role="timer" aria-label="Time to kickoff">
+    <span className="vq-countdown" role="timer" aria-label={label}>
       {cells.map(([v, u]) => (
         <span key={u}>
           <b>{String(v).padStart(2, "0")}</b>

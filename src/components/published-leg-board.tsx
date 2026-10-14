@@ -5,6 +5,8 @@ import { supabase } from "@/lib/supabase";
 import LegActions from "./leg-actions";
 import PriceFreshness from "./price-freshness";
 import GamblyLink from "./gambly-link";
+import RuleChips from "./rule-chips";
+import { citedRules } from "@/lib/nba-rules";
 type Leg = {
   leg_key: string;
   name: string;
@@ -208,13 +210,13 @@ export default function PublishedLegBoard({
               <p>{r.matchup}</p>
               <b>{r.quote || "Price not verified"}</b>
               <PriceFreshness at={r.quote_observed_at} />
+              <RuleChips rules={citedRules(r.why, r.risk)} />
               <small>
                 Published{" "}
                 {new Date(r.published_at).toLocaleString("en-US", {
                   timeZone: "America/New_York",
                 })}{" "}
-                ET ·{" "}
-                <span title={r.leg_key}>Ref {r.leg_key.slice(-8)}</span>
+                ET · <span title={r.leg_key}>Ref {r.leg_key.slice(-8)}</span>
               </small>
               <details>
                 <summary>Case & loss risk</summary>

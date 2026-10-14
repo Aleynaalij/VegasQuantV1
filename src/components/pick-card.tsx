@@ -21,6 +21,9 @@ import PriceFreshness from "./price-freshness";
 import CopyPick from "./copy-pick";
 import PickMoneySplits from "./pick-money-splits";
 import BrandMark from "./brand-mark";
+import TeamLogo from "./team-logo";
+import RuleChips from "./rule-chips";
+import { citedRules } from "@/lib/nba-rules";
 export default function PickCard({
   p,
   d,
@@ -82,19 +85,45 @@ export default function PickCard({
           {r?.result || "OFFICIAL PLAY"}
         </Badge>
       </div>
-      <p className="muted">
-        {g?.away_team} @ {g?.home_team}
-      </p>
-      <h2>{p.selection}</h2>
-      <div className="official-price">
-        {odd(p.odds)} <span>{p.book}</span>
-      </div>
-      {!r && entryAction}
-      {compact && (
-        <p className="slip-quick-metrics">
-          Analyst edge: +{p.edge} pp · Confidence: {p.confidence}/10
+      {g && (
+        <p className="slip-matchup">
+          <TeamLogo team={g.away_team} size={28} />
+          <span>
+            {g.away_team} @ {g.home_team}
+          </span>
+          <TeamLogo team={g.home_team} size={28} />
         </p>
       )}
+      <div className="slip-line">
+        <div>
+          <span className="slip-market">{p.market}</span>
+          <h2>{p.selection}</h2>
+        </div>
+        <div className="official-price slip-odds">
+          <b>{odd(p.odds)}</b>
+          <span>{p.book}</span>
+        </div>
+      </div>
+      <dl className="slip-stats">
+        <div>
+          <dt>Edge</dt>
+          <dd className="positive">+{p.edge} pp</dd>
+        </div>
+        <div>
+          <dt>Model</dt>
+          <dd>{p.model_probability}%</dd>
+        </div>
+        <div>
+          <dt>Market</dt>
+          <dd>{p.market_probability}%</dd>
+        </div>
+        <div>
+          <dt>{compact ? "Confidence" : "Grade"}</dt>
+          <dd>{compact ? `${p.confidence}/10` : p.bet_grade}</dd>
+        </div>
+      </dl>
+      <RuleChips rules={citedRules(p.why_like, p.why_lose)} />
+      {!r && entryAction}
       {!compact && (
         <p className="slip-why">
           <strong>The read</strong> {p.why_like.split(/\n\s*\n/)[0]}{" "}

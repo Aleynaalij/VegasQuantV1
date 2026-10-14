@@ -185,7 +185,11 @@ export function Shell({
           </h3>
           <p>
             {sport === "nba" ? (
-              "Minutes, role and opportunity before selections."
+              <>
+                Minutes, role and opportunity before selections.
+                <br />
+                <Link href="/nba/rules">Read the rulebook →</Link>
+              </>
             ) : (
               <>
                 A clear case. A verified price.
@@ -234,6 +238,7 @@ export function Shell({
                   methodology: "Methodology",
                   error: "Something went wrong",
                   missing: "Not found",
+                  rules: "Rulebook",
                 } as Record<string, string>
               )[active] || "Workspace"}
             </b>
