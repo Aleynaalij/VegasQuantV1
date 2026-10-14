@@ -42,6 +42,7 @@ http.createServer((req, res) => {
   if (rpc("community_feed")) return json(res, [{ id: "c1", user_id: "u2", author_name: "SampleMember", title: "Sample slip", body: "Sample post body.", sport: "nfl", kind: "talk", legs: [], stake: null, created_at: NOW, reactions: 0, reacted: false, comments: 0, following: false }]);
   if (rpc("community_member")) return json(res, { username: "SampleMember", region: "Sample", avatar: null, visible: true, events: [] });
   if (rpc("challenge_community_count")) return json(res, 3);
+  if (rpc("tail_leaderboard")) return json(res, [{ username: "SampleMember", wins: 4, losses: 1, pushes: 0, score: 37.6 }]);
   if (u.startsWith("/rest/v1/rpc/")) return json(res, null);
   if (u.startsWith("/rest/v1/candidate_releases")) {
     if (u.includes("pick_of_day")) return json(res, releases.slice(0, 1));

@@ -12,6 +12,8 @@ import { supabase } from "@/lib/supabase";
 import CommunityPhoto from "./community-photo";
 import { COMMUNITY_PHOTO_BUCKET, MAX_PHOTO_BYTES } from "@/lib/community-photo";
 import { time } from "@/lib/domain";
+import TailLeaderboard from "./tail-leaderboard";
+import SectionBoundary from "./section-boundary";
 type Post = {
   id: string;
   user_id: string;
@@ -526,6 +528,9 @@ export default function CommunityFeed() {
         <Link href="/feed">
           Looking for analyst picks and injury updates? Head to The Zone →
         </Link>
+        <SectionBoundary name="Tail leaderboard">
+          <TailLeaderboard />
+        </SectionBoundary>
         {!authReady ? (
           <p>Checking your session…</p>
         ) : !uid ? (

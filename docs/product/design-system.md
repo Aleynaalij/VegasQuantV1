@@ -62,3 +62,8 @@ Citations are required for NBA official picks (migration `20261014015003_nba_bib
 ## UI checks
 - `npm run ui:smoke` (CI job `ui-smoke`) builds against `scripts/ui-smoke/stub.mjs`, a synthetic Supabase stand-in, and loads the key pages at 390px and 1280px, signed out and signed in. It fails on server errors, page crashes, the full-page error, sideways scroll, or missing main content (for example Home's Pick of the Day, "Legs we like" and "For you" when signed in). Locally: start the stub, build with `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`, run `next start -p 3100`, then the check.
 - Fonts load through `next/font` (DM Sans as `--font-body`, Manrope as `--font-display`). Don't add font `@import`s.
+
+## Alerts and leaderboard
+- **Price alerts.** When a pick release is republished with new prices (a candidate's `supersedes_release_id`), members who tailed or saved a leg of the old release get one push (`kind = 'price'`, event key `price:<new release id>`). Age rules match research alerts. Tapping it opens `/feed?view=legs#release-<id>`; the service worker only opens known in-app paths. Migration `20261014180000_price_alerts_and_tail_leaderboard.sql`.
+- **Automatic line tracking** needs the odds feed in `supabase/functions/source-sync` turned on (`ODDS_API_KEY`, `ODDS_FEED_ENABLED=true`, `ODDS_PROPS_ENABLED=true`). Until then, price moves come from published revisions.
+- **Tail leaderboard** (Community): `tail_leaderboard(days)` counts tailed legs graded with a verified (https) result source, for members with a visible profile and at least 3 decided legs, ranked by the 95% Wilson lower bound of win rate. Tails can only be added before a release expires and can't be removed after it starts.

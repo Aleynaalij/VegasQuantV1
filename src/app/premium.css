@@ -757,3 +757,17 @@ html[data-theme] body .vq-foryou li a, html[data-theme] body .vq-foryou li small
 html[data-theme] body .vq-foryou li small, html[data-theme] body .vq-foryou p { color:var(--muted) !important; }
 html[data-theme] body .vq-foryou p { font-size:13.5px; line-height:1.6; margin:0; }
 html[data-theme] body .ask-vegas-source { display:block; margin-top:8px; font-size:11.5px; color:var(--muted) !important; }
+
+/* ---------- Community: tail leaderboard ---------- */
+.vq-board-head { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:8px; }
+html[data-theme] body .vq-board h2 { font-size:17px; margin:0; color:var(--text) !important; }
+.vq-board-head [role="group"] { display:flex; gap:6px; }
+html[data-theme] body .vq-board-head button { min-height:32px; padding:4px 10px; border-radius:999px; border:1px solid var(--line-strong); background:transparent; font-size:12px; font-weight:700; color:var(--muted) !important; cursor:pointer; }
+html[data-theme] body .vq-board-head button[aria-pressed="true"] { background:var(--brand, #2f6bff); border-color:transparent; color:#fff !important; }
+.vq-board ol { list-style:none; margin:0 0 10px; padding:0; }
+.vq-board li { display:grid; grid-template-columns:28px 1fr auto; align-items:center; gap:8px; min-height:44px; border-top:1px solid var(--line); }
+.vq-board li:first-child { border-top:0; }
+html[data-theme] body .vq-board-rank { font-weight:800; font-variant-numeric:tabular-nums; color:var(--muted) !important; }
+html[data-theme] body .vq-board li b { font-variant-numeric:tabular-nums; color:var(--text) !important; }
+html[data-theme] body .vq-board p, html[data-theme] body .vq-board small { font-size:13px; line-height:1.55; color:var(--muted) !important; }
+html[data-theme] body .vq-board small { display:block; font-size:11.5px; margin-top:6px; }

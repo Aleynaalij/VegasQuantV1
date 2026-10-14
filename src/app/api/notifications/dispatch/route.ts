@@ -2,7 +2,7 @@ import { sendPushTest } from "@/lib/push-test-server";
 import { timingSafeEqual } from "node:crypto";
 import webpush from "web-push";
 import { serviceDb } from "@/lib/billing-server";
-import { validPushEndpoint } from "@/lib/push";
+import { pushPayload, validPushEndpoint } from "@/lib/push";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 export async function POST(req: Request) {
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
           id: string;
           pick_id: string;
           event_key?: string;
-          type: "official" | "research" | "signup" | "health";
+          type: "official" | "research" | "signup" | "health" | "price";
           endpoint: string;
           keys: { p256dh: string; auth: string };
         }[]
@@ -55,16 +55,7 @@ export async function POST(req: Request) {
           else {
             await webpush.sendNotification(
               { endpoint: job.endpoint, keys: job.keys },
-              JSON.stringify({
-                pick_id: job.pick_id,
-                type: job.type,
-                ...(job.event_key?.startsWith("app-update:")
-                  ? {
-                      announcement:
-                        "Vegas Quant has been updated. Open the app for the new design, game board and community.",
-                    }
-                  : {}),
-              }),
+              JSON.stringify(pushPayload(job)),
               {
                 TTL: 1800,
                 timeout: 8000,
