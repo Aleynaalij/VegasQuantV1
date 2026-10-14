@@ -6,14 +6,14 @@ const key = "vq-theme-v1";
 function apply(theme: string) {
   document.documentElement.dataset.theme = theme;
   document.documentElement.style.colorScheme = theme;
-  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#131e30" : "#ffffff");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", theme === "dark" ? "#070b14" : "#ffffff");
   try { localStorage.setItem(key, theme); } catch {}
   window.dispatchEvent(new Event("vq-theme"));
 }
 export function ThemeSettings() {
-  const [theme, setTheme] = useState("light");
+  const [theme, setTheme] = useState("dark");
   useEffect(() => {
-    const update = () => setTheme(document.documentElement.dataset.theme || "light");
+    const update = () => setTheme(document.documentElement.dataset.theme || "dark");
     update(); window.addEventListener("vq-theme", update);
     return () => window.removeEventListener("vq-theme", update);
   }, []);
@@ -24,8 +24,8 @@ export function ThemeSettings() {
 export default function ThemePrompt() {
   const pathname = usePathname();
   useEffect(() => {
-    const theme = document.documentElement.dataset.theme || "light";
-    document.querySelectorAll('meta[name="theme-color"]').forEach(meta => meta.setAttribute("content", theme === "dark" ? "#131e30" : "#ffffff"));
+    const theme = document.documentElement.dataset.theme || "dark";
+    document.querySelectorAll('meta[name="theme-color"]').forEach(meta => meta.setAttribute("content", theme === "dark" ? "#070b14" : "#ffffff"));
   }, [pathname]);
   const dialog = useRef<HTMLDialogElement>(null);
   const [uid, setUid] = useState<string | null>(null);

@@ -143,15 +143,22 @@ export default function DeskApp({
     official =
       d.picks.find(
         (p) =>
-          p.game_id === g?.id && (page === "game" || p.stage_id === stage?.id) &&
-          (page !== "home" || isCurrentHomeWeek(d.games.find(game => game.id === p.game_id)?.kickoff)),
+          p.game_id === g?.id &&
+          (page === "game" || p.stage_id === stage?.id) &&
+          (page !== "home" ||
+            isCurrentHomeWeek(
+              d.games.find((game) => game.id === p.game_id)?.kickoff,
+            )),
       ) ||
       (page === "home"
         ? [...challengePicks]
             .sort((a, b) => b.created_at.localeCompare(a.created_at))
-            .find((p) =>
-              isCurrentHomeWeek(d.games.find(game => game.id === p.game_id)?.kickoff) &&
-              d.results.some((r) => r.pick_id === p.id && r.result === "WIN"),
+            .find(
+              (p) =>
+                isCurrentHomeWeek(
+                  d.games.find((game) => game.id === p.game_id)?.kickoff,
+                ) &&
+                d.results.some((r) => r.pick_id === p.id && r.result === "WIN"),
             )
         : undefined),
     gamePicks = d.picks.filter((p) => p.game_id === g?.id);
@@ -356,14 +363,15 @@ export default function DeskApp({
           )}
         </div>
         {error && <div className="notice">{error}</div>}
-        {page === "home" && !ch && <HomeBrief games={d.games} />}
+        {page === "home" && <HomeBrief games={d.games} />}
         {page === "home" && ch && (
           <CommunityHome challengeId={ch.id} number={ch.number}>
-            <HomeBrief games={d.games} />
             <DecisionBoard games={d.games} />
             <CandidateTracker activeOnly featured funPlayOnly />
             <CandidateTracker activeOnly featured pickOfDay />
-            <Link className="text-link" href="/feed">Legs we like · See the game board →</Link>
+            <Link className="text-link" href="/feed">
+              Legs we like · See the game board →
+            </Link>
             <DailyUpdateNotice />
             {ch.status === "PREP" ? (
               <details className="challenge-preview">

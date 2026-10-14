@@ -163,7 +163,7 @@ export default function DownloadCard({ title, subtitle, publishedAt, sections, l
     finally { setBusy(false); }
   }
   const filename = `vegas-quant-${title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "card"}`;
-  return <div style={{ marginTop: 16 }}>
+  return <div className="download-card" style={{ marginTop: 16 }}>
     <button type="button" className="secondary" onClick={() => void preview()} disabled={busy}>
       <Download size={18} aria-hidden="true" /> {busy ? "Creating cards…" : label}
     </button>

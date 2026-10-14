@@ -213,7 +213,8 @@ export default function PublishedLegBoard({
                 {new Date(r.published_at).toLocaleString("en-US", {
                   timeZone: "America/New_York",
                 })}{" "}
-                ET · ID {r.leg_key}
+                ET ·{" "}
+                <span title={r.leg_key}>Ref {r.leg_key.slice(-8)}</span>
               </small>
               <details>
                 <summary>Case & loss risk</summary>
