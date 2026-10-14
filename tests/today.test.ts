@@ -34,3 +34,12 @@ test("leg text helpers shorten market and matchup", () => {
   assert.equal(legMarket("FULL GAME TOTAL · 50+ rushing yards"), "50+ rushing yards");
   assert.equal(legMatchup("Buffalo @ Los Angeles Rams · Oct 12 · 8:15 PM ET"), "Buffalo @ Los Angeles Rams");
 });
+
+test("Today drops a release once a price revision supersedes it", () => {
+  const now = Date.parse("2026-10-11T15:00:00Z");
+  const w = todayWindows([
+    release("old", "2026-10-11T17:00:00Z"),
+    release("new", "2026-10-11T17:00:00Z", [leg("n", { supersedes_release_id: "old" })]),
+  ], now);
+  assert.deepEqual(w.flatMap((x) => x.releases.map((r) => r.id)), ["new"]);
+});

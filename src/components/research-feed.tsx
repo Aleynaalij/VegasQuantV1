@@ -82,7 +82,22 @@ export default function ResearchFeed() {
       if (n !== epoch.current) return;
       const failures: string[] = [];
       if (legs.error) failures.push("Selections could not refresh.");
-      else setReleases((legs.data || []) as CandidateRelease[]);
+      else {
+        let list = (legs.data || []) as CandidateRelease[];
+        // A link from Home may point past the first page: fetch that release too.
+        const wanted = window.location.hash.match(/^#release-([\w-]+)$/)?.[1];
+        if (wanted && !list.some((r) => r.id === wanted)) {
+          const one = await supabase
+            .from("candidate_releases")
+            .select("id,title,candidates,created_at,expires_at")
+            .eq("id", wanted)
+            .limit(1);
+          if (n !== epoch.current) return;
+          if (!one.error && one.data?.length)
+            list = [...list, ...(one.data as CandidateRelease[])];
+        }
+        setReleases(list);
+      }
       if (edges.error) failures.push("Official releases could not refresh.");
       else setEdgeReleases((edges.data || []) as EdgeRelease[]);
       const current = membership.error ? noAccess : (membership.data as Access);
@@ -177,12 +192,22 @@ export default function ResearchFeed() {
     const hash = window.location.hash.match(/^#release-([\w-]+)$/);
     if (hash) setOpenRelease(hash[1]);
   }, []);
+  const scrolledTo = useRef("");
   useEffect(() => {
-    if (!openRelease || loading) return;
-    document
-      .getElementById(`release-${openRelease}`)
-      ?.scrollIntoView({ block: "start" });
-  }, [openRelease, loading]);
+    if (!openRelease || loading || scrolledTo.current === openRelease) return;
+    // Show enough items to reach the linked release, then scroll to it once.
+    const i = visibleTimeline.findIndex(
+      (x) => x.kind === "selection" && x.value.id === openRelease,
+    );
+    if (i >= limit) {
+      setLimit(i + 1);
+      return;
+    }
+    const el = document.getElementById(`release-${openRelease}`);
+    if (!el) return;
+    el.scrollIntoView({ block: "start" });
+    scrolledTo.current = openRelease;
+  });
   useEffect(() => {
     const view = new URLSearchParams(window.location.search).get("view");
     setZoneView(

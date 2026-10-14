@@ -19,6 +19,7 @@ export async function getDeskOrEmpty(): Promise<Desk> {
   try {
     return await getDesk();
   } catch {
-    return { ...emptyDesk, unavailable: true };
+    // free_core keeps the normal Home/Records layout (live value is true); member data stays behind RLS.
+    return { ...emptyDesk, unavailable: true, free_core: true } as Desk;
   }
 }

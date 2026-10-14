@@ -7,6 +7,7 @@ export type TodayLeg = {
   pick_of_day?: boolean;
   fun_play?: boolean;
   analysis_kind?: string;
+  supersedes_release_id?: string;
 };
 export type TodayRelease = {
   id: string;
@@ -47,7 +48,11 @@ export function kickoffWindow(iso: string) {
   const t = eastern(iso);
   const slot = t.hour < 15 ? "early" : t.hour < 19 ? "late" : "night";
   const name =
-    slot === "early" ? "Early games" : slot === "late" ? "Late afternoon" : "Night game";
+    slot === "early"
+      ? "Early games"
+      : slot === "late"
+        ? "Late afternoon"
+        : "Night game";
   return { key: `${t.day}-${slot}`, label: `${t.weekday} · ${name}` };
 }
 
@@ -57,10 +62,18 @@ export function todayWindows(
   now = Date.now(),
 ): TodayWindow[] {
   const windows = new Map<string, TodayWindow>();
+  // A price revision republishes a release; only the newest version is current (as in The Zone).
+  const superseded = new Set(
+    releases.flatMap((r) =>
+      r.candidates.flatMap((c) =>
+        c.supersedes_release_id ? [c.supersedes_release_id] : [],
+      ),
+    ),
+  );
   for (const r of [...releases].sort(
     (a, b) => Date.parse(a.expires_at) - Date.parse(b.expires_at),
   )) {
-    if (!(Date.parse(r.expires_at) > now)) continue;
+    if (!(Date.parse(r.expires_at) > now) || superseded.has(r.id)) continue;
     const legs = r.candidates.filter(
       (c) =>
         !c.pick_of_day &&
