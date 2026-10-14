@@ -2,6 +2,15 @@
 
 Updated October 14, 2026. Owner authorized launch preparation, not submission.
 
+## Owner to-do · after work, October 14, 2026
+
+- [ ] Review and approve Stripe Identity's fees and business activation. Approval is still pending.
+- [ ] Activate Identity and securely add the live restricted key and webhook signing secret to Vercel. Do not share secrets in chat.
+- [ ] Complete live/mobile age-verification and deletion/redaction acceptance tests, plus the remaining consent/support review.
+- [ ] After successful testing, enable mandatory 21+ verification for all existing and new accounts. Enforcement remains off until this rollout is ready.
+
+Detailed setup: [age-verification.md](age-verification.md).
+
 ## Delivered foundation
 - Public About, FAQ, Privacy Notice, Terms, Responsible Play and Help & Support routes, linked in the shared footer.
 - JourneyBuilt, LLC operator attribution; 21+ intended audience.
