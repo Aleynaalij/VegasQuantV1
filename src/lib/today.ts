@@ -6,6 +6,7 @@ export type TodayLeg = {
   odds?: number | null;
   pick_of_day?: boolean;
   fun_play?: boolean;
+  parlay?: boolean;
   analysis_kind?: string;
   supersedes_release_id?: string;
 };
@@ -78,6 +79,7 @@ export function todayWindows(
       (c) =>
         !c.pick_of_day &&
         !c.fun_play &&
+        !c.parlay &&
         !String(c.analysis_kind || "").startsWith("RETROSPECTIVE"),
     );
     if (!legs.length) continue;

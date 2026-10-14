@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import LegResultStatus, { useReleaseResults } from "./leg-result-status";
+import ParlayCard, { type ParlayCandidate } from "./parlay-card";
 import LegActions from "./leg-actions";
 import DownloadCard from "./download-card";
 import PriceFreshness from "./price-freshness";
@@ -14,6 +15,7 @@ import { time } from "@/lib/domain";
 import { homeWeekStart, isCurrentHomeWeek } from "@/lib/home-week";
 
 type Candidate = {
+  parlay?: boolean;
   book?: string;
   supersedes_release_id?: string;
   original_published_at?: string;
@@ -142,6 +144,15 @@ export default function CandidateTracker({
         Candidate research could not refresh. No official decision is implied.
       </p>
     ) : null;
+  if (release.candidates[0]?.parlay)
+    return (
+      <ParlayCard
+        candidate={release.candidates[0] as unknown as ParlayCandidate}
+        releaseId={release.id}
+        publishedAt={release.created_at}
+        expiresAt={release.expires_at}
+      />
+    );
   const expired = Date.now() >= new Date(release.expires_at).getTime();
   const implied =
     Number.isFinite(release.candidates[0]?.odds) &&

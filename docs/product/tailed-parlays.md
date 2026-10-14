@@ -1,0 +1,7 @@
+# Published parlays and Home tracking
+
+An explicit `parlay:true` candidate is PARLAY in the immutable published-leg view. Its first candidate contains `parlay_legs` plus exact `leg_keys` referencing the accompanying individual full-game targets. Tailing the combined candidate creates one existing `leg_tails` row; it does not create six artificial tails or a placed wager. Home reads only the signed-in user's tails, counts PARLAY/HAIL_MARY entries with unresolved outcomes in the upcoming/recent window, and links back to each original ticket. Older unresolved tickets remain in Records. The existing pre-kickoff tail/removal rules apply.
+
+New editorial parlay outcome: all referenced leaves verified WIN => WIN; any verified LOSS => LOSS. Push/void reductions stay ungraded rather than inventing the sportsbook's revised odds, payout or rules. Evidence retains the referenced outcomes, and a lock/deduped insertion preserves one combined result. No bankroll or official challenge grades change.
+
+Changes in injury/role or prices must be an append-only update referencing the original publication. A user's original tail never silently switches its selections. Latest analysis remains linked from the published card. This owner-requested six-leg SEA–DEN ticket uses the original screenshot's Waddle 15+ receiving target; the separate earlier 20+ research watch target is not silently substituted. JSN remains availability-conditional. The old DraftKings +298 snapshot is historical comparison only; current FanDuel prices/combined odds remain unknown.
