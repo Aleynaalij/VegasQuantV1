@@ -163,8 +163,7 @@ main {
 .text-link,
 .profile-view-link,
 .profile-socials a,
-.slate-windows button,
-.section-switch button {
+.slate-windows button {
   background: #fff !important;
   border-color: #cedbed !important;
   color: #0866d8 !important;
@@ -299,8 +298,7 @@ textarea::placeholder {
 .mi-game .game-pair {
   margin: 16px 0;
 }
-.slate-windows button.selected,
-.section-switch button.selected {
+.slate-windows button.selected {
   background: #0866d8 !important;
   color: #fff !important;
   border-color: #0866d8 !important;
