@@ -666,3 +666,19 @@ html[data-theme] body .top-actions .top-profile:focus-visible { outline: 3px sol
 .vq-welcome-mark { width:110px; height:auto; margin-bottom:18px; }
 @keyframes vq-opening-exit { 0%,70% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
 @media (prefers-reduced-motion:reduce) { .vq-brand-opening { animation:none; } }
+
+.vq-policy { max-width:820px; margin:0 auto; padding:18px 0 30px; }
+.vq-policy header .vq-mark { width:88px; height:66px; display:block; margin-bottom:18px; }
+.vq-policy h1 { font-size:clamp(30px,6vw,48px); line-height:1.14; letter-spacing:-.035em; margin:16px 0; }
+.vq-policy p { color:var(--muted); font-size:16px; line-height:1.75; overflow-wrap:anywhere; }
+.vq-policy nav,.vq-footer-links,.vq-help-actions { display:flex; flex-wrap:wrap; gap:12px 18px; margin:24px 0; }
+.vq-policy nav a,.vq-footer-links a,.vq-help-actions a { color:#a7beff; font-size:14px; }
+.vq-policy nav a[aria-current="page"] { color:#fff; text-decoration:underline; text-underline-offset:5px; }
+.vq-policy section,.vq-policy details { border:1px solid var(--line); background:var(--panel); border-radius:18px; padding:22px; margin:14px 0; }
+.vq-policy h2,.vq-policy summary { font-size:19px; font-weight:700; line-height:1.4; }
+.vq-policy summary { cursor:pointer; }
+.vq-policy section p { margin-bottom:0; }
+.vq-legal-consent { display:flex!important; flex-direction:row!important; gap:12px; align-items:flex-start; font-size:14px; line-height:1.6; }
+.vq-legal-consent input { width:20px!important; min-width:20px; margin-top:4px; }
+.vq-footer-links { margin:18px 0; }
+main > footer small { display:block; color:var(--muted); font-size:12px; line-height:1.8; }

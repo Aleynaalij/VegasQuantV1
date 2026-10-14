@@ -290,6 +290,8 @@ export function Shell({
                 : "Entertainment challenge. No wager is guaranteed. A stage may be passed when no qualifying edge exists."}
             </p>
             <Link href="/methodology">Methodology & transparency</Link>
+            <nav className="vq-footer-links" aria-label="Help and legal"><Link href="/about">About</Link><Link href="/faq">FAQs</Link><Link href="/support">Support</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/responsible-play">Responsible play</Link></nav>
+            <small>21+ · Research and community, not a sportsbook. No guaranteed winnings.<br />Vegas Quant is a product of JourneyBuilt, LLC. © {new Date().getFullYear()} JourneyBuilt, LLC.</small>
           </footer>
         </main>
         <nav className="mobile-nav" aria-label="Main navigation">

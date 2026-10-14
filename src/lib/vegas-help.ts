@@ -103,7 +103,7 @@ export const helpTopics: HelpTopic[] = [
     link: "Read the methodology",
   },
   {
-    id: "community",
+    id: "community-posting",
     title: "How do I share a slip?",
     category: "Start here",
     phrases: [
