@@ -28,3 +28,9 @@ Supabase account/email; profile/region/avatar/social links; personal tracking an
 - https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion
 - https://developer.apple.com/app-store/app-privacy-details/
 - https://www.ncpgambling.org/help-treatment/about-the-national-problem-gambling-helpline/
+
+## Safety implementation update
+- Member blocks are owner-private, enforced bidirectionally for post/comment visibility and interactions by RLS/trigger checks; administrators can still inspect reported material. Member profile pages and historical game-comment read paths need a separate review.
+- Posting restrictions are admin-only; basic server-side phrase filtering covers selected direct threats, executable-link markers and guaranteed-return claims. This is not comprehensive semantic moderation.
+- Account can initiate/cancel pending deletion requests. Admin Accounts has the private queue. There is no deletion worker or completion promise: auth session revocation, subscription cleanup, avatar storage and immutable personal-record deletion exceptions still require implementation and tests.
+- Support inbox is not active: email hosting account/provider and Vercel domain DNS access are missing.

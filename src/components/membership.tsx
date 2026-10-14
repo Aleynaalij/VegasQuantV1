@@ -9,6 +9,7 @@ import { Shell, Panel } from "./ui";
 import FriendPass from "./friend-pass";
 import CommunitySettings from "./community-settings";
 import PickAlerts from "./pick-alerts";
+import AccountDeletion from "./account-deletion";
 import BillingAccount from "./billing-account";
 import type { Session } from "@supabase/supabase-js";
 type Quote = {
@@ -476,6 +477,7 @@ export default function Membership() {
         </p>
       )}
       {session && <BillingAccount token={session.access_token} />}
+      {session && <AccountDeletion key={session.user.id} uid={session.user.id} />}
       <Panel title="Free to follow. Premium to go deeper.">
         <div className="notebook">
           <h3>14 days of Premium, on us</h3>

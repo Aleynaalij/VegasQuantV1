@@ -43,11 +43,13 @@ function Comments({
   uid,
   admin,
   onChange,
+  onBlock,
 }: {
   postId: string;
   uid: string;
   admin: boolean;
   onChange: () => void;
+  onBlock: (id: string, label: string) => Promise<void>;
 }) {
   const [rows, setRows] = useState<Comment[]>([]),
     [body, setBody] = useState(""),
@@ -117,6 +119,7 @@ function Comments({
           <strong>@{c.author_name}</strong>
           <small> · {time(c.created_at)}</small>
           <p>{c.body}</p>
+          {uid !== c.user_id ? <button className="text-link" onClick={() => void onBlock(c.user_id,c.author_name)}>Block member</button> : null}
           {(uid === c.user_id || admin) && (
             <button className="text-link" onClick={() => void remove(c.id)}>
               Remove comment
@@ -137,6 +140,7 @@ export default function CommunityFeed() {
     [followingOnly, setFollowingOnly] = useState(false),
     [limit, setLimit] = useState(20),
     [rows, setRows] = useState<Post[]>([]),
+    [blocked, setBlocked] = useState<{target_user_id:string;label:string}[]>([]),
     [kind, setKind] = useState("talk"),
     [title, setTitle] = useState(""),
     [body, setBody] = useState(""),
@@ -165,6 +169,7 @@ export default function CommunityFeed() {
       setOpenComments(null);
       setAdmin(false);
       setReports([]);
+      setBlocked([]);
       setLoading(false);
       setAuthReady(true);
     };
@@ -203,6 +208,8 @@ export default function CommunityFeed() {
       return;
     }
     setRows(r.data || []);
+    const blocks = await supabase.from("member_blocks").select("target_user_id,label").eq("user_id",uid);
+    if(n===epoch.current) setBlocked(blocks.data || []);
     if (a.data === true) {
       const flags = await supabase
         .from("community_reports")
@@ -290,6 +297,29 @@ export default function CommunityFeed() {
     if (r.error) setNotice("Follow could not save.");
     else await refresh();
   }
+  async function block(id: string, label: string) {
+    if(!uid || busy) return;
+    setBusy(true);
+    const r=await supabase.from("member_blocks").insert({user_id:uid,target_user_id:id,label});
+    setBusy(false);
+    setNotice(r.error ? "Could not block this member." : "Member blocked. Their posts and comments are hidden from your community feed.");
+    if(!r.error) { setOpenComments(null); await refresh(); }
+  }
+  async function unblock(id: string) {
+    if(!uid || busy) return;
+    setBusy(true);
+    const r=await supabase.from("member_blocks").delete().eq("user_id",uid).eq("target_user_id",id);
+    setBusy(false);
+    setNotice(r.error ? "Could not unblock member." : "Member unblocked.");
+    if(!r.error) await refresh();
+  }
+  async function restrict(id: string, restricted: boolean) {
+    if(!admin || busy) return;
+    setBusy(true);
+    const r=await supabase.rpc("restrict_community_member",{p_user:id,p_reason:"Moderator action following community review",p_restricted:restricted});
+    setBusy(false);
+    setNotice(r.error ? "Could not change posting access." : restricted ? "Member posting restricted." : "Member posting restored.");
+  }
   async function remove(id: string) {
     const r = await supabase.from("community_posts").delete().eq("id", id);
     if (r.error) setNotice("Could not remove post.");
@@ -318,6 +348,8 @@ export default function CommunityFeed() {
       <div className="community-feed">
         <header>
           <span className="eyebrow">YOUR PEOPLE · YOUR PERSPECTIVE</span>
+          <p>Keep it respectful. No threats, scams or guaranteed-return claims. Reporting and blocking are available on member posts.</p>
+          {blocked.length ? <details><summary>Blocked members · {blocked.length}</summary>{blocked.map(b=><p key={b.target_user_id}>@{b.label} <button className="secondary" disabled={busy} onClick={() => void unblock(b.target_user_id)}>Unblock</button></p>)}</details> : null}
           <h1>Community</h1>
           <p>Share a slip. Talk through a game. Explain your thinking.</p>
           <p className="notice">
@@ -526,6 +558,8 @@ export default function CommunityFeed() {
                   </small>
                 ) : null}
                 <div className="social-actions">
+                  {uid !== p.user_id ? <button className="secondary" disabled={busy} onClick={() => void block(p.user_id,p.author_name)}>Block member</button> : null}
+                  {admin && uid !== p.user_id ? <><button className="secondary" disabled={busy} onClick={() => void restrict(p.user_id,true)}>Restrict posting</button><button className="secondary" disabled={busy} onClick={() => void restrict(p.user_id,false)}>Restore posting</button></> : null}
                   <button
                     className="secondary"
                     disabled={busy}
@@ -567,6 +601,7 @@ export default function CommunityFeed() {
                 {openComments === p.id ? (
                   <Comments
                     key={`${uid}:${p.id}`}
+                    onBlock={block}
                     postId={p.id}
                     uid={uid}
                     admin={admin}

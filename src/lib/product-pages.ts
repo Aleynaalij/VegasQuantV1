@@ -71,7 +71,7 @@ export const productPages = {
       ],
       [
         "How do I get help or delete an account?",
-        "Visit Help & Support for current options. Self-service account deletion is not yet available and is an App Store launch requirement. Signing out does not delete your account."
+        "Visit Help & Support for current options. A deletion-request form is available in Account. Automatic account cleanup is still a launch requirement. Signing out does not delete your account."
       ]
     ]
   },
@@ -151,7 +151,7 @@ export const productPages = {
       ],
       [
         "Questions and closure",
-        "See Help & Support for the current contact status and account controls. Account deletion is not yet self-service and is a launch requirement. Uninstalling does not cancel a subscription or delete an account. These terms and the final contact, retention and purchase policies need a legal review before App Store submission."
+        "See Help & Support for the current contact status and account controls. In-app deletion requests are available, but automatic account cleanup remains a launch requirement. Uninstalling does not cancel a subscription or delete an account. These terms and the final contact, retention and purchase policies need a legal review before App Store submission."
       ]
     ]
   },
@@ -199,11 +199,11 @@ export const productPages = {
       ],
       [
         "Community safety",
-        "Use Report on the post concerned and provide a brief reason. Your report is sent to the platform moderation queue. Do not publish another person’s private information when reporting abuse."
+        "Use Report on the post concerned and provide a brief reason. Your report is sent to the platform moderation queue. Block member hides that member’s posts and comments from your feed; manage blocks at the top of Community. Server-side rules filter selected harmful phrases and guaranteed-return claims, but cannot detect every harmful post. Do not publish another person’s private information when reporting abuse."
       ],
       [
         "Privacy and account deletion",
-        "Self-service account deletion and a data-export flow are not available yet. Signing out or uninstalling does not erase account data. These are outstanding release requirements."
+        "Signed-in members can submit or cancel a pending deletion request in Account. Requests are recorded for administrator review; automatic cleanup and data export are not available yet. A request does not delete the account or cancel a subscription."
       ],
       [
         "Contact JourneyBuilt",
