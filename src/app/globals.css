@@ -1582,21 +1582,8 @@ footer p {
   color: #eef6f0;
   background: #0c1318;
 }
-.member-notice {
-  padding: 16px;
-  border: 1px solid #3e5c4b;
-  border-radius: 8px;
-  margin: 16px 0;
-  overflow-wrap: anywhere;
-}
 .member-form button {
   min-height: 44px;
-}
-.mfa-qr {
-  background: white;
-  padding: 12px;
-  width: 220px;
-  max-width: 100%;
 }
 @media (max-width: 600px) {
   .pass-grid {
@@ -1605,42 +1592,6 @@ footer p {
   .membership-lock {
     padding: 20px;
   }
-}
-
-.mfa-setup {
-  display: grid;
-  gap: 12px;
-  margin-top: 20px;
-  max-width: 520px;
-}
-.mfa-setup label {
-  display: grid;
-  gap: 8px;
-}
-.mfa-setup input {
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  padding: 12px;
-  background: #0b1419;
-  color: #f4f5f4;
-  border: 1px solid #42534e;
-  border-radius: 8px;
-  font-family: monospace;
-}
-.mfa-alternative {
-  margin-top: 20px;
-}
-.mfa-alternative summary {
-  cursor: pointer;
-  color: #85cfb8;
-}
-.mfa-alternative .mfa-qr {
-  display: block;
-  width: 240px;
-  max-width: 100%;
-  height: auto;
-  margin: 16px 0;
 }
 /* Native modal keeps focus inside and makes the background inert. */
 .vq-welcome { margin: auto; padding: 0; width: min(560px, calc(100% - 28px)); max-height: calc(100dvh - 32px); border: 1px solid #34423e; border-radius: 20px; background: #10181e; color: #edf1ef; box-shadow: 0 24px 100px #0009; }
@@ -1659,7 +1610,6 @@ footer p {
 .vq-welcome-footer small { display: block; text-align: center; color: #95a29f; font-size: 11px; margin-top: 10px; }
 .vq-welcome-footer .vq-welcome-retry { background: transparent; color: #b1bcc4; margin-top: 8px; }
 .vq-welcome-error { color: #ffb4ad; font-size: 13px; }
-.vq-welcome-about { background: transparent; color: #75deb0; border: 1px solid #34423e; border-radius: 8px; padding: 10px 14px; margin-top: 8px; }
 @media (max-width: 420px) { .vq-welcome-content { padding: 22px 20px 10px; } .vq-welcome-footer { padding: 14px 20px 16px; } }
 .pick-publication, .official-card > .pick-odds-notice { font-size: 12px; line-height: 1.6; color: var(--muted); }
 .official-card > .pick-odds-notice { padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; }
@@ -1731,7 +1681,6 @@ footer p {
 .intel-stamp > span { display:block; }
 .intel-entry { margin:16px 0; }
 .intel-entry pre { overflow:auto; max-height:350px; font-size:12px; }
-.account-tools { display:grid; gap:14px; margin:18px 0; }
 @media(max-width:700px){.intel-controls{grid-template-columns:1fr}}
 /* Challenge-first experience */
 .home-heading h1,.home-heading .eyebrow,.home-heading p{display:none}.home-heading{margin-bottom:12px;justify-content:flex-end}.home-heading>div:empty{display:none}

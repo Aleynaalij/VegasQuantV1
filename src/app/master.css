@@ -1,43 +1,4 @@
 /* Vegas Quant / Sports intelligence, rebuilt for the small screen first. */
-.alert-preference {
-  background: #f0f5ff;
-  border-color: #c7d5ef;
-  color: #14233a;
-}
-.alert-preference > span {
-  min-width: 0;
-  font-weight: 600;
-}
-.alert-preference strong {
-  color: #174ac6;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.alert-preference input[type="checkbox"] {
-  appearance: none;
-  -webkit-appearance: none;
-  box-sizing: border-box;
-  width: 50px;
-  min-width: 50px;
-  height: 28px;
-  min-height: 28px;
-  padding: 0;
-  margin: 0;
-  border: 0;
-  background: #64748b;
-  border-radius: 20px;
-}
-.alert-preference input[type="checkbox"]:checked {
-  background: #2458ed;
-}
-.alert-preference input[type="checkbox"]:focus-visible {
-  outline: 3px solid #174ac6;
-  outline-offset: 4px;
-}
-.alert-preference input[type="checkbox"]:disabled {
-  opacity: .65;
-  cursor: wait;
-}
 :root {
   --bg: #f6f7f9;
   --panel: #fff;
@@ -177,8 +138,6 @@ p {
 }
 .panel,
 .candidate-tracker,
-.community-panel,
-.community-profile-rail,
 .official-card,
 .membership-lock {
   border-radius: 16px !important;
@@ -252,150 +211,6 @@ summary:focus-visible {
 }
 .home-brief {
   padding: 8px 0 24px;
-}
-.community-home.community-resume {
-  display: flex !important;
-  flex-direction: column;
-  gap: 18px;
-}
-.community-layout {
-  display: contents !important;
-}
-.community-main {
-  order: 0;
-  min-width: 0;
-  display: grid;
-  gap: 18px;
-}
-.community-profile-rail {
-  order: -1;
-  display: flex;
-  align-items: center;
-  padding: 18px 22px;
-  background: white !important;
-  min-height: 0;
-}
-.profile-cover,
-.profile-rail-note,
-.profile-rail-content > .eyebrow {
-  display: none !important;
-}
-.profile-rail-content {
-  display: grid;
-  grid-template-columns: 48px 1fr auto;
-  align-items: center;
-  gap: 3px 14px;
-  padding: 0 !important;
-  width: 100%;
-}
-.profile-rail-content .community-avatar {
-  width: 48px;
-  height: 48px;
-  margin: 0;
-  grid-row: 1 / 4;
-}
-.profile-rail-content h1 {
-  font-size: 19px !important;
-  margin: 0;
-  grid-column: 2;
-}
-.profile-handle {
-  display: none;
-}
-.profile-rail-content > p {
-  font-size: 11px;
-  margin: 0;
-  grid-column: 2;
-}
-.profile-socials {
-  display: none !important;
-}
-.profile-view-link {
-  grid-column: 3;
-  grid-row: 1 / 4;
-  margin: 0 !important;
-  font-size: 11px;
-}
-.community-drawer {
-  order: 3;
-  margin: 0 !important;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: white;
-}
-.community-drawer > summary {
-  padding: 18px 22px !important;
-  min-height: 60px;
-  border: 0 !important;
-  background: transparent !important;
-  border-radius: 14px;
-  color: #14233a !important;
-}
-.community-drawer > summary strong {
-  color: #14233a !important;
-}
-.community-drawer .community-panel {
-  border: 0 !important;
-  box-shadow: none !important;
-  margin: 0;
-}
-.community-count {
-  background: #eef2ff !important;
-  color: #2458ed !important;
-  border: 0;
-}
-.community-roster {
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
-.community-person {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 12px;
-  background: #fafbfe;
-}
-.community-person strong {
-  font-size: 12px;
-}
-.community-person small,
-.community-person span {
-  font-size: 11px;
-}
-.community-sidebar {
-  order: 4;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-.community-sidebar > details {
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  overflow: hidden;
-}
-.community-sidebar > details > summary {
-  padding: 18px 22px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-.community-sidebar .community-panel {
-  border: 0 !important;
-  margin: 0;
-}
-.community-event {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  padding: 12px 0;
-}
-.community-event p {
-  margin: 4px 0;
-  font-size: 11px;
-}
-.community-event time {
-  grid-column: 2;
-  grid-row: 1 / 3;
-  font-size: 11px;
 }
 .challenge-preview {
   border: 1px solid var(--line);
@@ -509,26 +324,6 @@ summary:focus-visible {
 [id$="settings"] {
   scroll-margin-top: 88px;
 }
-.account-wayfinding {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  margin: 0 0 22px;
-}
-.account-wayfinding a {
-  padding: 16px;
-  border: 1px solid var(--line);
-  background: white;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 700;
-  display: grid;
-  gap: 5px;
-}
-.account-wayfinding small {
-  font-size: 11px;
-  font-weight: 400;
-}
 .screen-account .panel {
   margin-bottom: 18px;
 }
@@ -537,17 +332,6 @@ summary:focus-visible {
 }
 .screen-account .notebook p {
   font-size: 13px;
-}
-.account-tools {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.account-tools a {
-  font-size: 11px;
-  padding: 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
 }
 .ask-vegas-launcher {
   border-radius: 12px !important;
@@ -568,11 +352,6 @@ footer {
   padding-top: 18px;
   border-color: var(--line);
   font-size: 11px;
-}
-@media (max-width: 1100px) {
-  .community-roster {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 @media (max-width: 760px) {
   .sidebar {
@@ -640,39 +419,6 @@ footer {
   .home-brief {
     padding: 0 0 20px;
   }
-  .community-main {
-    gap: 14px;
-  }
-  .community-profile-rail {
-    padding: 16px !important;
-  }
-  .profile-rail-content {
-    grid-template-columns: 40px 1fr auto;
-    gap: 3px 10px;
-  }
-  .profile-rail-content .community-avatar {
-    width: 40px;
-    height: 40px;
-  }
-  .profile-rail-content h1 {
-    font-size: 17px !important;
-  }
-  .community-sidebar {
-    grid-template-columns: 1fr;
-  }
-  .community-person {
-    padding: 10px;
-  }
-  .community-person .community-avatar {
-    width: 34px;
-    height: 34px;
-  }
-  .community-person strong {
-    font-size: 11px;
-  }
-  .community-roster {
-    grid-template-columns: 1fr 1fr;
-  }
   .sports-ticker summary {
     gap: 9px !important;
     padding: 11px 12px !important;
@@ -713,12 +459,6 @@ footer {
   .challenge-preview > summary {
     padding: 16px;
   }
-  .community-drawer > summary {
-    padding: 16px !important;
-  }
-  .community-sidebar > details > summary {
-    padding: 16px;
-  }
   .panel-head {
     padding: 17px 18px;
   }
@@ -727,16 +467,6 @@ footer {
   }
   .panel-head h2 {
     font-size: 18px;
-  }
-  .account-wayfinding {
-    gap: 7px;
-  }
-  .account-wayfinding a {
-    padding: 12px 10px;
-    font-size: 11px;
-  }
-  .account-wayfinding small {
-    font-size: 11px;
   }
   .ask-vegas-launcher {
     bottom: calc(79px + env(safe-area-inset-bottom)) !important;
@@ -760,33 +490,9 @@ footer {
   }
 }
 
-.community-resume .community-sidebar {
-  display: grid !important;
-  width: 100%;
-}
-.community-resume .community-profile-rail,
-.community-resume .community-drawer {
-  width: 100%;
-  box-sizing: border-box;
-}
-
 /* Keep identity in normal grid flow; legacy mobile rules positioned the photo. */
-.community-resume .profile-rail-content { min-height: 0 !important; grid-template-rows: auto auto; }
-.community-resume .profile-rail-content > .community-avatar { position: static !important; inset: auto !important; grid-column: 1; grid-row: 1 / 3; width: 52px; height: 52px; align-self: center; margin: 0 !important; border: 2px solid white; box-shadow: 0 0 0 1px #dce5f2; }
-.community-resume .profile-rail-content h1 { grid-row: 1; align-self: end; margin: 0 !important; }
-.community-resume .profile-rail-content > p { grid-row: 2; align-self: start; margin: 0 !important; }
-.community-resume .profile-view-link { grid-row: 1 / 3; }
-.community-resume .profile-rail-content { grid-template-columns: 52px minmax(0, 1fr) auto; column-gap: 14px; }
 
 /* A member directory, with undistorted portraits and readable names. */
-.community-resume .community-directory .community-roster,
-.community-resume .community-directory .community-roster:not(.expanded) { display: grid !important; grid-template-columns: 1fr !important; max-height: none !important; overflow: visible !important; gap: 0 !important; }
-.community-resume .community-directory .community-person { display: flex !important; align-items: center; gap: 14px; width: 100%; padding: 14px 0 !important; min-height: 76px; border: 0 !important; border-bottom: 1px solid #edf0f5 !important; border-radius: 0; background: white !important; }
-.community-resume .community-directory .community-person > .community-avatar { position: static !important; width: 48px !important; height: 48px !important; min-width: 48px; flex: 0 0 48px !important; aspect-ratio: 1; object-fit: cover; border-radius: 50% !important; margin: 0 !important; border: 0 !important; box-shadow: none !important; display: grid; place-items: center; font-size: 14px; background: #edf2ff; color: #2458ed; }
-.community-resume .community-directory .community-person > div { min-width: 0; display: grid; gap: 3px; }
-.community-resume .community-directory .community-person strong { white-space: normal; overflow-wrap: anywhere; font-size: 14px; line-height: 1.3; }
-.community-resume .community-directory .community-person small { color: #69788b; font-size: 11px; }
-.community-resume .community-directory .community-person div > span { display: none; }
 
 .phone-contact-dialog { width: min(440px, calc(100% - 32px)); margin: auto; padding: 26px; border: 1px solid #dce5f2; border-radius: 20px; background: white; color: #14233a; box-shadow: 0 24px 80px #14233a33; }
 .phone-contact-dialog::backdrop { background: #14233a66; backdrop-filter: blur(4px); }
@@ -800,7 +506,7 @@ footer {
 
 .phone-contact-dialog { max-height: calc(100dvh - 40px); overflow-y: auto; }
 /* Community engagement */
-.leg-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.leg-actions button,.follow-chips button{display:inline-flex;align-items:center;gap:7px;border:1px solid #dce3ef;border-radius:12px;padding:10px 13px;background:#fff;color:#23324c;font-weight:700}.leg-actions button[aria-pressed=true]{background:#e9efff;color:#244be3;border-color:#aebffa}.leg-actions small{flex-basis:100%;color:#6b778c}.price-freshness{padding:10px 12px;background:#f1f5ff;border-radius:10px;font-size:12px}.price-freshness small{display:block;margin-top:4px;color:#667085}.price-freshness.stale,.price-freshness.unknown{background:#fff6e6;color:#82571e}.game-thread,.follow-topics{margin:24px 0}.follow-topics input,.follow-topics select,.game-thread textarea{width:100%;padding:12px;border:1px solid #dce3ef;border-radius:12px;background:#fff;color:#18243b}.follow-chips{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0}.game-comment{background:#fff;border:1px solid #e0e5ee;border-radius:16px;padding:20px;margin:14px 0}.game-thread form,.follow-topics form{display:grid;gap:12px}.game-thread textarea{min-height:100px;resize:vertical}.game-comment header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.game-comment header img{border-radius:50%;object-fit:cover}.game-comment p{white-space:pre-wrap;overflow-wrap:anywhere}.game-comment small{color:#69788b}.update-bell{position:relative;display:grid;place-items:center;border:1px solid #dce3ef;background:#fff;border-radius:12px;width:42px;height:42px;color:#244be3}.unread-dot{position:absolute;right:-4px;top:-5px;min-width:19px;height:19px;border-radius:50%;background:#e2384f;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid white}.app-update{border-bottom:1px solid #e3e7ef;padding:16px 0}.app-update p{white-space:pre-wrap}.activation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.activation-grid article{display:grid;gap:8px;background:#f4f7ff;padding:18px;border-radius:14px}.activation-grid strong{font-size:30px}.activation-grid span{font-size:12px;color:#637084}@media(max-width:600px){.activation-grid{grid-template-columns:1fr 1fr}.top-actions .desktop{display:none}}
+.leg-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.leg-actions button{display:inline-flex;align-items:center;gap:7px;border:1px solid #dce3ef;border-radius:12px;padding:10px 13px;background:#fff;color:#23324c;font-weight:700}.leg-actions button[aria-pressed=true]{background:#e9efff;color:#244be3;border-color:#aebffa}.leg-actions small{flex-basis:100%;color:#6b778c}.price-freshness{padding:10px 12px;background:#f1f5ff;border-radius:10px;font-size:12px}.price-freshness small{display:block;margin-top:4px;color:#667085}.price-freshness.stale,.price-freshness.unknown{background:#fff6e6;color:#82571e}.game-thread{margin:24px 0}.game-thread textarea{width:100%;padding:12px;border:1px solid #dce3ef;border-radius:12px;background:#fff;color:#18243b}.game-comment{background:#fff;border:1px solid #e0e5ee;border-radius:16px;padding:20px;margin:14px 0}.game-thread form{display:grid;gap:12px}.game-thread textarea{min-height:100px;resize:vertical}.game-comment header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.game-comment header img{border-radius:50%;object-fit:cover}.game-comment p{white-space:pre-wrap;overflow-wrap:anywhere}.game-comment small{color:#69788b}.update-bell{position:relative;display:grid;place-items:center;border:1px solid #dce3ef;background:#fff;border-radius:12px;width:42px;height:42px;color:#244be3}.unread-dot{position:absolute;right:-4px;top:-5px;min-width:19px;height:19px;border-radius:50%;background:#e2384f;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid white}.app-update{border-bottom:1px solid #e3e7ef;padding:16px 0}.app-update p{white-space:pre-wrap}.activation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.activation-grid article{display:grid;gap:8px;background:#f4f7ff;padding:18px;border-radius:14px}.activation-grid strong{font-size:30px}.activation-grid span{font-size:12px;color:#637084}@media(max-width:600px){.activation-grid{grid-template-columns:1fr 1fr}.top-actions .desktop{display:none}}
 
 /* Compact mobile sports desk: keep the featured ticket within reach. */
 .top-actions { display:flex; align-items:center; gap:12px; }
@@ -850,7 +556,6 @@ html[data-theme="dark"] :is(.primary, .primary *, button.selected) { color:#fff;
 html[data-theme="dark"] :is(.notice, .ticket-price-note) { background:#302b1b; color:#f5dda1; border-color:#756332; }
 html[data-theme="dark"] .notice :is(p, strong, b) { color:#f5dda1; }
 html[data-theme="dark"] .theme-options button.selected { color:#fff; }
-html[data-theme="dark"] .alert-preference input[type="checkbox"]:checked { background:#2458ed; }
 html[data-theme="dark"] :is(input, textarea, select) { background:var(--panel2) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] :is(.secondary, .phone-contact-dialog, .community-drawer, .community-roster > *, .badge, .update-bell, .app-update) { background:var(--panel) !important; border-color:var(--line) !important; color:var(--text) !important; }
 html[data-theme="dark"] :is(h1, h2, h3, h4, label, summary, strong, .community-drawer > summary strong) { color:var(--text) !important; }
@@ -858,8 +563,6 @@ html[data-theme="dark"] :is(.eyebrow, .candidate-price, .text-link, a) { color:#
 html[data-theme="dark"] :is(.primary, .primary *, .theme-options button.selected, .feed-filters button.selected) { color:#fff !important; }
 html[data-theme="dark"] .mobile-nav a.active { background:#24365d !important; color:#b7ccff !important; }
 html[data-theme="dark"] .theme-dialog { background:var(--panel) !important; }
-
-html[data-theme="dark"] .alert-preference input[type="checkbox"]:checked { background:#2458ed !important; }
 
 html[data-theme="dark"] :is(.community-profile-rail, .sports-ticker, .candidate-tracker.fun-ticket, .mi-search, .filter-bar, .account-wayfinding a, .leg-record, .game-comment, .leg-actions button, .board-filters button, .follow-chips button, .community-resume .community-directory .community-person, .activation-grid article) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] .price-freshness { background:var(--panel2); color:var(--muted); }
@@ -888,10 +591,6 @@ html[data-theme="dark"] :is(.price-freshness.stale, .price-freshness.unknown, .t
 html[data-theme="dark"] :is(.price-freshness.stale, .price-freshness.unknown, .ticket-price-note, .feed-next) :is(p, small, strong, b) { color:#b7f2d6 !important; }
 html[data-theme="dark"] :is(.challenge-run, .community-panel, .entry-dialog) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] .journey-dot { background:var(--panel2) !important; color:var(--text) !important; border-color:var(--line) !important; }
-.community-directory .community-roster { display:grid !important; grid-template-columns:1fr !important; gap:0 !important; width:100%; }
-.community-directory .community-person { display:flex !important; align-items:center; text-align:left; gap:14px; width:100%; box-sizing:border-box; padding:14px !important; }
-.community-directory .community-person > div { min-width:0; flex:1; }
-.community-directory .community-person strong { overflow-wrap:anywhere; }
 
 /* Matching mint labels on Home. */
 html[data-theme="dark"] :is(.challenge-preview > summary span, .sports-ticker .ticker-label) { background:#8ce3bd !important; color:#0b3025 !important; border-color:#8ce3bd !important; }
@@ -901,10 +600,8 @@ html[data-theme="dark"] .profile-setup-dialog,
 html[data-theme="dark"] .profile-setup-dialog .member-form { background:#131e30 !important; color:#edf3ff !important; border-color:#34435c !important; }
 html[data-theme="dark"] .profile-setup-dialog :is(p, small) { color:#b2bfd3 !important; }
 html[data-theme="dark"] .profile-setup-dialog :is(label, h2) { color:#edf3ff !important; }
-html[data-theme="dark"] .profile-setup-dialog .photo-status { color:#8ce3bd !important; }
 .profile-setup-dialog .member-form { width:100%; box-sizing:border-box; }
 .profile-setup-dialog input[type="file"] { max-width:100%; }
-.profile-setup-dialog .photo-status { font-size:13px; line-height:1.5; }
 
 /* The Zone's own combined win slip, with readable light and dark palettes. */
 html[data-theme="dark"] .zone-winning-slip :is(.win-price strong, footer strong) { color:#8ce3bd !important; }
@@ -915,7 +612,6 @@ html[data-theme="dark"] .sport-switch a.selected { color:#fff !important; }
 html:not([data-theme="dark"]) :is(footer, footer p, footer a) { color:#52657d; }
 html[data-theme="dark"] :is(footer, footer p, footer > span) { color:var(--muted) !important; }
 html[data-theme="dark"] .notice[aria-label="Daily publication schedule"] p { color:var(--muted) !important; }
-html:not([data-theme="dark"]) .vq-welcome-about { color:#2458ed; border-color:#c9d5f5; background:#fff; font-weight:700; }
 html:not([data-theme="dark"]) .member-form label { color:#23324c; font-weight:650; }
 html:not([data-theme="dark"]) .research-more { color:#2458ed; font-weight:700; }
 html:not([data-theme="dark"]) .pass-grid > div { background:var(--panel,#fff); border:1px solid var(--line); }
