@@ -139,22 +139,17 @@
 }
 .slate-windows button.selected {
   font-weight: 700;
-  background: #0866d8 !important;
-  color: #fff !important;
-  border-color: #0866d8 !important;
 }
 .mi-search {
   display: flex;
   margin: 24px 0;
   align-items: end;
   border: 1px solid #2c4049;
-  border-color: var(--line) !important;
   color: var(--text) !important;
   box-shadow: 0 4px 18px #16386006;
   padding: 18px !important;
   border-radius: 14px !important;
   gap: 14px;
-  background: white !important;
   margin-bottom: 14px;
 }
 .mi-search label {
@@ -167,10 +162,7 @@
 .mi-search input {
   width: 100%;
   color: var(--text);
-  border: 1px solid var(--border);
   padding: 12px;
-  background: #0a131a;
-  border-color: #3a515a;
   border-radius: 11px;
   font-size: 15px;
   min-height: 46px;
@@ -178,10 +170,7 @@
 .mi-search select {
   width: 100%;
   color: var(--text);
-  border: 1px solid var(--border);
   padding: 12px;
-  background: #0a131a;
-  border-color: #3a515a;
   border-radius: 11px;
   font-size: 15px;
   min-height: 46px;
@@ -195,10 +184,6 @@
 }
 .slate-windows button {
   flex-shrink: 0;
-  border: 1px solid #354750;
-  background: #fff !important;
-  border-color: #cedbed !important;
-  color: #0866d8 !important;
   padding: 9px 16px;
   font-size: 12px;
   min-height: 40px;
@@ -223,14 +208,10 @@
 }
 .mi-game {
   text-decoration: none;
-  background: #fff !important;
-  border-color: var(--line) !important;
   color: var(--text) !important;
   position: relative;
   overflow: hidden;
   border-radius: 16px !important;
-  border: 1px solid var(--line) !important;
-  box-shadow: 0 2px 3px #14233a03 !important;
   padding: 20px !important;
   display: flex;
   flex-direction: column;

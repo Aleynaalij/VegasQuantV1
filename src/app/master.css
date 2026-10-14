@@ -1,15 +1,4 @@
 /* Vegas Quant / Sports intelligence, rebuilt for the small screen first. */
-:root {
-  --bg: #f6f7f9;
-  --panel: #fff;
-  --panel2: #f1f4f8;
-  --text: #14233a;
-  --muted: #637086;
-  --line: #e1e5ec;
-  --green: #2458ed;
-  --accent: #2458ed;
-  --radius: 16px;
-}
 body {
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
@@ -163,10 +152,6 @@ p {
   color: #596b83 !important;
   padding: 7px 9px;
 }
-.badge.green {
-  color: #116d49 !important;
-  background: #e4f6ed !important;
-}
 .badge.red {
   color: #b52d44 !important;
   background: #ffedf0 !important;
@@ -213,9 +198,7 @@ summary:focus-visible {
   padding: 8px 0 24px;
 }
 .challenge-preview {
-  border: 1px solid var(--line);
   border-radius: 14px;
-  background: #f0f2f6;
 }
 .challenge-preview > summary {
   display: flex;
@@ -228,13 +211,10 @@ summary:focus-visible {
 }
 .challenge-preview > summary span {
   font-size: 11px;
-  color: #7c8799;
-  background: #e2e6ec;
   border-radius: 5px;
   padding: 6px 9px;
 }
 .challenge-preview .challenge-run {
-  border: 0 !important;
   border-radius: 0 0 14px 14px !important;
   margin: 0 !important;
   padding: 22px !important;
@@ -242,14 +222,12 @@ summary:focus-visible {
 .sports-ticker {
   margin: 0 !important;
   border-radius: 11px !important;
-  background: #fff !important;
 }
 .sports-ticker summary {
   min-height: 48px !important;
   padding: 12px 16px !important;
 }
 .sports-ticker .ticker-label {
-  background: #eef2ff;
   border-radius: 5px;
   padding: 6px 8px;
   font-size: 11px !important;
@@ -291,9 +269,6 @@ summary:focus-visible {
   line-height: 1.5;
 }
 .notice[aria-label="Daily publication schedule"] {
-  background: none !important;
-  border: 0 !important;
-  border-top: 1px solid var(--line) !important;
   border-radius: 0;
   padding: 14px 0 !important;
   margin: 0 !important;
@@ -304,12 +279,10 @@ summary:focus-visible {
 .notice[aria-label="Daily publication schedule"] strong {
   white-space: nowrap;
   font-size: 11px;
-  color: #526784;
 }
 .notice[aria-label="Daily publication schedule"] p {
   font-size: 11px;
   margin: 0;
-  color: #5d6b80 !important;
 }
 .screen-home .explore-cards {
   display: none;
@@ -506,7 +479,7 @@ footer {
 
 .phone-contact-dialog { max-height: calc(100dvh - 40px); overflow-y: auto; }
 /* Community engagement */
-.leg-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.leg-actions button{display:inline-flex;align-items:center;gap:7px;border:1px solid #dce3ef;border-radius:12px;padding:10px 13px;background:#fff;color:#23324c;font-weight:700}.leg-actions button[aria-pressed=true]{background:#e9efff;color:#244be3;border-color:#aebffa}.leg-actions small{flex-basis:100%;color:#6b778c}.price-freshness{padding:10px 12px;background:#f1f5ff;border-radius:10px;font-size:12px}.price-freshness small{display:block;margin-top:4px;color:#667085}.price-freshness.stale,.price-freshness.unknown{background:#fff6e6;color:#82571e}.game-thread{margin:24px 0}.game-thread textarea{width:100%;padding:12px;border:1px solid #dce3ef;border-radius:12px;background:#fff;color:#18243b}.game-comment{background:#fff;border:1px solid #e0e5ee;border-radius:16px;padding:20px;margin:14px 0}.game-thread form{display:grid;gap:12px}.game-thread textarea{min-height:100px;resize:vertical}.game-comment header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.game-comment header img{border-radius:50%;object-fit:cover}.game-comment p{white-space:pre-wrap;overflow-wrap:anywhere}.game-comment small{color:#69788b}.update-bell{position:relative;display:grid;place-items:center;border:1px solid #dce3ef;background:#fff;border-radius:12px;width:42px;height:42px;color:#244be3}.unread-dot{position:absolute;right:-4px;top:-5px;min-width:19px;height:19px;border-radius:50%;background:#e2384f;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid white}.app-update{border-bottom:1px solid #e3e7ef;padding:16px 0}.app-update p{white-space:pre-wrap}.activation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.activation-grid article{display:grid;gap:8px;background:#f4f7ff;padding:18px;border-radius:14px}.activation-grid strong{font-size:30px}.activation-grid span{font-size:12px;color:#637084}@media(max-width:600px){.activation-grid{grid-template-columns:1fr 1fr}.top-actions .desktop{display:none}}
+.leg-actions{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0}.leg-actions button{display:inline-flex;align-items:center;gap:7px;border:1px solid #dce3ef;border-radius:12px;padding:10px 13px;color:#23324c;font-weight:700}.leg-actions button[aria-pressed=true]{background:#e9efff;color:#244be3;border-color:#aebffa}.leg-actions small{flex-basis:100%}.price-freshness{padding:10px 12px;border-radius:10px;font-size:12px}.price-freshness small{display:block;margin-top:4px}.game-thread{margin:24px 0}.game-thread textarea{width:100%;padding:12px;border:1px solid #dce3ef;border-radius:12px;background:#fff;color:#18243b}.game-comment{background:#fff;border:1px solid #e0e5ee;border-radius:16px;padding:20px;margin:14px 0}.game-thread form{display:grid;gap:12px}.game-thread textarea{min-height:100px;resize:vertical}.game-comment header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.game-comment header img{border-radius:50%;object-fit:cover}.game-comment p{white-space:pre-wrap;overflow-wrap:anywhere}.game-comment small{color:#69788b}.update-bell{position:relative;display:grid;place-items:center;border:1px solid #dce3ef;background:#fff;border-radius:12px;width:42px;height:42px;color:#244be3}.unread-dot{position:absolute;right:-4px;top:-5px;min-width:19px;height:19px;border-radius:50%;background:#e2384f;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid white}.app-update{border-bottom:1px solid #e3e7ef;padding:16px 0}.app-update p{white-space:pre-wrap}.activation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.activation-grid article{display:grid;gap:8px;background:#f4f7ff;padding:18px;border-radius:14px}.activation-grid strong{font-size:30px}.activation-grid span{font-size:12px;color:#637084}@media(max-width:600px){.activation-grid{grid-template-columns:1fr 1fr}.top-actions .desktop{display:none}}
 
 /* Compact mobile sports desk: keep the featured ticket within reach. */
 .top-actions { display:flex; align-items:center; gap:12px; }
@@ -537,14 +510,6 @@ footer {
 
 /* Keep accessible page names without reintroducing a large visual heading. */
 /* The Zone: compact exploration and two deliberately matched palettes. */
-.theme-options { display:flex; gap:12px; margin:20px 0; }
-.theme-options button { flex:1; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--panel2); color:var(--text); font-weight:700; }
-.theme-options button.selected { background:#2458ed; color:white; border-color:#2458ed; }
-.theme-dialog { width:min(440px,calc(100% - 32px)); box-sizing:border-box; padding:28px; border:1px solid var(--line); border-radius:24px; background:var(--panel); color:var(--text); box-shadow:0 24px 90px #0005; }
-.theme-dialog::backdrop { background:#07122499; backdrop-filter:blur(8px); }
-.theme-dialog h2 { margin-top:12px; }
-.theme-dialog p { color:var(--muted); }
-.theme-dialog .primary { width:100%; }
 html[data-theme="dark"] { --bg:#0b1220; --panel:#131e30; --panel2:#1b2940; --text:#edf3ff; --muted:#b2bfd3; --line:#34435c; --green:#8aaaff; --accent:#8aaaff; color-scheme:dark; }
 html[data-theme="dark"] body, html[data-theme="dark"] .shell { background:var(--bg); color:var(--text); }
 html[data-theme="dark"] :is(.panel, .feed-post, .candidate-tracker, .feed-featured, .stat, .topbar, .sidebar, .mobile-nav, .member-form, .feed-matchup, .feed-context, .feed-publisher, .ticket-leg, .alert-preference) { background:var(--panel) !important; color:var(--text); border-color:var(--line) !important; }
@@ -555,14 +520,12 @@ html[data-theme="dark"] :is(a, .text-link, .candidate-price, .eyebrow, .alert-pr
 html[data-theme="dark"] :is(.primary, .primary *, button.selected) { color:#fff; }
 html[data-theme="dark"] :is(.notice, .ticket-price-note) { background:#302b1b; color:#f5dda1; border-color:#756332; }
 html[data-theme="dark"] .notice :is(p, strong, b) { color:#f5dda1; }
-html[data-theme="dark"] .theme-options button.selected { color:#fff; }
 html[data-theme="dark"] :is(input, textarea, select) { background:var(--panel2) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] :is(.secondary, .phone-contact-dialog, .community-drawer, .community-roster > *, .badge, .update-bell, .app-update) { background:var(--panel) !important; border-color:var(--line) !important; color:var(--text) !important; }
 html[data-theme="dark"] :is(h1, h2, h3, h4, label, summary, strong, .community-drawer > summary strong) { color:var(--text) !important; }
 html[data-theme="dark"] :is(.eyebrow, .candidate-price, .text-link, a) { color:#9cb7ff !important; }
-html[data-theme="dark"] :is(.primary, .primary *, .theme-options button.selected, .feed-filters button.selected) { color:#fff !important; }
+html[data-theme="dark"] :is(.primary, .primary *, .feed-filters button.selected) { color:#fff !important; }
 html[data-theme="dark"] .mobile-nav a.active { background:#24365d !important; color:#b7ccff !important; }
-html[data-theme="dark"] .theme-dialog { background:var(--panel) !important; }
 
 html[data-theme="dark"] :is(.community-profile-rail, .sports-ticker, .candidate-tracker.fun-ticket, .mi-search, .filter-bar, .account-wayfinding a, .leg-record, .game-comment, .leg-actions button, .board-filters button, .follow-chips button, .community-resume .community-directory .community-person, .activation-grid article) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] .price-freshness { background:var(--panel2); color:var(--muted); }
@@ -603,19 +566,14 @@ html[data-theme="dark"] .profile-setup-dialog :is(label, h2) { color:#edf3ff !im
 .profile-setup-dialog .member-form { width:100%; box-sizing:border-box; }
 .profile-setup-dialog input[type="file"] { max-width:100%; }
 
-/* The Zone's own combined win slip, with readable light and dark palettes. */
+/* The Zone's own combined win slip. */
 html[data-theme="dark"] .zone-winning-slip :is(.win-price strong, footer strong) { color:#8ce3bd !important; }
 
-/* Audit 2026-10-14: light-theme contrast for elements that kept dark-theme colors. */
+/* Audit 2026-10-14: contrast fixes for links and footers. */
 html .skip-link, html[data-theme="dark"] .skip-link { color:#fff !important; background:#2458ed !important; }
 html[data-theme="dark"] .sport-switch a.selected { color:#fff !important; }
-html:not([data-theme="dark"]) :is(footer, footer p, footer a) { color:#52657d; }
 html[data-theme="dark"] :is(footer, footer p, footer > span) { color:var(--muted) !important; }
 html[data-theme="dark"] .notice[aria-label="Daily publication schedule"] p { color:var(--muted) !important; }
-html:not([data-theme="dark"]) .member-form label { color:#23324c; font-weight:650; }
-html:not([data-theme="dark"]) .research-more { color:#2458ed; font-weight:700; }
-html:not([data-theme="dark"]) .pass-grid > div { background:var(--panel,#fff); border:1px solid var(--line); }
-html:not([data-theme="dark"]) .pass-grid strong { color:#2458ed; }
 .pass-grid h2 { color:var(--text); }
 .pass-grid p { color:var(--muted); }
 html[data-theme="dark"] .pass-grid > div { background:#131e30; border-color:#34435c; }
@@ -623,7 +581,7 @@ html[data-theme="dark"] .pass-grid strong { color:#9cb7ff; }
 html .pass-grid .primary:disabled { opacity:1; background:#e7ecf6 !important; color:#52657d !important; box-shadow:none !important; cursor:not-allowed; }
 html[data-theme="dark"] .pass-grid .primary:disabled { background:#24324a !important; color:#b7c3d8 !important; }
 .fatal { padding:48px 0; max-width:560px; }
-.fatal p { color:var(--muted); line-height:1.6; }
+.fatal p { line-height:1.6; }
 .fatal-actions { display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-top:20px; }
 .fatal-actions .primary { min-height:44px; padding:0 22px; }
 .fatal-actions a.primary { display:inline-flex; align-items:center; text-decoration:none; color:#fff; border-radius:12px; }

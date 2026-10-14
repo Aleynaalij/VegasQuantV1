@@ -1,18 +1,5 @@
 /* Vegas Quant: a calm, editorial sports experience. Shared visual tokens keep
    public, member and admin screens consistent without changing data access. */
-:root {
-  --bg: #080d11;
-  --panel: #111b22;
-  --panel2: #17242d;
-  --line: #293942;
-  --border: var(--line);
-  --text: #f2f6f3;
-  --muted: #a5b3bb;
-  --green: #8be6bd;
-  --gold: #e5c783;
-  --red: #f598a0;
-  --radius: 22px;
-}
 html {
   scroll-padding-top: 100px;
 }
@@ -197,11 +184,6 @@ main:focus {
   max-width: 100%;
   white-space: normal;
 }
-.badge.green {
-  background: #18392e;
-  color: #a0ecc8;
-  border: 1px solid #315746;
-}
 .badge.red {
   background: #382129;
   color: #ffc0c5;
@@ -285,10 +267,6 @@ main:focus {
   margin: 0 0 24px;
   padding: 36px;
   border-radius: 28px;
-  border: 1px solid #345849;
-  background:
-    radial-gradient(ellipse at 90% 0%, #2a624963, transparent 65%), #10201c;
-  box-shadow: none;
 }
 .challenge-run::after {
   width: 360px;
@@ -319,7 +297,6 @@ main:focus {
 .run-free {
   max-width: 58ch;
   font-size: 12px;
-  color: #afc1b8;
 }
 .journey {
   padding-top: 24px;
@@ -334,7 +311,6 @@ main:focus {
 .journey-dot {
   width: 48px;
   height: 48px;
-  background: #14251f;
   border: 1px solid #486052;
   font-variant-numeric: tabular-nums;
 }
@@ -390,7 +366,6 @@ main:focus {
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #111c23;
   border: 1px solid #2c3e47;
   border-radius: 18px;
 }
@@ -421,11 +396,8 @@ main:focus {
 .official-card,
 .featured-official .official-card {
   border: 1px solid #497661;
-  border-top: 4px solid var(--green);
   border-radius: 24px;
-  background: #112019;
   padding: 28px;
-  box-shadow: 0 20px 50px #0002;
 }
 .official-card > .panel-head {
   padding: 0 0 18px;
@@ -460,14 +432,12 @@ main:focus {
   border: 0;
   border-left: 2px solid #4a6555;
   border-radius: 0;
-  background: none;
   padding: 8px 12px;
   color: #a8bdb0;
   max-width: 75ch;
 }
 .pick-publication {
   font-size: 11px;
-  color: #a9bdb2;
 }
 .pick-numbers {
   display: grid;
@@ -479,7 +449,6 @@ main:focus {
   background: #355244;
 }
 .pick-numbers > div {
-  background: #14281e;
   padding: 15px;
 }
 .pick-numbers span {
@@ -505,7 +474,6 @@ main:focus {
 .number-track {
   border-style: dashed;
   border-color: #4a6355;
-  background: none;
 }
 .pick-reason {
   display: grid;
@@ -516,10 +484,8 @@ main:focus {
   font-size: 11px;
   letter-spacing: 1.2px;
   margin: 18px 0 0;
-  color: #bee6ce;
 }
 .pick-reason p {
-  color: #bfcec5;
   font-size: 14px;
   line-height: 1.85;
   max-width: 78ch;
@@ -697,14 +663,11 @@ main:focus {
 }
 .member-form label {
   font-size: 13px;
-  color: #ced9d4;
 }
 .member-form input {
   min-height: 50px;
   border-radius: 11px;
-  background: #0b141a;
   font-size: 16px;
-  border-color: #405650;
 }
 .entry-dialog {
   border-radius: 24px;
@@ -1105,9 +1068,7 @@ footer {
   padding: 18px !important;
   margin: 16px 0 !important;
   text-align: center;
-  border: 1px solid #83dfb9;
   border-radius: 12px;
-  background: #1b3c31;
   color: #adf5d7 !important;
   font-weight: 800;
   font-size: 14px;
@@ -1158,7 +1119,6 @@ footer {
 .pick-splits > strong {
   font-size: 0.75rem;
   letter-spacing: 0.1em;
-  color: #91dcc1;
 }
 .pick-splits p,
 .pick-splits small {
