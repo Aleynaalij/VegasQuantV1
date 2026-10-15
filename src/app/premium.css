@@ -760,6 +760,15 @@ html[data-theme] body .vq-foryou-pick small { flex-basis:100%; font-size:12px; c
 html[data-theme] body .follow-button { display:inline-flex; align-items:center; min-height:36px; padding:6px 14px; border-radius:999px; border:1px solid var(--line-strong); background:transparent; color:var(--text); font-size:13px; font-weight:700; text-decoration:none; cursor:pointer; }
 html[data-theme] body .follow-button[aria-pressed="true"] { background:var(--brand, #2f6bff); border-color:transparent; color:#fff; }
 html[data-theme] body .follow-button:disabled { opacity:.6; cursor:progress; }
+.priced-record { border:1px solid var(--line); background:var(--panel); border-radius:18px; padding:16px; margin:16px 0; display:grid; gap:10px; }
+html[data-theme] body .priced-record h3 { font-size:17px; margin:0; color:var(--text); }
+.priced-record-stats { display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:8px; }
+.priced-record-stats > div { display:grid; gap:2px; padding:10px 12px; border-radius:12px; background:var(--panel2); border:1px solid var(--line); }
+html[data-theme] body .priced-record-stats b { font-size:20px; font-variant-numeric:tabular-nums; color:var(--text); }
+html[data-theme] body .priced-record-stats b.up { color:var(--money); }
+html[data-theme] body .priced-record-stats b.down { color:var(--loss); }
+html[data-theme] body .priced-record small { font-size:12px; line-height:1.5; color:var(--muted); }
+html[data-theme] body .priced-record p { font-size:14px; margin:0; color:var(--text); }
 .alerts-nudge { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-top:12px; padding:12px 14px; border-radius:12px; background:var(--panel2); border:1px solid var(--line); }
 html[data-theme] body .alerts-nudge p { flex:1 1 220px; color:var(--text); }
 html[data-theme] body .ask-vegas-source { display:block; margin-top:8px; font-size:11.5px; color:var(--muted) !important; }

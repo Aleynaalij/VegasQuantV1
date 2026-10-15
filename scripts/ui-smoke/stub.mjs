@@ -51,6 +51,11 @@ http.createServer((req, res) => {
   }
   if (u.startsWith("/rest/v1/research_feed_posts")) return json(res, posts);
   if (u.startsWith("/rest/v1/community_profiles")) { const p = { username: "SampleMember", avatar: null, region: "Sample", visible: true }; return json(res, (req.headers.accept || "").includes("vnd.pgrst.object") ? p : [p]); }
+  if (u.startsWith("/rest/v1/published_legs") && u.includes("odds")) return json(res, [
+    { leg_key: "candidate:s:1", kind: "SINGLE", name: "Sample Runner", market: "Full game · 60+ rushing yards", matchup: "Buffalo @ Los Angeles Rams", game_id: "g0", published_at: "2026-10-12T10:00:00Z", result: "WIN", result_source: "https://example.com/box", odds: -150, original_leg_key: null },
+    { leg_key: "candidate:s:2", kind: "SINGLE", name: "Sample Receiver", market: "Full game · 50+ receiving yards", matchup: "Buffalo @ Los Angeles Rams", game_id: "g0", published_at: "2026-10-12T10:00:00Z", result: "LOSS", result_source: "https://example.com/box", odds: -120, original_leg_key: null },
+    { leg_key: "candidate:s:3", kind: "SINGLE", name: "Sample Passer", market: "Full game · 200+ passing yards", matchup: "Buffalo @ Los Angeles Rams", game_id: "g0", published_at: "2026-10-12T10:00:00Z", result: "WIN", result_source: "https://example.com/box", odds: null, original_leg_key: null },
+  ]);
   if (u.startsWith("/rest/v1/topic_follows")) return json(res, [{ kind: "team", topic: "Seattle Seahawks" }]);
   if (u.startsWith("/rest/v1/")) return json(res, []);
   json(res, {}, 404);
