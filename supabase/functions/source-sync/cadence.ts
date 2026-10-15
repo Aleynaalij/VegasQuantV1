@@ -13,11 +13,13 @@ export function gameLinesDue(kickoffs: number[], last: number | null, now: numbe
   return due(last, now, ahead.some((k) => k - now <= 2 * HOUR) ? 15 * MIN : 2 * HOUR);
 }
 
-/** Player props (2 credits per game): games within a day, every 3 hours, every 30 minutes in the last 75. */
+/** Player props: games within a day, every 3 hours, every 15 minutes within 2 hours of kickoff.
+ * Each requested market consumes provider credits; published-pick games request extra markets.
+ */
 export function propsDue(kickoffs: number[], last: number | null, now: number) {
   const ahead = kickoffs.filter((k) => k > now && k <= now + 24 * HOUR);
   if (!ahead.length) return false;
-  return due(last, now, ahead.some((k) => k - now <= 75 * MIN) ? 30 * MIN : 3 * HOUR);
+  return due(last, now, ahead.some((k) => k - now <= 2 * HOUR) ? 15 * MIN : 3 * HOUR);
 }
 
 /** Props horizon passed to upcomingPropEvents: only games inside the next day are quoted. */
