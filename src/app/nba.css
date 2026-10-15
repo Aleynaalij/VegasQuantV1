@@ -1,8 +1,8 @@
 /* Separate sport desks share the Vegas Quant shell. */
 .sport-switch { display: flex; align-items: center; gap: 6px; padding: 12px 24px; border-bottom: 1px solid var(--line); background: var(--panel); }
 .sport-switch a { display: inline-flex; justify-content: center; align-items: center; min-height: 44px; min-width: 76px; padding: 8px 20px; border-radius: 12px; color: var(--muted); font-weight: 750; text-decoration: none; }
-.sport-switch a.selected { background: #2458ed; color: #fff; }
-.sport-switch a:focus-visible, .nba-destinations a:focus-visible { outline: 3px solid #8daaff; outline-offset: 3px; }
+.sport-switch a.selected { background: var(--brand); color: #fff; }
+.sport-switch a:focus-visible, .nba-destinations a:focus-visible { outline: 3px solid var(--brand-ink); outline-offset: 3px; }
 .sport-switch > span { margin-left: auto; color: var(--muted); font-size: 12px; }
 .nba-desk { display: grid; gap: 20px; max-width: 1100px; margin: 0 auto; }
 .nba-hero { padding: clamp(24px, 5vw, 48px); border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
@@ -31,7 +31,7 @@
 }
 .zone-views { display:flex; gap:8px; overflow-x:auto; padding:8px 0; }
 .zone-views a { flex-shrink:0; padding:12px 18px; border:1px solid var(--line); border-radius:12px; color:var(--text); text-decoration:none; font-weight:700; }
-.zone-views .selected { background:#2458ed; color:white; }
+.zone-views .selected { background:var(--brand); color:white; }
 .community-feed { display:grid; gap:20px; max-width:900px; margin:auto; }
 .community-composer, .social-post { border:1px solid var(--line); background:var(--panel); padding:24px; border-radius:16px; display:grid; gap:14px; }
 .community-composer label { display:grid; gap:7px; }
@@ -44,4 +44,4 @@
 .social-comments { border-top:1px solid var(--line); padding-top:16px; display:grid; gap:12px; }
 .social-comments form { display:grid; gap:10px; }
 .social-comments article { border-left:2px solid var(--line); padding-left:12px; }
-.zone-views a:focus-visible { outline:3px solid #8daaff; outline-offset:3px; }
+.zone-views a:focus-visible { outline:3px solid var(--brand-ink); outline-offset:3px; }

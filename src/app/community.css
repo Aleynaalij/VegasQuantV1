@@ -550,7 +550,7 @@
   place-items: center;
   font-size: 14px;
   background: #edf2ff;
-  color: #2458ed;
+  color: var(--brand);
 }
 .community-resume .community-directory .community-person > div {
   min-width: 0;

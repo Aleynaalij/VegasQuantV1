@@ -188,7 +188,7 @@
   gap: 12px;
 }
 html[data-theme="dark"] .alert-preference input[type="checkbox"]:checked {
-  background: #2458ed !important;
+  background: var(--brand) !important;
 }
 .profile-setup-dialog .photo-status {
   font-size: 13px;

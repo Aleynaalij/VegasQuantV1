@@ -23,7 +23,6 @@ import PhoneContactPrompt from "@/components/phone-contact-prompt";
 import Welcome from "@/components/welcome";
 import ThemePrompt from "@/components/theme-settings";
 import BrandOpening from "@/components/brand-opening";
-import SkinPreview from "@/components/skin-preview";
 import AskVegas from "@/components/ask-vegas";
 import DailyLuck from "@/components/daily-luck";
 import AgeAccessBoundary from "@/components/age-access-boundary";
@@ -86,7 +85,6 @@ export default function RootLayout({
               "try{localStorage.removeItem('vq-theme-v1');localStorage.removeItem('vq-theme-v2')}catch(e){}",
           }}
         />
-        <SkinPreview />
         <ThemePrompt />
         <BrandOpening />
         <AgeAccessBoundary
