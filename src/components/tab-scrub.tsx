@@ -79,7 +79,11 @@ export default function TabScrub() {
       suppressUntil = performance.now() + 600;
       if (going) {
         nav.classList.add("scrub-pending");
-        window.setTimeout(() => nav.classList.remove("scrub-pending"), 4000);
+        // Slow or failed navigation: hand the gold back to the tab you're actually on.
+        window.setTimeout(() => {
+          nav.classList.remove("scrub-pending");
+          target.classList.remove("scrub-target");
+        }, 4000);
         router.push(target.getAttribute("href") || "/");
       }
     };
