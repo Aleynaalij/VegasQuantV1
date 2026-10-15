@@ -1172,7 +1172,7 @@
 .eyebrow {
   font-size: 11px;
   letter-spacing: 0.12em;
-  color: #2458ed;
+  color: var(--brand);
 }
 .topbar {
   height: 68px;
@@ -1227,7 +1227,7 @@
 }
 .sidebar nav a.active {
   background: #eef2ff !important;
-  color: #2458ed !important;
+  color: var(--brand) !important;
 }
 .sidebar-rule {
   border: 1px solid #e3e9f6;
@@ -1294,7 +1294,7 @@
   font-weight: 650;
 }
 .primary {
-  background: #2458ed !important;
+  background: var(--brand) !important;
   color: #fff !important;
   box-shadow: none !important;
 }
@@ -1302,12 +1302,12 @@
   background: #fff !important;
   border: 1px solid #d6deeb !important;
   box-shadow: none;
-  color: #2458ed !important;
+  color: var(--brand) !important;
 }
 .candidate-tracker {
   margin: 0;
   padding: 24px !important;
-  border-top: 3px solid #2458ed !important;
+  border-top: 3px solid var(--brand) !important;
 }
 .candidate-tracker > header {
   padding: 0;
@@ -1358,8 +1358,8 @@
 }
 .ask-vegas-launcher {
   border-radius: 12px;
-  background: #2458ed;
-  box-shadow: 0 6px 20px #2458ed20;
+  background: var(--brand);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--brand) 13%, transparent);
   padding: 12px 15px;
   min-height: 44px;
 }
@@ -1519,12 +1519,12 @@
 .leg-actions button { min-height: 44px; }
 html[data-theme="dark"] .shell { background:var(--bg); color:var(--text); }
 html[data-theme="dark"] :is(p, small, .muted, .candidate-context, .admin-link) { color:var(--muted); }
-html[data-theme="dark"] :is(a, .text-link, .candidate-price, .eyebrow, .alert-preference strong) { color:#9cb7ff; }
+html[data-theme="dark"] :is(a, .text-link, .candidate-price, .eyebrow, .alert-preference strong) { color:var(--brand-ink); }
 html[data-theme="dark"] :is(.primary, .primary *, button.selected) { color:#fff; }
 html[data-theme="dark"] .notice :is(p, strong, b) { color:#f5dda1; }
 html[data-theme="dark"] :is(.secondary, .phone-contact-dialog, .community-drawer, .community-roster > *, .badge, .update-bell, .app-update) { background:var(--panel) !important; border-color:var(--line) !important; color:var(--text) !important; }
 html[data-theme="dark"] :is(h1, h2, h3, h4, label, summary, strong, .community-drawer > summary strong) { color:var(--text) !important; }
-html[data-theme="dark"] :is(.eyebrow, .candidate-price, .text-link, a) { color:#9cb7ff !important; }
+html[data-theme="dark"] :is(.eyebrow, .candidate-price, .text-link, a) { color:var(--brand-ink) !important; }
 html[data-theme="dark"] :is(.primary, .primary *, .feed-filters button.selected) { color:#fff !important; }
 html[data-theme="dark"] .mobile-nav a.active { background:#24365d !important; color:#b7ccff !important; }
 html[data-theme="dark"] :is(.community-profile-rail, .sports-ticker, .candidate-tracker.fun-ticket, .mi-search, .filter-bar, .account-wayfinding a, .leg-record, .game-comment, .leg-actions button, .board-filters button, .follow-chips button, .community-resume .community-directory .community-person, .activation-grid article) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
@@ -1534,7 +1534,7 @@ html[data-theme="dark"] :is(main p, main small, .sidebar small, .topbar a, .comm
 html[data-theme="dark"] :is(.mi-game, .mi-access, .community-sidebar > details, .profile-rail-content > a, .community-profile-rail > a, .feed-featured, .notebook, .mi-target, .mi-item, .mi-section, .slate-windows button) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] :is(.mi-game .game-pair, .mi-game .game-pair strong, .community-sidebar summary, .sports-ticker .ticker-track, .sports-ticker .ticker-track span, .sports-ticker .ticker-games a) { color:var(--text) !important; }
 html[data-theme="dark"] :is(.mi-game p, .mi-game small, .community-drawer summary > span, .sports-ticker .ticker-games small) { color:var(--muted) !important; }
-html[data-theme="dark"] :is(.profile-view-link, .profile-socials a, .section-switch button) { background:var(--panel) !important; color:#9cb7ff !important; border-color:var(--line) !important; }
+html[data-theme="dark"] :is(.profile-view-link, .profile-socials a, .section-switch button) { background:var(--panel) !important; color:var(--brand-ink) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] :is(.challenge-run, .community-panel, .entry-dialog) { background:var(--panel) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] .profile-setup-dialog,
 html[data-theme="dark"] .profile-setup-dialog .member-form { background:#131e30 !important; color:#edf3ff !important; border-color:#34435c !important; }
@@ -1542,13 +1542,13 @@ html[data-theme="dark"] .profile-setup-dialog :is(p, small) { color:#b2bfd3; }
 html[data-theme="dark"] .profile-setup-dialog :is(label, h2) { color:#edf3ff !important; }
 .profile-setup-dialog .member-form { width:100%; box-sizing:border-box; }
 .profile-setup-dialog input[type="file"] { max-width:100%; }
-html .skip-link, html[data-theme="dark"] .skip-link { color:#fff !important; background:#2458ed; }
+html .skip-link, html[data-theme="dark"] .skip-link { color:#fff !important; background:var(--brand); }
 html[data-theme="dark"] .sport-switch a.selected { color:#fff !important; }
 html[data-theme="dark"] .notice[aria-label="Daily publication schedule"] p { color:var(--muted) !important; }
 .pass-grid h2 { color:var(--text); }
 .pass-grid p { color:var(--muted); }
 html[data-theme="dark"] .pass-grid > div { background:#131e30; border-color:#34435c; }
-html[data-theme="dark"] .pass-grid strong { color:#9cb7ff; }
+html[data-theme="dark"] .pass-grid strong { color:var(--brand-ink); }
 html .pass-grid .primary:disabled { opacity:1; background:#e7ecf6 !important; color:#52657d !important; box-shadow:none !important; cursor:not-allowed; }
 html[data-theme="dark"] .pass-grid .primary:disabled { background:#24324a !important; color:#b7c3d8 !important; }
 .fatal { padding:48px 0; max-width:560px; }

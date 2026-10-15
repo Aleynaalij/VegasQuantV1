@@ -58,7 +58,7 @@ export default function DownloadCard({ title, subtitle, publishedAt, sections, l
       }
       function header() {
         y = 105;
-        rows.push({ text: "VEGAS QUANT / THE ZONE", y, font: "bold 30px Arial", color: "#80aaff" });
+        rows.push({ text: "VEGAS QUANT / THE ZONE", y, font: "bold 30px Arial", color: "#e8c46a" });
         y += 86;
         for (const text of wrap(title, "bold 52px Arial")) {
           rows.push({ text, y, font: "bold 52px Arial", color: "#f0f4fc" }); y += 68;

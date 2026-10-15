@@ -670,25 +670,25 @@
   .home-brief { margin:22px 0 18px; padding:0; }
 }
 html[data-theme="dark"] .sports-ticker .ticker-scroll { color:var(--text) !important; }
-html[data-theme="dark"] .sports-ticker summary b { color:#9cb7ff !important; }
+html[data-theme="dark"] .sports-ticker summary b { color:var(--brand-ink) !important; }
 html[data-theme="dark"] .journey-dot { background:var(--panel2) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd !important; color:#0b3025 !important; border-color:#8ce3bd !important; }
 
 /* Home Pick of the Day: a compact, expandable sports headline. */
-.candidate-tracker.vq-pod-strip {padding:0; border-radius:12px; overflow:hidden; border:1px solid #33476a; border-left:4px solid #5685ff; background:linear-gradient(100deg,#15233b,#0c1423);}
+.candidate-tracker.vq-pod-strip {padding:0; border-radius:12px; overflow:hidden; border:1px solid #33476a; border-left:4px solid var(--brand-hi); background:linear-gradient(100deg,#15233b,#0c1423);}
 .vq-pod-headline {display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none;min-height:76px;}
 .vq-pod-headline::-webkit-details-marker {display:none;}
-.vq-pod-badge {flex:0 0 85px;font-size:10px;font-weight:800;line-height:1.5;letter-spacing:1.4px;color:#a9c3ff;}
+.vq-pod-badge {flex:0 0 85px;font-size:10px;font-weight:800;line-height:1.5;letter-spacing:1.4px;color:var(--brand-ink);}
 .vq-pod-copy {min-width:0;flex:1;display:grid;gap:5px;}
 .vq-pod-copy strong {font-size:15px;line-height:1.35;color:#edf3ff;}
 .vq-pod-copy small {font-size:11px;line-height:1.4;color:#a9b7ce;}
-.vq-pod-chevron {font-size:22px;color:#a9c3ff;transition:transform .18s;}
+.vq-pod-chevron {font-size:22px;color:var(--brand-ink);transition:transform .18s;}
 .vq-pod-strip[open]>.vq-pod-headline {border-bottom:1px solid #33476a;}
 .vq-pod-strip[open] .vq-pod-chevron {transform:rotate(180deg);}
 .vq-pod-collapse {display:none;}
 .vq-pod-strip[open] .vq-pod-collapse {display:inline;}
 .vq-pod-strip[open] .vq-pod-expand {display:none;}
 .vq-pod-body {padding:20px;}
-.vq-pod-headline:focus-visible {outline:3px solid #a9c3ff;outline-offset:-4px;}
+.vq-pod-headline:focus-visible {outline:3px solid var(--brand-ink);outline-offset:-4px;}
 @media(max-width:420px){.vq-pod-headline{gap:10px;padding:12px;}.vq-pod-badge{flex-basis:70px;font-size:9px;}.vq-pod-copy strong{font-size:14px;}.vq-pod-body{padding:16px;}}
 @media(prefers-reduced-motion:reduce){.vq-pod-chevron{transition:none;}}

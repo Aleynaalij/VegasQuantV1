@@ -1,6 +1,6 @@
 # Vegas Quant Premium design system
 
-Sportsbook-style and dark only. Defined in `src/app/premium.css`, loaded after every other stylesheet. Navigation: Home / The Zone / Community / Records / Account, with separate NFL and NBA desks (see `community-zone.md`).
+The lounge: a dark luxury sportsbook room that matches the Vegas Quant cards (2026-10-15). Gold trim, felt and a betting-board layout; tokens in `src/app/premium.css`, lounge styling in `src/app/lounge.css` (loaded last), cards in `src/components/casino-card.*`. Navigation: Home / The Zone / Community / Records / Account, with separate NFL and NBA desks (see `community-zone.md`).
 
 ## Theme
 - Vegas Quant is dark only (2026-10-14). `<html>` renders with `data-theme="dark"` from the server, the Light mode and Appearance setting were removed, and old saved theme choices are cleared on load.
@@ -13,15 +13,19 @@ Sportsbook-style and dark only. Defined in `src/app/premium.css`, loaded after e
 | `--panel`, `--panel2`, `--panel3` | Card surfaces, from base to most raised |
 | `--line`, `--line-strong` | Borders and dividers |
 | `--text`, `--muted`, `--faint` | Text, from primary to tertiary |
-| `--brand`, `--brand-hi`, `--brand-ink` | Actions, selection and links |
+| `--brand`, `--brand-hi`, `--brand-ink` | Gold: actions, selection and links |
+| `--gold`, `--gold-hi`, `--gold-deep`, `--gold-line` | Trim, rails, hairlines and board numerals |
+| `--felt-a`, `--felt-b` | The next-kickoff table felt |
 | `--money` | Wins, positive CLV and live/positive status only |
 | `--warn` | Unverified prices, stale quotes and cautions |
 | `--loss` | Losses and live-game alerts |
 
 ## Rules
 - Green means money won or positive edge. Never use it for warnings; unverified prices use `--warn`.
-- One primary (blue gradient) action per card. Secondary actions use the ghost style.
-- Selected chips and tabs are solid (`--text` background); unselected chips are outlined.
+- Gold is the one action color: one primary (gold, dark ink) action per card; secondary actions are gold-outlined ghosts. No electric blue.
+- Selected tabs, filters and pressed toggles are gold with dark ink; unselected ones are outlined. NFL/NBA are poker chips.
+- Team names, page titles, section titles and countdown digits use the condensed board font (`--font-board`, Barlow Condensed), uppercase. Body text stays DM Sans.
+- Lists of games read as one board (shared dividers), not separate tiles. Suits (♠ ♥ ♦ ♣) are quiet section markers; red suits are the only red that isn't a loss.
 - Numbers use tabular figures so prices and countdowns don't jitter.
 - Minimum text size is 11px. All text meets WCAG AA contrast on the dark theme.
 

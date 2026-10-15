@@ -714,7 +714,7 @@ html[data-theme="dark"] .zone-expand > span {
   }
 }
 html[data-theme="dark"] .feed-featured > summary span {
-  color: #9cb7ff;
+  color: var(--brand-ink);
 }
 
 /* Premium polish (2026-10-14). */
