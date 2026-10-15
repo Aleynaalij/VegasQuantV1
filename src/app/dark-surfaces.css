@@ -79,7 +79,6 @@ html[data-theme="dark"] body .source-observations,
 html[data-theme="dark"] body .source-status,
 html[data-theme="dark"] body .sports-ticker,
 html[data-theme="dark"] body .stat,
-html[data-theme="dark"] body .ticket-leg,
 html[data-theme="dark"] body .update-bell,
 html[data-theme="dark"] body .workspace-index > a {
   background: var(--panel) !important;

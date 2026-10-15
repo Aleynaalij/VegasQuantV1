@@ -669,12 +669,10 @@
 @media (max-width:767px) {
   .home-brief { margin:22px 0 18px; padding:0; }
 }
-html[data-theme="dark"] .ticket-price-note :is(p, small, strong) { color:#f5dda1 !important; }
 html[data-theme="dark"] .sports-ticker .ticker-scroll { color:var(--text) !important; }
 html[data-theme="dark"] .sports-ticker summary b { color:#9cb7ff !important; }
 html[data-theme="dark"] .journey-dot { background:var(--panel2) !important; color:var(--text) !important; border-color:var(--line) !important; }
 html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd !important; color:#0b3025 !important; border-color:#8ce3bd !important; }
-html[data-theme="dark"] .zone-winning-slip :is(.win-price strong, footer strong) { color:#8ce3bd !important; }
 
 /* Home Pick of the Day: a compact, expandable sports headline. */
 .candidate-tracker.vq-pod-strip {padding:0; border-radius:12px; overflow:hidden; border:1px solid #33476a; border-left:4px solid #5685ff; background:linear-gradient(100deg,#15233b,#0c1423);}

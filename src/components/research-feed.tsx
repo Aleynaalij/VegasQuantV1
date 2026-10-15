@@ -56,6 +56,16 @@ const categories = [
   "Decision",
 ];
 const pageSize = 6;
+// Owner-ticket recaps shown as winning cards in place of their pick drop.
+const BILLS_WIN_IDS = [
+  "62bfa07e-6280-4520-abd2-30595429bc6e",
+  "0d8e8f5a-2470-473b-9271-c396829bb429",
+];
+const isParlay = (r: CandidateRelease) =>
+  r.candidates.some((c) => c.parlay || c.fun_play);
+const isWinPost = (p: Post) =>
+  p.market_label.startsWith("zone-win:") ||
+  (!!p.result_leg_key && p.result_details?.result === "WIN");
 export default function ResearchFeed() {
   const [posts, setPosts] = useState<Post[]>([]),
     [access, setAccess] = useState<Access>(noAccess),
@@ -67,6 +77,7 @@ export default function ResearchFeed() {
     [saving, setSaving] = useState(false),
     [notice, setNotice] = useState("");
   const [releases, setReleases] = useState<CandidateRelease[]>([]);
+  const [zoneView, setZoneView] = useState("Latest");
   const [edgeReleases, setEdgeReleases] = useState<EdgeRelease[]>([]);
   const [boardOpen, setBoardOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -89,6 +100,33 @@ export default function ResearchFeed() {
       if (legs.error) failures.push("Selections could not refresh.");
       else {
         let list = (legs.data || []) as CandidateRelease[];
+        if (zoneView === "Parlays" || zoneView === "Wins") {
+          const extra = await Promise.all(
+            zoneView === "Parlays"
+              ? [{ parlay: true }, { fun_play: true }].map((match) =>
+                  supabase
+                    .from("candidate_releases")
+                    .select("id,title,candidates,created_at,expires_at")
+                    .contains("candidates", JSON.stringify([match]))
+                    .order("created_at", { ascending: false })
+                    .limit(limit + 1),
+                )
+              : [
+                  supabase
+                    .from("candidate_releases")
+                    .select("id,title,candidates,created_at,expires_at")
+                    .in("id", BILLS_WIN_IDS),
+                ],
+          );
+          if (n !== epoch.current) return;
+          const seen = new Set(list.map((r) => r.id));
+          for (const r of extra)
+            for (const x of (r.data || []) as CandidateRelease[])
+              if (!seen.has(x.id)) {
+                seen.add(x.id);
+                list.push(x);
+              }
+        }
         // A link from Home may point past the first page: fetch that release too.
         const wanted = window.location.hash.match(/^#release-([\w-]+)$/)?.[1];
         if (wanted && !list.some((r) => r.id === wanted)) {
@@ -119,6 +157,10 @@ export default function ResearchFeed() {
           .order("id", { ascending: false })
           .limit(limit + 1);
         if (filter !== "All") query = query.eq("category", filter);
+        if (zoneView === "Wins")
+          query = query.or(
+            "market_label.like.zone-win:*,result_leg_key.not.is.null",
+          );
         const result = await query;
         if (n !== epoch.current) return;
         if (result.error) failures.push("Research updates could not refresh.");
@@ -157,7 +199,8 @@ export default function ResearchFeed() {
       window.removeEventListener("focus", focus);
       clearInterval(timer);
     };
-  }, [filter, limit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, limit, zoneView]);
   async function publish(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
@@ -192,7 +235,6 @@ export default function ResearchFeed() {
     }
   }
   const timeline = feedTimeline(posts, releases, edgeReleases, filter);
-  const [zoneView, setZoneView] = useState("Latest");
   useEffect(() => {
     const hash = window.location.hash.match(/^#release-([\w-]+)$/);
     if (hash) setOpenRelease(hash[1]);
@@ -216,14 +258,37 @@ export default function ResearchFeed() {
   useEffect(() => {
     const view = new URLSearchParams(window.location.search).get("view");
     setZoneView(
-      view === "legs" ? "Legs" : view === "injury" ? "Injury watch" : "Latest",
+      view === "legs"
+        ? "Legs"
+        : view === "parlays"
+          ? "Parlays"
+          : view === "wins"
+            ? "Wins"
+            : view === "injury"
+              ? "Injury watch"
+              : "Latest",
     );
     setFilter(view === "injury" ? "Injury watch" : "All");
   }, []);
   const visibleTimeline =
     zoneView === "Legs"
-      ? timeline.filter((item) => item.kind !== "post")
-      : timeline;
+      ? timeline.filter(
+          (item) =>
+            item.kind !== "post" &&
+            !(item.kind === "selection" && isParlay(item.value)),
+        )
+      : zoneView === "Parlays"
+        ? timeline.filter(
+            (item) => item.kind === "selection" && isParlay(item.value),
+          )
+        : zoneView === "Wins"
+          ? timeline.filter(
+              (item) =>
+                (item.kind === "post" && isWinPost(item.value)) ||
+                (item.kind === "selection" &&
+                  BILLS_WIN_IDS.includes(item.value.id)),
+            )
+          : timeline;
   return (
     <Shell active="feed">
       <ZoneNav active={zoneView} />
@@ -381,16 +446,22 @@ export default function ResearchFeed() {
                   ) : item.kind === "edge" ? (
                     <EdgeReleaseCard key={item.key} release={item.value} />
                   ) : item.kind === "selection" &&
-                    [
-                      "62bfa07e-6280-4520-abd2-30595429bc6e",
-                      "0d8e8f5a-2470-473b-9271-c396829bb429",
-                    ].includes(item.value.id) ? (
+                    BILLS_WIN_IDS.includes(item.value.id) ? (
                     <BillsWinningSlip
                       publishedAt={item.value.created_at}
                       halftime={
                         item.value.id === "0d8e8f5a-2470-473b-9271-c396829bb429"
                       }
                     />
+                  ) : item.kind === "selection" && isParlay(item.value) ? (
+                    // Parlays show their card straight away; no collapsed drop header.
+                    <div
+                      className="zone-parlay"
+                      key={item.key}
+                      id={`release-${item.value.id}`}
+                    >
+                      <CandidateTracker snapshot={item.value} />
+                    </div>
                   ) : item.kind === "selection" ? (
                     <details
                       className="zone-drop"
@@ -405,7 +476,7 @@ export default function ResearchFeed() {
                         <strong>{item.value.title}</strong>
                         <span>
                           {item.value.candidates[0]?.parlay
-                            ? `One parlay · ${item.value.candidates.filter(c => !c.parlay).length} legs`
+                            ? `One parlay · ${item.value.candidates.filter((c) => !c.parlay).length} legs`
                             : `${item.value.candidates.length} ${item.value.candidates.length === 1 ? "selection" : "selections"}`}{" "}
                           ·{" "}
                           <span className="zone-expand">
@@ -421,40 +492,45 @@ export default function ResearchFeed() {
                     <SectionBoundary name="This update">
                       {content}
                     </SectionBoundary>
-                    {p && (
-                      <DownloadCard
-                        title={p.title}
-                        subtitle={p.matchup}
-                        publishedAt={p.created_at}
-                        sections={[
-                          {
-                            heading: p.market_label.startsWith("zone-win:")
-                              ? "Result"
-                              : "Summary",
-                            text: p.summary,
-                          },
-                          {
-                            heading: p.market_label.startsWith("zone-win:")
-                              ? "Winning legs"
-                              : "Analyst case",
-                            text: p.why_watch.split(
-                              " Original pregame release:",
-                            )[0],
-                          },
-                          ...(!p.market_label.startsWith("zone-win:")
-                            ? [
-                                {
-                                  heading: "Observed market",
-                                  text: p.market_label,
-                                },
-                              ]
-                            : []),
-                          { heading: "Source / uncertainty", text: p.caution },
-                          { heading: "Next check", text: p.next_check },
-                          { heading: "Source", text: p.source_url },
-                        ]}
-                      />
-                    )}
+                    {p &&
+                      !p.market_label.startsWith("zone-win:") &&
+                      !p.result_details && (
+                        <DownloadCard
+                          title={p.title}
+                          subtitle={p.matchup}
+                          publishedAt={p.created_at}
+                          sections={[
+                            {
+                              heading: p.market_label.startsWith("zone-win:")
+                                ? "Result"
+                                : "Summary",
+                              text: p.summary,
+                            },
+                            {
+                              heading: p.market_label.startsWith("zone-win:")
+                                ? "Winning legs"
+                                : "Analyst case",
+                              text: p.why_watch.split(
+                                " Original pregame release:",
+                              )[0],
+                            },
+                            ...(!p.market_label.startsWith("zone-win:")
+                              ? [
+                                  {
+                                    heading: "Observed market",
+                                    text: p.market_label,
+                                  },
+                                ]
+                              : []),
+                            {
+                              heading: "Source / uncertainty",
+                              text: p.caution,
+                            },
+                            { heading: "Next check", text: p.next_check },
+                            { heading: "Source", text: p.source_url },
+                          ]}
+                        />
+                      )}
                   </div>
                 );
               })}

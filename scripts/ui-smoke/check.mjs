@@ -9,6 +9,8 @@ const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const pages = [
   { path: "/", expect: ["Next kickoff", "21+"] },
   { path: "/feed", expect: ["The Zone", "How it works"] },
+  { path: "/feed?view=parlays", expect: ["Sample Sunday sleeper parlay", "3-leg parlay"] },
+  { path: "/feed?view=wins", expect: ["Five legs. One $218 win."] },
   { path: "/matchups", expect: ["Seahawks"] },
   { path: "/matchups/sample-sea-den-2026-10-15", expect: ["Follow Seahawks", "Follow Broncos"] },
   { path: "/history", expect: ["Vegas Quant published record", "Sample"] },

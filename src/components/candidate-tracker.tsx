@@ -4,12 +4,10 @@ import Link from "next/link";
 import LegResultStatus, { useReleaseResults } from "./leg-result-status";
 import ParlayCard, { type ParlayCandidate } from "./parlay-card";
 import LegActions from "./leg-actions";
-import DownloadCard from "./download-card";
 import PriceFreshness from "./price-freshness";
 import GamblyLink from "./gambly-link";
-import TeamLogo from "./team-logo";
-import { nflTeamCode } from "@/lib/nfl-teams";
-import TeamHelmet from "./team-helmet";
+import CasinoCard, { CasinoCardDownload } from "./casino-card";
+import { cleanMarket, odds, type CasinoCardData } from "@/lib/casino-card";
 import { supabase } from "@/lib/supabase";
 import { time } from "@/lib/domain";
 import { homeWeekStart, isCurrentHomeWeek } from "@/lib/home-week";
@@ -57,6 +55,66 @@ function copySelection(c: Candidate): string {
     .replace(/\s+total\s+/gi, " ")
     .trim();
   return `${c.name} ${stat}`;
+}
+/** The playing-card face for one published selection. */
+function cardFor(
+  c: Candidate,
+  o: {
+    releaseTitle: string;
+    publishedAt: string;
+    index: number;
+    total: number;
+    pickOfDay: boolean;
+    result?: string;
+  },
+): CasinoCardData {
+  const price = odds(c.odds);
+  const won = o.result === "WIN",
+    lost = o.result === "LOSS";
+  if (c.fun_play)
+    return {
+      variant: "hailmary",
+      eyebrow: "Hail Mary · every leg must win",
+      title: o.releaseTitle,
+      matchup: c.book
+        ? `${c.book} moneylines · combined odds unverified`
+        : "Moneylines · combined odds unverified",
+      legs: (c.legs || []).map((l) => ({
+        name: l.team,
+        market: "Moneyline",
+        note: odds(l.odds) || "price n/a",
+      })),
+      publishedAt: o.publishedAt,
+    };
+  return {
+    variant: won
+      ? "win"
+      : lost
+        ? "miss"
+        : o.pickOfDay || c.pick_of_day
+          ? "pod"
+          : "pick",
+    eyebrow:
+      o.pickOfDay || c.pick_of_day
+        ? "Pick of the Day"
+        : o.total > 1
+          ? `Leg ${o.index + 1} of ${o.total}`
+          : "Leg we like",
+    title: c.name,
+    market: cleanMarket(c.market),
+    matchup: c.matchup,
+    price: price
+      ? `${/draftkings/i.test(c.quote) ? "DraftKings" : c.book || "FanDuel"} ${price}`
+      : "Analyst target · unpriced",
+    stamp: won
+      ? "✓ HIT"
+      : lost
+        ? "MISS"
+        : o.result === "PUSH"
+          ? "PUSH"
+          : undefined,
+    publishedAt: o.publishedAt,
+  };
 }
 export type CandidateRelease = {
   id: string;
@@ -271,24 +329,19 @@ export default function CandidateTracker({
           </small>
         </header>
         {multiple && (
-          <DownloadCard
-            title={release.title}
-            subtitle="Individual published selections"
-            publishedAt={release.created_at}
-            label={`Download all ${list.length} legs`}
-            sections={list.flatMap((c) => [
-              {
-                heading: copySelection(c),
-                text: c.matchup + "\n" + c.quote + "\n" + c.quote_context,
-              },
-              { heading: "Case", text: c.why },
-              { heading: "Risk", text: c.risk },
-              { heading: "Next check", text: c.next },
-              {
-                heading: "Sources",
-                text: c.sources.map((s) => s.label + ": " + s.url).join("\n"),
-              },
-            ])}
+          <CasinoCardDownload
+            label={`Download all ${list.length} legs as one card`}
+            data={{
+              variant: "pick",
+              eyebrow: `${list.length} legs we like`,
+              title: release.title,
+              legs: list.map((c) => ({
+                name: c.name,
+                market: cleanMarket(c.market),
+                note: odds(c.odds) || undefined,
+              })),
+              publishedAt: release.created_at,
+            }}
           />
         )}
         {multiple && !expired && (
@@ -322,261 +375,194 @@ export default function CandidateTracker({
             <p>Full-game totals · Check available lines in your app.</p>
           </div>
         )}
-        {list.map((c, i) => (
-          <article className="candidate-item" key={c.name}>
-            <div className="eyebrow">
-              {c.fun_play
-                ? "ONE PARLAY · ALL LEGS MUST WIN"
-                : multiple
-                  ? `POTENTIAL PICK ${i + 1}`
-                  : i === 0
-                    ? "LEADING CANDIDATE"
-                    : "WATCHLIST"}{" "}
-              · {c.matchup}
-            </div>
-            {!c.fun_play && (
-              <div className="candidate-player">
-                {nflTeamCode(c.name) ? (
-                  <TeamLogo team={c.name} size={48} />
-                ) : (
-                  <TeamHelmet name={c.name} />
-                )}
-                <h3>{c.name}</h3>
+        {list.map((c, i) => {
+          const key = `candidate:${release.id}:${release.candidates.indexOf(c) + 1}`;
+          const card = cardFor(c, {
+            releaseTitle: release.title,
+            publishedAt: release.created_at,
+            index: i,
+            total: list.length,
+            pickOfDay,
+            result: resultStates[key]?.result,
+          });
+          return (
+            <article className="candidate-item" key={c.name}>
+              <div className="eyebrow">
+                {c.fun_play
+                  ? "ONE PARLAY · ALL LEGS MUST WIN"
+                  : multiple
+                    ? `POTENTIAL PICK ${i + 1}`
+                    : i === 0
+                      ? "LEADING CANDIDATE"
+                      : "WATCHLIST"}{" "}
+                · {c.matchup}
               </div>
-            )}
-            {!c.fun_play && <p>{c.market}</p>}
-            <LegResultStatus
-              state={
-                resultStates[
-                  `candidate:${release.id}:${release.candidates.indexOf(c) + 1}`
-                ]
-              }
-            />
-            {c.fun_play ? (
-              <div className="ticket-price-note">
-                {c.book
-                  ? `${c.book} Research snapshots · combined odds & boost unverified`
-                  : "Combined odds & boost unverified · individual prices are historical observations"}
-                {c.book && <p>{c.quote_context}</p>}
-              </div>
-            ) : (
-              <>
-                <strong className="candidate-price">{c.quote}</strong>
-                {c.odds_status !== "USER_SCREENSHOT_QUOTE_TIME_UNKNOWN" && (
+              <CasinoCard data={card} />
+              <LegResultStatus state={resultStates[key]} />
+              {!c.fun_play &&
+                c.odds_status !== "USER_SCREENSHOT_QUOTE_TIME_UNKNOWN" && (
                   <p className="candidate-context">{c.quote_context}</p>
                 )}
-                {c.odds_status !== "UNPRICED_ANALYST_TARGET" && (
-                  <PriceFreshness at={c.quote_observed_at} />
-                )}
-              </>
-            )}
-            {c.fun_play && c.legs && (
-              <>
-                <div className="ticket-legs">
-                  {c.legs.slice(0, featured ? 2 : 4).map((leg) => (
-                    <div className="ticket-leg" key={leg.team}>
-                      <TeamLogo team={leg.team} />
-                      <div>
-                        <strong>{leg.team.split(" ").at(-1)}</strong>
-                        <small>Moneyline{c.book ? ` · ${c.book}` : ""}</small>
-                      </div>
-                      <b>
-                        {leg.odds == null
-                          ? "Unavailable"
-                          : `${leg.odds > 0 ? "+" : ""}${leg.odds}`}
-                      </b>
-                    </div>
-                  ))}
-                </div>
-                <details className="ticket-more">
-                  <summary>View all {c.legs.length} legs & game times</summary>
-                  <div className="ticket-legs ticket-legs-full">
-                    {c.legs.map((leg) => (
-                      <div className="ticket-leg" key={leg.team}>
-                        <TeamLogo team={leg.team} />
-                        <div>
-                          <strong>{leg.team}</strong>
-                          <small>{leg.matchup}</small>
-                        </div>
-                        <b>
-                          {leg.odds == null
-                            ? "Unavailable"
-                            : `${leg.odds > 0 ? "+" : ""}${leg.odds}`}
-                        </b>
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              </>
-            )}
-            {!expired && (c.experimental || editorial) && c.gambly_url && (
-              <div className="ticket-action">
-                <GamblyLink url={c.gambly_url} selection={copySelection(c)} />
-                <p>
-                  18+ · Copy, open Gambly, then paste. Verify every line and
-                  price.
-                </p>
-              </div>
-            )}
-            <DownloadCard
-              title={c.fun_play ? release.title : copySelection(c)}
-              subtitle={c.matchup}
-              publishedAt={release.created_at}
-              sections={[
-                { heading: "Selection", text: copySelection(c) },
-                { heading: "Matchup", text: c.matchup },
-                {
-                  heading: "Published price / context",
-                  text: c.quote + "\n" + c.quote_context,
-                },
-                { heading: "Why we like it", text: c.why },
-                { heading: "Why it could lose", text: c.risk },
-                { heading: "Next check", text: c.next },
-                {
-                  heading: "Sources",
-                  text: c.sources.map((s) => s.label + ": " + s.url).join("\n"),
-                },
-              ]}
-            />
-            <LegActions
-              legKey={
-                c.original_leg_key ||
-                `candidate:${release.id}:${release.candidates.indexOf(c) + 1}`
-              }
-              expired={expired}
-            />
-            <details className="candidate-details">
-              <summary>Full pick analysis & risks ↓</summary>
-              {c.supersedes_release_id && (
-                <details>
-                  <summary>Original published prices</summary>
-                  <p>
-                    Original publication
-                    {c.original_published_at
-                      ? ` · ${time(c.original_published_at)}`
-                      : ""}
-                    . Selections are unchanged.
-                  </p>
-                  <p>{c.original_quote}</p>
-                  {c.original_legs?.map((leg) => (
-                    <p key={leg.team}>
-                      {leg.team}: {leg.odds > 0 ? "+" : ""}
-                      {leg.odds}
-                    </p>
-                  ))}
-                </details>
+              {!c.fun_play && c.odds_status !== "UNPRICED_ANALYST_TARGET" && (
+                <PriceFreshness at={c.quote_observed_at} />
               )}
-              <p className="candidate-context">{c.quote_context}</p>
-              <div className="candidate-facts">
-                <div>
-                  <small>Quote observation</small>
-                  <strong>
-                    {c.quote_observed_at &&
-                    Number.isFinite(Date.parse(c.quote_observed_at))
-                      ? time(c.quote_observed_at)
-                      : "Time not verified"}
-                  </strong>
+              {c.fun_play && c.book && (
+                <p className="candidate-context">{c.quote_context}</p>
+              )}
+              {!expired && (c.experimental || editorial) && c.gambly_url && (
+                <div className="ticket-action">
+                  <GamblyLink url={c.gambly_url} selection={copySelection(c)} />
+                  <p>
+                    18+ · Copy, open Gambly, then paste. Verify every line and
+                    price.
+                  </p>
                 </div>
-                <div>
-                  <small>Entry limit</small>
-                  <strong>Not established</strong>
-                </div>
-                <div>
-                  <small>Decision</small>
-                  <strong>
-                    {expired
-                      ? "Archived"
-                      : c.analysis_kind === "QUALITATIVE_EDITORIAL"
-                        ? "Analyst selection"
-                        : experimental
-                          ? "Experimental"
-                          : "WAIT"}
-                  </strong>
-                </div>
-              </div>
-              <p className="notice">
-                <b>Waiting for</b>
-                <br />
-                {c.next ||
-                  "Verified current price and a supported probability estimate."}
-              </p>
-              <small>
-                Publication time is not the quote time. Confirm availability at
-                your sportsbook; this research card does not authorize an entry.
-              </small>
-              {featured && !experimental && (
+              )}
+              <CasinoCardDownload data={card} />
+              <LegActions
+                legKey={
+                  c.original_leg_key ||
+                  `candidate:${release.id}:${release.candidates.indexOf(c) + 1}`
+                }
+                expired={expired}
+              />
+              <details className="candidate-details">
+                <summary>Full pick analysis & risks ↓</summary>
+                {c.supersedes_release_id && (
+                  <details>
+                    <summary>Original published prices</summary>
+                    <p>
+                      Original publication
+                      {c.original_published_at
+                        ? ` · ${time(c.original_published_at)}`
+                        : ""}
+                      . Selections are unchanged.
+                    </p>
+                    <p>{c.original_quote}</p>
+                    {c.original_legs?.map((leg) => (
+                      <p key={leg.team}>
+                        {leg.team}: {leg.odds > 0 ? "+" : ""}
+                        {leg.odds}
+                      </p>
+                    ))}
+                  </details>
+                )}
+                <p className="candidate-context">{c.quote_context}</p>
                 <div className="candidate-facts">
                   <div>
-                    <small>Break-even at quoted odds</small>
+                    <small>Quote observation</small>
                     <strong>
-                      {implied === null ? "Unknown" : `${implied.toFixed(2)}%`}
+                      {c.quote_observed_at &&
+                      Number.isFinite(Date.parse(c.quote_observed_at))
+                        ? time(c.quote_observed_at)
+                        : "Time not verified"}
                     </strong>
                   </div>
                   <div>
-                    <small>Model probability needed for +3 pp</small>
-                    <strong>
-                      {implied === null
-                        ? "Unknown"
-                        : `${(implied + 3).toFixed(2)}%`}
-                    </strong>
+                    <small>Entry limit</small>
+                    <strong>Not established</strong>
                   </div>
                   <div>
-                    <small>Verified model / edge</small>
-                    <strong>Unknown</strong>
+                    <small>Decision</small>
+                    <strong>
+                      {expired
+                        ? "Archived"
+                        : c.analysis_kind === "QUALITATIVE_EDITORIAL"
+                          ? "Analyst selection"
+                          : experimental
+                            ? "Experimental"
+                            : "WAIT"}
+                    </strong>
                   </div>
                 </div>
-              )}
-              {c.fun_play && c.legs && (
-                <div>
-                  <h4>Every leg: case & failure risk</h4>
-                  {c.legs.map((leg) => (
-                    <div key={leg.team} style={{ marginBottom: 16 }}>
-                      <strong>{leg.team}</strong>
-                      <p>{leg.why}</p>
-                      <p>
-                        <b>Risk:</b> {leg.risk}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <p>
-                <b>Why we’re watching</b>
-                <br />
-                {c.why}
-              </p>
-              <details className="candidate-details" open={featured}>
-                <summary>Read the case, risks & next checks ↓</summary>
-                <p>
-                  <b>What could beat this read</b>
+                <p className="notice">
+                  <b>Waiting for</b>
                   <br />
-                  {c.risk}
+                  {c.next ||
+                    "Verified current price and a supported probability estimate."}
                 </p>
-                {featured && (
-                  <p>
-                    Projection, confidence, risk score, EV, fair price, playable
-                    limit and predicted close: not established. No stake
-                    assigned. Exact-prop ticket and money splits unavailable.
-                  </p>
+                <small>
+                  Publication time is not the quote time. Confirm availability
+                  at your sportsbook; this research card does not authorize an
+                  entry.
+                </small>
+                {featured && !experimental && (
+                  <div className="candidate-facts">
+                    <div>
+                      <small>Break-even at quoted odds</small>
+                      <strong>
+                        {implied === null
+                          ? "Unknown"
+                          : `${implied.toFixed(2)}%`}
+                      </strong>
+                    </div>
+                    <div>
+                      <small>Model probability needed for +3 pp</small>
+                      <strong>
+                        {implied === null
+                          ? "Unknown"
+                          : `${(implied + 3).toFixed(2)}%`}
+                      </strong>
+                    </div>
+                    <div>
+                      <small>Verified model / edge</small>
+                      <strong>Unknown</strong>
+                    </div>
+                  </div>
                 )}
-                <div className="candidate-sources">
-                  {c.sources
-                    .filter((s) => s.url.startsWith("https://"))
-                    .map((s) => (
-                      <a
-                        key={s.url}
-                        href={s.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {s.label} ↗
-                      </a>
+                {c.fun_play && c.legs && (
+                  <div>
+                    <h4>Every leg: case & failure risk</h4>
+                    {c.legs.map((leg) => (
+                      <div key={leg.team} style={{ marginBottom: 16 }}>
+                        <strong>{leg.team}</strong>
+                        <p>{leg.why}</p>
+                        <p>
+                          <b>Risk:</b> {leg.risk}
+                        </p>
+                      </div>
                     ))}
-                </div>
+                  </div>
+                )}
+                <p>
+                  <b>Why we’re watching</b>
+                  <br />
+                  {c.why}
+                </p>
+                <details className="candidate-details" open={featured}>
+                  <summary>Read the case, risks & next checks ↓</summary>
+                  <p>
+                    <b>What could beat this read</b>
+                    <br />
+                    {c.risk}
+                  </p>
+                  {featured && (
+                    <p>
+                      Projection, confidence, risk score, EV, fair price,
+                      playable limit and predicted close: not established. No
+                      stake assigned. Exact-prop ticket and money splits
+                      unavailable.
+                    </p>
+                  )}
+                  <div className="candidate-sources">
+                    {c.sources
+                      .filter((s) => s.url.startsWith("https://"))
+                      .map((s) => (
+                        <a
+                          key={s.url}
+                          href={s.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {s.label} ↗
+                        </a>
+                      ))}
+                  </div>
+                </details>
               </details>
-            </details>
-          </article>
-        ))}
+            </article>
+          );
+        })}
         {!experimental && !pickOfDay && (
           <p className="notice">
             <b>What “3% edge” means:</b> Our defensible estimated chance must

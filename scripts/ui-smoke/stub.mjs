@@ -21,8 +21,14 @@ const releases = [
   { id: "00000000-0000-4000-8000-000000000001", title: "Pick of the Day · Sample Runner 60+ rushing yards", created_at: NOW, expires_at: "2026-10-16T00:15:00Z", candidates: [leg("Sample Runner", "Full game · 60+ rushing yards", tnf, { pick_of_day: true })] },
   { id: "00000000-0000-4000-8000-000000000002", title: "Sample Seahawks–Broncos legs", created_at: NOW, expires_at: "2026-10-16T00:15:00Z", candidates: [leg("Sample Receiver", "Full game · 50+ receiving yards", tnf), leg("Sample Passer", "Full game · 190+ passing yards", tnf, { odds: -150 })] },
   { id: "00000000-0000-4000-8000-000000000003", title: "Sample Texans–Jaguars legs", created_at: NOW, expires_at: "2026-10-18T17:00:00Z", candidates: [leg("Sample Back", "Full game · 50+ rushing yards", sun)] },
+  { id: "00000000-0000-4000-8000-000000000004", title: "Sample Sunday sleeper parlay", created_at: NOW, expires_at: "2026-10-18T17:00:00Z", candidates: [{ ...leg("Sample Sunday sleeper parlay", "3 full-game targets · cross-game parlay", sun), parlay: true, analysis_kind: "QUALITATIVE_PARLAY", parlay_legs: [
+    { name: "Sample Back", market: "Full game · 50+ rushing yards", why: "Sample case.", risk: "Sample risk.", matchup: sun },
+    { name: "Sample Receiver", market: "Full game · 40+ receiving yards", why: "Sample case.", risk: "Sample risk.", matchup: tnf },
+    { name: "Sample Tight End", market: "Full game · 3+ receptions", why: "Sample case.", risk: "Sample risk.", matchup: sun },
+  ] }] },
 ];
 const posts = [
+  { id: "w1", game: null, game_id: null, category: "Decision", title: "Sample winning ticket", summary: "Sample.", matchup: "Ravens @ Falcons", away_code: "BAL", home_code: "ATL", market_label: "zone-win:ravens-falcons-full5-20261011", why_watch: "Sample.", caution: "Sample.", next_check: "Sample.", source_url: "https://example.com", source_at: NOW, created_at: "2026-10-13T12:00:00Z" },
   { id: "f1", game: { slug: games[0].slug }, game_id: "g1", category: "Injury watch", title: "Sample Seahawks–Broncos injury update", summary: "Sample summary.", matchup: "Seahawks @ Broncos", away_code: "SEA", home_code: "DEN", market_label: "Sample market", why_watch: "Sample.", caution: "Sample.", next_check: "Sample.", source_url: "https://example.com", source_at: NOW, created_at: NOW },
 ];
 const json = (res, body, status = 200) => { res.statusCode = status; res.setHeader("Content-Type", "application/json"); res.end(JSON.stringify(body)); };
