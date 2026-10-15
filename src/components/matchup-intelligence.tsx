@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import FollowButton from "./follow-button";
 import Link from "next/link";
 import type { Access } from "@/lib/membership";
 import { supabase } from "@/lib/supabase";
@@ -229,6 +230,18 @@ export default function MatchupIntelligence({
                 ? `${time(row.game.kickoff)} · ${row.game.venue}`
                 : "Choose your game for the case, injury updates, sources and discussion."}
             </p>
+            {row && (
+              <div className="follow-row" aria-label="Follow these teams">
+                <FollowButton
+                  topic={row.game.away_team}
+                  label={row.game.away_team.split(" ").at(-1)}
+                />
+                <FollowButton
+                  topic={row.game.home_team}
+                  label={row.game.home_team.split(" ").at(-1)}
+                />
+              </div>
+            )}
           </div>
         </div>
         {error && <p role="alert">{error}</p>}
