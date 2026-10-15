@@ -158,8 +158,9 @@ export default function ResearchFeed() {
           .limit(limit + 1);
         if (filter !== "All") query = query.eq("category", filter);
         if (zoneView === "Wins")
+          // Only wins: filtering in the query keeps paging (and "Load more") accurate.
           query = query.or(
-            "market_label.like.zone-win:*,result_leg_key.not.is.null",
+            "market_label.like.zone-win:*,result_details->>result.eq.WIN",
           );
         const result = await query;
         if (n !== epoch.current) return;
