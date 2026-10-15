@@ -1,23 +1,9 @@
-import {
-  COMMUNITY_PHOTO_BUCKET,
-  eraseCommunityPhotos,
-} from "@/lib/community-photo";
-import { identityClient } from "@/lib/age-server";
-import { redactIdentityAttempts } from "@/lib/age-erasure";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import {
-  appOrigin,
-  billingEnabled,
-  requestUser,
-  serviceDb,
-  stripeClient,
-} from "@/lib/billing-server";
+import { appOrigin, requestUser, serviceDb } from "@/lib/billing-server";
 import { supabaseUrl, publishableKey } from "@/lib/supabase";
-import {
-  stopErasureBilling,
-  type ErasurePlan,
-} from "@/lib/account-erasure-billing";
+import { type ErasurePlan } from "@/lib/account-erasure-billing";
+import { prepareAccountErasure } from "@/lib/account-erasure";
 export const dynamic = "force-dynamic";
 const input = z
   .object({
@@ -106,41 +92,7 @@ export async function POST(req: Request) {
     }
     const plan = begun.data as ErasurePlan;
     lease = plan.lease;
-    const identityRows = await db.rpc("age_check_sessions", {
-      p_user: auth.user.id,
-    });
-    if (identityRows.error) throw Error("Identity inventory unavailable");
-    if (identityRows.data?.length) {
-      const identity = identityClient();
-      await redactIdentityAttempts(auth.user.id, identityRows.data, {
-        retrieve: (id) => identity.identity.verificationSessions.retrieve(id),
-        redact: (id) => identity.identity.verificationSessions.redact(id),
-      });
-    }
-    if (plan.subscriptions.length || plan.orders.some((o) => o.checkout_id)) {
-      if (!billingEnabled()) throw Error("Billing unavailable");
-      const stripe = stripeClient();
-      await stopErasureBilling(auth.user.id, plan, {
-        checkout: {
-          retrieve: (id) => stripe.checkout.sessions.retrieve(id),
-          expire: (id) => stripe.checkout.sessions.expire(id),
-        },
-        subscriptions: {
-          retrieve: (id) => stripe.subscriptions.retrieve(id),
-          cancel: (id, p) => stripe.subscriptions.cancel(id, p),
-        },
-      });
-    }
-    await eraseCommunityPhotos(
-      auth.user.id,
-      plan.storage_paths || [],
-      (paths) => db!.storage.from(COMMUNITY_PHOTO_BUCKET).remove(paths),
-    );
-    const ready = await db.rpc("authorize_account_erasure", {
-      p_user: auth.user.id,
-      p_lease: lease,
-    });
-    if (ready.error) throw Error("Authorization failed");
+    await prepareAccountErasure(db, auth.user.id, plan);
     const revoked = await db.auth.admin.signOut(token, "global");
     if (revoked.error) throw Error("Session revocation failed");
     // The audited Auth BEFORE DELETE trigger cleans application rows in the same

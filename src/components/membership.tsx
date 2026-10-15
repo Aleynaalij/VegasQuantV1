@@ -1,5 +1,6 @@
 "use client";
 import FollowTopics from "./follow-topics";
+import AdminMembers from "./admin-members";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -326,6 +327,7 @@ export default function Membership() {
           {notice}
         </p>
       )}
+      {access.admin && <AdminMembers />}
       {session ? (
         <Panel
           id="access-settings"

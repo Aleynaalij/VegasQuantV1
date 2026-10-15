@@ -318,3 +318,88 @@ html[data-theme="dark"] body .social-post .member-label { color: var(--gold); }
 html[data-theme="dark"] body .sidebar nav a.active svg { color: var(--gold) !important; }
 html[data-theme="dark"] body .sidebar nav a.active { box-shadow: inset 3px 0 0 var(--gold) !important; }
 html[data-theme] body .vq-home .vq-slate time { color: var(--gold); }
+
+/* ---------- Admin portal: members (Account page, administrators only) ---------- */
+.admin-members {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0 24px;
+  padding: 18px;
+  border: 1px solid var(--gold-line);
+  border-left: 4px solid var(--gold);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #e8c46a0a, transparent 40%), var(--panel);
+}
+.admin-members > header { display: grid; gap: 4px; }
+html[data-theme] body .admin-members h2 {
+  margin: 0;
+  font: 800 30px/1 var(--font-board), sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.admin-members > header nav { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; }
+html[data-theme] body .admin-members > header nav a { color: var(--gold-hi); }
+.admin-members-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.admin-members-stats > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel2);
+  text-align: center;
+}
+html[data-theme] body .admin-members-stats b {
+  font: 800 26px/1 var(--font-board), sans-serif;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+html[data-theme] body .admin-members-stats .live b { color: var(--money); }
+html[data-theme] body .admin-members-stats .never b { color: var(--loss); }
+html[data-theme] body .admin-members-stats .gold b { color: var(--gold); }
+html[data-theme] body .admin-members-stats small { font-size: 11px; color: var(--muted); line-height: 1.2; }
+.admin-members-tools { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.admin-members-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.admin-members-list li { display: grid; gap: 6px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.admin-members-list li:first-child { border-top: 0; }
+.admin-member-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.admin-member-head > span { display: grid; min-width: 0; }
+html[data-theme] body .admin-member-head b { color: var(--text); font-size: 15px; }
+html[data-theme] body .admin-member-head small { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.admin-member-head em {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+html[data-theme] body .admin-member-head em.tone-live { color: var(--money); }
+html[data-theme] body .admin-member-head em.tone-recent { color: var(--gold); }
+html[data-theme] body .admin-member-head em.tone-idle { color: var(--faint); }
+html[data-theme] body .admin-member-head em.tone-never { color: var(--loss); }
+html[data-theme] body .admin-member-facts { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+html[data-theme] body .admin-member-remove { justify-self: start; color: var(--loss) !important; font-size: 13px; }
+.admin-member-delete { display: grid; gap: 8px; padding: 12px; border: 1px solid #ff546855; border-radius: 12px; background: #ff54680d; }
+.admin-member-delete label { display: grid; gap: 6px; font-size: 13px; }
+.admin-member-delete > div { display: flex; align-items: center; gap: 12px; }
+html[data-theme] body .admin-member-delete small { color: var(--muted); font-size: 12px; line-height: 1.5; }
+html[data-theme] body .admin-member-delete .danger {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--loss);
+  color: #fff;
+  font-weight: 800;
+}
+html[data-theme] body .admin-member-delete .danger:disabled { opacity: 0.45; }
+.admin-members-pages { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+html[data-theme] body .admin-members-note { margin: 0; font-size: 12px; color: var(--faint); }
+@media (max-width: 480px) {
+  .admin-members-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .admin-members-tools { grid-template-columns: 1fr; }
+}
