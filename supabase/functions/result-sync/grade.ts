@@ -32,6 +32,30 @@ export const normal = (s: string) =>
     .replace(/[^a-z0-9]/g, "");
 const playerName = (s: string) =>
   normal(s.replace(/\s+(?:Jr\.?|Sr\.?|II|III|IV)$/i, ""));
+// Trailing desk tags that keep a selection a pick; anything else (e.g. WATCHLIST) is not graded.
+const PICK_TAGS = new Set(["LEAN", "CONDITIONAL LEAN"]);
+const MARKET =
+  /^(?:(Full game|FULL GAME TOTAL)\s*·\s*)?(?:(\d+)\+|(Over|Under)\s+(\d+(?:\.\d+)?))\s+(?:total\s+)?(rushing yards|receiving yards|passing yards|receptions)((?:\s*·\s*[^·]+)*)$/i;
+/** Every name a matchup line may use for one side: full name, abbreviation, city or nickname. */
+const sideNames = (full: string, abbreviation: string) => {
+  const words = full.trim().split(/\s+/);
+  return [full, abbreviation, words.slice(0, -1).join(" "), words.at(-1)!]
+    .filter(Boolean)
+    .map(normal);
+};
+/** "DEN @ LAC · Oct 11" -> ["den", "lac"]; null when the line has no "@". */
+export function matchupSides(matchup: string) {
+  const sides = (matchup || "").split(" · ")[0].split(" @ ");
+  return sides.length === 2 ? sides.map(normal) : null;
+}
+/** The game's full team name for "LAC", "Detroit", "Rams" or "Buffalo Bills"; undefined otherwise. */
+const teamIn = (g: Game, team: string) =>
+  [
+    [g.away_team, g.away_abbreviation],
+    [g.home_team, g.home_abbreviation],
+  ].find(([full, abbreviation]) =>
+    sideNames(full, abbreviation).includes(normal(team)),
+  )?.[0];
 export function contractFor(
   c: any,
   key: string,
@@ -39,15 +63,20 @@ export function contractFor(
   publishedAt: string,
   expiresAt: string,
 ): Contract | string {
-  if (c.fun_play || c.legs || /^RETROSPECTIVE/.test(c.analysis_kind || ""))
+  if (c.fun_play || c.legs || c.parlay || /^RETROSPECTIVE/.test(c.analysis_kind || ""))
     return "Ticket/retrospective requires review";
-  // Only explicit full-game single-player stats. No guessing period or market semantics.
-  const m =
-    /^Full game\s*·\s*(?:(\d+)\+|(Over|Under)\s+(\d+(?:\.\d+)?))\s+(rushing yards|receiving yards|passing yards|receptions)$/i.exec(
-      c.market || "",
-    );
-  if (!m || !c.name || !c.team)
-    return "Unsupported market, period or missing player/team";
+  // Single-player full-game stats only. A market with no period is full game (sportsbook
+  // convention, overtime included) unless the selection mentions a quarter or half.
+  const m = MARKET.exec((c.market || "").trim());
+  if (!m || !c.name) return "Unsupported market, period or missing player";
+  if (!m[1] && /quarter|half/i.test(`${c.market} ${c.matchup || ""}`.replace(/halftime/gi, "")))
+    return "Unsupported market, period or missing player";
+  const tags = m[6]
+    .split("·")
+    .map((t: string) => t.trim())
+    .filter(Boolean);
+  if (tags.some((t: string) => !PICK_TAGS.has(t)))
+    return "Watchlist note or qualified selection, not a gradable pick";
   const metric = (
     {
       "rushing yards": "rushing_yards",
@@ -55,7 +84,7 @@ export function contractFor(
       "passing yards": "passing_yards",
       receptions: "receptions",
     } as const
-  )[m[4].toLowerCase() as "receptions"];
+  )[m[5].toLowerCase() as "receptions"];
   const eventIds = (c.sources || []).flatMap((s: any) => {
     try {
       const u = new URL(s.url);
@@ -66,20 +95,27 @@ export function contractFor(
       return [];
     }
   });
+  const sides = matchupSides(c.matchup);
+  if (!c.game_id && !c.team && !sides) return "Game binding missing or ambiguous";
   const candidates = games.filter((g) => {
     if (c.game_id && g.id !== c.game_id) return false;
     if (eventIds.length && !eventIds.includes(g.provider_id)) return false;
-    if (![g.away_team, g.home_team].some((t) => normal(t) === normal(c.team)))
+    if (c.team && !teamIn(g, c.team)) return false;
+    if (
+      !c.game_id &&
+      sides &&
+      !(
+        sideNames(g.away_team, g.away_abbreviation).includes(sides[0]) &&
+        sideNames(g.home_team, g.home_abbreviation).includes(sides[1])
+      )
+    )
       return false;
     const kick = Date.parse(g.kickoff),
       pub = Date.parse(publishedAt),
       end = Date.parse(expiresAt);
-    return (
-      pub <= kick + 4 * 3600000 &&
-      pub >= kick - 7 * 86400000 &&
-      end >= kick &&
-      end <= kick + 12 * 3600000
-    );
+    if (pub > kick + 4 * 3600000 || pub < kick - 7 * 86400000) return false;
+    // A slate release expires once; its explicitly bound later games stay gradable.
+    return c.game_id ? true : end >= kick && end <= kick + 12 * 3600000;
   });
   if (candidates.length !== 1) return "Game binding missing or ambiguous";
   const g = candidates[0];
@@ -87,10 +123,11 @@ export function contractFor(
     leg_key: key,
     game_id: g.id,
     player: c.name,
-    team: c.team,
+    // Empty when the selection names no team; the box score then resolves the player's side.
+    team: c.team ? teamIn(g, c.team)! : "",
     metric,
-    threshold: Number(m[1] || m[3]),
-    operator: m[1] ? "gte" : m[2].toLowerCase() === "over" ? "over" : "under",
+    threshold: Number(m[2] || m[4]),
+    operator: m[2] ? "gte" : m[3].toLowerCase() === "over" ? "over" : "under",
     period: "full_game",
     market: c.market,
   };
@@ -109,7 +146,7 @@ export function espnStat(
   data: any,
   g: Game,
   c: Contract,
-): { value: number; final: boolean; athlete_id: string } | string {
+): { value: number; final: boolean; athlete_id: string; team: string } | string {
   const competition = data.header?.competitions?.[0];
   if (
     String(data.header?.id) !== g.provider_id ||
@@ -148,9 +185,18 @@ export function espnStat(
     receiving_yards: "receivingYards",
     receptions: "receptions",
   }[c.metric];
-  const found: { value: number; final: boolean; athlete_id: string }[] = [];
+  const found: {
+    value: number;
+    final: boolean;
+    athlete_id: string;
+    team: string;
+  }[] = [];
+  const sides = c.team ? [c.team] : [g.away_team, g.home_team];
   for (const team of data.boxscore?.players || []) {
-    if (normal(team.team?.displayName || "") !== normal(c.team)) continue;
+    const side = sides.find(
+      (t) => normal(team.team?.displayName || "") === normal(t),
+    );
+    if (!side) continue;
     for (const group of team.statistics || []) {
       if (group.name !== groupName) continue;
       const i = group.keys?.indexOf(field);
@@ -169,6 +215,7 @@ export function espnStat(
             competition.status?.type?.completed === true &&
             competition.status?.type?.state === "post",
           athlete_id: String(athlete.athlete.id),
+          team: side,
         });
       }
     }

@@ -192,3 +192,24 @@
 .mi-admin select,.mi-admin input{width:100%;min-height:44px}
 .mi-admin label{display:grid;gap:8px;margin:16px 0}
 .mi-preview{max-height:400px;overflow:auto;font-size:12px;white-space:pre-wrap}
+.manual-result {
+  display: grid;
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 12px;
+}
+.manual-result label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+.manual-result [role="alert"] {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .manual-result {
+    grid-template-columns: 1fr;
+  }
+}
