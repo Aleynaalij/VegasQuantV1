@@ -1,6 +1,6 @@
 export default function ZoneNav({ active = "Latest" }: { active?: string }) {
   return (
-    <nav className="zone-views" aria-label="Zone views">
+    <nav className="zone-views" aria-label="Zone views" data-swipe-tabs>
       {[
         ["Latest", "/feed"],
         ["Parlays", "/feed?view=parlays"],

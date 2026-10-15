@@ -4,6 +4,7 @@ import InstallApp from "./install-app";
 import UpdateInbox from "./update-inbox";
 import LetsSweat from "./lets-sweat";
 import AccountLink from "./account-link";
+import SwipeTabs from "./swipe-tabs";
 import {
   ArrowUpRight,
   BookOpen,
@@ -126,6 +127,7 @@ export function Shell({
   )[sportSection];
   return (
     <div className={`shell screen-${active}`}>
+      <SwipeTabs />
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>
@@ -262,7 +264,7 @@ export function Shell({
             <AccountLink />
           </div>
         </header>
-        <nav className="sport-switch" aria-label="Sport selection">
+        <nav className="sport-switch" aria-label="Sport selection" data-swipe-tabs>
           <a
             href={nflHref}
             aria-current={sport === "nfl" ? "page" : undefined}
@@ -307,7 +309,7 @@ export function Shell({
             </small>
           </footer>
         </main>
-        <nav className="mobile-nav" aria-label="Main navigation">
+        <nav className="mobile-nav" aria-label="Main navigation" data-swipe-tabs>
           <Link
             aria-current={active === "home" ? "page" : undefined}
             className={active === "home" ? "active" : ""}
