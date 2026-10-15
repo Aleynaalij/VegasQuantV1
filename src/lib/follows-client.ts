@@ -1,4 +1,6 @@
 import { supabase } from "./supabase";
+/** ilike pattern matching the topic exactly, ignoring case (follow matching is case-insensitive). */
+export const topicPattern = (topic: string) => topic.replace(/[\\%_]/g, (c) => `\\${c}`);
 // Follow/unfollow shared by Home, matchup pages and Account; listeners refresh on "vq-follows-changed".
 export async function setFollow(
   uid: string,
@@ -13,7 +15,7 @@ export async function setFollow(
         .delete()
         .eq("user_id", uid)
         .eq("kind", kind)
-        .eq("topic", topic);
+        .ilike("topic", topicPattern(topic));
   // Already following (unique violation) is the state we wanted.
   if (r.error && r.error.code !== "23505") throw Error("Could not update follow.");
   window.dispatchEvent(new Event("vq-follows-changed"));

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-import { setFollow } from "@/lib/follows-client";
+import { setFollow, topicPattern } from "@/lib/follows-client";
 
 // One-tap follow toggle for a team or player. Signed-out visitors get a sign-in link instead.
 export default function FollowButton({
@@ -40,9 +40,9 @@ export default function FollowButton({
         .select("topic")
         .eq("user_id", id)
         .eq("kind", kind)
-        .eq("topic", topic)
-        .maybeSingle();
-      if (live && n === epoch) setOn(!r.error && !!r.data);
+        .ilike("topic", topicPattern(topic))
+        .limit(1);
+      if (live && n === epoch) setOn(!r.error && !!r.data?.length);
     }
     void load();
     const refresh = () => void load();

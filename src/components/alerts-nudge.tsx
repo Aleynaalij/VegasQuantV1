@@ -26,7 +26,18 @@ export default function AlertsNudge({ subject }: { subject: string }) {
       if (!id || !alertsWanted(id)) return setShow(false);
       const reg = await navigator.serviceWorker.getRegistration();
       const sub = await reg?.pushManager.getSubscription();
-      if (live) setShow(!sub || Notification.permission !== "granted");
+      // A browser subscription only counts if the server has it for this member
+      // (it may be stale or belong to an account signed in earlier).
+      const saved =
+        sub && Notification.permission === "granted"
+          ? await supabase
+              .from("push_subscriptions")
+              .select("id")
+              .eq("endpoint", sub.endpoint)
+              .eq("user_id", id)
+              .maybeSingle()
+          : null;
+      if (live) setShow(!saved || !!saved.error || !saved.data);
     }
     void check();
     window.addEventListener("vq-alerts-changed", check);
