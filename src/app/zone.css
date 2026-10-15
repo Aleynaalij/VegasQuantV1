@@ -362,7 +362,7 @@
   line-height: 1.6;
 }
 .candidate-details > summary {
-  color: #0866d8;
+  color: var(--brand);
   cursor: pointer;
   font-size: 13px;
   font-weight: 700;
@@ -395,7 +395,7 @@
 }
 .ticket-action > .btn {
   width: 100%;
-  background: #0866d8;
+  background: var(--brand);
   color: #fff;
   font-size: 14px;
 }
@@ -432,7 +432,7 @@
 }
 .candidate-price {
   display: block;
-  color: #0866d8 !important;
+  color: var(--brand) !important;
   font-size: 22px;
 }
 .vq-feed {

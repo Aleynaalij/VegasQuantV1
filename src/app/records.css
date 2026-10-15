@@ -78,9 +78,9 @@
   }
 }
 .section-switch button.selected {
-  background: #0866d8 !important;
+  background: var(--brand) !important;
   color: #fff !important;
-  border-color: #0866d8 !important;
+  border-color: var(--brand) !important;
 }
 .section-switch {
   display: flex;
@@ -110,7 +110,7 @@
   text-decoration: none;
   background: #fff !important;
   border-color: #cedbed !important;
-  color: #0866d8 !important;
+  color: var(--brand) !important;
   min-height: 40px;
   padding: 9px 16px;
   border-radius: 8px;
@@ -209,8 +209,8 @@
 }
 .board-filters button[aria-pressed="true"] {
   background: #e9efff;
-  color: #244be3;
-  border-color: #aebffa;
+  color: var(--brand);
+  border-color: var(--brand-ink);
 }
 .published-board {
   margin: 24px 0;

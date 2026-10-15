@@ -446,13 +446,13 @@
   color: var(--text) !important;
 }
 .btn.primary {
-  background: #0866d8 !important;
+  background: var(--brand) !important;
   color: #fff !important;
-  border-color: #0866d8 !important;
-  box-shadow: 0 4px 12px #0866d822;
+  border-color: var(--brand) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 13%, transparent);
 }
 .btn.primary:hover {
-  background: #0756b7 !important;
+  background: var(--brand) !important;
 }
 .btn {
   display: inline-flex;
@@ -461,17 +461,17 @@
   min-height: 46px;
   padding: 12px 18px;
   border-radius: 12px;
-  background: #0866d8;
+  background: var(--brand);
   color: #fff;
   font-weight: 750;
-  border: 1px solid #0866d8;
+  border: 1px solid var(--brand);
   gap: 8px;
 }
 .pick-odds-notice {
   color: #74510f !important;
 }
 .official-price {
-  color: #0866d8;
+  color: var(--brand);
 }
 .pick-numbers > div, .pick-finances > div {
   background: #f5f8fd;
@@ -484,12 +484,12 @@
   background: #dbeaff;
   border-radius: 50%;
   font-size: 11px;
-  color: #075ab9;
+  color: var(--brand);
 }
 .slip-why, .pick-publication {
   color: var(--text) !important;
 }
-.player-portrait { display: grid; place-items: center; flex: 0 0 88px; width: 88px; height: 64px; overflow: hidden; border-radius: 14px; background: linear-gradient(145deg,#e0edff,#f7faff); border: 1px solid #cbdcf1; color: #0866d8; font-size: 20px; font-weight: 800; }
+.player-portrait { display: grid; place-items: center; flex: 0 0 88px; width: 88px; height: 64px; overflow: hidden; border-radius: 14px; background: linear-gradient(145deg,#e0edff,#f7faff); border: 1px solid #cbdcf1; color: var(--brand); font-size: 20px; font-weight: 800; }
 .player-portrait img { width: 88px; height: 64px; object-fit: contain; object-position: center bottom; }
 .official-card {
   border-radius: 16px;

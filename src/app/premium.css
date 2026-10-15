@@ -658,7 +658,7 @@ html[data-theme] body .top-actions .top-profile:focus-visible { outline: 3px sol
 .vq-policy h1 { font-size:clamp(30px,6vw,48px); line-height:1.14; letter-spacing:-.035em; margin:16px 0; }
 .vq-policy p { color:var(--muted); font-size:16px; line-height:1.75; overflow-wrap:anywhere; }
 .vq-policy nav,.vq-footer-links,.vq-help-actions { display:flex; flex-wrap:wrap; gap:12px 18px; margin:24px 0; }
-.vq-policy nav a,.vq-footer-links a,.vq-help-actions a { color:#a7beff; font-size:14px; }
+.vq-policy nav a,.vq-footer-links a,.vq-help-actions a { color:var(--brand-ink); font-size:14px; }
 .vq-policy nav a[aria-current="page"] { color:#fff; text-decoration:underline; text-underline-offset:5px; }
 .vq-policy section,.vq-policy details { border:1px solid var(--line); background:var(--panel); border-radius:18px; padding:22px; margin:14px 0; }
 .vq-policy h2,.vq-policy summary { font-size:19px; font-weight:700; line-height:1.4; }

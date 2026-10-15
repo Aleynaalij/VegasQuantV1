@@ -157,9 +157,9 @@
 }
 .vq-luck-primary,
 .vq-luck-actions button {
-  border: 1px solid #789ff6;
+  border: 1px solid var(--brand);
   border-radius: 12px;
-  background: #285ce0;
+  background: var(--brand);
   padding: 12px 24px;
   min-height: 46px;
 }
@@ -226,6 +226,6 @@
   background: #8de0c1;
 }
 .vq-luck button:focus-visible {
-  outline: 3px solid #9bbdff;
+  outline: 3px solid var(--brand-ink);
   outline-offset: 4px;
 }
