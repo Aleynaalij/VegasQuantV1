@@ -18,6 +18,7 @@ import ZoneNav from "./zone-nav";
 import PickCard from "./pick-card";
 import TeamLogo from "./team-logo";
 import ResearchSections from "./research-sections";
+import { researchFacts } from "@/lib/research-facts";
 import ResearchNotebook from "./research-notebook";
 import SourceStatus from "./source-status";
 function Fields({ value }: { value: unknown }) {
@@ -52,6 +53,37 @@ function Fields({ value }: { value: unknown }) {
       </dl>
     );
   return <p className="preserve">{String(value)}</p>;
+}
+/** A research topic as readable facts, in the lounge card style. */
+function Facts({ groups }: { groups: ReturnType<typeof researchFacts> }) {
+  return (
+    <div className="mi-facts">
+      {groups.map((facts, i) => (
+        <dl key={i}>
+          {facts.map((f, j) =>
+            f.kind === "note" ? (
+              <p key={j} className="mi-fact-note">{f.value}</p>
+            ) : (
+              <div key={j} className={f.kind !== "time" && f.value.length > 16 ? "wide" : ""}>
+                {f.label && <dt>{f.label}</dt>}
+                <dd>
+                  {f.kind === "link" ? (
+                    <a href={f.value} target="_blank" rel="noopener noreferrer">
+                      {f.host} ↗
+                    </a>
+                  ) : f.kind === "time" ? (
+                    time(f.value)
+                  ) : (
+                    f.value
+                  )}
+                </dd>
+              </div>
+            ),
+          )}
+        </dl>
+      ))}
+    </div>
+  );
 }
 function TargetCard({ target: t }: { target: Target }) {
   return (
@@ -543,19 +575,23 @@ export default function MatchupIntelligence({
                         ["Weather", intel.weather],
                         ["Vegas", intel.vegas],
                         ["Bias check", intel.bias],
-                      ].map(([name, value]) => ({
-                        title: String(name),
-                        content: (
-                          <>
-                            {name === "Market" && (
-                              <p className="muted">
-                                Saved analyst snapshot; not a live quote.
-                              </p>
-                            )}
-                            <Fields value={value} />
-                          </>
-                        ),
-                      }))}
+                      ]
+                        .map(([name, value]) => ({ name: String(name), groups: researchFacts(value) }))
+                        // Topics with nothing a member can use are left out.
+                        .filter((t) => t.groups.length)
+                        .map(({ name, groups }) => ({
+                          title: name,
+                          content: (
+                            <>
+                              {name === "Market" && (
+                                <p className="muted">
+                                  Saved analyst snapshot; not a live quote.
+                                </p>
+                              )}
+                              <Facts groups={groups} />
+                            </>
+                          ),
+                        }))}
                     />
                     <details className="mi-section">
                       <summary>
