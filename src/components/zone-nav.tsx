@@ -3,8 +3,10 @@ export default function ZoneNav({ active = "Latest" }: { active?: string }) {
     <nav className="zone-views" aria-label="Zone views">
       {[
         ["Latest", "/feed"],
-        ["Games", "/matchups"],
+        ["Parlays", "/feed?view=parlays"],
         ["Legs", "/feed?view=legs"],
+        ["Wins", "/feed?view=wins"],
+        ["Games", "/matchups"],
         ["Injury watch", "/feed?view=injury"],
       ].map(([label, href]) => (
         <a

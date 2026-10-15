@@ -1,6 +1,5 @@
-import BrandMark from "./brand-mark";
-import TeamHelmet from "./team-helmet";
-import { time } from "@/lib/domain";
+import CasinoCard, { CasinoCardDownload } from "./casino-card";
+import type { CasinoCardData } from "@/lib/casino-card";
 
 const firstQuarterLegs = [
   ["Bhayshul Tuten", "10+ rushing yards"],
@@ -17,20 +16,27 @@ const liveLegs = [
   ["Darius Cooper", "70+ receiving yards"],
   ["Brenton Strange", "7+ receptions"],
 ];
+/** Retrospective owner-supplied ticket recaps; they do not grade challenge records. */
 export default function LondonWinningSlip({ publishedAt, variant = "first-quarter" }: { publishedAt: string; variant?: "first-quarter" | "live-six" }) {
   const live = variant === "live-six";
   const legs = live ? liveLegs : firstQuarterLegs;
-  return <article className="zone-winning-slip" aria-label={live ? "Winning combined six-leg parlay with $500 payout" : "Winning combined five-leg first-quarter parlay"}>
-    <header><span className="win-brand"><BrandMark /> VEGAS QUANT · THE ZONE</span><span className="win-badge">✓ WIN · {legs.length}/{legs.length}</span></header>
-    <p className="eyebrow">LONDON · OCT 11, 2026 · {live ? "LIVE FULL-GAME PICKS" : "FIRST QUARTER"}</p>
-    <h2>{live ? "Six legs. One $500 win." : "Five legs. One winning slip."}</h2>
-    <p>Philadelphia Eagles @ Jacksonville Jaguars{live ? " · Final: PHI 17 — JAX 19" : ""}</p>
-    <div className="win-price">
-      <div><small>{live ? "TOTAL PAYOUT" : "COMBINED ODDS"}</small><strong>{live ? "$500.00" : "+1353"}</strong></div>
-      <div>{live ? <><span className="win-badge">+$450.00 profit</span><small>$50.00 stake · Combined +900</small></> : <><span className="win-badge">30% profit boost</span><small>Base odds +1041</small></>}</div>
+  const card: CasinoCardData = {
+    variant: "win",
+    eyebrow: `London · Oct 11 · ${live ? "live full-game picks" : "first quarter"}`,
+    title: live ? "Six legs. One $500 win." : "Five legs. One winning slip.",
+    matchup: `Eagles @ Jaguars${live ? " · Final: PHI 17 — JAX 19" : ""}`,
+    hero: live
+      ? { label: "Total payout", value: "$500.00", note: "+$450 profit · $50 stake · +900" }
+      : { label: "Combined odds", value: "+1353", note: "30% profit boost · base +1041" },
+    stamp: `WIN ${legs.length}/${legs.length}`,
+    legs: legs.map(([name, market]) => ({ name, market, note: live ? undefined : "1st quarter", status: "won" as const })),
+    footnote: live ? "DraftKings · settled ticket. Payout includes the $50 stake." : undefined,
+    publishedAt,
+  };
+  return (
+    <div>
+      <CasinoCard data={card} />
+      <CasinoCardDownload data={card} />
     </div>
-    <ol>{legs.map(([name, selection]) => <li key={name}><TeamHelmet name={name} /><div><strong>{name}</strong><span>{selection}</span><small>{live ? "Full-game total · live selection" : "1st quarter"}</small></div><span className="win-leg-status" aria-label="Leg won">✓</span></li>)}</ol>
-    <footer><strong>ALL {live ? "SIX" : "FIVE"} LEGS CLEARED</strong><time dateTime={publishedAt}>{time(publishedAt)}</time></footer>
-    {live && <p><small>DraftKings · Settled ticket · Total payout includes the $50 stake.</small></p>}
-  </article>;
+  );
 }

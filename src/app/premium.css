@@ -45,9 +45,6 @@ html[data-theme="dark"] body {
 html[data-theme="dark"] body .shell { background: transparent; }
 
 /* Numbers line up like a betting board. */
-html[data-theme="dark"] body :is(.stat strong, .vq-countdown, .ticker-score, .win-price strong, .pass-grid strong, .activation-grid strong) {
-  font-variant-numeric: tabular-nums;
-}
 
 /* ---------- Shell ---------- */
 html[data-theme="dark"] body :is(.topbar, .sidebar) {
@@ -195,12 +192,6 @@ html[data-theme="dark"] body .positive { color: var(--money) !important; }
 html[data-theme="dark"] body .negative { color: var(--loss) !important; }
 
 /* Price warnings are warnings (amber), not wins (green). */
-html[data-theme="dark"] body :is(.price-freshness.stale, .price-freshness.unknown, .ticket-price-note) {
-  background: var(--warn-soft) !important;
-  border: 1px solid #ffb54755 !important;
-  color: #ffd79a !important;
-}
-html[data-theme="dark"] body :is(.price-freshness.stale, .price-freshness.unknown, .ticket-price-note) :is(p, small, strong, b) { color: #ffd79a !important; }
 
 /* Inputs */
 html[data-theme="dark"] body :is(input, textarea, select) {

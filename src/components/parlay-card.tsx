@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
-import BrandMark from "./brand-mark";
 import LegActions from "./leg-actions";
 import GamblyLink from "./gambly-link";
-import DownloadCard from "./download-card";
+import CasinoCard, { CasinoCardDownload } from "./casino-card";
+import { cleanMarket, type CasinoCardData } from "@/lib/casino-card";
 export type ParlayCandidate = {
   worth_a_dollar?: boolean;
   name: string;
@@ -14,7 +14,13 @@ export type ParlayCandidate = {
   next: string;
   copy_text: string;
   gambly_url: string;
-  parlay_legs: { name: string; market: string; why: string; risk: string; matchup?: string }[];
+  parlay_legs: {
+    name: string;
+    market: string;
+    why: string;
+    risk: string;
+    matchup?: string;
+  }[];
   sources: { label: string; url: string }[];
   original_leg_key?: string;
 };
@@ -30,31 +36,27 @@ export default function ParlayCard({
   expiresAt: string;
 }) {
   const key = c.original_leg_key || `candidate:${releaseId}:1`;
+  const card: CasinoCardData = {
+    variant: "parlay",
+    eyebrow: `${c.parlay_legs.length}-leg parlay · every leg must hit`,
+    title: c.name,
+    matchup: c.matchup,
+    price: c.worth_a_dollar
+      ? "$1 for fun · odds at your book"
+      : "Analyst targets · combined odds unverified",
+    legs: c.parlay_legs.map((l) => ({
+      name: l.name,
+      market: cleanMarket(l.market),
+      note: c.worth_a_dollar ? l.matchup?.split(" · ")[0] : undefined,
+    })),
+    publishedAt,
+  };
   return (
-    <article className="zone-winning-slip">
-      <header>
-        <span className="win-brand">
-          <BrandMark /> VEGAS QUANT · THE ZONE
-        </span>
-        <span className="win-badge">{c.parlay_legs.length} LEG PARLAY</span>
-      </header>
-      <h2>{c.name}</h2>
-      <p>{c.matchup}</p>
+    <section className="vq-parlay" id={`parlay-${releaseId}`}>
+      <CasinoCard data={card} />
       <p className="notice">
         <strong>Availability check required</strong> · {c.risk}
       </p>
-      <ol>
-        {c.parlay_legs.map((l) => (
-          <li key={l.name}>
-            <div>
-              <strong>{l.name}</strong>
-              <span>{l.market}</span>
-              {c.worth_a_dollar && <small>{l.matchup}</small>}
-              {!c.worth_a_dollar && <small>{l.why}</small>}
-            </div>
-          </li>
-        ))}
-      </ol>
       {!c.worth_a_dollar && (
         <p>
           <strong>Odds unavailable.</strong> These are analyst-selected
@@ -91,19 +93,24 @@ export default function ParlayCard({
       </p>
       <GamblyLink
         url={c.gambly_url}
-        selection={c.parlay_legs.map((leg) => `${leg.name} ${leg.market.replace(/^Full game\s*[·:—-]\s*/i, "")}`).join("\n")}
+        selection={c.parlay_legs
+          .map(
+            (leg) =>
+              `${leg.name} ${leg.market.replace(/^Full game\s*[·:—-]\s*/i, "")}`,
+          )
+          .join("\n")}
         label="Copy parlay & open Gambly ↗"
       />
       <details>
         <summary>
           {c.worth_a_dollar
             ? "The logic, risks & sources"
-            : "Every leg’s risk and source links"}
+            : "Why each leg, risks & sources"}
         </summary>
         {c.worth_a_dollar && <p>{c.why}</p>}
         {c.parlay_legs.map((l) => (
           <p key={l.name}>
-            <strong>{l.name}:</strong> {c.worth_a_dollar && <>{l.why} </>}
+            <strong>{l.name}:</strong> {l.why}{" "}
             {l.risk}
           </p>
         ))}
@@ -115,20 +122,7 @@ export default function ParlayCard({
           </p>
         ))}
       </details>
-      <DownloadCard
-        title={c.name}
-        subtitle={c.matchup}
-        publishedAt={publishedAt}
-        sections={[
-          { heading: `${c.parlay_legs.length} targets`, text: c.copy_text },
-          { heading: "Availability & correlation", text: c.risk + " " + c.why },
-          { heading: "Next update", text: c.next },
-          {
-            heading: "Sources",
-            text: c.sources.map((s) => s.label + ": " + s.url).join("\n"),
-          },
-        ]}
-      />
-    </article>
+      <CasinoCardDownload data={card} />
+    </section>
   );
 }
