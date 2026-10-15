@@ -403,3 +403,55 @@ html[data-theme] body .admin-members-note { margin: 0; font-size: 12px; color: v
   .admin-members-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .admin-members-tools { grid-template-columns: 1fr; }
 }
+
+/* ---------- Tab bar: gold on the page you're on, and slide-to-switch ---------- */
+html[data-theme="dark"] body .mobile-nav {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+html[data-theme="dark"] body .mobile-nav a {
+  -webkit-tap-highlight-color: transparent;
+  transition: color .14s ease, background-color .14s ease, transform .14s ease;
+}
+html[data-theme="dark"] body .mobile-nav a svg { transition: color .14s ease, transform .14s ease; }
+/* The Zone's monogram follows the tab colour instead of its blue brand fills. */
+html[data-theme="dark"] body .mobile-nav .vq-mark path { fill: var(--faint); transition: fill .14s ease; }
+/* The page you're on (or the tab under your finger while sliding): gold icon, gold label, lit chip. */
+html[data-theme="dark"] body .mobile-nav a.active,
+html[data-theme="dark"] body .mobile-nav a.scrub-target {
+  color: var(--gold-hi) !important;
+  background: radial-gradient(ellipse at 50% 30%, #e8c46a24, transparent 70%) !important;
+}
+html[data-theme="dark"] body .mobile-nav a:is(.active, .scrub-target) svg { color: var(--gold) !important; }
+html[data-theme="dark"] body .mobile-nav a:is(.active, .scrub-target) .vq-mark path { fill: var(--gold-hi); }
+html[data-theme="dark"] body .mobile-nav a:is(.active, .scrub-target) .vq-mark path:nth-child(even) { fill: var(--gold-deep); }
+html[data-theme="dark"] body .mobile-nav a.scrub-target::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 28%;
+  right: 28%;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: var(--gold);
+  box-shadow: 0 0 10px #e8c46a66;
+}
+html[data-theme="dark"] body .mobile-nav a.scrub-target { position: relative; transform: translateY(-3px); }
+html[data-theme="dark"] body .mobile-nav a.scrub-target svg { transform: scale(1.14); }
+/* While sliding, only the tab under the finger is lit. */
+html[data-theme="dark"] body .mobile-nav:is(.scrubbing, .scrub-pending) a.active:not(.scrub-target) {
+  color: var(--faint) !important;
+  background: transparent !important;
+}
+html[data-theme="dark"] body .mobile-nav:is(.scrubbing, .scrub-pending) a.active:not(.scrub-target) svg { color: var(--faint) !important; }
+html[data-theme="dark"] body .mobile-nav:is(.scrubbing, .scrub-pending) a.active:not(.scrub-target)::before { opacity: 0; }
+html[data-theme="dark"] body .mobile-nav:is(.scrubbing, .scrub-pending) a.active:not(.scrub-target) .vq-mark path { fill: var(--faint); }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] body .mobile-nav a,
+  html[data-theme="dark"] body .mobile-nav a svg { transition: none; transform: none; }
+}
+/* The monogram on the gold "Ask Vegas" chip is dark ink, not the old blue. */
+html[data-theme="dark"] body .ask-vegas-launcher .vq-mark path { fill: #17120a; }
+html[data-theme="dark"] body .ask-vegas-launcher .vq-mark path:nth-child(even) { fill: #5a4518; }
