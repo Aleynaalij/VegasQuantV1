@@ -1,5 +1,5 @@
 /** Turns stored analyst research into reader-facing facts, leaving out internal model plumbing. */
-export type ResearchFact = { label: string; value: string; kind: "text" | "time" | "link" | "note" };
+export type ResearchFact = { label: string; value: string; kind: "text" | "time" | "link" | "note"; host?: string };
 
 /** Internal bookkeeping the analyst pipeline stores but members never need to see. */
 const HIDDEN = new Set([
@@ -31,6 +31,30 @@ function noise(value: string) {
   );
 }
 
+/** A web address safe to link, shown by its site name; anything malformed is not a link. */
+function link(text: string): string | null {
+  try {
+    const url = new URL(text);
+    return /^https?:$/.test(url.protocol) && url.hostname ? url.hostname.replace(/^www\./, "") : null;
+  } catch {
+    return null;
+  }
+}
+
+function facts(key: string, value: unknown, prefix = ""): ResearchFact[] {
+  if (HIDDEN.has(key)) return [];
+  const named = !key ? prefix : prefix ? `${prefix} ${label(key).toLowerCase()}` : label(key);
+  if (value && typeof value === "object" && !Array.isArray(value) && key !== "target_quote") {
+    // Nested details (e.g. wind: { speed, unit }) read as "Wind speed", "Wind unit".
+    return Object.entries(value as Record<string, unknown>).flatMap(([k, v]) => facts(k, v, named));
+  }
+  if (Array.isArray(value) && value.some((v) => v && typeof v === "object")) {
+    return value.flatMap((v) => (v && typeof v === "object" ? facts("", v, named) : facts(key, v, prefix)));
+  }
+  const fact = scalar(key, value);
+  return fact ? [{ ...fact, label: key ? named : prefix }] : [];
+}
+
 function scalar(key: string, value: unknown): ResearchFact | null {
   if (value == null || typeof value === "boolean") return null;
   if (typeof value === "object") {
@@ -48,7 +72,10 @@ function scalar(key: string, value: unknown): ResearchFact | null {
   }
   const text = String(value).trim();
   if (!text || noise(text)) return null;
-  if (/^https?:\/\//.test(text)) return { label: label(key), value: text, kind: "link" };
+  if (/^https?:\/\//i.test(text)) {
+    const host = link(text);
+    return host ? { label: label(key), value: text, kind: "link", host } : null;
+  }
   if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(text)) return { label: label(key), value: text, kind: "time" };
   return { label: label(key), value: text, kind: NOTES.has(key) ? "note" : "text" };
 }
@@ -61,11 +88,9 @@ export function researchFacts(value: unknown): ResearchFact[][] {
     const fact = scalar("", value);
     return fact ? [[{ ...fact, label: "" }]] : [];
   }
-  const facts = Object.entries(value as Record<string, unknown>)
-    .filter(([k]) => !HIDDEN.has(k))
-    .map(([k, v]) => scalar(k, v))
-    .filter((f): f is ResearchFact => !!f)
+  const list = Object.entries(value as Record<string, unknown>)
+    .flatMap(([k, v]) => facts(k, v))
     // Headline facts first, fine print last.
     .sort((a, b) => Number(a.kind === "note") - Number(b.kind === "note"));
-  return facts.some((f) => f.kind !== "note" && f.kind !== "link") ? [facts] : [];
+  return list.some((f) => f.kind !== "note" && f.kind !== "link") ? [list] : [];
 }

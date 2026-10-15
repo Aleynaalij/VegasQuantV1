@@ -69,7 +69,7 @@ function Facts({ groups }: { groups: ReturnType<typeof researchFacts> }) {
                 <dd>
                   {f.kind === "link" ? (
                     <a href={f.value} target="_blank" rel="noopener noreferrer">
-                      {new URL(f.value).hostname.replace(/^www\./, "")} ↗
+                      {f.host} ↗
                     </a>
                   ) : f.kind === "time" ? (
                     time(f.value)

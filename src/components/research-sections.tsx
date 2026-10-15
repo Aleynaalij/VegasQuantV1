@@ -7,7 +7,9 @@ export default function ResearchSections({
 }: {
   sections: { title: string; content: ReactNode }[];
 }) {
-  const [active, setActive] = useState(0);
+  const [chosen, setActive] = useState(0);
+  // Topic lists differ between versions; never point past the end of the current one.
+  const active = Math.min(chosen, Math.max(0, sections.length - 1));
   const id = useId();
   if (!sections.length) return null;
   return (

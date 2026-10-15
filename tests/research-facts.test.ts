@@ -37,3 +37,15 @@ test("placeholders alone leave the topic empty", () => {
   assert.deepEqual(researchFacts([]), []);
   assert.equal(researchFacts([{ player: "J. Smith", status: "Questionable" }]).length, 1);
 });
+
+test("nested details are flattened into readable labels, bookkeeping still hidden", () => {
+  const [facts] = researchFacts({ wind: { speed: 15, unit: "mph", id: "x" }, forecast: "Clear" });
+  assert.deepEqual(facts.map((f) => [f.label, f.value]), [["Wind speed", "15"], ["Wind unit", "mph"], ["Forecast", "Clear"]]);
+  const [rows] = researchFacts({ notes: [{ player: "J. Smith", status: "Out" }] });
+  assert.deepEqual(rows.map((f) => f.label), ["Notes player", "Notes status"]);
+});
+
+test("malformed links are dropped instead of breaking the page; good links show their site", () => {
+  const [facts] = researchFacts({ spread: "-2.5", source: "https://", other: "https://www.weather.gov/x" });
+  assert.deepEqual(facts.map((f) => [f.label, f.kind, f.host]), [["Spread", "text", undefined], ["Other", "link", "weather.gov"]]);
+});
