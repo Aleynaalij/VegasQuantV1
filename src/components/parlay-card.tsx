@@ -91,7 +91,7 @@ export default function ParlayCard({
       </p>
       <GamblyLink
         url={c.gambly_url}
-        selection={c.copy_text}
+        selection={c.parlay_legs.map((leg) => `${leg.name} ${leg.market.replace(/^Full game\s*[·:—-]\s*/i, "")}`).join("\n")}
         label="Copy parlay & open Gambly ↗"
       />
       <details>
