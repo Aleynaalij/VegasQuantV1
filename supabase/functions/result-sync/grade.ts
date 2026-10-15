@@ -66,10 +66,11 @@ export function contractFor(
   if (c.fun_play || c.legs || c.parlay || /^RETROSPECTIVE/.test(c.analysis_kind || ""))
     return "Ticket/retrospective requires review";
   // Single-player full-game stats only. A market with no period is full game (sportsbook
-  // convention, overtime included) unless the selection mentions a quarter or half.
+  // convention, overtime included) unless the selection mentions a quarter or half,
+  // halftime included; only an explicit Full game prefix overrides that context.
   const m = MARKET.exec((c.market || "").trim());
   if (!m || !c.name) return "Unsupported market, period or missing player";
-  if (!m[1] && /quarter|half/i.test(`${c.market} ${c.matchup || ""}`.replace(/halftime/gi, "")))
+  if (!m[1] && /quarter|half/i.test(`${c.market} ${c.matchup || ""}`))
     return "Unsupported market, period or missing player";
   const tags = m[6]
     .split("·")

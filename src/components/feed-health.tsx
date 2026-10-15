@@ -62,6 +62,8 @@ export default function FeedHealth() {
           .from("published_legs")
           .select("leg_key,name,market,matchup,expires_at")
           .is("result", null)
+          // Official picks settle through the admin result flow, not research_leg_results.
+          .neq("kind", "OFFICIAL")
           .lt("expires_at", new Date(Date.now() - 6 * 3600000).toISOString())
           .order("expires_at", { ascending: true })
           .limit(100),

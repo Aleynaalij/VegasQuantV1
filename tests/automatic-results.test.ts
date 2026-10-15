@@ -183,6 +183,10 @@ test("desk market wordings parse to the same full-game contract", () => {
     typeof at({ ...candidate, market: "FULL GAME TOTAL · 70+ rushing yards", matchup: "Buffalo @ Los Angeles Rams · Halftime BUF 14–LAR 7" }),
     "object",
   );
+  assert.equal(
+    typeof at({ ...candidate, market: "70+ rushing yards", matchup: "Buffalo @ Los Angeles Rams · Halftime BUF 14–LAR 7" }),
+    "string",
+  );
 });
 test("selections without a team bind by matchup and resolve the side from the box score", () => {
   const { team: _, ...noTeam } = candidate;
