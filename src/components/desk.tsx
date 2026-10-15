@@ -361,9 +361,6 @@ export default function DeskApp({
             <SectionBoundary name="Pick of the Day">
               <CandidateTracker activeOnly featured pickOfDay />
             </SectionBoundary>
-            <SectionBoundary name="For you">
-              <ForYou games={d.games} />
-            </SectionBoundary>
             <SectionBoundary name="Next kickoff">
               <HomeBrief games={d.games} />
             </SectionBoundary>
@@ -379,6 +376,9 @@ export default function DeskApp({
             </SectionBoundary>
             <SectionBoundary name="Explore">
               <ExploreCards />
+            </SectionBoundary>
+            <SectionBoundary name="For you">
+              <ForYou games={d.games} />
             </SectionBoundary>
           </>
         )}
