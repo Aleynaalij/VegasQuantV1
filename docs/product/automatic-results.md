@@ -4,7 +4,9 @@ Activated October 14, 2026. This worker tracks published NFL editorial selection
 
 ## Supported selections
 
-Single-player full-game rushing yards, receiving yards, passing yards and receptions. Market text must explicitly use `Full game · 50+ rushing yards` or `Full game · Over 49.5 rushing yards` / `Under`. Overtime is included. Each candidate needs the full player name, exact team and an unambiguous game. Prefer explicit `game_id` plus an ESPN game/box-score source. Existing candidates may bind by exact team and publication/expiration window only if exactly one game matches. The immutable publication is never rewritten to make it gradeable.
+Single-player full-game rushing yards, receiving yards, passing yards and receptions. Accepted wordings: `Full game · 50+ rushing yards`, `FULL GAME TOTAL · 50+ total rushing yards`, `Full game · Over 49.5 rushing yards` / `Under`, and the bare `50+ rushing yards` / `Over 49.5 rushing yards`. A bare market counts as full game (sportsbook convention, overtime included) unless the market or matchup mentions a quarter or half; halftime-published `FULL GAME TOTAL` legs are full game. Trailing `· LEAN` and `· CONDITIONAL LEAN` tags are graded; `· WATCHLIST` and other qualifiers are not picks and are skipped.
+
+The game binds from an explicit `game_id` (still gradable after its slate release expires), an ESPN game source, the team (full name, abbreviation, city or nickname) and/or the matchup line (`DEN @ LAC`, `Detroit @ Arizona`, full names), plus the publication window when no `game_id` is given. Exactly one game must match. When no team is named, the player's side is resolved from the box score and must be unique across both teams; nflverse then corroborates for that side. The immutable publication is never rewritten to make it gradable.
 
 Parlay tickets, retrospective cards, partial periods, touchdown/other markets, NBA and OFFICIAL challenge selections remain review-only. Missing players are not assumed to have zero; injury/DNP and void rules are not inferred. Results are editorial threshold outcomes, not FanDuel/DraftKings settlement confirmation.
 
@@ -22,7 +24,7 @@ Provider outages, missing weekly rows and mismatched stats remain pending. A fin
 
 ## Operations and acceptance
 
-- Admin → Data feed health shows result worker health and the latest run's exact blockers.
+- Admin → Data feed health shows result worker health and, on each ungraded pick, why the latest run skipped it. Admins grade review-only picks there (WIN/LOSS/PUSH, or VOID for watch notes that were never a pick) with an https source; results are immutable, so it asks for confirmation.
 - Tests cover game/period ambiguity, name suffixes, no-zero behavior, live vs final, threshold boundaries, CSV schema, source mismatch, transaction dedupe and member write denial.
 - First hosted run verified 16 exact published outcomes; two Cook entries correctly waited on a provider name-suffix discrepancy, subsequently resolved with standard suffix normalization and duplicate-player rejection. The second hosted run finalized those two entries, bringing verified editorial outcomes to 18. Eighty legacy entries remain unsupported/ambiguous/review-only, with exact reasons journaled.
 - Existing immutable manually verified outcomes are retained. No bankroll, wager or official challenge result records are modified.
