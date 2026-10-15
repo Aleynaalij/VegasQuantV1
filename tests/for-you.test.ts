@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { forYou } from "../src/lib/for-you";
+import { forYou, suggestedTeams } from "../src/lib/for-you";
 
 const games = [
   { id: "past", slug: "past", kickoff: "2026-10-01T00:15:00Z", away_team: "Buffalo Bills", home_team: "Miami Dolphins" },
@@ -25,4 +25,13 @@ test("a followed player matches update text; unknown follows stay empty", () => 
   assert.equal(jsn.game, null);
   assert.equal(jsn.post?.id, "jsn");
   assert.deepEqual([nobody.game, nobody.post], [null, null]);
+});
+
+test("suggested teams are this week's teams, soonest first, minus follows", () => {
+
+  assert.deepEqual(suggestedTeams(games, [], now), ["Seattle Seahawks", "Denver Broncos", "Buffalo Bills", "New York Jets"]);
+  assert.deepEqual(
+    suggestedTeams(games, [{ kind: "team", topic: "seattle seahawks" }, { kind: "player", topic: "Buffalo Bills" }], now),
+    ["Denver Broncos", "Buffalo Bills", "New York Jets"],
+  );
 });

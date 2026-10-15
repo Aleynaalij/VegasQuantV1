@@ -57,3 +57,22 @@ export function forYou(
     return { follow, game: teamGame, post };
   });
 }
+
+/** Teams playing in the next week that the member doesn't follow yet, soonest kickoff first. */
+export function suggestedTeams(
+  games: ForYouGame[],
+  follows: Follow[],
+  now = Date.now(),
+): string[] {
+  const followed = new Set(
+    follows.filter((f) => f.kind === "team").map((f) => f.topic.toLowerCase()),
+  );
+  const teams = games
+    .filter((g) => {
+      const k = Date.parse(g.kickoff);
+      return k > now - 4 * 3600000 && k <= now + 7 * 86400000;
+    })
+    .sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff))
+    .flatMap((g) => [g.away_team, g.home_team]);
+  return [...new Set(teams)].filter((t) => !followed.has(t.toLowerCase()));
+}

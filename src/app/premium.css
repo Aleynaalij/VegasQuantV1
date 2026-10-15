@@ -755,6 +755,13 @@ html[data-theme] body .vq-foryou li b { font-size:15px; color:var(--text); }
 html[data-theme] body .vq-foryou li a, html[data-theme] body .vq-foryou li small { font-size:13px; line-height:1.45; }
 html[data-theme] body .vq-foryou li small, html[data-theme] body .vq-foryou p { color:var(--muted); }
 html[data-theme] body .vq-foryou p { font-size:13.5px; line-height:1.6; margin:0; }
+.vq-foryou-pick, .follow-row { display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:12px; }
+html[data-theme] body .vq-foryou-pick small { flex-basis:100%; font-size:12px; color:var(--muted); }
+html[data-theme] body .follow-button { display:inline-flex; align-items:center; min-height:36px; padding:6px 14px; border-radius:999px; border:1px solid var(--line-strong); background:transparent; color:var(--text); font-size:13px; font-weight:700; text-decoration:none; cursor:pointer; }
+html[data-theme] body .follow-button[aria-pressed="true"] { background:var(--brand, #2f6bff); border-color:transparent; color:#fff; }
+html[data-theme] body .follow-button:disabled { opacity:.6; cursor:progress; }
+.alerts-nudge { display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; margin-top:12px; padding:12px 14px; border-radius:12px; background:var(--panel2); border:1px solid var(--line); }
+html[data-theme] body .alerts-nudge p { flex:1 1 220px; color:var(--text); }
 html[data-theme] body .ask-vegas-source { display:block; margin-top:8px; font-size:11.5px; color:var(--muted) !important; }
 
 /* ---------- Community: tail leaderboard ---------- */

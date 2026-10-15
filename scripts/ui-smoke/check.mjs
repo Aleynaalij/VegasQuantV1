@@ -10,6 +10,7 @@ const pages = [
   { path: "/", expect: ["Next kickoff", "21+"] },
   { path: "/feed", expect: ["The Zone", "How it works"] },
   { path: "/matchups", expect: ["Seahawks"] },
+  { path: "/matchups/sample-sea-den-2026-10-15", expect: ["Follow Seahawks", "Follow Broncos"] },
   { path: "/history", expect: ["Vegas Quant published record", "Sample"] },
   { path: "/performance", expect: ["By sport"] },
   { path: "/community", expect: [] },
@@ -21,7 +22,7 @@ const pages = [
 ];
 const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
-  { path: "/", expect: ["Pick of the Day", "For you", "Your tailed parlays"] },
+  { path: "/", expect: ["Pick of the Day", "For you", "Your tailed parlays", "More teams this week"] },
   { path: "/community", expect: ["Tail leaderboard", "SampleMember"] },
 ];
 const session = () => {
