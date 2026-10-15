@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import CommunitySettings from "./community-settings";
-import { markPromptShown } from "@/lib/prompt-queue";
+import { dropPrompt, markPromptShown, wantPrompt } from "@/lib/prompt-queue";
 
 export default function ProfileSetupGate() {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -17,12 +17,16 @@ export default function ProfileSetupGate() {
       if (!live || current !== generation) return;
       const id = data.session?.user.id;
       setUid(id || null);
-      if (!id) { setRequired(false); return; }
+      if (!id) { setRequired(false); dropPrompt("profile"); return; }
+      // Hold the visit until we know whether setup is required, so optional pop-ups can't go first.
+      wantPrompt("profile");
       const r = await supabase.from("community_profiles").select("username,avatar").eq("user_id", id).maybeSingle();
       if (!live || current !== generation) return;
       setError(!!r.error);
       const p = r.data;
-      setRequired(!!r.error || !p || !/^[A-Za-z0-9_]{3,24}$/.test(p.username || "") || /^Member_[a-f0-9]{8}$/i.test(p.username || "") || !p.avatar);
+      const needed = !!r.error || !p || !/^[A-Za-z0-9_]{3,24}$/.test(p.username || "") || /^Member_[a-f0-9]{8}$/i.test(p.username || "") || !p.avatar;
+      setRequired(needed);
+      if (!needed) dropPrompt("profile");
     }
     void check();
     const listener = supabase.auth.onAuthStateChange(() => { setTimeout(() => void check(), 0); });

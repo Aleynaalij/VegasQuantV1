@@ -54,11 +54,11 @@ export function pricedRecord(legs: PricedLeg[], closing: Closing = new Map()) {
   for (const l of [...graded].sort(
     (a, b) => Date.parse(a.published_at) - Date.parse(b.published_at),
   )) {
-    const key = l.original_leg_key || sameSelection(l);
-    if (!first.has(key) && !first.has(sameSelection(l))) {
-      first.set(key, l);
-      first.set(sameSelection(l), l);
-    }
+    // Index each kept pick by its own leg key too, so a revision whose wording changed still
+    // finds its original through original_leg_key.
+    const keys = [l.leg_key, sameSelection(l), ...(l.original_leg_key ? [l.original_leg_key] : [])];
+    if (keys.some((k) => first.has(k))) continue;
+    for (const k of keys) first.set(k, l);
   }
   const unique = [...new Set(first.values())];
   const priced = unique.filter((l) => priceOf(l) !== null);

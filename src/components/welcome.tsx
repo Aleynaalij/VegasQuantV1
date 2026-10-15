@@ -5,7 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 import BrandMark from "./brand-mark";
-import { markPromptShown } from "@/lib/prompt-queue";
+import { markPromptShown, wantPrompt } from "@/lib/prompt-queue";
 
 const VERSION = 1;
 
@@ -21,6 +21,8 @@ export default function Welcome() {
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       const current = session?.user ?? null;
       setUser(current);
+      if (current && current.user_metadata.vq_welcome_version !== VERSION)
+        wantPrompt("profile");
       setOpen(
         Boolean(
           current && current.user_metadata.vq_welcome_version !== VERSION,

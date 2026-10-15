@@ -59,3 +59,11 @@ test("closing line value compares the published price with FanDuel's last price 
   // a: 66.7 − 60 = +6.7 pts; b: 54.5 − 60 = −5.5 pts → average +0.6
   assert.ok(Math.abs(r.avgClv! - 0.606) < 0.01);
 });
+
+test("a revision with edited wording still counts once through original_leg_key", () => {
+  const r = pricedRecord([
+    leg("orig", "WIN", -150, { name: "Cook", market: "60+ rushing yards" }),
+    leg("rev", "WIN", -200, { name: "James Cook", market: "Full game · 60+ rushing yards", original_leg_key: "orig", published_at: "2026-10-12T12:00:00Z" }),
+  ]);
+  assert.equal(r.picks, 1);
+});

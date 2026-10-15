@@ -30,3 +30,12 @@ test("profile setup uses up the visit", () => {
   wantPrompt("push");
   assert.equal(mayShowPrompt("push", 10000), false);
 });
+
+test("a pending profile check holds optional prompts until it resolves", () => {
+  resetPromptQueue(0);
+  wantPrompt("profile");
+  wantPrompt("push");
+  assert.equal(mayShowPrompt("push", 10000), false);
+  dropPrompt("profile");
+  assert.equal(mayShowPrompt("push", 10000), true);
+});
