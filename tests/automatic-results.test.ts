@@ -48,8 +48,10 @@ test("exact full game target binding rejects ambiguity and partial periods", () 
   for (const market of [
     "Second half · 70+ rushing yards",
     "1st quarter · 70+ rushing yards",
-    "70+ rushing yards",
+    "10+ first-quarter rushing yards",
     "Full game · anytime touchdown",
+    "FULL GAME TOTAL · 70+ total rushing yards · WATCHLIST · PRICE TOO EXPENSIVE",
+    "Rushing yards · unpriced watch",
   ]) {
     assert.equal(
       typeof contractFor(
@@ -156,4 +158,60 @@ test("standard name suffix resolves only a single player on the exact team", () 
     s.boxscore.players[0].statistics[0].athletes[0],
   );
   assert.equal(typeof espnStat(s, game, contract), "string");
+});
+
+const at = (c: any, games: Game[] = [game]) =>
+  contractFor(c, "k", games, "2026-10-13T01:44:00Z", "2026-10-13T04:00:00Z");
+test("desk market wordings parse to the same full-game contract", () => {
+  for (const [market, threshold, operator] of [
+    ["FULL GAME TOTAL · 70+ rushing yards", 70, "gte"],
+    ["FULL GAME TOTAL · 70+ total rushing yards · LEAN", 70, "gte"],
+    ["FULL GAME TOTAL · Under 43.5 total rushing yards · CONDITIONAL LEAN", 43.5, "under"],
+    ["Over 86.5 rushing yards", 86.5, "over"],
+    ["70+ rushing yards", 70, "gte"],
+  ] as const) {
+    const c = at({ ...candidate, market }) as Contract;
+    assert.equal(typeof c, "object", market);
+    assert.deepEqual([c.threshold, c.operator, c.metric], [threshold, operator, "rushing_yards"]);
+  }
+  // A bare market is only full game when nothing points at a quarter or half.
+  assert.equal(
+    typeof at({ ...candidate, market: "70+ rushing yards", matchup: "BUF @ LAR · First quarter" }),
+    "string",
+  );
+  assert.equal(
+    typeof at({ ...candidate, market: "FULL GAME TOTAL · 70+ rushing yards", matchup: "Buffalo @ Los Angeles Rams · Halftime BUF 14–LAR 7" }),
+    "object",
+  );
+  assert.equal(
+    typeof at({ ...candidate, market: "70+ rushing yards", matchup: "Buffalo @ Los Angeles Rams · Halftime BUF 14–LAR 7" }),
+    "string",
+  );
+});
+test("selections without a team bind by matchup and resolve the side from the box score", () => {
+  const { team: _, ...noTeam } = candidate;
+  const other = { ...game, id: "other", provider_id: "999", home_team: "Buffalo Bills", away_team: "Miami Dolphins", home_abbreviation: "BUF", away_abbreviation: "MIA" };
+  for (const matchup of ["BUF @ LAR · Oct 12", "Buffalo @ Los Angeles Rams · Oct 12", "Buffalo Bills @ Los Angeles Rams"])
+    assert.equal((at({ ...noTeam, matchup }, [game, other]) as Contract).game_id, "g", matchup);
+  assert.equal(typeof at({ ...noTeam, matchup: "Rams @ Bills" }, [game, other]), "string");
+  assert.equal(typeof at(noTeam, [game]), "string");
+  const c = at({ ...noTeam, matchup: "BUF @ LAR" }) as Contract;
+  assert.equal(c.team, "");
+  const s = espnStat(summary, game, c) as any;
+  assert.deepEqual([s.value, s.team], [70, "Buffalo Bills"]);
+  // The same name on both teams is ambiguous.
+  const both = structuredClone(summary);
+  both.boxscore.players.push({ ...structuredClone(both.boxscore.players[0]), team: { displayName: game.home_team } });
+  assert.equal(typeof espnStat(both, game, c), "string");
+});
+test("an explicit game id stays gradable after a slate release expires", () => {
+  const later = { ...game, kickoff: "2026-10-13T20:00:00Z" };
+  assert.equal(typeof at({ ...candidate, game_id: "g" }, [later]), "object");
+  assert.equal(typeof at(candidate, [later]), "string");
+  assert.equal(typeof at({ ...candidate, parlay: true }), "string");
+});
+test("team abbreviations bind and store the full team name", () => {
+  const c = at({ ...candidate, team: "BUF", matchup: "BUF @ LAR · Oct 12" }) as Contract;
+  assert.equal(c.team, "Buffalo Bills");
+  assert.equal(typeof at({ ...candidate, team: "NYJ" }), "string");
 });

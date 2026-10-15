@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { time, type Game } from "@/lib/domain";
 import { Shell, Panel } from "./ui";
 import SourceObservations from "./source-observations";
+import ManualResult from "./manual-result";
 import { feedAlerts, researchDeadline } from "@/lib/feed-health";
 export default function FeedHealth() {
   const [allowed, setAllowed] = useState(false),
@@ -61,6 +62,8 @@ export default function FeedHealth() {
           .from("published_legs")
           .select("leg_key,name,market,matchup,expires_at")
           .is("result", null)
+          // Official picks settle through the admin result flow, not research_leg_results.
+          .neq("kind", "OFFICIAL")
           .lt("expires_at", new Date(Date.now() - 6 * 3600000).toISOString())
           .order("expires_at", { ascending: true })
           .limit(100),
@@ -99,6 +102,13 @@ export default function FeedHealth() {
       clearInterval(t);
     };
   }, []);
+  // Why the latest automatic result run skipped each selection, if it did.
+  const syncReasons = new Map(
+    (
+      (rows.find((r) => r.provider === "Editorial result sync")?.details
+        ?.blockers as { leg_key: string; reason: string }[] | undefined) || []
+    ).map((b) => [b.leg_key, b.reason]),
+  );
   return (
     <Shell active="admin">
       <h1>Data feed health</h1>
@@ -175,7 +185,10 @@ export default function FeedHealth() {
             <p>
               Up to 100 oldest ungraded selections whose window ended more than
               six hours ago. This delay is a review filter, not proof the game
-              is final. This queue never grades picks automatically.
+              is final. Full-game player yards and receptions grade
+              automatically once ESPN and nflverse agree; grade the rest here
+              from a final source. Use VOID for watch notes that were never a
+              pick.
             </p>
             {resultError ? (
               <p role="status">{resultError}</p>
@@ -189,7 +202,19 @@ export default function FeedHealth() {
                     {p.market} · {p.matchup}
                   </p>
                   <p>Window ended {time(p.expires_at)}</p>
+                  {syncReasons.get(p.leg_key) && (
+                    <p>Automatic sync: {syncReasons.get(p.leg_key)}</p>
+                  )}
                   <code>{p.leg_key}</code>
+                  <ManualResult
+                    legKey={p.leg_key}
+                    label={`${p.name} · ${p.market}`}
+                    onRecorded={() =>
+                      setPendingResults((list) =>
+                        list.filter((x) => x.leg_key !== p.leg_key),
+                      )
+                    }
+                  />
                 </article>
               ))
             )}

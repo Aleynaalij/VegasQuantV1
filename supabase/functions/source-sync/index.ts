@@ -7,6 +7,7 @@ import {
   injuryObservations,
   newsObservations,
 } from "./normalize.ts";
+import { gameLinesDue, propsDue, PROPS_HORIZON } from "./cadence.ts";
 const db = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -120,10 +121,34 @@ Deno.serve(async (req: Request) => {
       }
     }
     const key = Deno.env.get("ODDS_API_KEY");
+    const oddsOn = Boolean(key && Deno.env.get("ODDS_FEED_ENABLED") === "true");
+    // Latest run that called the provider (rows without fetched_at predate the cadence).
+    const lastFetch = async (provider: string) => {
+      const r = await db
+        .from("feed_runs")
+        .select("status,details")
+        .eq("provider", provider)
+        .not("details->>fetched_at", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      const row = r.data?.[0];
+      const at = Date.parse(row?.details?.fetched_at || "");
+      return Number.isFinite(at) ? { at, status: row!.status, details: row!.details } : null;
+    };
+    // A run that is not due repeats the last fetch's status and details (same fetched_at),
+    // so health checks stay current without spending provider credits.
+    const carryForward = (provider: string, last: NonNullable<Awaited<ReturnType<typeof lastFetch>>>) =>
+      db.rpc("ingest_source", {
+        p: { provider, status: last.status, details: { ...last.details, carried_forward: true } },
+      });
+    const kickoffs = (upcoming || []).map((g) => Date.parse(g.kickoff));
+    const now = Date.now();
     let oddsCount = 0, missingFanDuelEvents = 0;
-    if (key && Deno.env.get("ODDS_FEED_ENABLED") === "true") {
+    const linesLast = oddsOn ? await lastFetch("The Odds API") : null;
+    const linesDue = oddsOn && gameLinesDue(kickoffs, linesLast?.at ?? null, now);
+    if (linesDue) {
       const events = await json(
-        `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${encodeURIComponent(key)}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=fanduel`,
+        `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${encodeURIComponent(key!)}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=fanduel`,
       );
       const { data: games, error } = await db
         .from("games")
@@ -142,28 +167,37 @@ Deno.serve(async (req: Request) => {
       });
       if (r.error) throw r.error;
     }
-    await db.rpc("ingest_source", {
-      p: {
-        provider: "The Odds API",
-        status:
-          key && Deno.env.get("ODDS_FEED_ENABLED") === "true"
-            ? oddsCount && !missingFanDuelEvents ? "ok" : "partial"
-            : "not configured",
-        details: {
-          books: ["FanDuel"],
-          quoted_markets: oddsCount,
-          missing_fanduel_events: missingFanDuelEvents,
-          fallback_book: null,
-          props: "Requires enabled event-level prop feed",
+    const gamesAhead = kickoffs.some((k) => k > now && k <= now + 7 * 86400000);
+    if (oddsOn && !linesDue && linesLast && gamesAhead)
+      await carryForward("The Odds API", linesLast);
+    else
+      await db.rpc("ingest_source", {
+        p: {
+          provider: "The Odds API",
+          status: !oddsOn
+            ? "not configured"
+            : !linesDue
+              ? "no upcoming events"
+              : oddsCount && !missingFanDuelEvents ? "ok" : "partial",
+          details: {
+            books: ["FanDuel"],
+            quoted_markets: oddsCount,
+            missing_fanduel_events: missingFanDuelEvents,
+            fallback_book: null,
+            props: "Requires enabled event-level prop feed",
+            ...(linesDue ? { fetched_at: new Date(now).toISOString() } : {}),
+          },
         },
-      },
-    });
+      });
     let propCount = 0;
-    const propsEnabled = Boolean(key && Deno.env.get("ODDS_FEED_ENABLED") === "true" && Deno.env.get("ODDS_PROPS_ENABLED") === "true");
-    if (propsEnabled) {
+    const propsEnabled = oddsOn && Deno.env.get("ODDS_PROPS_ENABLED") === "true";
+    const propsLast = propsEnabled ? await lastFetch("The Odds API props") : null;
+    if (propsEnabled && propsLast && !propsDue(kickoffs, propsLast.at, now)) {
+      await carryForward("The Odds API props", propsLast);
+    } else if (propsEnabled) {
       try {
         const events = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events?apiKey=${encodeURIComponent(key!)}`);
-        const selection = upcomingPropEvents(events,upcoming || [],Date.now());
+        const selection = upcomingPropEvents(events,upcoming || [],now,24,PROPS_HORIZON);
         let failed = 0, empty = 0;
         for (let i=0;i<selection.events.length;i+=3) {
           const results = await Promise.allSettled(selection.events.slice(i,i+3).map(async event => {
@@ -182,9 +216,9 @@ Deno.serve(async (req: Request) => {
         await db.rpc("ingest_source",{p:{provider:"The Odds API props",
           status:failed || empty || selection.skipped ? "partial" : selection.events.length ? "ok" : "no upcoming events",
           details:{events:selection.events.length,failed,empty,skipped:selection.skipped,inserted_quotes:propCount,
-            markets:["player_rush_yds","player_reception_yds"],books:["FanDuel"]}}});
+            markets:["player_rush_yds","player_reception_yds"],books:["FanDuel"],fetched_at:new Date(now).toISOString()}}});
       } catch {
-        await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"error",details:{message:"Prop provider unavailable; prior observations retained"}}});
+        await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"error",details:{message:"Prop provider unavailable; prior observations retained",fetched_at:new Date(now).toISOString()}}});
       }
     } else {
       await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"not configured",
@@ -195,9 +229,7 @@ Deno.serve(async (req: Request) => {
       added,
       prop_quotes_inserted: propCount,
       props_configured: propsEnabled,
-      odds_configured: Boolean(
-        key && Deno.env.get("ODDS_FEED_ENABLED") === "true",
-      ),
+      odds_configured: oddsOn,
     });
   } catch (e) {
     const message =

@@ -159,7 +159,7 @@ Deno.serve(async (req: Request) => {
               "nflverse unavailable; final result awaiting corroboration",
             );
           }
-          const corroboration = weeklyStat(second.rows, g, c);
+          const corroboration = weeklyStat(second.rows, g, { ...c, team: stat.team });
           if (typeof corroboration === "string") {
             status = "AWAITING_CORROBORATION";
             reason = corroboration;

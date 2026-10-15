@@ -1,9 +1,9 @@
 import { oddsObservations } from "./normalize.ts";
 type Game = { id: string; home_team: string; away_team: string; kickoff: string };
 type Event = { id: string; home_team: string; away_team: string; commence_time: string };
-export function upcomingPropEvents(events: Event[], games: Game[], now: number, limit = 24) {
+export function upcomingPropEvents(events: Event[], games: Game[], now: number, limit = 24, horizon = 7*86400000) {
   const eligible = events.filter(e => /^[a-zA-Z0-9_-]+$/.test(e.id) &&
-    Date.parse(e.commence_time) > now && Date.parse(e.commence_time) <= now + 7*86400000 &&
+    Date.parse(e.commence_time) > now && Date.parse(e.commence_time) <= now + horizon &&
     games.some(g => g.home_team === e.home_team && g.away_team === e.away_team &&
       Math.abs(Date.parse(g.kickoff)-Date.parse(e.commence_time)) < 3600000))
     .sort((a,b) => Date.parse(a.commence_time)-Date.parse(b.commence_time));
