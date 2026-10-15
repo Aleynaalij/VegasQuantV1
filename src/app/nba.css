@@ -40,7 +40,7 @@
 .social-post header,.social-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
 .social-actions button { min-height:44px; }
 .social-post ol { padding-left:24px; }
-.social-post .member-label { color:#91b6ff; font-size:12px; letter-spacing:.08em; }
+.social-post .member-label { color:var(--brand-ink); font-size:12px; letter-spacing:.08em; }
 .social-comments { border-top:1px solid var(--line); padding-top:16px; display:grid; gap:12px; }
 .social-comments form { display:grid; gap:10px; }
 .social-comments article { border-left:2px solid var(--line); padding-left:12px; }

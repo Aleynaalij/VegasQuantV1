@@ -290,12 +290,12 @@
   background: #fff !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
-  box-shadow: 0 4px 18px #16386006;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
 }
 .mi-section summary {
   border-color: var(--line) !important;
 }
-.update-bell{place-items:center;color:#244be3}
+.update-bell{place-items:center;color:var(--brand)}
 .unread-dot{position:absolute;right:-4px;top:-5px;min-width:19px;height:19px;border-radius:50%;background:#e2384f;color:#fff;font-size:11px;font-weight:800;display:grid;place-items:center;border:2px solid white}
 .activation-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .activation-grid article{display:grid;gap:8px;background:#f4f7ff;padding:18px;border-radius:14px}

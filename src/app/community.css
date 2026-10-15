@@ -225,7 +225,7 @@
 .profile-roster {
   border-top: 1px solid #294239;
   color: var(--text) !important;
-  box-shadow: 0 4px 18px #16386006;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
 }
 .profile-socials a {
   font-size: 12px;
@@ -235,7 +235,7 @@
   text-decoration: none;
   background: #fff !important;
   border-color: #cedbed !important;
-  color: #0866d8 !important;
+  color: var(--brand) !important;
 }
 .profile-cover span {
   color: #fff;
@@ -251,7 +251,7 @@
 }
 .initials {
   background: #e8f1ff !important;
-  color: #0866d8 !important;
+  color: var(--brand) !important;
 }
 .community-directory-action {
   font-size: 12px;
@@ -305,7 +305,7 @@
   padding: 16px;
   font-size: 11px;
   letter-spacing: 0.2em;
-  background: linear-gradient(120deg, #0866d8, #2793ed);
+  background: linear-gradient(120deg, var(--brand), var(--brand));
   color: #fff;
   height: 82px !important;
   display: none;
@@ -345,7 +345,7 @@
 }
 .profile-handle {
   font-size: 13px;
-  color: #0866d8;
+  color: var(--brand);
   display: none;
 }
 .profile-rail-content > p {
@@ -365,7 +365,7 @@
   border-top: 1px solid #294239;
   background: #fff !important;
   border-color: #cedbed !important;
-  color: #0866d8 !important;
+  color: var(--brand) !important;
   grid-column: 3;
   grid-row: 1 / 4;
   margin: 0 !important;

@@ -111,7 +111,7 @@
   border-radius: 20px;
 }
 .alert-preference input[type="checkbox"]:focus-visible {
-  outline: 3px solid #174ac6;
+  outline: 3px solid var(--brand);
   outline-offset: 4px;
 }
 .alert-preference input[type="checkbox"]:disabled {

@@ -535,16 +535,16 @@
   background: #fff !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
-  box-shadow: 0 4px 18px #16386006;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
 }
 .one-bankroll {
   border-radius: 18px;
 }
 .join-run {
-  background: #0866d8 !important;
+  background: var(--brand) !important;
   color: #fff !important;
-  border-color: #0866d8 !important;
-  box-shadow: 0 4px 12px #0866d822;
+  border-color: var(--brand) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 13%, transparent);
 }
 .run-notice {
   color: #74510f !important;
@@ -565,7 +565,7 @@
   margin: 22px 0 14px;
 }
 .journey-dot {
-  color: #0866d8;
+  color: var(--brand);
 }
 .journey-stop {
   color: #52657d;
@@ -579,7 +579,7 @@
 }
 .sports-ticker summary b,
 .sports-ticker .ticker-games a {
-  color: #0866d8 !important;
+  color: var(--brand) !important;
 }
 .sports-ticker .ticker-games > div {
   border-color: var(--line) !important;

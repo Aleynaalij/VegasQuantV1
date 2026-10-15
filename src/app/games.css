@@ -72,7 +72,7 @@
   background: #fff !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
-  box-shadow: 0 4px 18px #16386006;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
 }
 .mi-watch {
   display: block;
@@ -81,7 +81,7 @@
   background: #fff !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
-  box-shadow: 0 4px 18px #16386006;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
 }
 .workspace-index > a {
   display: block;
@@ -92,7 +92,7 @@
   background: #fff !important;
   border-color: var(--line) !important;
   color: var(--text) !important;
-  box-shadow: 0 4px 18px #16386006;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
 }
 .mi-historical {
   padding: 14px;
@@ -143,7 +143,7 @@
   align-items: end;
   border: 1px solid #2c4049;
   color: var(--text) !important;
-  box-shadow: 0 4px 18px #16386006;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
   padding: 18px;
   border-radius: 14px;
   gap: 14px;
@@ -218,9 +218,9 @@
     border-color 0.16s;
 }
 .mi-game:hover {
-  box-shadow: 0 10px 24px #19478414;
+  box-shadow: 0 10px 24px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 8%, transparent);
   transform: translateY(-3px);
-  border-color: #9db7ff !important;
+  border-color: var(--brand-ink) !important;
 }
 .mi-game .game-pair {
   gap: 8px !important;
@@ -425,6 +425,6 @@ html[data-theme="dark"] .slate-windows button.selected {
 }
 /* Letter badges shown when a team logo can't load: dark text on the light badge. */
 html[data-theme] body .game-pair .team-logo-fallback {
-  color: #1d3a8a;
+  color: color-mix(in srgb, var(--gold) 22%, var(--panel));
   font-weight: 800;
 }

@@ -269,7 +269,7 @@ html[data-theme] body .sports-ticker .ticker-label {
 
 /* ---------- Gold-filled controls: dark ink on gold ---------- */
 html[data-theme="dark"] body :is(
-  .primary, button.primary, a.primary, .btn.primary, .ask-vegas-launcher, .skip-link,
+  .primary, button.primary, a.primary, .btn, .btn.primary, .ask-vegas-launcher, .skip-link,
   .zone-views a.selected, .section-switch .selected, .slate-windows button.selected,
   .feed-filters button.selected, .board-filters button[aria-pressed="true"],
   .vq-board-head button[aria-pressed="true"], button[aria-pressed="true"]
@@ -279,7 +279,7 @@ html[data-theme="dark"] body :is(
   color: #17120a !important;
   box-shadow: 0 6px 16px #0008, inset 0 1px 0 #fff5 !important;
 }
-html[data-theme="dark"] body :is(.primary, .btn.primary, .ask-vegas-launcher) :is(svg, span, b, strong) { color: #17120a !important; }
+html[data-theme="dark"] body :is(.primary, .btn, .ask-vegas-launcher) :is(svg, span, b, strong) { color: #17120a !important; }
 /* The chips keep their own look (declared again so they win over the rule above). */
 html[data-theme="dark"] body .sport-switch a.selected {
   color: var(--gold-hi) !important;
