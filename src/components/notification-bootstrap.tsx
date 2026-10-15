@@ -3,6 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { alertsWanted, registerDevice, supportsPush } from "@/lib/push-client";
 import PickAlerts from "./pick-alerts";
+import {
+  dropPrompt,
+  markPromptShown,
+  mayShowPrompt,
+  wantPrompt,
+} from "@/lib/prompt-queue";
 export default function NotificationBootstrap() {
   const dialog = useRef<HTMLDialogElement>(null);
   const [uid, setUid] = useState<string | null>(null);
@@ -21,14 +27,19 @@ export default function NotificationBootstrap() {
   }
   useEffect(() => {
     const el = dialog.current;
+    if (open) wantPrompt("push");
+    else dropPrompt("push");
     const show = () => {
       if (
         open &&
         el &&
         !el.open &&
-        !document.querySelector('dialog[open], [data-profile-required="true"]')
-      )
+        !document.querySelector('dialog[open], [data-profile-required="true"]') &&
+        mayShowPrompt("push")
+      ) {
         el.showModal();
+        markPromptShown("push");
+      }
     };
     show();
     const timer = open ? setInterval(show, 300) : undefined;

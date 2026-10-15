@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 
 import BrandMark from "./brand-mark";
+import { markPromptShown } from "@/lib/prompt-queue";
 
 const VERSION = 1;
 
@@ -42,6 +43,8 @@ export default function Welcome() {
     if (!open || !element) return;
     const previousOverflow = document.body.style.overflow;
     element.showModal();
+    // Onboarding uses up the visit; optional pop-ups (alerts, phone, daily luck) wait.
+    markPromptShown("profile");
     document.body.style.overflow = "hidden";
     return () => {
       element.close();

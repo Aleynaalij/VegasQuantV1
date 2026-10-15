@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import CommunitySettings from "./community-settings";
+import { markPromptShown } from "@/lib/prompt-queue";
 
 export default function ProfileSetupGate() {
   const dialog = useRef<HTMLDialogElement>(null);
@@ -30,7 +31,7 @@ export default function ProfileSetupGate() {
   }, []);
   useEffect(() => {
     const el = dialog.current;
-    const show = () => { if (required && el && !el.open && !document.querySelector("dialog[open]")) el.showModal(); };
+    const show = () => { if (required && el && !el.open && !document.querySelector("dialog[open]")) { el.showModal(); markPromptShown("profile"); } };
     show();
     const timer = required ? setInterval(show, 300) : undefined;
     if (!required && el?.open) el.close();

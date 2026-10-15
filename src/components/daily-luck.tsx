@@ -2,6 +2,12 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
+  dropPrompt,
+  markPromptShown,
+  mayShowPrompt,
+  wantPrompt,
+} from "@/lib/prompt-queue";
+import {
   Card,
   Outcome,
   deck,
@@ -55,11 +61,16 @@ export default function DailyLuck() {
       try {
         if (localStorage.getItem(key)) {
           handled.current.add(key);
+          dropPrompt("luck");
           return;
         }
       } catch {
         /* Session-only fallback. */
       }
+      // One optional pop-up per visit; alerts and phone setup go first.
+      wantPrompt("luck");
+      if (!mayShowPrompt("luck")) return;
+      markPromptShown("luck");
       handled.current.add(key);
       setRound(null);
       locked.current = false;
