@@ -12,12 +12,16 @@ test("game lines refresh every 2 hours, every 15 minutes near kickoff", () => {
   assert.equal(gameLinesDue([now + H], now - 10 * 60000, now), false);
   assert.equal(gameLinesDue([now - H, now + 9 * 24 * H], null, now), false); // nothing within a week
 });
-test("props quote only games within a day, every 30 minutes before kickoff", () => {
+test("props quote only games within a day, every 15 minutes within two hours of kickoff", () => {
   assert.equal(propsDue([now + 30 * H], null, now), false);
   assert.equal(propsDue([now + 10 * H], now - 2 * H, now), false);
   assert.equal(propsDue([now + 10 * H], now - 3 * H, now), true);
-  assert.equal(propsDue([now + H], now - 30 * 60000, now), true);
-  assert.equal(propsDue([now + H], now - 20 * 60000, now), false);
+  assert.equal(propsDue([now + 2 * H], now - 15 * 60000, now), true);
+  assert.equal(propsDue([now + 2 * H + 1], now - 15 * 60000, now), false);
+  assert.equal(propsDue([now + H], now - 15 * 60000, now), true);
+  assert.equal(propsDue([now + H], now - 10 * 60000, now), false);
+  assert.equal(propsDue([now + H], now - 15 * 60000 + 30000, now), true);
+  assert.equal(propsDue([now, now - H], null, now), false);
 });
 test("prop events honour the horizon", () => {
   const game = { id: "g", home_team: "A", away_team: "B", kickoff: new Date(now + 30 * H).toISOString() };
