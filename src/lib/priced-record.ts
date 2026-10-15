@@ -38,7 +38,10 @@ const sameSelection = (leg: PricedLeg) =>
     .map((s) => s.trim().toLowerCase())
     .join("|");
 
-export function pricedRecord(legs: PricedLeg[]) {
+/** Closing FanDuel price per leg key (last price before kickoff), when the feed matched one. */
+export type Closing = Map<string, number>;
+
+export function pricedRecord(legs: PricedLeg[], closing: Closing = new Map()) {
   // Only individual picks with a verified (https-sourced) result.
   const graded = legs.filter(
     (l) =>
@@ -76,6 +79,18 @@ export function pricedRecord(legs: PricedLeg[]) {
     if (l.result !== "PUSH") breakEven += impliedProbability(odds);
   }
   const decided = wins + losses;
+  // Closing line value: did the published price beat FanDuel's last price before kickoff?
+  let clvPicks = 0,
+    beatClose = 0,
+    clvPoints = 0;
+  for (const l of priced) {
+    const close = closing.get(l.leg_key);
+    if (close === undefined) continue;
+    const edge = impliedProbability(close) - impliedProbability(priceOf(l)!);
+    clvPicks++;
+    clvPoints += edge * 100;
+    if (edge > 0) beatClose++;
+  }
   return {
     picks: priced.length,
     unpriced: unique.length - priced.length,
@@ -87,5 +102,9 @@ export function pricedRecord(legs: PricedLeg[]) {
     hitRate: decided ? (wins / decided) * 100 : null,
     // Average price-implied win rate: the hit rate these prices needed just to break even.
     breakEvenRate: decided ? (breakEven / decided) * 100 : null,
+    clvPicks,
+    beatClose,
+    // Average percentage points of implied probability gained versus the closing price.
+    avgClv: clvPicks ? clvPoints / clvPicks : null,
   };
 }

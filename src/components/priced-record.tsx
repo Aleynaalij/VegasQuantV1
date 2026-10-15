@@ -25,7 +25,24 @@ export default function PricedRecord() {
         .in("kind", ["SINGLE", "PICK_OF_DAY"])
         .not("result", "is", null)
         .limit(2000);
-      if (live) setRecord(r.error ? null : pricedRecord((r.data || []) as PricedLeg[]));
+      if (!live) return;
+      if (r.error) return setRecord(null);
+      const legs = (r.data || []) as PricedLeg[];
+      // Closing prices: the feed's last FanDuel price for picks whose game has kicked off.
+      const close = await supabase
+        .from("leg_market_prices")
+        .select("leg_key,last_price,kickoff")
+        .in("leg_key", legs.map((l) => l.leg_key))
+        .lt("kickoff", new Date().toISOString());
+      if (!live) return;
+      setRecord(
+        pricedRecord(
+          legs,
+          new Map(
+            (close.error ? [] : close.data || []).map((x) => [x.leg_key, Number(x.last_price)]),
+          ),
+        ),
+      );
     }
     void load();
     const auth = supabase.auth.onAuthStateChange(() =>
@@ -70,6 +87,15 @@ export default function PricedRecord() {
           ` (${beat >= 0 ? "+" : "−"}${Math.abs(Math.round(beat))} pts)`}
         .
       </p>
+      {record.clvPicks > 0 && (
+        <p>
+          Beat FanDuel’s closing price on {record.beatClose} of{" "}
+          {record.clvPicks} pick{record.clvPicks === 1 ? "" : "s"}
+          {record.avgClv !== null &&
+            ` (average ${record.avgClv >= 0 ? "+" : "−"}${Math.abs(record.avgClv).toFixed(1)} pts)`}
+          .
+        </p>
+      )}
       <small>
         Graded individual picks at the odds printed when each went out; a
         repriced or repeated pick counts once at its first price.

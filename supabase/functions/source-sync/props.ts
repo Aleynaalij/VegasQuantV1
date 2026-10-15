@@ -10,9 +10,17 @@ export function upcomingPropEvents(events: Event[], games: Game[], now: number, 
   const unique = [...new Map(eligible.map(e => [e.id,e])).values()];
   return { events: unique.slice(0,limit), skipped: Math.max(0,unique.length-limit) };
 }
+// Rushing/receiving yards feed the research scanner for every game. Games with a published,
+// gradable pick also get passing yards, receptions and the alternate "N+" lines that price them.
+export const BASE_PROP_MARKETS = ["player_rush_yds","player_reception_yds"];
+export const PICK_PROP_MARKETS = [...BASE_PROP_MARKETS,"player_pass_yds","player_receptions",
+  "player_rush_yds_alternate","player_reception_yds_alternate","player_pass_yds_alternate","player_receptions_alternate"];
+/** The game an Odds API event is for (same matching as upcomingPropEvents). */
+export const gameForEvent = (event: Event, games: Game[]) => games.find(g => g.home_team === event.home_team &&
+  g.away_team === event.away_team && Math.abs(Date.parse(g.kickoff)-Date.parse(event.commence_time)) < 3600000);
 export function propObservations(event: Parameters<typeof oddsObservations>[0][number], games: Game[], now: number) {
   const filtered = { ...event, bookmakers: (event.bookmakers || []).map(b => ({ ...b,
-    markets: b.markets.filter(m => ["player_rush_yds","player_reception_yds"].includes(m.key)) })) };
+    markets: b.markets.filter(m => PICK_PROP_MARKETS.includes(m.key)) })) };
   return oddsObservations([filtered],games).filter(o => {
     const at = Date.parse(o.observed_at || "");
     return Number.isFinite(at) && at <= now && o.payload.outcomes.every(x =>

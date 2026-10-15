@@ -48,3 +48,14 @@ test("a price revision or a repeated selection counts once, at the first publica
   assert.equal(r.picks, 1);
   assert.equal(r.units, profitUnits(-150));
 });
+
+test("closing line value compares the published price with FanDuel's last price before kickoff", () => {
+  const r = pricedRecord(
+    [leg("a", "WIN", -150), leg("b", "LOSS", -150, { name: "b2" }), leg("c", "WIN", -150, { name: "c2" })],
+    new Map([["a", -200], ["b", -120]]),
+  );
+  assert.equal(r.clvPicks, 2);
+  assert.equal(r.beatClose, 1);
+  // a: 66.7 − 60 = +6.7 pts; b: 54.5 − 60 = −5.5 pts → average +0.6
+  assert.ok(Math.abs(r.avgClv! - 0.606) < 0.01);
+});

@@ -719,6 +719,8 @@ html[data-theme] body .vq-today li a { display:flex; align-items:center; justify
 html[data-theme] body .vq-today li b { display:block; font-size:15px; color:var(--text); }
 html[data-theme] body .vq-today li small { display:block; font-size:12.5px; line-height:1.45; color:var(--muted); }
 html[data-theme] body .vq-today li em { flex:none; font-style:normal; font-weight:700; font-variant-numeric:tabular-nums; font-size:13px; padding:3px 8px; border:1px solid var(--line-strong); border-radius:8px; color:var(--text); }
+.vq-today li .vq-today-price { flex:none; display:grid; justify-items:end; gap:3px; }
+html[data-theme] body .vq-today li .vq-today-price small { font-size:11.5px; white-space:nowrap; }
 .vq-today li a:hover b, .vq-today li a:focus-visible b { text-decoration:underline; text-underline-offset:3px; }
 .vq-edge-note { margin:12px 0 4px; }
 html[data-theme] body .vq-edge-note summary { cursor:pointer; font-size:12.5px; color:var(--muted) !important; text-decoration:underline dotted; text-underline-offset:3px; }

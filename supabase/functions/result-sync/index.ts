@@ -8,6 +8,7 @@ import {
   type Game,
   type Contract,
 } from "./grade.ts";
+import { marketKeys, marketPrice, type Observation } from "./prices.ts";
 const db = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -90,6 +91,50 @@ Deno.serve(async (req: Request) => {
     if (contracts.length) {
       const saved = await db.rpc("register_result_contracts", { p: contracts });
       if (saved.error) throw Error("Contract registration failed");
+    }
+    // FanDuel price for each upcoming gradable pick: the first exact-line price seen and the
+    // latest one up to kickoff (its closing price). Reads only odds recorded in the last 30
+    // minutes; failures here never block grading.
+    let priced = 0,
+      priceError = false;
+    try {
+      const now = Date.now();
+      const soon = contracts.filter((c) => {
+        const k = Date.parse((games.data as Game[]).find((g) => g.id === c.game_id)!.kickoff);
+        return k > now - 3 * 3600000 && k <= now + 36 * 3600000;
+      });
+      if (soon.length) {
+        const obs = await db
+          .from("source_observations")
+          .select("game_id,observed_at,payload")
+          .eq("kind", "odds")
+          .in("game_id", [...new Set(soon.map((c) => c.game_id))])
+          .in("payload->>market", [...new Set(soon.flatMap((c) => marketKeys(c.metric)))])
+          .gte("recorded_at", new Date(now - 30 * 60000).toISOString())
+          .limit(500);
+        if (obs.error) throw obs.error;
+        const existing = await db
+          .from("leg_market_prices")
+          .select("leg_key,last_observed_at")
+          .in("leg_key", soon.map((c) => c.leg_key));
+        if (existing.error) throw existing.error;
+        const known = new Map((existing.data || []).map((r) => [r.leg_key, r.last_observed_at]));
+        for (const c of soon) {
+          const kick = Date.parse((games.data as Game[]).find((g) => g.id === c.game_id)!.kickoff);
+          const p = marketPrice(c, (obs.data || []) as Observation[], Math.min(now, kick));
+          if (!p) continue;
+          const last = known.get(c.leg_key);
+          if (last && Date.parse(last) >= Date.parse(p.observed_at)) continue;
+          const latest = { last_price: p.price, last_point: p.point, last_observed_at: p.observed_at, kickoff: new Date(kick).toISOString(), updated_at: new Date().toISOString() };
+          const w = last
+            ? await db.from("leg_market_prices").update(latest).eq("leg_key", c.leg_key)
+            : await db.from("leg_market_prices").insert({ leg_key: c.leg_key, book: p.book, first_price: p.price, first_point: p.point, first_observed_at: p.observed_at, ...latest });
+          if (w.error) throw w.error;
+          priced++;
+        }
+      }
+    } catch {
+      priceError = true;
     }
     const progressRows = await db
       .from("leg_result_progress")
@@ -227,6 +272,8 @@ Deno.serve(async (req: Request) => {
           settled,
           live,
           contracts: contracts.length,
+          prices_updated: priced,
+          ...(priceError ? { price_error: "Market price update failed; grading unaffected" } : {}),
           blockers,
           scope:
             "NFL full-game single-player yards/receptions; no sportsbook payout or official bankroll mutation",

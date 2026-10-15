@@ -13,7 +13,8 @@ import {
 
 // Home's "Today" list: every live leg, grouped by kickoff window, each linking to its full case.
 export default function TodayLegs() {
-  const [windows, setWindows] = useState<TodayWindow[]>([]);
+  const [windows, setWindows] = useState<TodayWindow[]>([]),
+    [prices, setPrices] = useState<Map<string, number>>(new Map());
   useEffect(() => {
     let live = true;
     async function refresh() {
@@ -23,8 +24,20 @@ export default function TodayLegs() {
         .gt("expires_at", new Date().toISOString())
         .order("expires_at", { ascending: true })
         .limit(12);
-      if (live && !r.error)
-        setWindows(todayWindows((r.data || []) as TodayRelease[]));
+      if (!live || r.error) return;
+      const w = todayWindows((r.data || []) as TodayRelease[]);
+      setWindows(w);
+      // Latest matched FanDuel price per leg (members only; signed-out visitors just see none).
+      const keys = w.flatMap((x) =>
+        x.releases.flatMap((rel) => rel.candidates.map((c) => c.leg_key!)),
+      );
+      if (!keys.length) return;
+      const p = await supabase
+        .from("leg_market_prices")
+        .select("leg_key,last_price")
+        .in("leg_key", keys);
+      if (live && !p.error)
+        setPrices(new Map((p.data || []).map((x) => [x.leg_key, Number(x.last_price)])));
     }
     void refresh();
     const timer = setInterval(refresh, 60000);
@@ -56,9 +69,13 @@ export default function TodayLegs() {
                         {legMarket(c.market)} · {legMatchup(c.matchup)}
                       </small>
                     </span>
-                    {typeof c.odds === "number" && (
-                      <em>{odd(c.odds)}</em>
-                    )}
+                    <span className="vq-today-price">
+                      {typeof c.odds === "number" && <em>{odd(c.odds)}</em>}
+                      {prices.has(c.leg_key!) &&
+                        prices.get(c.leg_key!) !== c.odds && (
+                          <small>FanDuel now {odd(prices.get(c.leg_key!)!)}</small>
+                        )}
+                    </span>
                   </Link>
                 </li>
               ))}

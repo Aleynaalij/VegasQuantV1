@@ -1,5 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
-import { upcomingPropEvents, propObservations } from "./props.ts";
+import {
+  upcomingPropEvents,
+  propObservations,
+  gameForEvent,
+  BASE_PROP_MARKETS,
+  PICK_PROP_MARKETS,
+} from "./props.ts";
 import {
   fixturesFromScoreboard,
   observationsFromScoreboard,
@@ -198,10 +204,14 @@ Deno.serve(async (req: Request) => {
       try {
         const events = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events?apiKey=${encodeURIComponent(key!)}`);
         const selection = upcomingPropEvents(events,upcoming || [],now,24,PROPS_HORIZON);
+        // Games with a published, gradable pick get the extra markets that price those picks.
+        const picked = await db.rpc("priced_pick_games", { p_hours: 36 });
+        const pickGames = new Set<string>(picked.error ? [] : (picked.data || []).map((r: { game_id: string }) => r.game_id));
         let failed = 0, empty = 0;
         for (let i=0;i<selection.events.length;i+=3) {
           const results = await Promise.allSettled(selection.events.slice(i,i+3).map(async event => {
-            const data = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/${event.id}/odds?apiKey=${encodeURIComponent(key!)}&markets=player_rush_yds,player_reception_yds&bookmakers=fanduel&oddsFormat=american`);
+            const markets = pickGames.has(gameForEvent(event, upcoming || [])?.id || "") ? PICK_PROP_MARKETS : BASE_PROP_MARKETS;
+            const data = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/${event.id}/odds?apiKey=${encodeURIComponent(key!)}&markets=${markets.join(",")}&bookmakers=fanduel&oddsFormat=american`);
             const observations = propObservations(data,upcoming || [],Date.now());
             for (const o of observations) o.fingerprint = await sha(JSON.stringify([o.game_id,o.kind,o.observed_at,o.payload]));
             const r = await db.rpc("ingest_source",{p:{provider:"The Odds API props",observations}});
@@ -216,7 +226,7 @@ Deno.serve(async (req: Request) => {
         await db.rpc("ingest_source",{p:{provider:"The Odds API props",
           status:failed || empty || selection.skipped ? "partial" : selection.events.length ? "ok" : "no upcoming events",
           details:{events:selection.events.length,failed,empty,skipped:selection.skipped,inserted_quotes:propCount,
-            markets:["player_rush_yds","player_reception_yds"],books:["FanDuel"],fetched_at:new Date(now).toISOString()}}});
+            markets:PICK_PROP_MARKETS,pick_games:pickGames.size,books:["FanDuel"],fetched_at:new Date(now).toISOString()}}});
       } catch {
         await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"error",details:{message:"Prop provider unavailable; prior observations retained",fetched_at:new Date(now).toISOString()}}});
       }
