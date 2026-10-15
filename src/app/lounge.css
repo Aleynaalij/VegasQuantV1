@@ -455,3 +455,100 @@ html[data-theme="dark"] body .mobile-nav:is(.scrubbing, .scrub-pending) a.active
 /* The monogram on the gold "Ask Vegas" chip is dark ink, not the old blue. */
 html[data-theme="dark"] body .ask-vegas-launcher .vq-mark path { fill: #17120a; }
 html[data-theme="dark"] body .ask-vegas-launcher .vq-mark path:nth-child(even) { fill: #5a4518; }
+
+/* ---------- Every card on the lounge palette (replaces leftover teal and blue surfaces) ---------- */
+html[data-theme="dark"] body :is(
+  .topic-reader, .mi-section, .mi-target, .stats, .proof-list article, .member-feed-card, .run-card-preview,
+  .edge-pick, .edge-release, .weekly-flashcard, .vq-welcome, .entry-balance-preview, .bankroll-quick-edit,
+  .membership-lock, .vq-luck, .pass-grid > div, .profile-setup-dialog .member-form, .balance-next
+) {
+  background: linear-gradient(180deg, #ffffff05, transparent 40%), var(--panel) !important;
+  border-color: var(--line) !important;
+  box-shadow: inset 0 0 0 1px #e8c46a0f, 0 12px 30px #0007 !important;
+}
+/* Cards inside cards: a step lighter, hairline border. */
+html[data-theme="dark"] body :is(
+  .mi-item, .candidate-facts div, .pick-numbers, .pick-splits, .price-rules, .vq-luck-table,
+  .vq-welcome-footer, .top-actions .install-notice, .publish-review pre, .update-tags span
+) {
+  background: var(--panel2) !important;
+  border-color: var(--line) !important;
+}
+/* Hover on a card or row: a whisper of gold. */
+html[data-theme="dark"] body :is(
+  .mi-game:hover, .explore-cards a:hover, .community-person:hover, .community-person:focus-visible,
+  .sidebar nav a:hover, .secondary:hover
+) {
+  background: linear-gradient(90deg, #e8c46a14, transparent 80%), var(--panel2) !important;
+}
+/* Topic, filter and choice chips: dark felt chips; the chosen one is gold with dark ink. */
+html[data-theme="dark"] body :is(
+  .topic-tabs button, .research-tabs button, .action-tabs button, .join-choices button, .vq-luck-choices button
+) {
+  background: var(--panel2) !important;
+  border: 1px solid #e8c46a33 !important;
+  color: var(--muted) !important;
+}
+html[data-theme="dark"] body :is(
+  .topic-tabs button[aria-selected="true"], .research-tabs button[aria-selected="true"],
+  .action-tabs button.selected, .join-choices button.selected
+) {
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 50%, var(--gold-deep)) !important;
+  border-color: #f7e6b0 !important;
+  color: #17120a !important;
+  font-weight: 700;
+}
+html[data-theme="dark"] body :is(.mfa-setup input, .ask-vegas-form input) {
+  background: #07080b !important;
+  border-color: var(--line) !important;
+}
+/* Initials, avatars and icon badges: gold on black instead of green. */
+html[data-theme="dark"] body :is(.community-avatar.initials, .member-event-icon, .avatar, .empty-symbol, .journey-stop.current .journey-dot) {
+  background: #e8c46a1a !important;
+  color: var(--gold-hi) !important;
+  border-color: #e8c46a55 !important;
+}
+html[data-theme="dark"] body .mi-group > h2::after { background: var(--gold-line) !important; }
+
+/* ---------- Research topics ("Go a little deeper") ---------- */
+html[data-theme="dark"] body .topic-reader { border-radius: 20px; }
+html[data-theme="dark"] body .topic-tabs { border-bottom-color: var(--gold-line) !important; }
+html[data-theme="dark"] body .topic-heading h2 { font-family: var(--font-board), sans-serif; letter-spacing: 0.01em; }
+.mi-facts { display: grid; gap: 14px; }
+.mi-facts dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  gap: 10px;
+  margin: 0;
+}
+.mi-facts dl > div {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel2);
+  min-width: 0;
+}
+.mi-facts dl > div.wide { grid-column: 1 / -1; }
+.mi-facts dt {
+  color: var(--gold);
+  font-family: var(--font-board), sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mi-facts dd {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.mi-facts dd a { color: var(--gold-hi); }
+.mi-fact-note {
+  grid-column: 1 / -1;
+  margin: 2px 2px 0;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.5;
+}

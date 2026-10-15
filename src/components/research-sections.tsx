@@ -9,6 +9,7 @@ export default function ResearchSections({
 }) {
   const [active, setActive] = useState(0);
   const id = useId();
+  if (!sections.length) return null;
   return (
     <section className="topic-reader" aria-label="Explore the research">
       <div className="topic-heading">
