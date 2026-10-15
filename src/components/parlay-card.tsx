@@ -5,6 +5,7 @@ import LegActions from "./leg-actions";
 import GamblyLink from "./gambly-link";
 import DownloadCard from "./download-card";
 export type ParlayCandidate = {
+  worth_a_dollar?: boolean;
   name: string;
   market: string;
   matchup: string;
@@ -13,7 +14,7 @@ export type ParlayCandidate = {
   next: string;
   copy_text: string;
   gambly_url: string;
-  parlay_legs: { name: string; market: string; why: string; risk: string }[];
+  parlay_legs: { name: string; market: string; why: string; risk: string; matchup?: string }[];
   sources: { label: string; url: string }[];
   original_leg_key?: string;
 };
@@ -48,22 +49,35 @@ export default function ParlayCard({
             <div>
               <strong>{l.name}</strong>
               <span>{l.market}</span>
-              <small>{l.why}</small>
+              {c.worth_a_dollar && <small>{l.matchup}</small>}
+              {!c.worth_a_dollar && <small>{l.why}</small>}
             </div>
           </li>
         ))}
       </ol>
-      <p>
-        <strong>Odds unavailable.</strong> These are analyst-selected full-game
-        targets. No verified FanDuel lines, combined price or payout is
-        supplied.
-      </p>
-      <p>{c.why}</p>
-      <p>
-        <Link href="/games/sea-den-2026-2-6">
-          Latest matchup analysis and injury updates →
-        </Link>
-      </p>
+      {!c.worth_a_dollar && (
+        <p>
+          <strong>Odds unavailable.</strong> These are analyst-selected
+          full-game targets. No verified FanDuel lines, combined price or payout
+          is supplied.
+        </p>
+      )}
+      {c.worth_a_dollar ? (
+        <p>
+          Ten sleepers. Ten games. One dollar, see what happens. Just for fun ·
+          every leg must clear. Analyst-selected targets; market availability
+          must be checked at your sportsbook.
+        </p>
+      ) : (
+        <p>{c.why}</p>
+      )}
+      {!c.worth_a_dollar && (
+        <p>
+          <Link href="/games/sea-den-2026-2-6">
+            Latest matchup analysis and injury updates →
+          </Link>
+        </p>
+      )}
       <p>
         <strong>Next update:</strong> {c.next}
       </p>
@@ -81,10 +95,16 @@ export default function ParlayCard({
         label="Copy parlay & open Gambly ↗"
       />
       <details>
-        <summary>Every leg’s risk and source links</summary>
+        <summary>
+          {c.worth_a_dollar
+            ? "The logic, risks & sources"
+            : "Every leg’s risk and source links"}
+        </summary>
+        {c.worth_a_dollar && <p>{c.why}</p>}
         {c.parlay_legs.map((l) => (
           <p key={l.name}>
-            <strong>{l.name}:</strong> {l.risk}
+            <strong>{l.name}:</strong> {c.worth_a_dollar && <>{l.why} </>}
+            {l.risk}
           </p>
         ))}
         {c.sources.map((s) => (
@@ -100,7 +120,7 @@ export default function ParlayCard({
         subtitle={c.matchup}
         publishedAt={publishedAt}
         sections={[
-          { heading: "Six targets", text: c.copy_text },
+          { heading: `${c.parlay_legs.length} targets`, text: c.copy_text },
           { heading: "Availability & correlation", text: c.risk + " " + c.why },
           { heading: "Next update", text: c.next },
           {

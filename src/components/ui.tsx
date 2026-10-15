@@ -2,6 +2,7 @@ import Link from "next/link";
 import BrandMark from "./brand-mark";
 import InstallApp from "./install-app";
 import UpdateInbox from "./update-inbox";
+import LetsSweat from "./lets-sweat";
 import AccountLink from "./account-link";
 import {
   ArrowUpRight,
@@ -254,6 +255,7 @@ export function Shell({
             </b>
           </div>
           <div className="top-actions">
+            {sport === "nfl" && <LetsSweat />}
             <InstallApp />
             <UpdateInbox />
             <span className="desktop">Research desk</span>

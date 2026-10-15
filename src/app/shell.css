@@ -1561,3 +1561,10 @@ html[data-theme="dark"] .pass-grid .primary:disabled { background:#24324a !impor
 .fatal-actions { display:flex; flex-wrap:wrap; align-items:center; gap:16px; margin-top:20px; }
 .fatal-actions .primary { min-height:44px; padding:0 22px; }
 .fatal-actions a.primary { display:inline-flex; align-items:center; text-decoration:none; color:#fff; border-radius:12px; }
+
+.vq-lets-sweat{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:#a5e8ca;text-decoration:none;font-size:12px;font-weight:700;min-height:44px;padding:0 4px;}
+.vq-lets-sweat i{width:7px;height:7px;flex-shrink:0;background:#37d89a;border-radius:50%;box-shadow:0 0 9px #37d89a66;}
+.vq-lets-sweat span{animation:vq-sweat-pulse 2.8s ease-in-out infinite;}
+@keyframes vq-sweat-pulse{50%{opacity:.65}}
+@media(max-width:420px){.top-actions{gap:8px}.vq-lets-sweat{font-size:10px;gap:4px}.mobile-brand{font-size:12px;gap:6px}}
+@media(prefers-reduced-motion:reduce){.vq-lets-sweat span{animation:none}}

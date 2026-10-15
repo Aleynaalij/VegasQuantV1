@@ -15,3 +15,11 @@ Owner policy, October 10, 2026:
 - Existing official publishing controls, immutable edge releases and no-wager/no-result-change rules remain in effect.
 
 Required community setup: signed-in accounts must have a custom username and uploaded profile photo in the app flow. Generated Member_<id> usernames do not complete setup. Profile visibility choices remain separate from completion; completing setup is not identity verification.
+
+## Worth a dollar of your time · weekly sleeper series
+
+Owner instruction October 14, 2026: a separate entertainment parlay, aiming for 10–12 researched sleeper player-stat targets from distinct games. Do not force the count or assert that a price such as +500 is available. Display no odds or payout. Keep workload evidence, primary source links, downside, final availability and market-availability unknowns in expandable details. Never imply safe returns, validated EV or a numerical confidence without evidence.
+
+Use immutable candidate releases: the first candidate has `parlay:true`, `worth_a_dollar:true`, `analysis_kind:ENTERTAINMENT_SLEEPER_PARLAY`, `parlay_legs`, exact `leg_keys`, and `sweat_until`. Leaf candidates use `analysis_kind:ENTERTAINMENT_SLEEPER`, exact game IDs, targets and source provenance. All candidates have `pick_of_day:false` and `fun_play:false`; this prevents replacing either Home feature. These entertainment leaves are excluded by the existing weekly individual-selection audit eligibility rule. A bundle is one tail, not ten artificial tickets.
+
+`publication_key` is `worth-a-dollar-<season>-week<week>-v1`; dedupe the weekly original. Any material change is a new linked immutable release and never silently moves existing tails. Expire pregame copying/tailing at the earliest included kickoff. `sweat_until` may retain the header link while included games are being played. The green “Let’s Sweat” dot indicates an active series post, not live score/provider health. Respect reduced-motion preferences. Use the supported copy/open Gambly flow; never claim automatic placement or confirmed market availability.
