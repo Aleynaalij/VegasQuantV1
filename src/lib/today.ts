@@ -9,6 +9,8 @@ export type TodayLeg = {
   parlay?: boolean;
   analysis_kind?: string;
   supersedes_release_id?: string;
+  /** Set by todayWindows: the published leg key (index in the original release). */
+  leg_key?: string;
 };
 export type TodayRelease = {
   id: string;
@@ -75,7 +77,9 @@ export function todayWindows(
     (a, b) => Date.parse(a.expires_at) - Date.parse(b.expires_at),
   )) {
     if (!(Date.parse(r.expires_at) > now) || superseded.has(r.id)) continue;
-    const legs = r.candidates.filter(
+    const legs = r.candidates
+      .map((c, i) => ({ ...c, leg_key: `candidate:${r.id}:${i + 1}` }))
+      .filter(
       (c) =>
         !c.pick_of_day &&
         !c.fun_play &&

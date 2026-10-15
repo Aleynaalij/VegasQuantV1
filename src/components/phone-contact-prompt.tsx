@@ -1,11 +1,18 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import {
+  dropPrompt,
+  markPromptShown,
+  mayShowPrompt,
+  wantPrompt,
+} from "@/lib/prompt-queue";
 
 export default function PhoneContactPrompt() {
   const dialog = useRef<HTMLDialogElement>(null);
   const [uid, setUid] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
+  const manualOpen = useRef(false);
   const [phone, setPhone] = useState("");
   const [optIn, setOptIn] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -40,6 +47,7 @@ export default function PhoneContactPrompt() {
       } catch {
         /* Storage may be disabled. */
       }
+      manualOpen.current = manual;
       if (manual || (!r.data && !deferred)) setOpen(true);
     }
     void load();
@@ -56,14 +64,19 @@ export default function PhoneContactPrompt() {
   }, []);
   useEffect(() => {
     const el = dialog.current;
+    if (open && !manualOpen.current) wantPrompt("phone");
+    else dropPrompt("phone");
     const show = () => {
       if (
         open &&
         el &&
         !el.open &&
-        !document.querySelector('dialog[open], [data-profile-required="true"]')
-      )
+        !document.querySelector('dialog[open], [data-profile-required="true"]') &&
+        (manualOpen.current || mayShowPrompt("phone"))
+      ) {
         el.showModal();
+        if (!manualOpen.current) markPromptShown("phone");
+      }
     };
     show();
     const timer = open ? setInterval(show, 300) : undefined;

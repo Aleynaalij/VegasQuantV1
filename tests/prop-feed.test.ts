@@ -36,3 +36,11 @@ test("new odds use exact FanDuel prices and never fall back to another book", ()
   assert.deepEqual(propObservations({...event,bookmakers:[dk]},[game],now),[]);
   assert.equal(JSON.stringify(fixture),original);
 });
+test("pick games keep alternate-line and extra prop markets; others only base markets", async () => {
+  const { PICK_PROP_MARKETS, BASE_PROP_MARKETS, gameForEvent } = await import("../supabase/functions/source-sync/props");
+  assert.ok(PICK_PROP_MARKETS.includes("player_receptions_alternate"));
+  assert.deepEqual(BASE_PROP_MARKETS, ["player_rush_yds","player_reception_yds"]);
+  assert.equal(gameForEvent(event,[game])?.id,"fixture");
+  const e={...event,bookmakers:[{key:"fanduel",title:"FanDuel",last_update:"2026-10-05T11:59:00Z",markets:[{key:"player_pass_yds_alternate",outcomes:[{name:"Over",description:"Test QB",point:199.5,price:-150}]}]}]};
+  assert.equal(propObservations(e,[game],now)[0].payload.market,"player_pass_yds_alternate");
+});
