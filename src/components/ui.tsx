@@ -5,6 +5,7 @@ import UpdateInbox from "./update-inbox";
 import LetsSweat from "./lets-sweat";
 import AccountLink from "./account-link";
 import SwipeTabs from "./swipe-tabs";
+import TabScrub from "./tab-scrub";
 import {
   ArrowUpRight,
   BookOpen,
@@ -309,7 +310,8 @@ export function Shell({
             </small>
           </footer>
         </main>
-        <nav className="mobile-nav" aria-label="Main navigation" data-swipe-tabs>
+        <nav className="mobile-nav" aria-label="Main navigation">
+          <TabScrub />
           <Link
             aria-current={active === "home" ? "page" : undefined}
             className={active === "home" ? "active" : ""}
