@@ -1,6 +1,18 @@
-import { compare, playerName, teamCode, type Contract, type Game } from "./grade.ts";
+import {
+  compare,
+  statNumber,
+  playerName,
+  teamCode,
+  type Contract,
+  type Game,
+} from "./grade.ts";
 
-export type HistoryGame = { season: number; week: number; opponent: string; value: number };
+export type HistoryGame = {
+  season: number;
+  week: number;
+  opponent: string;
+  value: number;
+};
 export type LegHistory = {
   player_id: string;
   position: string | null;
@@ -43,18 +55,32 @@ export function legHistory(
   if (ids.length > 1) {
     // Two players share the name: keep the one on this leg's team this season.
     const own = c.team
-      ? teamCode(c.team === g.home_team ? g.home_abbreviation : g.away_abbreviation)
+      ? teamCode(
+          c.team === g.home_team ? g.home_abbreviation : g.away_abbreviation,
+        )
       : null;
     const onTeam = own
-      ? ids.filter((i) => prior.some((r) => r.player_id === i && r.team === own && r.season === String(g.season)))
+      ? ids.filter((i) =>
+          prior.some(
+            (r) =>
+              r.player_id === i &&
+              r.team === own &&
+              r.season === String(g.season),
+          ),
+        )
       : [];
     if (onTeam.length !== 1) return "Player history ambiguous";
     id = onTeam[0];
   }
   if (!id) return "No prior games";
   const games = prior
-    .filter((r) => r.player_id === id && /^-?\d+(?:\.0+)?$/.test(r[c.metric] || ""))
-    .sort((a, b) => Number(b.season) - Number(a.season) || Number(b.week) - Number(a.week))
+    .filter(
+      (r) => r.player_id === id && statNumber(r[c.metric], c.metric) !== null,
+    )
+    .sort(
+      (a, b) =>
+        Number(b.season) - Number(a.season) || Number(b.week) - Number(a.week),
+    )
     .slice(0, take)
     .map((r) => ({
       season: Number(r.season),
@@ -63,7 +89,12 @@ export function legHistory(
       value: Number(r[c.metric]),
     }));
   if (!games.length) return "No prior games";
-  const latest = prior.filter((r) => r.player_id === id).sort((a, b) => Number(b.season) - Number(a.season) || Number(b.week) - Number(a.week))[0];
+  const latest = prior
+    .filter((r) => r.player_id === id)
+    .sort(
+      (a, b) =>
+        Number(b.season) - Number(a.season) || Number(b.week) - Number(a.week),
+    )[0];
   return {
     player_id: id,
     position: latest.position || latest.position_group || null,

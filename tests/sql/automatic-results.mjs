@@ -11,7 +11,7 @@ create function private.age_member_allowed()returns boolean language sql as $$se
 grant usage on schema private to authenticated;
 create table public.games(id uuid primary key,provider_id text,season integer,week integer,kickoff timestamptz,away_team text,home_team text,away_abbreviation text,home_abbreviation text);
 create table public.published_legs(leg_key text,name text,market text,kind text,published_at timestamptz);
-create table public.candidate_releases(id uuid);
+create table public.candidate_releases(id uuid,candidates jsonb,created_at timestamptz default now());
 create table public.leg_tails(leg_key text,user_id uuid);alter table public.leg_tails enable row level security;grant select on public.leg_tails to authenticated;
 create policy tails_owner on public.leg_tails for select to authenticated using(user_id=auth.uid());
 create table public.research_leg_results(leg_key text primary key,result text,source_url text);
@@ -30,6 +30,12 @@ await db.exec(
 await db.exec(
   fs.readFileSync(
     "supabase/migrations/20261014172844_editorial_progress_own_tails.sql",
+    "utf8",
+  ),
+);
+await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261016142733_defensive_sack_contract_and_correction_evidence.sql",
     "utf8",
   ),
 );
@@ -88,8 +94,100 @@ assert.equal(
   (await db.query("select result from research_leg_results")).rows[0].result,
   "WIN",
 );
+// A later provider correction is journaled, deduped, and cannot rewrite the original WIN.
+const correction = (x, y) =>
+  db.query(
+    "select public.observe_editorial_correction($1,$2::jsonb,$3::jsonb) r",
+    ["candidate:r:1", JSON.stringify(x), JSON.stringify(y)],
+  );
+assert.equal(
+  (await correction({ ...a, value: 69 }, { ...b, value: 69 })).rows[0].r
+    .recorded,
+  true,
+);
+assert.equal(
+  (await correction({ ...a, value: 69 }, { ...b, value: 69 })).rows[0].r
+    .recorded,
+  false,
+);
+assert.equal(
+  (
+    await db.query(
+      "select count(*)::int n from private.editorial_stat_correction_observations",
+    )
+  ).rows[0].n,
+  1,
+);
+assert.equal(
+  (
+    await db.query(
+      "select result from research_leg_results where leg_key='candidate:r:1'",
+    )
+  ).rows[0].result,
+  "WIN",
+);
+await assert.rejects(
+  correction({ ...a, completed: false, value: 69 }, { ...b, value: 69 }),
+);
+await db.exec("reset role");
+const sackId = "00000000-0000-4000-8000-000000000008",
+  sackKey = `candidate:${sackId}:1`;
+const sackCandidate = {
+  name: "Test Defender",
+  game_id: g,
+  book: "FanDuel",
+  market: "Full game · Over 0.5 sacks",
+  sack_market_type: "numeric_total",
+  sack_settlement_review: {
+    source_url: "https://example.com/exact-rules",
+    observed_at: new Date(Date.now() - 3600000).toISOString(),
+  },
+};
+await db.query(
+  "insert into candidate_releases(id,candidates)values($1,$2::jsonb)",
+  [sackId, JSON.stringify([sackCandidate])],
+);
+await db.query(
+  "insert into published_legs values($1,'Test Defender','Full game · Over 0.5 sacks','SINGLE',now())",
+  [sackKey],
+);
+const sack = {
+  ...c,
+  leg_key: sackKey,
+  player: "Test Defender",
+  metric: "def_sacks",
+  threshold: 0.5,
+  operator: "over",
+  market: sackCandidate.market,
+};
+await db.exec("set role service_role");
+await assert.rejects(
+  db.query("select public.register_result_contracts($1::jsonb)", [
+    JSON.stringify([{ ...sack, threshold: 0.25 }]),
+  ]),
+);
+await db.query("select public.register_result_contracts($1::jsonb)", [
+  JSON.stringify([sack]),
+]);
+const numericFinal = (value) =>
+  db.query("select public.finalize_editorial_leg($1,$2::jsonb,$3::jsonb) r", [
+    sackKey,
+    JSON.stringify({ ...a, value }),
+    JSON.stringify({ ...b, value }),
+  ]);
+await assert.rejects(numericFinal(0.25));
+assert.equal((await numericFinal(0.5)).rows[0].r.result, "PUSH");
+assert.equal(
+  (
+    await db.query("select result from research_leg_results where leg_key=$1", [
+      sackKey,
+    ])
+  ).rows[0].result,
+  "PUSH",
+);
 await db.exec("reset role;set role authenticated");
 await assert.rejects(finalize(a, b));
+await assert.rejects(correction({ ...a, value: 69 }, { ...b, value: 69 }));
 await assert.rejects(
   db.query("select public.register_result_contracts($1::jsonb)", [
     JSON.stringify([c]),

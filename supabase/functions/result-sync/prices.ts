@@ -8,7 +8,12 @@ export type Observation = {
   payload: {
     market?: string;
     book?: string;
-    outcomes?: { name: string; description?: string; point?: number; price: number }[];
+    outcomes?: {
+      name: string;
+      description?: string;
+      point?: number;
+      price: number;
+    }[];
   };
 };
 export type MarketPrice = {
@@ -23,6 +28,7 @@ const MARKETS: Record<Contract["metric"], string> = {
   receiving_yards: "player_reception_yds",
   passing_yards: "player_pass_yds",
   receptions: "player_receptions",
+  def_sacks: "player_sacks",
 };
 /** Standard and alternate-line market keys for a metric. */
 export const marketKeys = (metric: Contract["metric"]) => [
