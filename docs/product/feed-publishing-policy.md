@@ -1,5 +1,7 @@
 # Feed and Pick of the Day
 
+**Current NFL override, October 16, 2026:** Apply `research/lessons/README.md` R1–R8 and the unchanged NFL bible before every new selection. Exact FanDuel prices are mandatory; the earlier unpriced editorial allowance is superseded. Ordinary and entertainment parlays now have at most four qualifying legs, halftime at most three overs, and POD must be -150 through -300. Database enforcement and evidence contract: [NFL selection gate](nfl-selection-gate.md). Earlier dated instructions below remain historical context and cannot bypass these gates. The v0.3 model remains SHADOW_ONLY; no validation approval is implied.
+
 Owner policy, October 10, 2026:
 
 - Feed publishes concise individual "Legs we like" cards, with one supported selection per upcoming game where possible.
