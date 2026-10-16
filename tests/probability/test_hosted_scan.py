@@ -10,7 +10,7 @@ import hosted_scan as h
 NOW = datetime(2026, 10, 18, 15, 0, tzinfo=timezone.utc)
 GAMES = [
     dict(id="g1", season=2026, week=7, kickoff="2026-10-18T17:00:00+00:00", kickoff_tbd=False, sport="nfl", away_abbreviation="SEA", home_abbreviation="DEN"),
-    dict(id="g2", season=2026, week=7, kickoff="2026-10-21T17:00:00+00:00", kickoff_tbd=False, sport="nfl", away_abbreviation="KC", home_abbreviation="LV"),
+    dict(id="g2", season=2026, week=8, kickoff="2026-10-26T17:00:00+00:00", kickoff_tbd=False, sport="nfl", away_abbreviation="KC", home_abbreviation="LV"),
     dict(id="g3", season=2026, week=7, kickoff="2026-10-18T20:00:00+00:00", kickoff_tbd=True, sport="nfl", away_abbreviation="A", home_abbreviation="B"),
     dict(id="n1", season=2026, week=1, kickoff="2026-10-18T23:00:00+00:00", kickoff_tbd=False, sport="nba", away_abbreviation="X", home_abbreviation="Y"),
 ]
@@ -34,7 +34,7 @@ class FakeDb(h.Supabase):
         raise AssertionError(path)
 
 class HostedScanTests(unittest.TestCase):
-    def test_slate_is_upcoming_scheduled_nfl_games_within_36_hours(self):
+    def test_slate_is_upcoming_scheduled_nfl_games_within_seven_days(self):
         self.assertEqual([g["id"] for g in h.upcoming_games(FakeDb([]), NOW)], ["g1"])
         self.assertEqual(h.slate([GAMES[0]]), [{"id": "g1", "kickoff": "2026-10-18T17:00:00+00:00"}])
 

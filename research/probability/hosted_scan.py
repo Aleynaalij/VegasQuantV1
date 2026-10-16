@@ -27,8 +27,9 @@ MODEL = HERE / "artifacts" / "v0.3" / "model.json"
 PROP_MARKETS = ["player_rush_yds", "player_rush_yds_alternate",
                 "player_reception_yds", "player_reception_yds_alternate"]
 NFLVERSE = "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_{}.csv"
-# Props are collected for games within a day of kickoff; the scanner accepts quotes up to 15 minutes old.
-HORIZON = timedelta(hours=36)
+# The prop feed researches games up to seven days ahead, the same window scan.py accepts; quotes
+# older than 15 minutes cannot be journaled.
+HORIZON = timedelta(days=7)
 FRESH = timedelta(minutes=14)
 
 
@@ -55,7 +56,7 @@ class Supabase:
 
 
 def upcoming_games(db: Supabase, now: datetime):
-    """Future, scheduled NFL games inside the prop-collection horizon."""
+    """Future, scheduled NFL games inside the prop-collection horizon (seven days)."""
     rows = db.select("games", select="id,season,week,kickoff,kickoff_tbd,sport,away_abbreviation,home_abbreviation",
                      kickoff=f"gt.{iso(now)}", order="kickoff.asc", limit="40")
     return [g for g in rows if str(g.get("sport") or "").upper() == "NFL" and not g.get("kickoff_tbd")
