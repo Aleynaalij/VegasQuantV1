@@ -474,7 +474,10 @@ export default function ResearchFeed() {
                     >
                       <summary>
                         <span className="eyebrow">
-                          PICK DROP · {time(item.value.created_at)}
+                          {item.value.candidates.every((c) => c.research)
+                            ? "RESEARCH BOARD"
+                            : "PICK DROP"}{" "}
+                          · {time(item.value.created_at)}
                         </span>
                         <strong>{item.value.title}</strong>
                         <span>

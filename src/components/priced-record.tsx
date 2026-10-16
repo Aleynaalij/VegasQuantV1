@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { gatedRecords, pricedRecord, type PricedLeg } from "@/lib/priced-record";
+import { gatedRecords, pricedRecord, OFFICIAL_KINDS, type PricedLeg } from "@/lib/priced-record";
 import type { LegForm } from "@/lib/leg-rules";
 
 const pct = (n: number | null) => (n === null ? "—" : `${Math.round(n)}%`);
@@ -9,7 +9,9 @@ const signed = (n: number, digits = 1) =>
   `${n >= 0 ? "+" : "−"}${Math.abs(n).toFixed(digits)}`;
 
 // Records card: what the graded individual picks returned at the prices they were published at.
-export default function PricedRecord() {
+// With `research`, the same card for the automated research board, kept apart from official picks.
+export default function PricedRecord({ research = false }: { research?: boolean }) {
+  const kinds = research ? ["RESEARCH"] : OFFICIAL_KINDS;
   const [record, setRecord] = useState<ReturnType<typeof pricedRecord> | null>(
     null,
   );
@@ -24,7 +26,7 @@ export default function PricedRecord() {
         .select(
           "leg_key,kind,name,market,matchup,game_id,published_at,result,result_source,odds,original_leg_key",
         )
-        .in("kind", ["SINGLE", "PICK_OF_DAY"])
+        .in("kind", kinds)
         .not("result", "is", null)
         .limit(2000);
       if (!live) return;
@@ -51,8 +53,9 @@ export default function PricedRecord() {
       const closing = new Map(
         (close.error ? [] : close.data || []).map((x) => [x.leg_key, Number(x.last_price)]),
       );
-      setRecord(pricedRecord(legs, closing));
-      setGates(forms.size ? gatedRecords(legs, closing, forms) : null);
+      setRecord(pricedRecord(legs, closing, kinds));
+      // Research legs pass every automatic rule by construction, so only official picks are split.
+      setGates(!research && forms.size ? gatedRecords(legs, closing, forms) : null);
     }
     void load();
     const auth = supabase.auth.onAuthStateChange(() =>
@@ -62,15 +65,15 @@ export default function PricedRecord() {
       live = false;
       auth.data.subscription.unsubscribe();
     };
-  }, []);
+  }, [research]);
   if (!record || !record.picks) return null;
   const beat =
     record.hitRate !== null && record.breakEvenRate !== null
       ? record.hitRate - record.breakEvenRate
       : null;
   return (
-    <section className="priced-record" aria-label="Profit at published prices">
-      <h3>Profit at published prices</h3>
+    <section className="priced-record" aria-label={research ? "Research board record" : "Profit at published prices"}>
+      <h3>{research ? "Research board record" : "Profit at published prices"}</h3>
       <div className="priced-record-stats">
         <div>
           <b className={record.units >= 0 ? "up" : "down"}>
@@ -122,8 +125,9 @@ export default function PricedRecord() {
         </div>
       )}
       <small>
-        Graded individual picks at the odds printed when each went out; a
-        repriced or repeated pick counts once at its first price.
+        {research
+          ? "Automated research legs at the FanDuel price printed when each went out; kept separate from official picks."
+          : "Graded individual picks at the odds printed when each went out; a repriced or repeated pick counts once at its first price."}
         {record.unpriced > 0 &&
           ` ${record.unpriced} graded pick${record.unpriced === 1 ? " was" : "s were"} published without a price and ${record.unpriced === 1 ? "isn’t" : "aren’t"} included.`}{" "}
         Not a record of placed bets.

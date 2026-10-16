@@ -44,12 +44,13 @@ const sameSelection = (leg: PricedLeg) =>
 export type Closing = Map<string, number>;
 
 /** Graded individual picks with a verified result, each selection once at its first publication. */
-export function uniquePicks(legs: PricedLeg[]) {
+export const OFFICIAL_KINDS = ["SINGLE", "PICK_OF_DAY"];
+export function uniquePicks(legs: PricedLeg[], kinds = OFFICIAL_KINDS) {
   // Only individual picks with a verified (https-sourced) result.
   return firstPublications(
     legs.filter(
       (l) =>
-        (l.kind === "SINGLE" || l.kind === "PICK_OF_DAY") &&
+        kinds.includes(l.kind) &&
         ["WIN", "LOSS", "PUSH"].includes(l.result || "") &&
         /^https:\/\//.test(l.result_source || ""),
     ),
@@ -71,8 +72,8 @@ function firstPublications(legs: PricedLeg[]) {
   return [...new Set(first.values())];
 }
 
-export function pricedRecord(legs: PricedLeg[], closing: Closing = new Map()) {
-  const unique = uniquePicks(legs);
+export function pricedRecord(legs: PricedLeg[], closing: Closing = new Map(), kinds = OFFICIAL_KINDS) {
+  const unique = uniquePicks(legs, kinds);
   const priced = unique.filter((l) => priceOf(l) !== null);
   let units = 0,
     wins = 0,

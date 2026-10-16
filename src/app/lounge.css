@@ -582,6 +582,7 @@ html[data-theme="dark"] body .topic-heading h2 { font-family: var(--font-board),
 .vq-today-form { color: var(--faint); font-size: 11px; }
 .vq-today-form.good { color: #8fe0ad; }
 .vq-today-form.bad { color: #f0a49c; }
+.vq-today-research { margin-left: 6px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); vertical-align: middle; }
 .priced-record-gates { display: grid; gap: 6px; margin-top: 12px; }
 .priced-record-gates p { display: flex; justify-content: space-between; gap: 10px; margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel2); font-size: 13px; }
 .priced-record-gates small { color: var(--faint); }

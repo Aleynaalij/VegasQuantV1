@@ -24,6 +24,8 @@ type Candidate = {
   analysis_kind?: string;
   pick_of_day?: boolean;
   experimental?: boolean;
+  /** Automated research board leg: labeled research, never an official pick. */
+  research?: boolean;
   fun_play?: boolean;
   copy_text?: string;
   legs?: {
@@ -228,6 +230,7 @@ export default function CandidateTracker({
     (c) => c.analysis_kind === "QUALITATIVE_EDITORIAL",
   );
   const funPlay = release.candidates[0]?.fun_play === true;
+  const research = release.candidates.every((c) => c.research === true);
   const list = pickOfDay
     ? release.candidates.filter((c) => c.pick_of_day).slice(0, 1)
     : featured && !experimental
@@ -284,7 +287,9 @@ export default function CandidateTracker({
               ? "PICK OF THE DAY"
               : funPlay
                 ? "HAIL MARY · SUNDAY FUN PLAY"
-                : editorial
+                : research
+                  ? "RESEARCH BOARD"
+                  : editorial
                   ? "LEGS WE LIKE"
                   : experimental
                     ? multiple
@@ -298,14 +303,16 @@ export default function CandidateTracker({
               ? "ARCHIVED RESEARCH"
               : funPlay
                 ? "ENTERTAINMENT"
-                : editorial
+                : research
+                  ? "AUTOMATED · NOT AN OFFICIAL PICK"
+                  : editorial
                   ? "ANALYST SELECTIONS"
                   : experimental
                     ? "EXPERIMENTAL ANALYSIS"
                     : "RESEARCH"}
           </span>
           <h2>
-            {featured && !experimental && !funPlay && !pickOfDay
+            {featured && !experimental && !funPlay && !pickOfDay && !research
               ? "Potential next leg"
               : release.title}
           </h2>
@@ -313,7 +320,9 @@ export default function CandidateTracker({
             <p>
               {funPlay
                 ? "One Sunday moneyline ticket. One losing leg loses the parlay. Separate from Pick of the Day."
-                : editorial
+                : research
+                  ? "Refreshed every three hours from recent form and live prices. Each leg cleared its target in recent games at least five points more often than its price needs. Research, not an official pick: no validated model edge is claimed, and it has its own record."
+                  : editorial
                   ? "Individual selections with the matchup case and risk. Analyst stat targets and observed sportsbook prices are labeled separately."
                   : experimental
                     ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
@@ -423,7 +432,7 @@ export default function CandidateTracker({
               {c.fun_play && c.book && (
                 <p className="candidate-context">{c.quote_context}</p>
               )}
-              {!expired && (c.experimental || editorial) && c.gambly_url && (
+              {!expired && (c.experimental || editorial || research) && c.gambly_url && (
                 <div className="ticket-action">
                   <GamblyLink url={c.gambly_url} selection={copySelection(c)} />
                   <p>
@@ -481,7 +490,9 @@ export default function CandidateTracker({
                     <strong>
                       {expired
                         ? "Archived"
-                        : c.analysis_kind === "QUALITATIVE_EDITORIAL"
+                        : research
+                          ? "Research lean"
+                          : c.analysis_kind === "QUALITATIVE_EDITORIAL"
                           ? "Analyst selection"
                           : experimental
                             ? "Experimental"
@@ -493,14 +504,16 @@ export default function CandidateTracker({
                   <b>Waiting for</b>
                   <br />
                   {c.next ||
-                    "Verified current price and a supported probability estimate."}
+                    (research
+                      ? "A validated model edge. Official picks stay behind the selection gate."
+                      : "Verified current price and a supported probability estimate.")}
                 </p>
                 <small>
                   Publication time is not the quote time. Confirm availability
                   at your sportsbook; this research card does not authorize an
                   entry.
                 </small>
-                {featured && !experimental && (
+                {featured && !experimental && !research && (
                   <div className="candidate-facts">
                     <div>
                       <small>Break-even at quoted odds</small>

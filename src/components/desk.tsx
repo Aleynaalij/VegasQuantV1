@@ -421,6 +421,9 @@ export default function DeskApp({
             <SectionBoundary name="Beat the close">
               <BeatTheClose />
             </SectionBoundary>
+            <SectionBoundary name="Research board record">
+              <PricedRecord research />
+            </SectionBoundary>
             <SectionBoundary name="The record summary">
               <RecordsDashboard d={d} picks={ledgerPicks} />
             </SectionBoundary>

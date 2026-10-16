@@ -1,0 +1,34 @@
+name: Research board
+# Every three hours, publish the strongest rule-passing player-prop legs on the week's NFL slate to
+# the legs feed as labeled research (scripts/research-board). Official picks stay behind the NFL
+# selection gate. The repo is public, so the job prints counts only. Needs repository secrets
+# SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY; without them it does nothing.
+on:
+  schedule:
+    - cron: '20 */3 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Select legs without publishing
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: research-board
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npx tsx scripts/research-board/run.ts ${{ inputs.dry_run && '--dry-run' || '' }} | tee -a "$GITHUB_STEP_SUMMARY"

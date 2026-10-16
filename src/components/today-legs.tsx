@@ -25,7 +25,7 @@ export default function TodayLegs() {
         .select("id,title,candidates,created_at,expires_at")
         .gt("expires_at", new Date().toISOString())
         .order("expires_at", { ascending: true })
-        .limit(12);
+        .limit(40);
       if (!live || r.error) return;
       const w = todayWindows((r.data || []) as TodayRelease[]);
       setWindows(w);
@@ -69,7 +69,10 @@ export default function TodayLegs() {
                 <li key={`${r.id}-${i}`}>
                   <Link href={`/feed?view=legs#release-${r.id}`}>
                     <span>
-                      <b>{c.name}</b>
+                      <b>
+                        {c.name}
+                        {c.research && <small className="vq-today-research">Research</small>}
+                      </b>
                       <small>
                         {legMarket(c.market)} · {legMatchup(c.matchup)}
                       </small>

@@ -96,3 +96,10 @@ test("beat the close compares our price with the close, results aside", async ()
   assert.equal(closingLineRecord([], tracked).legs, 0);
   assert.equal(closingLineRecord([], tracked).avgPoints, null);
 });
+
+test("research legs keep their own record, apart from official picks", () => {
+  const legs = [leg("pick", "WIN", -150), leg("research", "LOSS", -200, { kind: "RESEARCH", name: "Research Player" })];
+  assert.equal(pricedRecord(legs).picks, 1);
+  const r = pricedRecord(legs, new Map(), ["RESEARCH"]);
+  assert.deepEqual([r.picks, r.wins, r.losses, r.units], [1, 0, 1, -1]);
+});
