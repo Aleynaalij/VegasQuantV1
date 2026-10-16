@@ -9,7 +9,7 @@ import {
   type Game,
   type Contract,
 } from "./grade.ts";
-import { bookPrices, marketKeys, type Observation } from "./prices.ts";
+import { bookQuotes, marketKeys, type Observation } from "./prices.ts";
 import { legHistory } from "./history.ts";
 const db = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -187,7 +187,13 @@ Deno.serve(async (req: Request) => {
         const known = new Map((existing.data || []).map((r) => [r.leg_key, r.last_observed_at]));
         for (const c of soon) {
           const kick = Date.parse((games.data as Game[]).find((g) => g.id === c.game_id)!.kickoff);
-          const all = bookPrices(c, (obs.data || []) as Observation[], Math.min(now, kick));
+          const { prices: all, quoting } = bookQuotes(c, (obs.data || []) as Observation[], Math.min(now, kick));
+          // A book whose current snapshot no longer offers the line is removed from line shopping.
+          const withdrawn = quoting.filter((b) => !all.some((p) => p.book === b));
+          if (withdrawn.length) {
+            const gone = await db.from("leg_book_prices").delete().eq("leg_key", c.leg_key).in("book", withdrawn);
+            if (gone.error) throw gone.error;
+          }
           if (!all.length) continue;
           const shopped = await db.from("leg_book_prices").upsert(
             all.map((p) => ({ leg_key: c.leg_key, book: p.book, price: p.price, point: p.point, observed_at: p.observed_at, kickoff: new Date(kick).toISOString(), updated_at: new Date().toISOString() })),

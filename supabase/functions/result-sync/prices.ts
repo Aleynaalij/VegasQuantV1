@@ -70,22 +70,45 @@ export function marketPrice(
   return bookPrices(c, observations, at).find((p) => p.book === book) || null;
 }
 
-/** Latest exact-line price at every book that quotes the line, at or before `at`. */
-export function bookPrices(
+/**
+ * Latest exact-line price at every book that quotes the line, at or before `at`. Only each book's
+ * latest snapshot per market counts, so a line a book has since withdrawn is never revived from an
+ * older snapshot. `quoting` lists every book with a current snapshot for the market, priced or not.
+ */
+export function bookQuotes(
   c: Pick<Contract, "game_id" | "player" | "metric" | "operator" | "threshold">,
   observations: Observation[],
   at: number,
-): MarketPrice[] {
-  const latest = new Map<string, MarketPrice>();
+): { prices: MarketPrice[]; quoting: string[] } {
+  const keys = marketKeys(c.metric);
+  const latest = new Map<string, Observation>();
   for (const o of observations) {
     const t = Date.parse(o.observed_at || "");
     const book = o.payload.book;
     if (o.game_id !== c.game_id || !book || !Number.isFinite(t) || t > at) continue;
-    const hit = snapshotPrice(c, o);
-    if (!hit) continue;
-    const prior = latest.get(book);
-    if (!prior || t > Date.parse(prior.observed_at))
-      latest.set(book, { book, price: hit.price, point: hit.point, observed_at: o.observed_at! });
+    if (!keys.includes(o.payload.market || "")) continue;
+    const k = `${book}\u0000${o.payload.market}`;
+    const prior = latest.get(k);
+    if (!prior || t > Date.parse(prior.observed_at!)) latest.set(k, o);
   }
-  return [...latest.values()].sort((a, b) => a.book.localeCompare(b.book));
+  const best = new Map<string, MarketPrice>();
+  for (const o of latest.values()) {
+    const hit = snapshotPrice(c, o);
+    const book = o.payload.book!;
+    if (!hit) continue;
+    const prior = best.get(book);
+    if (!prior || Date.parse(o.observed_at!) > Date.parse(prior.observed_at))
+      best.set(book, { book, price: hit.price, point: hit.point, observed_at: o.observed_at! });
+  }
+  return {
+    prices: [...best.values()].sort((a, b) => a.book.localeCompare(b.book)),
+    quoting: [...new Set([...latest.values()].map((o) => o.payload.book!))].sort(),
+  };
 }
+
+/** Latest exact-line price at every book that currently quotes the line. */
+export const bookPrices = (
+  c: Pick<Contract, "game_id" | "player" | "metric" | "operator" | "threshold">,
+  observations: Observation[],
+  at: number,
+) => bookQuotes(c, observations, at).prices;

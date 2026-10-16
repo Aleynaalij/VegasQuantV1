@@ -11,6 +11,6 @@ test(
     const { stdout } = await promisify(execFile)(process.execPath, [
       fileURLToPath(new URL("./sql/nfl-selection-gate.mjs", import.meta.url)),
     ]);
-    assert.match(stdout, /34 NFL gate checks passed/);
+    assert.match(stdout, /35 NFL gate checks passed/);
   },
 );

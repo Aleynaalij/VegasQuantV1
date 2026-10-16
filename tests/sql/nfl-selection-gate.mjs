@@ -146,7 +146,8 @@ assert.deepEqual(await errors(), []);
 let checks = 2;
 for (const [candidate, pattern] of [
   [patch({ odds: null }), /exact numeric American price/],
-  [patch({ book: "" }), /named sportsbook/],
+  [patch({ book: "" }), /collected sportsbook/],
+  [patch({ book: "Bovada" }), /collected sportsbook/],
   [patch({ book: "DraftKings" }), /published sportsbook/],
   [patch({}, { history: c.selection_gate.history.slice(0, 4) }), /five latest/],
   [

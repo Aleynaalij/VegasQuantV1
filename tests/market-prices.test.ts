@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bookPrices, marketPrice, wantedLine, marketKeys, type Observation } from "../supabase/functions/result-sync/prices";
+import { bookPrices, bookQuotes, marketPrice, wantedLine, marketKeys, type Observation } from "../supabase/functions/result-sync/prices";
 
 const c = { game_id: "g", player: "James Cook", metric: "rushing_yards" as const, operator: "gte" as const, threshold: 60 };
 const obs = (at: string, market: string, outcomes: Observation["payload"]["outcomes"], book = "FanDuel", game_id = "g"): Observation =>
@@ -19,7 +19,7 @@ test("latest exact FanDuel line up to the cutoff; other books, players and point
     obs("2026-10-18T18:00:00Z", "player_rush_yds_alternate", [{ name: "Over", description: "James Cook", point: 59.5, price: -190 }]),
     obs("2026-10-18T15:00:00Z", "player_rush_yds_alternate", [{ name: "Over", description: "James Cook", point: 59.5, price: -999 }], "DraftKings"),
     obs("2026-10-18T15:00:00Z", "player_rush_yds", [{ name: "Over", description: "James Cook", point: 64.5, price: -110 }]),
-    obs("2026-10-18T15:00:00Z", "player_rush_yds_alternate", [{ name: "Over", description: "Ray Davis", point: 59.5, price: 200 }]),
+    obs("2026-10-18T15:00:00Z", "player_rush_yds_alternate", [{ name: "Over", description: "Ray Davis", point: 59.5, price: 200 }], "FanDuel", "other"),
   ];
   const kickoff = Date.parse("2026-10-18T17:00:00Z");
   assert.deepEqual(marketPrice(c, list, kickoff), { book: "FanDuel", price: -175, point: 59.5, observed_at: "2026-10-18T14:00:00Z" });
@@ -49,4 +49,17 @@ test("line shopping: the latest exact-line price at every book, and one named bo
   );
   assert.equal(marketPrice(c, list, at, "DraftKings")?.price, -150);
   assert.equal(marketPrice(c, list, at, "Caesars"), null);
+});
+
+test("a book's latest snapshot decides: a withdrawn line is not revived from an older snapshot", () => {
+  const at = Date.parse("2026-10-18T17:00:00Z");
+  const list = [
+    obs("2026-10-18T10:00:00Z", "player_rush_yds_alternate", [{ name: "Over", description: "James Cook", point: 59.5, price: -160 }], "DraftKings"),
+    obs("2026-10-18T12:00:00Z", "player_rush_yds_alternate", [{ name: "Over", description: "James Cook", point: 64.5, price: -120 }], "DraftKings"),
+    obs("2026-10-18T12:00:00Z", "player_rush_yds_alternate", [{ name: "Over", description: "James Cook", point: 59.5, price: -170 }]),
+  ];
+  assert.deepEqual(bookQuotes(c, list, at), {
+    prices: [{ book: "FanDuel", price: -170, point: 59.5, observed_at: "2026-10-18T12:00:00Z" }],
+    quoting: ["DraftKings", "FanDuel"],
+  });
 });
