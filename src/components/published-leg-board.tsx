@@ -158,7 +158,7 @@ export default function PublishedLegBoard({
             }}
           />
           <div className="board-filters">
-            {["ALL", "SINGLE", "PICK_OF_DAY", "HAIL_MARY", "OFFICIAL"].map(
+            {["ALL", "SINGLE", "PICK_OF_DAY", "HAIL_MARY", "OFFICIAL", "RESEARCH"].map(
               (f) => (
                 <button
                   key={f}

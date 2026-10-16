@@ -8,6 +8,8 @@ export type TodayLeg = {
   fun_play?: boolean;
   parlay?: boolean;
   analysis_kind?: string;
+  /** Automated research board leg, labeled research rather than a pick. */
+  research?: boolean;
   supersedes_release_id?: string;
   /** Set by todayWindows: the published leg key (index in the original release). */
   leg_key?: string;
