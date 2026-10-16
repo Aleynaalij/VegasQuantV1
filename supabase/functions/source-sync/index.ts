@@ -4,6 +4,8 @@ import {
   propObservations,
   gameForEvent,
   BASE_PROP_MARKETS,
+  PROP_MARKET_SET_VERSION,
+  propFetchCache,
   PICK_PROP_MARKETS,
 } from "./props.ts";
 import {
@@ -225,7 +227,12 @@ Deno.serve(async (req: Request) => {
     const propsLast = propsEnabled
       ? await lastFetch("The Odds API props")
       : null;
-    if (propsEnabled && propsLast && !propsDue(kickoffs, propsLast.at, now)) {
+    if (
+      propsEnabled &&
+      propsLast &&
+      propsLast.details?.market_set_version === PROP_MARKET_SET_VERSION &&
+      !propsDue(kickoffs, propsLast.at, now)
+    ) {
       await carryForward("The Odds API props", propsLast);
     } else if (propsEnabled) {
       try {
@@ -240,7 +247,7 @@ Deno.serve(async (req: Request) => {
           PROPS_HORIZON,
         );
         // Rate limit per event: a near kickoff must not repeatedly refresh next week's games.
-        const previousEventFetches = propsLast?.details?.event_fetched_at || {};
+        const previousEventFetches = propFetchCache(propsLast?.details, now);
         const eventFetches: Record<string, string> = {};
         for (const event of selection.events) {
           const previous = previousEventFetches[event.id];
@@ -320,6 +327,8 @@ Deno.serve(async (req: Request) => {
               eligible_events: selection.events.length,
               deferred_events: selection.events.length - dueEvents.length,
               horizon_hours: PROPS_HORIZON / 3600000,
+              market_set_version: PROP_MARKET_SET_VERSION,
+              research_markets: BASE_PROP_MARKETS,
               event_fetched_at: eventFetches,
               failed,
               empty,
