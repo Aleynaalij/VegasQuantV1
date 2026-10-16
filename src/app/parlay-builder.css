@@ -103,6 +103,14 @@
 .workshop-saved {
   margin-top: 26px;
 }
+.workshop-leg.workshop-card {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.workshop-card > .workshop-head {
+  margin-top: 12px;
+}
 .workshop-saved > .workshop-leg {
   margin: 12px 0;
 }

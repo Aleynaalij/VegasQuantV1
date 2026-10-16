@@ -13,6 +13,8 @@ import {
   type PublishedLeg,
 } from "@/lib/parlay-builder";
 import GamblyLink from "./gambly-link";
+import CasinoCard, { CasinoCardDownload } from "./casino-card";
+import { cleanMarket, type CasinoCardData } from "@/lib/casino-card";
 
 export default function ParlayWorkshop({
   mode,
@@ -267,13 +269,24 @@ export default function ParlayWorkshop({
                   quoteAge >= 0 &&
                   quoteAge <= 15 * 60 * 1000,
               );
+              const result = r.result?.toUpperCase();
+              const card: CasinoCardData = {
+                variant: result === "WIN" ? "win" : result ? "miss" : "pick",
+                eyebrow: result ? "Published leg · settled result" : "Published research · individual leg",
+                title: r.name,
+                market: cleanMarket(r.market),
+                matchup: r.matchup,
+                price: r.quote || "Odds unknown · analyst target",
+                stamp: result === "WIN" ? "✓ HIT" : result === "LOSS" ? "MISS" : result || undefined,
+                footnote: result
+                  ? "Original published selection and recorded result. See case, risk & sources for the publication."
+                  : "Published research is not automatically a recommendation. Review the case, risks and original quote.",
+                publishedAt: r.published_at,
+              };
               return (
-                <article className="workshop-leg" key={r.leg_key}>
+                <div className="workshop-leg workshop-card" key={r.leg_key}>
+                  <CasinoCard data={card} />
                   <div className="workshop-head">
-                    <div>
-                      <h3>{r.name}</h3>
-                      <strong>{r.market}</strong>
-                    </div>
                     {recommended ? (
                       <span className="workshop-recommended">
                         Recommended · 3%+ edge
@@ -282,7 +295,6 @@ export default function ParlayWorkshop({
                       <span className="workshop-label">Published research</span>
                     )}
                   </div>
-                  <p>{r.matchup}</p>
                   <p className="workshop-note">
                     {r.quote || "Odds unknown · analyst target"}
                     {r.quote_observed_at
@@ -321,6 +333,7 @@ export default function ParlayWorkshop({
                     </Link>
                   </details>
                   <div className="workshop-actions">
+                    <CasinoCardDownload data={card} />
                     <button
                       className={selected ? "btn" : "secondary"}
                       disabled={busy || (!available && !selected)}
@@ -341,7 +354,7 @@ export default function ParlayWorkshop({
                       />
                     )}
                   </div>
-                </article>
+                </div>
               );
             })}
           </div>
