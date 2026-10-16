@@ -2,6 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.117.2";
 import {
   contractFor,
   espnStat,
+  playerName,
   csvRows,
   weeklyStat,
   compare,
@@ -9,6 +10,7 @@ import {
   type Contract,
 } from "./grade.ts";
 import { marketKeys, marketPrice, type Observation } from "./prices.ts";
+import { legHistory } from "./history.ts";
 const db = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -92,6 +94,66 @@ Deno.serve(async (req: Request) => {
       const saved = await db.rpc("register_result_contracts", { p: contracts });
       if (saved.error) throw Error("Contract registration failed");
     }
+    // nflverse weekly player stats by season, shared by history and final corroboration.
+    const weekly = new Map<number, Promise<any>>();
+    const season = (year: number) => {
+      if (!weekly.has(year))
+        weekly.set(
+          year,
+          get(
+            `https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_${year}.csv`,
+          ).then((s) => {
+            const rows = csvRows(s.text);
+            // Rows by player name, so each pick's history scans one player, not the season.
+            const byName = new Map<string, Record<string, string>[]>();
+            for (const r of rows) {
+              const k = playerName(r.player_display_name);
+              const list = byName.get(k);
+              if (list) list.push(r);
+              else byName.set(k, [r]);
+            }
+            return { ...s, rows, byName };
+          }),
+        );
+      return weekly.get(year)!;
+    };
+    // Each pick's recent form as of its game: how often the player cleared the target in his last
+    // five games. Computed once per pick; failures never block pricing or grading.
+    let histories = 0,
+      historyError = false;
+    try {
+      const keys = contracts.map((c) => c.leg_key);
+      const known = new Set<string>();
+      for (let i = 0; i < keys.length; i += 100) {
+        const r = await db.from("leg_history").select("leg_key").in("leg_key", keys.slice(i, i + 100));
+        if (r.error) throw r.error;
+        for (const x of r.data || []) known.add(x.leg_key);
+      }
+      for (const c of contracts) {
+        if (known.has(c.leg_key) || Date.now() - started > 35000 || histories >= 60) continue;
+        const g = (games.data as Game[]).find((g) => g.id === c.game_id)!;
+        let h;
+        try {
+          const own = (await season(g.season)).byName.get(playerName(c.player)) || [];
+          h = legHistory(own, c, g);
+          // In the first five weeks, reach back into the previous season for five games.
+          if (g.week <= 5 && (typeof h === "string" || h.sample < 5))
+            h = legHistory([...own, ...((await season(g.season - 1)).byName.get(playerName(c.player)) || [])], c, g);
+        } catch {
+          historyError = true;
+          continue;
+        }
+        // No usable history is recorded too, so the pick is not looked up again every run.
+        const row = typeof h === "string"
+          ? { player_id: null, position: null, games: [], cleared: 0, sample: 0, median: null }
+          : h;
+        const w = await db.from("leg_history").insert({ leg_key: c.leg_key, ...row });
+        if (w.error) throw w.error;
+        histories++;
+      }
+    } catch {
+      historyError = true;
+    }
     // FanDuel price for each upcoming gradable pick: the first exact-line price seen and the
     // latest one up to kickoff (its closing price). Reads only odds recorded in the last 30
     // minutes; failures here never block grading.
@@ -146,8 +208,7 @@ Deno.serve(async (req: Request) => {
         Date.parse(prior.get(a.leg_key)?.checked_at || "1970-01-01") -
         Date.parse(prior.get(b.leg_key)?.checked_at || "1970-01-01"),
     );
-    const weekly = new Map<number, Promise<any>>(),
-      summaries = new Map<string, Promise<any>>();
+    const summaries = new Map<string, Promise<any>>();
     for (const c of contracts) {
       const g = (games.data as Game[]).find((g) => g.id === c.game_id)!;
       if (Date.parse(g.kickoff) > Date.now()) continue;
@@ -190,14 +251,9 @@ Deno.serve(async (req: Request) => {
           if (status === "TARGET_REACHED_LIVE") live++;
         } else {
           const weeklyUrl = `https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_${g.season}.csv`;
-          if (!weekly.has(g.season))
-            weekly.set(
-              g.season,
-              get(weeklyUrl).then((s) => ({ ...s, rows: csvRows(s.text) })),
-            );
           let second: any;
           try {
-            second = await weekly.get(g.season)!;
+            second = await season(g.season);
           } catch {
             status = "AWAITING_CORROBORATION";
             throw Error(
@@ -273,6 +329,8 @@ Deno.serve(async (req: Request) => {
           live,
           contracts: contracts.length,
           prices_updated: priced,
+          histories_added: histories,
+          ...(historyError ? { history_error: "Recent-form history failed; grading unaffected" } : {}),
           ...(priceError ? { price_error: "Market price update failed; grading unaffected" } : {}),
           blockers,
           scope:

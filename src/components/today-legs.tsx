@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { odd } from "@/lib/domain";
+import { useLegForms } from "./leg-form";
+import { breakEven } from "@/lib/leg-rules";
 import {
   legMarket,
   legMatchup,
@@ -48,6 +50,9 @@ export default function TodayLegs() {
       window.removeEventListener("focus", refresh);
     };
   }, []);
+  const legForms = useLegForms(
+    windows.flatMap((x) => x.releases.flatMap((rel) => rel.candidates.map((c) => c.leg_key!))),
+  );
   if (!windows.length) return null;
   return (
     <section className="vq-today" aria-label="Today’s legs">
@@ -71,6 +76,18 @@ export default function TodayLegs() {
                     </span>
                     <span className="vq-today-price">
                       {typeof c.odds === "number" && <em>{odd(c.odds)}</em>}
+                      {legForms.forms[c.leg_key!] && (() => {
+                        const f = legForms.forms[c.leg_key!];
+                        const good =
+                          typeof c.odds === "number" && f.sample >= 5
+                            ? (f.cleared / f.sample) * 100 >= breakEven(c.odds) + 5
+                            : null;
+                        return (
+                          <small className={`vq-today-form ${good === null ? "" : good ? "good" : "bad"}`}>
+                            Cleared {f.cleared}/{f.sample}
+                          </small>
+                        );
+                      })()}
                       {prices.has(c.leg_key!) &&
                         prices.get(c.leg_key!) !== c.odds && (
                           <small>FanDuel now {odd(prices.get(c.leg_key!)!)}</small>

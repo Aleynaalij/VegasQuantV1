@@ -2,6 +2,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import LegResultStatus, { useReleaseResults } from "./leg-result-status";
+import LegFormLine, { useLegForms } from "./leg-form";
 import ParlayCard, { type ParlayCandidate } from "./parlay-card";
 import LegActions from "./leg-actions";
 import PriceFreshness from "./price-freshness";
@@ -147,6 +148,9 @@ export default function CandidateTracker({
   const resultStates = useReleaseResults(
     release?.id,
     release?.candidates.length || 0,
+  );
+  const legForms = useLegForms(
+    release ? release.candidates.map((_, i) => `candidate:${release.id}:${i + 1}`) : [],
   );
   const [failed, setFailed] = useState(false);
   const [allCopied, setAllCopied] = useState(false);
@@ -398,6 +402,16 @@ export default function CandidateTracker({
                 · {c.matchup}
               </div>
               <CasinoCard data={card} />
+              {!c.fun_play && !c.parlay && (
+                <LegFormLine
+                  legKey={key}
+                  data={legForms}
+                  price={typeof c.odds === "number" ? c.odds : null}
+                  market={c.market}
+                  matchup={c.matchup}
+                  pickOfDay={pickOfDay || c.pick_of_day}
+                />
+              )}
               <LegResultStatus state={resultStates[key]} />
               {!c.fun_play &&
                 c.odds_status !== "USER_SCREENSHOT_QUOTE_TIME_UNKNOWN" && (
