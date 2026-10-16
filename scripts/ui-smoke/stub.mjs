@@ -62,6 +62,12 @@ http.createServer((req, res) => {
     { leg_key: "candidate:s:2", kind: "SINGLE", name: "Sample Receiver", market: "Full game · 50+ receiving yards", matchup: "Buffalo @ Los Angeles Rams", game_id: "g0", published_at: "2026-10-12T10:00:00Z", result: "LOSS", result_source: "https://example.com/box", odds: -120, original_leg_key: null },
     { leg_key: "candidate:s:3", kind: "SINGLE", name: "Sample Passer", market: "Full game · 200+ passing yards", matchup: "Buffalo @ Los Angeles Rams", game_id: "g0", published_at: "2026-10-12T10:00:00Z", result: "WIN", result_source: "https://example.com/box", odds: null, original_leg_key: null },
   ]);
+  if (u.startsWith("/rest/v1/leg_market_prices") && u.includes("first_price") && u.includes("kickoff=lt")) return json(res, [
+    // Sample closing prices: one leg beat the close, one closed worse, one did not move.
+    { leg_key: "candidate:s:1", first_price: -150, last_price: -170 },
+    { leg_key: "candidate:s:2", first_price: -120, last_price: -110 },
+    { leg_key: "candidate:s:3", first_price: -200, last_price: -200 },
+  ]);
   if (u.startsWith("/rest/v1/leg_history")) {
     // Sample recent form for whichever legs are asked for: alternately strong and weak.
     const keys = (/leg_key=in\.\(([^)]*)\)/.exec(u)?.[1] || "").split(",").map((k) => k.replace(/"/g, "")).filter(Boolean);

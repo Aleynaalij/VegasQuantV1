@@ -67,3 +67,32 @@ test("a revision with edited wording still counts once through original_leg_key"
   ]);
   assert.equal(r.picks, 1);
 });
+
+test("beat the close compares our price with the close, results aside", async () => {
+  const { closingLineRecord } = await import("../src/lib/priced-record");
+  const tracked = new Map([
+    ["beat", { first: -330, last: -350 }], // market moved toward the pick
+    ["worse", { first: -240, last: -220 }],
+    ["same", { first: -420, last: -420 }],
+    ["printed", { first: -130, last: -125 }], // printed -110 beats the -125 close
+    ["repeat", { first: -400, last: -500 }], // later repeat of "beat": counts once
+  ]);
+  const r = closingLineRecord(
+    [
+      leg("beat", "LOSS", null, { name: "Same player" }),
+      leg("worse", "WIN", null),
+      leg("same", null as unknown as string, null),
+      leg("printed", "WIN", -110),
+      leg("repeat", "WIN", null, { name: "Same player", published_at: "2026-10-13T10:00:00Z" }),
+      leg("untracked", "WIN", -110),
+    ],
+    tracked,
+  );
+  assert.deepEqual([r.legs, r.beat, r.tied, r.missed], [4, 2, 1, 1]);
+  assert.equal(Math.round(r.beatRate!), 67);
+  const pts = (impliedProbability(-350) - impliedProbability(-330) + impliedProbability(-220) - impliedProbability(-240)
+    + impliedProbability(-125) - impliedProbability(-110)) * 100 / 4;
+  assert.ok(Math.abs(r.avgPoints! - pts) < 1e-9);
+  assert.equal(closingLineRecord([], tracked).legs, 0);
+  assert.equal(closingLineRecord([], tracked).avgPoints, null);
+});
