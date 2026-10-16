@@ -17,6 +17,7 @@ import AutomaticResultCard, {
   type AutomaticResult,
 } from "./automatic-result-card";
 import BillsWinningSlip from "./bills-winning-slip";
+import ParlayWorkshop from "./parlay-workshop";
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
@@ -313,6 +314,7 @@ export default function ResearchFeed() {
           </Link>
         </header>
         <HowItWorks />
+        {(zoneView === "Legs" || zoneView === "Parlays") && <ParlayWorkshop key={zoneView} mode={zoneView === "Legs" ? "catalog" : "parlays"} />}
         <details className="zone-extra-filters">
           <summary>More research filters</summary>
           <nav className="feed-filters" aria-label="Filter feed">
@@ -345,7 +347,7 @@ export default function ResearchFeed() {
         {!loading && (
           <>
             <div className="feed-stream">
-              {visibleTimeline.slice(0, limit).map((item) => {
+              {(zoneView === "Legs" ? [] : visibleTimeline).slice(0, limit).map((item) => {
                 const p = item.kind === "post" ? item.value : null;
                 const content =
                   p?.market_label ===
@@ -536,13 +538,13 @@ export default function ResearchFeed() {
                 );
               })}
             </div>
-            {!visibleTimeline.length && !error && (
+            {zoneView !== "Legs" && !visibleTimeline.length && !error && (
               <p className="feed-empty">
                 No updates in this category yet. Check back as the next decision
                 develops.
               </p>
             )}
-            {visibleTimeline.length > limit && (
+            {zoneView !== "Legs" && visibleTimeline.length > limit && (
               <button
                 className="secondary feed-more"
                 onClick={() => setLimit((l) => l + pageSize)}

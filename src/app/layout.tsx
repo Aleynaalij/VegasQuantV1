@@ -18,6 +18,7 @@ import "./dark-surfaces.css";
 import "./premium.css";
 import "./lounge.css";
 import "./social.css";
+import "./parlay-builder.css";
 import NotificationBootstrap from "@/components/notification-bootstrap";
 import ProfileSetupGate from "@/components/profile-setup-gate";
 import PhoneContactPrompt from "@/components/phone-contact-prompt";

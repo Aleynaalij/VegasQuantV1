@@ -225,6 +225,23 @@ export const helpTopics: HelpTopic[] = [
     link: "Join Community",
   },
   {
+    id: "parlay-builder",
+    title: "How do I create my own parlay?",
+    category: "App guide",
+    phrases: [
+      "create parlay",
+      "create my own parlay",
+      "custom parlay",
+      "parlay builder",
+      "recommended sticker",
+      "3 percent edge",
+    ],
+    answer:
+      "In The Zone, open Parlays and tap Create parlay. Choose 2–4 upcoming player legs from this week’s published research, remove any you do not want, name your combination and save. Your parlays are private and do not place wagers or change your tail record. Copy parlay & open Gambly copies only player names and stat lines. Combined odds are unknown until your sportsbook prices the ticket. The Legs tab is the weekly library, including individual legs from published tickets and closed selections. Published research is not automatically recommended: the sticker needs a current accepted publishing check and an approved model showing at least a three-percentage-point edge. SHADOW_ONLY estimates cannot earn it.",
+    href: "/feed?view=parlays",
+    link: "Create your parlay",
+  },
+  {
     id: "feed",
     title: "What is the Feed?",
     category: "Start here",

@@ -53,7 +53,7 @@ test("knowledge uses unique topics and internal destinations", () => {
         "/nba",
         "/support",
         "/account/verify-age",
-      ].includes(t.href),
+      ].includes(t.href.split("?")[0]),
     );
 });
 
@@ -97,4 +97,9 @@ test("current help does not advertise retired challenge entry controls", () => {
     helpTopics.find((t) => t.id === "age-verification")!.answer,
     /not activated yet/,
   );
+});
+
+test("custom parlays help routes to the builder and preserves research qualification", () => {
+ assert.equal(findHelp("create my own parlay")?.href, "/feed?view=parlays");
+ assert.match(findHelp("recommended sticker")!.answer, /SHADOW_ONLY/);
 });
