@@ -12,16 +12,23 @@ export default function BeatTheClose() {
       const s = await supabase.auth.getSession();
       if (!s.data.session) return live && setRecord(null);
       // Closing prices exist once a tracked leg's game has kicked off.
-      const prices = await supabase
-        .from("leg_market_prices")
-        .select("leg_key,first_price,last_price")
-        .lt("kickoff", new Date().toISOString())
-        .limit(2000);
-      if (!live) return;
-      if (prices.error || !prices.data?.length) return setRecord(null);
-      const tracked = new Map<string, TrackedPrice>(
-        prices.data.map((p) => [p.leg_key, { first: Number(p.first_price), last: Number(p.last_price) }]),
-      );
+      // Read every page in a stable order so the lifetime record never silently drops rows.
+      const cutoff = new Date().toISOString();
+      const tracked = new Map<string, TrackedPrice>();
+      for (let from = 0; ; from += 1000) {
+        const page = await supabase
+          .from("leg_market_prices")
+          .select("leg_key,first_price,last_price")
+          .lt("kickoff", cutoff)
+          .order("leg_key")
+          .range(from, from + 999);
+        if (!live) return;
+        if (page.error) return setRecord(null);
+        for (const p of page.data || [])
+          tracked.set(p.leg_key, { first: Number(p.first_price), last: Number(p.last_price) });
+        if ((page.data || []).length < 1000) break;
+      }
+      if (!tracked.size) return setRecord(null);
       const keys = [...tracked.keys()];
       const legs: PricedLeg[] = [];
       for (let i = 0; i < keys.length; i += 150) {

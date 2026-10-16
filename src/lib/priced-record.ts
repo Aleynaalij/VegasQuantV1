@@ -164,6 +164,8 @@ export function closingLineRecord(legs: PricedLeg[], tracked: Map<string, Tracke
     missed = 0,
     points = 0;
   const ok = (n: number) => Number.isFinite(n) && Math.abs(n) >= 100;
+  // Each selection once, at its earliest publication that has a tracked price: an earlier
+  // publication with no tracked price has nothing to measure, so the repeat is judged at its own price.
   for (const l of firstPublications(legs.filter((x) => tracked.has(x.leg_key)))) {
     const t = tracked.get(l.leg_key)!;
     const start = priceOf(l) ?? t.first;
