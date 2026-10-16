@@ -104,3 +104,12 @@ export function checkLeg(l: RuleInput): RuleCheck[] {
 /** "pass" only when every check passes, "fail" when any fails, otherwise "unknown". */
 export const verdict = (checks: RuleCheck[]): RuleStatus =>
   checks.some((c) => c.status === "fail") ? "fail" : checks.every((c) => c.status === "pass") ? "pass" : "unknown";
+
+export type BookPrice = { book: string; price: number };
+/** Units won per unit staked at American odds. */
+const payout = (price: number) => (price > 0 ? price / 100 : 100 / -price);
+/** Books ordered best price first (highest payout); ties keep alphabetical order. */
+export const bestPrices = (prices: BookPrice[]) =>
+  [...prices]
+    .filter((p) => Number.isFinite(p.price) && Math.abs(p.price) >= 100)
+    .sort((a, b) => payout(b.price) - payout(a.price) || a.book.localeCompare(b.book));

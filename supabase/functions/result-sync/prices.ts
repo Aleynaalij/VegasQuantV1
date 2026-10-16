@@ -1,6 +1,6 @@
 import { normal, type Contract } from "./grade.ts";
 
-// FanDuel prices for a graded-pick contract, from The Odds API prop observations. Exact lines only:
+// Sportsbook prices for a graded-pick contract, from The Odds API prop observations. Exact lines only:
 // "60+ rushing yards" is the Over 59.5 line; "Over 86.5" / "Under 38.5" match that exact point.
 export type Observation = {
   game_id: string;
@@ -40,32 +40,52 @@ export function wantedLine(c: Pick<Contract, "operator" | "threshold">) {
     : { name: c.operator === "over" ? "Over" : "Under", point: c.threshold };
 }
 
-/** Latest exact-line FanDuel price at or before `at` (kickoff for a closing price). */
+/** Exact-line prices for the contract in one snapshot, or null when the snapshot is ambiguous. */
+function snapshotPrice(
+  c: Pick<Contract, "player" | "metric" | "operator" | "threshold">,
+  o: Observation,
+) {
+  const want = wantedLine(c),
+    who = playerName(c.player);
+  if (!marketKeys(c.metric).includes(o.payload.market || "")) return null;
+  const hits = (o.payload.outcomes || []).filter(
+    (x) =>
+      x.name === want.name &&
+      x.point === want.point &&
+      playerName(x.description || "") === who &&
+      Number.isFinite(x.price) &&
+      Math.abs(x.price) >= 100,
+  );
+  // Two different prices for the same line in one snapshot is ambiguous; skip it.
+  return new Set(hits.map((x) => x.price)).size === 1 ? { price: hits[0].price, point: want.point } : null;
+}
+
+/** Latest exact-line price at one book at or before `at` (kickoff for a closing price). */
 export function marketPrice(
   c: Pick<Contract, "game_id" | "player" | "metric" | "operator" | "threshold">,
   observations: Observation[],
   at: number,
+  book = "FanDuel",
 ): MarketPrice | null {
-  const keys = marketKeys(c.metric),
-    want = wantedLine(c),
-    who = playerName(c.player);
-  let best: MarketPrice | null = null;
+  return bookPrices(c, observations, at).find((p) => p.book === book) || null;
+}
+
+/** Latest exact-line price at every book that quotes the line, at or before `at`. */
+export function bookPrices(
+  c: Pick<Contract, "game_id" | "player" | "metric" | "operator" | "threshold">,
+  observations: Observation[],
+  at: number,
+): MarketPrice[] {
+  const latest = new Map<string, MarketPrice>();
   for (const o of observations) {
     const t = Date.parse(o.observed_at || "");
-    if (o.game_id !== c.game_id || !Number.isFinite(t) || t > at) continue;
-    if (o.payload.book !== "FanDuel" || !keys.includes(o.payload.market || "")) continue;
-    const hits = (o.payload.outcomes || []).filter(
-      (x) =>
-        x.name === want.name &&
-        x.point === want.point &&
-        playerName(x.description || "") === who &&
-        Number.isFinite(x.price) &&
-        Math.abs(x.price) >= 100,
-    );
-    // Two different prices for the same line in one snapshot is ambiguous; skip it.
-    if (new Set(hits.map((x) => x.price)).size !== 1) continue;
-    if (!best || t > Date.parse(best.observed_at))
-      best = { book: "FanDuel", price: hits[0].price, point: want.point, observed_at: o.observed_at! };
+    const book = o.payload.book;
+    if (o.game_id !== c.game_id || !book || !Number.isFinite(t) || t > at) continue;
+    const hit = snapshotPrice(c, o);
+    if (!hit) continue;
+    const prior = latest.get(book);
+    if (!prior || t > Date.parse(prior.observed_at))
+      latest.set(book, { book, price: hit.price, point: hit.point, observed_at: o.observed_at! });
   }
-  return best;
+  return [...latest.values()].sort((a, b) => a.book.localeCompare(b.book));
 }

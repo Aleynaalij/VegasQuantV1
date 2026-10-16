@@ -40,7 +40,7 @@ const sameSelection = (leg: PricedLeg) =>
     .map((s) => s.trim().toLowerCase())
     .join("|");
 
-/** Closing FanDuel price per leg key (last price before kickoff), when the feed matched one. */
+/** Closing price at the published book per leg key (last price before kickoff), when the feed matched one. */
 export type Closing = Map<string, number>;
 
 /** Graded individual picks with a verified result, each selection once at its first publication. */
@@ -86,7 +86,7 @@ export function pricedRecord(legs: PricedLeg[], closing: Closing = new Map()) {
     if (l.result !== "PUSH") breakEven += impliedProbability(odds);
   }
   const decided = wins + losses;
-  // Closing line value: did the published price beat FanDuel's last price before kickoff?
+  // Closing line value: did the published price beat its book's last price before kickoff?
   let clvPicks = 0,
     beatClose = 0,
     clvPoints = 0;

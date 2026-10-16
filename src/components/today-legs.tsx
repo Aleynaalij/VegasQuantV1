@@ -29,7 +29,7 @@ export default function TodayLegs() {
       if (!live || r.error) return;
       const w = todayWindows((r.data || []) as TodayRelease[]);
       setWindows(w);
-      // Latest matched FanDuel price per leg (members only; signed-out visitors just see none).
+      // Latest matched price at the published book per leg (members only; signed-out visitors see none).
       const keys = w.flatMap((x) =>
         x.releases.flatMap((rel) => rel.candidates.map((c) => c.leg_key!)),
       );
@@ -88,10 +88,16 @@ export default function TodayLegs() {
                           </small>
                         );
                       })()}
-                      {prices.has(c.leg_key!) &&
+                      {legForms.books[c.leg_key!]?.[0] ? (
+                        <small>
+                          Best {legForms.books[c.leg_key!][0].book} {odd(legForms.books[c.leg_key!][0].price)}
+                        </small>
+                      ) : (
+                        prices.has(c.leg_key!) &&
                         prices.get(c.leg_key!) !== c.odds && (
-                          <small>FanDuel now {odd(prices.get(c.leg_key!)!)}</small>
-                        )}
+                          <small>Now {odd(prices.get(c.leg_key!)!)}</small>
+                        )
+                      )}
                     </span>
                   </Link>
                 </li>

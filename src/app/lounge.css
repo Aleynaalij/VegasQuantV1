@@ -589,3 +589,6 @@ html[data-theme="dark"] body .topic-heading h2 { font-family: var(--font-board),
 .priced-record-gates b.down { color: #f0a49c; }
 .leg-model { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
 .leg-model b { color: var(--gold-hi); }
+.leg-books { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 6px 0 0; font-size: 12px; color: var(--faint); }
+.leg-books b { color: var(--muted); font-weight: 600; }
+.leg-books b.best { color: var(--gold-hi); }

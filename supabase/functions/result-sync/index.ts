@@ -9,7 +9,7 @@ import {
   type Game,
   type Contract,
 } from "./grade.ts";
-import { marketKeys, marketPrice, type Observation } from "./prices.ts";
+import { bookPrices, marketKeys, type Observation } from "./prices.ts";
 import { legHistory } from "./history.ts";
 const db = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -74,9 +74,12 @@ Deno.serve(async (req: Request) => {
     if (releases.error || games.error)
       throw Error("Publication/game query failed");
     const contracts: Contract[] = [];
+    // The book each pick was published at; its first and closing prices are tracked there.
+    const publishedBook = new Map<string, string>();
     for (const r of releases.data || [])
       for (const [i, c] of r.candidates.entries()) {
         const key = `candidate:${r.id}:${i + 1}`;
+        publishedBook.set(key, typeof c.book === "string" && c.book.trim() ? c.book.trim() : "FanDuel");
         const parsed = contractFor(
           c,
           key,
@@ -154,9 +157,10 @@ Deno.serve(async (req: Request) => {
     } catch {
       historyError = true;
     }
-    // FanDuel price for each upcoming gradable pick: the first exact-line price seen and the
-    // latest one up to kickoff (its closing price). Reads only odds recorded in the last 30
-    // minutes; failures here never block grading.
+    // Prices for each upcoming gradable pick. leg_market_prices keeps the published book's first
+    // exact-line price and its latest one up to kickoff (its closing price); leg_book_prices keeps
+    // the latest price at every collected book for line shopping. Reads only odds recorded in the
+    // last 30 minutes; failures here never block grading.
     let priced = 0,
       priceError = false;
     try {
@@ -173,7 +177,7 @@ Deno.serve(async (req: Request) => {
           .in("game_id", [...new Set(soon.map((c) => c.game_id))])
           .in("payload->>market", [...new Set(soon.flatMap((c) => marketKeys(c.metric)))])
           .gte("recorded_at", new Date(now - 30 * 60000).toISOString())
-          .limit(500);
+          .limit(3000);
         if (obs.error) throw obs.error;
         const existing = await db
           .from("leg_market_prices")
@@ -183,7 +187,13 @@ Deno.serve(async (req: Request) => {
         const known = new Map((existing.data || []).map((r) => [r.leg_key, r.last_observed_at]));
         for (const c of soon) {
           const kick = Date.parse((games.data as Game[]).find((g) => g.id === c.game_id)!.kickoff);
-          const p = marketPrice(c, (obs.data || []) as Observation[], Math.min(now, kick));
+          const all = bookPrices(c, (obs.data || []) as Observation[], Math.min(now, kick));
+          if (!all.length) continue;
+          const shopped = await db.from("leg_book_prices").upsert(
+            all.map((p) => ({ leg_key: c.leg_key, book: p.book, price: p.price, point: p.point, observed_at: p.observed_at, kickoff: new Date(kick).toISOString(), updated_at: new Date().toISOString() })),
+          );
+          if (shopped.error) throw shopped.error;
+          const p = all.find((x) => x.book === (publishedBook.get(c.leg_key) || "FanDuel"));
           if (!p) continue;
           const last = known.get(c.leg_key);
           if (last && Date.parse(last) >= Date.parse(p.observed_at)) continue;
