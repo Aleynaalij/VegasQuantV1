@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { pricedRecord, type PricedLeg } from "@/lib/priced-record";
+import { gatedRecords, pricedRecord, type PricedLeg } from "@/lib/priced-record";
+import type { LegForm } from "@/lib/leg-rules";
 
 const pct = (n: number | null) => (n === null ? "—" : `${Math.round(n)}%`);
 const signed = (n: number, digits = 1) =>
@@ -12,6 +13,7 @@ export default function PricedRecord() {
   const [record, setRecord] = useState<ReturnType<typeof pricedRecord> | null>(
     null,
   );
+  const [gates, setGates] = useState<ReturnType<typeof gatedRecords> | null>(null);
   useEffect(() => {
     let live = true;
     async function load() {
@@ -34,15 +36,23 @@ export default function PricedRecord() {
         .select("leg_key,last_price,kickoff")
         .in("leg_key", legs.map((l) => l.leg_key))
         .lt("kickoff", new Date().toISOString());
+      // Each pick's recent form as of its game, for the rule-by-rule split.
+      const keys = [...new Set(legs.flatMap((l) => [l.leg_key, ...(l.original_leg_key ? [l.original_leg_key] : [])]))];
+      const forms = new Map<string, LegForm>();
+      for (let i = 0; i < keys.length; i += 150) {
+        const h = await supabase
+          .from("leg_history")
+          .select("leg_key,cleared,sample,median,position")
+          .in("leg_key", keys.slice(i, i + 150));
+        for (const x of (h.error ? [] : h.data || []).filter((x) => x.sample > 0))
+          forms.set(x.leg_key, { cleared: x.cleared, sample: x.sample, median: x.median === null ? null : Number(x.median), position: x.position });
+      }
       if (!live) return;
-      setRecord(
-        pricedRecord(
-          legs,
-          new Map(
-            (close.error ? [] : close.data || []).map((x) => [x.leg_key, Number(x.last_price)]),
-          ),
-        ),
+      const closing = new Map(
+        (close.error ? [] : close.data || []).map((x) => [x.leg_key, Number(x.last_price)]),
       );
+      setRecord(pricedRecord(legs, closing));
+      setGates(forms.size ? gatedRecords(legs, closing, forms) : null);
     }
     void load();
     const auth = supabase.auth.onAuthStateChange(() =>
@@ -95,6 +105,30 @@ export default function PricedRecord() {
             ` (average ${record.avgClv >= 0 ? "+" : "−"}${Math.abs(record.avgClv).toFixed(1)} pts)`}
           .
         </p>
+      )}
+      {gates && (gates.pass.picks > 0 || gates.fail.picks > 0) && (
+        <div className="priced-record-gates" aria-label="Record by selection rules">
+          {(
+            [
+              ["Passed every rule", gates.pass],
+              ["Broke a rule", gates.fail],
+              ["Not enough history", gates.unknown],
+            ] as const
+          )
+            .filter(([, r]) => r.picks > 0)
+            .map(([label, r]) => (
+              <p key={label}>
+                <span>
+                  {label} <small>· {r.wins}–{r.losses}{r.pushes ? `–${r.pushes}` : ""}</small>
+                </span>
+                <b className={r.units >= 0 ? "up" : "down"}>{signed(r.units)}u</b>
+              </p>
+            ))}
+          <small>
+            Rules from our published lessons: recent form must beat the price, no near-even-money
+            props, sensible Pick of the Day prices, halftime discipline, and no drifting prices.
+          </small>
+        </div>
       )}
       <small>
         Graded individual picks at the odds printed when each went out; a

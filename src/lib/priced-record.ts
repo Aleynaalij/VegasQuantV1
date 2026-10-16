@@ -1,3 +1,5 @@
+import { checkLeg, verdict, type LegForm } from "./leg-rules";
+
 // Profit at published prices for graded individual selections: 1 unit per pick at the American
 // odds printed when the pick went out. Parlays, Hail Marys and official picks have their own records.
 export type PricedLeg = {
@@ -41,7 +43,8 @@ const sameSelection = (leg: PricedLeg) =>
 /** Closing FanDuel price per leg key (last price before kickoff), when the feed matched one. */
 export type Closing = Map<string, number>;
 
-export function pricedRecord(legs: PricedLeg[], closing: Closing = new Map()) {
+/** Graded individual picks with a verified result, each selection once at its first publication. */
+export function uniquePicks(legs: PricedLeg[]) {
   // Only individual picks with a verified (https-sourced) result.
   const graded = legs.filter(
     (l) =>
@@ -60,7 +63,11 @@ export function pricedRecord(legs: PricedLeg[], closing: Closing = new Map()) {
     if (keys.some((k) => first.has(k))) continue;
     for (const k of keys) first.set(k, l);
   }
-  const unique = [...new Set(first.values())];
+  return [...new Set(first.values())];
+}
+
+export function pricedRecord(legs: PricedLeg[], closing: Closing = new Map()) {
+  const unique = uniquePicks(legs);
   const priced = unique.filter((l) => priceOf(l) !== null);
   let units = 0,
     wins = 0,
@@ -106,5 +113,33 @@ export function pricedRecord(legs: PricedLeg[], closing: Closing = new Map()) {
     beatClose,
     // Average percentage points of implied probability gained versus the closing price.
     avgClv: clvPicks ? clvPoints / clvPicks : null,
+  };
+}
+
+/**
+ * The same record split by the standing selection rules (research/lessons): picks that passed
+ * every automatic check, picks that broke at least one, and picks without enough history to judge.
+ */
+export function gatedRecords(
+  legs: PricedLeg[],
+  closing: Closing,
+  forms: Map<string, LegForm>,
+) {
+  const groups = { pass: [] as PricedLeg[], fail: [] as PricedLeg[], unknown: [] as PricedLeg[] };
+  for (const l of uniquePicks(legs)) {
+    const checks = checkLeg({
+      price: priceOf(l),
+      lastPrice: closing.get(l.leg_key),
+      form: forms.get(l.leg_key) ?? (l.original_leg_key ? forms.get(l.original_leg_key) : undefined),
+      market: l.market,
+      matchup: l.matchup,
+      pickOfDay: l.kind === "PICK_OF_DAY",
+    });
+    groups[verdict(checks)].push(l);
+  }
+  return {
+    pass: pricedRecord(groups.pass, closing),
+    fail: pricedRecord(groups.fail, closing),
+    unknown: pricedRecord(groups.unknown, closing),
   };
 }

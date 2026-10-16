@@ -269,7 +269,7 @@ html[data-theme] body .sports-ticker .ticker-label {
 
 /* ---------- Gold-filled controls: dark ink on gold ---------- */
 html[data-theme="dark"] body :is(
-  .primary, button.primary, a.primary, .btn, .btn.primary, .ask-vegas-launcher, .skip-link,
+  .primary, button.primary, a.primary, .btn, .btn.primary, .ask-vegas-launcher, .skip-link, .vq-welcome-footer button,
   .zone-views a.selected, .section-switch .selected, .slate-windows button.selected,
   .feed-filters button.selected, .board-filters button[aria-pressed="true"],
   .vq-board-head button[aria-pressed="true"], button[aria-pressed="true"]
@@ -552,3 +552,38 @@ html[data-theme="dark"] body .topic-heading h2 { font-family: var(--font-board),
   font-size: 12px;
   line-height: 1.5;
 }
+
+/* ---------- Leg form: "Cleared 4 of last 5" against the price, and admin rule checks ---------- */
+.leg-form { margin: 10px 0 4px; }
+.leg-form > p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel2);
+}
+.leg-form > p strong { color: var(--text); font-size: 14px; }
+.leg-form > p span { color: var(--faint); font-size: 12px; }
+.leg-form.good > p { border-color: #4caf7a66; }
+.leg-form.good > p strong { color: #8fe0ad; }
+.leg-form.bad > p { border-color: #e0605566; }
+.leg-form.bad > p strong { color: #f0a49c; }
+.leg-rules { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.leg-rules summary { cursor: pointer; }
+.leg-rules ul { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 3px; }
+.leg-rules .rule-pass b, b.rule-pass { color: #8fe0ad; }
+.leg-rules .rule-fail b, b.rule-fail { color: #f0a49c; }
+.leg-rules .rule-unknown b, b.rule-unknown { color: var(--gold); }
+.vq-today-form { color: var(--faint); font-size: 11px; }
+.vq-today-form.good { color: #8fe0ad; }
+.vq-today-form.bad { color: #f0a49c; }
+.priced-record-gates { display: grid; gap: 6px; margin-top: 12px; }
+.priced-record-gates p { display: flex; justify-content: space-between; gap: 10px; margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel2); font-size: 13px; }
+.priced-record-gates small { color: var(--faint); }
+.priced-record-gates b.up { color: #8fe0ad; }
+.priced-record-gates b.down { color: #f0a49c; }

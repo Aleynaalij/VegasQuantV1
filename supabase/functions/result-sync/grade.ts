@@ -30,7 +30,7 @@ export const normal = (s: string) =>
     .toLowerCase()
     .replace(/[’']/g, "")
     .replace(/[^a-z0-9]/g, "");
-const playerName = (s: string) =>
+export const playerName = (s: string) =>
   normal(s.replace(/\s+(?:Jr\.?|Sr\.?|II|III|IV)$/i, ""));
 // Trailing desk tags that keep a selection a pick; anything else (e.g. WATCHLIST) is not graded.
 const PICK_TAGS = new Set(["LEAN", "CONDITIONAL LEAN"]);
@@ -271,7 +271,7 @@ export function csvRows(text: string): Record<string, string>[] {
     .filter((r) => r.length === header.length)
     .map((r) => Object.fromEntries(header.map((k, i) => [k, r[i]])));
 }
-const teamCode = (s: string) => (s === "LAR" ? "LA" : s === "WSH" ? "WAS" : s);
+export const teamCode = (s: string) => (s === "LAR" ? "LA" : s === "WSH" ? "WAS" : s);
 export function weeklyStat(
   rows: Record<string, string>[],
   g: Game,

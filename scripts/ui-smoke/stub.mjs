@@ -62,6 +62,11 @@ http.createServer((req, res) => {
     { leg_key: "candidate:s:2", kind: "SINGLE", name: "Sample Receiver", market: "Full game · 50+ receiving yards", matchup: "Buffalo @ Los Angeles Rams", game_id: "g0", published_at: "2026-10-12T10:00:00Z", result: "LOSS", result_source: "https://example.com/box", odds: -120, original_leg_key: null },
     { leg_key: "candidate:s:3", kind: "SINGLE", name: "Sample Passer", market: "Full game · 200+ passing yards", matchup: "Buffalo @ Los Angeles Rams", game_id: "g0", published_at: "2026-10-12T10:00:00Z", result: "WIN", result_source: "https://example.com/box", odds: null, original_leg_key: null },
   ]);
+  if (u.startsWith("/rest/v1/leg_history")) {
+    // Sample recent form for whichever legs are asked for: alternately strong and weak.
+    const keys = (/leg_key=in\.\(([^)]*)\)/.exec(u)?.[1] || "").split(",").map((k) => k.replace(/"/g, "")).filter(Boolean);
+    return json(res, keys.map((leg_key, i) => ({ leg_key, cleared: i % 2 ? 2 : 5, sample: 5, median: i % 2 ? 31 : 74, position: "WR" })));
+  }
   if (u.startsWith("/rest/v1/topic_follows")) return json(res, [{ kind: "team", topic: "Seattle Seahawks" }]);
   if (u.startsWith("/rest/v1/")) return json(res, []);
   json(res, {}, 404);
