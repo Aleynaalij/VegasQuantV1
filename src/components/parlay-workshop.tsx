@@ -65,6 +65,22 @@ export default function ParlayWorkshop({
       setLoading(false);
     }
     void load();
+    // Refresh the library without discarding a member's in-progress combination.
+    const refreshCatalog = async () => {
+      if (document.visibilityState !== "visible") return;
+      const n = epoch.current;
+      const result = await supabase.rpc("published_leg_catalog", {
+        p_since: homeWeekStart(new Date()),
+      });
+      if (!live || n !== epoch.current) return;
+      if (result.error)
+        setError(
+          "The leg library could not refresh. Showing the last loaded observations; saving rechecks every leg.",
+        );
+      else setRows(weeklyLegs(result.data || []));
+    };
+    const refreshTimer = setInterval(() => void refreshCatalog(), 60000);
+    window.addEventListener("focus", refreshCatalog);
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event !== "INITIAL_SESSION" && event !== "TOKEN_REFRESHED")
         void load();
@@ -73,6 +89,8 @@ export default function ParlayWorkshop({
       live = false;
       ++epoch.current;
       data.subscription.unsubscribe();
+      clearInterval(refreshTimer);
+      window.removeEventListener("focus", refreshCatalog);
     };
   }, []);
   function start() {
