@@ -8,7 +8,12 @@ export type Observation = {
   payload: {
     market?: string;
     book?: string;
-    outcomes?: { name: string; description?: string; point?: number; price: number }[];
+    outcomes?: {
+      name: string;
+      description?: string;
+      point?: number;
+      price: number;
+    }[];
   };
 };
 export type MarketPrice = {
@@ -23,6 +28,7 @@ const MARKETS: Record<Contract["metric"], string> = {
   receiving_yards: "player_reception_yds",
   passing_yards: "player_pass_yds",
   receptions: "player_receptions",
+  def_sacks: "player_sacks",
 };
 /** Standard and alternate-line market keys for a metric. */
 export const marketKeys = (metric: Contract["metric"]) => [
@@ -53,7 +59,8 @@ export function marketPrice(
   for (const o of observations) {
     const t = Date.parse(o.observed_at || "");
     if (o.game_id !== c.game_id || !Number.isFinite(t) || t > at) continue;
-    if (o.payload.book !== "FanDuel" || !keys.includes(o.payload.market || "")) continue;
+    if (o.payload.book !== "FanDuel" || !keys.includes(o.payload.market || ""))
+      continue;
     const hits = (o.payload.outcomes || []).filter(
       (x) =>
         x.name === want.name &&
@@ -65,7 +72,12 @@ export function marketPrice(
     // Two different prices for the same line in one snapshot is ambiguous; skip it.
     if (new Set(hits.map((x) => x.price)).size !== 1) continue;
     if (!best || t > Date.parse(best.observed_at))
-      best = { book: "FanDuel", price: hits[0].price, point: want.point, observed_at: o.observed_at! };
+      best = {
+        book: "FanDuel",
+        price: hits[0].price,
+        point: want.point,
+        observed_at: o.observed_at!,
+      };
   }
   return best;
 }
