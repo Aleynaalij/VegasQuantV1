@@ -6,6 +6,7 @@ import LetsSweat from "./lets-sweat";
 import AccountLink from "./account-link";
 import SwipeTabs from "./swipe-tabs";
 import TabScrub from "./tab-scrub";
+import CommunityStories from "./community-stories";
 import {
   ArrowUpRight,
   BookOpen,
@@ -265,7 +266,11 @@ export function Shell({
             <AccountLink />
           </div>
         </header>
-        <nav className="sport-switch" aria-label="Sport selection" data-swipe-tabs>
+        <nav
+          className="sport-switch"
+          aria-label="Sport selection"
+          data-swipe-tabs
+        >
           <a
             href={nflHref}
             aria-current={sport === "nfl" ? "page" : undefined}
@@ -280,7 +285,11 @@ export function Shell({
           >
             NBA
           </a>
-          {sport === "nba" ? <span>Preparation mode</span> : null}
+          {active === "home" ? (
+            <CommunityStories />
+          ) : sport === "nba" ? (
+            <span>Preparation mode</span>
+          ) : null}
         </nav>
         <main id="main-content" tabIndex={-1}>
           {children}

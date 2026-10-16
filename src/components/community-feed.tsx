@@ -12,8 +12,7 @@ import { supabase } from "@/lib/supabase";
 import CommunityPhoto from "./community-photo";
 import { COMMUNITY_PHOTO_BUCKET, MAX_PHOTO_BYTES } from "@/lib/community-photo";
 import { time } from "@/lib/domain";
-import TailLeaderboard from "./tail-leaderboard";
-import SectionBoundary from "./section-boundary";
+import { ImagePlus, Heart, MessageCircle } from "lucide-react";
 type Post = {
   id: string;
   user_id: string;
@@ -155,11 +154,7 @@ export default function CommunityFeed() {
     [blocked, setBlocked] = useState<
       { target_user_id: string; label: string }[]
     >([]),
-    [kind, setKind] = useState("talk"),
-    [title, setTitle] = useState(""),
     [body, setBody] = useState(""),
-    [legs, setLegs] = useState(""),
-    [stake, setStake] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(false),
@@ -168,6 +163,8 @@ export default function CommunityFeed() {
     [reports, setReports] = useState<
       { id: string; post_id: string; reason: string }[]
     >([]);
+  const [targetPost, setTargetPost] = useState<string | null>(null);
+  const [targetMissing, setTargetMissing] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const photoInput = useRef<HTMLInputElement>(null);
@@ -186,6 +183,8 @@ export default function CommunityFeed() {
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get("sport") === "nba")
       setSport("nba");
+    const target = new URLSearchParams(window.location.search).get("post");
+    if (target && /^[0-9a-f-]{36}$/i.test(target)) setTargetPost(target);
     let live = true;
     const update = (id: string | null) => {
       if (!live || sessionUid.current === id) return;
@@ -194,10 +193,7 @@ export default function CommunityFeed() {
       mutationEpoch.current++;
       if (photoInput.current) photoInput.current.value = "";
       setPhoto(null);
-      setTitle("");
       setBody("");
-      setLegs("");
-      setStake("");
       setBusy(false);
       setUid(id);
       setRows([]);
@@ -226,13 +222,16 @@ export default function CommunityFeed() {
     if (!uid) return;
     const n = ++epoch.current;
     setLoading(true);
-    const [r, a] = await Promise.all([
+    const [r, a, target] = await Promise.all([
       supabase.rpc("community_feed", {
         p_sport: sport,
         p_limit: limit,
         p_following: followingOnly,
       }),
       supabase.rpc("is_admin"),
+      targetPost
+        ? supabase.rpc("community_post", { p_id: targetPost })
+        : Promise.resolve({ data: null, error: null }),
     ]);
     if (n !== epoch.current) return;
     setLoading(false);
@@ -243,7 +242,16 @@ export default function CommunityFeed() {
       );
       return;
     }
-    setRows(r.data || []);
+    const posts: Post[] = r.data || [];
+    if (targetPost && target.error) {
+      setNotice("That post could not load. Please refresh to try again.");
+      setTargetMissing(false);
+    } else {
+      setTargetMissing(Boolean(targetPost && !target.data));
+    }
+    if (target.data && !posts.some((p) => p.id === target.data.id))
+      posts.unshift(target.data);
+    setRows(posts);
     const blocks = await supabase
       .from("member_blocks")
       .select("target_user_id,label")
@@ -257,7 +265,16 @@ export default function CommunityFeed() {
         .limit(50);
       if (n === epoch.current) setReports(flags.data || []);
     }
-  }, [uid, sport, limit, followingOnly]);
+  }, [uid, sport, limit, followingOnly, targetPost]);
+  useEffect(() => {
+    if (!targetPost || !rows.some((p) => p.id === targetPost)) return;
+    const frame = requestAnimationFrame(() =>
+      document
+        .getElementById(`post-${targetPost}`)
+        ?.scrollIntoView({ block: "start", behavior: "smooth" }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [targetPost, rows.length]);
   useEffect(() => {
     void refresh();
     const focus = () => void refresh();
@@ -272,14 +289,7 @@ export default function CommunityFeed() {
   async function post(e: FormEvent) {
     e.preventDefault();
     if (!uid) return;
-    const selections = legs
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
-    if (selections.length > 12 || selections.some((s) => s.length > 180)) {
-      setNotice("Use up to twelve selections, each under 180 characters.");
-      return;
-    }
+    if (!body.trim() && !photo) return;
     if (busy) return;
     const generation = mutationEpoch.current;
     const postId = crypto.randomUUID();
@@ -311,11 +321,11 @@ export default function CommunityFeed() {
         id: postId,
         user_id: uid,
         sport,
-        kind,
-        title: title.trim(),
-        body: body.trim(),
-        legs: kind === "talk" ? [] : selections,
-        stake: kind === "talk" || stake === "" ? null : Number(stake),
+        kind: "talk",
+        title: "Community post",
+        body: body.trim() || "Shared a photo",
+        legs: [],
+        stake: null,
         photo_path: uploaded,
       });
       if (r.error) {
@@ -328,13 +338,11 @@ export default function CommunityFeed() {
         );
       }
       if (generation !== mutationEpoch.current) return;
-      setTitle("");
       setBody("");
-      setLegs("");
-      setStake("");
       setPhoto(null);
       if (photoInput.current) photoInput.current.value = "";
       setNotice("Posted to Community. This does not record a wager.");
+      window.dispatchEvent(new Event("vq-community-changed"));
       await refresh();
     } catch (error) {
       if (generation === mutationEpoch.current)
@@ -443,6 +451,7 @@ export default function CommunityFeed() {
       if (!r.ok) throw Error(data.error || "Could not remove post.");
       if (generation !== mutationEpoch.current) return;
       setNotice("Post and attached photo removed.");
+      window.dispatchEvent(new Event("vq-community-changed"));
       await refresh();
     } catch (error) {
       if (generation === mutationEpoch.current)
@@ -471,66 +480,27 @@ export default function CommunityFeed() {
   return (
     <Shell active="community" sport={sport}>
       <div className="community-feed">
-        <header>
-          <span className="eyebrow">YOUR PEOPLE · YOUR PERSPECTIVE</span>
-          <p>
-            Keep it respectful. No threats, scams or guaranteed-return claims.
-            Reporting and blocking are available on member posts.
-          </p>
-          {blocked.length ? (
-            <details>
-              <summary>Blocked members · {blocked.length}</summary>
-              {blocked.map((b) => (
-                <p key={b.target_user_id}>
-                  @{b.label}{" "}
-                  <button
-                    className="secondary"
-                    disabled={busy}
-                    onClick={() => void unblock(b.target_user_id)}
-                  >
-                    Unblock
-                  </button>
-                </p>
-              ))}
-            </details>
-          ) : null}
+        <header className="community-feed-heading">
           <h1>Community</h1>
-          <p>Share a slip. Talk through a game. Explain your thinking.</p>
-          <p className="notice">
-            Member picks are community opinions, separate from Vegas Quant
-            selections. Sharing, reacting or following never records a wager.
-            Results are member-reported, not verified records.
-          </p>
+          <Link href="/feed">The Zone →</Link>
         </header>
-        <nav className="zone-views" aria-label="Community sport">
-          {(["nfl", "nba"] as const).map((s) => (
-            <button
-              className={sport === s ? "primary" : "secondary"}
-              aria-pressed={sport === s}
-              key={s}
-              onClick={() => {
-                setSport(s);
-                setKind("talk");
-                setLimit(20);
-              }}
-            >
-              {s.toUpperCase()}
-            </button>
-          ))}
-        </nav>
-        {sport === "nba" ? (
-          <p className="notice">
-            NBA preparation mode: game discussion is open. NBA pregame slips and
-            result posts stay disabled until the owner opens publishing after
-            the season begins.
-          </p>
+        {blocked.length ? (
+          <details>
+            <summary>Blocked members · {blocked.length}</summary>
+            {blocked.map((b) => (
+              <p key={b.target_user_id}>
+                @{b.label}{" "}
+                <button
+                  className="secondary"
+                  disabled={busy}
+                  onClick={() => void unblock(b.target_user_id)}
+                >
+                  Unblock
+                </button>
+              </p>
+            ))}
+          </details>
         ) : null}
-        <Link href="/feed">
-          Looking for analyst picks and injury updates? Head to The Zone →
-        </Link>
-        <SectionBoundary name="Tail leaderboard">
-          <TailLeaderboard />
-        </SectionBoundary>
         {!authReady ? (
           <p>Checking your session…</p>
         ) : !uid ? (
@@ -547,83 +517,55 @@ export default function CommunityFeed() {
         ) : (
           <>
             <form className="community-composer" onSubmit={post}>
-              <h2>Start a conversation</h2>
               <fieldset disabled={busy}>
-                <p>
-                  Your profile username is published with your post. Avoid
-                  account numbers and private ticket details. Sharing your stake
-                  is optional.
-                </p>
-                <label>
-                  Post type
-                  <select
-                    value={kind}
-                    onChange={(e) => setKind(e.target.value)}
+                <label className="sr-only" htmlFor="community-message">
+                  Your post
+                </label>
+                <textarea
+                  id="community-message"
+                  maxLength={2000}
+                  value={body}
+                  onChange={(e) => setBody(e.target.value)}
+                  placeholder="What's on your mind?"
+                  rows={3}
+                />
+                <div className="composer-toolbar">
+                  <label className="attach-photo" title="Attach a photo">
+                    <ImagePlus size={22} aria-hidden="true" />{" "}
+                    <span>Photo</span>
+                    <input
+                      ref={photoInput}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) {
+                          setPhoto(null);
+                          return;
+                        }
+                        if (
+                          file.size > MAX_PHOTO_BYTES ||
+                          !["image/jpeg", "image/png", "image/webp"].includes(
+                            file.type,
+                          )
+                        ) {
+                          setNotice("Choose a JPG, PNG or WebP under 5 MB.");
+                          e.target.value = "";
+                          setPhoto(null);
+                          return;
+                        }
+                        setPhoto(file);
+                        setNotice("");
+                      }}
+                    />
+                  </label>
+                  <button
+                    className="primary"
+                    disabled={busy || (!body.trim() && !photo)}
                   >
-                    {Object.entries(kinds).map(([v, label]) => (
-                      <option
-                        key={v}
-                        value={v}
-                        disabled={sport === "nba" && v !== "talk"}
-                      >
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Headline
-                  <input
-                    required
-                    maxLength={120}
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="What are you watching tonight?"
-                  />
-                </label>
-                <label>
-                  Caption or reasoning
-                  <textarea
-                    required
-                    maxLength={2000}
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                    placeholder="Why you like it—and what could go wrong."
-                  />
-                </label>
-                <label>
-                  Add a photo · optional
-                  <input
-                    ref={photoInput}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) {
-                        setPhoto(null);
-                        return;
-                      }
-                      if (
-                        file.size > MAX_PHOTO_BYTES ||
-                        !["image/jpeg", "image/png", "image/webp"].includes(
-                          file.type,
-                        )
-                      ) {
-                        setNotice("Choose a JPG, PNG or WebP under 5 MB.");
-                        e.target.value = "";
-                        setPhoto(null);
-                        return;
-                      }
-                      setPhoto(file);
-                      setNotice("");
-                    }}
-                  />
-                </label>
-                <small>
-                  Cover account numbers, balances, barcodes and private ticket
-                  details before sharing. Photo metadata is removed during
-                  upload. Members can still screenshot shared photos.
-                </small>
+                    {busy ? "Posting…" : "Post"}
+                  </button>
+                </div>
                 {preview ? (
                   <div className="community-photo-preview">
                     <img src={preview} alt="Photo preview before publishing" />
@@ -639,41 +581,8 @@ export default function CommunityFeed() {
                     </button>
                   </div>
                 ) : null}
-                {kind !== "talk" ? (
-                  <>
-                    <label>
-                      Selections · one per line
-                      <textarea
-                        required={kind === "slip" && !photo}
-                        maxLength={2160}
-                        value={legs}
-                        onChange={(e) => setLegs(e.target.value)}
-                        placeholder="Player · market · target"
-                      />
-                    </label>
-                    <label>
-                      Stake to share · optional
-                      <input
-                        type="number"
-                        min="0"
-                        max="1000000"
-                        step="0.01"
-                        value={stake}
-                        onChange={(e) => setStake(e.target.value)}
-                      />
-                    </label>
-                  </>
-                ) : null}
-                <button
-                  className="primary"
-                  disabled={busy || (sport === "nba" && kind !== "talk")}
-                >
-                  {busy ? "Publishing…" : "Post to Community"}
-                </button>
               </fieldset>
-              <Link href="/membership">
-                Complete or manage your community profile →
-              </Link>
+              <Link href="/membership">Your profile →</Link>
             </form>
             <div className="social-actions">
               <button
@@ -705,6 +614,9 @@ export default function CommunityFeed() {
               </button>
             </div>
             <p role="status">{notice}</p>
+            {targetMissing ? (
+              <p role="status">This post is no longer available.</p>
+            ) : null}
             {loading ? <p>Refreshing Community…</p> : null}
             {!loading && rows.length === 0 ? (
               <section className="community-composer">
@@ -720,7 +632,11 @@ export default function CommunityFeed() {
               </section>
             ) : null}
             {rows.map((p) => (
-              <article className="social-post" key={p.id}>
+              <article
+                className={`social-post ${p.id === targetPost ? "linked-post" : ""}`}
+                id={`post-${p.id}`}
+                key={p.id}
+              >
                 <header>
                   <Link
                     href={`/community/${encodeURIComponent(p.author_name)}`}
@@ -743,7 +659,7 @@ export default function CommunityFeed() {
                   MEMBER POST · {kinds[p.kind]}
                   {p.kind === "result" ? " · UNVERIFIED RESULT" : ""}
                 </span>
-                <h2>{p.title}</h2>
+                {p.title !== "Community post" ? <h2>{p.title}</h2> : null}
                 <p>{p.body}</p>
                 {p.photo_path ? (
                   <CommunityPhoto
@@ -765,6 +681,32 @@ export default function CommunityFeed() {
                   </small>
                 ) : null}
                 <div className="social-actions">
+                  <button
+                    className="secondary"
+                    disabled={busy}
+                    aria-pressed={p.reacted}
+                    onClick={() => void react(p)}
+                  >
+                    <Heart
+                      size={19}
+                      fill={p.reacted ? "currentColor" : "none"}
+                      aria-hidden="true"
+                    />{" "}
+                    Like · {p.reactions}
+                  </button>
+                  <button
+                    className="secondary"
+                    aria-expanded={openComments === p.id}
+                    onClick={() =>
+                      setOpenComments(openComments === p.id ? null : p.id)
+                    }
+                  >
+                    <MessageCircle size={19} aria-hidden="true" /> Comment ·{" "}
+                    {p.comments}
+                  </button>
+                </div>
+                <details className="post-options">
+                  <summary aria-label="Post options">•••</summary>
                   {uid !== p.user_id ? (
                     <button
                       className="secondary"
@@ -792,23 +734,6 @@ export default function CommunityFeed() {
                       </button>
                     </>
                   ) : null}
-                  <button
-                    className="secondary"
-                    disabled={busy}
-                    aria-pressed={p.reacted}
-                    onClick={() => void react(p)}
-                  >
-                    Helpful · {p.reactions}
-                  </button>
-                  <button
-                    className="secondary"
-                    aria-expanded={openComments === p.id}
-                    onClick={() =>
-                      setOpenComments(openComments === p.id ? null : p.id)
-                    }
-                  >
-                    Comments · {p.comments}
-                  </button>
                   {uid === p.user_id || admin ? (
                     <button
                       className="text-link"
@@ -819,9 +744,6 @@ export default function CommunityFeed() {
                         : "Remove my post"}
                     </button>
                   ) : null}
-                </div>
-                <details>
-                  <summary>Report this post</summary>
                   <form onSubmit={(e) => void report(e, p.id)}>
                     <label>
                       Reason
@@ -851,8 +773,8 @@ export default function CommunityFeed() {
               </button>
             ) : null}
             {admin && reports.length ? (
-              <section className="community-composer">
-                <h2>Moderation · Latest reports</h2>
+              <details className="community-composer">
+                <summary>Moderation · Latest reports</summary>
                 {reports.map((r) => (
                   <div key={r.id}>
                     <p>{r.reason}</p>
@@ -864,7 +786,7 @@ export default function CommunityFeed() {
                     </button>
                   </div>
                 ))}
-              </section>
+              </details>
             ) : null}
           </>
         )}
