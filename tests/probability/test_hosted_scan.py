@@ -37,6 +37,12 @@ class HostedScanTests(unittest.TestCase):
     def test_slate_is_upcoming_scheduled_nfl_games_within_seven_days(self):
         self.assertEqual([g["id"] for g in h.upcoming_games(FakeDb([]), NOW)], ["g1"])
         self.assertEqual(h.slate([GAMES[0]]), [{"id": "g1", "kickoff": "2026-10-18T17:00:00+00:00"}])
+        db = FakeDb([])
+        h.upcoming_games(db, NOW)
+        path = db.calls[0][0]
+        self.assertIn("sport=ilike.nfl", path)
+        self.assertIn("kickoff_tbd=is.false", path)
+        self.assertIn("and=(kickoff.gt.2026-10-18T15:00:00Z,kickoff.lte.2026-10-25T15:00:00Z)", path)
 
     def test_only_a_recent_fanduel_prop_snapshot_makes_a_scan_due(self):
         self.assertTrue(h.has_fresh_props([prop(5)], NOW))

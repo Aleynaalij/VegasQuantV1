@@ -57,8 +57,11 @@ class Supabase:
 
 def upcoming_games(db: Supabase, now: datetime):
     """Future, scheduled NFL games inside the prop-collection horizon (seven days)."""
+    # Filter in the query, before the limit, so other sports can never crowd NFL games out.
     rows = db.select("games", select="id,season,week,kickoff,kickoff_tbd,sport,away_abbreviation,home_abbreviation",
-                     kickoff=f"gt.{iso(now)}", order="kickoff.asc", limit="40")
+                     sport="ilike.nfl", kickoff_tbd="is.false",
+                     **{"and": f"(kickoff.gt.{iso(now)},kickoff.lte.{iso(now + HORIZON)})"},
+                     order="kickoff.asc", limit="100")
     return [g for g in rows if str(g.get("sport") or "").upper() == "NFL" and not g.get("kickoff_tbd")
             and datetime.fromisoformat(g["kickoff"].replace("Z", "+00:00")) <= now + HORIZON]
 

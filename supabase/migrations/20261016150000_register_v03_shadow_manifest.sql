@@ -24,7 +24,9 @@ begin
   coalesce(jsonb_array_length(f.forecast->'blockers'), 0), f.recorded_at
  from private.leg_result_contracts c
  join private.nfl_shadow_forecasts f on f.game_id = c.game_id
-  and regexp_replace(lower(f.player), '[^a-z0-9]', '', 'g') = regexp_replace(lower(regexp_replace(c.player, '\s+(Jr\.?|Sr\.?|II|III|IV)$', '', 'i')), '[^a-z0-9]', '', 'g')
+  -- Names compare without suffixes (Jr., Sr., II-IV), case or punctuation, on both sides.
+  and regexp_replace(lower(regexp_replace(f.player, '\s+(Jr\.?|Sr\.?|II|III|IV)$', '', 'i')), '[^a-z0-9]', '', 'g')
+   = regexp_replace(lower(regexp_replace(c.player, '\s+(Jr\.?|Sr\.?|II|III|IV)$', '', 'i')), '[^a-z0-9]', '', 'g')
   and f.market = case c.metric when 'rushing_yards' then 'rushing' when 'receiving_yards' then 'receiving' end
   and f.direction = case c.operator when 'under' then 'under' else 'over' end
   and f.line = case c.operator when 'gte' then c.threshold - 0.5 else c.threshold end
