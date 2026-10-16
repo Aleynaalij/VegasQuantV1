@@ -168,6 +168,7 @@ export default function CommunityFeed() {
   const [photo, setPhoto] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const photoInput = useRef<HTMLInputElement>(null);
+  const scrolledPost = useRef<string | null>(null);
   const mutationEpoch = useRef(0);
   useEffect(() => {
     if (!photo) {
@@ -267,7 +268,13 @@ export default function CommunityFeed() {
     }
   }, [uid, sport, limit, followingOnly, targetPost]);
   useEffect(() => {
-    if (!targetPost || !rows.some((p) => p.id === targetPost)) return;
+    if (
+      !targetPost ||
+      scrolledPost.current === targetPost ||
+      !rows.some((p) => p.id === targetPost)
+    )
+      return;
+    scrolledPost.current = targetPost;
     const frame = requestAnimationFrame(() =>
       document
         .getElementById(`post-${targetPost}`)
@@ -764,7 +771,7 @@ export default function CommunityFeed() {
                 ) : null}
               </article>
             ))}
-            {rows.length === limit && limit < 100 ? (
+            {rows.length >= limit && limit < 100 ? (
               <button
                 className="secondary"
                 onClick={() => setLimit((n) => n + 20)}
