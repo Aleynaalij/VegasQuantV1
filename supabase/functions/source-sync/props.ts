@@ -39,21 +39,41 @@ export function upcomingPropEvents(
     skipped: Math.max(0, unique.length - limit),
   };
 }
-// Main and alternate rushing/receiving yards are needed BEFORE selection, for every research game.
-// Published-pick games additionally request passing and receptions markets.
+// Research prices are collected before selection; unsupported statistical models stay blocked.
 export const BASE_PROP_MARKETS = [
   "player_rush_yds",
   "player_reception_yds",
+  "player_pass_yds",
   "player_rush_yds_alternate",
   "player_reception_yds_alternate",
+  "player_pass_yds_alternate",
+  "player_sacks",
+  "player_sacks_alternate",
 ];
 export const PICK_PROP_MARKETS = [
   ...BASE_PROP_MARKETS,
-  "player_pass_yds",
   "player_receptions",
-  "player_pass_yds_alternate",
   "player_receptions_alternate",
 ];
+export const PROP_MARKET_SET_VERSION = "nfl-research-v3-passing-sacks";
+/** New market sets must refresh once immediately; old per-event caches cannot hide missing markets. */
+export function propFetchCache(
+  details: Record<string, unknown> | undefined,
+  now: number,
+): Record<string, string> {
+  if (details?.market_set_version !== PROP_MARKET_SET_VERSION) return {};
+  const raw = details.event_fetched_at;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return {};
+  return Object.fromEntries(
+    Object.entries(raw).filter(
+      ([key, value]) =>
+        /^[a-zA-Z0-9_-]+$/.test(key) &&
+        typeof value === "string" &&
+        Number.isFinite(Date.parse(value)) &&
+        Date.parse(value) <= now,
+    ),
+  ) as Record<string, string>;
+}
 /** The game an Odds API event is for (same matching as upcomingPropEvents). */
 export const gameForEvent = (event: Event, games: Game[]) =>
   games.find(
