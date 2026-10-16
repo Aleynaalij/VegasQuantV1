@@ -31,4 +31,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --ignore-scripts
-      - run: npx tsx scripts/research-board/run.ts ${{ inputs.dry_run && '--dry-run' || '' }} | tee -a "$GITHUB_STEP_SUMMARY"
+      # bash with pipefail, so a failing run is not hidden by tee.
+      - shell: bash
+        run: npx tsx scripts/research-board/run.ts ${{ inputs.dry_run && '--dry-run' || '' }} | tee -a "$GITHUB_STEP_SUMMARY"
