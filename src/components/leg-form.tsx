@@ -4,11 +4,18 @@ import { supabase } from "@/lib/supabase";
 import { breakEven, checkLeg, formLine, statUnit, verdict, type LegForm } from "@/lib/leg-rules";
 
 type Price = { first: number; last: number };
-export type FormData = { forms: Record<string, LegForm>; prices: Record<string, Price>; admin: boolean };
+/** Latest prospective shadow-model forecast for a leg (administrators only). */
+type Estimate = { probability: number; push: number; direction: string; line: number; odds: number | null; blockers: number; at: string };
+export type FormData = {
+  forms: Record<string, LegForm>;
+  prices: Record<string, Price>;
+  estimates: Record<string, Estimate>;
+  admin: boolean;
+};
 
 /** Recent form, tracked prices and (for administrators) rule checks for a set of leg keys. */
 export function useLegForms(keys: string[]): FormData {
-  const [data, setData] = useState<FormData>({ forms: {}, prices: {}, admin: false });
+  const [data, setData] = useState<FormData>({ forms: {}, prices: {}, estimates: {}, admin: false });
   const id = keys.join(",");
   useEffect(() => {
     let live = true;
@@ -24,12 +31,28 @@ export function useLegForms(keys: string[]): FormData {
         supabase.rpc("is_admin"),
       ]);
       if (!live) return;
+      const m = a.data === true ? await supabase.rpc("admin_leg_model_estimates", { p_keys: list }) : null;
+      if (!live) return;
       setData({
         forms: Object.fromEntries(
           (h.data || []).filter((x) => x.sample > 0).map((x) => [x.leg_key, { cleared: x.cleared, sample: x.sample, median: x.median === null ? null : Number(x.median), position: x.position }]),
         ),
         prices: Object.fromEntries(
           (p.data || []).map((x) => [x.leg_key, { first: Number(x.first_price), last: Number(x.last_price) }]),
+        ),
+        estimates: Object.fromEntries(
+          (m?.error ? [] : (m?.data as any[]) || []).map((x) => [
+            x.leg_key,
+            {
+              probability: Number(x.research_probability),
+              push: Number(x.push_probability),
+              direction: x.direction,
+              line: Number(x.line),
+              odds: x.odds === null ? null : Number(x.odds),
+              blockers: x.blockers,
+              at: x.recorded_at,
+            },
+          ]),
         ),
         admin: a.data === true,
       });
@@ -77,6 +100,19 @@ export default function LegFormLine({
           {be !== null && <span>Price needs {Math.round(be)}%</span>}
         </p>
       )}
+      {data.admin && data.estimates[legKey] && (() => {
+        const e = data.estimates[legKey];
+        const win = (e.probability / (1 - e.push)) * 100;
+        return (
+          <p className="leg-model">
+            <b>Model (shadow) {Math.round(win)}%</b> · {e.direction === "under" ? "u" : "o"}
+            {e.line}
+            {e.odds !== null && ` ${e.odds > 0 ? "+" : ""}${e.odds}`}
+            {e.odds !== null && Math.abs(e.odds) >= 100 && ` · needs ${Math.round(breakEven(e.odds))}%`} · {e.blockers} blocker
+            {e.blockers === 1 ? "" : "s"} · research only
+          </p>
+        );
+      })()}
       {data.admin && (
         <details className="leg-rules">
           <summary>
