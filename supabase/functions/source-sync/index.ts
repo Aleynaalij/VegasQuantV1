@@ -13,7 +13,12 @@ import {
   injuryObservations,
   newsObservations,
 } from "./normalize.ts";
-import { gameLinesDue, propsDue, PROPS_HORIZON } from "./cadence.ts";
+import {
+  gameLinesDue,
+  propsDue,
+  propEventDue,
+  PROPS_HORIZON,
+} from "./cadence.ts";
 const db = createClient(
   Deno.env.get("SUPABASE_URL")!,
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -139,19 +144,30 @@ Deno.serve(async (req: Request) => {
         .limit(1);
       const row = r.data?.[0];
       const at = Date.parse(row?.details?.fetched_at || "");
-      return Number.isFinite(at) ? { at, status: row!.status, details: row!.details } : null;
+      return Number.isFinite(at)
+        ? { at, status: row!.status, details: row!.details }
+        : null;
     };
     // A run that is not due repeats the last fetch's status and details (same fetched_at),
     // so health checks stay current without spending provider credits.
-    const carryForward = (provider: string, last: NonNullable<Awaited<ReturnType<typeof lastFetch>>>) =>
+    const carryForward = (
+      provider: string,
+      last: NonNullable<Awaited<ReturnType<typeof lastFetch>>>,
+    ) =>
       db.rpc("ingest_source", {
-        p: { provider, status: last.status, details: { ...last.details, carried_forward: true } },
+        p: {
+          provider,
+          status: last.status,
+          details: { ...last.details, carried_forward: true },
+        },
       });
     const kickoffs = (upcoming || []).map((g) => Date.parse(g.kickoff));
     const now = Date.now();
-    let oddsCount = 0, missingFanDuelEvents = 0;
+    let oddsCount = 0,
+      missingFanDuelEvents = 0;
     const linesLast = oddsOn ? await lastFetch("The Odds API") : null;
-    const linesDue = oddsOn && gameLinesDue(kickoffs, linesLast?.at ?? null, now);
+    const linesDue =
+      oddsOn && gameLinesDue(kickoffs, linesLast?.at ?? null, now);
     if (linesDue) {
       const events = await json(
         `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${encodeURIComponent(key!)}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=fanduel`,
@@ -162,8 +178,14 @@ Deno.serve(async (req: Request) => {
       if (error) throw error;
       const observations = oddsObservations(events, games || []);
       oddsCount = observations.length;
-      const coveredEvents = new Set(observations.filter(o => o.payload.outcomes.length > 0).map(o => o.payload.event_id));
-      missingFanDuelEvents = events.filter((event: { id: string }) => !coveredEvents.has(event.id)).length;
+      const coveredEvents = new Set(
+        observations
+          .filter((o) => o.payload.outcomes.length > 0)
+          .map((o) => o.payload.event_id),
+      );
+      missingFanDuelEvents = events.filter(
+        (event: { id: string }) => !coveredEvents.has(event.id),
+      ).length;
       for (const o of observations)
         o.fingerprint = await sha(
           JSON.stringify([o.game_id, o.kind, o.payload]),
@@ -184,7 +206,9 @@ Deno.serve(async (req: Request) => {
             ? "not configured"
             : !linesDue
               ? "no upcoming events"
-              : oddsCount && !missingFanDuelEvents ? "ok" : "partial",
+              : oddsCount && !missingFanDuelEvents
+                ? "ok"
+                : "partial",
           details: {
             books: ["FanDuel"],
             quoted_markets: oddsCount,
@@ -196,43 +220,149 @@ Deno.serve(async (req: Request) => {
         },
       });
     let propCount = 0;
-    const propsEnabled = oddsOn && Deno.env.get("ODDS_PROPS_ENABLED") === "true";
-    const propsLast = propsEnabled ? await lastFetch("The Odds API props") : null;
+    const propsEnabled =
+      oddsOn && Deno.env.get("ODDS_PROPS_ENABLED") === "true";
+    const propsLast = propsEnabled
+      ? await lastFetch("The Odds API props")
+      : null;
     if (propsEnabled && propsLast && !propsDue(kickoffs, propsLast.at, now)) {
       await carryForward("The Odds API props", propsLast);
     } else if (propsEnabled) {
       try {
-        const events = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events?apiKey=${encodeURIComponent(key!)}`);
-        const selection = upcomingPropEvents(events,upcoming || [],now,24,PROPS_HORIZON);
-        // Games with a published, gradable pick get the extra markets that price those picks.
+        const events = await json(
+          `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events?apiKey=${encodeURIComponent(key!)}`,
+        );
+        const selection = upcomingPropEvents(
+          events,
+          upcoming || [],
+          now,
+          24,
+          PROPS_HORIZON,
+        );
+        // Rate limit per event: a near kickoff must not repeatedly refresh next week's games.
+        const previousEventFetches = propsLast?.details?.event_fetched_at || {};
+        const eventFetches: Record<string, string> = {};
+        for (const event of selection.events) {
+          const previous = previousEventFetches[event.id];
+          if (
+            typeof previous === "string" &&
+            Number.isFinite(Date.parse(previous))
+          )
+            eventFetches[event.id] = previous;
+        }
+        const dueEvents = selection.events.filter((event) => {
+          const previous = Date.parse(eventFetches[event.id] || "");
+          return propEventDue(
+            Date.parse(event.commence_time),
+            Number.isFinite(previous) ? previous : null,
+            now,
+          );
+        });
+        // Games with a published, gradable pick get additional passing/receptions markets.
         const picked = await db.rpc("priced_pick_games", { p_hours: 36 });
-        const pickGames = new Set<string>(picked.error ? [] : (picked.data || []).map((r: { game_id: string }) => r.game_id));
-        let failed = 0, empty = 0;
-        for (let i=0;i<selection.events.length;i+=3) {
-          const results = await Promise.allSettled(selection.events.slice(i,i+3).map(async event => {
-            const markets = pickGames.has(gameForEvent(event, upcoming || [])?.id || "") ? PICK_PROP_MARKETS : BASE_PROP_MARKETS;
-            const data = await json(`https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/${event.id}/odds?apiKey=${encodeURIComponent(key!)}&markets=${markets.join(",")}&bookmakers=fanduel&oddsFormat=american`);
-            const observations = propObservations(data,upcoming || [],Date.now());
-            for (const o of observations) o.fingerprint = await sha(JSON.stringify([o.game_id,o.kind,o.observed_at,o.payload]));
-            const r = await db.rpc("ingest_source",{p:{provider:"The Odds API props",observations}});
-            if (r.error) throw r.error;
-            return { inserted: r.data.inserted, empty: observations.length===0 };
-          }));
+        const pickGames = new Set<string>(
+          picked.error
+            ? []
+            : (picked.data || []).map((r: { game_id: string }) => r.game_id),
+        );
+        let failed = 0,
+          empty = 0;
+        for (let i = 0; i < dueEvents.length; i += 3) {
+          const results = await Promise.allSettled(
+            dueEvents.slice(i, i + 3).map(async (event) => {
+              eventFetches[event.id] = new Date(now).toISOString();
+              const markets = pickGames.has(
+                gameForEvent(event, upcoming || [])?.id || "",
+              )
+                ? PICK_PROP_MARKETS
+                : BASE_PROP_MARKETS;
+              const data = await json(
+                `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/${event.id}/odds?apiKey=${encodeURIComponent(key!)}&markets=${markets.join(",")}&bookmakers=fanduel&oddsFormat=american`,
+              );
+              const observations = propObservations(
+                data,
+                upcoming || [],
+                Date.now(),
+              );
+              for (const o of observations)
+                o.fingerprint = await sha(
+                  JSON.stringify([o.game_id, o.kind, o.observed_at, o.payload]),
+                );
+              const r = await db.rpc("ingest_source", {
+                p: { provider: "The Odds API props", observations },
+              });
+              if (r.error) throw r.error;
+              return {
+                inserted: r.data.inserted,
+                empty: observations.length === 0,
+              };
+            }),
+          );
           for (const r of results) {
             if (r.status === "rejected") failed++;
-            else { propCount += r.value.inserted; if(r.value.empty) empty++; }
+            else {
+              propCount += r.value.inserted;
+              if (r.value.empty) empty++;
+            }
           }
         }
-        await db.rpc("ingest_source",{p:{provider:"The Odds API props",
-          status:failed || empty || selection.skipped ? "partial" : selection.events.length ? "ok" : "no upcoming events",
-          details:{events:selection.events.length,failed,empty,skipped:selection.skipped,inserted_quotes:propCount,
-            markets:PICK_PROP_MARKETS,pick_games:pickGames.size,books:["FanDuel"],fetched_at:new Date(now).toISOString()}}});
+        await db.rpc("ingest_source", {
+          p: {
+            provider: "The Odds API props",
+            status:
+              failed || empty || selection.skipped
+                ? "partial"
+                : selection.events.length
+                  ? "ok"
+                  : "no upcoming events",
+            details: {
+              events: dueEvents.length,
+              eligible_events: selection.events.length,
+              deferred_events: selection.events.length - dueEvents.length,
+              horizon_hours: PROPS_HORIZON / 3600000,
+              event_fetched_at: eventFetches,
+              failed,
+              empty,
+              skipped: selection.skipped,
+              inserted_quotes: propCount,
+              markets: PICK_PROP_MARKETS,
+              pick_games: pickGames.size,
+              books: ["FanDuel"],
+              fetched_at: dueEvents.length
+                ? new Date(now).toISOString()
+                : new Date(propsLast?.at || now).toISOString(),
+            },
+          },
+        });
       } catch {
-        await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"error",details:{message:"Prop provider unavailable; prior observations retained",fetched_at:new Date(now).toISOString()}}});
+        await db.rpc("ingest_source", {
+          p: {
+            provider: "The Odds API props",
+            status: "error",
+            details: {
+              message: "Prop provider unavailable; prior observations retained",
+              fetched_at: new Date(now).toISOString(),
+            },
+          },
+        });
       }
     } else {
-      await db.rpc("ingest_source",{p:{provider:"The Odds API props",status:"not configured",
-        details:{books:["FanDuel"],required:["ODDS_API_KEY","ODDS_FEED_ENABLED=true","ODDS_PROPS_ENABLED=true"],message:"Player-prop provider access required; no prices generated"}}});
+      await db.rpc("ingest_source", {
+        p: {
+          provider: "The Odds API props",
+          status: "not configured",
+          details: {
+            books: ["FanDuel"],
+            required: [
+              "ODDS_API_KEY",
+              "ODDS_FEED_ENABLED=true",
+              "ODDS_PROPS_ENABLED=true",
+            ],
+            message:
+              "Player-prop provider access required; no prices generated",
+          },
+        },
+      });
     }
     return Response.json({
       ok: true,
