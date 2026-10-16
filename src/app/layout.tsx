@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, DM_Sans, Manrope } from "next/font/google";
 import "./base.css";
-import "@/components/ask-vegas.css";
 import "./shell.css";
 import "./home.css";
 import "./picks.css";
@@ -25,7 +24,6 @@ import PhoneContactPrompt from "@/components/phone-contact-prompt";
 import Welcome from "@/components/welcome";
 import ThemePrompt from "@/components/theme-settings";
 import BrandOpening from "@/components/brand-opening";
-import AskVegas from "@/components/ask-vegas";
 import DailyLuck from "@/components/daily-luck";
 import AgeAccessBoundary from "@/components/age-access-boundary";
 
@@ -96,7 +94,6 @@ export default function RootLayout({
               <ProfileSetupGate />
               <NotificationBootstrap />
               <PhoneContactPrompt />
-              <AskVegas />
               <DailyLuck />
             </>
           }
