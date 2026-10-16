@@ -125,29 +125,57 @@ Deno.serve(async (req: Request) => {
       const keys = contracts.map((c) => c.leg_key);
       const known = new Set<string>();
       for (let i = 0; i < keys.length; i += 100) {
-        const r = await db.from("leg_history").select("leg_key").in("leg_key", keys.slice(i, i + 100));
+        const r = await db
+          .from("leg_history")
+          .select("leg_key")
+          .in("leg_key", keys.slice(i, i + 100));
         if (r.error) throw r.error;
         for (const x of r.data || []) known.add(x.leg_key);
       }
       for (const c of contracts) {
-        if (known.has(c.leg_key) || Date.now() - started > 35000 || histories >= 60) continue;
+        if (
+          known.has(c.leg_key) ||
+          Date.now() - started > 35000 ||
+          histories >= 60
+        )
+          continue;
         const g = (games.data as Game[]).find((g) => g.id === c.game_id)!;
         let h;
         try {
-          const own = (await season(g.season)).byName.get(playerName(c.player)) || [];
+          const own =
+            (await season(g.season)).byName.get(playerName(c.player)) || [];
           h = legHistory(own, c, g);
           // In the first five weeks, reach back into the previous season for five games.
           if (g.week <= 5 && (typeof h === "string" || h.sample < 5))
-            h = legHistory([...own, ...((await season(g.season - 1)).byName.get(playerName(c.player)) || [])], c, g);
+            h = legHistory(
+              [
+                ...own,
+                ...((await season(g.season - 1)).byName.get(
+                  playerName(c.player),
+                ) || []),
+              ],
+              c,
+              g,
+            );
         } catch {
           historyError = true;
           continue;
         }
         // No usable history is recorded too, so the pick is not looked up again every run.
-        const row = typeof h === "string"
-          ? { player_id: null, position: null, games: [], cleared: 0, sample: 0, median: null }
-          : h;
-        const w = await db.from("leg_history").insert({ leg_key: c.leg_key, ...row });
+        const row =
+          typeof h === "string"
+            ? {
+                player_id: null,
+                position: null,
+                games: [],
+                cleared: 0,
+                sample: 0,
+                median: null,
+              }
+            : h;
+        const w = await db
+          .from("leg_history")
+          .insert({ leg_key: c.leg_key, ...row });
         if (w.error) throw w.error;
         histories++;
       }
@@ -162,7 +190,9 @@ Deno.serve(async (req: Request) => {
     try {
       const now = Date.now();
       const soon = contracts.filter((c) => {
-        const k = Date.parse((games.data as Game[]).find((g) => g.id === c.game_id)!.kickoff);
+        const k = Date.parse(
+          (games.data as Game[]).find((g) => g.id === c.game_id)!.kickoff,
+        );
         return k > now - 3 * 3600000 && k <= now + 36 * 3600000;
       });
       if (soon.length) {
@@ -171,26 +201,57 @@ Deno.serve(async (req: Request) => {
           .select("game_id,observed_at,payload")
           .eq("kind", "odds")
           .in("game_id", [...new Set(soon.map((c) => c.game_id))])
-          .in("payload->>market", [...new Set(soon.flatMap((c) => marketKeys(c.metric)))])
+          .in("payload->>market", [
+            ...new Set(soon.flatMap((c) => marketKeys(c.metric))),
+          ])
           .gte("recorded_at", new Date(now - 30 * 60000).toISOString())
           .limit(500);
         if (obs.error) throw obs.error;
         const existing = await db
           .from("leg_market_prices")
           .select("leg_key,last_observed_at")
-          .in("leg_key", soon.map((c) => c.leg_key));
+          .in(
+            "leg_key",
+            soon.map((c) => c.leg_key),
+          );
         if (existing.error) throw existing.error;
-        const known = new Map((existing.data || []).map((r) => [r.leg_key, r.last_observed_at]));
+        const known = new Map(
+          (existing.data || []).map((r) => [r.leg_key, r.last_observed_at]),
+        );
         for (const c of soon) {
-          const kick = Date.parse((games.data as Game[]).find((g) => g.id === c.game_id)!.kickoff);
-          const p = marketPrice(c, (obs.data || []) as Observation[], Math.min(now, kick));
+          const kick = Date.parse(
+            (games.data as Game[]).find((g) => g.id === c.game_id)!.kickoff,
+          );
+          const p = marketPrice(
+            c,
+            (obs.data || []) as Observation[],
+            Math.min(now, kick),
+          );
           if (!p) continue;
           const last = known.get(c.leg_key);
           if (last && Date.parse(last) >= Date.parse(p.observed_at)) continue;
-          const latest = { last_price: p.price, last_point: p.point, last_observed_at: p.observed_at, kickoff: new Date(kick).toISOString(), updated_at: new Date().toISOString() };
+          const latest = {
+            last_price: p.price,
+            last_point: p.point,
+            last_observed_at: p.observed_at,
+            kickoff: new Date(kick).toISOString(),
+            updated_at: new Date().toISOString(),
+          };
           const w = last
-            ? await db.from("leg_market_prices").update(latest).eq("leg_key", c.leg_key)
-            : await db.from("leg_market_prices").insert({ leg_key: c.leg_key, book: p.book, first_price: p.price, first_point: p.point, first_observed_at: p.observed_at, ...latest });
+            ? await db
+                .from("leg_market_prices")
+                .update(latest)
+                .eq("leg_key", c.leg_key)
+            : await db
+                .from("leg_market_prices")
+                .insert({
+                  leg_key: c.leg_key,
+                  book: p.book,
+                  first_price: p.price,
+                  first_point: p.point,
+                  first_observed_at: p.observed_at,
+                  ...latest,
+                });
           if (w.error) throw w.error;
           priced++;
         }
@@ -260,15 +321,15 @@ Deno.serve(async (req: Request) => {
               "nflverse unavailable; final result awaiting corroboration",
             );
           }
-          const corroboration = weeklyStat(second.rows, g, { ...c, team: stat.team });
+          const corroboration = weeklyStat(second.rows, g, {
+            ...c,
+            team: stat.team,
+          });
           if (typeof corroboration === "string") {
             status = "AWAITING_CORROBORATION";
             reason = corroboration;
-          } else if (corroboration.value !== value) {
-            status = "CONFLICT";
-            reason = "ESPN and nflverse disagree; no automatic result";
           } else {
-            const outcome = await db.rpc("finalize_editorial_leg", {
+            const evidence = {
               p_key: c.leg_key,
               p_espn: {
                 value,
@@ -288,13 +349,27 @@ Deno.serve(async (req: Request) => {
                 last_modified: second.last_modified,
                 source_url: weeklyUrl,
               },
-            });
-            if (outcome.error) throw Error("Final result transaction failed");
-            if (outcome.data.inserted) settled++;
-            status = outcome.data.conflict ? "CONFLICT" : "FINAL";
-            reason = outcome.data.conflict
-              ? "Provider correction differs from immutable result; review required"
-              : "Final ESPN stat corroborated by nflverse";
+            };
+            const correction = await db.rpc(
+              "observe_editorial_correction",
+              evidence,
+            );
+            if (correction.error)
+              throw Error("Correction evidence journal failed");
+            if (corroboration.value !== value || correction.data.conflict) {
+              status = "CONFLICT";
+              reason = correction.data.conflict
+                ? "Source correction journaled; immutable result retained for review"
+                : "ESPN and nflverse disagree; no automatic result";
+            } else {
+              const outcome = await db.rpc("finalize_editorial_leg", evidence);
+              if (outcome.error) throw Error("Final result transaction failed");
+              if (outcome.data.inserted) settled++;
+              status = outcome.data.conflict ? "CONFLICT" : "FINAL";
+              reason = outcome.data.conflict
+                ? "Provider correction differs from immutable result; review required"
+                : "Final ESPN stat corroborated by nflverse";
+            }
           }
         }
       } catch (e) {
@@ -306,51 +381,49 @@ Deno.serve(async (req: Request) => {
         status !== "TARGET_REACHED_LIVE"
       )
         blockers.push({ leg_key: c.leg_key, reason });
-      const progress = await db
-        .from("leg_result_progress")
-        .upsert({
-          leg_key: c.leg_key,
-          status,
-          value,
-          reason,
-          source_url: source,
-          checked_at: new Date().toISOString(),
-        });
+      const progress = await db.from("leg_result_progress").upsert({
+        leg_key: c.leg_key,
+        status,
+        value,
+        reason,
+        source_url: source,
+        checked_at: new Date().toISOString(),
+      });
       if (progress.error) throw Error("Progress persistence failed");
     }
-    const run = await db
-      .from("feed_runs")
-      .insert({
-        provider: "Editorial result sync",
-        status: blockers.length ? "partial" : "ok",
-        details: {
-          checked,
-          settled,
-          live,
-          contracts: contracts.length,
-          prices_updated: priced,
-          histories_added: histories,
-          ...(historyError ? { history_error: "Recent-form history failed; grading unaffected" } : {}),
-          ...(priceError ? { price_error: "Market price update failed; grading unaffected" } : {}),
-          blockers,
-          scope:
-            "NFL full-game single-player yards/receptions; no sportsbook payout or official bankroll mutation",
-        },
-      });
+    const run = await db.from("feed_runs").insert({
+      provider: "Editorial result sync",
+      status: blockers.length ? "partial" : "ok",
+      details: {
+        checked,
+        settled,
+        live,
+        contracts: contracts.length,
+        prices_updated: priced,
+        histories_added: histories,
+        ...(historyError
+          ? { history_error: "Recent-form history failed; grading unaffected" }
+          : {}),
+        ...(priceError
+          ? { price_error: "Market price update failed; grading unaffected" }
+          : {}),
+        blockers,
+        scope:
+          "NFL full-game single-player yards/receptions and explicitly reviewed numeric defensive sacks; no sportsbook payout or official bankroll mutation",
+      },
+    });
     if (run.error) throw Error("Run journal failed");
     return Response.json({ checked, settled, live, blockers: blockers.length });
   } catch {
-    await db
-      .from("feed_runs")
-      .insert({
-        provider: "Editorial result sync",
-        status: "error",
-        details: {
-          message: "Result sync failed; existing immutable results retained",
-          checked,
-          settled,
-        },
-      });
+    await db.from("feed_runs").insert({
+      provider: "Editorial result sync",
+      status: "error",
+      details: {
+        message: "Result sync failed; existing immutable results retained",
+        checked,
+        settled,
+      },
+    });
     return Response.json({ error: "Result sync failed" }, { status: 502 });
   }
 });
