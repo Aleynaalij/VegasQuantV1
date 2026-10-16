@@ -41,6 +41,15 @@ await db.exec(
     "utf8",
   ),
 );
+await db.exec(
+  fs.readFileSync(
+    new URL(
+      "../../supabase/migrations/20261016132600_nfl_prospective_shadow_evidence.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  ),
+);
 const game = "00000000-0000-4000-8000-000000000001",
   quote = "00000000-0000-4000-8000-000000000002";
 const stamp = new Date().toISOString();
@@ -122,7 +131,7 @@ const patch = (p = {}, s = {}) => ({
 });
 assert.match(JSON.stringify(await errors()), /approved priced model/);
 await db.exec(
-  `insert into private.nfl_selection_model_approvals values('fixture-approved',array['receiving_yards','rushing_yards','receptions'],'https://example.com/validation',now()-interval '1 second')`,
+  `insert into private.nfl_selection_model_approvals(model_id,markets,validation_url,approved_at) values('fixture-approved',array['receiving_yards','rushing_yards','receptions'],'https://example.com/validation',now()-interval '1 second')`,
 );
 assert.deepEqual(await errors(), []);
 let checks = 2;
@@ -387,6 +396,92 @@ assert.equal(
     )
   ).rows[0].n,
   2,
+);
+// Shadow journal is durable research evidence, never a model approval or public release.
+await db.query(
+  "insert into private.nfl_shadow_model_manifests(model_id,artifact_sha256,artifact_url,status) values('fixture-shadow',$1,'https://example.com/artifact','SHADOW_ONLY')",
+  ["a".repeat(64)],
+);
+const shadowTime = new Date().toISOString();
+const shadow = {
+  as_of: shadowTime,
+  model_id: "fixture-shadow",
+  status: "SHADOW_ONLY",
+  input_sources: [
+    { sha256: "b".repeat(64), source_url: "https://example.com/history" },
+  ],
+  coverage: { cards: 1, priced: 1 },
+  cards: [
+    {
+      game_id: game,
+      model_id: "fixture-shadow",
+      player: "Test Player",
+      market: "receiving",
+      official_eligible: false,
+      status: "WAIT",
+      research_probability: 0.75,
+      generated_as_of: shadowTime,
+      history_through: [2026, 5],
+      forecast_inputs: { test: 1 },
+      blockers: ["No prospective validation"],
+      quote: {
+        source_observation_id: quote,
+        sportsbook: "FanDuel",
+        source_url: "https://example.com/quote",
+        provider_market: "player_reception_yds_alternate",
+        observed_at: stamp,
+        direction: "over",
+        line: 39.5,
+        odds: -200,
+      },
+    },
+  ],
+};
+const slate = [
+  {
+    id: game,
+    kickoff: (
+      await db.query("select kickoff from games where id=$1", [game])
+    ).rows[0].kickoff.toISOString(),
+  },
+];
+const record = async (x = shadow) =>
+  (
+    await db.query(
+      "select private.record_nfl_shadow_scan($1::jsonb,$2::jsonb) r",
+      [JSON.stringify(x), JSON.stringify(slate)],
+    )
+  ).rows[0].r;
+const saved = await record();
+assert.equal(saved.recorded_forecasts, 1);
+assert.equal(saved.published, false);
+assert.equal((await record()).replayed, true);
+await assert.rejects(
+  record({ ...shadow, coverage: { cards: 99 } }),
+  /Conflicting replay/,
+);
+await assert.rejects(
+  record({ ...shadow, as_of: "2026-01-01T00:00:00Z" }),
+  /Fresh shadow scan/,
+);
+await assert.rejects(
+  record({ ...shadow, status: "BETTABLE" }),
+  /Fresh shadow scan/,
+);
+assert.equal(
+  (
+    await db.query(
+      "select count(*)::int n from private.nfl_selection_model_approvals where model_id='fixture-shadow'",
+    )
+  ).rows[0].n,
+  0,
+);
+await assert.rejects(
+  db.exec("update private.nfl_shadow_scan_runs set scan='{}'"),
+  /immutable/,
+);
+console.log(
+  "Shadow journal: exact-source capture, dedupe, conflict rejection, stale/backfill rejection and immutability passed.",
 );
 console.log(
   `${checks} NFL gate checks passed (fixture model approval exists only in isolated test database).`,
