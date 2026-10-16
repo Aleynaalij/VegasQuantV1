@@ -2,6 +2,7 @@
 -- it was published at, before kickoff, everyone who tailed or saved that leg gets one push. Each leg
 -- alerts at most once per direction ('against': the price drifted away from the pick, rule R7;
 -- 'toward': the market moved with the pick). Uses the existing price alert delivery ('price' kind).
+-- The first tracked price (an insert) is checked against the published price too.
 create table private.leg_move_alerts(
  leg_key text not null,
  direction text not null check(direction in ('against','toward')),
@@ -15,9 +16,9 @@ revoke all on private.leg_move_alerts from public, anon, authenticated, service_
 
 create function private.enqueue_price_move_push() returns trigger
 language plpgsql security definer set search_path = '' as $$
-declare base numeric; original text; move numeric; dir text; release text;
+declare base numeric; original text; move numeric; dir text; release text; leg text;
 begin
- if new.last_price is not distinct from old.last_price or now() >= new.kickoff
+ if (tg_op = 'UPDATE' and new.last_price is not distinct from old.last_price) or now() >= new.kickoff
   or new.last_observed_at >= new.kickoff or new.last_point is distinct from new.first_point then
   return new;
  end if;
@@ -31,22 +32,26 @@ begin
  dir := case when move >= 15 then 'against' when move <= -15 then 'toward' end;
  if dir is null then return new; end if;
  release := split_part(new.leg_key, ':', 2);
- if release !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' then return new; end if;
+ leg := split_part(new.leg_key, ':', 3);
+ if release !~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' or leg !~ '^[0-9]{1,3}$' then
+  return new;
+ end if;
  insert into private.leg_move_alerts(leg_key, direction, from_price, to_price)
   values(new.leg_key, dir, base, new.last_price) on conflict do nothing;
  if not found then return new; end if;
  insert into private.push_deliveries(subscription_id, kind, event_key, next_at)
- select s.id, 'price', 'price:' || lower(release) || ':move:' || dir || ':' || trim_scale(base)::text || ':' || trim_scale(new.last_price)::text, now()
+ select s.id, 'price', 'price:' || lower(release) || ':move:' || leg || ':' || dir || ':' || trim_scale(base)::text || ':' || trim_scale(new.last_price)::text, now()
    from public.push_subscriptions s
   where s.user_id in (
    select t.user_id from public.leg_tails t where t.leg_key = new.leg_key or t.leg_key = original
    union
-   select v.user_id from public.saved_legs v where v.leg_key = new.leg_key or v.leg_key = original);
+   select v.user_id from public.saved_legs v where v.leg_key = new.leg_key or v.leg_key = original)
+ on conflict do nothing;
  return new;
 exception when others then
  raise warning 'Price move alert could not be queued';
  return new;
 end $$;
 revoke all on function private.enqueue_price_move_push() from public, anon, authenticated, service_role;
-create trigger enqueue_price_move_push after update on public.leg_market_prices
+create trigger enqueue_price_move_push after insert or update on public.leg_market_prices
  for each row execute function private.enqueue_price_move_push();

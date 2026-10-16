@@ -26,13 +26,14 @@ export function priceAlertRelease(eventKey: string | null | undefined) {
 const PRICE = /^-?\d+(?:\.\d+)?$/;
 const odds = (s: string) => (Number(s) > 0 ? `+${Number(s)}` : String(Number(s)));
 /**
- * Notification text for a market move ("price:<release>:move:<against|toward>:<from>:<to>"), or
+ * Notification text for a market move ("price:<release>:move:<leg>:<against|toward>:<from>:<to>"), or
  * null for any other event. Built only from validated numbers, never from free text.
  */
 export function priceMoveMessage(eventKey: string | null | undefined) {
   const parts = (eventKey || "").split(":");
-  if (parts.length !== 6 || parts[0] !== "price" || parts[2] !== "move" || !UUID.test(parts[1])) return null;
-  const [, , , direction, from, to] = parts;
+  if (parts.length !== 7 || parts[0] !== "price" || parts[2] !== "move" || !UUID.test(parts[1])) return null;
+  if (!/^\d{1,3}$/.test(parts[3])) return null;
+  const [, , , , direction, from, to] = parts;
   if (!["against", "toward"].includes(direction) || !PRICE.test(from) || !PRICE.test(to)) return null;
   const cents = (p: number) => (p < 0 ? p + 100 : p - 100);
   const moved = Math.round(Math.abs(cents(Number(to)) - cents(Number(from))));
