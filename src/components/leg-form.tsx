@@ -14,7 +14,8 @@ export function useLegForms(keys: string[]): FormData {
     let live = true;
     const list = id ? id.split(",") : [];
     if (!list.length) return;
-    (async () => {
+    // History arrives after publication and prices move until kickoff, so keep refreshing.
+    async function load() {
       const s = await supabase.auth.getSession();
       if (!s.data.session) return;
       const [h, p, a] = await Promise.all([
@@ -32,9 +33,12 @@ export function useLegForms(keys: string[]): FormData {
         ),
         admin: a.data === true,
       });
-    })();
+    }
+    void load();
+    const timer = setInterval(load, 60000);
     return () => {
       live = false;
+      clearInterval(timer);
     };
   }, [id]);
   return data;
@@ -58,7 +62,8 @@ export default function LegFormLine({
 }) {
   const form = data.forms[legKey],
     tracked = data.prices[legKey];
-  const published = price ?? tracked?.first ?? null;
+  // Rules judge the price printed at publication; a quote tracked later never stands in for it.
+  const published = price;
   if (!form && !data.admin) return null;
   const be = published !== null && Math.abs(published) >= 100 ? breakEven(published) : null;
   const rate = form ? (form.cleared / form.sample) * 100 : null;
