@@ -25,6 +25,8 @@ await db.exec(
     "utf8",
   ),
 );
+await db.exec(fs.readFileSync('supabase/migrations/20261016230144_member_parlays_seven_legs.sql','utf8'));
+await db.exec(`insert into published_legs select 'extra-'||n,null,null,1,'${game}','SINGLE','Extra Player '||n,'20+ receiving yards',null,now()+interval '2 days',now(),null from generate_series(1,8)n;`);
 await db.exec(
   `set role authenticated;set app.uid='${u}';set app.member='true';`,
 );
@@ -77,6 +79,13 @@ assert.equal(
     .name,
   "Sample Player",
 );
+// Seven legs save with authoritative snapshots; an eighth is rejected on the server.
+await db.exec(`set role authenticated;set app.uid='${u}';set app.member='true'`);
+const seven=Array.from({length:7},(_,i)=>`extra-${i+1}`);
+const large=(await db.query("select create_member_parlay('Seven',$1::text[]) id",[seven])).rows[0].id;
+assert.equal((await db.query('select jsonb_array_length(legs) n from member_parlays where id=$1',[large])).rows[0].n,7);
+await assert.rejects(db.query("select create_member_parlay('Eight',$1::text[])",[[...seven,'extra-8']]),/two to seven/);
+await db.exec('reset role');
 // An accepted historical gate alone cannot create a model badge.
 await db.query(
   "insert into private.nfl_selection_gate_decisions values($1,'candidate_releases',true,$2,now())",

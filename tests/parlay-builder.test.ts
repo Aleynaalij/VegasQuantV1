@@ -49,7 +49,7 @@ test("Gambly text contains only player and stat, including official and bundled 
   );
   assert.equal(canBuildWith(leg({ kind: "PARLAY" }), +now), true);
 });
-test("Builder rejects conflicts across source types, stale legs, unsupported phases and fifth legs", () => {
+test("Builder rejects conflicts across source types, stale legs, unsupported phases and eighth legs", () => {
   assert.match(
     selectionError(
       [leg()],
@@ -71,7 +71,9 @@ test("Builder rejects conflicts across source types, stale legs, unsupported pha
     canBuildWith(leg({ market: "Halftime · 40+ rushing yards" }), +now),
     false,
   );
-  assert.match(selectionError(Array(4).fill(leg()), leg(), +now)!, /four/);
+  const chosen = Array.from({ length: 6 }, (_, i) => leg({ leg_key: `leg:${i}`, name: `Player ${i}` }));
+  assert.equal(selectionError(chosen, leg(), +now), null);
+  assert.match(selectionError([...chosen, leg()], leg({ name: "Eighth Player" }), +now)!, /seven/);
 });
 test("Weekly catalogue includes bundle leaves and dedupes newest observation without reviving older duplicates", () => {
   const newest = leg({

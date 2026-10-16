@@ -205,13 +205,13 @@ export default function ParlayWorkshop({
           aria-label="Your parlay draft"
         >
           <div className="workshop-head">
-            <h3>Your parlay · {chosen.length}/4</h3>
+            <h3>Your parlay · {chosen.length}/7</h3>
             <button className="secondary" onClick={() => setOpen(false)}>
               Close builder
             </button>
           </div>
           <p>
-            Choose 2–4 legs. Your combination, not a platform recommendation.
+            Choose 2–7 legs. Your combination, not a platform recommendation.
             Combined odds are unknown; same-game legs can be correlated.
           </p>
           <label>

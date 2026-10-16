@@ -89,7 +89,7 @@ export function selectionError(
 ): string | null {
   if (!canBuildWith(next, now))
     return "This leg is closed or unavailable for a new parlay.";
-  if (chosen.length >= 4) return "Keep your parlay to four legs or fewer.";
+  if (chosen.length >= 7) return "Keep your parlay to seven legs or fewer.";
   if (
     chosen.some(
       (r) => r.leg_key === next.leg_key || legFamily(r) === legFamily(next),
