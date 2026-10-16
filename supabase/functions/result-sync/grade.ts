@@ -2,7 +2,8 @@ export type Metric =
   | "rushing_yards"
   | "receiving_yards"
   | "passing_yards"
-  | "receptions";
+  | "receptions"
+  | "def_sacks";
 export type Contract = {
   leg_key: string;
   game_id: string;
@@ -35,7 +36,7 @@ export const playerName = (s: string) =>
 // Trailing desk tags that keep a selection a pick; anything else (e.g. WATCHLIST) is not graded.
 const PICK_TAGS = new Set(["LEAN", "CONDITIONAL LEAN"]);
 const MARKET =
-  /^(?:(Full game|FULL GAME TOTAL)\s*·\s*)?(?:(\d+)\+|(Over|Under)\s+(\d+(?:\.\d+)?))\s+(?:total\s+)?(rushing yards|receiving yards|passing yards|receptions)((?:\s*·\s*[^·]+)*)$/i;
+  /^(?:(Full game|FULL GAME TOTAL)\s*·\s*)?(?:(\d+(?:\.\d+)?)\+|(Over|Under)\s+(\d+(?:\.\d+)?))\s+(?:total\s+)?(rushing yards|receiving yards|passing yards|receptions|sacks)((?:\s*·\s*[^·]+)*)$/i;
 /** Every name a matchup line may use for one side: full name, abbreviation, city or nickname. */
 const sideNames = (full: string, abbreviation: string) => {
   const words = full.trim().split(/\s+/);
@@ -63,7 +64,12 @@ export function contractFor(
   publishedAt: string,
   expiresAt: string,
 ): Contract | string {
-  if (c.fun_play || c.legs || c.parlay || /^RETROSPECTIVE/.test(c.analysis_kind || ""))
+  if (
+    c.fun_play ||
+    c.legs ||
+    c.parlay ||
+    /^RETROSPECTIVE/.test(c.analysis_kind || "")
+  )
     return "Ticket/retrospective requires review";
   // Single-player full-game stats only. A market with no period is full game (sportsbook
   // convention, overtime included) unless the selection mentions a quarter or half,
@@ -84,8 +90,36 @@ export function contractFor(
       "receiving yards": "receiving_yards",
       "passing yards": "passing_yards",
       receptions: "receptions",
+      sacks: "def_sacks",
     } as const
-  )[m[5].toLowerCase() as "receptions"];
+  )[
+    m[5].toLowerCase() as
+      | "rushing yards"
+      | "receiving yards"
+      | "passing yards"
+      | "receptions"
+      | "sacks"
+  ];
+  if (metric === "def_sacks") {
+    const review = c.sack_settlement_review;
+    if (
+      c.sack_market_type !== "numeric_total" ||
+      c.book !== "FanDuel" ||
+      !review ||
+      !/^https:\/\//.test(review.source_url || "") ||
+      !Number.isFinite(Date.parse(review.observed_at || "")) ||
+      Date.parse(review.observed_at) > Date.parse(publishedAt)
+    )
+      return "Sack market settlement review required; numeric totals are not record-a-sack Yes/No";
+    const threshold = Number(m[2] || m[4]);
+    if (
+      !Number.isFinite(threshold) ||
+      threshold < 0 ||
+      !Number.isInteger(threshold * 2)
+    )
+      return "Sack thresholds must use exact nonnegative half-sack increments";
+  } else if (m[2] && !Number.isInteger(Number(m[2])))
+    return "Fractional milestones unsupported for this statistic";
   const eventIds = (c.sources || []).flatMap((s: any) => {
     try {
       const u = new URL(s.url);
@@ -97,7 +131,8 @@ export function contractFor(
     }
   });
   const sides = matchupSides(c.matchup);
-  if (!c.game_id && !c.team && !sides) return "Game binding missing or ambiguous";
+  if (!c.game_id && !c.team && !sides)
+    return "Game binding missing or ambiguous";
   const candidates = games.filter((g) => {
     if (c.game_id && g.id !== c.game_id) return false;
     if (eventIds.length && !eventIds.includes(g.provider_id)) return false;
@@ -143,11 +178,28 @@ export function compare(
     ? "WIN"
     : "LOSS";
 }
+/** Individual sacks preserve credited half sacks; offensive yards/receptions remain whole-number stats. */
+export function statNumber(raw: unknown, metric: Metric): number | null {
+  if (
+    typeof raw !== "string" ||
+    !(metric === "def_sacks" ? /^\d+(?:\.\d+)?$/ : /^-?\d+(?:\.0+)?$/).test(raw)
+  )
+    return null;
+  const value = Number(raw);
+  if (
+    !Number.isFinite(value) ||
+    (metric === "def_sacks" && (value < 0 || !Number.isInteger(value * 2)))
+  )
+    return null;
+  return value;
+}
 export function espnStat(
   data: any,
   g: Game,
   c: Contract,
-): { value: number; final: boolean; athlete_id: string; team: string } | string {
+):
+  | { value: number; final: boolean; athlete_id: string; team: string }
+  | string {
   const competition = data.header?.competitions?.[0];
   if (
     String(data.header?.id) !== g.provider_id ||
@@ -175,16 +227,19 @@ export function espnStat(
   )
     return "ESPN teams mismatch";
   const groupName =
-    c.metric === "passing_yards"
-      ? "passing"
-      : c.metric === "rushing_yards"
-        ? "rushing"
-        : "receiving";
+    c.metric === "def_sacks"
+      ? "defensive"
+      : c.metric === "passing_yards"
+        ? "passing"
+        : c.metric === "rushing_yards"
+          ? "rushing"
+          : "receiving";
   const field = {
     passing_yards: "passingYards",
     rushing_yards: "rushingYards",
     receiving_yards: "receivingYards",
     receptions: "receptions",
+    def_sacks: "sacks",
   }[c.metric];
   const found: {
     value: number;
@@ -209,9 +264,10 @@ export function espnStat(
         )
           continue;
         const raw = athlete.stats?.[i];
-        if (typeof raw !== "string" || !/^[-]?\d+$/.test(raw)) continue;
+        const parsed = statNumber(raw, c.metric);
+        if (parsed === null) continue;
         found.push({
-          value: Number(raw),
+          value: parsed,
           final:
             competition.status?.type?.completed === true &&
             competition.status?.type?.state === "post",
@@ -271,7 +327,8 @@ export function csvRows(text: string): Record<string, string>[] {
     .filter((r) => r.length === header.length)
     .map((r) => Object.fromEntries(header.map((k, i) => [k, r[i]])));
 }
-export const teamCode = (s: string) => (s === "LAR" ? "LA" : s === "WSH" ? "WAS" : s);
+export const teamCode = (s: string) =>
+  s === "LAR" ? "LA" : s === "WSH" ? "WAS" : s;
 export function weeklyStat(
   rows: Record<string, string>[],
   g: Game,
@@ -296,7 +353,9 @@ export function weeklyStat(
     return "nflverse weekly player row unavailable or ambiguous";
   const r = found[0],
     value = r[c.metric];
-  if (!/^-?\d+(?:\.0+)?$/.test(value)) return "nflverse stat invalid";
+  const parsed = statNumber(value, c.metric);
+  if (parsed === null)
+    return "nflverse stat invalid or missing; no zero assumed";
   const parts = r.game_id.split("_");
   if (
     parts.length !== 4 ||
@@ -306,5 +365,5 @@ export function weeklyStat(
     parts[3] !== teamCode(g.home_abbreviation)
   )
     return "nflverse game mismatch";
-  return { value: Number(value), game_id: r.game_id, player_id: r.player_id };
+  return { value: parsed, game_id: r.game_id, player_id: r.player_id };
 }
