@@ -73,4 +73,19 @@ await db.query(`update games set kickoff=now()-interval '1 hour' where id=$1`, [
 await blocked([second], /upcoming NFL game/, "now()-interval '2 hours'");
 await db.query(`update games set kickoff=now()+interval '1 day' where id=$1`, [game]);
 await publish([second]);
+
+// The publishing job inserts as service_role: the trigger condition must be callable by it.
+await db.exec(`grant insert, select on candidate_releases to service_role; grant usage on schema private to service_role;`);
+const asService = (candidates) =>
+  db.transaction(async (tx) => {
+    await tx.exec("set local role service_role");
+    await tx.query(`insert into candidate_releases(stage_id,candidates,expires_at) values($1,$2::jsonb,now()+interval '23 hours')`, [stage, JSON.stringify(candidates)]);
+  });
+const third = leg({ name: "Third Back", market: "Full game · 30+ rushing yards", odds: -180 });
+await db.query(`insert into source_observations(game_id,kind,observed_at,recorded_at,payload) values($1,'odds',$2,now(),$3::jsonb)`, [
+  game, observed, JSON.stringify({ book: "FanDuel", market: "player_rush_yds", outcomes: [{ name: "Over", description: "Third Back", point: 29.5, price: -180 }] }),
+]);
+await assert.rejects(asService([third]), /permission denied for function is_research_release/);
+await db.exec(migration("20261017001000_research_board_grant.sql"));
+await asService([third]);
 console.log("research board: ok");
