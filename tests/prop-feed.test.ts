@@ -130,8 +130,12 @@ test("research games request alternate lines before publication; pick games add 
   assert.deepEqual(BASE_PROP_MARKETS, [
     "player_rush_yds",
     "player_reception_yds",
+    "player_pass_yds",
     "player_rush_yds_alternate",
     "player_reception_yds_alternate",
+    "player_pass_yds_alternate",
+    "player_sacks",
+    "player_sacks_alternate",
   ]);
   assert.equal(new Set(PICK_PROP_MARKETS).size, PICK_PROP_MARKETS.length);
   assert.equal(gameForEvent(event, [game])?.id, "fixture");
@@ -161,5 +165,95 @@ test("research games request alternate lines before publication; pick games add 
   assert.equal(
     propObservations(e, [game], now)[0].payload.market,
     "player_pass_yds_alternate",
+  );
+});
+
+test("passing and defensive sack quotes retain the exact price and fractional threshold", () => {
+  const rows = propObservations(
+    {
+      ...event,
+      bookmakers: [
+        {
+          key: "fanduel",
+          title: "FanDuel",
+          last_update: "2026-10-05T11:59:00Z",
+          markets: [
+            {
+              key: "player_sacks",
+              outcomes: [
+                {
+                  name: "Over",
+                  description: "Test Defender",
+                  point: 0.5,
+                  price: -180,
+                },
+              ],
+            },
+            {
+              key: "player_sacks_alternate",
+              outcomes: [
+                {
+                  name: "Over",
+                  description: "Test Defender",
+                  point: 1.5,
+                  price: 300,
+                },
+              ],
+            },
+            {
+              key: "player_pass_yds",
+              outcomes: [
+                {
+                  name: "Over",
+                  description: "Test QB",
+                  point: 225.5,
+                  price: -110,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    [game],
+    now,
+  );
+  assert.equal(rows.length, 3);
+  assert.equal(
+    rows.find((r) => r.payload.market === "player_sacks")?.payload.outcomes[0]
+      .point,
+    0.5,
+  );
+  assert.equal(
+    rows.find((r) => r.payload.market === "player_sacks_alternate")?.payload
+      .outcomes[0].price,
+    300,
+  );
+});
+test("market-set upgrades invalidate old fetch clocks without accepting future or malformed timestamps", async () => {
+  const { propFetchCache, PROP_MARKET_SET_VERSION } = await import(
+    "../supabase/functions/source-sync/props"
+  );
+  const valid = "2026-10-05T11:59:00Z";
+  assert.deepEqual(
+    propFetchCache({ event_fetched_at: { e1: valid } }, now),
+    {},
+  );
+  assert.deepEqual(
+    propFetchCache(
+      { market_set_version: "old", event_fetched_at: { e1: valid } },
+      now,
+    ),
+    {},
+  );
+  assert.deepEqual(
+    propFetchCache(
+      {
+        market_set_version: PROP_MARKET_SET_VERSION,
+        event_fetched_at: { e1: valid, e2: "bad", e3: "2026-10-06T11:59:00Z" },
+      },
+      now,
+    ),
+    { e1: valid },
   );
 });
