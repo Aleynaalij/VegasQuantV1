@@ -65,12 +65,13 @@ def scan(frame,artifact,games,observations,as_of,context=None):
                 snapshots={}
                 for observation in observations:
                     p=observation.get("payload",{})
-                    if observation.get("game_id")!=game["id"] or p.get("market")!=key:continue
-                    at=pd.to_datetime(observation.get("observed_at"),utc=True,errors="coerce")
+                    if observation.get("game_id")!=game["id"] or p.get("market") not in (key,key+"_alternate"):continue
+                    at=pd.to_datetime(p.get("provider_updated_at") or observation.get("observed_at"),utc=True,errors="coerce")
                     if pd.isna(at) or at>now:continue
                     book=p.get("book")
                     if not book:continue
-                    if book not in snapshots or at>snapshots[book][0]:snapshots[book]=(at,observation)
+                    snapshot_key=(book,p["market"])
+                    if snapshot_key not in snapshots or at>snapshots[snapshot_key][0]:snapshots[snapshot_key]=(at,observation)
                 for at,observation in snapshots.values():
                     p=observation["payload"]
                     # Exact unique player name mapping only; ambiguity is never fuzzy-matched.
@@ -80,7 +81,7 @@ def scan(frame,artifact,games,observations,as_of,context=None):
                     matches=[o for o in p.get("outcomes",[]) if name_key(o.get("description",""))==name_key(player["player_display_name"])]
                     for outcome in matches:
                         if outcome.get("name") not in ["Over","Under"]:continue
-                        q=dict(base,direction=outcome["name"].lower(),line=outcome.get("point"),odds=outcome.get("price"),sportsbook=p["book"],source_url=observation.get("source"),observed_at=at.isoformat())
+                        q=dict(base,source_observation_id=observation.get("id"),provider_market=p["market"],database_receipt_at=observation.get("recorded_at"),direction=outcome["name"].lower(),line=outcome.get("point"),odds=outcome.get("price"),sportsbook=p["book"],source_url=observation.get("source"),observed_at=at.isoformat())
                         c=context.get(player["player_id"],{})
                         q.update({k:c[k] for k in ["availability_verified","availability_source_url","role_change"] if k in c})
                         other=[o for o in matches if o.get("point")==q["line"] and o.get("name")!=outcome["name"]]
@@ -117,7 +118,7 @@ def main():
     load=lambda f:json.loads(Path(f).read_text())
     now=datetime.now(timezone.utc).isoformat()
     result=scan(frame,load(a.model),load(a.games),load(a.observations),now,load(a.context) if a.context else None)
-    sources=[dict(file=x.name,sha256=hashlib.sha256(x.read_bytes()).hexdigest()) for x in paths]
+    sources=[dict(file=x.name,sha256=hashlib.sha256(x.read_bytes()).hexdigest(),source_url="https://github.com/nflverse/nflverse-data/releases/download/"+("stats_player/" if x.name.startswith("stats_player_week_") else "player_stats/")+x.name) for x in paths]
     if a.journal:
         from journal import Journal
         j=Journal(a.journal)
