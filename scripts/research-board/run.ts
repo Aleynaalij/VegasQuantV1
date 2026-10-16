@@ -73,11 +73,17 @@ async function main() {
 
   const legs = slate.flatMap((g) => gameLegs(g, observations, rows, now));
   const board = pickBoard(legs, seen);
-  // The stage of the latest release: research boards bind each leg to its own game explicitly.
-  const stage = await db.from("candidate_releases").select("stage_id").order("created_at", { ascending: false }).limit(1);
-  if (stage.error || !stage.data?.length) throw Error("No stage to publish under");
+  // Research boards bind each leg to its own game explicitly; the stage only satisfies the release's
+  // foreign key. Use the latest release's stage, or any challenge stage before the first release.
+  const latest = await db.from("candidate_releases").select("stage_id").order("created_at", { ascending: false }).limit(1);
+  let stageId: string | undefined = latest.data?.[0]?.stage_id;
+  if (!stageId) {
+    const any = await db.from("challenge_stages").select("id").order("stage_number").limit(1);
+    stageId = any.data?.[0]?.id;
+  }
+  if (!stageId) throw Error("No challenge stage to publish under");
 
-  let published_releases = 0, published_legs = 0, blocked = 0;
+  let published_releases = 0, published_legs = 0, blocked = 0, failed = 0, attempted = 0;
   const hour = new Date(now).toISOString().slice(0, 13).replace(/[-T:]/g, "");
   for (const g of slate) {
     const mine = board.filter((l) => l.game.id === g.id);
@@ -87,20 +93,27 @@ async function main() {
       published_legs += mine.length;
       continue;
     }
+    attempted++;
     const r = await db.from("candidate_releases").insert({
-      stage_id: stage.data[0].stage_id,
+      stage_id: stageId,
       title: `Research board · ${g.away_abbreviation} @ ${g.home_abbreviation}`,
       candidates: mine.map(candidate),
       expires_at: g.kickoff,
       publication_key: `research-board-${g.id}-${hour}`,
     });
-    if (r.error) blocked++;
-    else {
+    // A validator rejection (23514, e.g. a quote that moved since the read) or a rerun within the
+    // same hour (23505) is expected; anything else is an operational failure.
+    if (r.error) {
+      if (r.error.code === "23514" || r.error.code === "23505") blocked++;
+      else failed++;
+    } else {
       published_releases++;
       published_legs += mine.length;
     }
   }
-  report({ games: slate.length, quotes: observations.length, qualifying: legs.length, published_releases, published_legs, blocked, dry_run: dry });
+  report({ games: slate.length, quotes: observations.length, qualifying: legs.length, published_releases, published_legs, blocked, failed, dry_run: dry });
+  // Fail the run, so the workflow turns red, on any operational error or when nothing it tried publishes.
+  if (failed || (attempted && !published_releases)) process.exit(1);
 }
 
 function report(counts: Record<string, number | boolean>) {
