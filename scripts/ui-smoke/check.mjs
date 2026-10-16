@@ -25,7 +25,7 @@ const pages = [
 const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
   { path: "/", expect: ["Pick of the Day", "For you", "Your tailed parlays", "More teams this week"] },
-  { path: "/community", expect: ["Tail leaderboard", "SampleMember"] },
+  { path: "/community", expect: ["Community", "SampleMember", "Sample post body."] },
   { path: "/history", expect: ["Profit at published prices", "1 graded pick was published without a price"] },
 ];
 const session = () => {
