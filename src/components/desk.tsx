@@ -31,6 +31,7 @@ import { supabase } from "@/lib/supabase";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
 import WeeklyPerformance from "./weekly-performance";
 import PricedRecord from "./priced-record";
+import BeatTheClose from "./beat-the-close";
 import MyTailRecord from "./my-tail-record";
 import HomeBrief from "./home-brief";
 import DecisionBoard from "./decision-board";
@@ -416,6 +417,9 @@ export default function DeskApp({
             </SectionBoundary>
             <SectionBoundary name="Profit at published prices">
               <PricedRecord />
+            </SectionBoundary>
+            <SectionBoundary name="Beat the close">
+              <BeatTheClose />
             </SectionBoundary>
             <SectionBoundary name="The record summary">
               <RecordsDashboard d={d} picks={ledgerPicks} />

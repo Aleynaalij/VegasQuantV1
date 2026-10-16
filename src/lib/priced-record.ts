@@ -46,15 +46,20 @@ export type Closing = Map<string, number>;
 /** Graded individual picks with a verified result, each selection once at its first publication. */
 export function uniquePicks(legs: PricedLeg[]) {
   // Only individual picks with a verified (https-sourced) result.
-  const graded = legs.filter(
-    (l) =>
-      (l.kind === "SINGLE" || l.kind === "PICK_OF_DAY") &&
-      ["WIN", "LOSS", "PUSH"].includes(l.result || "") &&
-      /^https:\/\//.test(l.result_source || ""),
+  return firstPublications(
+    legs.filter(
+      (l) =>
+        (l.kind === "SINGLE" || l.kind === "PICK_OF_DAY") &&
+        ["WIN", "LOSS", "PUSH"].includes(l.result || "") &&
+        /^https:\/\//.test(l.result_source || ""),
+    ),
   );
-  // A price revision or a repeat of the same selection counts once, at the earliest publication.
+}
+
+/** Each selection once, at its earliest publication: a price revision or a repeat counts once. */
+function firstPublications(legs: PricedLeg[]) {
   const first = new Map<string, PricedLeg>();
-  for (const l of [...graded].sort(
+  for (const l of [...legs].sort(
     (a, b) => Date.parse(a.published_at) - Date.parse(b.published_at),
   )) {
     // Index each kept pick by its own leg key too, so a revision whose wording changed still
@@ -141,5 +146,45 @@ export function gatedRecords(
     pass: pricedRecord(groups.pass, closing),
     fail: pricedRecord(groups.fail, closing),
     unknown: pricedRecord(groups.unknown, closing),
+  };
+}
+
+/** First and last tracked price at a leg's published book; after kickoff the last one is the close. */
+export type TrackedPrice = { first: number; last: number };
+
+/**
+ * Beat the close: for every published leg whose game has started and whose book price was tracked,
+ * did the pick go out at a better price than the market closed at? The starting price is the
+ * printed odds, or the first tracked price when the leg was published without one. Results are not
+ * needed: a pick that beats the close got value whether it won or lost.
+ */
+export function closingLineRecord(legs: PricedLeg[], tracked: Map<string, TrackedPrice>) {
+  let beat = 0,
+    tied = 0,
+    missed = 0,
+    points = 0;
+  const ok = (n: number) => Number.isFinite(n) && Math.abs(n) >= 100;
+  // Each selection once, at its earliest publication that has a tracked price: an earlier
+  // publication with no tracked price has nothing to measure, so the repeat is judged at its own price.
+  for (const l of firstPublications(legs.filter((x) => tracked.has(x.leg_key)))) {
+    const t = tracked.get(l.leg_key)!;
+    const start = priceOf(l) ?? t.first;
+    if (!ok(start) || !ok(t.last)) continue;
+    // Percentage points of win probability the close implies beyond the price we gave.
+    const edge = (impliedProbability(t.last) - impliedProbability(start)) * 100;
+    points += edge;
+    if (Math.abs(edge) < 1e-9) tied++;
+    else if (edge > 0) beat++;
+    else missed++;
+  }
+  const legsCounted = beat + tied + missed;
+  return {
+    legs: legsCounted,
+    beat,
+    tied,
+    missed,
+    // Share of legs that moved our way, out of those where the price moved at all.
+    beatRate: beat + missed ? (beat / (beat + missed)) * 100 : null,
+    avgPoints: legsCounted ? points / legsCounted : null,
   };
 }

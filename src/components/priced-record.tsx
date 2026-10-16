@@ -97,15 +97,6 @@ export default function PricedRecord() {
           ` (${beat >= 0 ? "+" : "−"}${Math.abs(Math.round(beat))} pts)`}
         .
       </p>
-      {record.clvPicks > 0 && (
-        <p>
-          Beat the closing price on {record.beatClose} of{" "}
-          {record.clvPicks} pick{record.clvPicks === 1 ? "" : "s"}
-          {record.avgClv !== null &&
-            ` (average ${record.avgClv >= 0 ? "+" : "−"}${Math.abs(record.avgClv).toFixed(1)} pts)`}
-          .
-        </p>
-      )}
       {gates && (gates.pass.picks > 0 || gates.fail.picks > 0) && (
         <div className="priced-record-gates" aria-label="Record by selection rules">
           {(
