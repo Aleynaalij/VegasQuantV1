@@ -67,6 +67,11 @@ http.createServer((req, res) => {
     const keys = (/leg_key=in\.\(([^)]*)\)/.exec(u)?.[1] || "").split(",").map((k) => k.replace(/"/g, "")).filter(Boolean);
     return json(res, keys.map((leg_key, i) => ({ leg_key, cleared: i % 2 ? 2 : 5, sample: 5, median: i % 2 ? 31 : 74, position: "WR" })));
   }
+  if (u.startsWith("/rest/v1/leg_book_prices")) {
+    // Sample line shopping: two books per requested leg.
+    const keys = (/leg_key=in\.\(([^)]*)\)/.exec(u)?.[1] || "").split(",").map((k) => k.replace(/"/g, "")).filter(Boolean);
+    return json(res, keys.flatMap((leg_key) => [{ leg_key, book: "FanDuel", price: -160 }, { leg_key, book: "DraftKings", price: -145 }]));
+  }
   if (u.startsWith("/rest/v1/topic_follows")) return json(res, [{ kind: "team", topic: "Seattle Seahawks" }]);
   if (u.startsWith("/rest/v1/")) return json(res, []);
   json(res, {}, 404);

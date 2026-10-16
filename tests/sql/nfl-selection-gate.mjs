@@ -50,6 +50,15 @@ await db.exec(
     "utf8",
   ),
 );
+await db.exec(
+  fs.readFileSync(
+    new URL(
+      "../../supabase/migrations/20261016170000_line_shopping_books.sql",
+      import.meta.url,
+    ),
+    "utf8",
+  ).replace(/create table public\.leg_book_prices[\s\S]*$/, ""),
+);
 const game = "00000000-0000-4000-8000-000000000001",
   quote = "00000000-0000-4000-8000-000000000002";
 const stamp = new Date().toISOString();
@@ -136,7 +145,10 @@ await db.exec(
 assert.deepEqual(await errors(), []);
 let checks = 2;
 for (const [candidate, pattern] of [
-  [patch({ odds: null }), /exact numeric FanDuel/],
+  [patch({ odds: null }), /exact numeric American price/],
+  [patch({ book: "" }), /collected sportsbook/],
+  [patch({ book: "Bovada" }), /collected sportsbook/],
+  [patch({ book: "DraftKings" }), /published sportsbook/],
   [patch({}, { history: c.selection_gate.history.slice(0, 4) }), /five latest/],
   [
     patch(
@@ -216,6 +228,35 @@ for (const [candidate, pattern] of [
   assert.match(JSON.stringify(await errors(candidate)), pattern);
   checks++;
 }
+// Line shopping: a DraftKings price passes with DraftKings provenance, and cannot borrow another book's.
+const dkQuote = "00000000-0000-4000-8000-0000000000d1";
+await db.query(
+  `insert into source_observations(id,game_id,kind,observed_at,recorded_at,payload) values($2,$1,'odds',now(),now(),$3::jsonb)`,
+  [
+    game,
+    dkQuote,
+    JSON.stringify({
+      book: "DraftKings",
+      market: "player_reception_yds_alternate",
+      provider_updated_at: stamp,
+      outcomes: [
+        { description: "Test Player", name: "Over", point: 39.5, price: -190 },
+      ],
+    }),
+  ],
+);
+const draftKings = patch(
+  { book: "DraftKings", odds: -190 },
+  { quote_observation_id: dkQuote, initial_quote_observation_id: dkQuote },
+);
+assert.deepEqual(await errors(draftKings), []);
+checks++;
+assert.match(
+  JSON.stringify(await errors(patch({ book: "DraftKings", odds: -190 }, { quote_observation_id: dkQuote }))),
+  /initial price observation/,
+);
+checks++;
+await db.exec(`delete from source_observations where id='${dkQuote}'`);
 // Early publication is a draft until the lock window.
 await db.exec(`update games set kickoff=now()+interval '3 hours'`);
 assert.match(JSON.stringify(await errors()), /two hours/);

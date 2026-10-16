@@ -12,6 +12,8 @@ import {
   fixturesFromScoreboard,
   observationsFromScoreboard,
   oddsObservations,
+  BOOKMAKERS,
+  BOOK_TITLES,
   injuryObservations,
   newsObservations,
 } from "./normalize.ts";
@@ -172,7 +174,7 @@ Deno.serve(async (req: Request) => {
       oddsOn && gameLinesDue(kickoffs, linesLast?.at ?? null, now);
     if (linesDue) {
       const events = await json(
-        `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${encodeURIComponent(key!)}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=fanduel`,
+        `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/odds/?apiKey=${encodeURIComponent(key!)}&regions=us&markets=h2h,spreads,totals&oddsFormat=american&bookmakers=${BOOKMAKERS.join(",")}`,
       );
       const { data: games, error } = await db
         .from("games")
@@ -180,9 +182,10 @@ Deno.serve(async (req: Request) => {
       if (error) throw error;
       const observations = oddsObservations(events, games || []);
       oddsCount = observations.length;
+      // FanDuel coverage is still reported on its own: it remains the default published book.
       const coveredEvents = new Set(
         observations
-          .filter((o) => o.payload.outcomes.length > 0)
+          .filter((o) => o.payload.book === "FanDuel" && o.payload.outcomes.length > 0)
           .map((o) => o.payload.event_id),
       );
       missingFanDuelEvents = events.filter(
@@ -212,7 +215,7 @@ Deno.serve(async (req: Request) => {
                 ? "ok"
                 : "partial",
           details: {
-            books: ["FanDuel"],
+            books: BOOK_TITLES,
             quoted_markets: oddsCount,
             missing_fanduel_events: missingFanDuelEvents,
             fallback_book: null,
@@ -284,7 +287,7 @@ Deno.serve(async (req: Request) => {
                 ? PICK_PROP_MARKETS
                 : BASE_PROP_MARKETS;
               const data = await json(
-                `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/${event.id}/odds?apiKey=${encodeURIComponent(key!)}&markets=${markets.join(",")}&bookmakers=fanduel&oddsFormat=american`,
+                `https://api.the-odds-api.com/v4/sports/americanfootball_nfl/events/${event.id}/odds?apiKey=${encodeURIComponent(key!)}&markets=${markets.join(",")}&bookmakers=${BOOKMAKERS.join(",")}&oddsFormat=american`,
               );
               const observations = propObservations(
                 data,
@@ -336,7 +339,7 @@ Deno.serve(async (req: Request) => {
               inserted_quotes: propCount,
               markets: PICK_PROP_MARKETS,
               pick_games: pickGames.size,
-              books: ["FanDuel"],
+              books: BOOK_TITLES,
               fetched_at: dueEvents.length
                 ? new Date(now).toISOString()
                 : new Date(propsLast?.at || now).toISOString(),
@@ -361,7 +364,7 @@ Deno.serve(async (req: Request) => {
           provider: "The Odds API props",
           status: "not configured",
           details: {
-            books: ["FanDuel"],
+            books: BOOK_TITLES,
             required: [
               "ODDS_API_KEY",
               "ODDS_FEED_ENABLED=true",

@@ -75,7 +75,7 @@ test("prop ingestion retains observed time and rejects missing player or invalid
   e.bookmakers[0].markets[0].outcomes[0].price = 0;
   assert.equal(propObservations(e, [game], now).length, 0);
 });
-test("new odds use exact FanDuel prices and never fall back to another book", () => {
+test("odds keep every line-shopping book separately attributed; other books are ignored", () => {
   const market = {
     key: "player_rush_yds",
     last_update: "2026-10-05T11:59:00Z",
@@ -101,23 +101,24 @@ test("new odds use exact FanDuel prices and never fall back to another book", ()
       },
     ],
   };
-  const fixture = { ...event, bookmakers: [dk, fd] };
+  const offshore = { ...dk, key: "bovada", title: "Bovada" };
+  const fixture = { ...event, bookmakers: [dk, fd, offshore] };
   const original = JSON.stringify(fixture);
   const rows = oddsObservations([fixture], [game]);
-  assert.equal(rows.length, 1);
-  assert.equal(rows[0].payload.book, "FanDuel");
-  assert.equal(rows[0].payload.outcomes[0].price, -115);
-  assert.equal(rows[0].observed_at, market.last_update);
-  assert.equal(
-    propObservations(fixture, [game], now)[0].payload.book,
-    "FanDuel",
+  assert.deepEqual(
+    rows.map((r) => [r.payload.book, r.payload.outcomes[0].price]),
+    [
+      ["DraftKings", -110],
+      ["FanDuel", -115],
+    ],
+  );
+  assert.equal(rows[1].observed_at, market.last_update);
+  assert.deepEqual(
+    propObservations(fixture, [game], now).map((r) => r.payload.book),
+    ["DraftKings", "FanDuel"],
   );
   assert.deepEqual(
-    oddsObservations([{ ...event, bookmakers: [dk] }], [game]),
-    [],
-  );
-  assert.deepEqual(
-    propObservations({ ...event, bookmakers: [dk] }, [game], now),
+    oddsObservations([{ ...event, bookmakers: [offshore] }], [game]),
     [],
   );
   assert.equal(JSON.stringify(fixture), original);

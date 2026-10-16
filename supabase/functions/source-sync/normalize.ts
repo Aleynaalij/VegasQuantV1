@@ -147,6 +147,12 @@ type OddsEvent = {
     }[];
   }[];
 };
+/**
+ * Books collected for line shopping (owner decision, October 16, 2026). The Odds API bills every
+ * ten named bookmakers as one region, so these cost the same credits as FanDuel alone.
+ */
+export const BOOKMAKERS = ["fanduel", "draftkings", "betmgm", "williamhill_us", "betrivers", "fanatics"];
+export const BOOK_TITLES = ["FanDuel", "DraftKings", "BetMGM", "Caesars", "BetRivers", "Fanatics"];
 export function oddsObservations(
   events: OddsEvent[],
   games: {
@@ -165,7 +171,7 @@ export function oddsObservations(
     );
     if (!g) return [];
     return e.bookmakers
-      .filter((b) => b.key === "fanduel")
+      .filter((b) => BOOKMAKERS.includes(b.key))
       .flatMap((b) =>
         b.markets.map((m) => ({
           game_id: g.id,

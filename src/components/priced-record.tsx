@@ -30,7 +30,7 @@ export default function PricedRecord() {
       if (!live) return;
       if (r.error) return setRecord(null);
       const legs = (r.data || []) as PricedLeg[];
-      // Closing prices: the feed's last FanDuel price for picks whose game has kicked off.
+      // Closing prices: the feed's last price at each pick's published book, once the game has kicked off.
       const close = await supabase
         .from("leg_market_prices")
         .select("leg_key,last_price,kickoff")
@@ -99,7 +99,7 @@ export default function PricedRecord() {
       </p>
       {record.clvPicks > 0 && (
         <p>
-          Beat FanDuel’s closing price on {record.beatClose} of{" "}
+          Beat the closing price on {record.beatClose} of{" "}
           {record.clvPicks} pick{record.clvPicks === 1 ? "" : "s"}
           {record.avgClv !== null &&
             ` (average ${record.avgClv >= 0 ? "+" : "−"}${Math.abs(record.avgClv).toFixed(1)} pts)`}
