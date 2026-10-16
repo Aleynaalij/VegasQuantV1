@@ -18,10 +18,28 @@ export function validPushEndpoint(value: string) {
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-/** Release a price alert points to ("price:<release id>"), or null. */
+/** Release a price alert points to ("price:<release id>[:move:…]"), or null. */
 export function priceAlertRelease(eventKey: string | null | undefined) {
-  const id = eventKey?.startsWith("price:") ? eventKey.slice(6) : "";
+  const id = eventKey?.startsWith("price:") ? eventKey.slice(6).split(":")[0] : "";
   return UUID.test(id) ? id.toLowerCase() : null;
+}
+const PRICE = /^-?\d+(?:\.\d+)?$/;
+const odds = (s: string) => (Number(s) > 0 ? `+${Number(s)}` : String(Number(s)));
+/**
+ * Notification text for a market move ("price:<release>:move:<leg>:<against|toward>:<from>:<to>"), or
+ * null for any other event. Built only from validated numbers, never from free text.
+ */
+export function priceMoveMessage(eventKey: string | null | undefined) {
+  const parts = (eventKey || "").split(":");
+  if (parts.length !== 7 || parts[0] !== "price" || parts[2] !== "move" || !UUID.test(parts[1])) return null;
+  if (!/^\d{1,3}$/.test(parts[3])) return null;
+  const [, , , , direction, from, to] = parts;
+  if (!["against", "toward"].includes(direction) || !PRICE.test(from) || !PRICE.test(to)) return null;
+  const cents = (p: number) => (p < 0 ? p + 100 : p - 100);
+  const moved = Math.round(Math.abs(cents(Number(to)) - cents(Number(from))));
+  return direction === "against"
+    ? `A leg you're on moved ${odds(from)} → ${odds(to)}, ${moved} cents against the pick. Recheck it before kickoff.`
+    : `A leg you're on moved ${odds(from)} → ${odds(to)}: the market moved ${moved} cents toward the pick.`;
 }
 /** The JSON sent to the service worker for one queued delivery. */
 export function pushPayload(job: {
@@ -34,6 +52,9 @@ export function pushPayload(job: {
     pick_id: job.pick_id,
     type: job.type,
     ...(release ? { release } : {}),
+    ...(job.type === "price" && priceMoveMessage(job.event_key)
+      ? { announcement: priceMoveMessage(job.event_key) }
+      : {}),
     ...(job.event_key?.startsWith("app-update:")
       ? {
           announcement:
