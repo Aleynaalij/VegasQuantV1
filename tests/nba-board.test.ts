@@ -123,3 +123,91 @@ test("market display retains negative and zero lines and rejects fabricated or m
     "https://www.espn.com/nba/",
   );
 });
+
+import { nbaComparisons } from "../src/lib/nba-board";
+test("comparison keeps player/side/line distinct and never awards stale or malformed quotes", () => {
+  const quote = (
+    id: string,
+    book: string,
+    price: number,
+    point: number,
+    observed_at: string | null = new Date(now - 60000).toISOString(),
+    player = "Player One",
+  ): NbaObservation => ({
+    id,
+    game_id: "g",
+    kind: "prop",
+    provider: "Odds",
+    source: "https://the-odds-api.com",
+    recorded_at: new Date(now).toISOString(),
+    observed_at,
+    payload: {
+      book,
+      market: "player_points",
+      outcomes: [{ name: "Over", description: player, point, price }],
+    },
+  });
+  const rows = [
+    quote("1", "FanDuel", -110, 20.5),
+    quote("2", "DraftKings", 105, 20.5),
+    quote("3", "BetMGM", 200, 20.5, null),
+    quote("4", "Caesars", 250, 21.5),
+    quote("5", "Fanatics", 150, 20.5, new Date(now - 3600000).toISOString()),
+    quote("6", "BetRivers", 0, 20.5),
+  ];
+  (rows[0].payload.outcomes as unknown[]).push({
+    name: "Over",
+    description: "Player Two",
+    point: 20.5,
+    price: 150,
+  });
+  const groups = nbaComparisons(rows, now);
+  const one = groups.find(
+    (g) => g.player === "Player One" && g.point === 20.5,
+  )!;
+  assert.equal(one.best, 105);
+  assert.equal(one.quotes.length, 4);
+  assert.equal(groups.length, 3);
+  assert.equal(
+    nbaComparisons([quote("a", "FanDuel", 110, 20.5, null)], now)[0].best,
+    null,
+  );
+});
+test("withdrawn and future-dated snapshots cannot revive a best price", () => {
+  const base: NbaObservation = {
+    id: "a",
+    game_id: "g",
+    kind: "odds",
+    provider: "Odds",
+    source: "https://the-odds-api.com",
+    recorded_at: new Date(now - 60000).toISOString(),
+    observed_at: new Date(now - 60000).toISOString(),
+    payload: {
+      book: "FanDuel",
+      market: "h2h",
+      outcomes: [{ name: "Home", price: 120 }],
+    },
+  };
+  assert.equal(
+    nbaComparisons(
+      [
+        base,
+        {
+          ...base,
+          id: "b",
+          recorded_at: new Date(now).toISOString(),
+          payload: { ...base.payload, outcomes: [] },
+        },
+      ],
+      now,
+    ).length,
+    0,
+  );
+  assert.equal(
+    nbaComparisons(
+      [{ ...base, observed_at: new Date(now + 1000).toISOString() }],
+      now,
+    )[0].best,
+    null,
+  );
+});
