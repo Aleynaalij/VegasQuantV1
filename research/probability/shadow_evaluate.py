@@ -72,21 +72,49 @@ def outcomes(pending, frames):
     return graded
 
 
-def grade(db: Supabase, fetch=download) -> dict:
-    pending = db.request("/rest/v1/rpc/nfl_shadow_pending_outcomes", {}) or []
-    if not pending:
-        return {"pending": 0, "recorded": 0}
+def load(seasons, fetch=download):
+    """Season -> (normalized weekly frame, source URL, SHA-256)."""
     import pandas as pd
     from engine import normalize
     frames = {}
     with tempfile.TemporaryDirectory() as tmp:
-        for season in sorted({int(p["season"]) for p in pending}):
+        for season in sorted(seasons):
             path = fetch(season, Path(tmp))
             frames[season] = (normalize(pd.read_csv(path, low_memory=False)), NFLVERSE.format(season),
                               hashlib.sha256(path.read_bytes()).hexdigest())
+    return frames
+
+
+def grade(db: Supabase, fetch=download) -> dict:
+    # Ungraded finished forecasts, plus graded ones still inside the correction window.
+    pending = db.request("/rest/v1/rpc/nfl_shadow_pending_outcomes", {}) or []
+    if not pending:
+        return {"pending": 0, "recorded": 0}
+    frames = load({int(p["season"]) for p in pending}, fetch)
     graded = outcomes(pending, frames)
     result = db.request("/rest/v1/rpc/record_nfl_shadow_outcomes", {"p_outcomes": graded}) if graded else {}
     return {"pending": len(pending), "graded": len(graded), **(result or {})}
+
+
+def add_baselines(rows, frames):
+    """Each row's empirical baseline: the player's prior 16 same-team regular-season games at the
+    same line (the engine's validation baseline), conditional on no push."""
+    games = defaultdict(list)
+    for frame, _, _ in frames.values():
+        for r in frame.to_dict("records"):
+            if r.get("season_type", "REG") == "REG" and r.get("player_id"):
+                games[(r["player_id"], r.get("recent_team"))].append(r)
+    for history in games.values():
+        history.sort(key=lambda r: (int(r["season"]), int(r["week"])))
+    for row in rows:
+        target = (int(row["season"]), int(row["week"]))
+        prior = [r for r in games.get((row["player_id"], row["team"]), []) if (int(r["season"]), int(r["week"])) < target][-16:]
+        values = [max(float(r[YARDS[row["market"]]]), 0.0) for r in prior if r.get(YARDS[row["market"]]) == r.get(YARDS[row["market"]])]
+        line = float(row["line"])
+        wins = sum(v > line if row["direction"] == "over" else v < line for v in values)
+        decided = sum(v != line for v in values)
+        row["baseline_probability"] = wins / decided if decided else None
+    return rows
 
 
 def implied(odds: float) -> float:
@@ -135,12 +163,15 @@ def mean(xs):
 
 # The frozen protocol's initial claims; every other market/position stays diagnostic only.
 SUPPORTED_SCOPES = {"rushing:RB", "receiving:WR"}
-# Approval slices inside the price band: the engine's tested 20.5-100.5 line range in 20-yard steps.
-LINE_SLICES = [(20, 40), (40, 60), (60, 80), (80, 101)]
+# Approval slices inside the price band: the engine's tested 20.5-100.5 line range, by the inclusive
+# bounds reported in the dossier. A whole-yard line on a boundary (40.0) or outside the range (20.0)
+# belongs to no slice.
+LINE_SLICES = [(20.5, 39.5), (40.5, 59.5), (60.5, 79.5), (80.5, 100.5)]
 
 
 def metrics(settled, rng):
-    """Calibration, no-vig comparison and flat-unit returns for a set of (row, settlement) pairs."""
+    """Calibration, historical-baseline and no-vig comparisons and flat-unit returns for a set of
+    (row, settlement) pairs."""
     decided = [(r, s) for r, s in settled if s in ("win", "loss")]
     # Conditional no-push probability, as priced (engine.evaluate_quote).
     p = lambda r: float(r["research_probability"]) / (1 - float(r["push_probability"] or 0))
@@ -151,6 +182,12 @@ def metrics(settled, rng):
         if r["no_vig_probability"] is not None:
             paired[r["game_id"]].append(brier(p(r), s) - brier(float(r["no_vig_probability"]), s))
     diffs = [d for v in paired.values() for d in v]
+    # Each player's prior-16-game hit rate at the same line (engine validation baseline).
+    versus_history = defaultdict(list)
+    for r, s in decided:
+        if r.get("baseline_probability") is not None:
+            versus_history[r["game_id"]].append(brier(p(r), s) - brier(float(r["baseline_probability"]), s))
+    history_diffs = [d for v in versus_history.values() for d in v]
     reliability = []
     for lo in [i / 10 for i in range(10)]:
         b = [(p(r), y(s)) for r, s in decided if lo <= p(r) < lo + 0.1 or (lo == 0.9 and p(r) == 1)]
@@ -169,6 +206,8 @@ def metrics(settled, rng):
         "brier": {"model": mean([brier(p(r), s) for r, s in decided]),
                   "raw_price": mean([brier(implied(float(r["odds"])), s) for r, s in decided]),
                   "log_loss": mean([-math.log(min(max(p(r) if s == "win" else 1 - p(r), 1e-12), 1)) for r, s in decided])},
+        "historical_baseline": {"paired": len(history_diffs), "model_minus_baseline_brier": mean(history_diffs),
+                                "ci95": clustered(versus_history, mean, rng)},
         "no_vig": {"paired": len(diffs), "model_minus_no_vig_brier": mean(diffs), "ci95": clustered(paired, mean, rng)},
         "reliability": reliability,
         "eligible_cohort": {"definition": f"over, price {BAND[0]} to {BAND[1]}, estimated edge >= {EDGE_PP}pp",
@@ -190,18 +229,21 @@ def scope_report(scope, rows, rng):
     supported = scope in SUPPORTED_SCOPES
     slices = []
     for lo, hi in LINE_SLICES:
-        part = [(r, s) for r, s in settled if BAND[0] <= float(r["odds"]) <= BAND[1] and lo <= float(r["line"]) < hi]
+        part = [(r, s) for r, s in settled if BAND[0] <= float(r["odds"]) <= BAND[1] and lo <= float(r["line"]) <= hi]
         m = metrics(part, rng)
         criteria = {
             "review_floors": all(scope_floors.values()) and m["decided"] >= MIN_SLICE,
+            # Missing no-vig coverage blocks the claim: the paired comparison needs its own floor.
+            "no_vig_coverage": m["no_vig"]["paired"] >= MIN_SLICE,
             "beats_no_vig_brier": bool(m["no_vig"]["ci95"] and m["no_vig"]["ci95"][1] < 0),
             "positive_return_lower_bound": bool(m["eligible_cohort"]["ci95"] and m["eligible_cohort"]["ci95"][0] > 0),
         }
-        slices.append({"price": list(BAND), "lines": [lo + 0.5, hi - 0.5], **m, "criteria": criteria,
+        slices.append({"price": list(BAND), "lines": [lo, hi], **m, "criteria": criteria,
                        "meets_protocol": supported and all(criteria.values())})
     return {
         "supported": supported,
         "counts": {**{k: sum(s == k for _, s in settled) for k in ("win", "loss", "push", "void")},
+                   "corrected": sum(1 for r in graded if r.get("corrections")),
                    "pending_finished": sum(1 for r in pending if r.get("finished")),
                    "pending_upcoming": sum(1 for r in pending if not r.get("finished"))},
         "player_games": len(player_games), "games": len(games), "floors": scope_floors,
@@ -226,9 +268,12 @@ def build_report(rows, model_id: str) -> dict:
                     "RB rushing and WR receiving are diagnostic only."}
 
 
-def report(db: Supabase) -> dict:
+def report(db: Supabase, fetch=download) -> dict:
     model_id = json.loads(MODEL.read_text())["model_id"]
     rows = db.request("/rest/v1/rpc/nfl_shadow_evaluation_rows", {"p_model_id": model_id}) or []
+    if rows:
+        seasons = {int(r["season"]) for r in rows}
+        add_baselines(rows, load(seasons | {s - 1 for s in seasons}, fetch))
     dossier = build_report(rows, model_id)
     db.request("/rest/v1/rpc/record_nfl_qualification_report",
                {"p_model_id": model_id, "p_protocol": PROTOCOL, "p_report": dossier})

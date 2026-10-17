@@ -103,6 +103,36 @@ class Report(unittest.TestCase):
         self.assertEqual((d["captured_forecasts"], d["graded_forecasts"]), (3, 1))
         self.assertEqual((r["counts"]["win"], r["counts"]["pending_finished"], r["counts"]["pending_upcoming"]), (1, 1, 1))
 
+    def test_whole_yard_lines_outside_reported_slice_bounds(self):
+        rows = [dict(r, line=40.0) for r in self.sample(0.8, 1)]
+        r = e.build_report(rows, "m")["scopes"]["rushing:RB"]
+        self.assertEqual([s["decided"] for s in r["slices"]], [0, 0, 0, 0])
+        self.assertEqual(r["slices"][0]["lines"], [20.5, 39.5])
+        rows = [dict(r, line=30.0, yards=40 if r["yards"] == 60 else 10) for r in self.sample(0.8, 1)]
+        self.assertEqual(e.build_report(rows, "m")["scopes"]["rushing:RB"]["slices"][0]["decided"], 400)
+
+    def test_no_vig_coverage_floor(self):
+        # Only two paired games carry a no-vig price: the interval can be negative, the claim cannot pass.
+        rows = [dict(r, no_vig_probability=r["no_vig_probability"] if i < 4 else None)
+                for i, r in enumerate(self.sample(0.8, 1))]
+        c = e.build_report(rows, "m")["scopes"]["rushing:RB"]["slices"][1]["criteria"]
+        self.assertFalse(c["no_vig_coverage"])
+        self.assertEqual(e.build_report(rows, "m")["scopes"]["rushing:RB"]["eligible_slices"], [])
+
+    def test_historical_baseline(self):
+        history = pd.DataFrame([dict(player_id="p1", season=2026, week=w, recent_team="SEA", season_type="REG",
+                                     rushing_yards=y, receiving_yards=0.0)
+                                for w, y in [(1, 50.0), (2, 30.0), (3, 40.0), (4, 60.0), (5, 41.0), (7, 99.0)]])
+        rows = [dict(row(1, "g1", line=40.5), season=2026, week=6, team="SEA"),
+                dict(row(2, "g1", line=40.0, direction="under", player="p1"), season=2026, week=6, team="SEA"),
+                dict(row(3, "g1", player="p1"), season=2026, week=6, team="KC")]
+        e.add_baselines(rows, {2026: (history, URL, SHA)})
+        self.assertEqual(rows[0]["baseline_probability"], 3 / 5)   # week 7 is after the target week
+        self.assertEqual(rows[1]["baseline_probability"], 1 / 4)   # the 40-yard push is excluded
+        self.assertIsNone(rows[2]["baseline_probability"])          # no same-team history
+        m = e.build_report(rows[:1], "m")["scopes"]["rushing:RB"]["all_lines"]["historical_baseline"]
+        self.assertEqual(m["paired"], 1)
+
     def test_eligible_cohort_is_price_band_overs_with_edge(self):
         rows = [row(1, "g1", odds=-300), row(2, "g1", odds=-140), row(3, "g1", direction="under"),
                 row(4, "g1", edge=2.0), row(5, "g1")]

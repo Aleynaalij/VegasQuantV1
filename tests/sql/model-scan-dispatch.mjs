@@ -53,18 +53,26 @@ await tick(); assert.equal(await calls(), 4);
 await answer(null); await tick(); assert.equal(await calls(), 5);
 await answer(204); await tick(); assert.equal(await calls(), 5);
 assert.equal((await db.query(`select attempts from private.workflow_dispatches`)).rows[0].attempts, 3);
+// Retries follow the stored batch after its rows leave the 10-minute lookup, until it is 15 minutes old.
+await db.exec(`update public.source_observations set recorded_at=recorded_at-interval '11 minutes';
+ update private.workflow_dispatches set last_source_at=last_source_at-interval '11 minutes', attempts=1, request_id=999;
+ insert into net._http_response values(999,503,null)`);
+await tick(); assert.equal(await calls(), 6);
+await answer(500);
+await db.exec(`update private.workflow_dispatches set last_source_at=last_source_at-interval '5 minutes'`);
+await tick(); assert.equal(await calls(), 6);
 // Other books, other markets and old batches never dispatch.
 await db.exec('delete from public.source_observations');
 await prop('DraftKings', 'player_rush_yds', '0 minutes');
 await prop('FanDuel', 'h2h', '0 minutes');
 await prop('FanDuel', 'player_rush_yds', '20 minutes');
 await tick();
-assert.equal(await calls(), 5);
+assert.equal(await calls(), 6);
 // The next batch dispatches again with a fresh attempt count.
 await db.exec(`update private.workflow_dispatches set last_source_at=last_source_at-interval '6 hours'`);
 await prop('FanDuel', 'player_rush_yds', '0 minutes');
 await tick();
-assert.equal(await calls(), 6);
+assert.equal(await calls(), 7);
 assert.equal((await db.query(`select attempts from private.workflow_dispatches`)).rows[0].attempts, 1);
 // Members and the service role cannot call it.
 const grants = (await db.query(`select has_function_privilege('service_role','private.dispatch_model_scan()','execute') s,

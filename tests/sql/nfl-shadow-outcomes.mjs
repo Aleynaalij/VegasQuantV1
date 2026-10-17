@@ -28,26 +28,34 @@ await snap('3 hours', -200); await snap('10 minutes', -230);
 await db.exec(readFileSync('supabase/migrations/20261018040000_nfl_shadow_outcomes.sql', 'utf8'));
 await db.exec(readFileSync('supabase/migrations/20261018051000_shadow_evaluation_pending.sql', 'utf8'));
 
-// Only finished games (six hours after kickoff) are pending.
+// Ungraded forecasts of finished games (six hours after kickoff) are pending.
 const pending = (await db.query('select * from public.nfl_shadow_pending_outcomes()')).rows;
 assert.deepEqual(pending.map((p) => p.forecast_id).sort(), ['00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002']);
 assert.deepEqual([pending[0].player_id, pending[0].season, pending[0].week, pending[0].team], ['p1', 2026, 7, 'SEA']);
 const src = { source_url: 'https://example.test/stats.csv', source_sha256: 'b'.repeat(64) };
 const record = async (o) => (await db.query('select public.record_nfl_shadow_outcomes($1) r', [o])).rows[0].r;
 assert.deepEqual(await record([{ forecast_id: '00000000-0000-0000-0000-000000000001', yards: 55, ...src },
-  { forecast_id: '00000000-0000-0000-0000-000000000002', void: true, ...src }]), { inserted: 2, replayed: 0, conflicts_rejected: 0 });
-// Replays are idempotent; a different later value never overwrites the original.
+  { forecast_id: '00000000-0000-0000-0000-000000000002', void: true, ...src }]), { inserted: 2, replayed: 0, corrected: 0 });
+// Replays are idempotent. A corrected final is appended as a new version; the original stays.
 assert.deepEqual(await record([{ forecast_id: '00000000-0000-0000-0000-000000000001', yards: 55, ...src },
-  { forecast_id: '00000000-0000-0000-0000-000000000001', yards: 20, ...src }]), { inserted: 0, replayed: 1, conflicts_rejected: 1 });
+  { forecast_id: '00000000-0000-0000-0000-000000000001', yards: 20, ...src }]), { inserted: 0, replayed: 1, corrected: 1 });
+assert.deepEqual(await record([{ forecast_id: '00000000-0000-0000-0000-000000000001', yards: 20, ...src }]), { inserted: 0, replayed: 1, corrected: 0 });
+assert.equal(Number((await db.query('select yards from private.nfl_shadow_outcomes where forecast_id=$1', ['00000000-0000-0000-0000-000000000001'])).rows[0].yards), 55);
 await assert.rejects(record([{ forecast_id: '00000000-0000-0000-0000-000000000003', yards: 10, ...src }]), /unfinished/);
 await assert.rejects(db.exec('update private.nfl_shadow_outcomes set yards=1'), /immutable/);
+await assert.rejects(db.exec('delete from private.nfl_shadow_outcome_corrections'), /immutable/);
+// Graded forecasts are re-read for 21 days so later corrections are seen, then drop out.
+assert.equal((await db.query('select count(*)::int n from public.nfl_shadow_pending_outcomes()')).rows[0].n, 2);
+await db.exec(`update public.games set kickoff=now()-interval '22 days' where id='00000000-0000-0000-0000-000000000001'`);
 assert.equal((await db.query('select count(*)::int n from public.nfl_shadow_pending_outcomes()')).rows[0].n, 0);
 
 // Every captured forecast is returned; the one still in progress is flagged, not dropped.
 const all = (await db.query(`select * from public.nfl_shadow_evaluation_rows('m') order by forecast_id`)).rows;
 assert.deepEqual(all.map((r) => [r.graded, r.finished]), [[true, true], [true, true], [false, false]]);
 const rows = all.filter((r) => r.graded).sort((a, b) => Number(a.line) - Number(b.line));
-assert.deepEqual([Number(rows[0].yards), Number(rows[0].odds), Number(rows[0].closing_odds), rows[0].player_position], [55, -200, -230, 'RB']);
+// The evaluation uses the corrected value and counts the correction.
+assert.deepEqual([Number(rows[0].yards), rows[0].corrections, Number(rows[0].odds), rows[0].player_position, rows[0].season, rows[0].week, rows[0].team],
+  [20, 1, -200, 'RB', 2026, 7, 'SEA']);
 assert.equal(rows[1].void, true); assert.equal(rows[1].closing_odds, null); // no closing quote for that line
 
 const id = (await db.query(`select public.record_nfl_qualification_report('m','qualification-2026-10-16','{"scopes":{}}') id`)).rows[0].id;
