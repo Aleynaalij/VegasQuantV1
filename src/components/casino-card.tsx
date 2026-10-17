@@ -125,7 +125,7 @@ export function CasinoCardDownload({ data, label = "Download card" }: { data: Ca
     try {
       const canvas = document.createElement("canvas");
       canvas.width = CARD_W;
-      canvas.height = CARD_H;
+      canvas.height = data.exportHeight || CARD_H;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw Error("Image export unavailable");
       const css = getComputedStyle(document.body);
@@ -157,7 +157,7 @@ export function CasinoCardDownload({ data, label = "Download card" }: { data: Ca
         <div className="vqc-preview">
           {/* Locally rendered PNG of the card above. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt={`${data.title} card`} width={CARD_W} height={CARD_H} />
+          <img src={url} alt={`${data.title} card`} width={CARD_W} height={data.exportHeight || CARD_H} />
           <div>
             <a className="primary" href={url} download={filename}>Save image</a>
             {typeof navigator !== "undefined" && "share" in navigator && (
