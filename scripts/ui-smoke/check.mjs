@@ -85,6 +85,11 @@ for (const [list, auth] of [
       await page.evaluate(() =>
         document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
       );
+      // Long lists use content-visibility: auto, so cards below the fold are skipped from rendering
+      // and from innerText until scrolled to. Render everything before reading the page's text.
+      await page
+        .addStyleTag({ content: "* { content-visibility: visible !important; }" })
+        .catch(() => {});
       const status = res?.status() ?? 0;
       if (auth && path === "/membership") {
         const panels = await page
