@@ -1,8 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import CasinoCard from "./casino-card";
-import DownloadCard from "./download-card";
+import CasinoCard, { CasinoCardDownload } from "./casino-card";
 import GamblyLink from "./gambly-link";
 import { weekendMoneylineCard as card, weekendMoneylineCopy } from "@/lib/weekend-moneyline-card";
 import type { CasinoCardData } from "@/lib/casino-card";
@@ -18,7 +17,7 @@ export default function WeekendMoneylineCard() {
     return () => { clearInterval(timer); window.removeEventListener("focus", update); };
   }, []);
   const face: CasinoCardData = {
-    variant: "parlay", eyebrow: "12-leg moneyline · Sunday predictions",
+    variant: "parlay", exportHeight: 2200, eyebrow: "12-leg moneyline · Sunday predictions",
     title: card.title, matchup: "October 18 · Every Sunday matchup",
     legs: card.legs.map(l => ({ name: l.name, market: "Moneyline", note: l.matchup })),
     footnote: "One-time analyst predictions · No validated edge claimed. Every leg must win.",
@@ -44,11 +43,7 @@ export default function WeekendMoneylineCard() {
         <p><a href={card.source} target="_blank" rel="noopener noreferrer">NFL Week 6 final injury report ↗</a></p>
         <p><a href={card.quoteSource} target="_blank" rel="noopener noreferrer">Odds source: The Odds API ↗</a></p>
       </details>
-      <DownloadCard title={card.title} subtitle="12-leg moneyline · October 18 Sunday predictions" publishedAt={card.preparedAt} sections={[
-        { heading: "Selections", text: weekendMoneylineCopy },
-        { heading: "Prediction card", text: "One-time analyst predictions. Not VQ Approved or an official pick. No validated edge, combined odds or payout. Every leg must win." },
-        { heading: "Risks & sources", text: `${card.source}\nFinal availability and current prices must be checked. Giants, Falcons and Packers are fragile leans.` },
-      ]} />
+      <CasinoCardDownload data={face} />
     </section>
   );
 }

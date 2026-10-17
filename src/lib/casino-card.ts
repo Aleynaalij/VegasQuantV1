@@ -10,6 +10,8 @@ export type CardLeg = {
   status?: "won" | "lost" | "push" | "open";
 };
 export type CasinoCardData = {
+  /** Taller image for long tickets; standard cards keep their existing dimensions. */
+  exportHeight?: number;
   variant: CardVariant;
   eyebrow: string;
   title: string;
@@ -135,7 +137,7 @@ export function drawCasinoCard(
 ) {
   const t = THEMES[d.variant];
   const W = CARD_W,
-    H = CARD_H;
+    H = d.exportHeight || CARD_H;
   const display = (px: number, weight = 800) => `${weight} ${px}px ${fonts.display}`;
   const body = (px: number, weight = 500) => `${weight} ${px}px ${fonts.body}`;
 
