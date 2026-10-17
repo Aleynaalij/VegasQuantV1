@@ -3,7 +3,8 @@
 --    and requires the scan's hoopR input hashes and each forecast's history cutoff (before the game's
 --    Eastern date). Missing evidence rejects the whole scan.
 -- 2. nba_shadow_evaluation_rows takes the closing price from the same book's last snapshot of the market
---    before tip; a line missing from that snapshot (withdrawn or moved) has no closing price.
+--    before tip; a line missing from that snapshot (withdrawn or moved) has no closing price. A market the
+--    book pulls entirely leaves no newer snapshot, so its last quote stands as the close.
 -- Same signatures, so existing grants stay in place.
 
 create or replace function private.record_nba_shadow_scan(p jsonb) returns jsonb

@@ -47,7 +47,8 @@ so market skill is measured only prospectively, below.
 2. **Grade.** `nba_shadow_evaluation_rows` grades the Over with `nba_grade` on recorded box scores
    (VOID if the player did not play). The closing price is read from the same book's last snapshot of
    that market before tip; if that snapshot no longer has the player's line (withdrawn or moved), there
-   is no closing price for the forecast, never an older one.
+   is no closing price for the forecast, never an older one. If the book pulls the whole market, the
+   feed records nothing new, so the market's last quote stands as the close (the last available price).
 3. **Score.** `shadow_report.py` (workflow *NBA shadow scorecard*, twice daily) uses the first
    capture per game, player, market and line. Per market, a market is *ready for owner review* only if:
    - at least 300 graded forecasts from at least 40 games;
