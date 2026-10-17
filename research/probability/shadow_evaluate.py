@@ -67,6 +67,20 @@ def outcomes(pending, frames):
     return graded
 
 
+PAGE = 1000  # PostgREST's row cap per call
+
+
+def paged(db: Supabase, rpc: str, body: dict, key: str) -> list:
+    """Every row of a keyset-paged RPC (ordered by `key`, at most PAGE rows a call)."""
+    rows, after = [], None
+    while True:
+        page = db.request(f"/rest/v1/rpc/{rpc}", {**body, "p_after": after, "p_limit": PAGE}) or []
+        rows += page
+        if len(page) < PAGE:
+            return rows
+        after = page[-1][key]
+
+
 def load(seasons, fetch=download):
     """Season -> (normalized weekly frame, source URL, SHA-256)."""
     import pandas as pd
@@ -82,13 +96,16 @@ def load(seasons, fetch=download):
 
 def grade(db: Supabase, fetch=download) -> dict:
     # Ungraded finished forecasts, plus graded ones still inside the correction window.
-    pending = db.request("/rest/v1/rpc/nfl_shadow_pending_outcomes", {}) or []
+    pending = paged(db, "nfl_shadow_pending_outcomes", {}, "forecast_id")
     if not pending:
         return {"pending": 0, "recorded": 0}
     frames = load({int(p["season"]) for p in pending}, fetch)
     graded = outcomes(pending, frames)
-    result = db.request("/rest/v1/rpc/record_nfl_shadow_outcomes", {"p_outcomes": graded}) if graded else {}
-    return {"pending": len(pending), "graded": len(graded), **(result or {})}
+    totals = defaultdict(int)
+    for i in range(0, len(graded), PAGE):
+        for k, v in (db.request("/rest/v1/rpc/record_nfl_shadow_outcomes", {"p_outcomes": graded[i:i + PAGE]}) or {}).items():
+            totals[k] += v
+    return {"pending": len(pending), "graded": len(graded), **totals}
 
 
 def add_baselines(rows, frames):
@@ -133,7 +150,10 @@ def settle(r) -> str:
 def first_observations(rows):
     """Protocol main sample: the first capture per player/game/market/direction/line."""
     first = {}
-    for r in sorted(rows, key=lambda r: r["recorded_at"]):
+    # Main and alternate snapshots can carry the same line in one scan (same recorded_at): break
+    # ties by provider observation time, then by stable ids, so the sample is reproducible.
+    order = lambda r: (str(r["recorded_at"]), str(r.get("quote_observed_at") or ""), str(r.get("observation_id") or ""), str(r["forecast_id"]))
+    for r in sorted(rows, key=order):
         first.setdefault((r["player_id"], r["game_id"], r["market"], r["direction"], float(r["line"])), r)
     return list(first.values())
 
@@ -281,10 +301,14 @@ def provenance(rows, input_sources):
 def scan_coverage(runs):
     """The candidates that never became forecasts: per hosted run, its coverage counts, blocker
     reasons and recorded forecasts, summed across runs."""
-    totals, blockers = defaultdict(int), defaultdict(int)
+    totals, blockers, fanduel, fanduel_blockers = defaultdict(int), defaultdict(int), defaultdict(int), defaultdict(int)
     for run in runs:
         for k, v in (run.get("coverage") or {}).items():
             totals[k] += int(v or 0)
+        for k, v in (run.get("fanduel_coverage") or {}).items():
+            fanduel[k] += int(v or 0)
+        for reason, n in (run.get("fanduel_blocker_counts") or {}).items():
+            fanduel_blockers[reason] += int(n or 0)
         counts = run.get("blocker_counts")
         if isinstance(counts, dict):
             for reason, n in counts.items():
@@ -297,7 +321,10 @@ def scan_coverage(runs):
                     blockers[reason] += int(n or 0)
     return {"runs": len(runs), "runs_with_forecasts": sum(1 for r in runs if r.get("recorded_forecasts")),
             "recorded_forecasts": sum(int(r.get("recorded_forecasts") or 0) for r in runs),
-            "candidates": dict(totals), "blocker_counts": dict(sorted(blockers.items()))}
+            "candidates": dict(totals), "blocker_counts": dict(sorted(blockers.items())),
+            # The journal records FanDuel only: how many candidate player-markets had a FanDuel quote.
+            "fanduel": dict(fanduel), "fanduel_blocker_counts": dict(sorted(fanduel_blockers.items())),
+            "runs_without_fanduel_coverage": sum(1 for r in runs if not r.get("fanduel_coverage"))}
 
 
 def build_report(rows, model_id: str, input_sources=None, runs=None) -> dict:
@@ -319,8 +346,8 @@ def build_report(rows, model_id: str, input_sources=None, runs=None) -> dict:
 
 def report(db: Supabase, fetch=download) -> dict:
     model_id = json.loads(MODEL.read_text())["model_id"]
-    rows = db.request("/rest/v1/rpc/nfl_shadow_evaluation_rows", {"p_model_id": model_id}) or []
-    runs = db.request("/rest/v1/rpc/nfl_shadow_scan_coverage", {"p_model_id": model_id}) or []
+    rows = paged(db, "nfl_shadow_evaluation_rows", {"p_model_id": model_id}, "forecast_id")
+    runs = paged(db, "nfl_shadow_scan_coverage", {"p_model_id": model_id}, "run_id")
     input_sources = []
     if rows:
         seasons = {int(r["season"]) for r in rows}

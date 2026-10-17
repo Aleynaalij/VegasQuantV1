@@ -112,8 +112,23 @@ def journal_payload(result: dict) -> dict:
     for c in cards:
         for b in c.get("blockers") or []:
             blockers[b] = blockers.get(b, 0) + 1
-    kept = [c for c in cards if (c.get("quote") or {}).get("sportsbook") == "FanDuel" and c.get("research_probability") is not None]
+    fanduel = lambda c: (c.get("quote") or {}).get("sportsbook") == "FanDuel" and c.get("research_probability") is not None
+    kept = [c for c in cards if fanduel(c)]
+    # FanDuel-specific coverage per candidate player-market: another book's price does not count,
+    # because the journal and the protocol use FanDuel quotes only.
+    candidate = lambda c: (c.get("game_id"), c.get("player"), c.get("market"))
+    candidates = {candidate(c) for c in cards}
+    priced = {candidate(c) for c in kept}
+    fd_blockers = {}
+    for c in kept:
+        for b in c.get("blockers") or []:
+            fd_blockers[b] = fd_blockers.get(b, 0) + 1
+    missing = len(candidates - priced)
+    if missing:
+        fd_blockers["No FanDuel quote for the player-market"] = missing
     return dict(result, cards=kept, blocker_counts=dict(sorted(blockers.items())),
+                fanduel_coverage={"candidates": len(candidates), "priced": len(priced), "unavailable": missing},
+                fanduel_blocker_counts=dict(sorted(fd_blockers.items())),
                 card_summary={"scanned": len(cards), "uploaded_fanduel_priced": len(kept)})
 
 

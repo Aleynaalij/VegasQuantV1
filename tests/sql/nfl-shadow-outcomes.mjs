@@ -13,7 +13,7 @@ create table private.nfl_shadow_scan_runs(id uuid primary key, model_id text, ge
 insert into private.nfl_shadow_scan_runs values('00000000-0000-0000-0000-0000000000a1','m',now()-interval '2 days',
  '{"coverage":{"cards":3,"priced":3,"unavailable":0},"blocker_counts":{"Quote older than 15 minutes":1}}'),
  ('00000000-0000-0000-0000-0000000000a2','m',now()-interval '3 days','{"coverage":{"cards":5,"priced":0,"unavailable":5},"reason":"No props"}');
-create table private.nfl_shadow_forecasts(id uuid primary key, run_id uuid default '00000000-0000-0000-0000-0000000000a1', game_id uuid references public.games(id), model_id text, player text,
+create table private.nfl_shadow_forecasts(id uuid primary key, run_id uuid default '00000000-0000-0000-0000-0000000000a1', observation_id uuid, game_id uuid references public.games(id), model_id text, player text,
  market text, direction text, line numeric, forecast jsonb, recorded_at timestamptz default now());
 insert into private.nfl_shadow_model_manifests values('m');
 insert into public.games values('00000000-0000-0000-0000-000000000001', now()-interval '1 day'),('00000000-0000-0000-0000-000000000002', now()-interval '1 hour');
@@ -53,6 +53,12 @@ assert.equal((await db.query('select count(*)::int n from public.nfl_shadow_pend
 await db.exec(`update public.games set kickoff=now()-interval '22 days' where id='00000000-0000-0000-0000-000000000001'`);
 assert.equal((await db.query('select count(*)::int n from public.nfl_shadow_pending_outcomes()')).rows[0].n, 0);
 
+// Keyset paging: one row a page, continuing after the last id.
+const page1 = (await db.query(`select forecast_id from public.nfl_shadow_evaluation_rows('m', null, 1)`)).rows;
+const page2 = (await db.query(`select forecast_id from public.nfl_shadow_evaluation_rows('m', $1, 1)`, [page1[0].forecast_id])).rows;
+assert.deepEqual([page1.length, page2.length], [1, 1]);
+assert.ok(page2[0].forecast_id > page1[0].forecast_id);
+assert.equal((await db.query(`select count(*)::int n from public.nfl_shadow_evaluation_rows('m', null, 5000)`)).rows[0].n, 3); // capped at 1,000
 // Every captured forecast is returned; the one still in progress is flagged, not dropped.
 const all = (await db.query(`select * from public.nfl_shadow_evaluation_rows('m') order by forecast_id`)).rows;
 assert.deepEqual(all.map((r) => [r.graded, r.finished]), [[true, true], [true, true], [false, false]]);
@@ -64,13 +70,14 @@ assert.equal(rows[1].void, true); assert.equal(rows[1].closing_odds, null); // n
 
 // Scan coverage lists every run, including ones that recorded no forecast.
 const runs = (await db.query(`select * from public.nfl_shadow_scan_coverage('m')`)).rows;
-assert.deepEqual(runs.map((r) => [r.recorded_forecasts, r.coverage.cards, r.reason]), [[0, 5, 'No props'], [3, 3, null]]);
-assert.deepEqual(runs[1].blocker_counts, { 'Quote older than 15 minutes': 1 });
+// Ordered by run id for keyset paging.
+assert.deepEqual(runs.map((r) => [r.recorded_forecasts, r.coverage.cards, r.reason]), [[3, 3, null], [0, 5, 'No props']]);
+assert.deepEqual(runs[0].blocker_counts, { 'Quote older than 15 minutes': 1 });
 const id = (await db.query(`select public.record_nfl_qualification_report('m','qualification-2026-10-16','{"scopes":{}}') id`)).rows[0].id;
 assert.ok(id);
 const grants = (await db.query(`select has_function_privilege('authenticated','public.record_nfl_shadow_outcomes(jsonb)','execute') a,
- has_function_privilege('anon','public.nfl_shadow_evaluation_rows(text)','execute') b,
- has_function_privilege('authenticated','public.nfl_shadow_scan_coverage(text)','execute') c,
- has_function_privilege('service_role','public.nfl_shadow_pending_outcomes()','execute') s`)).rows[0];
+ has_function_privilege('anon','public.nfl_shadow_evaluation_rows(text,uuid,int)','execute') b,
+ has_function_privilege('authenticated','public.nfl_shadow_scan_coverage(text,uuid,int)','execute') c,
+ has_function_privilege('service_role','public.nfl_shadow_pending_outcomes(uuid,int)','execute') s`)).rows[0];
 assert.deepEqual(grants, { a: false, b: false, c: false, s: true });
 console.log('nfl shadow outcomes ok');

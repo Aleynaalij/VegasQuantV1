@@ -7,8 +7,10 @@
 --    stays immutable; a later different value is appended to private.nfl_shadow_outcome_corrections
 --    and the evaluation uses the latest version. Grading re-reads forecasts for 21 days after
 --    kickoff so corrections are seen.
--- 3. Scan coverage: every hosted run, with its coverage counts, blocker reasons and the forecasts it
---    recorded, so a dossier reports the candidates that never became forecasts too.
+-- 3. Scan coverage: every hosted run, with its coverage counts (all books and FanDuel only), blocker
+--    reasons and the forecasts it recorded, so a dossier reports candidates that never became forecasts.
+-- 4. Paging: PostgREST returns at most 1,000 rows per call, so the row-returning RPCs take a keyset
+--    cursor (p_after, ordered by id) and callers page until a short page.
 create table private.nfl_shadow_outcome_corrections(
  id uuid primary key default gen_random_uuid(),
  forecast_id uuid not null references private.nfl_shadow_outcomes(forecast_id),
@@ -40,14 +42,17 @@ revoke all on function private.nfl_shadow_current_outcome(uuid) from public, ano
 
 -- Ungraded forecasts whose game finished at least six hours ago, plus graded ones still inside the
 -- 21-day correction window.
-create or replace function public.nfl_shadow_pending_outcomes() returns table(forecast_id uuid, player_id text, season int, week int, market text, team text, kickoff timestamptz)
+drop function public.nfl_shadow_pending_outcomes();
+create function public.nfl_shadow_pending_outcomes(p_after uuid default null, p_limit int default 1000)
+ returns table(forecast_id uuid, player_id text, season int, week int, market text, team text, kickoff timestamptz)
 language sql stable security definer set search_path='' as $$
  select f.id, f.forecast->'quote'->>'player_id', (f.forecast->'quote'->>'season')::int, (f.forecast->'quote'->>'week')::int,
   f.market, f.forecast->'quote'->>'team', g.kickoff
  from private.nfl_shadow_forecasts f join public.games g on g.id=f.game_id
  left join private.nfl_shadow_outcomes o on o.forecast_id=f.id
  where g.kickoff < now() - interval '6 hours' and (o.forecast_id is null or g.kickoff > now() - interval '21 days')
- order by g.kickoff limit 50000
+   and (p_after is null or f.id > p_after)
+ order by f.id limit least(greatest(p_limit,1),1000)
 $$;
 
 create or replace function public.record_nfl_shadow_outcomes(p_outcomes jsonb) returns jsonb
@@ -78,14 +83,16 @@ begin
 end $$;
 
 drop function public.nfl_shadow_evaluation_rows(text);
-create function public.nfl_shadow_evaluation_rows(p_model_id text) returns table(
- forecast_id uuid, game_id uuid, kickoff timestamptz, recorded_at timestamptz, player_id text, player_position text,
+create function public.nfl_shadow_evaluation_rows(p_model_id text, p_after uuid default null, p_limit int default 1000) returns table(
+ forecast_id uuid, game_id uuid, kickoff timestamptz, recorded_at timestamptz, quote_observed_at timestamptz, observation_id uuid,
+ player_id text, player_position text,
  season int, week int, team text, market text, direction text, line numeric, odds numeric, research_probability numeric,
  push_probability numeric, no_vig_probability numeric, estimated_edge_pp numeric, graded boolean, finished boolean,
  yards numeric, void boolean, corrections int, outcome_source_url text, outcome_source_sha256 text, outcome_version uuid,
  closing_odds numeric)
 language sql stable security definer set search_path='' as $$
- select f.id, f.game_id, g.kickoff, f.recorded_at, f.forecast->'quote'->>'player_id', f.forecast->>'position',
+ select f.id, f.game_id, g.kickoff, f.recorded_at, (f.forecast->'quote'->>'observed_at')::timestamptz, f.observation_id,
+  f.forecast->'quote'->>'player_id', f.forecast->>'position',
   (f.forecast->'quote'->>'season')::int, (f.forecast->'quote'->>'week')::int, f.forecast->'quote'->>'team',
   f.market, f.direction, f.line, (f.forecast->'quote'->>'odds')::numeric, (f.forecast->>'research_probability')::numeric,
   (f.forecast->>'push_probability')::numeric, (f.forecast->>'no_vig_market_probability')::numeric,
@@ -100,16 +107,20 @@ language sql stable security definer set search_path='' as $$
     limit 1)
  from private.nfl_shadow_forecasts f join public.games g on g.id=f.game_id
  left join lateral private.nfl_shadow_current_outcome(f.id) o on true
- where f.model_id=p_model_id
+ where f.model_id=p_model_id and (p_after is null or f.id > p_after)
+ order by f.id limit least(greatest(p_limit,1),1000)
 $$;
-create function public.nfl_shadow_scan_coverage(p_model_id text) returns table(
- run_id uuid, generated_at timestamptz, coverage jsonb, blocker_counts jsonb, per_game jsonb, reason text, recorded_forecasts int)
+create function public.nfl_shadow_scan_coverage(p_model_id text, p_after uuid default null, p_limit int default 1000) returns table(
+ run_id uuid, generated_at timestamptz, coverage jsonb, fanduel_coverage jsonb, blocker_counts jsonb, fanduel_blocker_counts jsonb,
+ per_game jsonb, reason text, recorded_forecasts int)
 language sql stable security definer set search_path='' as $$
- select r.id, r.generated_at, r.scan->'coverage', r.scan->'blocker_counts', r.scan->'per_game', r.scan->>'reason',
+ select r.id, r.generated_at, r.scan->'coverage', r.scan->'fanduel_coverage', r.scan->'blocker_counts', r.scan->'fanduel_blocker_counts',
+  r.scan->'per_game', r.scan->>'reason',
   (select count(*)::int from private.nfl_shadow_forecasts f where f.run_id=r.id)
- from private.nfl_shadow_scan_runs r where r.model_id=p_model_id order by r.generated_at
+ from private.nfl_shadow_scan_runs r where r.model_id=p_model_id and (p_after is null or r.id > p_after)
+ order by r.id limit least(greatest(p_limit,1),1000)
 $$;
-revoke all on function public.nfl_shadow_pending_outcomes(), public.record_nfl_shadow_outcomes(jsonb), public.nfl_shadow_evaluation_rows(text),
- public.nfl_shadow_scan_coverage(text) from public, anon, authenticated;
-grant execute on function public.nfl_shadow_pending_outcomes(), public.record_nfl_shadow_outcomes(jsonb), public.nfl_shadow_evaluation_rows(text),
- public.nfl_shadow_scan_coverage(text) to service_role;
+revoke all on function public.nfl_shadow_pending_outcomes(uuid,int), public.record_nfl_shadow_outcomes(jsonb),
+ public.nfl_shadow_evaluation_rows(text,uuid,int), public.nfl_shadow_scan_coverage(text,uuid,int) from public, anon, authenticated;
+grant execute on function public.nfl_shadow_pending_outcomes(uuid,int), public.record_nfl_shadow_outcomes(jsonb),
+ public.nfl_shadow_evaluation_rows(text,uuid,int), public.nfl_shadow_scan_coverage(text,uuid,int) to service_role;

@@ -85,6 +85,9 @@ class HostedScanTests(unittest.TestCase):
         self.assertEqual(p["coverage"], result["coverage"])
         self.assertEqual(p["blocker_counts"], {"No verified exact-player prop quote": 1, "Quote older than 15 minutes": 2})
         self.assertEqual(p["card_summary"], {"scanned": 3, "uploaded_fanduel_priced": 1})
+        # B is priced at DraftKings only: it counts as missing FanDuel coverage, not as priced.
+        self.assertEqual(p["fanduel_coverage"], {"candidates": 3, "priced": 1, "unavailable": 2})
+        self.assertEqual(p["fanduel_blocker_counts"], {"No FanDuel quote for the player-market": 2, "Quote older than 15 minutes": 1})
 
 if __name__ == "__main__":
     unittest.main()

@@ -2,6 +2,7 @@ from pathlib import Path
 import random
 import sys
 import unittest
+import unittest.mock
 import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "research" / "probability"))
 import shadow_evaluate as e
@@ -182,11 +183,56 @@ class Report(unittest.TestCase):
         self.assertFalse(mid["criteria"]["return_sample"])
         self.assertNotIn([40.5, 59.5], r["eligible_slices"])
 
+    def test_first_capture_ties_break_on_provider_time_then_ids(self):
+        same = "2026-10-18T12:00:00Z"
+        alt = dict(row(1, "g1", recorded=same, player="p1", odds=-230), quote_observed_at="2026-10-18T11:59:30Z", observation_id="o2")
+        main = dict(row(2, "g1", recorded=same, player="p1", odds=-200), quote_observed_at="2026-10-18T11:58:00Z", observation_id="o1")
+        self.assertEqual([r["forecast_id"] for r in e.first_observations([alt, main])], ["f2"])
+        self.assertEqual([r["forecast_id"] for r in e.first_observations([main, alt])], ["f2"])
+
+    def test_scan_coverage_sums_fanduel_specific_counts(self):
+        runs = [dict(coverage=dict(cards=10, priced=9, unavailable=1), recorded_forecasts=2,
+                     fanduel_coverage=dict(candidates=6, priced=2, unavailable=4),
+                     fanduel_blocker_counts={"No FanDuel quote for the player-market": 4}),
+                dict(coverage=dict(cards=3, priced=0, unavailable=3), recorded_forecasts=0)]
+        c = e.scan_coverage(runs)
+        self.assertEqual(c["fanduel"], {"candidates": 6, "priced": 2, "unavailable": 4})
+        self.assertEqual(c["fanduel_blocker_counts"], {"No FanDuel quote for the player-market": 4})
+        self.assertEqual(c["runs_without_fanduel_coverage"], 1)
+
     def test_eligible_cohort_is_price_band_overs_with_edge(self):
         rows = [row(1, "g1", odds=-300), row(2, "g1", odds=-140), row(3, "g1", direction="under"),
                 row(4, "g1", edge=2.0), row(5, "g1")]
         r = e.build_report(rows, "m")["scopes"]["rushing:RB"]
         self.assertEqual(r["all_lines"]["eligible_cohort"]["n"], 1)
+
+
+class Paging(unittest.TestCase):
+    class Db:
+        def __init__(self, n):
+            self.ids, self.calls = [f"{i:05d}" for i in range(n)], []
+        def request(self, path, body=None):
+            self.calls.append((path, body))
+            if path.endswith("record_nfl_shadow_outcomes"):
+                return {"inserted": len(body["p_outcomes"]), "replayed": 0, "corrected": 0}
+            after = body.get("p_after")
+            rest = [i for i in self.ids if after is None or i > after][: body["p_limit"]]
+            return [dict(forecast_id=i, player_id="p1", season=2026, week=7, market="rushing", team="SEA") for i in rest]
+
+    def test_paged_reads_every_row_past_the_api_cap(self):
+        db = self.Db(2500)
+        rows = e.paged(db, "nfl_shadow_pending_outcomes", {}, "forecast_id")
+        self.assertEqual(len(rows), 2500)
+        self.assertEqual([b["p_after"] for _, b in db.calls], [None, "00999", "01999"])
+
+    def test_grade_writes_outcomes_in_chunks(self):
+        db = self.Db(2500)
+        frame = pd.DataFrame([dict(player_id="p1", season=2026, week=7, recent_team="SEA", season_type="REG", rushing_yards=50.0, receiving_yards=0.0)])
+        with unittest.mock.patch.object(e, "load", lambda seasons, fetch=None: {2026: (frame, URL, SHA)}):
+            out = e.grade(db)
+        writes = [b for p, b in db.calls if p.endswith("record_nfl_shadow_outcomes")]
+        self.assertEqual([len(b["p_outcomes"]) for b in writes], [1000, 1000, 500])
+        self.assertEqual((out["pending"], out["graded"], out["inserted"]), (2500, 2500, 2500))
 
 
 if __name__ == "__main__":
