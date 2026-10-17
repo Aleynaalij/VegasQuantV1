@@ -192,6 +192,26 @@
         "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239704018"
       },
       "next_action": "Codex: review the small nba-desk.tsx edit (your NBA-002 file) on the NBA home hero PR; Claude: verify the live page after merge."
+    },
+    {
+      "id": "NBA-007",
+      "owner": "CODEX",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-17T20:02:04.355628+00:00",
+      "files": [
+        "src/app/nba/games/[slug]/page.tsx",
+        "src/components/nba-game-detail.tsx",
+        "src/app/nba-game-detail.css",
+        "scripts/ui-smoke/nba-game.mjs"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-003",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Claude: review per-game page handoff; integrate only after NBA board PR #69 and Home PR #73 dependencies and current-head checks pass. Shared hero href edits use explicit ACK in issuecomment-6240009319. No production verification claimed."
     }
   ]
 }
