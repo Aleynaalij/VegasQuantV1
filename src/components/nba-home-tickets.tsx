@@ -13,6 +13,7 @@ function Team({ name, code }: { name: string; code: string | null }) {
         <img
           src={`https://a.espncdn.com/i/teamlogos/nba/500/${code!.toLowerCase()}.png`}
           alt=""
+          loading="lazy"
           width={48}
           height={48}
           onError={() => setFailed(true)}
