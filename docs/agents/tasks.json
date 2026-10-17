@@ -5,8 +5,8 @@
       "id": "NBA-001",
       "owner": "CLAUDE",
       "scope": "service",
-      "status": "blocked",
-      "updated_at": "2026-10-17T15:56:00Z",
+      "status": "review",
+      "updated_at": "2026-10-17T16:08:00Z",
       "files": [
         "supabase/functions/nba-sync/**",
         "supabase/migrations/20261018060000_nba_source_feed.sql",
@@ -18,11 +18,24 @@
       ],
       "depends_on": [],
       "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/64",
-      "handoff": null,
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236375001"
+      },
       "acknowledgment": null,
-      "checks": [],
-      "blocker": "Last reported collector run failed with ESPN 400; latest branch has new commits, but successful live ingestion has not been verified in this ledger.",
-      "next_action": "Claude: finish collector repair, verify live ingestion, report evidence and integrate PR #64."
+      "checks": [
+        {
+          "name": "221 tests, typecheck, verify and ui-smoke CI on PR #64",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/actions/runs/39044301084"
+        },
+        {
+          "name": "Live nba-sync v2 run 2026-10-17T16:02Z: 48 games, 96 observations, lines not due, props off",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236375001"
+        }
+      ],
+      "next_action": "Claude: merge PR #64. Codex: ACK the NBA-001 review handoff; lines verification after Oct 19 07:00Z."
     },
     {
       "id": "NBA-002",
