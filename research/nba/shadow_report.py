@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hosted_scan import MODEL, Supabase, iso  # noqa: E402
 
 PROTOCOL = "nba-shadow-2026-10-17"
-MIN_FORECASTS, MIN_GAMES, MIN_NO_VIG, MIN_RETURN = 300, 40, 200, 100
+MIN_FORECASTS, MIN_GAMES, MIN_NO_VIG, MIN_RETURN, MIN_CLV = 300, 40, 200, 100, 150
 EDGE_PP, BOOTSTRAP, SEED = 3.0, 1000, 1701
 
 
@@ -104,6 +104,7 @@ def market_report(data, rng):
         "sample_floors": out["graded"] >= MIN_FORECASTS and out["games"] >= MIN_GAMES,
         "no_vig_coverage": out["no_vig_pairs"] >= MIN_NO_VIG,
         "beats_no_vig_brier": bool(paired) and out["model_minus_no_vig_brier_95pct"][1] < 0,
+        "closing_coverage": len(clv) >= MIN_CLV,
         "positive_closing_line_value": bool(clv) and out["closing_line_value"]["mean_pp"] > 0,
         "return_sample": len(bets) >= MIN_RETURN,
         "positive_return_lower_bound": out["flat_return"]["units_per_bet_95pct"] is not None and out["flat_return"]["units_per_bet_95pct"][0] > 0,
@@ -119,7 +120,7 @@ def build_report(model_id, data, now):
         by_market[r["market"]].append(r)
     return {"protocol": PROTOCOL, "model_id": model_id, "generated_at": iso(now), "status": "SHADOW_ONLY",
             "official_eligible": False, "forecast_rows": len(data), "first_captures": len(sample),
-            "floors": {"graded": MIN_FORECASTS, "games": MIN_GAMES, "no_vig_pairs": MIN_NO_VIG, "return_bets": MIN_RETURN},
+            "floors": {"graded": MIN_FORECASTS, "games": MIN_GAMES, "no_vig_pairs": MIN_NO_VIG, "return_bets": MIN_RETURN, "clv_pairs": MIN_CLV},
             "markets": {m: market_report(v, rng) for m, v in sorted(by_market.items())},
             "note": "Ready for owner review is not approval. Official NBA picks need a separate, owner-approved gate."}
 

@@ -207,6 +207,20 @@ class ReportTests(unittest.TestCase):
         self.assertFalse(m["criteria"]["beats_no_vig_brier"])
         self.assertFalse(m["ready_for_owner_review"])
 
+    def test_closing_line_value_needs_closing_coverage(self):
+        rng = np.random.default_rng(3)
+        data = []
+        for i in range(600):
+            truth = rng.uniform(.2, .8)
+            # Same skilled journal, but only one forecast still has a closing price (the rest were withdrawn).
+            close = (-140 if truth > .5 else 120, 120 if truth > .5 else -140) if i == 0 else (None, None)
+            data.append(eval_row(i, f"g{i % 60}", "WIN" if rng.uniform() < truth else "LOSS", truth, .5, -110, -110, *close))
+        m = sr.build_report("m", data, NOW)["markets"]["player_points"]
+        self.assertEqual(m["closing_line_value"]["n"], 1)
+        self.assertTrue(m["criteria"]["positive_closing_line_value"])
+        self.assertFalse(m["criteria"]["closing_coverage"])
+        self.assertFalse(m["ready_for_owner_review"])
+
 
 if __name__ == "__main__":
     unittest.main()
