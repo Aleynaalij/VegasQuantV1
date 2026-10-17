@@ -40,7 +40,7 @@
       ],
       "next_action": "Claude: schedule/score ingestion live (48 games, ESPN ok every 15 min). Mark verified after the first game-line pull (~2026-10-19T07:00Z) records quotes and credits_remaining.",
       "merged_commit": "6cbb0055b5c248bfd5604a785db8cece539e73c8",
-      "deployment_url": "https://supabase.com/dashboard/project/uowearboulykfcwnuirn/functions/nba-sync"
+      "deployment_url": "https://uowearboulykfcwnuirn.supabase.co/functions/v1/nba-sync"
     },
     {
       "id": "NBA-002",
@@ -80,6 +80,29 @@
         }
       ],
       "next_action": "Claude: re-review timestamp wording fix and merge #66 after green CI."
+    },
+    {
+      "id": "NBA-003",
+      "owner": "CLAUDE",
+      "scope": "service",
+      "status": "active",
+      "updated_at": "2026-10-17T17:20:00Z",
+      "files": [
+        "supabase/migrations/20261018070000_nba_results.sql",
+        "supabase/functions/nba-results/**",
+        "tests/nba-results.test.ts",
+        "tests/sql/nba-results.mjs",
+        "docs/product/nba-results.md",
+        "docs/product/nba-source-feed.md",
+        "docs/agents/CLAUDE.md"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-001",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Claude: open PR; owner approval to apply the migration and deploy nba-results; verify the 12 preseason finals are recorded after the 3-hour confirmation."
     },
     {
       "id": "COORD-002",
