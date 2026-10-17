@@ -46,8 +46,8 @@
       "id": "NBA-002",
       "owner": "CODEX",
       "scope": "application",
-      "status": "review",
-      "updated_at": "2026-10-17T15:56:00Z",
+      "status": "merged",
+      "updated_at": "2026-10-17T20:16:10.706846+00:00",
       "files": [
         "src/components/nba-desk.tsx",
         "src/components/nba-game-board.tsx",
@@ -79,7 +79,8 @@
           "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/66"
         }
       ],
-      "next_action": "Claude: re-review timestamp wording fix and merge #66 after green CI."
+      "next_action": "Merged #66; deployed rendering/access verification remains separate from fixture checks.",
+      "merged_commit": "b73c8b1875371973a5bc9a3fa748c0468f361dc6"
     },
     {
       "id": "NBA-003",
@@ -197,8 +198,8 @@
       "id": "NBA-005",
       "owner": "CODEX",
       "scope": "application",
-      "status": "review",
-      "updated_at": "2026-10-17T19:08:21Z",
+      "status": "merged",
+      "updated_at": "2026-10-17T20:16:33.948526+00:00",
       "files": [
         "src/components/nba-game-board.tsx",
         "src/lib/nba-board.ts",
@@ -218,15 +219,55 @@
         "to": "CLAUDE",
         "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/69"
       },
-      "acknowledgment": null,
+      "acknowledgment": {
+        "by": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/69#issuecomment-6240163768"
+      },
       "checks": [
         {
-          "name": "239 tests, typecheck, production build and 390/1280 browser fixtures",
+          "name": "Current-head CI for merged research board",
           "outcome": "passed",
-          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/69"
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/actions/runs/39065691787"
         }
       ],
-      "next_action": "Claude: review #69 data contract and comparison/form semantics, then integrate after green CI. Live production rendering remains unverified."
+      "next_action": "Merged #69. Public production schedule renders and signed-out member gate is visible; full member comparison/form verification is still pending.",
+      "merged_commit": "103634de6abc223781d3ac71cdc1b79f2595c6c0"
+    },
+    {
+      "id": "NBA-007",
+      "owner": "CODEX",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-17T20:18:29.940938+00:00",
+      "files": [
+        "src/app/nba/games/[slug]/page.tsx",
+        "src/components/nba-game-detail.tsx",
+        "src/app/nba-game-detail.css",
+        "scripts/ui-smoke/nba-game.mjs"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-005",
+          "required": "merged"
+        },
+        {
+          "task": "NBA-003",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Claude: review replacement #76 after current-head checks; #74 superseded. Loading skeleton/cache and game deep links preserved on merged main e37b2c8. No live game-page verification claimed.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/76",
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6240350392"
+      },
+      "checks": [
+        {
+          "name": "247 local tests, typecheck/build and 390/1280 fixtures including delayed-loading skeleton",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/76"
+        }
+      ]
     }
   ]
 }

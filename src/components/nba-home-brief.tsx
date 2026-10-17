@@ -25,7 +25,7 @@ const OPENING_NIGHT = "2026-10-20T04:00:00Z";
 /** After opening night (midnight ET, Oct 21) an empty slate is never presented as "opening night". */
 const AFTER_OPENING_NIGHT = Date.parse("2026-10-21T04:00:00Z");
 const COLUMNS =
-  "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,venue,season_type,status,away_score,home_score";
+  "id,slug,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,venue,season_type,status,away_score,home_score";
 
 /** Last good slate for this tab, so returning to the NBA desk paints the real card at once. */
 const CACHE_KEY = "vq-nba-home-slate-v1";
@@ -131,7 +131,14 @@ export default function NbaHomeBrief({
                   : "Next tip-off"}
               : {next.away_team} at {next.home_team}
             </h1>
-            <a className="vq-matchup" href="#nba-slate">
+            <Link
+              className="vq-matchup"
+              href={
+                next.slug
+                  ? `/nba/games/${encodeURIComponent(next.slug)}`
+                  : "#nba-slate"
+              }
+            >
               <span className="vq-team">
                 <NbaTeamLogo
                   team={next.away_team}
@@ -157,7 +164,7 @@ export default function NbaHomeBrief({
                   <strong className="nba-hero-score">{next.home_score}</strong>
                 ) : null}
               </span>
-            </a>
+            </Link>
             <div className="vq-hero-meta">
               <span>
                 {next.tipoff_tbd
@@ -288,7 +295,14 @@ export default function NbaHomeBrief({
       {!compact && rest.length > 0 && (
         <nav className="vq-slate" aria-label="Upcoming NBA games">
           {rest.map((g) => (
-            <a key={g.id} href="#nba-slate">
+            <Link
+              key={g.id}
+              href={
+                g.slug
+                  ? `/nba/games/${encodeURIComponent(g.slug)}`
+                  : "#nba-slate"
+              }
+            >
               <span className="vq-slate-teams">
                 <NbaTeamLogo
                   team={g.away_team}
@@ -317,7 +331,7 @@ export default function NbaHomeBrief({
                           minute: "2-digit",
                         })}
               </time>
-            </a>
+            </Link>
           ))}
         </nav>
       )}

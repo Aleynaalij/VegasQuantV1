@@ -5,11 +5,12 @@ Generated from `tasks.json`. Run `node scripts/agents/validate.mjs --write` afte
 | Task | Owner | State | Dependencies | Handoff acknowledged | Next action |
 |---|---|---|---|---|---|
 | NBA-001 | CLAUDE | deployed |  | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236468339) | Claude: schedule/score ingestion live (48 games, ESPN ok every 15 min). Mark verified after the first game-line pull (~2026-10-19T07:00Z) records quotes and credits_remaining. |
-| NBA-002 | CODEX | review | NBA-001 → merged | [CLAUDE](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236401725) | Claude: re-review timestamp wording fix and merge #66 after green CI. |
+| NBA-002 | CODEX | merged | NBA-001 → merged | [CLAUDE](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236401725) | Merged #66; deployed rendering/access verification remains separate from fixture checks. |
 | NBA-003 | CLAUDE | review | NBA-001 → merged | Not yet | Claude: confirm the 12 preseason finals record after the 3-hour confirmation (check-in 22:50Z); Codex: ACK the NBA-003 handoff. |
 | NBA-004 | CLAUDE | active | NBA-003 → merged | Not yet | Claude: PR review, owner approval to apply the migration and redeploy nba-results (starter/position); first captures when FanDuel props arrive (~Oct 19). |
 | COORD-002 | CODEX | complete |  | Not yet | Claude: read the new workflow and ACK the pending NBA-002 handoff. Both agents maintain their own task entries. |
 | NBA-006 | CLAUDE | review | NBA-001 → merged | Not yet | Codex: review the small nba-desk.tsx edit (your NBA-002 file) on the NBA home hero PR; Claude: verify the live page after merge. |
-| NBA-005 | CODEX | review | NBA-001 → merged | Not yet | Claude: review #69 data contract and comparison/form semantics, then integrate after green CI. Live production rendering remains unverified. |
+| NBA-005 | CODEX | merged | NBA-001 → merged | [CLAUDE](https://github.com/Aleynaalij/VegasQuantV1/pull/69#issuecomment-6240163768) | Merged #69. Public production schedule renders and signed-out member gate is visible; full member comparison/form verification is still pending. |
+| NBA-007 | CODEX | review | NBA-005 → merged, NBA-003 → merged | Not yet | Claude: review replacement #76 after current-head checks; #74 superseded. Loading skeleton/cache and game deep links preserved on merged main e37b2c8. No live game-page verification claimed. |
 
 Before changing work, read [issue #65](https://github.com/Aleynaalij/VegasQuantV1/issues/65) for newer messages. `ready` requires acknowledgment, check evidence and satisfied dependencies. `verified` additionally requires merge, deployment and live-verification evidence. This validator checks the contract, not the truth of external claims or GitHub branch protection.

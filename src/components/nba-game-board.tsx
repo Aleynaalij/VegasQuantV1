@@ -227,8 +227,16 @@ export default function NbaGameBoard() {
     </section>
   );
 }
-function NbaGameDetails({ game, now }: { game: NbaGame; now: number }) {
-  const [open, setOpen] = useState(false),
+export function NbaGameDetails({
+  game,
+  now,
+  defaultOpen = false,
+}: {
+  game: NbaGame;
+  now: number;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen),
     [rows, setRows] = useState<NbaObservation[]>([]),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(false),
@@ -283,6 +291,7 @@ function NbaGameDetails({ game, now }: { game: NbaGame; now: number }) {
   return (
     <details
       className="nba-board-details"
+      open={open}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
       <summary>Open research · lines, props & form</summary>
@@ -404,6 +413,15 @@ function NbaGameDetails({ game, now }: { game: NbaGame; now: number }) {
                       </li>
                     ))}
                   </ul>
+                  {/FINAL/.test(game.status || "") && (
+                    <NbaObservedGrade
+                      game={game.id}
+                      market={c.market}
+                      side={c.side}
+                      point={c.point}
+                      player={c.player}
+                    />
+                  )}
                   {c.player && (
                     <NbaPlayerForm
                       key={`${c.player}-${game.id}`}
@@ -578,5 +596,67 @@ function NbaPlayerForm({ player, game }: { player: string; game: NbaGame }) {
         </div>
       )}
     </details>
+  );
+}
+
+function NbaObservedGrade({
+  game,
+  market,
+  side,
+  point,
+  player,
+}: {
+  game: string;
+  market: string;
+  side: string;
+  point: number | null;
+  player: string;
+}) {
+  const [grade, setGrade] = useState(""),
+    [busy, setBusy] = useState(false);
+  async function check() {
+    setBusy(true);
+    try {
+      const r = await supabase.rpc("nba_grade", {
+        p_game: game,
+        p_market: market,
+        p_side: side,
+        p_point: point,
+        p_player: player || null,
+      });
+      setGrade(
+        r.error
+          ? "Result unavailable"
+          : (
+              {
+                WIN: "WIN",
+                LOSS: "LOSS",
+                PUSH: "PUSH",
+                VOID: "VOID",
+                PENDING: "Awaiting confirmed result",
+                REVIEW: "Result under review",
+              } as Record<string, string>
+            )[String(r.data)] || "Result unavailable",
+      );
+    } catch {
+      setGrade("Result unavailable");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="nba-observed-grade">
+      <button
+        type="button"
+        className="secondary"
+        disabled={busy}
+        onClick={check}
+      >
+        {busy ? "Checking…" : "Check final result"}
+      </button>
+      {grade && (
+        <p role="status">{grade} · observed selection, not a published pick</p>
+      )}
+    </div>
   );
 }

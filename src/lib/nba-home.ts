@@ -1,6 +1,7 @@
 // NBA home "next tip-off" helpers: which regular-season game leads the page, and the rest of the slate.
 export type NbaHomeGame = {
   id: string;
+  slug?: string;
   away_team: string;
   home_team: string;
   away_abbreviation: string | null;
