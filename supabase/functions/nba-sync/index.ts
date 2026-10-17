@@ -13,7 +13,8 @@ import {
   injuryObservations,
   priceObservations,
   gameForEvent,
-  scoreboardRange,
+  scoreboardDates,
+  mergeScoreboards,
   type OddsEvent,
 } from "./normalize.ts";
 import { linesDue, propEventDue, PROPS_HORIZON, eventFetchCache } from "./cadence.ts";
@@ -59,16 +60,19 @@ Deno.serve(async (req: Request) => {
   if (auth.error || auth.data !== true) return new Response("Unauthorized", { status: 401 });
   const now = Date.now();
   try {
-    // 1. Schedule and scores, yesterday through a week ahead.
-    const board = await json(
-      `https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${scoreboardRange(now)}&limit=1000`,
-    );
+    // 1. Schedule and scores, yesterday through a week ahead, one free request per day.
+    const dates = scoreboardDates(now);
+    const days = [];
+    for (let i = 0; i < dates.length; i += 3)
+      days.push(...(await Promise.all(dates.slice(i, i + 3).map((d) =>
+        json(`https://site.api.espn.com/apis/site/v2/sports/basketball/nba/scoreboard?dates=${d}`)))));
+    const board = mergeScoreboards(days);
     const fixtures = gamesFromScoreboard(board);
     const scheduled = await ingest({
       provider: "ESPN NBA",
       games: fixtures,
       observations: await fingerprint(observationsFromScoreboard(board)),
-      details: { games: fixtures.length, range: scoreboardRange(now) },
+      details: { games: fixtures.length, dates: [dates[0], dates[dates.length - 1]] },
     });
 
     // 2. Injury report for teams playing in the next 48 hours.
@@ -138,9 +142,10 @@ Deno.serve(async (req: Request) => {
           const data: OddsEvent = await json(
             `https://api.the-odds-api.com/v4/sports/basketball_nba/events/${e.id}/odds?apiKey=${encodeURIComponent(key)}&markets=${markets.join(",")}&bookmakers=${BOOKMAKERS.join(",")}&oddsFormat=american`,
           );
-          fetched[e.id] = new Date(now).toISOString();
           propQuotes += (await ingest({ provider: "The Odds API NBA props",
             observations: await fingerprint(priceObservations([data], fixtures, "prop", markets, Date.now())) })).inserted;
+          // Only a stored fetch counts: a failed ingest leaves the event due for the next run.
+          fetched[e.id] = new Date(now).toISOString();
         } catch {
           failed++;
         }

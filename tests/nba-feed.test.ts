@@ -6,7 +6,8 @@ import {
   observationsFromScoreboard,
   injuryObservations,
   priceObservations,
-  scoreboardRange,
+  scoreboardDates,
+  mergeScoreboards,
 } from "../supabase/functions/nba-sync/normalize";
 import { linesDue, propEventDue, eventFetchCache } from "../supabase/functions/nba-sync/cadence";
 
@@ -105,6 +106,9 @@ test("per-event fetch cache resets when the market set changes and drops bad ent
   assert.deepEqual(eventFetchCache(details, "player_points,player_rebounds", now), {});
 });
 
-test("scoreboard range spans yesterday to a week ahead in Eastern dates", () => {
-  assert.equal(scoreboardRange(Date.parse("2026-10-20T03:00:00Z")), "20261018-20261026");
+test("scoreboard is requested day by day, yesterday to a week ahead in Eastern dates", () => {
+  const dates = scoreboardDates(Date.parse("2026-10-20T03:00:00Z")); // 11 PM Oct 19 Eastern
+  assert.deepEqual([dates.length, dates[0], dates[1], dates[8]], [9, "20261018", "20261019", "20261026"]);
+  const merged = mergeScoreboards([{ events: board.events.slice(0, 1) }, { events: board.events.slice(0, 2) }, {}] as never);
+  assert.deepEqual(merged.events.map((e: { id: string }) => e.id), ["401810001", "401810002"]);
 });

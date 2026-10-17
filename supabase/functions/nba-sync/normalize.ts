@@ -199,7 +199,13 @@ export function priceObservations(events: OddsEvent[], games: Fixture[], kind: "
   });
 }
 
-/** ESPN date range for the scoreboard: yesterday through a week ahead (Eastern dates). */
-export function scoreboardRange(now: number) {
-  return `${ymdEastern(new Date(now - 86400000).toISOString())}-${ymdEastern(new Date(now + 7 * 86400000).toISOString())}`;
+/** Scoreboard dates, yesterday through a week ahead (Eastern). ESPN's NBA scoreboard rejects date
+ *  ranges with HTTP 400 (verified October 17, 2026), so each day is requested on its own. */
+export function scoreboardDates(now: number) {
+  return Array.from({ length: 9 }, (_, i) => ymdEastern(new Date(now + (i - 1) * 86400000).toISOString()));
+}
+
+/** One scoreboard from several daily responses; an event seen twice is kept once. */
+export function mergeScoreboards(boards: { events?: Event[] }[]) {
+  return { events: [...new Map(boards.flatMap((b) => b.events || []).map((e) => [e.id, e])).values()] };
 }
