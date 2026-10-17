@@ -419,6 +419,7 @@ export default function CandidateTracker({
                   market={c.market}
                   matchup={c.matchup}
                   pickOfDay={pickOfDay || c.pick_of_day}
+                  settled={Boolean(resultStates[key]?.result)}
                 />
               )}
               <LegResultStatus state={resultStates[key]} />

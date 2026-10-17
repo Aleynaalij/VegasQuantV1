@@ -192,8 +192,10 @@ export default function ParlayWorkshop({
         </button>
       </div>
       <p className="workshop-note">
-        Published research is not automatically recommended. Only a current,
-        approved model edge of 3 percentage points or more earns the sticker.
+        Published research is not automatically recommended. “Recommended · 3%+
+        edge” needs a current, approved model edge. The ✓ VQ APPROVED stamp means
+        the leg passes every selection rule and its recent form beats the price’s
+        break-even by 15+ points; it is not a model edge or a guarantee.
       </p>
       {loading && <p role="status">Loading your leg library…</p>}
       {error && (

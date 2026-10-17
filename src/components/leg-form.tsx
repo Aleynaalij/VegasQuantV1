@@ -86,6 +86,7 @@ export default function LegFormLine({
   market,
   matchup,
   pickOfDay,
+  settled = false,
 }: {
   legKey: string;
   data: FormData;
@@ -93,6 +94,8 @@ export default function LegFormLine({
   market: string;
   matchup?: string;
   pickOfDay?: boolean;
+  /** A graded leg keeps its result, never a stamp. */
+  settled?: boolean;
 }) {
   const form = data.forms[legKey],
     tracked = data.prices[legKey],
@@ -104,7 +107,7 @@ export default function LegFormLine({
   const rate = form ? (form.cleared / form.sample) * 100 : null;
   const tone = rate === null || be === null || form!.sample < 5 ? "" : rate >= be + 5 ? "good" : "bad";
   const checks = data.admin ? checkLeg({ price: published, lastPrice: tracked?.last, form, market, matchup, pickOfDay }) : [];
-  const approved = stamped({ price: published, lastPrice: tracked?.last, form, market, matchup, pickOfDay });
+  const approved = !settled && stamped({ price: published, lastPrice: tracked?.last, form, market, matchup, pickOfDay });
   return (
     <div className={`leg-form ${tone}`}>
       {approved && <VqStamp />}
