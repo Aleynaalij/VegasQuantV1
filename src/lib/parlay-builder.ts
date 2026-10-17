@@ -1,4 +1,5 @@
 import { homeWeekStart } from "./home-week";
+import { stamped, type LegForm } from "./leg-rules";
 export type PublishedLeg = {
   leg_key: string;
   name: string;
@@ -29,6 +30,58 @@ export type MemberParlay = {
   created_at: string;
   expires_at: string;
 };
+export type LegStatFilter =
+  | "all"
+  | "receiving"
+  | "passing"
+  | "rushing"
+  | "receptions";
+
+export function legStatType(leg: PublishedLeg): LegStatFilter {
+  const line = parlayCopyLine(leg) || "";
+  if (/\breceiving\b/i.test(line)) return "receiving";
+  if (/\bpassing\b/i.test(line)) return "passing";
+  if (/\brushing\b/i.test(line)) return "rushing";
+  if (/\b(receptions|catches)\b/i.test(line)) return "receptions";
+  return "all";
+}
+
+/** The filter and the displayed stamp must use exactly the same approval check. */
+export function vqApprovedLeg(
+  leg: PublishedLeg,
+  form?: LegForm,
+  lastPrice?: number,
+): boolean {
+  const price = Number(leg.odds);
+  return (
+    !leg.result &&
+    leg.odds != null &&
+    stamped({
+      price: Number.isFinite(price) ? price : null,
+      lastPrice,
+      form,
+      market: leg.market,
+      matchup: leg.matchup,
+      pickOfDay: leg.kind === "PICK_OF_DAY",
+    })
+  );
+}
+
+export function filterPublishedLegs(
+  rows: PublishedLeg[],
+  type: LegStatFilter,
+  search: string,
+  approvedOnly: boolean,
+  approvedKeys: Set<string>,
+): PublishedLeg[] {
+  const term = search.trim().toLowerCase();
+  return rows.filter(
+    (leg) =>
+      (type === "all" || legStatType(leg) === type) &&
+      (!approvedOnly || approvedKeys.has(leg.leg_key)) &&
+      `${leg.name} ${leg.market} ${leg.matchup}`.toLowerCase().includes(term),
+  );
+}
 const stat =
   /(?:over\s+|under\s+)?\d+(?:\.\d+)?\+?\s+(?:(?:receiving|rushing|passing)\s+(?:yards|yds)|receptions|catches)\b/i;
 /** Only player + stat; never copy the game, phase, date, price or explanatory prose. */
@@ -91,7 +144,6 @@ export function selectionError(
 ): string | null {
   if (!canBuildWith(next, now))
     return "This leg is closed or unavailable for a new parlay.";
-  if (chosen.length >= 7) return "Keep your parlay to seven legs or fewer.";
   if (
     chosen.some(
       (r) => r.leg_key === next.leg_key || legFamily(r) === legFamily(next),

@@ -100,6 +100,21 @@
   gap: 8px;
   margin-top: 14px;
 }
+.workshop-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.workshop-filters button {
+  min-height: 42px;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 0.85rem;
+}
+.workshop-approved-filter {
+  border-color: #c6a652;
+}
 .workshop-saved {
   margin-top: 26px;
 }

@@ -9,13 +9,15 @@ import {
   parlayCopyLine,
   selectionError,
   weeklyLegs,
+  filterPublishedLegs,
+  vqApprovedLeg,
+  type LegStatFilter,
   type MemberParlay,
   type PublishedLeg,
 } from "@/lib/parlay-builder";
 import GamblyLink from "./gambly-link";
 import CasinoCard, { CasinoCardDownload } from "./casino-card";
 import { cleanMarket, type CasinoCardData } from "@/lib/casino-card";
-import { stamped } from "@/lib/leg-rules";
 import { useLegForms, VqStamp } from "./leg-form";
 
 export default function ParlayWorkshop({
@@ -32,6 +34,8 @@ export default function ParlayWorkshop({
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState("");
+  const [statFilter, setStatFilter] = useState<LegStatFilter>("all");
+  const [approvedOnly, setApprovedOnly] = useState(false);
   const [now, setNow] = useState(Date.now);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30000);
@@ -161,14 +165,27 @@ export default function ParlayWorkshop({
       setBusy(false);
     }
   }
-  const legs = rows.filter((r) =>
-    `${r.name} ${r.market} ${r.matchup}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
   const showCatalog = mode === "catalog" || open;
   // Recent form and tracked prices, for the stamp of approval on recommended legs.
   const legForms = useLegForms(showCatalog ? rows.map((r) => r.leg_key) : []);
+  const approvedKeys = new Set(
+    rows
+      .filter((r) =>
+        vqApprovedLeg(
+          r,
+          legForms.forms[r.leg_key],
+          legForms.prices[r.leg_key]?.last,
+        ),
+      )
+      .map((r) => r.leg_key),
+  );
+  const legs = filterPublishedLegs(
+    rows,
+    statFilter,
+    search,
+    approvedOnly,
+    approvedKeys,
+  );
   return (
     <section
       className="parlay-workshop"
@@ -193,9 +210,9 @@ export default function ParlayWorkshop({
       </div>
       <p className="workshop-note">
         Published research is not automatically recommended. “Recommended · 3%+
-        edge” needs a current, approved model edge. The ✓ VQ APPROVED stamp means
-        the leg passes every selection rule and its recent form beats the price’s
-        break-even by 15+ points; it is not a model edge or a guarantee.
+        edge” needs a current, approved model edge. The ✓ VQ APPROVED stamp
+        means the leg passes every selection rule and its recent form beats the
+        price’s break-even by 15+ points; it is not a model edge or a guarantee.
       </p>
       {loading && <p role="status">Loading your leg library…</p>}
       {error && (
@@ -211,14 +228,15 @@ export default function ParlayWorkshop({
           aria-label="Your parlay draft"
         >
           <div className="workshop-head">
-            <h3>Your parlay · {chosen.length}/7</h3>
+            <h3>Your parlay · {chosen.length} legs</h3>
             <button className="secondary" onClick={() => setOpen(false)}>
               Close builder
             </button>
           </div>
           <p>
-            Choose 2–7 legs. Your combination, not a platform recommendation.
-            Combined odds are unknown; same-game legs can be correlated.
+            Choose two or more legs. No leg limit. Your combination, not a
+            platform recommendation. Combined odds are unknown; same-game legs
+            can be correlated.
           </p>
           <label>
             Parlay name
@@ -264,6 +282,47 @@ export default function ParlayWorkshop({
               onChange={(e) => setSearch(e.target.value)}
             />
           </label>
+          <div
+            className="workshop-filters"
+            role="group"
+            aria-label="Filter published legs"
+          >
+            {(
+              [
+                ["all", "All legs"],
+                ["receiving", "Receiving"],
+                ["passing", "Passing"],
+                ["rushing", "Rushing"],
+                ["receptions", "Receptions"],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={statFilter === value ? "btn" : "secondary"}
+                aria-pressed={statFilter === value}
+                onClick={() => setStatFilter(value)}
+              >
+                {label}
+              </button>
+            ))}
+            <button
+              type="button"
+              className={
+                approvedOnly
+                  ? "btn workshop-approved-filter"
+                  : "secondary workshop-approved-filter"
+              }
+              aria-pressed={approvedOnly}
+              onClick={() => setApprovedOnly(!approvedOnly)}
+            >
+              ✓ VQ Approved
+            </button>
+          </div>
+          <p className="workshop-note" role="status">
+            Showing {legs.length} of {rows.length} legs
+            {approvedOnly ? " · VQ Approved only" : ""}
+          </p>
           <div className="workshop-legs">
             {legs.map((r) => {
               const selected = chosen.some((c) => c.leg_key === r.leg_key);
@@ -276,26 +335,22 @@ export default function ParlayWorkshop({
                   quoteAge <= 15 * 60 * 1000,
               );
               const result = r.result?.toUpperCase();
-              const odds = Number(r.odds);
-              const approved =
-                !result &&
-                r.odds != null &&
-                stamped({
-                  price: Number.isFinite(odds) ? odds : null,
-                  lastPrice: legForms.prices[r.leg_key]?.last,
-                  form: legForms.forms[r.leg_key],
-                  market: r.market,
-                  matchup: r.matchup,
-                  pickOfDay: r.kind === "PICK_OF_DAY",
-                });
+              const approved = approvedKeys.has(r.leg_key);
               const card: CasinoCardData = {
                 variant: result === "WIN" ? "win" : result ? "miss" : "pick",
-                eyebrow: result ? "Published leg · settled result" : "Published research · individual leg",
+                eyebrow: result
+                  ? "Published leg · settled result"
+                  : "Published research · individual leg",
                 title: r.name,
                 market: cleanMarket(r.market),
                 matchup: r.matchup,
                 price: r.quote || "Odds unknown · analyst target",
-                stamp: result === "WIN" ? "✓ HIT" : result === "LOSS" ? "MISS" : result || undefined,
+                stamp:
+                  result === "WIN"
+                    ? "✓ HIT"
+                    : result === "LOSS"
+                      ? "MISS"
+                      : result || undefined,
                 footnote: result
                   ? "Original published selection and recorded result. See case, risk & sources for the publication."
                   : "Published research is not automatically a recommendation. Review the case, risks and original quote.",
@@ -379,8 +434,8 @@ export default function ParlayWorkshop({
           </div>
           {!legs.length && (
             <p>
-              No published legs match yet. Research updates remain in Latest; we
-              publish selections only when their checks pass.
+              No legs match these filters. Try another stat type or turn off VQ
+              Approved.
             </p>
           )}
         </>

@@ -237,7 +237,7 @@ export const helpTopics: HelpTopic[] = [
       "3 percent edge",
     ],
     answer:
-      "In The Zone, open Parlays and tap Create parlay. Choose 2–7 upcoming player legs from this week’s published research, remove any you do not want, name your combination and save. Your parlays are private and do not place wagers or change your tail record. Copy parlay & open Gambly copies only player names and stat lines. Combined odds are unknown until your sportsbook prices the ticket. The Legs tab is the weekly library, including individual legs from published tickets and closed selections. Published research is not automatically recommended: the sticker needs a current accepted publishing check and an approved model showing at least a three-percentage-point edge. SHADOW_ONLY estimates cannot earn it.",
+      "In The Zone, open Parlays and tap Create parlay. Choose two or more upcoming player legs (no leg-count cap) from this week’s published research, remove any you do not want, name your combination and save. Your parlays are private and do not place wagers or change your tail record. Copy parlay & open Gambly copies only player names and stat lines. Combined odds are unknown until your sportsbook prices the ticket. The Legs tab is the weekly library, including individual legs from published tickets and closed selections. Published research is not automatically recommended: the sticker needs a current accepted publishing check and an approved model showing at least a three-percentage-point edge. SHADOW_ONLY estimates cannot earn it.",
     href: "/feed?view=parlays",
     link: "Create your parlay",
   },
