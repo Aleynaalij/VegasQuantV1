@@ -199,8 +199,7 @@ export default function NbaGameBoard() {
               {g.venue || "Venue unknown"}
             </p>
             <small>
-              Schedule received {stamp(g.updated_at)} ·{" "}
-              {nbaFreshness(g.updated_at, now, 45)}
+              Schedule last changed {stamp(g.updated_at)}
             </small>
             <div className="nba-board-source">
               <Source url={g.source} />
