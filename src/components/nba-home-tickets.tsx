@@ -43,7 +43,7 @@ export default function NbaHomeTickets() {
           "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,status,venue,season_type",
         )
         .eq("season_type", 2)
-        .gte("tipoff", new Date(at).toISOString())
+        .gte("tipoff", new Date(at - 4 * 3600000).toISOString())
         .lte("tipoff", new Date(at + 7 * 86400000).toISOString())
         .order("tipoff")
         .order("id")
