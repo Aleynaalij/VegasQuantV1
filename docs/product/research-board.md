@@ -7,7 +7,11 @@ feed sat empty between manual drops. The research board fills it with a separate
 **What publishes.** `.github/workflows/research-board.yml` runs `scripts/research-board/run.ts` every
 hour at :37. A scheduled run publishes only when no board has gone out for 2.5 hours, so the board
 refreshes about every three hours, and a run GitHub delays or drops is retried the next hour.
-Manual runs always publish.
+Manual runs always publish. Because GitHub still dropped most scheduled runs, Supabase's own
+scheduler (`cron` job `research-board-dispatch`, migration `20261018020000_research_board_timer.sql`)
+also starts the workflow every hour at :07 as a `scheduled` run, using a fine-grained GitHub token
+the owner stores in Supabase Vault as `github_research_board_token` (this repository only,
+Actions: read and write). Without the secret the timer does nothing.
 - **Candidate legs.** It reads the week's upcoming NFL games, the latest prop snapshots from all six
   books (observed within the last seven hours), and the nflverse weekly player stats. It then keeps
   the FanDuel "N+" over lines that:
