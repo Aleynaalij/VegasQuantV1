@@ -22,7 +22,7 @@
   min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
-  padding: 3px;
+  padding: 8px;
   overscroll-behavior-x: contain;
 }
 .community-stories::-webkit-scrollbar {
@@ -51,6 +51,8 @@ html body .sport-switch .community-stories a.community-story {
   letter-spacing: 0;
 }
 .story-ring {
+  position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
   width: 46px;
@@ -232,5 +234,38 @@ html body .sport-switch .community-stories a.story-empty {
   }
   .sport-switch {
     gap: 8px !important;
+  }
+}
+
+/* Two restrained gold ripples identify unread community activity. */
+.story-ring::before,
+.story-ring::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border: 1px solid #e8c56c;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: story-gold-wave 2.8s ease-out infinite;
+}
+.story-ring::after {
+  animation-delay: 1.4s;
+}
+@keyframes story-gold-wave {
+  0% {
+    transform: scale(1);
+    opacity: 0.65;
+  }
+  80%,
+  100% {
+    transform: scale(1.25);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .story-ring::before,
+  .story-ring::after {
+    animation: none;
+    opacity: 0;
   }
 }
