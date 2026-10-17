@@ -27,7 +27,11 @@ for (const width of [390, 1280]) {
     p = await c.newPage();
   let observations = 0;
   await p.route("**/rest/v1/**", (route) => {
-    const path = new URL(route.request().url()).pathname;
+    const url = new URL(route.request().url());
+    const path = url.pathname;
+    if (path.endsWith("nba_games") && url.searchParams.get("limit") === "60") {
+      assert.ok(Date.parse(url.searchParams.getAll("tipoff").find(v => v.startsWith("gte.")).slice(4)) < Date.now() - 3.9 * 3600000);
+    }
     let data = [];
     if (path.endsWith("nba_games"))
       data = [
