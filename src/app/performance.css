@@ -1,0 +1,74 @@
+/*
+ * Scrolling and tab-switch smoothness on phones. Loaded last, so it overrides the earlier sheets.
+ * Each rule removes a full-screen repaint per frame while keeping the same look.
+ */
+
+/* 1. The lounge background (spotlight + card-back lattice) used `background-attachment: fixed`,
+ * which on Android repaints the whole viewport on every scroll frame. The same background now
+ * lives on its own fixed layer, which the GPU composites instead of repainting. */
+html[data-theme="dark"] {
+  background: var(--bg) !important;
+}
+html[data-theme="dark"] body {
+  background: transparent !important;
+  background-attachment: scroll !important;
+}
+html[data-theme="dark"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(900px 420px at 50% -8%, #e8c46a14, transparent 65%),
+    repeating-linear-gradient(45deg, #ffffff05 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(-45deg, #ffffff05 0 1px, transparent 1px 26px);
+  transform: translateZ(0);
+}
+
+/* 2. Glass bars: blurring what scrolls underneath is re-done every frame on three stacked bars.
+ * Their backgrounds are already 85–95% opaque, so the blur was barely visible; make them a touch
+ * more solid and drop the blur. */
+html[data-theme] body :is(.mobile-nav, .topbar, .sidebar, .feed-filters) {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+html[data-theme="dark"] body .mobile-nav,
+html[data-theme="dark"] body :is(.topbar, .sidebar) {
+  background: #070b14f5 !important;
+}
+
+/* 3. The Zone's "Expand" pulse animated box-shadow forever on every collapsed release, which
+ * repaints each frame. Same pulse, as a ring that scales and fades (composited). */
+.zone-expand > span,
+html[data-theme="dark"] .zone-expand > span {
+  animation: none !important;
+  position: relative;
+}
+.zone-expand > span::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  opacity: 0;
+  animation: vq-expand-ring 2.4s ease-out infinite;
+  pointer-events: none;
+}
+.zone-drop[open] .zone-expand > span::after {
+  animation: none;
+}
+@keyframes vq-expand-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  75%, 100% { transform: scale(1.7); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .zone-expand > span::after { animation: none; }
+}
+
+/* 4. Long lists: let the browser skip layout and paint for cards far off screen. */
+.zone-item,
+.workshop-leg {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 420px;
+}

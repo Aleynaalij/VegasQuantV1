@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { closingLineRecord, type PricedLeg, type TrackedPrice } from "@/lib/priced-record";
+import { onUserChange } from "@/lib/auth-user";
+import { closingPrices, publishedLegs } from "@/lib/records-data";
+import { closingLineRecord } from "@/lib/priced-record";
 
 // Records card: how often our published legs got a better price than the market closed at.
 export default function BeatTheClose() {
@@ -11,41 +13,17 @@ export default function BeatTheClose() {
     async function load() {
       const s = await supabase.auth.getSession();
       if (!s.data.session) return live && setRecord(null);
-      // Closing prices exist once a tracked leg's game has kicked off.
-      // Read every page in a stable order so the lifetime record never silently drops rows.
-      const cutoff = new Date().toISOString();
-      const tracked = new Map<string, TrackedPrice>();
-      for (let from = 0; ; from += 1000) {
-        const page = await supabase
-          .from("leg_market_prices")
-          .select("leg_key,first_price,last_price")
-          .lt("kickoff", cutoff)
-          .order("leg_key")
-          .range(from, from + 999);
-        if (!live) return;
-        if (page.error) return setRecord(null);
-        for (const p of page.data || [])
-          tracked.set(p.leg_key, { first: Number(p.first_price), last: Number(p.last_price) });
-        if ((page.data || []).length < 1000) break;
-      }
+      // Every page of closing prices and published legs, shared with the other Records cards.
+      const [tracked, all] = await Promise.all([closingPrices.get(), publishedLegs.get()]);
+      if (!live) return;
       if (!tracked.size) return setRecord(null);
-      const keys = [...tracked.keys()];
-      const legs: PricedLeg[] = [];
-      for (let i = 0; i < keys.length; i += 150) {
-        const r = await supabase
-          .from("published_legs")
-          .select("leg_key,kind,name,market,matchup,game_id,published_at,result,result_source,odds,original_leg_key")
-          .in("leg_key", keys.slice(i, i + 150));
-        if (r.error) return live && setRecord(null);
-        legs.push(...((r.data || []) as PricedLeg[]));
-      }
-      if (live) setRecord(closingLineRecord(legs, tracked));
+      setRecord(closingLineRecord(all.filter((l) => tracked.has(l.leg_key)), tracked));
     }
-    void load();
-    const auth = supabase.auth.onAuthStateChange(() => setTimeout(() => void load(), 0));
+    void load().catch(() => live && setRecord(null));
+    const stop = onUserChange(() => setTimeout(() => void load().catch(() => undefined), 0));
     return () => {
       live = false;
-      auth.data.subscription.unsubscribe();
+      stop();
     };
   }, []);
   if (!record || !record.legs) return null;

@@ -1,6 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { onUserChange } from "@/lib/auth-user";
+import { legForms } from "@/lib/leg-data";
+import { closingPrices, publishedLegs, resetRecordsData } from "@/lib/records-data";
 import { gatedRecords, pricedRecord, OFFICIAL_KINDS, type PricedLeg } from "@/lib/priced-record";
 import type { LegForm } from "@/lib/leg-rules";
 
@@ -21,49 +24,30 @@ export default function PricedRecord({ research = false }: { research?: boolean 
     async function load() {
       const s = await supabase.auth.getSession();
       if (!s.data.session) return live && setRecord(null);
-      const r = await supabase
-        .from("published_legs")
-        .select(
-          "leg_key,kind,name,market,matchup,game_id,published_at,result,result_source,odds,original_leg_key",
-        )
-        .in("kind", kinds)
-        .not("result", "is", null)
-        .limit(2000);
+      // Shared with the other Records cards and cached (lib/records-data).
+      const [all, tracked] = await Promise.all([publishedLegs.get(), closingPrices.get()]);
       if (!live) return;
-      if (r.error) return setRecord(null);
-      const legs = (r.data || []) as PricedLeg[];
+      const legs = all.filter((l) => kinds.includes(l.kind) && l.result !== null);
       // Closing prices: the feed's last price at each pick's published book, once the game has kicked off.
-      const close = await supabase
-        .from("leg_market_prices")
-        .select("leg_key,last_price,kickoff")
-        .in("leg_key", legs.map((l) => l.leg_key))
-        .lt("kickoff", new Date().toISOString());
-      // Each pick's recent form as of its game, for the rule-by-rule split.
-      const keys = [...new Set(legs.flatMap((l) => [l.leg_key, ...(l.original_leg_key ? [l.original_leg_key] : [])]))];
-      const forms = new Map<string, LegForm>();
-      for (let i = 0; i < keys.length; i += 150) {
-        const h = await supabase
-          .from("leg_history")
-          .select("leg_key,cleared,sample,median,position")
-          .in("leg_key", keys.slice(i, i + 150));
-        for (const x of (h.error ? [] : h.data || []).filter((x) => x.sample > 0))
-          forms.set(x.leg_key, { cleared: x.cleared, sample: x.sample, median: x.median === null ? null : Number(x.median), position: x.position });
-      }
-      if (!live) return;
-      const closing = new Map(
-        (close.error ? [] : close.data || []).map((x) => [x.leg_key, Number(x.last_price)]),
-      );
+      const closing = new Map(legs.filter((l) => tracked.has(l.leg_key)).map((l) => [l.leg_key, tracked.get(l.leg_key)!.last]));
       setRecord(pricedRecord(legs, closing, kinds));
       // Research legs pass every automatic rule by construction, so only official picks are split.
-      setGates(!research && forms.size ? gatedRecords(legs, closing, forms) : null);
+      if (research) return setGates(null);
+      // Each pick's recent form as of its game, for the rule-by-rule split.
+      const keys = [...new Set(legs.flatMap((l) => [l.leg_key, ...(l.original_leg_key ? [l.original_leg_key] : [])]))];
+      const found = await legForms.loadMany(keys);
+      if (!live) return;
+      const forms = new Map([...found].filter((e): e is [string, LegForm] => e[1] !== undefined));
+      setGates(forms.size ? gatedRecords(legs, closing, forms) : null);
     }
-    void load();
-    const auth = supabase.auth.onAuthStateChange(() =>
-      setTimeout(() => void load(), 0),
-    );
+    void load().catch(() => live && setRecord(null));
+    const stop = onUserChange(() => {
+      resetRecordsData();
+      setTimeout(() => void load().catch(() => undefined), 0);
+    });
     return () => {
       live = false;
-      auth.data.subscription.unsubscribe();
+      stop();
     };
   }, [research]);
   if (!record || !record.picks) return null;
