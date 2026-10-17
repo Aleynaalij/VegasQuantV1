@@ -85,8 +85,8 @@
       "id": "NBA-003",
       "owner": "CLAUDE",
       "scope": "service",
-      "status": "active",
-      "updated_at": "2026-10-17T17:20:00Z",
+      "status": "review",
+      "updated_at": "2026-10-17T19:40:00Z",
       "files": [
         "supabase/migrations/20261018070000_nba_results.sql",
         "supabase/functions/nba-results/**",
@@ -102,7 +102,42 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: open PR; owner approval to apply the migration and deploy nba-results; verify the 12 preseason finals are recorded after the 3-hour confirmation."
+      "next_action": "Claude: confirm the 12 preseason finals record after the 3-hour confirmation (check-in 22:50Z); Codex: ACK the NBA-003 handoff.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/68",
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6238912185"
+      }
+    },
+    {
+      "id": "NBA-004",
+      "owner": "CLAUDE",
+      "scope": "service",
+      "status": "active",
+      "updated_at": "2026-10-17T19:40:00Z",
+      "files": [
+        "research/nba/engine.py",
+        "research/nba/hosted_scan.py",
+        "research/nba/shadow_report.py",
+        "research/nba/MODEL.md",
+        "research/nba/README.md",
+        "research/nba/requirements.txt",
+        "research/nba/artifacts/**",
+        "supabase/migrations/20261018080000_nba_shadow.sql",
+        ".github/workflows/nba-shadow-scan.yml",
+        ".github/workflows/nba-shadow-report.yml",
+        ".github/workflows/nba-model.yml",
+        "tests/nba_model/**",
+        "tests/nba-shadow.test.ts",
+        "tests/sql/nba-shadow.mjs"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-003",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Claude: PR review, owner approval to apply the migration and redeploy nba-results (starter/position); first captures when FanDuel props arrive (~Oct 19)."
     },
     {
       "id": "COORD-002",
@@ -133,6 +168,30 @@
       ],
       "next_action": "Claude: read the new workflow and ACK the pending NBA-002 handoff. Both agents maintain their own task entries.",
       "completion_evidence": "https://github.com/Aleynaalij/VegasQuantV1/commit/5730b4e818b45f4a03b58ad951d5d4e70394ec51"
+    },
+    {
+      "id": "NBA-006",
+      "owner": "CLAUDE",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-17T20:10:00Z",
+      "files": [
+        "src/components/nba-home-brief.tsx",
+        "src/components/nba-team-logo.tsx",
+        "src/lib/nba-home.ts",
+        "tests/nba-home-brief.test.ts"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-001",
+          "required": "merged"
+        }
+      ],
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239704018"
+      },
+      "next_action": "Codex: review the small nba-desk.tsx edit (your NBA-002 file) on the NBA home hero PR; Claude: verify the live page after merge."
     },
     {
       "id": "NBA-005",

@@ -9,7 +9,8 @@ const KEYS = ["minutes", "points", "fieldGoalsMade-fieldGoalsAttempted", "threeP
   "defensiveRebounds", "fouls", "plusMinus"];
 const stat = (min: number, pts: number, threes: number, reb: number, ast: number) =>
   [String(min), String(pts), "5-10", `${threes}-6`, "0-0", String(reb), String(ast), "2", "1", "0", "1", String(reb - 1), "2", "+3"];
-const athlete = (id: string, name: string, stats: string[], didNotPlay = false) => ({ athlete: { id, displayName: name }, stats, didNotPlay });
+const athlete = (id: string, name: string, stats: string[], didNotPlay = false) =>
+  ({ athlete: { id, displayName: name, position: { abbreviation: "G" } }, stats, didNotPlay, starter: !didNotPlay && id !== "11" });
 const summary = (detail = "Final/OT", completed = true) => ({
   header: { competitions: [{ status: { type: { name: completed ? "STATUS_FINAL" : "STATUS_IN_PROGRESS", detail, completed } },
     competitors: [
@@ -35,9 +36,9 @@ test("ESPN summary becomes a record_nba_result payload: canonical teams, sides, 
   assert.deepEqual(p.away, { team: "Los Angeles Clippers", score: 125, rebounds: 63, assists: 31, threes: 17 });
   assert.deepEqual(p.home, { team: "Boston Celtics", score: 120, rebounds: 46, assists: 29, threes: 7 });
   assert.equal(p.players.length, 4);
-  assert.deepEqual(p.players[0], { athlete_id: "10", player: "James Harden", side: "away", played: true, minutes: 36, threes: 4,
+  assert.deepEqual(p.players[0], { athlete_id: "10", player: "James Harden", side: "away", played: true, starter: true, position: "G", minutes: 36, threes: 4,
     points: 30, rebounds: 6, assists: 9, steals: 1, blocks: 0, turnovers: 2 });
-  assert.deepEqual(p.players[2], { athlete_id: "12", player: "Bench Player", side: "away", played: false, minutes: null, threes: 0,
+  assert.deepEqual(p.players[2], { athlete_id: "12", player: "Bench Player", side: "away", played: false, starter: false, position: "G", minutes: null, threes: 0,
     points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, turnovers: 0 });
 });
 

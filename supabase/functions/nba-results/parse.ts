@@ -14,7 +14,7 @@ type Summary = {
       statistics?: {
         keys?: string[];
         totals?: string[];
-        athletes?: { athlete?: { id?: string; displayName?: string }; stats?: string[]; didNotPlay?: boolean }[];
+        athletes?: { athlete?: { id?: string; displayName?: string; position?: { abbreviation?: string } }; stats?: string[]; didNotPlay?: boolean; starter?: boolean }[];
       }[];
     }[];
   };
@@ -66,6 +66,8 @@ export function resultPayload(data: Summary, game: Game, sourceHash: string) {
         player: a.athlete?.displayName ?? "",
         side,
         played,
+        starter: a.starter === true,
+        position: /^[A-Z]{1,3}$/.test(a.athlete?.position?.abbreviation || "") ? a.athlete!.position!.abbreviation! : null,
         minutes: played ? (Number.isFinite(count(st[at("minutes")])) ? count(st[at("minutes")]) : null) : null,
         threes: played ? made(st[at(THREES)]) : 0,
         ...Object.fromEntries(STATS.map((k) => [k, played ? count(st[at(k)]) : 0])),

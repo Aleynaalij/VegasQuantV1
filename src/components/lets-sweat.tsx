@@ -39,7 +39,12 @@ export default function LetsSweat() {
   return id ? (
     <Link
       className="vq-lets-sweat"
-      href={`/feed#release-${id}`}
+      href={`/feed?view=parlays&release=${id}#release-${id}`}
+      onClick={() =>
+        document
+          .getElementById(`release-${id}`)
+          ?.scrollIntoView({ block: "start" })
+      }
       aria-label="Let’s Sweat — Worth a dollar of your time"
     >
       <i aria-hidden="true" />
