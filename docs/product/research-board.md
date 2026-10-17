@@ -12,7 +12,9 @@ feed sat empty between manual drops. The research board fills it with a separate
   - are priced -150 to -299;
   - have five or more prior games whose median reaches the target;
   - cleared the target at least five points more often than the price's break-even (R1);
-  - pass every automatic rule in `src/lib/leg-rules.ts`.
+  - pass every automatic rule in `src/lib/leg-rules.ts`;
+  - meet a minimum target: 15+ rushing or receiving yards, 150+ passing yards, 3+ receptions. Smaller
+    targets (a QB at 5+ rushing yards) miss only on an injury or a fluke and say nothing about the read.
 - **Board limits.** One leg per player per game, at most three per game and eight per run. A
   selection already published (research or official) is never repeated.
 - **Release shape.** One release per game, expiring at kickoff, titled `Research board · AWAY @ HOME`.

@@ -42,6 +42,17 @@ export const BOOK = "FanDuel";
 /** Price band for a research leg: -150 or shorter (R2), longer than -300 (no heavy chalk). */
 export const PRICE_MIN = -300;
 export const PRICE_MAX = -150;
+/**
+ * Smallest target worth a standalone leg. A QB at 5+ rushing yards or a back at 5+ receiving yards
+ * misses only on an injury or a fluke of game script, so it says nothing about the read.
+ */
+export const MIN_TARGET: Record<Contract["metric"], number> = {
+  rushing_yards: 15,
+  receiving_yards: 15,
+  passing_yards: 150,
+  receptions: 3,
+  def_sacks: 1,
+};
 
 /**
  * Every "N+" over line the published book currently quotes for a game, as gradable contracts. Only
@@ -62,7 +73,7 @@ export function quotedLines(game: BoardGame, observations: Observation[]) {
       // "N+" targets are the over at N - 0.5; whole-number lines are not milestones.
       if (x.name !== "Over" || !x.description || !Number.isFinite(x.point)) continue;
       const threshold = x.point! + 0.5;
-      if (!Number.isInteger(threshold) || threshold <= 0) continue;
+      if (!Number.isInteger(threshold) || threshold < MIN_TARGET[metric]) continue;
       const key = `${playerName(x.description)}|${metric}|${threshold}`;
       if (!lines.has(key))
         lines.set(key, {
