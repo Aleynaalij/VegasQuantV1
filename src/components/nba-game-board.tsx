@@ -469,59 +469,55 @@ function NbaPlayerForm({ player, game }: { player: string; game: NbaGame }) {
         if (key.error || !key.data)
           throw new Error("Player identity unavailable");
         // Filter by game time, not recording time: late confirmation cannot leak future games.
-        const games = await supabase
-          .from("nba_game_results")
+        const players = await supabase
+          .from("nba_player_results")
           .select(
-            "game_id,source_url,nba_games!inner(tipoff,season,season_type)",
+            "game_id,athlete_id,player,played,minutes,points,rebounds,assists,threes,nba_game_results!inner(source_url,nba_games!inner(tipoff,season,season_type))",
           )
-          .eq("nba_games.season", game.season)
-          .eq("nba_games.season_type", game.season_type)
-          .lt("nba_games.tipoff", game.tipoff)
+          .eq("name_key", key.data)
+          .eq("nba_game_results.nba_games.season", game.season)
+          .eq("nba_game_results.nba_games.season_type", game.season_type)
+          .lt("nba_game_results.nba_games.tipoff", game.tipoff)
           .gte(
-            "nba_games.tipoff",
+            "nba_game_results.nba_games.tipoff",
             new Date(Date.parse(game.tipoff) - 60 * 86400000).toISOString(),
           )
-          .order("recorded_at", { ascending: false })
+          .order("game_id")
           .limit(200);
-        if (games.error) throw games.error;
-        const ids = (games.data || []).map((g) => g.game_id);
+        if (players.error) throw players.error;
+        if ((players.data || []).length === 200)
+          throw new Error("Player history exceeded safe window");
+        if (new Set((players.data || []).map((p) => p.athlete_id)).size > 1)
+          throw new Error("Ambiguous player identity");
+        const ids = (players.data || []).map((p) => p.game_id);
         if (!ids.length) {
           if (live) setForm([]);
           return;
         }
-        const [players, progress] = await Promise.all([
-          supabase
-            .from("nba_player_results")
-            .select(
-              "game_id,athlete_id,player,played,minutes,points,rebounds,assists,threes",
-            )
-            .in("game_id", ids)
-            .eq("name_key", key.data)
-            .limit(200),
-          supabase
-            .from("nba_result_progress")
-            .select("game_id,status")
-            .in("game_id", ids)
-            .limit(200),
-        ]);
-        if (players.error || progress.error)
-          throw players.error || progress.error;
-        if (new Set((players.data || []).map((p) => p.athlete_id)).size > 1)
-          throw new Error("Ambiguous player identity");
+        const progress = await supabase
+          .from("nba_result_progress")
+          .select("game_id,status")
+          .in("game_id", ids)
+          .limit(200);
+        if (progress.error) throw progress.error;
         const confirmed = new Set(
           (progress.data || [])
             .filter((p) => p.status === "FINAL")
             .map((p) => p.game_id),
         );
-        const meta = new Map(
-          (games.data || []).map((g) => {
-            const joined = g.nba_games as unknown as { tipoff: string };
-            return [g.game_id, { date: joined.tipoff, source: g.source_url }];
-          }),
-        );
         const result = (players.data || [])
           .filter((p) => confirmed.has(p.game_id))
-          .map((p) => ({ ...p, ...meta.get(p.game_id)! }))
+          .map((p) => {
+            const meta = p.nba_game_results as unknown as {
+              source_url: string;
+              nba_games: { tipoff: string };
+            };
+            return {
+              ...p,
+              date: meta.nba_games.tipoff,
+              source: meta.source_url,
+            };
+          })
           .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
           .slice(0, 5);
         if (live) setForm(result);
