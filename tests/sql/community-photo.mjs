@@ -21,7 +21,7 @@ create table private.account_erasure_jobs(user_id uuid primary key,lease_id uuid
 create table private.billing_orders(id uuid,user_id uuid,state text,checkout_id text,created_at timestamptz);create table private.billing_subscriptions(id text,user_id uuid,customer_id text,order_id uuid);
 create table public.account_deletion_requests(user_id uuid,status text);
 create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
-create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text,owner_id text,created_at timestamptz default now());alter table storage.objects enable row level security;
+create table storage.objects(owner uuid,id uuid default gen_random_uuid(),bucket_id text,name text,owner_id text,created_at timestamptz default now());alter table storage.objects enable row level security;
 create function storage.foldername(text)returns text[] language sql as $$select string_to_array($1,'/')$$;
 create table public.community_posts(id uuid primary key default gen_random_uuid(),user_id uuid,sport text default 'nfl',kind text default 'slip',title text,body text,legs jsonb default '[]' constraint community_posts_legs_check check(jsonb_array_length(legs)<=12),author_name text,created_at timestamptz default now());alter table public.community_posts enable row level security;
 create table public.community_post_comments(user_id uuid,created_at timestamptz);
@@ -37,6 +37,7 @@ await db.exec(
   ),
 );
 await db.exec(fs.readFileSync('supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261017010812_fix_community_photo_owner_collision.sql','utf8'));
 await db.exec(
   `create trigger prepare_post before insert on public.community_posts for each row execute function private.prepare_member_publication();set role authenticated;select set_config('app.uid','${a}',false);`,
 );
