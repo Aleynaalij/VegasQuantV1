@@ -81,3 +81,10 @@ test("a published research leg is structured, gradable and labeled", () => {
   assert.ok(Array.isArray(c.sources) && c.sources.length === 2);
   assert.equal(c.research_evidence.sample, 5);
 });
+
+test("the board caps are parameters: a manual run can raise them", () => {
+  const legs = gameLegs(game, observations, merged, at);
+  const many = [...legs, ...legs.map((l) => ({ ...l, player: `Other ${l.player}`, game: { ...l.game } }))];
+  assert.equal(pickBoard(many, new Set(), 8, 1).length, 1);
+  assert.equal(pickBoard(many, new Set(), 60, 12).length, 2);
+});

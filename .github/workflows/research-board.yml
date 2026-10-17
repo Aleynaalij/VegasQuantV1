@@ -12,6 +12,14 @@ on:
         description: Select legs without publishing
         type: boolean
         default: false
+      limit:
+        description: Most legs this run (default 8, at most 60)
+        type: number
+        default: 8
+      per_game:
+        description: Most legs per game this run (default 3, at most 12)
+        type: number
+        default: 3
 permissions:
   contents: read
 concurrency:
@@ -33,4 +41,4 @@ jobs:
       - run: npm ci --ignore-scripts
       # bash with pipefail, so a failing run is not hidden by tee.
       - shell: bash
-        run: npx tsx scripts/research-board/run.ts ${{ inputs.dry_run && '--dry-run' || '' }} | tee -a "$GITHUB_STEP_SUMMARY"
+        run: npx tsx scripts/research-board/run.ts ${{ inputs.dry_run && '--dry-run' || '' }} --limit=${{ inputs.limit || 8 }} --per-game=${{ inputs.per_game || 3 }} | tee -a "$GITHUB_STEP_SUMMARY"
