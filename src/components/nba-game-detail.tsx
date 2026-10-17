@@ -19,6 +19,10 @@ export default function NbaGameDetail({ slug }: { slug: string }) {
   useEffect(() => {
     let live = true,
       busy = false;
+    setGame(null);
+    setAllowed(false);
+    setLoading(true);
+    setError("");
     async function load() {
       if (busy) return;
       busy = true;
