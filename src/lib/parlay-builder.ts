@@ -6,6 +6,8 @@ export type PublishedLeg = {
   matchup: string;
   game_id: string | null;
   kind: string;
+  /** Structured American odds printed at publication, when the leg had one. */
+  odds?: number | string | null;
   quote: string | null;
   quote_observed_at: string | null;
   published_at: string;

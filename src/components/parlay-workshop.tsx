@@ -15,6 +15,8 @@ import {
 import GamblyLink from "./gambly-link";
 import CasinoCard, { CasinoCardDownload } from "./casino-card";
 import { cleanMarket, type CasinoCardData } from "@/lib/casino-card";
+import { stamped } from "@/lib/leg-rules";
+import { useLegForms, VqStamp } from "./leg-form";
 
 export default function ParlayWorkshop({
   mode,
@@ -165,6 +167,8 @@ export default function ParlayWorkshop({
       .includes(search.toLowerCase()),
   );
   const showCatalog = mode === "catalog" || open;
+  // Recent form and tracked prices, for the stamp of approval on recommended legs.
+  const legForms = useLegForms(showCatalog ? rows.map((r) => r.leg_key) : []);
   return (
     <section
       className="parlay-workshop"
@@ -270,6 +274,18 @@ export default function ParlayWorkshop({
                   quoteAge <= 15 * 60 * 1000,
               );
               const result = r.result?.toUpperCase();
+              const odds = Number(r.odds);
+              const approved =
+                !result &&
+                r.odds != null &&
+                stamped({
+                  price: Number.isFinite(odds) ? odds : null,
+                  lastPrice: legForms.prices[r.leg_key]?.last,
+                  form: legForms.forms[r.leg_key],
+                  market: r.market,
+                  matchup: r.matchup,
+                  pickOfDay: r.kind === "PICK_OF_DAY",
+                });
               const card: CasinoCardData = {
                 variant: result === "WIN" ? "win" : result ? "miss" : "pick",
                 eyebrow: result ? "Published leg · settled result" : "Published research · individual leg",
@@ -294,6 +310,7 @@ export default function ParlayWorkshop({
                     ) : (
                       <span className="workshop-label">Published research</span>
                     )}
+                    {approved && <VqStamp />}
                   </div>
                   <p className="workshop-note">
                     {r.quote || "Odds unknown · analyst target"}
