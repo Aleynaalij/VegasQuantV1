@@ -33,6 +33,8 @@ export default function ParlayWorkshop({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [sharing, setSharing] = useState<string | null>(null);
+  const [sharedPost, setSharedPost] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [statFilter, setStatFilter] = useState<LegStatFilter>("all");
   const [approvedOnly, setApprovedOnly] = useState(false);
@@ -51,6 +53,9 @@ export default function ParlayWorkshop({
       setLoading(true);
       setChosen([]);
       setSaved([]);
+      setSharing(null);
+      setSharedPost(null);
+      setNotice("");
       setRows([]);
       setError("");
       const [catalog, mine] = await Promise.all([
@@ -59,7 +64,7 @@ export default function ParlayWorkshop({
         }),
         supabase
           .from("member_parlays")
-          .select("id,title,legs,created_at,expires_at")
+          .select("id,title,legs,created_at,expires_at,community_post_id")
           .order("created_at", { ascending: false })
           .limit(50),
       ]);
@@ -145,7 +150,7 @@ export default function ParlayWorkshop({
       }
       const readback = await supabase
         .from("member_parlays")
-        .select("id,title,legs,created_at,expires_at")
+        .select("id,title,legs,created_at,expires_at,community_post_id")
         .order("created_at", { ascending: false })
         .limit(50);
       if (n !== epoch.current) return;
@@ -163,6 +168,41 @@ export default function ParlayWorkshop({
       if (n === epoch.current) setError("Could not save. Please retry.");
     } finally {
       setBusy(false);
+    }
+  }
+  async function share(parlay: MemberParlay) {
+    if (sharing) return;
+    const n = epoch.current;
+    setSharing(parlay.id);
+    setError("");
+    setNotice("");
+    setSharedPost(null);
+    try {
+      const result = await supabase.rpc("share_member_parlay", {
+        p_parlay: parlay.id,
+      });
+      if (n !== epoch.current) return;
+      if (result.error || !result.data)
+        throw Error(
+          result.error?.message || "Could not share your parlay. Please retry.",
+        );
+      setSaved((current) =>
+        current.map((p) =>
+          p.id === parlay.id ? { ...p, community_post_id: result.data } : p,
+        ),
+      );
+      setSharedPost(result.data);
+      setNotice("Your Vegas Quant parlay card is posted to Community.");
+      window.dispatchEvent(new Event("vq-community-changed"));
+    } catch (error) {
+      if (n === epoch.current)
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Could not share. Please retry.",
+        );
+    } finally {
+      if (n === epoch.current) setSharing(null);
     }
   }
   const showCatalog = mode === "catalog" || open;
@@ -221,6 +261,11 @@ export default function ParlayWorkshop({
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
+      {sharedPost && (
+        <Link href={`/community?post=${sharedPost}`}>
+          View your community post →
+        </Link>
+      )}
       {open && (
         <section
           className="workshop-draft"
@@ -465,6 +510,20 @@ export default function ParlayWorkshop({
                 Combined odds unknown. Every leg must hit. Your selection is not
                 a Vegas Quant recommendation.
               </p>
+              {p.community_post_id ? (
+                <Link href={`/community?post=${p.community_post_id}`}>
+                  View community card →
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={sharing !== null}
+                  onClick={() => void share(p)}
+                >
+                  {sharing === p.id ? "Posting…" : "Post to Community"}
+                </button>
+              )}
               {Date.parse(p.expires_at) > Date.now() && (
                 <GamblyLink
                   url="https://gambly.com"

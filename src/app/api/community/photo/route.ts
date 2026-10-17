@@ -41,6 +41,12 @@ export async function POST(req: Request) {
       new Uint8Array(await file.arrayBuffer()),
     );
     const path = photoPath(auth.user.id, id!);
+    const permit = await auth.db.rpc("begin_community_photo", { p_post: id });
+    if (permit.error || permit.data !== path)
+      return reply(
+        { error: "Upload authorization failed. Check your profile and retry." },
+        403,
+      );
     const upload = await auth.db.storage
       .from(COMMUNITY_PHOTO_BUCKET)
       .upload(path, image, {

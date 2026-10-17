@@ -10,6 +10,7 @@ import Link from "next/link";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
 import CommunityPhoto from "./community-photo";
+import CommunityParlayCard from "./community-parlay-card";
 import { COMMUNITY_PHOTO_BUCKET, MAX_PHOTO_BYTES } from "@/lib/community-photo";
 import { time } from "@/lib/domain";
 import { ImagePlus, Heart, MessageCircle } from "lucide-react";
@@ -318,7 +319,13 @@ export default function CommunityFeed() {
           },
           body: form,
         });
-        const data = await response.json();
+        const data = await response.json().catch(() => null);
+        if (!data)
+          throw Error(
+            response.status === 413
+              ? "Photo is too large to upload. Choose a smaller image."
+              : "Photo upload could not complete. Please retry.",
+          );
         if (!response.ok || !data.path)
           throw Error(data.error || "Photo upload failed.");
         uploaded = data.path;
@@ -573,6 +580,11 @@ export default function CommunityFeed() {
                     {busy ? "Posting…" : "Post"}
                   </button>
                 </div>
+                {notice && (
+                  <p role="status" className="notice">
+                    {notice}
+                  </p>
+                )}
                 {preview ? (
                   <div className="community-photo-preview">
                     <img src={preview} alt="Photo preview before publishing" />
@@ -620,7 +632,6 @@ export default function CommunityFeed() {
                 Refresh
               </button>
             </div>
-            <p role="status">{notice}</p>
             {targetMissing ? (
               <p role="status">This post is no longer available.</p>
             ) : null}
@@ -675,7 +686,14 @@ export default function CommunityFeed() {
                     title={p.title}
                   />
                 ) : null}
-                {p.legs.length ? (
+                {p.kind === "slip" && p.legs.length ? (
+                  <CommunityParlayCard
+                    title={p.title}
+                    legs={p.legs}
+                    author={p.author_name}
+                    publishedAt={p.created_at}
+                  />
+                ) : p.legs.length ? (
                   <ol>
                     {p.legs.map((leg, i) => (
                       <li key={i}>{leg}</li>

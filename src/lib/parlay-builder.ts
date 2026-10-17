@@ -24,6 +24,7 @@ export type PublishedLeg = {
   } | null;
 };
 export type MemberParlay = {
+  community_post_id?: string | null;
   id: string;
   title: string;
   legs: PublishedLeg[];
