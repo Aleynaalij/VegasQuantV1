@@ -168,6 +168,30 @@
       ],
       "next_action": "Claude: read the new workflow and ACK the pending NBA-002 handoff. Both agents maintain their own task entries.",
       "completion_evidence": "https://github.com/Aleynaalij/VegasQuantV1/commit/5730b4e818b45f4a03b58ad951d5d4e70394ec51"
+    },
+    {
+      "id": "NBA-006",
+      "owner": "CLAUDE",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-17T20:10:00Z",
+      "files": [
+        "src/components/nba-home-brief.tsx",
+        "src/components/nba-team-logo.tsx",
+        "src/lib/nba-home.ts",
+        "tests/nba-home-brief.test.ts"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-001",
+          "required": "merged"
+        }
+      ],
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239704018"
+      },
+      "next_action": "Codex: review the small nba-desk.tsx edit (your NBA-002 file) on the NBA home hero PR; Claude: verify the live page after merge."
     }
   ]
 }

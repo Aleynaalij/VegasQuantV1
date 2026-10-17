@@ -1,5 +1,6 @@
 import Link from "next/link";
 import NbaGameBoard from "./nba-game-board";
+import NbaHomeBrief from "./nba-home-brief";
 import {
   Activity,
   BookMarked,
@@ -62,30 +63,38 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
   return (
     <Shell active={view} sport="nba">
       <div className="nba-desk">
-        <section className="nba-hero">
-          <span className="nba-eyebrow">VEGAS QUANT · BASKETBALL</span>
-          <span className="badge muted">Preparation mode</span>
-          <h1>{copy.title}</h1>
-          <p>{copy.intro}</p>
-          <div className="nba-opening">
-            <span>
-              <b>Opening night</b> · Tue, Oct 20, 2026
-            </span>
-            <KickoffCountdown
-              kickoff={openingDay}
-              label="Time to NBA opening day"
-              liveLabel="Season underway"
-            />
+        {view === "home" ? (
+          <NbaHomeBrief />
+        ) : (
+          <section className="nba-hero">
+            <span className="nba-eyebrow">VEGAS QUANT · BASKETBALL</span>
+            <span className="badge muted">Preparation mode</span>
+            <h1>{copy.title}</h1>
+            <p>{copy.intro}</p>
+            <div className="nba-opening">
+              <span>
+                <b>Opening night</b> · Tue, Oct 20, 2026
+              </span>
+              <KickoffCountdown
+                kickoff={openingDay}
+                label="Time to NBA opening day"
+                liveLabel="Season underway"
+              />
+            </div>
+            <div className="nba-launch-note">
+              <ShieldCheck size={20} aria-hidden="true" />
+              <span>
+                Pregame picks stay unpublished until the NBA regular season
+                begins and our research is ready.
+              </span>
+            </div>
+          </section>
+        )}
+        {(view === "home" || view === "game") && (
+          <div id="nba-slate">
+            <NbaGameBoard />
           </div>
-          <div className="nba-launch-note">
-            <ShieldCheck size={20} aria-hidden="true" />
-            <span>
-              Pregame picks stay unpublished until the NBA regular season begins
-              and our research is ready.
-            </span>
-          </div>
-        </section>
-        {(view === "home" || view === "game") && <NbaGameBoard />}
+        )}
         {view === "home" ? (
           <>
             <div className="nba-destinations">
