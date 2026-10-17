@@ -37,23 +37,37 @@ export function nbaNickname(team: string) {
     : team.split(" ").at(-1) || team;
 }
 
-/**
- * Started and not final. A game past a confirmed tip-off still marked scheduled counts too (the feed
- * refreshes every 15 minutes); with tip-off TBD the stored time is a placeholder, so only ESPN's own
- * in-progress status counts. A stale status never keeps a game "live" past 4 hours.
- */
+/** ESPN statuses that prove a game is being played; nothing else is shown as live. */
+const IN_PLAY = new Set([
+  "STATUS_IN_PROGRESS",
+  "STATUS_HALFTIME",
+  "STATUS_END_PERIOD",
+]);
+
+/** Live only on ESPN's own in-play status; a stale status never keeps a game "live" past 4 hours. */
 export function nbaIsLive(g: NbaHomeGame, now: number) {
-  const tip = Date.parse(g.tipoff);
-  const status = g.status || "";
-  if (DONE.has(status) || tip > now + 4 * HOUR || now - tip >= 4 * HOUR)
-    return false;
-  return status !== "STATUS_SCHEDULED"
-    ? tip <= now || g.tipoff_tbd
-    : !g.tipoff_tbd && tip <= now;
+  return IN_PLAY.has(g.status || "") && now - Date.parse(g.tipoff) < 4 * HOUR;
 }
 
 /**
- * Regular-season games for the home hero: live games first, then upcoming within a week.
+ * Past a confirmed tip-off with no in-play or final status yet (a delay, or the 15-minute feed has not
+ * caught up). Shown as "Awaiting game update", never as live. A TBD time is a placeholder, so it never
+ * counts as elapsed.
+ */
+export function nbaAwaiting(g: NbaHomeGame, now: number) {
+  const tip = Date.parse(g.tipoff);
+  return (
+    !g.tipoff_tbd &&
+    !DONE.has(g.status || "") &&
+    !IN_PLAY.has(g.status || "") &&
+    tip <= now &&
+    now - tip < 4 * HOUR
+  );
+}
+
+/**
+ * Regular-season games for the home hero: live games first, then games awaiting an update, then
+ * upcoming within a week.
  * `opening` is true when the lead game is on opening night (an Eastern date), however few past
  * games the caller loaded.
  */
@@ -65,7 +79,10 @@ export function nbaHomeSlate(
   const regular = games.filter(
     (g) => g.season_type === 2 && Number.isFinite(Date.parse(g.tipoff)),
   );
-  const live = regular.filter((g) => nbaIsLive(g, now));
+  const byTip = (a: NbaHomeGame, b: NbaHomeGame) =>
+    Date.parse(a.tipoff) - Date.parse(b.tipoff);
+  const live = regular.filter((g) => nbaIsLive(g, now)).sort(byTip);
+  const awaiting = regular.filter((g) => nbaAwaiting(g, now)).sort(byTip);
   const upcoming = regular
     .filter(
       (g) =>
@@ -74,11 +91,8 @@ export function nbaHomeSlate(
         Date.parse(g.tipoff) <= now + 7 * 24 * HOUR &&
         !DONE.has(g.status || ""),
     )
-    .sort((a, b) => Date.parse(a.tipoff) - Date.parse(b.tipoff));
-  const ordered = [
-    ...live.sort((a, b) => Date.parse(a.tipoff) - Date.parse(b.tipoff)),
-    ...upcoming,
-  ];
+    .sort(byTip);
+  const ordered = [...live, ...awaiting, ...upcoming];
   const next = ordered[0] ?? null;
   const opening = next
     ? nbaWhen(next.tipoff, {

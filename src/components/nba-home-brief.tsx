@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import {
+  nbaAwaiting,
   nbaHomeSlate,
   nbaIsLive,
   nbaNickname,
@@ -19,8 +20,10 @@ import {
 import NbaTeamLogo from "./nba-team-logo";
 import KickoffCountdown from "./kickoff-countdown";
 
-/** Regular season opens October 20, 2026 (midnight ET); shown until the schedule loads or if it cannot. */
+/** Regular season opens October 20, 2026 (midnight ET); the pre-season hero counts down to it. */
 const OPENING_NIGHT = "2026-10-20T04:00:00Z";
+/** After opening night (midnight ET, Oct 21) an empty slate is never presented as "opening night". */
+const AFTER_OPENING_NIGHT = Date.parse("2026-10-21T04:00:00Z");
 const COLUMNS =
   "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,venue,season_type,status,away_score,home_score";
 
@@ -28,6 +31,9 @@ const COLUMNS =
 export default function NbaHomeBrief() {
   const [games, setGames] = useState<NbaHomeGame[] | null>(null);
   const [now, setNow] = useState(() => Date.now());
+  // When the last read failed; the last good slate (and when it loaded) stays on screen with a notice.
+  const [failed, setFailed] = useState(false);
+  const [loadedAt, setLoadedAt] = useState<number | null>(null);
   useEffect(() => {
     let live = true;
     async function load() {
@@ -41,9 +47,14 @@ export default function NbaHomeBrief() {
         .order("tipoff")
         .limit(60);
       if (!live) return;
-      // A failed read keeps the last good slate; the first failure falls back to the generic hero.
-      if (!error && data) setGames(data as NbaHomeGame[]);
-      else setGames((g) => g ?? []);
+      if (!error && data) {
+        setGames(data as NbaHomeGame[]);
+        setLoadedAt(at);
+        setFailed(false);
+      } else {
+        setGames((g) => g ?? []);
+        setFailed(true);
+      }
       setNow(at);
     }
     load();
@@ -55,6 +66,8 @@ export default function NbaHomeBrief() {
   }, []);
   const { next, rest, week, opening } = nbaHomeSlate(games || [], now);
   const isLive = next ? nbaIsLive(next, now) : false;
+  const awaiting = next ? nbaAwaiting(next, now) : false;
+  const unavailable = failed && loadedAt === null;
   return (
     <header className="home-brief vq-home nba-home-brief">
       <section
@@ -67,19 +80,25 @@ export default function NbaHomeBrief() {
             <i aria-hidden="true" />{" "}
             {isLive
               ? "Live now"
-              : next
-                ? opening
-                  ? "Opening night"
-                  : "Next tip-off"
-                : "The basketball desk"}
+              : awaiting
+                ? "Awaiting game update"
+                : next
+                  ? opening
+                    ? "Opening night"
+                    : "Next tip-off"
+                  : "The basketball desk"}
           </span>
           <span className="vq-chip">NBA</span>
         </div>
         {next ? (
           <>
             <h1 id="nba-hero-title" className="vq-sr">
-              {isLive ? "Live" : "Next tip-off"}: {next.away_team} at{" "}
-              {next.home_team}
+              {isLive
+                ? "Live"
+                : awaiting
+                  ? "Awaiting game update"
+                  : "Next tip-off"}
+              : {next.away_team} at {next.home_team}
             </h1>
             <a className="vq-matchup" href="#nba-slate">
               <span className="vq-team">
@@ -115,17 +134,17 @@ export default function NbaHomeBrief() {
                   : `${nbaWhen(next.tipoff, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} ET`}
                 {next.venue ? ` · ${next.venue}` : ""}
               </span>
-              {next.tipoff_tbd ? (
-                isLive ? (
-                  <span className="vq-countdown live">
-                    <i aria-hidden="true" /> Tipped off
-                  </span>
-                ) : null
-              ) : (
+              {isLive ? (
+                <span className="vq-countdown live">
+                  <i aria-hidden="true" /> In play
+                </span>
+              ) : awaiting ? (
+                <span className="vq-countdown">Awaiting game update</span>
+              ) : next.tipoff_tbd ? null : (
                 <KickoffCountdown
                   kickoff={next.tipoff}
                   label="Time to tip-off"
-                  liveLabel="Tipped off"
+                  liveLabel="Awaiting game update"
                 />
               )}
             </div>
@@ -137,6 +156,25 @@ export default function NbaHomeBrief() {
                 The rulebook
               </Link>
             </div>
+          </>
+        ) : unavailable ? (
+          <>
+            <h1 id="nba-hero-title" className="vq-hero-title">
+              Schedule unavailable.
+            </h1>
+            <p className="vq-hero-sub">
+              We couldn’t load the NBA schedule. It retries automatically.
+            </p>
+          </>
+        ) : games !== null && now >= AFTER_OPENING_NIGHT ? (
+          <>
+            <h1 id="nba-hero-title" className="vq-hero-title">
+              No NBA games this week.
+            </h1>
+            <p className="vq-hero-sub">
+              The next regular-season games will appear here once they are
+              scheduled.
+            </p>
           </>
         ) : (
           <>
@@ -156,6 +194,16 @@ export default function NbaHomeBrief() {
           </>
         )}
       </section>
+      {failed && loadedAt !== null ? (
+        <p className="nba-home-stale" role="status">
+          Couldn’t refresh the schedule · showing games as of{" "}
+          {nbaWhen(new Date(loadedAt).toISOString(), {
+            hour: "numeric",
+            minute: "2-digit",
+          })}{" "}
+          ET
+        </p>
+      ) : null}
       {rest.length > 0 && (
         <nav className="vq-slate" aria-label="Upcoming NBA games">
           {rest.map((g) => (
@@ -178,13 +226,15 @@ export default function NbaHomeBrief() {
               <time dateTime={g.tipoff}>
                 {nbaIsLive(g, now)
                   ? "Live"
-                  : g.tipoff_tbd
-                    ? `${nbaWhen(g.tipoff, { weekday: "short" })} · TBD`
-                    : nbaWhen(g.tipoff, {
-                        weekday: "short",
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}
+                  : nbaAwaiting(g, now)
+                    ? "Awaiting update"
+                    : g.tipoff_tbd
+                      ? `${nbaWhen(g.tipoff, { weekday: "short" })} · TBD`
+                      : nbaWhen(g.tipoff, {
+                          weekday: "short",
+                          hour: "numeric",
+                          minute: "2-digit",
+                        })}
               </time>
             </a>
           ))}
@@ -194,7 +244,9 @@ export default function NbaHomeBrief() {
         <a href="#nba-slate">
           <CalendarDays size={18} aria-hidden="true" />
           <span>
-            <b>{games === null ? "Schedule" : `${week} games`}</b>
+            <b>
+              {games === null || unavailable ? "Schedule" : `${week} games`}
+            </b>
             <small>Next 7 days</small>
           </span>
         </a>
