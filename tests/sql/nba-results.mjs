@@ -98,8 +98,15 @@ await assert.rejects(grade('player_blocks', 'Over', 0.5, 'Tyrese Maxey'), /Unsup
 await assert.rejects(grade('spreads', 'Boston', -2, null), /Side must be one of the two teams/);
 await assert.rejects(grade('totals', 'Over', null, null), /Line required/);
 
-// A later provider change is journaled once, flags CONFLICT, and the recorded result stays.
+// A later provider change is journaled once, flags CONFLICT, and the recorded result stays,
+// even when the changed box score no longer adds up.
 assert.equal((await record(changed)).status, 'FINAL');
+const broken = summary(); broken.players[0].steals = 2; broken.players[0].points = 31;
+assert.equal((await record(broken)).status, 'CONFLICT');
+assert.equal((await db.query('select count(*)::int n from private.nba_result_corrections')).rows[0].n, 1);
+await db.exec(`alter table private.nba_result_corrections disable trigger immutable_nba_result_correction;
+ delete from private.nba_result_corrections; alter table private.nba_result_corrections enable trigger immutable_nba_result_correction;
+ update public.nba_result_progress set status = 'FINAL'`);
 const corrected = summary(); corrected.players[5].points = 41; corrected.players[9].points = 9;
 assert.equal((await record(corrected)).status, 'CONFLICT');
 assert.equal((await record(corrected)).status, 'CONFLICT');

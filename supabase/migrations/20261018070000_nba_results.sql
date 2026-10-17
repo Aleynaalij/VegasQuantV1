@@ -148,10 +148,11 @@ declare g public.nba_games; prior public.nba_game_results; st private.nba_result
     x->>'points', x->>'rebounds', x->>'assists', x->>'threes', x->>'steals', x->>'blocks', x->>'turnovers') order by (x->>'athlete_id')::bigint)
    from jsonb_array_elements(p->'players') x))::text, 'UTF8')), 'hex');
 
- -- Already recorded: only look for provider corrections.
+ -- Already recorded: only look for provider corrections. Any changed box score is a correction,
+ -- including one that no longer adds up.
  select * into prior from public.nba_game_results where game_id = g.id;
  if found then
-  if fp = prior.fingerprint or bad is not null then
+  if fp = prior.fingerprint then
    update public.nba_result_progress set checked_at = now() where game_id = g.id;
    return jsonb_build_object('status', (select status from public.nba_result_progress where game_id = g.id));
   end if;
