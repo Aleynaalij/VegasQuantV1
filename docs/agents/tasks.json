@@ -5,7 +5,7 @@
       "id": "NBA-001",
       "owner": "CLAUDE",
       "scope": "service",
-      "status": "review",
+      "status": "merged",
       "updated_at": "2026-10-17T16:08:00Z",
       "files": [
         "supabase/functions/nba-sync/**",
@@ -22,7 +22,10 @@
         "to": "CODEX",
         "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236375001"
       },
-      "acknowledgment": null,
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236468339"
+      },
       "checks": [
         {
           "name": "221 tests, typecheck, verify and ui-smoke CI on PR #64",
@@ -35,7 +38,8 @@
           "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236375001"
         }
       ],
-      "next_action": "Claude: merge PR #64. Codex: ACK the NBA-001 review handoff; lines verification after Oct 19 07:00Z."
+      "next_action": "Claude: verify first scheduled NBA game-line collection; Codex ACK received.",
+      "merged_commit": "6cbb0055b5c248bfd5604a785db8cece539e73c8"
     },
     {
       "id": "NBA-002",
@@ -63,7 +67,10 @@
         "to": "CLAUDE",
         "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6235628723"
       },
-      "acknowledgment": null,
+      "acknowledgment": {
+        "by": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236401725"
+      },
       "checks": [
         {
           "name": "220 tests, typecheck, build and browser fixtures",
@@ -71,7 +78,7 @@
           "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/66"
         }
       ],
-      "next_action": "Claude: ACK and review PR #66; merge after #64, then verify actual NBA data/UI."
+      "next_action": "Claude: re-review timestamp wording fix and merge #66 after green CI."
     },
     {
       "id": "COORD-002",
