@@ -31,11 +31,27 @@ test("a live game leads the hero; finals and stale statuses drop out", () => {
   const stale = game("stale", -6, { status: "STATUS_IN_PROGRESS" });
   const slate = nbaHomeSlate([game("next", 2), final, live, stale], now);
   assert.equal(slate.next?.id, "live");
-  assert.equal(slate.opening, false);
+  assert.equal(slate.opening, true); // still Oct 20 in New York; the hero says "Live now" first
   assert.deepEqual([nbaIsLive(live, now), nbaIsLive(final, now), nbaIsLive(stale, now), nbaIsLive(game("tip", -0.1), now)], [true, false, false, true]);
   assert.deepEqual(slate.rest.map((g) => g.id), ["next"]);
 });
 
 test("empty or failed schedule gives no lead game", () => {
-  assert.deepEqual(nbaHomeSlate([], now), { next: null, rest: [], live: 0, week: 0, opening: true });
+  assert.deepEqual(nbaHomeSlate([], now), { next: null, rest: [], live: 0, week: 0, opening: false });
+});
+
+test("opening night follows the calendar, not how much history was loaded", () => {
+  // 20:00Z Oct 20 is opening night in New York; a game on Oct 22 is not, even with no past games loaded.
+  assert.equal(nbaHomeSlate([game("a", 3)], now).opening, true);
+  assert.equal(nbaHomeSlate([game("later", 48)], now).opening, false);
+  assert.equal(nbaHomeSlate([game("late-et", 7)], now).opening, true); // 03:00Z Oct 21 is still Oct 20 in ET
+});
+
+test("a TBD tip-off time is a placeholder: never live until ESPN says so", () => {
+  const tbd = game("tbd", -1, { tipoff_tbd: true });
+  assert.equal(nbaIsLive(tbd, now), false);
+  const started = game("tbd-live", 1, { tipoff_tbd: true, status: "STATUS_IN_PROGRESS" });
+  assert.equal(nbaIsLive(started, now), true);
+  const slate = nbaHomeSlate([started, game("next", 3)], now);
+  assert.deepEqual([slate.next?.id, slate.rest.map((g) => g.id)], ["tbd-live", ["next"]]);
 });

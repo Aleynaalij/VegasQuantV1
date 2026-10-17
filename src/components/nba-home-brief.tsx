@@ -115,11 +115,19 @@ export default function NbaHomeBrief() {
                   : `${nbaWhen(next.tipoff, { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} ET`}
                 {next.venue ? ` · ${next.venue}` : ""}
               </span>
-              <KickoffCountdown
-                kickoff={next.tipoff}
-                label="Time to tip-off"
-                liveLabel="Tipped off"
-              />
+              {next.tipoff_tbd ? (
+                isLive ? (
+                  <span className="vq-countdown live">
+                    <i aria-hidden="true" /> Tipped off
+                  </span>
+                ) : null
+              ) : (
+                <KickoffCountdown
+                  kickoff={next.tipoff}
+                  label="Time to tip-off"
+                  liveLabel="Tipped off"
+                />
+              )}
             </div>
             <div className="vq-hero-actions">
               <a className="vq-btn" href="#nba-slate">
@@ -170,11 +178,13 @@ export default function NbaHomeBrief() {
               <time dateTime={g.tipoff}>
                 {nbaIsLive(g, now)
                   ? "Live"
-                  : nbaWhen(g.tipoff, {
-                      weekday: "short",
-                      hour: "numeric",
-                      minute: "2-digit",
-                    })}
+                  : g.tipoff_tbd
+                    ? `${nbaWhen(g.tipoff, { weekday: "short" })} · TBD`
+                    : nbaWhen(g.tipoff, {
+                        weekday: "short",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
               </time>
             </a>
           ))}

@@ -21,6 +21,8 @@ const DONE = new Set([
   "STATUS_SUSPENDED",
 ]);
 const HOUR = 3600000;
+/** 2026-27 regular-season opening night, as formatted by nbaWhen (MM/DD/YYYY, Eastern). */
+export const NBA_OPENING_NIGHT = "10/20/2026";
 
 /** ESPN logo file name: the lowercase ESPN abbreviation ("NY" -> "ny", "UTAH" -> "utah"). */
 export function nbaLogoCode(abbreviation: string | null) {
@@ -36,19 +38,30 @@ export function nbaNickname(team: string) {
 }
 
 /**
- * Started and not final. A game past tip-off still marked scheduled counts too (the feed refreshes every
- * 15 minutes); a stale status never keeps a game "live" past 4 hours.
+ * Started and not final. A game past a confirmed tip-off still marked scheduled counts too (the feed
+ * refreshes every 15 minutes); with tip-off TBD the stored time is a placeholder, so only ESPN's own
+ * in-progress status counts. A stale status never keeps a game "live" past 4 hours.
  */
 export function nbaIsLive(g: NbaHomeGame, now: number) {
   const tip = Date.parse(g.tipoff);
-  return !DONE.has(g.status || "") && tip <= now && now - tip < 4 * HOUR;
+  const status = g.status || "";
+  if (DONE.has(status) || tip > now + 4 * HOUR || now - tip >= 4 * HOUR)
+    return false;
+  return status !== "STATUS_SCHEDULED"
+    ? tip <= now || g.tipoff_tbd
+    : !g.tipoff_tbd && tip <= now;
 }
 
 /**
  * Regular-season games for the home hero: live games first, then upcoming within a week.
- * `opening` is true while no regular-season game has tipped off yet.
+ * `opening` is true when the lead game is on opening night (an Eastern date), however few past
+ * games the caller loaded.
  */
-export function nbaHomeSlate(games: NbaHomeGame[], now: number) {
+export function nbaHomeSlate(
+  games: NbaHomeGame[],
+  now: number,
+  openingNight = NBA_OPENING_NIGHT,
+) {
   const regular = games.filter(
     (g) => g.season_type === 2 && Number.isFinite(Date.parse(g.tipoff)),
   );
@@ -56,6 +69,7 @@ export function nbaHomeSlate(games: NbaHomeGame[], now: number) {
   const upcoming = regular
     .filter(
       (g) =>
+        !live.includes(g) &&
         Date.parse(g.tipoff) > now &&
         Date.parse(g.tipoff) <= now + 7 * 24 * HOUR &&
         !DONE.has(g.status || ""),
@@ -65,9 +79,16 @@ export function nbaHomeSlate(games: NbaHomeGame[], now: number) {
     ...live.sort((a, b) => Date.parse(a.tipoff) - Date.parse(b.tipoff)),
     ...upcoming,
   ];
-  const opening = !regular.some((g) => Date.parse(g.tipoff) <= now);
+  const next = ordered[0] ?? null;
+  const opening = next
+    ? nbaWhen(next.tipoff, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      }) === openingNight
+    : false;
   return {
-    next: ordered[0] ?? null,
+    next,
     rest: ordered.slice(1, 4),
     live: live.length,
     week: upcoming.length,
