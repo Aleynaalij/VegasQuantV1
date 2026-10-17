@@ -67,13 +67,24 @@ class HostedScanTests(unittest.TestCase):
         fakes = {"scan": types.SimpleNamespace(scan=fake_scan), "engine": types.SimpleNamespace(normalize=lambda d: d)}
         with mock.patch.dict(sys.modules, fakes):
             out = h.run(db, now_fn=lambda: NOW, fetch=fetch)
-        self.assertEqual(out, {"scanned": True, "games": 1, "coverage": {"cards": 0, "priced": 0, "unavailable": 0},
+        self.assertEqual(out, {"scanned": True, "games": 1, "coverage": {"cards": 0, "priced": 0, "unavailable": 0}, "uploaded_cards": 0,
                                "recorded_forecasts": 2, "skipped_unverifiable_or_stale": 1, "replayed": False})
         self.assertEqual(captured["rows"], 2)  # 2025 and 2026 logs
         path, body = db.calls[-1]
         self.assertEqual(body["p_slate"], [{"id": "g1", "kickoff": "2026-10-18T17:00:00+00:00"}])
         self.assertEqual([s["file"] for s in body["p_scan"]["input_sources"]], ["stats_player_week_2025.csv", "stats_player_week_2026.csv"])
         self.assertTrue(all(len(s["sha256"]) == 64 and s["source_url"].startswith("https://github.com/nflverse/") for s in body["p_scan"]["input_sources"]))
+
+    def test_upload_keeps_fanduel_priced_cards_and_summarizes_the_rest(self):
+        fd = dict(player="A", quote=dict(sportsbook="FanDuel"), research_probability=0.7, blockers=["Quote older than 15 minutes"])
+        dk = dict(player="B", quote=dict(sportsbook="DraftKings"), research_probability=0.6, blockers=["Quote older than 15 minutes"])
+        unpriced = dict(player="C", research_probability=None, blockers=["No verified exact-player prop quote"])
+        result = dict(as_of="t", cards=[fd, dk, unpriced], coverage=dict(cards=3, priced=2, unavailable=1))
+        p = h.journal_payload(result)
+        self.assertEqual(p["cards"], [fd])
+        self.assertEqual(p["coverage"], result["coverage"])
+        self.assertEqual(p["blocker_counts"], {"No verified exact-player prop quote": 1, "Quote older than 15 minutes": 2})
+        self.assertEqual(p["card_summary"], {"scanned": 3, "uploaded_fanduel_priced": 1})
 
 if __name__ == "__main__":
     unittest.main()
