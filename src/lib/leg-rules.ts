@@ -113,3 +113,16 @@ export const bestPrices = (prices: BookPrice[]) =>
   [...prices]
     .filter((p) => Number.isFinite(p.price) && Math.abs(p.price) >= 100)
     .sort((a, b) => payout(b.price) - payout(a.price) || a.book.localeCompare(b.book));
+
+/** Points a recommended leg's recent clear rate must beat its price's break-even by. */
+export const STAMP_EDGE = 15;
+/**
+ * The Vegas Quant stamp: a leg that passes every automatic rule (so it has 5+ games of form and its
+ * price has not moved 15 cents against it) and whose recent clear rate beats the price's break-even
+ * by at least STAMP_EDGE points. Judged at the published price, never a later quote.
+ */
+export function stamped(l: RuleInput): boolean {
+  if (!validPrice(l.price) || !l.form || l.form.sample < 5) return false;
+  if (verdict(checkLeg(l)) !== "pass") return false;
+  return (l.form.cleared / l.form.sample) * 100 - breakEven(l.price) >= STAMP_EDGE;
+}

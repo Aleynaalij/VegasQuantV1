@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { bestPrices, breakEven, checkLeg, formLine, statUnit, verdict, type BookPrice, type LegForm } from "@/lib/leg-rules";
+import { bestPrices, breakEven, checkLeg, formLine, stamped, statUnit, verdict, type BookPrice, type LegForm } from "@/lib/leg-rules";
 
 type Price = { first: number; last: number };
 /** Latest prospective shadow-model forecast for a leg (administrators only). */
@@ -86,6 +86,7 @@ export default function LegFormLine({
   market,
   matchup,
   pickOfDay,
+  settled = false,
 }: {
   legKey: string;
   data: FormData;
@@ -93,6 +94,8 @@ export default function LegFormLine({
   market: string;
   matchup?: string;
   pickOfDay?: boolean;
+  /** A graded leg keeps its result, never a stamp. */
+  settled?: boolean;
 }) {
   const form = data.forms[legKey],
     tracked = data.prices[legKey],
@@ -104,8 +107,10 @@ export default function LegFormLine({
   const rate = form ? (form.cleared / form.sample) * 100 : null;
   const tone = rate === null || be === null || form!.sample < 5 ? "" : rate >= be + 5 ? "good" : "bad";
   const checks = data.admin ? checkLeg({ price: published, lastPrice: tracked?.last, form, market, matchup, pickOfDay }) : [];
+  const approved = !settled && stamped({ price: published, lastPrice: tracked?.last, form, market, matchup, pickOfDay });
   return (
     <div className={`leg-form ${tone}`}>
+      {approved && <VqStamp />}
       {form && (
         <p>
           <strong>{formLine(form, statUnit(market))}</strong>
@@ -151,5 +156,19 @@ export default function LegFormLine({
         </details>
       )}
     </div>
+  );
+}
+
+/** The small stamp of approval on a recommended leg (see `stamped` in lib/leg-rules). */
+export function VqStamp({ compact = false }: { compact?: boolean }) {
+  return (
+    <span
+      className={`vq-stamp${compact ? " compact" : ""}`}
+      title="Vegas Quant approved: passes every rule and recent form beats the price by 15+ points"
+      aria-label="Vegas Quant approved"
+    >
+      <span aria-hidden="true">✓</span>
+      {!compact && <>VQ APPROVED</>}
+    </span>
   );
 }

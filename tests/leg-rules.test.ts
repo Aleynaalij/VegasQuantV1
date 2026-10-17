@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { breakEven, checkLeg, formLine, verdict } from "../src/lib/leg-rules";
+import { breakEven, checkLeg, formLine, stamped, verdict } from "../src/lib/leg-rules";
 
 const status = (c: ReturnType<typeof checkLeg>, id: string) => c.find((x) => x.id === id)?.status;
 
@@ -64,4 +64,21 @@ test("the record splits by rule verdict, using each pick's form as of its game",
   ]);
   const g = gatedRecords(legs, new Map(), forms);
   assert.deepEqual([g.pass.wins, g.pass.losses, g.fail.wins, g.fail.losses, g.unknown.wins], [1, 0, 0, 1, 1]);
+});
+
+test("the stamp of approval needs every rule passed and form 15+ points over break-even", () => {
+  const form = (cleared: number, sample = 5, position = "WR") => ({ cleared, sample, median: 70, position });
+  const market = "Full game · 60+ receiving yards";
+  // -200 needs 66.7%: 5/5 clears it by 33 points, 4/5 (80%) by only 13.
+  assert.equal(stamped({ price: -200, form: form(5), market }), true);
+  assert.equal(stamped({ price: -200, form: form(4), market }), false);
+  // 4/5 at -150 (60% needed) is +20: stamped.
+  assert.equal(stamped({ price: -150, form: form(4), market }), true);
+  // Any failed rule removes it: a 15-cent move against, heavy chalk, too few games, no price.
+  assert.equal(stamped({ price: -200, lastPrice: -170, form: form(5), market }), false);
+  assert.equal(stamped({ price: -200, lastPrice: -230, form: form(5), market }), true); // moved toward the pick
+  assert.equal(stamped({ price: -550, form: form(5), market }), false);
+  assert.equal(stamped({ price: -200, form: form(4, 4), market }), false);
+  assert.equal(stamped({ price: null, form: form(5), market }), false);
+  assert.equal(stamped({ price: -200, form: null, market }), false);
 });

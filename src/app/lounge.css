@@ -593,3 +593,7 @@ html[data-theme="dark"] body .topic-heading h2 { font-family: var(--font-board),
 .leg-books { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 6px 0 0; font-size: 12px; color: var(--faint); }
 .leg-books b { color: var(--muted); font-weight: 600; }
 .leg-books b.best { color: var(--gold-hi); }
+/* Stamp of approval on recommended legs: passes every rule, form beats the price by 15+ points. */
+.vq-stamp { display: inline-flex; align-items: center; gap: 5px; margin: 0 0 8px; padding: 3px 9px 3px 6px; border: 1.5px solid var(--gold); border-radius: 999px; color: var(--gold); font-size: 10.5px; font-weight: 800; letter-spacing: .08em; transform: rotate(-3deg); box-shadow: 0 0 0 2px rgba(0,0,0,.25) inset; }
+.vq-stamp > span { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: var(--gold); color: #111; font-size: 10px; }
+.vq-stamp.compact { margin: 0 0 0 6px; padding: 0; border: 0; box-shadow: none; transform: none; vertical-align: middle; }
