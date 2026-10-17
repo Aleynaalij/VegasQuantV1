@@ -74,6 +74,8 @@ const isWinPost = (p: Post) =>
 export default function ResearchFeed() {
   const searchParams = useSearchParams();
   const routeView = searchParams.get("view");
+  const routeRelease = /^[a-f0-9-]{36}$/i.test(searchParams.get("release") || "")
+    ? searchParams.get("release")! : "";
   const [posts, setPosts] = useState<Post[]>([]),
     [access, setAccess] = useState<Access>(noAccess),
     [loading, setLoading] = useState(true),
@@ -135,7 +137,7 @@ export default function ResearchFeed() {
               }
         }
         // A link from Home may point past the first page: fetch that release too.
-        const wanted = window.location.hash.match(/^#release-([\w-]+)$/)?.[1];
+        const wanted = routeRelease || window.location.hash.match(/^#release-([\w-]+)$/)?.[1];
         if (wanted && !list.some((r) => r.id === wanted)) {
           const one = await supabase
             .from("candidate_releases")
@@ -208,7 +210,7 @@ export default function ResearchFeed() {
       clearInterval(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filter, limit, zoneView]);
+  }, [filter, limit, zoneView, routeRelease]);
   async function publish(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaving(true);
@@ -245,8 +247,9 @@ export default function ResearchFeed() {
   const timeline = feedTimeline(posts, releases, edgeReleases, filter);
   useEffect(() => {
     const hash = window.location.hash.match(/^#release-([\w-]+)$/);
-    if (hash) setOpenRelease(hash[1]);
-  }, []);
+    setOpenRelease(routeRelease || hash?.[1] || "");
+    scrolledTo.current = "";
+  }, [routeRelease, routeView]);
   const scrolledTo = useRef("");
   useEffect(() => {
     if (!openRelease || loading || scrolledTo.current === openRelease) return;
@@ -279,7 +282,7 @@ export default function ResearchFeed() {
     setFilter(view === "injury" ? "Injury watch" : "All");
     setLimit(20);
   }, [routeView]);
-  const visibleTimeline =
+  const filteredTimeline =
     zoneView === "Legs"
       ? timeline.filter(
           (item) =>
@@ -298,6 +301,12 @@ export default function ResearchFeed() {
                   BILLS_WIN_IDS.includes(item.value.id)),
             )
           : timeline;
+  // Direct card links bypass archive depth without changing publication history.
+  const visibleTimeline = routeRelease
+    ? [...filteredTimeline].sort((a, b) =>
+        (b.kind === "selection" && b.value.id === routeRelease ? 1 : 0) -
+        (a.kind === "selection" && a.value.id === routeRelease ? 1 : 0))
+    : filteredTimeline;
   return (
     <Shell active="feed">
       <ZoneNav active={zoneView} />
@@ -468,6 +477,7 @@ export default function ResearchFeed() {
                     // Parlays show their card straight away; no collapsed drop header.
                     <div
                       className="zone-parlay"
+                      style={{ scrollMarginTop: 140 }}
                       key={item.key}
                       id={`release-${item.value.id}`}
                     >
