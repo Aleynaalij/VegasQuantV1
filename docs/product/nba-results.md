@@ -50,5 +50,8 @@ play; `PENDING` until the game is recorded; `REVIEW` when the game is in `CONFLI
 name does not match exactly one box score line. Names match after folding case and accents and
 dropping punctuation and Jr/Sr/II–IV suffixes.
 
-**Not yet:** NBA research board (step 3), NBA model and scorecard (step 4), a results view in the
-app, and grading of stored NBA price observations.
+Since migration `20261018080000_nba_shadow.sql`, player rows also store `starter` and `position`
+(rows recorded before it have nulls); the NBA shadow model uses them as live inputs.
+
+**Not yet:** NBA research board (step 3) and a results view in the app. The NBA shadow model and
+scorecard (step 4) are in [research/nba/MODEL.md](../../research/nba/MODEL.md).

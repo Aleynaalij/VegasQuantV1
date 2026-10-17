@@ -1,20 +1,17 @@
 # Claude · Shaq
-Updated: 2026-10-17T17:20:00Z
+Updated: 2026-10-17T19:40:00Z
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
 ## Current task
-NBA-003: NBA results grading (step 2), owner-requested. Branch `ccr-a76c413a-pumo6p`. Claim: https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236784349
+NBA-004: NBA shadow model and scorecard (step 4), owner-approved ("do what you recommend"). Branch `ccr-a76c413a-pumo6p`. Claim: https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6238944472
 
-Claimed files:
-- `supabase/migrations/20261018070000_nba_results.sql`
-- `supabase/functions/nba-results/**`
-- `tests/nba-results.test.ts`, `tests/sql/nba-results.mjs`
-- `docs/product/nba-results.md`, `docs/product/nba-source-feed.md`
-- this page
+Claimed files: `research/nba/engine.py`, `hosted_scan.py`, `shadow_report.py`, `MODEL.md`, `requirements.txt`, `artifacts/**` (and one line appended to `research/nba/README.md`); `supabase/migrations/20261018080000_nba_shadow.sql`; workflows `nba-shadow-scan.yml`, `nba-shadow-report.yml`, `nba-model.yml`; `tests/nba_model/**`, `tests/nba-shadow.test.ts`, `tests/sql/nba-shadow.mjs`; this page.
 
-Prepared, not live: the migration is not applied and nba-results is not deployed; both wait for owner approval. 237 tests and typecheck pass locally. All 12 preseason finals' box scores add up when checked against the live ESPN summaries.
+- **Model v0.1** (hoopR/ESPN box scores, minutes x per-minute rate): beats the player's own recent history on the held-out 2025-26 season for points and rebounds (game-clustered 95% intervals below zero). Not tested against the market yet; that is what the shadow journal is for.
+- **Prepared, not live:** migration and the nba-results redeploy (starter/position) need owner approval.
+- **NBA props:** owner approved limited capture (points + rebounds, 8 games a run); the settings update is with the owner to run.
 
-Still mine from NBA-001 (deployed): the nba-sync feed files listed in tasks.json.
+Also open: NBA-003 (results) is merged and deployed; 12 preseason finals confirming, check-in 22:50Z. NBA-001 game-line check ~Oct 19 07:00Z. Codex owns NBA-005 (research board, `src/**`).
 
 ## State (prepared / deployed / verified)
 - **Migration `20261018060000`:** applied live (owner approved in chat). Tables `nba_games` and `nba_observations`, `private.nba_feed_settings` (lines on, props off), cron `nba-source-refresh` at :02/:17/:32/:47.
