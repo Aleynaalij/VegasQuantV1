@@ -4,8 +4,10 @@ The NFL selection gate blocks every NFL pick until a priced model is approved (R
 accepts a pick inside the two-hour lock window (R7). Nothing published automatically, so the legs
 feed sat empty between manual drops. The research board fills it with a separate, labeled tier.
 
-**What publishes.** `.github/workflows/research-board.yml` runs `scripts/research-board/run.ts` at
-:20 past every third hour.
+**What publishes.** `.github/workflows/research-board.yml` runs `scripts/research-board/run.ts` every
+hour at :37. A scheduled run publishes only when no board has gone out for 2.5 hours, so the board
+refreshes about every three hours, and a run GitHub delays or drops is retried the next hour.
+Manual runs always publish.
 - **Candidate legs.** It reads the week's upcoming NFL games, the latest prop snapshots from all six
   books (observed within the last seven hours), and the nflverse weekly player stats. It then keeps
   the FanDuel "N+" over lines that:

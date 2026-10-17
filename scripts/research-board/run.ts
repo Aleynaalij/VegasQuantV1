@@ -30,6 +30,19 @@ async function main() {
   const limit = arg("limit", 8, 60), perGame = arg("per-game", 3, 12);
   const db = createClient(url, key, { auth: { persistSession: false } });
   const now = Date.now();
+  // GitHub delays or drops scheduled runs under load, so the workflow tries hourly and a scheduled
+  // run only publishes when no board has gone out for 2.5 hours: a dropped run is retried next hour.
+  if (process.argv.includes("--scheduled")) {
+    const last = await db
+      .from("candidate_releases")
+      .select("created_at")
+      .like("title", "Research board ·%")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (last.error) throw Error("Latest board query failed");
+    const at = Date.parse(last.data?.[0]?.created_at || "");
+    if (Number.isFinite(at) && now - at < 150 * 60000) return report({ skipped_recent_board: true });
+  }
   const games = await db
     .from("games")
     .select("id,provider_id,away_team,home_team,away_abbreviation,home_abbreviation,kickoff,season,week,sport")
