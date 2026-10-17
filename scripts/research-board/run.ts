@@ -3,6 +3,7 @@
 // The repository is public, so it prints counts only: no players, prices or keys.
 //
 //   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... npx tsx scripts/research-board/run.ts [--dry-run]
+//     [--limit=N] [--per-game=N]   (manual runs only: raise the board caps, at most 60 and 12)
 import { createClient } from "@supabase/supabase-js";
 import { csvRows } from "../../supabase/functions/result-sync/grade.ts";
 import type { Observation } from "../../supabase/functions/result-sync/prices.ts";
@@ -21,6 +22,12 @@ async function main() {
     return;
   }
   const dry = process.argv.includes("--dry-run");
+  // A release holds at most 12 candidates; the per-run cap keeps one run from flooding the feed.
+  const arg = (name: string, fallback: number, max: number) => {
+    const v = Number(process.argv.find((a) => a.startsWith(`--${name}=`))?.split("=")[1]);
+    return Number.isInteger(v) && v > 0 ? Math.min(v, max) : fallback;
+  };
+  const limit = arg("limit", 8, 60), perGame = arg("per-game", 3, 12);
   const db = createClient(url, key, { auth: { persistSession: false } });
   const now = Date.now();
   const games = await db
@@ -72,7 +79,7 @@ async function main() {
   );
 
   const legs = slate.flatMap((g) => gameLegs(g, observations, rows, now));
-  const board = pickBoard(legs, seen);
+  const board = pickBoard(legs, seen, limit, perGame);
   // Research boards bind each leg to its own game explicitly; the stage only satisfies the release's
   // foreign key. Use the latest release's stage, or any challenge stage before the first release.
   const latest = await db.from("candidate_releases").select("stage_id").order("created_at", { ascending: false }).limit(1);
