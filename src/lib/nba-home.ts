@@ -31,6 +31,12 @@ export function nbaLogoCode(abbreviation: string | null) {
   return /^[a-z]{2,4}$/.test(code) ? code : null;
 }
 
+/** The schedule's team name for a book's spelling (same aliases as nba-sync), so a side matches nba_games. */
+export function nbaCanonicalTeam(name: string) {
+  const t = name.trim();
+  return t === "LA Clippers" ? "Los Angeles Clippers" : t;
+}
+
 /** "Portland Trail Blazers" -> "Trail Blazers"; otherwise the last word ("Boston Celtics" -> "Celtics"). */
 export function nbaNickname(team: string) {
   return /Trail Blazers$/.test(team)
