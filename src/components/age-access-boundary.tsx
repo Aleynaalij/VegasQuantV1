@@ -62,9 +62,27 @@ export default function AgeAccessBoundary({
       }
     }
     void check();
+    // Same account: re-check quietly, keeping the app mounted. The decision on screen changes only
+    // if the answer changed (for example a new age-policy version), never to "Checking…".
+    let lastQuiet = 0;
+    async function quietRecheck() {
+      if (Date.now() - lastQuiet < 60000) return;
+      lastQuiet = Date.now();
+      const current = generation.current;
+      try {
+        const status = await supabase.rpc("age_verification_status");
+        if (!live || current !== generation.current || status.error) return;
+        setMode(status.data.required && !status.data.verified ? "required" : "allowed");
+      } catch {
+        // Keep the current decision on a brief connection problem.
+      }
+    }
     const listener = supabase.auth.onAuthStateChange((_event, session) => {
-      // Same account as the decision on screen: nothing changed, keep the app mounted.
-      if ((session?.user.id ?? null) === decidedFor.current) return;
+      const id = session?.user.id ?? null;
+      if (id === decidedFor.current) {
+        if (id) void quietRecheck();
+        return;
+      }
       generation.current++;
       decidedFor.current = undefined;
       setMode("checking");

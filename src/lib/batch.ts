@@ -24,14 +24,16 @@ export function batchLoader<T>(
   const inflight = new Map<string, Promise<T | undefined>>();
   let queue: { key: string; resolve: (v: T | undefined) => void; reject: (e: unknown) => void }[] = [];
   let scheduled = false;
-  let generation = 0;
 
   async function flush() {
     scheduled = false;
     const batch = queue;
     queue = [];
-    const gen = generation;
     const keys = [...new Set(batch.map((q) => q.key))];
+    // The request each key belongs to now; invalidate() detaches it, so a stale answer is never
+    // cached and never clears a newer request for the same key.
+    const mine = new Map(keys.map((k) => [k, inflight.get(k)]));
+    const current = (k: string) => inflight.get(k) === mine.get(k);
     const found = new Map<string, T>();
     try {
       for (let i = 0; i < keys.length; i += chunk) {
@@ -39,15 +41,15 @@ export function batchLoader<T>(
         for (const [k, v] of part) found.set(k, v);
       }
     } catch (e) {
-      for (const k of keys) inflight.delete(k);
+      for (const k of keys) if (current(k)) inflight.delete(k);
       for (const q of batch) q.reject(e);
       return;
     }
     const now = Date.now();
     for (const k of keys) {
+      if (!current(k)) continue;
       inflight.delete(k);
-      // A sign-out or write during the fetch invalidated these keys: don't cache stale answers.
-      if (gen === generation) cache.set(k, { value: found.get(k), at: now });
+      cache.set(k, { value: found.get(k), at: now });
     }
     for (const q of batch) q.resolve(found.get(q.key));
   }
@@ -81,9 +83,16 @@ export function batchLoader<T>(
     },
     peek: (key) => fresh(key)?.value,
     invalidate(keys) {
-      generation++;
-      if (!keys) cache.clear();
-      else for (const k of keys) cache.delete(k);
+      // Also detach in-flight requests: a load after a write must not join a request that
+      // started before it (its answer is not cached either, see `gen` in flush).
+      if (!keys) {
+        cache.clear();
+        inflight.clear();
+      } else
+        for (const k of keys) {
+          cache.delete(k);
+          inflight.delete(k);
+        }
     },
   };
 }
