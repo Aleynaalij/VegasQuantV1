@@ -1,19 +1,18 @@
 # Codex · Kobe
-Updated: 2026-10-17T15:06:43Z
+Updated: 2026-10-17, NBA-002 handoff
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
 ## Current task
-COORD-001: establish the shared protocol, mailbox and onboarding prompt at the owner's request.
-Claimed files: `docs/agents/README.md`, `docs/agents/CODEX.md`, initial placeholder `docs/agents/CLAUDE.md`, `docs/agents/CLAUDE-PROMPT.md`.
-After bootstrap, only Claude edits its status page.
+NBA-002: read-only NBA schedule and source-freshness UI, coordinated with Claude NBA-001.
+Branch: codex/nba-readonly-board. Base: 60c7ad8.
+Claimed files: src/components/nba-desk.tsx; src/components/nba-game-board.tsx; src/lib/nba-board.ts; src/app/nba-board.css; tests/nba-board.test.ts; scripts/ui-smoke/nba-board.mjs; this status file.
 
-## Verified handoff
-PR #64 is open: https://github.com/Aleynaalij/VegasQuantV1/pull/64
-Reviewed head: `6ab4128889dd528e78d3d216557ac64ffe434f1b`.
-Independently ran six NBA normalizer/cadence tests and the SQL database-contract test: all seven passed.
-Live at 2026-10-17T14:57:34Z: NBA tables existed, nba-sync v1 ACTIVE, 15-minute cron active; zero NBA games/observations/feed runs at that check. A newly deployed collector without a first run is not a proven failure. Lines enabled; props disabled.
-NBA UI on main still uses preparation placeholders.
+## Implemented
+NBA Home and Research lab use public nba_games for a seven-day board and recent finals. Separate preseason/regular/postseason labels; no scheduled 0–0 results or invented live status. Source timestamps and snapshot age remain visible. Membership-gated injury and game-line observations load only when opened; queries are bounded and age/member restrictions remain in the database. Empty/error states show missing data instead of fixtures. No new RPC or migration, no picks, grading, feed-credit changes or official/NFL changes.
 
-## Next
-Await Claude ACK and current claims in #65. Proposed next task, not started: verify ingestion and build read-only NBA schedule/freshness UI in independently claimed files. No NBA implementation or deployment performed as part of coordination setup.
-No persistent background check runs after this session ends.
+## Verification
+220 tests passed; six new NBA board data-contract tests. Production build and TypeScript passed. Phone 390px and desktop 1280px browser fixture tests passed: no horizontal overflow; lazy detail requests; no member details for signed-out access; scores only for started/final games; missing provider timestamps remain unknown; empty and failed refresh states. Synthetic browser fixtures are not hosted game data.
+
+## Integration and next action
+Hand off this PR to Claude for peer review. Ingestion remains Claude’s claimed work in PR #64; no edits to those files. At the last live check NBA tables were still empty following the initial ESPN 400. Re-check actual ingestion before claiming real NBA rows or live provider success. The frontend can show the verified empty state while ingestion is repaired. Prefer merging the source-feed PR before this UI PR for repository reproducibility.
+After this task ends, no background polling is running; next active turn must read issue #65 and latest main again.

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import NbaGameBoard from "./nba-game-board";
 import {
   Activity,
   BookMarked,
@@ -14,9 +15,9 @@ import { Empty, Panel, Shell } from "./ui";
 type NbaView = "home" | "game" | "feed" | "history";
 const views = {
   home: {
-    title: "The NBA desk is taking shape.",
+    title: "The NBA research board.",
     intro:
-      "A dedicated home for basketball research. We’re building the foundation before regular-season selections begin.",
+      "Schedules, scores and sourced market research. Regular-season selections wait for verified research.",
   },
   game: {
     title: "NBA research lab",
@@ -84,6 +85,7 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
             </span>
           </div>
         </section>
+        {(view === "home" || view === "game") && <NbaGameBoard />}
         {view === "home" ? (
           <>
             <div className="nba-destinations">
@@ -122,10 +124,11 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
                   </span>
                 </p>
                 <p>
-                  <strong>Data connections · Next</strong>
+                  <strong>Data connections · Verification</strong>
                   <span>
-                    Schedules, player logs, injuries, rotations and FanDuel
-                    props still need to be connected and verified.
+                    Schedules, scores, injuries and sportsbook snapshots are
+                    being verified. Player logs and rotation research remain
+                    ahead.
                   </span>
                 </p>
                 <p>
@@ -149,15 +152,6 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
                 </article>
               ))}
             </div>
-          </Panel>
-        ) : null}
-        {view === "game" ? (
-          <Panel title="Game board">
-            <Empty title="Schedule connection comes next">
-              Verified NBA games and player data will appear here when
-              connected. No demonstration games or player projections are being
-              presented as research.
-            </Empty>
           </Panel>
         ) : null}
         {view === "feed" ? (
