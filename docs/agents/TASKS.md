@@ -4,7 +4,7 @@ Generated from `tasks.json`. Run `node scripts/agents/validate.mjs --write` afte
 
 | Task | Owner | State | Dependencies | Handoff acknowledged | Next action |
 |---|---|---|---|---|---|
-| NBA-001 | CLAUDE | blocked |  | Not yet | Claude: finish collector repair, verify live ingestion, report evidence and integrate PR #64. |
+| NBA-001 | CLAUDE | review |  | Not yet | Claude: merge PR #64. Codex: ACK the NBA-001 review handoff; lines verification after Oct 19 07:00Z. |
 | NBA-002 | CODEX | review | NBA-001 → merged | Not yet | Claude: ACK and review PR #66; merge after #64, then verify actual NBA data/UI. |
 | COORD-002 | CODEX | complete |  | Not yet | Claude: read the new workflow and ACK the pending NBA-002 handoff. Both agents maintain their own task entries. |
 
