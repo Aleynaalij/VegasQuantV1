@@ -166,6 +166,22 @@ class Report(unittest.TestCase):
         self.assertEqual(c["blocker_counts"]["stale quotes"], 1)
         self.assertEqual(c["blocker_counts"]["No verified exact-player prop quote"], 206)
 
+    def test_correlated_alternate_lines_do_not_count_as_extra_observations(self):
+        # Plenty of other games satisfy the scope floors, but the 40.5-59.5 slice is 400 alternate
+        # quotes from 4 players in 2 games: far below its own player-game and game floors.
+        others = [dict(r, line=70.5, yards=80 if r["yards"] == 60 else 10) for r in self.sample(0.8, 1)]
+        rng, crowd = random.Random(3), []
+        for i in range(400):
+            crowd.append(row(1000 + i, f"x{i % 2}", player=f"q{i % 4}", line=40.5 + (i % 9),
+                             yards=60 if rng.random() < 0.8 else 10, recorded=f"2026-10-18T12:{i % 60:02d}:00Z"))
+        r = e.build_report(others + crowd, "m")["scopes"]["rushing:RB"]
+        mid = r["slices"][1]
+        self.assertEqual(mid["decided_effective"], {"player_games": 4, "games": 2})
+        self.assertFalse(mid["criteria"]["review_floors"])
+        self.assertFalse(mid["criteria"]["no_vig_coverage"])
+        self.assertFalse(mid["criteria"]["return_sample"])
+        self.assertNotIn([40.5, 59.5], r["eligible_slices"])
+
     def test_eligible_cohort_is_price_band_overs_with_edge(self):
         rows = [row(1, "g1", odds=-300), row(2, "g1", odds=-140), row(3, "g1", direction="under"),
                 row(4, "g1", edge=2.0), row(5, "g1")]

@@ -164,6 +164,13 @@ SUPPORTED_SCOPES = {"rushing:RB", "receiving:WR"}
 LINE_SLICES = [(20.5, 39.5), (40.5, 59.5), (60.5, 79.5), (80.5, 100.5)]
 
 
+def effective(pairs):
+    """Distinct player-games and games: alternate lines for one player in one game are correlated
+    and must not multiply the effective sample size."""
+    return {"player_games": len({(r["player_id"], r["game_id"]) for r, _ in pairs}),
+            "games": len({r["game_id"] for r, _ in pairs})}
+
+
 def metrics(settled, rng):
     """Calibration, historical-baseline and no-vig comparisons and flat-unit returns for a set of
     (row, settlement) pairs."""
@@ -197,16 +204,18 @@ def metrics(settled, rng):
     flat = [u for v in units.values() for u in v]
     clv = [implied(float(r["closing_odds"])) - implied(float(r["odds"])) for r, _ in eligible if r["closing_odds"] is not None]
     return {
-        "decided": len(decided),
+        "decided": len(decided), "decided_effective": effective(decided),
         "brier": {"model": mean([brier(p(r), s) for r, s in decided]),
                   "raw_price": mean([brier(implied(float(r["odds"])), s) for r, s in decided]),
                   "log_loss": mean([-math.log(min(max(p(r) if s == "win" else 1 - p(r), 1e-12), 1)) for r, s in decided])},
         "historical_baseline": {"paired": len(history_diffs), "model_minus_baseline_brier": mean(history_diffs),
                                 "ci95": clustered(versus_history, mean, rng)},
-        "no_vig": {"paired": len(diffs), "model_minus_no_vig_brier": mean(diffs), "ci95": clustered(paired, mean, rng)},
+        "no_vig": {"paired": len(diffs),
+                   "paired_effective": effective([(r, s) for r, s in decided if r["no_vig_probability"] is not None]),
+                   "model_minus_no_vig_brier": mean(diffs), "ci95": clustered(paired, mean, rng)},
         "reliability": reliability,
         "eligible_cohort": {"definition": f"over, price {BAND[0]} to {BAND[1]}, estimated edge >= {EDGE_PP}pp",
-                            "n": len(flat), "flat_unit_return": mean(flat), "ci95": clustered(units, mean, rng),
+                            "n": len(flat), "n_effective": effective(eligible), "flat_unit_return": mean(flat), "ci95": clustered(units, mean, rng),
                             "clv_coverage": len(clv), "mean_clv_probability": mean(clv)},
     }
 
@@ -227,12 +236,15 @@ def scope_report(scope, rows, rng):
         part = [(r, s) for r, s in settled if BAND[0] <= float(r["odds"]) <= BAND[1] and lo <= float(r["line"]) <= hi]
         m = metrics(part, rng)
         criteria = {
-            "review_floors": all(scope_floors.values()) and m["decided"] >= MIN_SLICE,
+            # A slice is the scope proposed for approval, so the protocol's floors apply to the slice
+            # itself, counted in distinct player-games and games, not in correlated quotes.
+            "review_floors": all(scope_floors.values()) and m["decided_effective"]["player_games"] >= max(MIN_SLICE, MIN_PLAYER_GAMES)
+                             and m["decided_effective"]["games"] >= MIN_GAMES,
             # Missing no-vig coverage blocks the claim: the paired comparison needs its own floor.
-            "no_vig_coverage": m["no_vig"]["paired"] >= MIN_SLICE,
+            "no_vig_coverage": m["no_vig"]["paired_effective"]["player_games"] >= MIN_SLICE,
             "beats_no_vig_brier": bool(m["no_vig"]["ci95"] and m["no_vig"]["ci95"][1] < 0),
             # A few winning selections cannot carry the return claim: the cohort needs its own floor.
-            "return_sample": m["eligible_cohort"]["n"] >= MIN_SLICE,
+            "return_sample": m["eligible_cohort"]["n_effective"]["player_games"] >= MIN_SLICE,
             "positive_return_lower_bound": bool(m["eligible_cohort"]["ci95"] and m["eligible_cohort"]["ci95"][0] > 0),
         }
         slices.append({"price": list(BAND), "lines": [lo, hi], **m, "criteria": criteria,
