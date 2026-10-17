@@ -114,3 +114,111 @@ export function nbaSource(value: string) {
     return null;
   }
 }
+
+export const nbaMarkets: Record<string, string> = {
+  h2h: "Moneyline",
+  spreads: "Spread",
+  totals: "Total",
+  player_points: "Points",
+  player_rebounds: "Rebounds",
+  player_assists: "Assists",
+  player_threes: "Threes",
+};
+const books = new Set([
+  "FanDuel",
+  "DraftKings",
+  "BetMGM",
+  "Caesars",
+  "BetRivers",
+  "Fanatics",
+]);
+export type NbaComparison = {
+  key: string;
+  market: string;
+  player: string;
+  side: string;
+  point: number | null;
+  quotes: {
+    book: string;
+    price: number;
+    observed_at: string | null;
+    recorded_at: string;
+    source: string;
+    fresh: boolean;
+  }[];
+  best: number | null;
+};
+const decimal = (n: number) => (n > 0 ? 1 + n / 100 : 1 + 100 / -n);
+/** Compare only identical market/player/side/line. Stale/unknown times never win. */
+export function nbaComparisons(
+  rows: NbaObservation[],
+  now: number,
+): NbaComparison[] {
+  const groups = new Map<string, NbaComparison>();
+  for (const r of latestNbaObservations(rows)) {
+    const market = String(r.payload.market || ""),
+      book = String(r.payload.book || "");
+    if (
+      !books.has(book) ||
+      !nbaMarkets[market] ||
+      !["odds", "prop"].includes(r.kind)
+    )
+      continue;
+    for (const raw of Array.isArray(r.payload.outcomes)
+      ? r.payload.outcomes
+      : []) {
+      if (!raw || typeof raw !== "object") continue;
+      const o = raw as Record<string, unknown>;
+      if (
+        typeof o.name !== "string" ||
+        typeof o.price !== "number" ||
+        nbaOdds(o.price) === "Price unknown"
+      )
+        continue;
+      const player =
+        r.kind === "prop" && typeof o.description === "string"
+          ? o.description.trim()
+          : "";
+      if (r.kind === "prop" && !player) continue;
+      const point =
+        typeof o.point === "number" && Number.isFinite(o.point)
+          ? o.point
+          : null;
+      if (market !== "h2h" && point === null) continue;
+      const key = JSON.stringify([r.game_id, market, player, o.name, point]);
+      const group = groups.get(key) || {
+        key,
+        market,
+        player,
+        side: o.name,
+        point,
+        quotes: [],
+        best: null,
+      };
+      const fresh =
+        nbaFreshness(r.observed_at, now, 15) === "Recent snapshot" &&
+        !!nbaSource(r.source);
+      group.quotes.push({
+        book,
+        price: o.price,
+        observed_at: r.observed_at,
+        recorded_at: r.recorded_at,
+        source: r.source,
+        fresh,
+      });
+      if (
+        fresh &&
+        (group.best === null || decimal(o.price) > decimal(group.best))
+      )
+        group.best = o.price;
+      groups.set(key, group);
+    }
+  }
+  return [...groups.values()].sort(
+    (a, b) =>
+      a.market.localeCompare(b.market) ||
+      a.player.localeCompare(b.player) ||
+      a.side.localeCompare(b.side) ||
+      (a.point || 0) - (b.point || 0),
+  );
+}
