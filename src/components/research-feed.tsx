@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowUpRight, Eye, Clock3, ChevronDown } from "lucide-react";
 import { Shell, Badge } from "./ui";
 import BrandMark from "./brand-mark";
@@ -68,6 +69,8 @@ const isWinPost = (p: Post) =>
   p.market_label.startsWith("zone-win:") ||
   (!!p.result_leg_key && p.result_details?.result === "WIN");
 export default function ResearchFeed() {
+  const searchParams = useSearchParams();
+  const routeView = searchParams.get("view");
   const [posts, setPosts] = useState<Post[]>([]),
     [access, setAccess] = useState<Access>(noAccess),
     [loading, setLoading] = useState(true),
@@ -258,7 +261,7 @@ export default function ResearchFeed() {
     scrolledTo.current = openRelease;
   });
   useEffect(() => {
-    const view = new URLSearchParams(window.location.search).get("view");
+    const view = routeView;
     setZoneView(
       view === "legs"
         ? "Legs"
@@ -271,7 +274,8 @@ export default function ResearchFeed() {
               : "Latest",
     );
     setFilter(view === "injury" ? "Injury watch" : "All");
-  }, []);
+    setLimit(20);
+  }, [routeView]);
   const visibleTimeline =
     zoneView === "Legs"
       ? timeline.filter(

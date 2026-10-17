@@ -1,3 +1,4 @@
+import Link from "next/link";
 export default function ZoneNav({ active = "Latest" }: { active?: string }) {
   return (
     <nav className="zone-views" aria-label="Zone views" data-swipe-tabs>
@@ -9,14 +10,14 @@ export default function ZoneNav({ active = "Latest" }: { active?: string }) {
         ["Games", "/matchups"],
         ["Injury watch", "/feed?view=injury"],
       ].map(([label, href]) => (
-        <a
+        <Link
           key={label}
           href={href}
           aria-current={active === label ? "page" : undefined}
           className={active === label ? "selected" : ""}
         >
           {label}
-        </a>
+        </Link>
       ))}
     </nav>
   );

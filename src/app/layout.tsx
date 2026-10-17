@@ -23,7 +23,6 @@ import ProfileSetupGate from "@/components/profile-setup-gate";
 import PhoneContactPrompt from "@/components/phone-contact-prompt";
 import Welcome from "@/components/welcome";
 import ThemePrompt from "@/components/theme-settings";
-import BrandOpening from "@/components/brand-opening";
 import DailyLuck from "@/components/daily-luck";
 import AgeAccessBoundary from "@/components/age-access-boundary";
 
@@ -86,7 +85,6 @@ export default function RootLayout({
           }}
         />
         <ThemePrompt />
-        <BrandOpening />
         <AgeAccessBoundary
           extras={
             <>

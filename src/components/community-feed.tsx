@@ -1,4 +1,5 @@
 "use client";
+import { useSearchParams } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -146,6 +147,9 @@ function Comments({
   );
 }
 export default function CommunityFeed() {
+  const searchParams = useSearchParams();
+  const routeSport = searchParams.get("sport");
+  const routePost = searchParams.get("post");
   const [uid, setUid] = useState<string | null>(null),
     [authReady, setAuthReady] = useState(false),
     [sport, setSport] = useState<"nfl" | "nba">("nfl"),
@@ -180,13 +184,15 @@ export default function CommunityFeed() {
     setPreview(url);
     return () => URL.revokeObjectURL(url);
   }, [photo]);
+  useEffect(() => {
+    setSport(routeSport === "nba" ? "nba" : "nfl");
+    setTargetPost(
+      routePost && /^[0-9a-f-]{36}$/i.test(routePost) ? routePost : null,
+    );
+  }, [routeSport, routePost]);
   const epoch = useRef(0);
   const sessionUid = useRef<string | null | undefined>(undefined);
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("sport") === "nba")
-      setSport("nba");
-    const target = new URLSearchParams(window.location.search).get("post");
-    if (target && /^[0-9a-f-]{36}$/i.test(target)) setTargetPost(target);
     let live = true;
     const update = (id: string | null) => {
       if (!live || sessionUid.current === id) return;

@@ -271,20 +271,20 @@ export function Shell({
           aria-label="Sport selection"
           data-swipe-tabs
         >
-          <a
+          <Link
             href={nflHref}
             aria-current={sport === "nfl" ? "page" : undefined}
             className={sport === "nfl" ? "selected" : ""}
           >
             NFL
-          </a>
-          <a
+          </Link>
+          <Link
             href={nbaHref}
             aria-current={sport === "nba" ? "page" : undefined}
             className={sport === "nba" ? "selected" : ""}
           >
             NBA
-          </a>
+          </Link>
           {active === "home" ? (
             <CommunityStories />
           ) : sport === "nba" ? (
