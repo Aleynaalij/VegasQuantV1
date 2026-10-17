@@ -4,6 +4,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import { noAccess, type Access } from "@/lib/membership";
+import { nbaCanonicalTeam } from "@/lib/nba-home";
 import {
   nbaComparisons,
   nbaMarkets,
@@ -620,7 +621,7 @@ function NbaObservedGrade({
       const r = await supabase.rpc("nba_grade", {
         p_game: game,
         p_market: market,
-        p_side: side,
+        p_side: nbaCanonicalTeam(side),
         p_point: point,
         p_player: player || null,
       });

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { nbaAwaiting, nbaHomeSlate, nbaIsLive, nbaLogoCode, nbaNickname, type NbaHomeGame } from "../src/lib/nba-home";
+import { nbaAwaiting, nbaCanonicalTeam, nbaHomeSlate, nbaIsLive, nbaLogoCode, nbaNickname, type NbaHomeGame } from "../src/lib/nba-home";
 
 const H = 3600000;
 const now = Date.parse("2026-10-20T20:00:00Z");
@@ -63,4 +63,10 @@ test("a TBD tip-off time is a placeholder: never live or awaiting until ESPN say
   assert.equal(nbaIsLive(started, now), true);
   const slate = nbaHomeSlate([started, game("next", 3)], now);
   assert.deepEqual([slate.next?.id, slate.rest.map((g) => g.id)], ["tbd-live", ["next"]]);
+});
+
+test("a book's team spelling grades against the schedule's name", () => {
+  assert.equal(nbaCanonicalTeam("LA Clippers"), "Los Angeles Clippers");
+  assert.equal(nbaCanonicalTeam(" Boston Celtics "), "Boston Celtics");
+  assert.equal(nbaCanonicalTeam("Over"), "Over");
 });
