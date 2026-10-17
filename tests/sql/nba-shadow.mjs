@@ -13,7 +13,7 @@ create table cron.job(jobname text primary key, schedule text, command text);
 create function cron.schedule(n text,s text,c text) returns bigint language sql as $$ insert into cron.job values(n,s,c) returning 1 $$;
 create function cron.unschedule(n text) returns boolean language sql as $$ delete from cron.job where jobname=n returning true $$;
 `);
-for (const m of ['20261018060000_nba_source_feed', '20261018070000_nba_results', '20261018080000_nba_shadow'])
+for (const m of ['20261018060000_nba_source_feed', '20261018070000_nba_results', '20261018080000_nba_shadow', '20261018090000_nba_shadow_hardening'])
   await db.exec(readFileSync(`supabase/migrations/${m}.sql`, 'utf8'));
 const MODEL = '20df1c2b74b1f013fa472bb348bdfcf234455ab73de40ec057f5108e59e350e4';
 const hours = (h) => new Date(Date.now() + h * 3600000).toISOString();
@@ -28,14 +28,16 @@ await db.query('select public.ingest_nba($1)', [{ provider: 'The Odds API NBA pr
 const obs = (await db.query(`select id from public.nba_observations where fingerprint='a'`)).rows[0].id;
 const gameId = (await db.query(`select id from public.nba_games where provider_id='1'`)).rows[0].id;
 const forecast = (over = {}) => ({ observation_id: obs, athlete_id: '4065648', player: 'Jayson Tatum', team: 'Boston Celtics',
-  market: 'player_points', line: 24.5, over_odds: -110, under_odds: -110, over_probability: 0.56, forecast: { median: 26 }, ...over });
-const scan = (forecasts, at = new Date().toISOString(), model = MODEL) =>
-  db.query('select public.record_nba_shadow_scan($1) r', [{ model_id: model, generated_at: at, summary: { candidates: forecasts.length }, forecasts }]).then((r) => r.rows[0].r);
+  market: 'player_points', line: 24.5, over_odds: -110, under_odds: -110, over_probability: 0.56, forecast: { median: 26, history_through: '2026-04-12', history_games: 70 }, ...over });
+const INPUTS = [{ file: 'player_box_2026.csv', sha256: 'c'.repeat(64) }, { file: 'player_box_2027.csv', sha256: 'd'.repeat(64) }];
+const scan = (forecasts, at = new Date().toISOString(), model = MODEL, inputs = INPUTS) =>
+  db.query('select public.record_nba_shadow_scan($1) r', [{ model_id: model, generated_at: at, summary: { candidates: forecasts.length, inputs }, forecasts }]).then((r) => r.rows[0].r);
 
 // A scan is stored once; replays and repeated snapshots add nothing; no-vig is computed in the database.
-const first = await scan([forecast()]);
+const t0 = Date.now();
+const first = await scan([forecast()], new Date(t0).toISOString());
 assert.equal(first.inserted, 1);
-assert.deepEqual(await scan([forecast()], new Date(Date.now() - 1000).toISOString()), { inserted: 0, run_id: (await db.query(
+assert.deepEqual(await scan([forecast()], new Date(t0 + 1).toISOString()), { inserted: 0, run_id: (await db.query(
   `select id from private.nba_shadow_runs order by recorded_at desc limit 1`)).rows[0].id });
 const row = (await db.query('select book, no_vig_over, under_odds from private.nba_shadow_forecasts')).rows[0];
 assert.deepEqual([row.book, Number(row.no_vig_over), row.under_odds], ['FanDuel', 0.5, -110]);
@@ -48,6 +50,25 @@ await assert.rejects(scan([forecast({ market: 'player_rebounds' })]), /Market do
 await assert.rejects(scan([forecast({ team: 'Miami Heat' })]), /Team is not in this game/);
 await assert.rejects(scan([forecast()], undefined, 'f'.repeat(64)), /Unregistered NBA model/);
 await assert.rejects(scan([forecast()], new Date(Date.now() - 20 * 60000).toISOString()), /Scan is not current/);
+// Evidence: input hashes, history cutoff before the game's Eastern date, provider and receipt times before the scan.
+const later = (ms) => new Date(Date.now() - ms).toISOString();
+await assert.rejects(scan([forecast()], later(10), MODEL, []), /missing its input hashes/);
+await assert.rejects(scan([forecast()], later(11), MODEL, [{ file: 'x.csv', sha256: 'nope' }]), /missing its input hashes/);
+await assert.rejects(scan([forecast({ forecast: { median: 26 } })], later(12)), /missing its history cutoff/);
+await assert.rejects(scan([forecast({ forecast: { median: 26, history_through: '2099-01-01', history_games: 70 } })], later(13)), /history reaches the game date/);
+await assert.rejects(scan([forecast()], new Date(Date.now() - 5 * 60000).toISOString()), /received after the scan/);
+await db.exec(`alter table public.nba_observations disable trigger immutable_nba_observation;
+ update public.nba_observations set observed_at = now() + interval '5 minutes';
+ alter table public.nba_observations enable trigger immutable_nba_observation`);
+await assert.rejects(scan([forecast()], later(15)), /Provider time is after the scan/);
+await db.exec(`alter table public.nba_observations disable trigger immutable_nba_observation;
+ update public.nba_observations set observed_at = now() - interval '45 minutes';
+ alter table public.nba_observations enable trigger immutable_nba_observation`);
+await assert.rejects(scan([forecast()], later(16)), /Provider quote is stale/);
+await db.exec(`alter table public.nba_observations disable trigger immutable_nba_observation;
+ update public.nba_observations set observed_at = null;
+ alter table public.nba_observations enable trigger immutable_nba_observation`);
+await assert.rejects(scan([forecast()], later(17)), /no provider time/);
 await db.exec(`alter table public.nba_observations disable trigger immutable_nba_observation;
  update public.nba_observations set recorded_at = now() - interval '40 minutes';
  alter table public.nba_observations enable trigger immutable_nba_observation`);
@@ -72,6 +93,13 @@ await db.exec(`insert into public.nba_game_results(game_id, provider_id, away_sc
  values('${gameId}', '4065648', 'Jayson Tatum', 'Boston Celtics', 'away', true, 36, 30, 8, 5, 4, 1, 0, 2, true, 'F')`);
 [ev] = await rows();
 assert.equal(ev.result, 'WIN');
+// The final pre-tip snapshot of the market no longer offers the line: no closing price, never the older one.
+await db.query('select public.ingest_nba($1)', [{ provider: 'The Odds API NBA props', observations: [prop('1', 'c', outcomes(-115, -105, 25.5))] }]);
+await db.exec(`alter table public.nba_observations disable trigger immutable_nba_observation;
+ update public.nba_observations set recorded_at = now() - interval '10 minutes' where fingerprint = 'c';
+ alter table public.nba_observations enable trigger immutable_nba_observation`);
+[ev] = await rows();
+assert.deepEqual([ev.close_over_odds, ev.close_under_odds, ev.close_observed_at], [null, null, null]);
 assert.equal((await db.query(`select count(*)::int n from public.nba_shadow_evaluation_rows($1, $2)`, [MODEL, ev.id])).rows[0].n, 0);
 
 // Reports and records are immutable and service-only; record_nba_result now stores starter/position.

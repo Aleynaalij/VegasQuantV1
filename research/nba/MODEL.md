@@ -40,16 +40,22 @@ so market skill is measured only prospectively, below.
 1. **Capture.** `hosted_scan.py` (workflow *NBA shadow model scan*, three minutes after each
    nba-sync run) forecasts every FanDuel points and rebounds main line (half-point lines with an Over
    price) for regular-season games within 36 hours, for players in the cohort. `record_nba_shadow_scan`
-   stores each forecast only if the game has not started, the snapshot is under 30 minutes old and the
-   line and prices match the stored snapshot exactly. Forecasts are immutable.
+   stores each forecast only if the game has not started, the snapshot was both quoted by the provider
+   and received within 30 minutes before the scan (never after it), the line and prices match the stored
+   snapshot exactly, the scan names its hoopR input hashes and the forecast's history ends before the
+   game's (Eastern) date. Missing evidence rejects the whole scan. Forecasts are immutable.
 2. **Grade.** `nba_shadow_evaluation_rows` grades the Over with `nba_grade` on recorded box scores
-   (VOID if the player did not play) and finds the same book's last same-line price before tip.
+   (VOID if the player did not play). The closing price is read from the same book's last snapshot of
+   that market before tip; if that snapshot no longer has the player's line (withdrawn or moved), there
+   is no closing price for the forecast, never an older one. If the book pulls the whole market, the
+   feed records nothing new, so the market's last quote stands as the close (the last available price).
 3. **Score.** `shadow_report.py` (workflow *NBA shadow scorecard*, twice daily) uses the first
    capture per game, player, market and line. Per market, a market is *ready for owner review* only if:
    - at least 300 graded forecasts from at least 40 games;
    - at least 200 with a two-sided (no-vig) price;
    - the model's Brier score beats the no-vig price, upper 95% bound (game-clustered) below zero;
-   - positive mean closing-line value on the side the model prefers;
+   - at least 150 forecasts with a closing price, and positive mean closing-line value on the side the
+     model prefers;
    - at least 100 bets where the model's side is 3+ points above no-vig, with the lower 95% bound of
      the flat return above zero.
 
@@ -58,7 +64,8 @@ so market skill is measured only prospectively, below.
 
 The model file is frozen by its hash (`model_id`, registered in `private.nba_shadow_models`). A new
 version gets a new artifact, registration and journal; the protocol is not changed after results are
-seen.
+seen. (The closing-coverage floor and the stricter capture checks were added on October 17, 2026,
+before any forecast had been captured.)
 
 ## Against the operating addendum (`operating-foundation-v1.txt`)
 

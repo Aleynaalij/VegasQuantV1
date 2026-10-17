@@ -86,8 +86,8 @@
       "id": "NBA-003",
       "owner": "CLAUDE",
       "scope": "service",
-      "status": "review",
-      "updated_at": "2026-10-17T19:40:00Z",
+      "status": "deployed",
+      "updated_at": "2026-10-17T21:25:00Z",
       "files": [
         "supabase/migrations/20261018070000_nba_results.sql",
         "supabase/functions/nba-results/**",
@@ -103,19 +103,37 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: confirm the 12 preseason finals record after the 3-hour confirmation (check-in 22:50Z); Codex: ACK the NBA-003 handoff.",
+      "next_action": "Claude: confirm the 12 preseason finals reach FINAL (check-in 22:50Z), spot-check nba_grade, then mark verified.",
       "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/68",
       "handoff": {
         "to": "CODEX",
         "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6238912185"
-      }
+      },
+      "merged_commit": "6299909c3b0d06d6b69099dd4cde150a4f0fbddb",
+      "deployment_url": "https://uowearboulykfcwnuirn.supabase.co/functions/v1/nba-results",
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239675816"
+      },
+      "checks": [
+        {
+          "name": "Results parse/grader tests and SQL harness, verify CI on PR #68",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/68"
+        },
+        {
+          "name": "Live: 12 preseason finals recorded, in the 3-hour confirmation window at 21:13Z",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65"
+        }
+      ]
     },
     {
       "id": "NBA-004",
       "owner": "CLAUDE",
       "scope": "service",
-      "status": "active",
-      "updated_at": "2026-10-17T19:40:00Z",
+      "status": "deployed",
+      "updated_at": "2026-10-17T21:25:00Z",
       "files": [
         "research/nba/engine.py",
         "research/nba/hosted_scan.py",
@@ -130,7 +148,8 @@
         ".github/workflows/nba-model.yml",
         "tests/nba_model/**",
         "tests/nba-shadow.test.ts",
-        "tests/sql/nba-shadow.mjs"
+        "tests/sql/nba-shadow.mjs",
+        "supabase/migrations/20261018090000_nba_shadow_hardening.sql"
       ],
       "depends_on": [
         {
@@ -138,7 +157,25 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: PR review, owner approval to apply the migration and redeploy nba-results (starter/position); first captures when FanDuel props arrive (~Oct 19)."
+      "next_action": "Claude: hardening for Codex's #70 findings (provider/receipt times, history cutoff and input hashes, withdrawn-line close, CLV coverage floor) in the NBA-004 follow-up PR; mark verified after the first live FanDuel captures (~Oct 19).",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/70",
+      "merged_commit": "c145b5919695ce152922f8fce8622004eaa9b4b1",
+      "deployment_url": "https://github.com/Aleynaalij/VegasQuantV1/actions/workflows/nba-shadow-scan.yml",
+      "checks": [
+        {
+          "name": "Model unit tests, SQL harness, verify CI on PR #70; holdout Brier beats baseline (points 0.1229 vs 0.1251, rebounds 0.1143 vs 0.1177)",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/70"
+        }
+      ],
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239698446"
+      },
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/70"
+      }
     },
     {
       "id": "COORD-002",
@@ -174,8 +211,8 @@
       "id": "NBA-006",
       "owner": "CLAUDE",
       "scope": "application",
-      "status": "review",
-      "updated_at": "2026-10-17T20:10:00Z",
+      "status": "deployed",
+      "updated_at": "2026-10-17T21:25:00Z",
       "files": [
         "src/components/nba-home-brief.tsx",
         "src/components/nba-team-logo.tsx",
@@ -192,7 +229,21 @@
         "to": "CODEX",
         "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239704018"
       },
-      "next_action": "Codex: review the small nba-desk.tsx edit (your NBA-002 file) on the NBA home hero PR; Claude: verify the live page after merge."
+      "next_action": "Claude: verify the live NBA home hero on opening night (Oct 20) shows the lead game and the live state.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/72",
+      "merged_commit": "a4304610adface8669dab55d7a7a52fcae23a232",
+      "deployment_url": "https://vegasquant.app/nba",
+      "checks": [
+        {
+          "name": "Home hero tests, typecheck, verify and ui-smoke CI; flicker fix #75; Codex live check of /nba hero and game link",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6241171294"
+        }
+      ],
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/72#issuecomment-6239886853"
+      }
     },
     {
       "id": "NBA-005",
