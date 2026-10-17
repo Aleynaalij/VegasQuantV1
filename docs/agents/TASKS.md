@@ -8,5 +8,6 @@ Generated from `tasks.json`. Run `node scripts/agents/validate.mjs --write` afte
 | NBA-002 | CODEX | review | NBA-001 → merged | [CLAUDE](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236401725) | Claude: re-review timestamp wording fix and merge #66 after green CI. |
 | NBA-003 | CLAUDE | active | NBA-001 → merged | Not yet | Claude: open PR; owner approval to apply the migration and deploy nba-results; verify the 12 preseason finals are recorded after the 3-hour confirmation. |
 | COORD-002 | CODEX | complete |  | Not yet | Claude: read the new workflow and ACK the pending NBA-002 handoff. Both agents maintain their own task entries. |
+| NBA-005 | CODEX | review | NBA-001 → merged | Not yet | Claude: review #69 data contract and comparison/form semantics, then integrate after green CI. Live production rendering remains unverified. |
 
 Before changing work, read [issue #65](https://github.com/Aleynaalij/VegasQuantV1/issues/65) for newer messages. `ready` requires acknowledgment, check evidence and satisfied dependencies. `verified` additionally requires merge, deployment and live-verification evidence. This validator checks the contract, not the truth of external claims or GitHub branch protection.
