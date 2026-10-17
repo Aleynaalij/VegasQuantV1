@@ -1,0 +1,16 @@
+# Open published selections on Kalshi
+
+Cards and saved member parlays offer **Find on Kalshi** beside Gambly. Lookup is read-only and on demand; no Kalshi account, trading key, order submission or price conversion is involved. Users confirm eligibility before opening external links.
+
+The authenticated `/api/kalshi` route reads selection snapshots from `published_legs` and the authoritative `games` row. It never trusts client-supplied player, target or matchup data. Currently supported: upcoming NFL full-game integer N+ passing yards, receiving yards, rushing yards and receptions. Other markets, closed/graded selections, started games and unverified context produce no match.
+
+For each game/stat, query Kalshi's public market endpoint using its exact event ticker. Match binary active status, open/close times, exact player/stat/target title, primary resolution text and the greater-than N−0.5 strike. Do not substitute a nearby line, ladder/escalator, different date or another player. The view link targets the exact event and carries only `op_market_ticker`; no order parameters. External market snapshots are cached for 60 seconds. No Kalshi prices or VQ edge/approval claims are displayed.
+
+Saved parlays check individual legs in batches of 25 without capping ticket size. Matching markets open individually; this is not an automatic Kalshi combo or a claim of combined availability. Missing matches and provider failures have distinct UI states. Publishing, research exemptions, selection gates, bankrolls and records are unchanged.
+
+References:
+- https://docs.kalshi.com/getting_started/quick_start_market_data
+- https://docs.kalshi.com/api-reference/market/get-markets
+- https://help.kalshi.com/en/articles/17516391-ladder-and-escalator-markets
+
+Validation: `node --import tsx --test tests/kalshi*.test.ts`; production build; mobile/desktop dialog smoke checks. Live authenticated member lookup needs the member's valid session; test fixtures do not establish coverage for every published target.

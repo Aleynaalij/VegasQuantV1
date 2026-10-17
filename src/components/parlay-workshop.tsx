@@ -470,6 +470,7 @@ export default function ParlayWorkshop({
                         url="https://gambly.com"
                         selection={parlayCopyLine(r)!}
                         label="Copy leg ↗"
+                        kalshiLegKeys={[r.leg_key]}
                       />
                     )}
                   </div>
@@ -528,6 +529,7 @@ export default function ParlayWorkshop({
                 <GamblyLink
                   url="https://gambly.com"
                   selection={parlayCopy(p.legs)}
+                  kalshiLegKeys={p.legs.map((r) => r.leg_key)}
                   label="Copy parlay & open Gambly ↗"
                 />
               )}

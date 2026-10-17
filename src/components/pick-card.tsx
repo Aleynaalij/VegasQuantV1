@@ -145,8 +145,19 @@ export default function PickCard({
         </time>{" "}
         · Vegas Quant Ultra
       </p>
-      {!share && <LegActions legKey={`official:${p.id}`} expired={!!d.results.find(r=>r.pick_id===p.id)} />}
-      <PriceFreshness at={typeof p.known_at_publication?.quote_observed_at === "string" ? p.known_at_publication.quote_observed_at : null} />
+      {!share && (
+        <LegActions
+          legKey={`official:${p.id}`}
+          expired={!!d.results.find((r) => r.pick_id === p.id)}
+        />
+      )}
+      <PriceFreshness
+        at={
+          typeof p.known_at_publication?.quote_observed_at === "string"
+            ? p.known_at_publication.quote_observed_at
+            : null
+        }
+      />
       <p className="pick-odds-notice">
         Odds and available lines may change. This card preserves the original
         published selection, line, odds, and stake; later sportsbook prices do
@@ -177,7 +188,9 @@ export default function PickCard({
           }
         />
       )}
-      {!share && !r && isGamblyUrl(p.gambly_url) && <GamblyLink url={p.gambly_url!} />}
+      {!share && !r && isGamblyUrl(p.gambly_url) && (
+        <GamblyLink url={p.gambly_url!} kalshiLegKeys={[`official:${p.id}`]} />
+      )}
       {!share && <PickMoneySplits pickId={p.id} />}
       <SlipBody className="slip-details" {...(!compact ? { open: true } : {})}>
         <summary className={compact ? "slip-expand-cta" : ""}>

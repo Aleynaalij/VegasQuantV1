@@ -1,15 +1,18 @@
 "use client";
 import { useId, useRef, useState } from "react";
+import KalshiLink from "./kalshi-link";
 import { isGamblyUrl } from "@/lib/gambly";
 
 export default function GamblyLink({
   url,
   selection,
   label,
+  kalshiLegKeys,
 }: {
   url: string;
   selection?: string;
   label?: string;
+  kalshiLegKeys?: string[];
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const [confirmed, setConfirmed] = useState(false);
@@ -33,6 +36,7 @@ export default function GamblyLink({
   if (!isGamblyUrl(url)) return null;
   return (
     <>
+      {kalshiLegKeys?.length ? <KalshiLink legKeys={kalshiLegKeys} /> : null}
       <button
         className="btn"
         onClick={() => {

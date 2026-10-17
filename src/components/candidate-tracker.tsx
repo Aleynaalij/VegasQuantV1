@@ -152,7 +152,9 @@ export default function CandidateTracker({
     release?.candidates.length || 0,
   );
   const legForms = useLegForms(
-    release ? release.candidates.map((_, i) => `candidate:${release.id}:${i + 1}`) : [],
+    release
+      ? release.candidates.map((_, i) => `candidate:${release.id}:${i + 1}`)
+      : [],
   );
   const [failed, setFailed] = useState(false);
   const [allCopied, setAllCopied] = useState(false);
@@ -290,14 +292,14 @@ export default function CandidateTracker({
                 : research
                   ? "RESEARCH BOARD"
                   : editorial
-                  ? "LEGS WE LIKE"
-                  : experimental
-                    ? multiple
-                      ? "EXPERIMENTAL PICKS"
-                      : "EXPERIMENTAL PICK"
-                    : featured
-                      ? "NEXT LEG WATCH"
-                      : "EDGE TRACKER"}{" "}
+                    ? "LEGS WE LIKE"
+                    : experimental
+                      ? multiple
+                        ? "EXPERIMENTAL PICKS"
+                        : "EXPERIMENTAL PICK"
+                      : featured
+                        ? "NEXT LEG WATCH"
+                        : "EDGE TRACKER"}{" "}
             ·{" "}
             {expired
               ? "ARCHIVED RESEARCH"
@@ -306,10 +308,10 @@ export default function CandidateTracker({
                 : research
                   ? "AUTOMATED · NOT AN OFFICIAL PICK"
                   : editorial
-                  ? "ANALYST SELECTIONS"
-                  : experimental
-                    ? "EXPERIMENTAL ANALYSIS"
-                    : "RESEARCH"}
+                    ? "ANALYST SELECTIONS"
+                    : experimental
+                      ? "EXPERIMENTAL ANALYSIS"
+                      : "RESEARCH"}
           </span>
           <h2>
             {featured && !experimental && !funPlay && !pickOfDay && !research
@@ -323,12 +325,12 @@ export default function CandidateTracker({
                 : research
                   ? "Refreshed every three hours from recent form and live prices. Each leg cleared its target in recent games at least five points more often than its price needs. Research, not an official pick: no validated model edge is claimed, and it has its own record."
                   : editorial
-                  ? "Individual selections with the matchup case and risk. Analyst stat targets and observed sportsbook prices are labeled separately."
-                  : experimental
-                    ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
-                    : featured
-                      ? "Our leading research candidate. Review its sources and risks; a research candidate is not a finalized pick."
-                      : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
+                    ? "Individual selections with the matchup case and risk. Analyst stat targets and observed sportsbook prices are labeled separately."
+                    : experimental
+                      ? "Individual selections with the case and risk for each game. Experimental model estimates are identified below; original publications stay on record."
+                      : featured
+                        ? "Our leading research candidate. Review its sources and risks; a research candidate is not a finalized pick."
+                        : "Candidates under review. None has a verified 3-percentage-point edge in this release."}
             </p>
           )}
           <small>
@@ -374,6 +376,9 @@ export default function CandidateTracker({
                 url="https://gambly.com/"
                 selection={allLegsText}
                 label="Copy all & open Gambly ↗"
+                kalshiLegKeys={list.map(
+                  (_, i) => `candidate:${release.id}:${i + 1}`,
+                )}
               />
             </div>
             {allCopied && <p role="status">Copied. Paste into Gambly.</p>}
@@ -433,15 +438,21 @@ export default function CandidateTracker({
               {c.fun_play && c.book && (
                 <p className="candidate-context">{c.quote_context}</p>
               )}
-              {!expired && (c.experimental || editorial || research) && c.gambly_url && (
-                <div className="ticket-action">
-                  <GamblyLink url={c.gambly_url} selection={copySelection(c)} />
-                  <p>
-                    18+ · Copy, open Gambly, then paste. Verify every line and
-                    price.
-                  </p>
-                </div>
-              )}
+              {!expired &&
+                (c.experimental || editorial || research) &&
+                c.gambly_url && (
+                  <div className="ticket-action">
+                    <GamblyLink
+                      url={c.gambly_url}
+                      selection={copySelection(c)}
+                      kalshiLegKeys={[key]}
+                    />
+                    <p>
+                      18+ · Copy, open Gambly, then paste. Verify every line and
+                      price.
+                    </p>
+                  </div>
+                )}
               <CasinoCardDownload data={card} />
               <LegActions
                 legKey={
@@ -494,10 +505,10 @@ export default function CandidateTracker({
                         : research
                           ? "Research lean"
                           : c.analysis_kind === "QUALITATIVE_EDITORIAL"
-                          ? "Analyst selection"
-                          : experimental
-                            ? "Experimental"
-                            : "WAIT"}
+                            ? "Analyst selection"
+                            : experimental
+                              ? "Experimental"
+                              : "WAIT"}
                     </strong>
                   </div>
                 </div>

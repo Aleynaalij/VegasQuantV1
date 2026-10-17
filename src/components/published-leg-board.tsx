@@ -158,20 +158,25 @@ export default function PublishedLegBoard({
             }}
           />
           <div className="board-filters">
-            {["ALL", "SINGLE", "PICK_OF_DAY", "HAIL_MARY", "OFFICIAL", "RESEARCH"].map(
-              (f) => (
-                <button
-                  key={f}
-                  aria-pressed={filter === f}
-                  onClick={() => {
-                    setFilter(f);
-                    setLimit(30);
-                  }}
-                >
-                  {f.replaceAll("_", " ")}
-                </button>
-              ),
-            )}
+            {[
+              "ALL",
+              "SINGLE",
+              "PICK_OF_DAY",
+              "HAIL_MARY",
+              "OFFICIAL",
+              "RESEARCH",
+            ].map((f) => (
+              <button
+                key={f}
+                aria-pressed={filter === f}
+                onClick={() => {
+                  setFilter(f);
+                  setLimit(30);
+                }}
+              >
+                {f.replaceAll("_", " ")}
+              </button>
+            ))}
           </div>
           {!notice && (
             <p>
@@ -241,6 +246,7 @@ export default function PublishedLegBoard({
               {r.gambly_url && Date.parse(r.expires_at) > Date.now() && (
                 <GamblyLink
                   url={r.gambly_url}
+                  kalshiLegKeys={[r.leg_key]}
                   selection={
                     r.copy_text || `${r.name} ${r.market} · ${r.matchup}`
                   }
