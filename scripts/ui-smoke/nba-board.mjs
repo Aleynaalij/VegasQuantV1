@@ -102,6 +102,10 @@ for (const width of [390, 1280]) {
           player: "Fixture Player",
           played: true,
           minutes: 30,
+          nba_game_results: {
+            source_url: "https://www.espn.com/nba/boxscore/_/gameId/1",
+            nba_games: { tipoff: new Date(now - 86400000).toISOString() },
+          },
           points: 25,
           rebounds: 7,
           assists: 4,
