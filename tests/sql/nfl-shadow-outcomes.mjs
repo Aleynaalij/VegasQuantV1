@@ -26,6 +26,7 @@ const snap = (ago, price) => db.query(`insert into public.source_observations(ga
  [ago, { book: 'FanDuel', market: 'player_rush_yds_alternate', outcomes: [{ description: 'Test Player', name: 'Over', point: 40.5, price }] }]);
 await snap('3 hours', -200); await snap('10 minutes', -230);
 await db.exec(readFileSync('supabase/migrations/20261018040000_nfl_shadow_outcomes.sql', 'utf8'));
+await db.exec(readFileSync('supabase/migrations/20261018051000_shadow_evaluation_pending.sql', 'utf8'));
 
 // Only finished games (six hours after kickoff) are pending.
 const pending = (await db.query('select * from public.nfl_shadow_pending_outcomes()')).rows;
@@ -42,8 +43,10 @@ await assert.rejects(record([{ forecast_id: '00000000-0000-0000-0000-00000000000
 await assert.rejects(db.exec('update private.nfl_shadow_outcomes set yards=1'), /immutable/);
 assert.equal((await db.query('select count(*)::int n from public.nfl_shadow_pending_outcomes()')).rows[0].n, 0);
 
-const rows = (await db.query(`select * from public.nfl_shadow_evaluation_rows('m') order by line`)).rows;
-assert.equal(rows.length, 2);
+// Every captured forecast is returned; the one still in progress is flagged, not dropped.
+const all = (await db.query(`select * from public.nfl_shadow_evaluation_rows('m') order by forecast_id`)).rows;
+assert.deepEqual(all.map((r) => [r.graded, r.finished]), [[true, true], [true, true], [false, false]]);
+const rows = all.filter((r) => r.graded).sort((a, b) => Number(a.line) - Number(b.line));
 assert.deepEqual([Number(rows[0].yards), Number(rows[0].odds), Number(rows[0].closing_odds), rows[0].player_position], [55, -200, -230, 'RB']);
 assert.equal(rows[1].void, true); assert.equal(rows[1].closing_odds, null); // no closing quote for that line
 

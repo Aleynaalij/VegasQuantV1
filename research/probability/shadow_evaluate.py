@@ -133,19 +133,19 @@ def mean(xs):
     return sum(xs) / len(xs) if xs else None
 
 
-def scope_report(rows, rng):
-    settled = [(r, settle(r)) for r in rows]
+# The frozen protocol's initial claims; every other market/position stays diagnostic only.
+SUPPORTED_SCOPES = {"rushing:RB", "receiving:WR"}
+# Approval slices inside the price band: the engine's tested 20.5-100.5 line range in 20-yard steps.
+LINE_SLICES = [(20, 40), (40, 60), (60, 80), (80, 101)]
+
+
+def metrics(settled, rng):
+    """Calibration, no-vig comparison and flat-unit returns for a set of (row, settlement) pairs."""
     decided = [(r, s) for r, s in settled if s in ("win", "loss")]
-    counts = {k: sum(s == k for _, s in settled) for k in ("win", "loss", "push", "void")}
-    games = {r["game_id"] for r, _ in decided}
-    player_games = {(r["player_id"], r["game_id"]) for r, _ in decided}
     # Conditional no-push probability, as priced (engine.evaluate_quote).
     p = lambda r: float(r["research_probability"]) / (1 - float(r["push_probability"] or 0))
     y = lambda s: 1.0 if s == "win" else 0.0
     brier = lambda q, s: (q - y(s)) ** 2
-    model_brier = mean([brier(p(r), s) for r, s in decided])
-    price_brier = mean([brier(implied(float(r["odds"])), s) for r, s in decided])
-    log_loss = mean([-math.log(min(max(p(r) if s == "win" else 1 - p(r), 1e-12), 1)) for r, s in decided])
     paired = defaultdict(list)
     for r, s in decided:
         if r["no_vig_probability"] is not None:
@@ -157,45 +157,73 @@ def scope_report(rows, rng):
         if b:
             reliability.append({"bin": [lo, round(lo + 0.1, 1)], "n": len(b),
                                 "forecast": mean([q for q, _ in b]), "observed": mean([o for _, o in b])})
-    band = [(r, s) for r, s in settled if s != "void" and BAND[0] <= float(r["odds"]) <= BAND[1]]
-    eligible = [(r, s) for r, s in band if r["direction"] == "over" and float(r["estimated_edge_pp"]) >= EDGE_PP]
+    eligible = [(r, s) for r, s in settled if s != "void" and BAND[0] <= float(r["odds"]) <= BAND[1]
+                and r["direction"] == "over" and float(r["estimated_edge_pp"]) >= EDGE_PP]
     units = defaultdict(list)
     for r, s in eligible:
         units[r["game_id"]].append(profit(float(r["odds"])) if s == "win" else 0.0 if s == "push" else -1.0)
     flat = [u for v in units.values() for u in v]
     clv = [implied(float(r["closing_odds"])) - implied(float(r["odds"])) for r, _ in eligible if r["closing_odds"] is not None]
-    novig_interval = clustered(paired, mean, rng)
-    return_interval = clustered(units, mean, rng)
-    floors = {"player_games": len(player_games) >= MIN_PLAYER_GAMES, "games": len(games) >= MIN_GAMES,
-              "price_band_slice": len([1 for _, s in band if s in ("win", "loss")]) >= MIN_SLICE}
-    criteria = {
-        "review_floors": all(floors.values()),
-        "beats_no_vig_brier": bool(novig_interval and novig_interval[1] < 0),
-        "positive_return_lower_bound": bool(return_interval and return_interval[0] > 0),
-    }
     return {
-        "counts": counts, "player_games": len(player_games), "games": len(games), "floors": floors,
-        "brier": {"model": model_brier, "raw_price": price_brier, "log_loss": log_loss},
-        "no_vig": {"paired": len(diffs), "model_minus_no_vig_brier": mean(diffs), "ci95": novig_interval},
+        "decided": len(decided),
+        "brier": {"model": mean([brier(p(r), s) for r, s in decided]),
+                  "raw_price": mean([brier(implied(float(r["odds"])), s) for r, s in decided]),
+                  "log_loss": mean([-math.log(min(max(p(r) if s == "win" else 1 - p(r), 1e-12), 1)) for r, s in decided])},
+        "no_vig": {"paired": len(diffs), "model_minus_no_vig_brier": mean(diffs), "ci95": clustered(paired, mean, rng)},
         "reliability": reliability,
         "eligible_cohort": {"definition": f"over, price {BAND[0]} to {BAND[1]}, estimated edge >= {EDGE_PP}pp",
-                            "n": len(flat), "flat_unit_return": mean(flat), "ci95": return_interval,
+                            "n": len(flat), "flat_unit_return": mean(flat), "ci95": clustered(units, mean, rng),
                             "clv_coverage": len(clv), "mean_clv_probability": mean(clv)},
-        "criteria": criteria,
-        "meets_protocol": all(criteria.values()),
+    }
+
+
+def scope_report(scope, rows, rng):
+    """`rows` is the scope's main sample, graded or not. Only graded rows are scored; the rest are
+    reported as pending so a dossier never hides unresolved forecasts."""
+    graded = [r for r in rows if r.get("graded", True)]
+    pending = [r for r in rows if not r.get("graded", True)]
+    settled = [(r, settle(r)) for r in graded]
+    decided = [(r, s) for r, s in settled if s in ("win", "loss")]
+    games = {r["game_id"] for r, _ in decided}
+    player_games = {(r["player_id"], r["game_id"]) for r, _ in decided}
+    scope_floors = {"player_games": len(player_games) >= MIN_PLAYER_GAMES, "games": len(games) >= MIN_GAMES}
+    supported = scope in SUPPORTED_SCOPES
+    slices = []
+    for lo, hi in LINE_SLICES:
+        part = [(r, s) for r, s in settled if BAND[0] <= float(r["odds"]) <= BAND[1] and lo <= float(r["line"]) < hi]
+        m = metrics(part, rng)
+        criteria = {
+            "review_floors": all(scope_floors.values()) and m["decided"] >= MIN_SLICE,
+            "beats_no_vig_brier": bool(m["no_vig"]["ci95"] and m["no_vig"]["ci95"][1] < 0),
+            "positive_return_lower_bound": bool(m["eligible_cohort"]["ci95"] and m["eligible_cohort"]["ci95"][0] > 0),
+        }
+        slices.append({"price": list(BAND), "lines": [lo + 0.5, hi - 0.5], **m, "criteria": criteria,
+                       "meets_protocol": supported and all(criteria.values())})
+    return {
+        "supported": supported,
+        "counts": {**{k: sum(s == k for _, s in settled) for k in ("win", "loss", "push", "void")},
+                   "pending_finished": sum(1 for r in pending if r.get("finished")),
+                   "pending_upcoming": sum(1 for r in pending if not r.get("finished"))},
+        "player_games": len(player_games), "games": len(games), "floors": scope_floors,
+        "all_lines": metrics(settled, rng),
+        "slices": slices,
+        "eligible_slices": [s["lines"] for s in slices if s["meets_protocol"]],
     }
 
 
 def build_report(rows, model_id: str) -> dict:
     rng = random.Random(SEED)
+    # The first capture is chosen among every captured forecast, before outcomes are known.
     main = first_observations(rows)
     scopes = defaultdict(list)
     for r in main:
         scopes[f"{r['market']}:{r['player_position']}"].append(r)
-    return {"protocol": PROTOCOL, "model_id": model_id, "graded_forecasts": len(rows), "main_sample": len(main),
-            "scopes": {k: scope_report(v, rng) for k, v in sorted(scopes.items())},
-            "note": "Research evaluation only. Passing every criterion makes a scope eligible for a documented human "
-                    "approval review; it does not approve the model or authorize any publication."}
+    return {"protocol": PROTOCOL, "model_id": model_id, "captured_forecasts": len(rows),
+            "graded_forecasts": sum(1 for r in rows if r.get("graded", True)), "main_sample": len(main),
+            "scopes": {k: scope_report(k, v, rng) for k, v in sorted(scopes.items())},
+            "note": "Research evaluation only. A slice that meets every criterion is eligible for a documented human "
+                    "approval review; it does not approve the model or authorize any publication. Scopes outside "
+                    "RB rushing and WR receiving are diagnostic only."}
 
 
 def report(db: Supabase) -> dict:
@@ -204,8 +232,10 @@ def report(db: Supabase) -> dict:
     dossier = build_report(rows, model_id)
     db.request("/rest/v1/rpc/record_nfl_qualification_report",
                {"p_model_id": model_id, "p_protocol": PROTOCOL, "p_report": dossier})
-    return {"graded_forecasts": dossier["graded_forecasts"], "main_sample": dossier["main_sample"],
-            "scopes": {k: {"player_games": v["player_games"], "games": v["games"], "criteria": v["criteria"]}
+    return {"captured_forecasts": dossier["captured_forecasts"], "graded_forecasts": dossier["graded_forecasts"],
+            "main_sample": dossier["main_sample"],
+            "scopes": {k: {"supported": v["supported"], "player_games": v["player_games"], "games": v["games"],
+                           "counts": v["counts"], "eligible_slices": v["eligible_slices"]}
                        for k, v in dossier["scopes"].items()}}
 
 
