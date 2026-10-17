@@ -79,7 +79,7 @@ export default function DeskApp({
     async function refresh() {
       if (fetching || document.visibilityState === "hidden") return;
       fetching = true;
-      const { data, error } = await supabase.rpc("desk_data");
+      const { data, error } = await supabase.rpc(page === "home" || page === "history" ? "desk_data_compact" : "desk_data");
       if (live) {
         if (error) {
           setD({ ...initial, access: noAccess } as Desk);

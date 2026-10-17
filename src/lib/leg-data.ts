@@ -65,21 +65,12 @@ const mine = (table: "saved_legs" | "leg_tails") =>
   });
 export const savedLegs = mine("saved_legs");
 export const tailedLegs = mine("leg_tails");
-/** Tail counts have no batch query: a few calls at a time, only for cards on screen, cached. */
-export const tailCounts = batchLoader<number>(
-  async (keys) => {
-    const out = new Map<string, number>();
-    for (let i = 0; i < keys.length; i += 6) {
-      const part = keys.slice(i, i + 6);
-      const res = await Promise.all(part.map((k) => supabase.rpc("leg_tail_count", { p_leg: k })));
-      res.forEach((r, j) => {
-        if (!r.error) out.set(part[j], Number(r.data || 0));
-      });
-    }
-    return out;
-  },
-  { ttl: 120000 },
-);
+/** One grouped request per visible batch; cache and mutation invalidation stay shared. */
+export const tailCounts = batchLoader<number>(async (keys) => {
+  const { data, error } = await supabase.rpc("leg_tail_counts", { p_legs: keys });
+  if (error) throw error;
+  return new Map<string, number>((data || []).map((r: { leg_key: string; tail_count: number }) => [r.leg_key, Number(r.tail_count)]));
+}, { ttl: 120000 });
 export const isAdmin = memo(async () => {
   const r = await supabase.rpc("is_admin");
   return r.data === true;
