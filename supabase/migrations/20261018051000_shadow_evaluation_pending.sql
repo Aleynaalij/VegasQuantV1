@@ -21,11 +21,14 @@ alter table private.nfl_shadow_outcome_corrections enable row level security;
 create trigger immutable_shadow_outcome_corrections before update or delete on private.nfl_shadow_outcome_corrections for each row execute function private.immutable();
 revoke all on private.nfl_shadow_outcome_corrections from public, anon, authenticated, service_role;
 
--- The outcome currently in force: the latest correction, else the original.
-create function private.nfl_shadow_current_outcome(p_forecast uuid) returns table(yards numeric, void boolean, corrections int)
+-- The outcome currently in force: the latest correction, else the original, with its source and
+-- version (the correction id; null for the original) so a dossier can name exactly what it scored.
+create function private.nfl_shadow_current_outcome(p_forecast uuid) returns table(yards numeric, void boolean, corrections int,
+ source_url text, source_sha256 text, version uuid)
 language sql stable security definer set search_path='' as $$
  select coalesce(c.yards, case when c.id is null then o.yards end), coalesce(c.void, o.void),
-  (select count(*)::int from private.nfl_shadow_outcome_corrections x where x.forecast_id=o.forecast_id)
+  (select count(*)::int from private.nfl_shadow_outcome_corrections x where x.forecast_id=o.forecast_id),
+  coalesce(c.source_url, o.source_url), coalesce(c.source_sha256, o.source_sha256), c.id
  from private.nfl_shadow_outcomes o
  left join lateral (select * from private.nfl_shadow_outcome_corrections x where x.forecast_id=o.forecast_id
    order by x.recorded_at desc, x.id desc limit 1) c on true
@@ -77,14 +80,15 @@ create function public.nfl_shadow_evaluation_rows(p_model_id text) returns table
  forecast_id uuid, game_id uuid, kickoff timestamptz, recorded_at timestamptz, player_id text, player_position text,
  season int, week int, team text, market text, direction text, line numeric, odds numeric, research_probability numeric,
  push_probability numeric, no_vig_probability numeric, estimated_edge_pp numeric, graded boolean, finished boolean,
- yards numeric, void boolean, corrections int, closing_odds numeric)
+ yards numeric, void boolean, corrections int, outcome_source_url text, outcome_source_sha256 text, outcome_version uuid,
+ closing_odds numeric)
 language sql stable security definer set search_path='' as $$
  select f.id, f.game_id, g.kickoff, f.recorded_at, f.forecast->'quote'->>'player_id', f.forecast->>'position',
   (f.forecast->'quote'->>'season')::int, (f.forecast->'quote'->>'week')::int, f.forecast->'quote'->>'team',
   f.market, f.direction, f.line, (f.forecast->'quote'->>'odds')::numeric, (f.forecast->>'research_probability')::numeric,
   (f.forecast->>'push_probability')::numeric, (f.forecast->>'no_vig_market_probability')::numeric,
   (f.forecast->>'estimated_edge_pp')::numeric, o.void is not null, g.kickoff < now() - interval '6 hours',
-  o.yards, o.void, coalesce(o.corrections,0),
+  o.yards, o.void, coalesce(o.corrections,0), o.source_url, o.source_sha256, o.version,
   (select (oc->>'price')::numeric from public.source_observations c, jsonb_array_elements(c.payload->'outcomes') oc
     where c.game_id=f.game_id and c.kind='odds' and c.payload->>'book'='FanDuel'
       and c.payload->>'market'=f.forecast->'quote'->>'provider_market' and c.observed_at < g.kickoff

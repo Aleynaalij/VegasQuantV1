@@ -18,7 +18,7 @@ def pending(fid, player="p1", team="SEA", week=7, market="rushing"):
 
 
 class Outcomes(unittest.TestCase):
-    def test_yards_void_and_unpublished(self):
+    def test_yards_and_missing_rows_left_pending(self):
         frames = frame([
             dict(player_id="p1", season=2026, week=7, recent_team="SEA", season_type="REG", rushing_yards=-3.0, receiving_yards=12.0),
             dict(player_id="p2", season=2026, week=7, recent_team="SEA", season_type="REG", rushing_yards=40.0, receiving_yards=0.0),
@@ -28,8 +28,8 @@ class Outcomes(unittest.TestCase):
         by = {g["forecast_id"]: g for g in graded}
         self.assertEqual(by["f1"]["yards"], 0.0)          # negative rushing yards clear nothing
         self.assertEqual(by["f2"]["yards"], 12.0)
-        self.assertTrue(by["f3"]["void"])                 # team played, player did not
-        self.assertNotIn("f4", by)                        # team's week not published yet
+        self.assertNotIn("f3", by)                        # no row: may have played without a stat, stays pending
+        self.assertEqual(by["f4"]["yards"], 0.0)          # the prop follows the player's own row, whatever the team
         self.assertNotIn("f5", by)
         self.assertEqual(by["f1"]["source_sha256"], SHA)
 
@@ -132,6 +132,26 @@ class Report(unittest.TestCase):
         self.assertIsNone(rows[2]["baseline_probability"])          # no same-team history
         m = e.build_report(rows[:1], "m")["scopes"]["rushing:RB"]["all_lines"]["historical_baseline"]
         self.assertEqual(m["paired"], 1)
+
+    def test_return_claim_needs_its_own_floor(self):
+        # 400 decided observations, but only two are eligible (over, edge >= 3): the return cannot pass.
+        rows = [dict(r, estimated_edge_pp=5.0 if i < 2 else 1.0) for i, r in enumerate(self.sample(0.8, 1))]
+        c = e.build_report(rows, "m")["scopes"]["rushing:RB"]["slices"][1]["criteria"]
+        self.assertFalse(c["return_sample"])
+        self.assertTrue(c["beats_no_vig_brier"])
+        self.assertEqual(e.build_report(rows, "m")["scopes"]["rushing:RB"]["eligible_slices"], [])
+
+    def test_provenance(self):
+        sources = [{"season": 2026, "source_url": URL, "sha256": SHA}]
+        rows = [dict(row(1, "g1"), outcome_source_url=URL, outcome_source_sha256=SHA, outcome_version=None),
+                dict(row(2, "g1"), outcome_source_url=URL, outcome_source_sha256="c" * 64, outcome_version="v2"),
+                dict(row(3, "g2"), graded=False, finished=False, yards=None, void=None)]
+        p = e.build_report(rows, "m", sources)["provenance"]
+        self.assertEqual(p["baseline_inputs"], sources)
+        self.assertEqual(p["outcome_sources"], [(URL, SHA), (URL, "c" * 64)])
+        self.assertEqual(p["corrected_outcome_versions"], ["v2"])
+        changed = [dict(rows[0], yards=0), *rows[1:]]
+        self.assertNotEqual(p["scored_outcomes_sha256"], e.build_report(changed, "m", sources)["provenance"]["scored_outcomes_sha256"])
 
     def test_eligible_cohort_is_price_band_overs_with_edge(self):
         rows = [row(1, "g1", odds=-300), row(2, "g1", odds=-140), row(3, "g1", direction="under"),

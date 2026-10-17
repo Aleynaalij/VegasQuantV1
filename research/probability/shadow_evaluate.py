@@ -45,25 +45,20 @@ def download(season: int, folder: Path) -> Path:
 
 
 def outcomes(pending, frames):
-    """Final yards per pending forecast. A player missing from a week whose team already appears
-    in the file did not play (void); a team missing from the week is not published yet (left pending)."""
-    rows, teams = {}, set()
+    """Final yards per pending forecast that has a row in the weekly stats. A missing row is left
+    pending, never voided: the weekly file omits players who took snaps without recording a
+    stat (a receiver never targeted), so absence does not prove the player sat out."""
+    rows = {}
     for season, (frame, url, sha) in frames.items():
         for r in frame.to_dict("records"):
-            key = (season, int(r["week"]))
-            teams.add((*key, r.get("recent_team")))
             if r.get("season_type", "REG") == "REG" and r.get("player_id"):
-                rows[(*key, r["player_id"])] = (r, url, sha)
+                rows[(season, int(r["week"]), r["player_id"])] = (r, url, sha)
     graded = []
     for p in pending:
-        key = (int(p["season"]), int(p["week"]))
-        if p["season"] not in frames or (*key, p["team"]) not in teams:
-            continue
-        found = rows.get((*key, p["player_id"]))
-        url, sha = frames[p["season"]][1:]
+        found = rows.get((int(p["season"]), int(p["week"]), p["player_id"]))
         if found is None:
-            graded.append({"forecast_id": p["forecast_id"], "void": True, "source_url": url, "source_sha256": sha})
             continue
+        url, sha = found[1:]
         value = found[0].get(YARDS[p["market"]])
         if value is None or (isinstance(value, float) and math.isnan(value)):
             continue
@@ -236,6 +231,8 @@ def scope_report(scope, rows, rng):
             # Missing no-vig coverage blocks the claim: the paired comparison needs its own floor.
             "no_vig_coverage": m["no_vig"]["paired"] >= MIN_SLICE,
             "beats_no_vig_brier": bool(m["no_vig"]["ci95"] and m["no_vig"]["ci95"][1] < 0),
+            # A few winning selections cannot carry the return claim: the cohort needs its own floor.
+            "return_sample": m["eligible_cohort"]["n"] >= MIN_SLICE,
             "positive_return_lower_bound": bool(m["eligible_cohort"]["ci95"] and m["eligible_cohort"]["ci95"][0] > 0),
         }
         slices.append({"price": list(BAND), "lines": [lo, hi], **m, "criteria": criteria,
@@ -253,7 +250,23 @@ def scope_report(scope, rows, rng):
     }
 
 
-def build_report(rows, model_id: str) -> dict:
+def provenance(rows, input_sources):
+    """What a dossier was computed from: the weekly files behind the baselines, the outcome sources,
+    and a digest of every scored outcome version, so a stored report can be reproduced or audited
+    after nflverse files or corrections change."""
+    graded = sorted((r for r in rows if r.get("graded", True)), key=lambda r: str(r["forecast_id"]))
+    scored = [[str(r["forecast_id"]), r.get("yards"), bool(r.get("void")), r.get("outcome_version"),
+               r.get("outcome_source_sha256")] for r in graded]
+    return {
+        "baseline_inputs": input_sources,
+        "outcome_sources": sorted({(r["outcome_source_url"], r["outcome_source_sha256"]) for r in graded
+                                   if r.get("outcome_source_sha256")}),
+        "corrected_outcome_versions": sorted(str(r["outcome_version"]) for r in graded if r.get("outcome_version")),
+        "scored_outcomes_sha256": hashlib.sha256(json.dumps(scored, sort_keys=True, default=str).encode()).hexdigest(),
+    }
+
+
+def build_report(rows, model_id: str, input_sources=None) -> dict:
     rng = random.Random(SEED)
     # The first capture is chosen among every captured forecast, before outcomes are known.
     main = first_observations(rows)
@@ -262,6 +275,7 @@ def build_report(rows, model_id: str) -> dict:
         scopes[f"{r['market']}:{r['player_position']}"].append(r)
     return {"protocol": PROTOCOL, "model_id": model_id, "captured_forecasts": len(rows),
             "graded_forecasts": sum(1 for r in rows if r.get("graded", True)), "main_sample": len(main),
+            "provenance": provenance(rows, input_sources or []),
             "scopes": {k: scope_report(k, v, rng) for k, v in sorted(scopes.items())},
             "note": "Research evaluation only. A slice that meets every criterion is eligible for a documented human "
                     "approval review; it does not approve the model or authorize any publication. Scopes outside "
@@ -271,10 +285,13 @@ def build_report(rows, model_id: str) -> dict:
 def report(db: Supabase, fetch=download) -> dict:
     model_id = json.loads(MODEL.read_text())["model_id"]
     rows = db.request("/rest/v1/rpc/nfl_shadow_evaluation_rows", {"p_model_id": model_id}) or []
+    input_sources = []
     if rows:
         seasons = {int(r["season"]) for r in rows}
-        add_baselines(rows, load(seasons | {s - 1 for s in seasons}, fetch))
-    dossier = build_report(rows, model_id)
+        frames = load(seasons | {s - 1 for s in seasons}, fetch)
+        add_baselines(rows, frames)
+        input_sources = [{"season": s, "source_url": url, "sha256": sha} for s, (_, url, sha) in sorted(frames.items())]
+    dossier = build_report(rows, model_id, input_sources)
     db.request("/rest/v1/rpc/record_nfl_qualification_report",
                {"p_model_id": model_id, "p_protocol": PROTOCOL, "p_report": dossier})
     return {"captured_forecasts": dossier["captured_forecasts"], "graded_forecasts": dossier["graded_forecasts"],
