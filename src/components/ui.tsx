@@ -192,34 +192,36 @@ export function Shell({
             Account
           </Link>
         </nav>
-        <div className="sidebar-rule">
-          <ShieldCheck size={23} />
-          <h3>
-            {sport === "nba" ? "Build the foundation." : "Know your number."}
-          </h3>
-          <p>
-            {sport === "nba" ? (
-              <>
-                Minutes, role and opportunity before selections.
-                <br />
-                <Link href="/nba/rules">Read the rulebook →</Link>
-              </>
-            ) : (
-              <>
-                A clear case. A verified price.
-                <br />A pass is a valid decision.
-              </>
-            )}
-          </p>
-          {sport === "nfl" ? (
-            <div>
-              <span>MINIMUM EDGE</span>
-              <strong>
-                3.0<small>%</small>
-              </strong>
-            </div>
-          ) : null}
-        </div>
+        {!(sport === "nba" && active === "home") && (
+          <div className="sidebar-rule">
+            <ShieldCheck size={23} />
+            <h3>
+              {sport === "nba" ? "Build the foundation." : "Know your number."}
+            </h3>
+            <p>
+              {sport === "nba" ? (
+                <>
+                  Minutes, role and opportunity before selections.
+                  <br />
+                  <Link href="/nba/rules">Read the rulebook →</Link>
+                </>
+              ) : (
+                <>
+                  A clear case. A verified price.
+                  <br />A pass is a valid decision.
+                </>
+              )}
+            </p>
+            {sport === "nfl" ? (
+              <div>
+                <span>MINIMUM EDGE</span>
+                <strong>
+                  3.0<small>%</small>
+                </strong>
+              </div>
+            ) : null}
+          </div>
+        )}
         <div className="sidebar-bottom">
           <span className="avatar">
             <BrandMark />

@@ -28,7 +28,11 @@ const COLUMNS =
   "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,venue,season_type,status,away_score,home_score";
 
 /** The NBA home hero: the next (or live) regular-season game, like the NFL "Next kickoff" card. */
-export default function NbaHomeBrief() {
+export default function NbaHomeBrief({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
   const [games, setGames] = useState<NbaHomeGame[] | null>(null);
   const [now, setNow] = useState(() => Date.now());
   // When the last read failed; the last good slate (and when it loaded) stays on screen with a notice.
@@ -152,9 +156,11 @@ export default function NbaHomeBrief() {
               <a className="vq-btn" href="#nba-slate">
                 Scores & schedule <ArrowDown size={16} aria-hidden="true" />
               </a>
-              <Link className="vq-btn ghost" href="/nba/rules">
-                The rulebook
-              </Link>
+              {!compact && (
+                <Link className="vq-btn ghost" href="/nba/rules">
+                  The rulebook
+                </Link>
+              )}
             </div>
           </>
         ) : unavailable ? (
@@ -204,7 +210,7 @@ export default function NbaHomeBrief() {
           ET
         </p>
       ) : null}
-      {rest.length > 0 && (
+      {!compact && rest.length > 0 && (
         <nav className="vq-slate" aria-label="Upcoming NBA games">
           {rest.map((g) => (
             <a key={g.id} href="#nba-slate">
@@ -240,31 +246,33 @@ export default function NbaHomeBrief() {
           ))}
         </nav>
       )}
-      <nav className="vq-tiles" aria-label="Basketball desk shortcuts">
-        <a href="#nba-slate">
-          <CalendarDays size={18} aria-hidden="true" />
-          <span>
-            <b>
-              {games === null || unavailable ? "Schedule" : `${week} games`}
-            </b>
-            <small>Next 7 days</small>
-          </span>
-        </a>
-        <Link href="/nba/zone">
-          <Radio size={18} aria-hidden="true" />
-          <span>
-            <b>The NBA Zone</b>
-            <small>Basketball feed</small>
-          </span>
-        </Link>
-        <Link href="/nba/rules">
-          <BookMarked size={18} aria-hidden="true" />
-          <span>
-            <b>The rulebook</b>
-            <small>40 rules behind every play</small>
-          </span>
-        </Link>
-      </nav>
+      {!compact && (
+        <nav className="vq-tiles" aria-label="Basketball desk shortcuts">
+          <a href="#nba-slate">
+            <CalendarDays size={18} aria-hidden="true" />
+            <span>
+              <b>
+                {games === null || unavailable ? "Schedule" : `${week} games`}
+              </b>
+              <small>Next 7 days</small>
+            </span>
+          </a>
+          <Link href="/nba/zone">
+            <Radio size={18} aria-hidden="true" />
+            <span>
+              <b>The NBA Zone</b>
+              <small>Basketball feed</small>
+            </span>
+          </Link>
+          <Link href="/nba/rules">
+            <BookMarked size={18} aria-hidden="true" />
+            <span>
+              <b>The rulebook</b>
+              <small>40 rules behind every play</small>
+            </span>
+          </Link>
+        </nav>
+      )}
       <p className="nba-home-note">
         <ShieldCheck size={16} aria-hidden="true" /> Preparation mode: no NBA
         picks are published until the regular season starts and the research is
