@@ -27,6 +27,10 @@ const AFTER_OPENING_NIGHT = Date.parse("2026-10-21T04:00:00Z");
 const COLUMNS =
   "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,venue,season_type,status,away_score,home_score";
 
+/** Last good slate for this tab, so returning to the NBA desk paints the real card at once. */
+const CACHE_KEY = "vq-nba-home-slate-v1";
+const CACHE_MAX_AGE = 10 * 60000;
+
 /** The NBA home hero: the next (or live) regular-season game, like the NFL "Next kickoff" card. */
 export default function NbaHomeBrief({
   compact = false,
@@ -40,6 +44,19 @@ export default function NbaHomeBrief({
   const [loadedAt, setLoadedAt] = useState<number | null>(null);
   useEffect(() => {
     let live = true;
+    try {
+      const cached = JSON.parse(sessionStorage.getItem(CACHE_KEY) || "null");
+      if (
+        cached &&
+        Date.now() - cached.at < CACHE_MAX_AGE &&
+        Array.isArray(cached.games)
+      ) {
+        setGames(cached.games);
+        setLoadedAt(cached.at);
+      }
+    } catch {
+      // Storage blocked or unreadable: load from the network as usual.
+    }
     async function load() {
       const at = Date.now();
       const { data, error } = await supabase
@@ -55,6 +72,14 @@ export default function NbaHomeBrief({
         setGames(data as NbaHomeGame[]);
         setLoadedAt(at);
         setFailed(false);
+        try {
+          sessionStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({ at, games: data }),
+          );
+        } catch {
+          // Caching is a convenience only.
+        }
       } else {
         setGames((g) => g ?? []);
         setFailed(true);
@@ -90,7 +115,9 @@ export default function NbaHomeBrief({
                   ? opening
                     ? "Opening night"
                     : "Next tip-off"
-                  : "The basketball desk"}
+                  : games === null
+                    ? "Next tip-off"
+                    : "The basketball desk"}
           </span>
           <span className="vq-chip">NBA</span>
         </div>
@@ -163,6 +190,43 @@ export default function NbaHomeBrief({
               )}
             </div>
           </>
+        ) : games === null ? (
+          // Same shape as the matchup card, so the real game swaps in without a jump.
+          <>
+            <h1 id="nba-hero-title" className="vq-sr">
+              Loading the NBA schedule
+            </h1>
+            <a
+              className="vq-matchup nba-skeleton"
+              href="#nba-slate"
+              tabIndex={-1}
+              aria-hidden="true"
+            >
+              <span className="vq-team">
+                <span className="team-logo nba-sk-logo" />
+                <b className="nba-sk-name" />
+              </span>
+              <span className="vq-at">@</span>
+              <span className="vq-team">
+                <span className="team-logo nba-sk-logo" />
+                <b className="nba-sk-name" />
+              </span>
+            </a>
+            <div className="vq-hero-meta" aria-hidden="true">
+              <span className="nba-sk-line" />
+              <span className="nba-sk-count" />
+            </div>
+            <div className="vq-hero-actions">
+              <a className="vq-btn" href="#nba-slate">
+                Scores & schedule <ArrowDown size={16} aria-hidden="true" />
+              </a>
+              {!compact && (
+                <Link className="vq-btn ghost" href="/nba/rules">
+                  The rulebook
+                </Link>
+              )}
+            </div>
+          </>
         ) : unavailable ? (
           <>
             <h1 id="nba-hero-title" className="vq-hero-title">
@@ -210,6 +274,17 @@ export default function NbaHomeBrief({
           ET
         </p>
       ) : null}
+      {!compact && games === null && (
+        <nav className="vq-slate" aria-hidden="true">
+          {[0, 1, 2].map((i) => (
+            <a key={i} href="#nba-slate" tabIndex={-1}>
+              <span className="vq-slate-teams">
+                <span className="nba-sk-line nba-sk-row" />
+              </span>
+            </a>
+          ))}
+        </nav>
+      )}
       {!compact && rest.length > 0 && (
         <nav className="vq-slate" aria-label="Upcoming NBA games">
           {rest.map((g) => (

@@ -51,3 +51,16 @@
 .nba-home-note svg { flex-shrink: 0; }
 #nba-slate { scroll-margin-top: 80px; }
 .nba-home-stale { margin: 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 13px; }
+/* Loading card: the same shape as the matchup card, so the real game swaps in without a jump. */
+.nba-skeleton .nba-sk-logo { display: block; width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.08); }
+/* Same size formula as the real name (lounge.css: clamp(26px, 7.6vw, 42px) at line-height 0.95). */
+.nba-skeleton .nba-sk-name { display: block; width: min(150px, 32vw); height: calc(clamp(26px, 7.6vw, 42px) * 0.95); border-radius: 6px; background: rgba(255,255,255,.08); }
+.nba-home-brief .nba-sk-line { display: block; width: min(260px, 60vw); height: 22px; border-radius: 6px; background: color-mix(in srgb, var(--muted) 18%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .nba-skeleton .nba-sk-logo, .nba-skeleton .nba-sk-name, .nba-home-brief .nba-sk-line, .nba-home-brief .nba-sk-count { animation: nba-sk-pulse 1.2s ease-in-out infinite alternate; }
+}
+/* Sized like the real countdown (163x40) and slate row content (26px logos) to avoid a layout jump. */
+.nba-home-brief .nba-sk-count { display: block; width: 163px; height: 40px; border-radius: 8px; background: rgba(255,255,255,.08); }
+.nba-home-brief .nba-sk-row { height: 26px; }
+@keyframes nba-sk-pulse { from { opacity: .55; } to { opacity: 1; } }
+@media (min-width: 761px) { .nba-skeleton .nba-sk-logo { width: 88px; height: 88px; } }
