@@ -25,9 +25,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      # shell: bash runs with pipefail, so a failure before `| tee` fails the job instead of passing.
       - id: due
+        shell: bash
         run: python research/probability/hosted_scan.py --check | tee -a "$GITHUB_OUTPUT"
       - if: steps.due.outputs.fresh == 'true'
         run: pip install -r research/probability/requirements.txt
       - if: steps.due.outputs.fresh == 'true'
+        shell: bash
         run: python research/probability/hosted_scan.py | tee -a "$GITHUB_STEP_SUMMARY"

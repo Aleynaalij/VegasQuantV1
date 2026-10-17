@@ -103,6 +103,35 @@ def sources(paths):
             for p in paths]
 
 
+def journal_payload(result: dict) -> dict:
+    """The upload: only FanDuel-priced cards can become journal rows, so the other books' and
+    unpriced candidates are summarized as blocker counts instead of sent card by card. A full slate
+    is about 7,000 cards, which timed out the upload RPC; coverage counts stay complete."""
+    cards = result.get("cards") or []
+    blockers = {}
+    for c in cards:
+        for b in c.get("blockers") or []:
+            blockers[b] = blockers.get(b, 0) + 1
+    fanduel = lambda c: (c.get("quote") or {}).get("sportsbook") == "FanDuel" and c.get("research_probability") is not None
+    kept = [c for c in cards if fanduel(c)]
+    # FanDuel-specific coverage per candidate player-market: another book's price does not count,
+    # because the journal and the protocol use FanDuel quotes only.
+    candidate = lambda c: (c.get("game_id"), c.get("player"), c.get("market"))
+    candidates = {candidate(c) for c in cards}
+    priced = {candidate(c) for c in kept}
+    fd_blockers = {}
+    for c in kept:
+        for b in c.get("blockers") or []:
+            fd_blockers[b] = fd_blockers.get(b, 0) + 1
+    missing = len(candidates - priced)
+    if missing:
+        fd_blockers["No FanDuel quote for the player-market"] = missing
+    return dict(result, cards=kept, blocker_counts=dict(sorted(blockers.items())),
+                fanduel_coverage={"candidates": len(candidates), "priced": len(priced), "unavailable": missing},
+                fanduel_blocker_counts=dict(sorted(fd_blockers.items())),
+                card_summary={"scanned": len(cards), "uploaded_fanduel_priced": len(kept)})
+
+
 def run(db: Supabase, now_fn=lambda: datetime.now(timezone.utc), fetch=download) -> dict:
     now = now_fn()
     games = upcoming_games(db, now)
@@ -123,8 +152,9 @@ def run(db: Supabase, now_fn=lambda: datetime.now(timezone.utc), fetch=download)
     as_of = iso(now_fn())
     result = scan(frame, artifact, games, observations, as_of)
     result["input_sources"] = input_sources
-    recorded = db.request("/rest/v1/rpc/record_nfl_shadow_scan", {"p_scan": result, "p_slate": slate(games)})
-    return {"scanned": True, "games": len(games), "coverage": result["coverage"],
+    payload = journal_payload(result)
+    recorded = db.request("/rest/v1/rpc/record_nfl_shadow_scan", {"p_scan": payload, "p_slate": slate(games)})
+    return {"scanned": True, "games": len(games), "coverage": result["coverage"], "uploaded_cards": len(payload["cards"]),
             "recorded_forecasts": (recorded or {}).get("recorded_forecasts"),
             "skipped_unverifiable_or_stale": (recorded or {}).get("skipped_unverifiable_or_stale"),
             "replayed": bool((recorded or {}).get("replayed"))}
