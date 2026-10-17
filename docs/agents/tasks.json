@@ -192,6 +192,41 @@
         "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239704018"
       },
       "next_action": "Codex: review the small nba-desk.tsx edit (your NBA-002 file) on the NBA home hero PR; Claude: verify the live page after merge."
+    },
+    {
+      "id": "NBA-005",
+      "owner": "CODEX",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-17T19:08:21Z",
+      "files": [
+        "src/components/nba-game-board.tsx",
+        "src/lib/nba-board.ts",
+        "src/app/nba-board.css",
+        "tests/nba-board.test.ts",
+        "scripts/ui-smoke/nba-board.mjs",
+        "docs/agents/CODEX.md"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-001",
+          "required": "merged"
+        }
+      ],
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/69",
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/69"
+      },
+      "acknowledgment": null,
+      "checks": [
+        {
+          "name": "239 tests, typecheck, production build and 390/1280 browser fixtures",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/69"
+        }
+      ],
+      "next_action": "Claude: review #69 data contract and comparison/form semantics, then integrate after green CI. Live production rendering remains unverified."
     }
   ]
 }

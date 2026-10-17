@@ -134,3 +134,55 @@
     padding: 14px;
   }
 }
+
+.nba-research-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+}
+.nba-research-filters label {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 180px;
+  font-size: 13px;
+  min-width: 0;
+}
+.nba-research-filters input,
+.nba-research-filters select {
+  width: 100%;
+  min-height: 44px;
+  min-width: 0;
+}
+.nba-price-card {
+  padding: 18px;
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+}
+.nba-price-card h4 {
+  margin: 8px 0;
+  font-size: 20px;
+}
+.nba-price-card > strong {
+  color: var(--gold, #e8c46a);
+  font-size: 14px;
+}
+.nba-book-quotes {
+  list-style: none;
+  padding: 0 !important;
+}
+.nba-book-quotes li,
+.nba-form-row {
+  display: grid;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.nba-form {
+  margin-top: 14px;
+}
+.nba-form-row {
+  font-size: 13px;
+}
