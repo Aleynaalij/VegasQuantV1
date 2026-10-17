@@ -5,12 +5,14 @@ import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import { noAccess, type Access } from "@/lib/membership";
 import {
+  nbaComparisons,
+  nbaMarkets,
+  nbaOdds,
   nbaPhase,
   nbaStatus,
   nbaHasScore,
   latestNbaObservations,
   nbaFreshness,
-  nbaOutcomes,
   nbaSource,
   type NbaGame,
   type NbaObservation,
@@ -198,9 +200,7 @@ export default function NbaGameBoard() {
               {g.tipoff_tbd ? "Tip time TBD" : stamp(g.tipoff)} ·{" "}
               {g.venue || "Venue unknown"}
             </p>
-            <small>
-              Schedule last changed {stamp(g.updated_at)}
-            </small>
+            <small>Schedule last changed {stamp(g.updated_at)}</small>
             <div className="nba-board-source">
               <Source url={g.source} />
             </div>
@@ -227,12 +227,23 @@ export default function NbaGameBoard() {
     </section>
   );
 }
-function NbaGameDetails({ game, now }: { game: NbaGame; now: number }) {
-  const [open, setOpen] = useState(false),
+export function NbaGameDetails({
+  game,
+  now,
+  defaultOpen = false,
+}: {
+  game: NbaGame;
+  now: number;
+  defaultOpen?: boolean;
+}) {
+  const [open, setOpen] = useState(defaultOpen),
     [rows, setRows] = useState<NbaObservation[]>([]),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(false),
     [retry, setRetry] = useState(0);
+  const [shown, setShown] = useState(20);
+  const [market, setMarket] = useState("all"),
+    [search, setSearch] = useState("");
   useEffect(() => {
     if (!open) return;
     let live = true;
@@ -246,11 +257,11 @@ function NbaGameDetails({ game, now }: { game: NbaGame; now: number }) {
             "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
           )
           .eq("game_id", game.id)
-          .in("kind", ["injury", "odds"])
+          .in("kind", ["injury", "odds", "prop"])
           .gte("recorded_at", new Date(Date.now() - 48 * 3600000).toISOString())
           .order("recorded_at", { ascending: false })
           .order("id", { ascending: false })
-          .limit(180);
+          .limit(500);
         if (!live) return;
         if (r.error) throw r.error;
         setRows(latestNbaObservations(r.data || []));
@@ -270,14 +281,20 @@ function NbaGameDetails({ game, now }: { game: NbaGame; now: number }) {
       live = false;
     };
   }, [game.id, open, retry, now]);
-  const injuries = rows.filter((r) => r.kind === "injury"),
-    odds = rows.filter((r) => r.kind === "odds");
+  const injuries = rows.filter((r) => r.kind === "injury");
+  const comparisons = nbaComparisons(rows, now);
+  const filtered = comparisons.filter(
+    (c) =>
+      (market === "all" || c.market === market) &&
+      `${c.player} ${c.side}`.toLowerCase().includes(search.toLowerCase()),
+  );
   return (
     <details
       className="nba-board-details"
+      open={open}
       onToggle={(e) => setOpen(e.currentTarget.open)}
     >
-      <summary>Injuries & sportsbook snapshots</summary>
+      <summary>Open research · lines, props & form</summary>
       {open && (
         <div>
           {loading && <p role="status">Loading source snapshots…</p>}
@@ -321,67 +338,325 @@ function NbaGameDetails({ game, now }: { game: NbaGame; now: number }) {
                   <Source url={r.source} />
                 </div>
               ))}
-              <h4>Observed game lines</h4>
+              <h4>Compare observed prices</h4>
               <p className="nba-board-note">
-                Exact book and provider time stay attached to each snapshot. No
-                executable current price, best-price claim or model edge is
-                implied.
+                Research only · not picks. Best observed compares identical
+                selections from available books with provider quotes at most 15
+                minutes old. Prices can change; this is not a live bet slip.
               </p>
-              {!odds.length && (
+              <div className="nba-research-filters">
+                <label>
+                  Market
+                  <select
+                    aria-label="Market"
+                    value={market}
+                    onChange={(e) => (setMarket(e.target.value), setShown(20))}
+                  >
+                    <option value="all">All markets</option>
+                    {Object.entries(nbaMarkets).map(([key, label]) => (
+                      <option value={key} key={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Player or team
+                  <input
+                    type="search"
+                    aria-label="Player or team"
+                    placeholder="Search research"
+                    value={search}
+                    onChange={(e) => (setSearch(e.target.value), setShown(20))}
+                  />
+                </label>
+              </div>
+              {!comparisons.length && (
                 <p>
-                  No sportsbook game-line snapshots received for this game.
-                  Coverage may not open until closer to tip.
+                  No sportsbook lines or player props received for this game
+                  yet. Coverage opens closer to tip.
                 </p>
               )}
-              {odds.map((r) => (
-                <div className="nba-board-observation" key={r.id}>
+              {!!comparisons.length && !filtered.length && (
+                <p>No selections match these filters.</p>
+              )}
+              {filtered.slice(0, shown).map((c) => (
+                <article className="nba-price-card" key={c.key}>
+                  <span className="eyebrow">{nbaMarkets[c.market]}</span>
+                  <h4>{c.player || c.side}</h4>
+                  <p>
+                    {c.player ? c.side + " " : ""}
+                    {c.point !== null ? c.point : "Moneyline"}
+                  </p>
                   <strong>
-                    {String(r.payload.book || "Book unknown")} ·{" "}
-                    {(
-                      {
-                        h2h: "Moneyline",
-                        spreads: "Spread",
-                        totals: "Total",
-                      } as Record<string, string>
-                    )[String(r.payload.market)] ||
-                      String(r.payload.market || "Market unknown")}
+                    {c.best === null
+                      ? "No fresh comparable price"
+                      : "Best observed " + nbaOdds(c.best)}
                   </strong>
-                  {nbaOutcomes(r.payload).length ? (
-                    <ul>
-                      {nbaOutcomes(r.payload).map((o, i) => (
-                        <li key={i}>
-                          {o.name}
-                          {o.point !== null
-                            ? " " +
-                              (o.point > 0 && r.payload.market === "spreads"
-                                ? "+"
-                                : "") +
-                              o.point
-                            : ""}{" "}
-                          · {o.price}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p>No available outcomes in this snapshot.</p>
+                  <ul className="nba-book-quotes">
+                    {c.quotes.map((q) => (
+                      <li key={q.book}>
+                        <b>
+                          {q.book} {nbaOdds(q.price)}
+                          {q.fresh && q.price === c.best
+                            ? " · Best observed"
+                            : ""}
+                        </b>
+                        <small>
+                          Provider {stamp(q.observed_at)} · Received{" "}
+                          {stamp(q.recorded_at)} ·{" "}
+                          {q.fresh
+                            ? "Within 15 min"
+                            : "Older / unverified snapshot"}
+                        </small>
+                        <Source url={q.source} />
+                      </li>
+                    ))}
+                  </ul>
+                  {/FINAL/.test(game.status || "") && (
+                    <NbaObservedGrade
+                      game={game.id}
+                      market={c.market}
+                      side={c.side}
+                      point={c.point}
+                      player={c.player}
+                    />
                   )}
-                  <small>
-                    Provider time {stamp(r.observed_at)} · Received{" "}
-                    {stamp(r.recorded_at)} ·{" "}
-                    {nbaFreshness(r.observed_at, now, 180)}
-                  </small>{" "}
-                  <Source url={r.source} />
-                </div>
+                  {c.player && (
+                    <NbaPlayerForm
+                      key={`${c.player}-${game.id}`}
+                      player={c.player}
+                      game={game}
+                    />
+                  )}
+                </article>
               ))}
+              {filtered.length > shown && (
+                <button
+                  type="button"
+                  className="secondary"
+                  onClick={() => setShown((n) => n + 20)}
+                >
+                  Show more selections
+                </button>
+              )}
               <p className="nba-board-note">
-                Latest received records from a bounded 48-hour window. This list
-                is not a complete historical ledger or a medical clearance
-                service.
+                Latest received records from a bounded 48-hour window (up to 500
+                observations). Available books only; missing books are not
+                compared. This list is not a complete historical ledger or a
+                medical clearance service.
               </p>
             </>
           )}
         </div>
       )}
     </details>
+  );
+}
+
+function NbaPlayerForm({ player, game }: { player: string; game: NbaGame }) {
+  const [open, setOpen] = useState(false),
+    [retry, setRetry] = useState(0);
+  const [loading, setLoading] = useState(false),
+    [error, setError] = useState("");
+  type FormRow = {
+    game_id: string;
+    athlete_id: string;
+    player: string;
+    played: boolean;
+    minutes: number | null;
+    points: number;
+    rebounds: number;
+    assists: number;
+    threes: number;
+    date: string;
+    source: string;
+  };
+  const [form, setForm] = useState<FormRow[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    let live = true;
+    async function load() {
+      setLoading(true);
+      setError("");
+      setForm([]);
+      try {
+        if (game.season === null || game.season_type === null)
+          throw new Error("Season phase unavailable");
+        const key = await supabase.rpc("nba_name_key", { n: player });
+        if (key.error || !key.data)
+          throw new Error("Player identity unavailable");
+        // Filter by game time, not recording time: late confirmation cannot leak future games.
+        const players = await supabase
+          .from("nba_player_results")
+          .select(
+            "game_id,athlete_id,player,played,minutes,points,rebounds,assists,threes,nba_game_results!inner(source_url,nba_games!inner(tipoff,season,season_type))",
+          )
+          .eq("name_key", key.data)
+          .eq("nba_game_results.nba_games.season", game.season)
+          .eq("nba_game_results.nba_games.season_type", game.season_type)
+          .lt("nba_game_results.nba_games.tipoff", game.tipoff)
+          .gte(
+            "nba_game_results.nba_games.tipoff",
+            new Date(Date.parse(game.tipoff) - 60 * 86400000).toISOString(),
+          )
+          .order("game_id")
+          .limit(200);
+        if (players.error) throw players.error;
+        if ((players.data || []).length === 200)
+          throw new Error("Player history exceeded safe window");
+        if (new Set((players.data || []).map((p) => p.athlete_id)).size > 1)
+          throw new Error("Ambiguous player identity");
+        const ids = (players.data || []).map((p) => p.game_id);
+        if (!ids.length) {
+          if (live) setForm([]);
+          return;
+        }
+        const progress = await supabase
+          .from("nba_result_progress")
+          .select("game_id,status")
+          .in("game_id", ids)
+          .limit(200);
+        if (progress.error) throw progress.error;
+        const confirmed = new Set(
+          (progress.data || [])
+            .filter((p) => p.status === "FINAL")
+            .map((p) => p.game_id),
+        );
+        const result = (players.data || [])
+          .filter((p) => confirmed.has(p.game_id))
+          .map((p) => {
+            const meta = p.nba_game_results as unknown as {
+              source_url: string;
+              nba_games: { tipoff: string };
+            };
+            return {
+              ...p,
+              date: meta.nba_games.tipoff,
+              source: meta.source_url,
+            };
+          })
+          .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+          .slice(0, 5);
+        if (live) setForm(result);
+      } catch {
+        if (live)
+          setError(
+            "Recorded form could not load or player identity is ambiguous. No form estimate is shown.",
+          );
+      } finally {
+        if (live) setLoading(false);
+      }
+    }
+    void load();
+    return () => {
+      live = false;
+    };
+  }, [open, retry, player, game.season, game.season_type, game.tipoff]);
+  return (
+    <details
+      className="nba-form"
+      onToggle={(e) => setOpen(e.currentTarget.open)}
+    >
+      <summary>Recent recorded form · {player}</summary>
+      {open && (
+        <div>
+          <p className="nba-board-note">
+            Up to five confirmed games from the prior 60 days, same season and
+            phase only. Partial recorded history, not a last-five season sample
+            or a prediction. Conflicted and unconfirmed results are excluded.
+            Minutes are rounded by the result provider.
+          </p>
+          {loading && <p role="status">Loading recorded form…</p>}
+          {error && (
+            <p role="alert">
+              {error}{" "}
+              <button type="button" onClick={() => setRetry((n) => n + 1)}>
+                Retry
+              </button>
+            </p>
+          )}
+          {!loading && !error && !form.length && (
+            <p>
+              No confirmed {nbaPhase(game.season_type).toLowerCase()} results
+              recorded for this player yet.
+            </p>
+          )}
+          {form.map((r) => (
+            <div className="nba-form-row" key={r.game_id}>
+              <b>{stamp(r.date)}</b>
+              <span>
+                {r.played
+                  ? `${r.points} PTS · ${r.rebounds} REB · ${r.assists} AST · ${r.threes} 3PM · ${r.minutes ?? "?"} MIN`
+                  : "Did not play"}
+              </span>
+              <Source url={r.source} />
+            </div>
+          ))}
+        </div>
+      )}
+    </details>
+  );
+}
+
+function NbaObservedGrade({
+  game,
+  market,
+  side,
+  point,
+  player,
+}: {
+  game: string;
+  market: string;
+  side: string;
+  point: number | null;
+  player: string;
+}) {
+  const [grade, setGrade] = useState(""),
+    [busy, setBusy] = useState(false);
+  async function check() {
+    setBusy(true);
+    try {
+      const r = await supabase.rpc("nba_grade", {
+        p_game: game,
+        p_market: market,
+        p_side: side,
+        p_point: point,
+        p_player: player || null,
+      });
+      setGrade(
+        r.error
+          ? "Result unavailable"
+          : (
+              {
+                WIN: "WIN",
+                LOSS: "LOSS",
+                PUSH: "PUSH",
+                VOID: "VOID",
+                PENDING: "Awaiting confirmed result",
+                REVIEW: "Result under review",
+              } as Record<string, string>
+            )[String(r.data)] || "Result unavailable",
+      );
+    } catch {
+      setGrade("Result unavailable");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="nba-observed-grade">
+      <button
+        type="button"
+        className="secondary"
+        disabled={busy}
+        onClick={check}
+      >
+        {busy ? "Checking…" : "Check final result"}
+      </button>
+      {grade && (
+        <p role="status">{grade} · observed selection, not a published pick</p>
+      )}
+    </div>
   );
 }
