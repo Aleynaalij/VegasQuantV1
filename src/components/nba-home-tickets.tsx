@@ -40,7 +40,7 @@ export default function NbaHomeTickets() {
       const r = await supabase
         .from("nba_games")
         .select(
-          "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,status,venue,season_type",
+          "id,slug,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,status,venue,season_type",
         )
         .eq("season_type", 2)
         .gte("tipoff", new Date(at - 4 * 3600000).toISOString())
@@ -92,31 +92,37 @@ export default function NbaHomeTickets() {
       >
         {games.map((g, i) => (
           <article className="nba-game-ticket" role="listitem" key={g.id}>
-            <div className="nba-ticket-top">
-              <span>NBA · REGULAR SEASON</span>
-              <b>{String(i + 1).padStart(2, "0")}</b>
-            </div>
-            <div className="nba-ticket-matchup">
-              <Team name={g.away_team} code={g.away_abbreviation} />
-              <span>@</span>
-              <Team name={g.home_team} code={g.home_abbreviation} />
-            </div>
-            <div className="nba-ticket-bottom">
-              <strong>
-                {new Date(g.tipoff).toLocaleString("en-US", {
-                  timeZone: "America/New_York",
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  ...(g.tipoff_tbd
-                    ? {}
-                    : { hour: "numeric", minute: "2-digit" }),
-                })}
-                {g.tipoff_tbd ? " · Time TBD" : " ET"}
-              </strong>
-              <span>{g.venue || "Venue to be confirmed"}</span>
-              <small>{nbaStatus(g, now)}</small>
-            </div>
+            <Link
+              className="nba-ticket-link"
+              href={`/nba/games/${encodeURIComponent(g.slug)}`}
+              aria-label={`${g.away_team} at ${g.home_team} game details`}
+            >
+              <div className="nba-ticket-top">
+                <span>NBA · REGULAR SEASON</span>
+                <b>{String(i + 1).padStart(2, "0")}</b>
+              </div>
+              <div className="nba-ticket-matchup">
+                <Team name={g.away_team} code={g.away_abbreviation} />
+                <span>@</span>
+                <Team name={g.home_team} code={g.home_abbreviation} />
+              </div>
+              <div className="nba-ticket-bottom">
+                <strong>
+                  {new Date(g.tipoff).toLocaleString("en-US", {
+                    timeZone: "America/New_York",
+                    weekday: "short",
+                    month: "short",
+                    day: "numeric",
+                    ...(g.tipoff_tbd
+                      ? {}
+                      : { hour: "numeric", minute: "2-digit" }),
+                  })}
+                  {g.tipoff_tbd ? " · Time TBD" : " ET"}
+                </strong>
+                <span>{g.venue || "Venue to be confirmed"}</span>
+                <small>{nbaStatus(g, now)}</small>
+              </div>
+            </Link>
           </article>
         ))}
       </div>
