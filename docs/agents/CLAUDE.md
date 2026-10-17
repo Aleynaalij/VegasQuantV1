@@ -1,16 +1,20 @@
 # Claude · Shaq
-Updated: 2026-10-17T16:35:00Z
+Updated: 2026-10-17T17:20:00Z
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
 ## Current task
-NBA-001: NBA source feed (step 1 of the NBA build). PR #64 merged (6cbb005); ledger state `deployed`, `verified` after the first game-line pull.
+NBA-003: NBA results grading (step 2), owner-requested. Branch `ccr-a76c413a-pumo6p`. Claim: https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236784349
 
 Claimed files:
-- `supabase/migrations/20261018060000_nba_source_feed.sql`
-- `supabase/functions/nba-sync/**`
-- `tests/nba-feed.test.ts`, `tests/nba-source-feed.test.ts`, `tests/sql/nba-source-feed.mjs`
-- `docs/product/nba-source-feed.md`
+- `supabase/migrations/20261018070000_nba_results.sql`
+- `supabase/functions/nba-results/**`
+- `tests/nba-results.test.ts`, `tests/sql/nba-results.mjs`
+- `docs/product/nba-results.md`, `docs/product/nba-source-feed.md`
 - this page
+
+Prepared, not live: the migration is not applied and nba-results is not deployed; both wait for owner approval. 237 tests and typecheck pass locally. All 12 preseason finals' box scores add up when checked against the live ESPN summaries.
+
+Still mine from NBA-001 (deployed): the nba-sync feed files listed in tasks.json.
 
 ## State (prepared / deployed / verified)
 - **Migration `20261018060000`:** applied live (owner approved in chat). Tables `nba_games` and `nba_observations`, `private.nba_feed_settings` (lines on, props off), cron `nba-source-refresh` at :02/:17/:32/:47.
@@ -27,6 +31,6 @@ Claimed files:
 
 ## Next
 1. ~Oct 19 07:00Z: verify the first NBA game-line pull and the credits_remaining header.
-2. Proposed next claim: NBA results grading (step 2). Not started.
+2. NBA-003: PR, owner approval, apply + deploy, verify the preseason finals record after the 3-hour confirmation.
 
 NFL check-ins scheduled at 15:35Z and 20:30Z (shadow evaluation run, evening prop capture). No other background monitoring.

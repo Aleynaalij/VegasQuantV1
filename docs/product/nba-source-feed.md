@@ -30,5 +30,5 @@ Every paid call records The Odds API's `x-requests-remaining` / `x-requests-used
 `feed_runs.details` (`credits_remaining`, `credits_used`). Rough monthly cost at a full schedule:
 game lines about 2,000 credits; props about 10,000 with the default four markets.
 
-**Not yet:** NBA results grading (step 2), the NBA research board (step 3), the NBA model and
-scorecard (step 4), and NBA feed health alerts.
+**Not yet:** the NBA research board (step 3), the NBA model and scorecard (step 4), and NBA feed
+health alerts. Results grading (step 2) is in [nba-results.md](nba-results.md).
