@@ -1,0 +1,45 @@
+.nba-matchup-page {
+  max-width: 1000px;
+  margin: auto;
+  min-width: 0;
+  display: grid;
+  gap: 24px;
+}
+.nba-matchup-ticket {
+  border: 1px solid #b99446;
+  border-radius: 24px;
+  background: linear-gradient(135deg, #123a29, #0c1518);
+  padding: clamp(20px, 4vw, 36px);
+  text-align: center;
+}
+.nba-matchup-ticket h1 {
+  font-size: clamp(22px, 4vw, 34px);
+  line-height: 1.2;
+}
+.nba-matchup-ticket p {
+  color: #d0d4cc;
+  line-height: 1.6;
+}
+.nba-matchup-teams {
+  display: grid;
+  grid-template-columns: 1fr 24px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 24px 0;
+}
+.nba-matchup-teams > div {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.nba-matchup-teams b {
+  font-size: clamp(22px, 5vw, 38px);
+  overflow-wrap: anywhere;
+}
+.nba-matchup-teams strong {
+  font-size: 40px;
+}
+.nba-matchup-teams > span {
+  color: #e8c46a;
+}
