@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "NBA-001",
+      "owner": "CLAUDE",
+      "scope": "service",
+      "status": "blocked",
+      "updated_at": "2026-10-17T15:56:00Z",
+      "files": [
+        "supabase/functions/nba-sync/**",
+        "supabase/migrations/20261018060000_nba_source_feed.sql",
+        "tests/nba-feed.test.ts",
+        "tests/nba-source-feed.test.ts",
+        "tests/sql/nba-source-feed.mjs",
+        "docs/product/nba-source-feed.md",
+        "docs/agents/CLAUDE.md"
+      ],
+      "depends_on": [],
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/64",
+      "handoff": null,
+      "acknowledgment": null,
+      "checks": [],
+      "blocker": "Last reported collector run failed with ESPN 400; latest branch has new commits, but successful live ingestion has not been verified in this ledger.",
+      "next_action": "Claude: finish collector repair, verify live ingestion, report evidence and integrate PR #64."
+    },
+    {
+      "id": "NBA-002",
+      "owner": "CODEX",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-17T15:56:00Z",
+      "files": [
+        "src/components/nba-desk.tsx",
+        "src/components/nba-game-board.tsx",
+        "src/lib/nba-board.ts",
+        "src/app/nba-board.css",
+        "tests/nba-board.test.ts",
+        "scripts/ui-smoke/nba-board.mjs",
+        "docs/agents/CODEX.md"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-001",
+          "required": "merged"
+        }
+      ],
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/66",
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6235628723"
+      },
+      "acknowledgment": null,
+      "checks": [
+        {
+          "name": "220 tests, typecheck, build and browser fixtures",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/66"
+        }
+      ],
+      "next_action": "Claude: ACK and review PR #66; merge after #64, then verify actual NBA data/UI."
+    },
+    {
+      "id": "COORD-002",
+      "owner": "CODEX",
+      "scope": "documentation",
+      "status": "active",
+      "updated_at": "2026-10-17T15:56:00Z",
+      "files": [
+        "docs/agents/tasks.json",
+        "docs/agents/TASKS.md",
+        "docs/agents/INTEGRATION-CHECKLIST.md",
+        "docs/agents/README.md",
+        "scripts/agents/validate.mjs",
+        "tests/agent-coordination.test.ts",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        ".github/ISSUE_TEMPLATE/agent-task.yml",
+        ".github/workflows/agent-coordination.yml"
+      ],
+      "depends_on": [],
+      "handoff": null,
+      "acknowledgment": null,
+      "checks": [],
+      "next_action": "Publish and verify the coordination contract, then hand it to Claude in #65."
+    }
+  ]
+}

@@ -48,3 +48,12 @@ Keep NFL and NBA data separated. Preserve Research Board exemptions and grants, 
 ## Initial NBA work map (verify freshness)
 Claude PR #64 owns the NBA ingestion migration, `supabase/functions/nba-sync/**` and related tests/docs until Claude acknowledges a different handoff. This is a conservative inferred reservation from the open PR, not an ACK by Claude.
 Codex has no NBA implementation claim yet. Candidate independent work is first-ingestion verification and read-only NBA schedule/source-freshness UI; claim exact files and coordinate before starting.
+
+## Task board and acceptance contract
+Read [TASKS.md](TASKS.md) and the latest issue #65 comments before a claim. `tasks.json` is the structured ledger; change only your task entries and coordinate shared-file edits. Regenerate TASKS.md with `node scripts/agents/validate.mjs --write`. Do not silently rewrite the other assistant's status or claim acknowledgment on its behalf.
+
+The workflow `Agent coordination contract` validates changed coordination files with read-only permissions and no secrets. Existing application CI already runs tests/typecheck/build/UI smoke; it is preserved. A status check is not automatically required branch protection.
+
+Use the PR template and [INTEGRATION-CHECKLIST.md](INTEGRATION-CHECKLIST.md). Handoff receipt, review acceptance, merge, production deployment and verified live are distinct. No receiving ACK means the task stays in review. An unmet dependency prevents ready/integrated states in the ledger. Production work cannot close as documentation complete.
+
+This remains an active-session workflow, not an always-running agent coordinator. No API keys, paid model workers, new schedules, automatic pings or conversation wake-ups are introduced.
