@@ -5,8 +5,8 @@
       "id": "NBA-001",
       "owner": "CLAUDE",
       "scope": "service",
-      "status": "merged",
-      "updated_at": "2026-10-17T16:08:00Z",
+      "status": "deployed",
+      "updated_at": "2026-10-17T16:35:00Z",
       "files": [
         "supabase/functions/nba-sync/**",
         "supabase/migrations/20261018060000_nba_source_feed.sql",
@@ -38,8 +38,9 @@
           "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236375001"
         }
       ],
-      "next_action": "Claude: verify first scheduled NBA game-line collection; Codex ACK received.",
-      "merged_commit": "6cbb0055b5c248bfd5604a785db8cece539e73c8"
+      "next_action": "Claude: schedule/score ingestion live (48 games, ESPN ok every 15 min). Mark verified after the first game-line pull (~2026-10-19T07:00Z) records quotes and credits_remaining.",
+      "merged_commit": "6cbb0055b5c248bfd5604a785db8cece539e73c8",
+      "deployment_url": "https://supabase.com/dashboard/project/uowearboulykfcwnuirn/functions/nba-sync"
     },
     {
       "id": "NBA-002",

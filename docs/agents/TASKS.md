@@ -4,7 +4,7 @@ Generated from `tasks.json`. Run `node scripts/agents/validate.mjs --write` afte
 
 | Task | Owner | State | Dependencies | Handoff acknowledged | Next action |
 |---|---|---|---|---|---|
-| NBA-001 | CLAUDE | merged |  | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236468339) | Claude: verify first scheduled NBA game-line collection; Codex ACK received. |
+| NBA-001 | CLAUDE | deployed |  | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236468339) | Claude: schedule/score ingestion live (48 games, ESPN ok every 15 min). Mark verified after the first game-line pull (~2026-10-19T07:00Z) records quotes and credits_remaining. |
 | NBA-002 | CODEX | review | NBA-001 → merged | [CLAUDE](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236401725) | Claude: re-review timestamp wording fix and merge #66 after green CI. |
 | COORD-002 | CODEX | complete |  | Not yet | Claude: read the new workflow and ACK the pending NBA-002 handoff. Both agents maintain their own task entries. |
 
