@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { bestPrices, breakEven, checkLeg, formLine, stamped, statUnit, verdict, type BookPrice, type LegForm } from "@/lib/leg-rules";
+import { breakEven, checkLeg, formLine, stamped, statUnit, verdict, type BookPrice, type LegForm } from "@/lib/leg-rules";
+import { isAdmin, legBooks, legForms, legPrices, useLegDataVersion, wireAuthInvalidation } from "@/lib/leg-data";
 
 type Price = { first: number; last: number };
 /** Latest prospective shadow-model forecast for a leg (administrators only). */
@@ -19,30 +20,32 @@ export type FormData = {
 export function useLegForms(keys: string[]): FormData {
   const [data, setData] = useState<FormData>({ forms: {}, prices: {}, estimates: {}, books: {}, admin: false });
   const id = keys.join(",");
+  // One app-wide refresh clock and batched, cached loaders (lib/leg-data): every card on screen
+  // shares one query per table instead of each card polling for its own legs.
+  const version = useLegDataVersion();
   useEffect(() => {
+    wireAuthInvalidation();
     let live = true;
     const list = id ? id.split(",") : [];
     if (!list.length) return;
-    // History arrives after publication and prices move until kickoff, so keep refreshing.
     async function load() {
       const s = await supabase.auth.getSession();
       if (!s.data.session) return;
-      const [h, p, a, b] = await Promise.all([
-        supabase.from("leg_history").select("leg_key,cleared,sample,median,position").in("leg_key", list),
-        supabase.from("leg_market_prices").select("leg_key,first_price,last_price").in("leg_key", list),
-        supabase.rpc("is_admin"),
-        supabase.from("leg_book_prices").select("leg_key,book,price").in("leg_key", list),
+      const [forms, prices, books, admin] = await Promise.all([
+        legForms.loadMany(list),
+        legPrices.loadMany(list),
+        legBooks.loadMany(list),
+        isAdmin.get().catch(() => false),
       ]);
       if (!live) return;
-      const m = a.data === true ? await supabase.rpc("admin_leg_model_estimates", { p_keys: list }) : null;
+      const m = admin ? await supabase.rpc("admin_leg_model_estimates", { p_keys: list }) : null;
       if (!live) return;
+      const present = <T,>(x: Map<string, T | undefined>) =>
+        Object.fromEntries([...x].filter(([, v]) => v !== undefined)) as Record<string, T>;
       setData({
-        forms: Object.fromEntries(
-          (h.data || []).filter((x) => x.sample > 0).map((x) => [x.leg_key, { cleared: x.cleared, sample: x.sample, median: x.median === null ? null : Number(x.median), position: x.position }]),
-        ),
-        prices: Object.fromEntries(
-          (p.data || []).map((x) => [x.leg_key, { first: Number(x.first_price), last: Number(x.last_price) }]),
-        ),
+        forms: present(forms),
+        prices: present(prices),
+        books: present(books),
         estimates: Object.fromEntries(
           (m?.error ? [] : (m?.data as any[]) || []).map((x) => [
             x.leg_key,
@@ -57,24 +60,14 @@ export function useLegForms(keys: string[]): FormData {
             },
           ]),
         ),
-        books: Object.fromEntries(
-          Object.entries(
-            (b.error ? [] : b.data || []).reduce<Record<string, BookPrice[]>>((acc, x) => {
-              (acc[x.leg_key] ||= []).push({ book: x.book, price: Number(x.price) });
-              return acc;
-            }, {}),
-          ).map(([k, v]) => [k, bestPrices(v)]),
-        ),
-        admin: a.data === true,
+        admin,
       });
     }
-    void load();
-    const timer = setInterval(load, 60000);
+    void load().catch(() => undefined);
     return () => {
       live = false;
-      clearInterval(timer);
     };
-  }, [id]);
+  }, [id, version]);
   return data;
 }
 

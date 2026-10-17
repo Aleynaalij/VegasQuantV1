@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bookmark, Flame } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { savedLegs, tailCounts, tailedLegs } from "@/lib/leg-data";
 
 export default function LegActions({
   legKey,
@@ -54,20 +55,10 @@ export default function LegActions({
           return;
         }
         const stateVersion = current.current.version;
-        const [a, b, c] = await Promise.all([
-          supabase
-            .from("saved_legs")
-            .select("leg_key")
-            .eq("user_id", id)
-            .eq("leg_key", legKey)
-            .maybeSingle(),
-          supabase
-            .from("leg_tails")
-            .select("leg_key")
-            .eq("user_id", id)
-            .eq("leg_key", legKey)
-            .maybeSingle(),
-          supabase.rpc("leg_tail_count", { p_leg: legKey }),
+        // Batched with every other leg card on screen and cached (lib/leg-data).
+        const [a, b] = await Promise.all([
+          savedLegs.load(`${id}|${legKey}`),
+          tailedLegs.load(`${id}|${legKey}`),
         ]);
         if (
           !live ||
@@ -76,10 +67,8 @@ export default function LegActions({
           current.current.busy
         )
           return;
-        if (a.error || b.error || c.error) throw a.error || b.error || c.error;
-        setSaved(!!a.data);
-        setTail(!!b.data);
-        setCount(Number(c.data || 0));
+        setSaved(!!a);
+        setTail(!!b);
         setReady(true);
         setNotice("");
       } catch {
@@ -116,6 +105,38 @@ export default function LegActions({
     };
   }, [legKey, retry]);
 
+  // The tail count is one call per leg, so it loads only once the card is near the screen.
+  const box = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = box.current;
+    if (!el || visible) return;
+    if (typeof IntersectionObserver === "undefined") return setVisible(true);
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        setVisible(true);
+        io.disconnect();
+      }
+    }, { rootMargin: "300px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [visible]);
+  useEffect(() => {
+    if (!visible || !uid) return;
+    let live = true;
+    const cached = tailCounts.peek(legKey);
+    if (cached !== undefined) setCount(cached);
+    tailCounts
+      .load(legKey)
+      .then((n) => {
+        if (live && n !== undefined) setCount(n);
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [visible, uid, legKey, retry]);
+
   async function toggle(kind: "saved_legs" | "leg_tails") {
     if (!uid) {
       setNotice("Sign in to save or tail a leg.");
@@ -145,12 +166,16 @@ export default function LegActions({
       if (result.error) throw result.error;
       if (on && !result.data?.length)
         throw new Error("Tail is retained after kickoff");
-      if (kind === "saved_legs") setSaved(!on);
-      else {
+      if (kind === "saved_legs") {
+        savedLegs.invalidate([`${uid}|${legKey}`]);
+        setSaved(!on);
+      } else {
+        tailedLegs.invalidate([`${uid}|${legKey}`]);
+        tailCounts.invalidate([legKey]);
         setTail(!on);
-        const total = await supabase.rpc("leg_tail_count", { p_leg: legKey });
+        const total = await tailCounts.load(legKey);
         if (version !== current.current.version) return;
-        if (!total.error) setCount(Number(total.data || 0));
+        if (total !== undefined) setCount(total);
       }
       setNotice(
         kind === "saved_legs"
@@ -175,7 +200,7 @@ export default function LegActions({
     }
   }
   return (
-    <div className="leg-actions" aria-busy={busy}>
+    <div className="leg-actions" aria-busy={busy} ref={box}>
       <button
         aria-pressed={saved}
         disabled={busy || !ready}

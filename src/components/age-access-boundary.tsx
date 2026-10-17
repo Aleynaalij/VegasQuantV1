@@ -27,6 +27,10 @@ export default function AgeAccessBoundary({
     >("checking"),
     [retry, setRetry] = useState(0);
   const generation = useRef(0);
+  // The account the current decision belongs to. Supabase re-emits SIGNED_IN when the app returns
+  // to the foreground and TOKEN_REFRESHED every hour; for the same account those must not tear
+  // the whole app down behind "Checking your account…" and rebuild it.
+  const decidedFor = useRef<string | null | undefined>(undefined);
   useEffect(() => {
     let live = true;
     async function check() {
@@ -35,6 +39,7 @@ export default function AgeAccessBoundary({
         const r = await supabase.auth.getSession();
         if (!live || current !== generation.current) return;
         if (!r.data.session) {
+          decidedFor.current = null;
           setMode("allowed");
           return;
         }
@@ -46,6 +51,7 @@ export default function AgeAccessBoundary({
           setMode("error");
           return;
         }
+        decidedFor.current = r.data.session.user.id;
         setMode(
           status.data.required && !status.data.verified
             ? "required"
@@ -56,17 +62,24 @@ export default function AgeAccessBoundary({
       }
     }
     void check();
-    const listener = supabase.auth.onAuthStateChange(() => {
+    const listener = supabase.auth.onAuthStateChange((_event, session) => {
+      // Same account as the decision on screen: nothing changed, keep the app mounted.
+      if ((session?.user.id ?? null) === decidedFor.current) return;
       generation.current++;
+      decidedFor.current = undefined;
       setMode("checking");
       setTimeout(() => void check(), 0);
     });
-    window.addEventListener("vq:age-verified", check);
+    const verified = () => {
+      decidedFor.current = undefined;
+      void check();
+    };
+    window.addEventListener("vq:age-verified", verified);
     return () => {
       live = false;
       generation.current++;
       listener.data.subscription.unsubscribe();
-      window.removeEventListener("vq:age-verified", check);
+      window.removeEventListener("vq:age-verified", verified);
     };
   }, [retry]);
   if (accountPaths.has(path))

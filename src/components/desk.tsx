@@ -28,6 +28,7 @@ import {
   type Pick,
 } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
+import { onUserChange } from "@/lib/auth-user";
 import { Badge, Empty, Panel, Shell, SourceLink, Stat } from "./ui";
 import WeeklyPerformance from "./weekly-performance";
 import PricedRecord from "./priced-record";
@@ -102,7 +103,7 @@ export default function DeskApp({
       )
       .subscribe();
     void refresh();
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+    const stopAuth = onUserChange(() => {
       setD(initial);
       setTimeout(() => void refresh(), 0);
     });
@@ -111,7 +112,7 @@ export default function DeskApp({
     return () => {
       live = false;
       clearInterval(timer);
-      authListener.subscription.unsubscribe();
+      stopAuth();
       window.removeEventListener("focus", refresh);
       void supabase.removeChannel(channel);
     };

@@ -27,6 +27,7 @@ import HowItWorks from "./how-it-works";
 import SectionBoundary from "./section-boundary";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
 import { supabase } from "@/lib/supabase";
+import { onUserChange } from "@/lib/auth-user";
 import { noAccess, type Access } from "@/lib/membership";
 import { time } from "@/lib/domain";
 
@@ -182,7 +183,7 @@ export default function ResearchFeed() {
   useEffect(() => {
     let live = true;
     void refresh();
-    const auth = supabase.auth.onAuthStateChange(() => {
+    const stopAuth = onUserChange(() => {
       ++epoch.current;
       setPosts([]);
       setEdgeReleases([]);
@@ -200,7 +201,7 @@ export default function ResearchFeed() {
     return () => {
       live = false;
       ++epoch.current;
-      auth.data.subscription.unsubscribe();
+      stopAuth();
       window.removeEventListener("focus", focus);
       clearInterval(timer);
     };
@@ -470,11 +471,11 @@ export default function ResearchFeed() {
                       <CandidateTracker snapshot={item.value} />
                     </div>
                   ) : item.kind === "selection" ? (
-                    <details
-                      className="zone-drop"
+                    <ZoneDrop
                       key={item.key}
                       id={`release-${item.value.id}`}
-                      open={openRelease === item.value.id || undefined}
+                      open={openRelease === item.value.id}
+                      body={() => <CandidateTracker snapshot={item.value} />}
                     >
                       <summary>
                         <span className="eyebrow">
@@ -494,8 +495,7 @@ export default function ResearchFeed() {
                           </span>
                         </span>
                       </summary>
-                      <CandidateTracker snapshot={item.value} />
-                    </details>
+                    </ZoneDrop>
                   ) : null;
                 return (
                   <div className="zone-item" key={item.key}>
@@ -652,5 +652,40 @@ export default function ResearchFeed() {
         )}
       </div>
     </Shell>
+  );
+}
+
+/**
+ * A collapsed release in The Zone. Its cards (and their data loading) mount only once it is
+ * opened: closed <details> content still renders in React, so every collapsed drop used to build
+ * full cards and query for them.
+ */
+function ZoneDrop({
+  id,
+  open,
+  body,
+  children,
+}: {
+  id: string;
+  open: boolean;
+  body: () => React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const [opened, setOpened] = useState(open);
+  useEffect(() => {
+    if (open) setOpened(true);
+  }, [open]);
+  return (
+    <details
+      className="zone-drop"
+      id={id}
+      open={open || undefined}
+      onToggle={(e) => {
+        if ((e.currentTarget as HTMLDetailsElement).open) setOpened(true);
+      }}
+    >
+      {children}
+      {opened ? body() : null}
+    </details>
   );
 }
