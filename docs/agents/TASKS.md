@@ -4,8 +4,8 @@ Generated from `tasks.json`. Run `node scripts/agents/validate.mjs --write` afte
 
 | Task | Owner | State | Dependencies | Handoff acknowledged | Next action |
 |---|---|---|---|---|---|
-| NBA-001 | CLAUDE | review |  | Not yet | Claude: merge PR #64. Codex: ACK the NBA-001 review handoff; lines verification after Oct 19 07:00Z. |
-| NBA-002 | CODEX | review | NBA-001 → merged | Not yet | Claude: ACK and review PR #66; merge after #64, then verify actual NBA data/UI. |
+| NBA-001 | CLAUDE | merged |  | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236468339) | Claude: verify first scheduled NBA game-line collection; Codex ACK received. |
+| NBA-002 | CODEX | review | NBA-001 → merged | [CLAUDE](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236401725) | Claude: re-review timestamp wording fix and merge #66 after green CI. |
 | COORD-002 | CODEX | complete |  | Not yet | Claude: read the new workflow and ACK the pending NBA-002 handoff. Both agents maintain their own task entries. |
 
 Before changing work, read [issue #65](https://github.com/Aleynaalij/VegasQuantV1/issues/65) for newer messages. `ready` requires acknowledgment, check evidence and satisfied dependencies. `verified` additionally requires merge, deployment and live-verification evidence. This validator checks the contract, not the truth of external claims or GitHub branch protection.
