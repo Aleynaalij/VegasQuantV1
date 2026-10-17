@@ -127,7 +127,7 @@ def season_rows(db: Supabase, now: datetime, positions: dict):
     import pandas as pd
     start = datetime(now.year if now.month >= 9 else now.year - 1, 9, 1, tzinfo=timezone.utc)
     games = {g["id"]: g for g in db.all("nba_games", select="id,provider_id,away_team,home_team,tipoff,season_type",
-                                        season_type="eq.2", tipoff=f"gte.{iso(start)}")}
+                                        season_type="eq.2", tipoff=f"gte.{iso(start)}", order="id.asc")}
     recorded = []
     for i in range(0, len(games), 100):
         ids = list(games)[i:i + 100]
