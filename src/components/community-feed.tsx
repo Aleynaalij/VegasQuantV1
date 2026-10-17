@@ -14,7 +14,7 @@ import CommunityPhoto from "./community-photo";
 import CommunityParlayCard from "./community-parlay-card";
 import { COMMUNITY_PHOTO_BUCKET, MAX_PHOTO_BYTES } from "@/lib/community-photo";
 import { time } from "@/lib/domain";
-import { ImagePlus, Heart, MessageCircle } from "lucide-react";
+import { ImagePlus, Heart, MessageCircle, Share2 } from "lucide-react";
 type Post = {
   id: string;
   user_id: string;
@@ -33,6 +33,9 @@ type Post = {
   photo_path: string | null;
 };
 type Comment = {
+  parent_id: string | null;
+  reactions: number;
+  reacted: boolean;
   id: string;
   user_id: string;
   author_name: string;
@@ -45,12 +48,14 @@ const kinds: Record<string, string> = {
   result: "Result",
 };
 function Comments({
+  targetComment,
   postId,
   uid,
   admin,
   onChange,
   onBlock,
 }: {
+  targetComment?: string | null;
   postId: string;
   uid: string;
   admin: boolean;
@@ -61,25 +66,49 @@ function Comments({
     [body, setBody] = useState(""),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
+  const [replyTo, setReplyTo] = useState<Comment | null>(null);
   const load = useCallback(async () => {
-    const r = await supabase
-      .from("community_post_comments")
-      .select("*")
-      .eq("post_id", postId)
-      .order("created_at", { ascending: false })
-      .limit(50);
+    const r = await supabase.rpc("community_comments", {
+      p_post: postId,
+      p_target: targetComment || null,
+    });
     if (r.error) setNotice("Comments could not load. Try again.");
     else setRows(r.data || []);
-  }, [postId]);
+  }, [postId, targetComment]);
   useEffect(() => {
     void load();
   }, [load]);
+  useEffect(() => {
+    if (targetComment && rows.some((c) => c.id === targetComment))
+      document
+        .getElementById(`comment-${targetComment}`)
+        ?.scrollIntoView({ block: "center" });
+  }, [rows, targetComment]);
+  async function react(c: Comment) {
+    if (busy) return;
+    setBusy(true);
+    const r = c.reacted
+      ? await supabase
+          .from("community_comment_reactions")
+          .delete()
+          .eq("comment_id", c.id)
+          .eq("user_id", uid)
+      : await supabase
+          .from("community_comment_reactions")
+          .insert({ comment_id: c.id, user_id: uid });
+    setBusy(false);
+    if (r.error) setNotice("Reaction could not save. Please retry.");
+    else await load();
+  }
   async function submit(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
-    const r = await supabase
-      .from("community_post_comments")
-      .insert({ post_id: postId, user_id: uid, body: body.trim() });
+    const r = await supabase.from("community_post_comments").insert({
+      post_id: postId,
+      user_id: uid,
+      body: body.trim(),
+      parent_id: replyTo?.id || null,
+    });
     setBusy(false);
     if (r.error) {
       setNotice(
@@ -88,6 +117,7 @@ function Comments({
       return;
     }
     setBody("");
+    setReplyTo(null);
     setNotice("Comment posted.");
     await load();
     onChange();
@@ -106,6 +136,18 @@ function Comments({
   return (
     <div className="social-comments">
       <form onSubmit={submit}>
+        {replyTo && (
+          <p>
+            Replying to @{replyTo.author_name}{" "}
+            <button
+              type="button"
+              className="text-link"
+              onClick={() => setReplyTo(null)}
+            >
+              Cancel reply
+            </button>
+          </p>
+        )}
         <label htmlFor={`reply-${postId}`}>Join the conversation</label>
         <textarea
           id={`reply-${postId}`}
@@ -121,10 +163,36 @@ function Comments({
       </form>
       <p role="status">{notice}</p>
       {rows.map((c) => (
-        <article key={c.id}>
+        <article
+          key={c.id}
+          id={`comment-${c.id}`}
+          className={c.id === targetComment ? "linked-comment" : undefined}
+        >
           <strong>@{c.author_name}</strong>
           <small> · {time(c.created_at)}</small>
+          {c.parent_id && <small>Reply in this thread</small>}
           <p>{c.body}</p>
+          <div className="social-actions">
+            <button
+              type="button"
+              className="text-link"
+              onClick={() => {
+                setReplyTo(c);
+                document.getElementById(`reply-${postId}`)?.focus();
+              }}
+            >
+              Reply
+            </button>
+            <button
+              type="button"
+              className="text-link"
+              aria-pressed={c.reacted}
+              disabled={busy}
+              onClick={() => void react(c)}
+            >
+              {c.reacted ? "Liked" : "Like"} comment · {c.reactions || 0}
+            </button>
+          </div>
           {uid !== c.user_id ? (
             <button
               className="text-link"
@@ -150,6 +218,11 @@ export default function CommunityFeed() {
   const searchParams = useSearchParams();
   const routeSport = searchParams.get("sport");
   const routePost = searchParams.get("post");
+  const targetComment = /^[0-9a-f-]{36}$/i.test(
+    searchParams.get("comment") || "",
+  )
+    ? searchParams.get("comment")
+    : null;
   const [uid, setUid] = useState<string | null>(null),
     [authReady, setAuthReady] = useState(false),
     [sport, setSport] = useState<"nfl" | "nba">("nfl"),
@@ -190,6 +263,9 @@ export default function CommunityFeed() {
       routePost && /^[0-9a-f-]{36}$/i.test(routePost) ? routePost : null,
     );
   }, [routeSport, routePost]);
+  useEffect(() => {
+    if (uid && routePost && targetComment) setOpenComments(routePost);
+  }, [uid, routePost, targetComment]);
   const epoch = useRef(0);
   const sessionUid = useRef<string | null | undefined>(undefined);
   useEffect(() => {
@@ -390,6 +466,32 @@ export default function CommunityFeed() {
     setBusy(false);
     if (r.error) setNotice("Reaction could not save.");
     else await refresh();
+  }
+  async function sharePost(p: Post) {
+    if (busy || !uid) return;
+    setBusy(true);
+    try {
+      const url = `${location.origin}/community?sport=${p.sport}&post=${p.id}#post-${p.id}`;
+      if (navigator.share)
+        await navigator.share({ title: "Vegas Quant community post", url });
+      else await navigator.clipboard.writeText(url);
+      const r = await supabase
+        .from("community_shares")
+        .upsert(
+          { post_id: p.id, user_id: uid },
+          { onConflict: "post_id,user_id", ignoreDuplicates: true },
+        );
+      setNotice(
+        r.error
+          ? "Link shared. The activity receipt could not save."
+          : "Post link shared.",
+      );
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError"))
+        setNotice("Could not share this post. Please retry.");
+    } finally {
+      setBusy(false);
+    }
   }
   async function follow(p: Post) {
     if (!uid || busy) return;
@@ -736,6 +838,14 @@ export default function CommunityFeed() {
                     {p.comments}
                   </button>
                 </div>
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={busy}
+                  onClick={() => void sharePost(p)}
+                >
+                  <Share2 size={17} aria-hidden="true" /> Share
+                </button>
                 <details className="post-options">
                   <summary aria-label="Post options">•••</summary>
                   {uid !== p.user_id ? (
@@ -785,6 +895,7 @@ export default function CommunityFeed() {
                 </details>
                 {openComments === p.id ? (
                   <Comments
+                    targetComment={targetComment}
                     key={`${uid}:${p.id}`}
                     onBlock={block}
                     postId={p.id}

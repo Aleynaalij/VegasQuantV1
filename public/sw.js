@@ -24,7 +24,7 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("message", (event) => {
   if (event.data === "ACTIVATE_UPDATE") self.skipWaiting();
   if (event.data === "PUSH_CAPABILITIES")
-    event.ports?.[0]?.postMessage({ health: true });
+    event.ports?.[0]?.postMessage({ health: true, social: true });
 });
 self.addEventListener("fetch", (event) => {
   if (
@@ -42,21 +42,24 @@ self.addEventListener("push", (event) => {
       ? data.release
       : null;
   const url =
-    data.type === "health"
-      ? "/admin/feeds"
-      : data.type === "signup"
-        ? "/admin/accounts"
-        : data.type === "research"
-          ? "/feed"
-          : release
-            ? `/feed?view=legs#release-${release}`
-            : data.type === "price"
-              ? "/feed?view=legs"
-              : "/";
+    data.type === "social"
+      ? safeTarget(data.url)
+      : data.type === "health"
+        ? "/admin/feeds"
+        : data.type === "signup"
+          ? "/admin/accounts"
+          : data.type === "research"
+            ? "/feed"
+            : release
+              ? `/feed?view=legs#release-${release}`
+              : data.type === "price"
+                ? "/feed?view=legs"
+                : "/";
   event.waitUntil(
     self.registration.showNotification("Vegas Quant", {
       body:
-        data.announcement || (data.type === "health"
+        data.announcement ||
+        (data.type === "health"
           ? "Research data needs attention. Open Feed Health to review."
           : data.type === "test"
             ? "Test alert: your Vegas Quant notifications are connected."
@@ -70,27 +73,51 @@ self.addEventListener("push", (event) => {
       icon: "/icons/vq-prestige-192.png",
       badge: "/icons/vq-prestige-192.png",
       tag:
-        data.type === "health"
-          ? "vq-health"
-          : data.type === "test"
-            ? "vq-test"
-            : data.type === "signup"
-              ? "vq-signup"
-              : data.type === "research"
-                ? "vq-research"
-                : data.type === "price"
-                  ? "vq-price-" + (release || "update")
-                  : "vq-official-" + (data.pick_id || "decision"),
+        data.type === "social"
+          ? "vq-social-" +
+            (/^[0-9a-f-]{36}$/.test(data.notification_id || "")
+              ? data.notification_id
+              : "activity")
+          : data.type === "health"
+            ? "vq-health"
+            : data.type === "test"
+              ? "vq-test"
+              : data.type === "signup"
+                ? "vq-signup"
+                : data.type === "research"
+                  ? "vq-research"
+                  : data.type === "price"
+                    ? "vq-price-" + (release || "update")
+                    : "vq-official-" + (data.pick_id || "decision"),
       data: { url },
     }),
   );
 });
 // Only known in-app destinations; a price alert may open one release in The Zone.
-const safeTarget = (url) =>
-  ["/admin/feeds", "/admin/accounts", "/feed", "/feed?view=legs"].includes(url) ||
-  /^\/feed\?view=legs#release-[0-9a-f-]{36}$/.test(url || "")
-    ? url
-    : "/";
+const safeTarget = (value) => {
+  if (
+    typeof value !== "string" ||
+    !value.startsWith("/") ||
+    value.startsWith("//")
+  )
+    return "/";
+  try {
+    const url = new URL(value, self.location.origin);
+    if (url.origin !== self.location.origin) return "/";
+    if (
+      [
+        "/admin/feeds",
+        "/admin/accounts",
+        "/feed",
+        "/notifications",
+        "/membership",
+      ].includes(url.pathname) ||
+      /^\/(community|account|messages)(\/|$)/.test(url.pathname)
+    )
+      return url.pathname + url.search + url.hash;
+  } catch {}
+  return "/";
+};
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const target = safeTarget(event.notification.data?.url);

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import BrandMark from "./brand-mark";
 import InstallApp from "./install-app";
-import UpdateInbox from "./update-inbox";
+import { NotificationBell as UpdateInbox } from "./notification-provider";
 import LetsSweat from "./lets-sweat";
 import AccountLink from "./account-link";
 import SwipeTabs from "./swipe-tabs";

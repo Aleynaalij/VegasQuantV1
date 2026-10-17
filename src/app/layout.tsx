@@ -17,6 +17,8 @@ import "./dark-surfaces.css";
 import "./premium.css";
 import "./lounge.css";
 import "./social.css";
+import "./notifications.css";
+import NotificationProvider from "@/components/notification-provider";
 import "./parlay-builder.css";
 import "./performance.css";
 import NotificationBootstrap from "@/components/notification-bootstrap";
@@ -86,19 +88,21 @@ export default function RootLayout({
           }}
         />
         <ThemePrompt />
-        <AgeAccessBoundary
-          extras={
-            <>
-              <Welcome />
-              <ProfileSetupGate />
-              <NotificationBootstrap />
-              <PhoneContactPrompt />
-              <DailyLuck />
-            </>
-          }
-        >
-          {children}
-        </AgeAccessBoundary>
+        <NotificationProvider>
+          <AgeAccessBoundary
+            extras={
+              <>
+                <Welcome />
+                <ProfileSetupGate />
+                <NotificationBootstrap />
+                <PhoneContactPrompt />
+                <DailyLuck />
+              </>
+            }
+          >
+            {children}
+          </AgeAccessBoundary>
+        </NotificationProvider>
       </body>
     </html>
   );
