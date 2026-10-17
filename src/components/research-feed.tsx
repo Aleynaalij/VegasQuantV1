@@ -19,6 +19,8 @@ import AutomaticResultCard, {
 } from "./automatic-result-card";
 import BillsWinningSlip from "./bills-winning-slip";
 import ParlayWorkshop from "./parlay-workshop";
+import dynamic from "next/dynamic";
+const WeekendMoneylineCard = dynamic(() => import("./weekend-moneyline-card"));
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
@@ -319,6 +321,7 @@ export default function ResearchFeed() {
           </Link>
         </header>
         <HowItWorks />
+        {zoneView === "Parlays" && <WeekendMoneylineCard />}
         {(zoneView === "Legs" || zoneView === "Parlays") && <ParlayWorkshop key={zoneView} mode={zoneView === "Legs" ? "catalog" : "parlays"} />}
         <details className="zone-extra-filters">
           <summary>More research filters</summary>
@@ -545,7 +548,7 @@ export default function ResearchFeed() {
                 );
               })}
             </div>
-            {zoneView !== "Legs" && !visibleTimeline.length && !error && (
+            {zoneView !== "Legs" && zoneView !== "Parlays" && !visibleTimeline.length && !error && (
               <p className="feed-empty">
                 No updates in this category yet. Check back as the next decision
                 develops.
