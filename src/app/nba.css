@@ -45,3 +45,9 @@
 .social-comments form { display:grid; gap:10px; }
 .social-comments article { border-left:2px solid var(--line); padding-left:12px; }
 .zone-views a:focus-visible { outline:3px solid var(--brand-ink); outline-offset:3px; }
+/* NBA home hero: reuses the NFL vq-home hero; only the live score and the preparation note are NBA-only. */
+.nba-home-brief .nba-hero-score { font-size: clamp(28px, 6vw, 40px); font-weight: 800; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; }
+.nba-home-note { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.nba-home-note svg { flex-shrink: 0; }
+#nba-slate { scroll-margin-top: 80px; }
+.nba-home-stale { margin: 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 13px; }
