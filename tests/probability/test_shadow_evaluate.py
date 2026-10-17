@@ -153,6 +153,19 @@ class Report(unittest.TestCase):
         changed = [dict(rows[0], yards=0), *rows[1:]]
         self.assertNotEqual(p["scored_outcomes_sha256"], e.build_report(changed, "m", sources)["provenance"]["scored_outcomes_sha256"])
 
+    def test_scan_coverage_reports_unpriced_candidates(self):
+        runs = [dict(coverage=dict(cards=696, priced=0, unavailable=696), recorded_forecasts=0,
+                     blocker_counts={"No verified exact-player prop quote": 206, "Workload is below validated cohort threshold": 303}),
+                dict(coverage=dict(cards=2001, priced=1416, unavailable=585), recorded_forecasts=0, blocker_counts=None,
+                     per_game=[dict(blockers={"Quote older than 15 minutes": 111}), dict(blockers=["stale quotes"])]),
+                dict(coverage=dict(cards=10, priced=10, unavailable=0), recorded_forecasts=8, blocker_counts={})]
+        c = e.build_report([row(1, "g1")], "m", runs=runs)["scan_coverage"]
+        self.assertEqual((c["runs"], c["runs_with_forecasts"], c["recorded_forecasts"]), (3, 1, 8))
+        self.assertEqual(c["candidates"], {"cards": 2707, "priced": 1426, "unavailable": 1281})
+        self.assertEqual(c["blocker_counts"]["Quote older than 15 minutes"], 111)
+        self.assertEqual(c["blocker_counts"]["stale quotes"], 1)
+        self.assertEqual(c["blocker_counts"]["No verified exact-player prop quote"], 206)
+
     def test_eligible_cohort_is_price_band_overs_with_edge(self):
         rows = [row(1, "g1", odds=-300), row(2, "g1", odds=-140), row(3, "g1", direction="under"),
                 row(4, "g1", edge=2.0), row(5, "g1")]

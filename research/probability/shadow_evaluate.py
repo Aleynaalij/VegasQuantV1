@@ -266,7 +266,29 @@ def provenance(rows, input_sources):
     }
 
 
-def build_report(rows, model_id: str, input_sources=None) -> dict:
+def scan_coverage(runs):
+    """The candidates that never became forecasts: per hosted run, its coverage counts, blocker
+    reasons and recorded forecasts, summed across runs."""
+    totals, blockers = defaultdict(int), defaultdict(int)
+    for run in runs:
+        for k, v in (run.get("coverage") or {}).items():
+            totals[k] += int(v or 0)
+        counts = run.get("blocker_counts")
+        if isinstance(counts, dict):
+            for reason, n in counts.items():
+                blockers[reason] += int(n or 0)
+        else:
+            # Runs that only summarise by game: count each reason once per game it blocked.
+            for game in run.get("per_game") or []:
+                reasons = (game or {}).get("blockers") or {}
+                for reason, n in (reasons.items() if isinstance(reasons, dict) else ((r, 1) for r in reasons)):
+                    blockers[reason] += int(n or 0)
+    return {"runs": len(runs), "runs_with_forecasts": sum(1 for r in runs if r.get("recorded_forecasts")),
+            "recorded_forecasts": sum(int(r.get("recorded_forecasts") or 0) for r in runs),
+            "candidates": dict(totals), "blocker_counts": dict(sorted(blockers.items()))}
+
+
+def build_report(rows, model_id: str, input_sources=None, runs=None) -> dict:
     rng = random.Random(SEED)
     # The first capture is chosen among every captured forecast, before outcomes are known.
     main = first_observations(rows)
@@ -276,6 +298,7 @@ def build_report(rows, model_id: str, input_sources=None) -> dict:
     return {"protocol": PROTOCOL, "model_id": model_id, "captured_forecasts": len(rows),
             "graded_forecasts": sum(1 for r in rows if r.get("graded", True)), "main_sample": len(main),
             "provenance": provenance(rows, input_sources or []),
+            "scan_coverage": scan_coverage(runs or []),
             "scopes": {k: scope_report(k, v, rng) for k, v in sorted(scopes.items())},
             "note": "Research evaluation only. A slice that meets every criterion is eligible for a documented human "
                     "approval review; it does not approve the model or authorize any publication. Scopes outside "
@@ -285,16 +308,18 @@ def build_report(rows, model_id: str, input_sources=None) -> dict:
 def report(db: Supabase, fetch=download) -> dict:
     model_id = json.loads(MODEL.read_text())["model_id"]
     rows = db.request("/rest/v1/rpc/nfl_shadow_evaluation_rows", {"p_model_id": model_id}) or []
+    runs = db.request("/rest/v1/rpc/nfl_shadow_scan_coverage", {"p_model_id": model_id}) or []
     input_sources = []
     if rows:
         seasons = {int(r["season"]) for r in rows}
         frames = load(seasons | {s - 1 for s in seasons}, fetch)
         add_baselines(rows, frames)
         input_sources = [{"season": s, "source_url": url, "sha256": sha} for s, (_, url, sha) in sorted(frames.items())]
-    dossier = build_report(rows, model_id, input_sources)
+    dossier = build_report(rows, model_id, input_sources, runs)
     db.request("/rest/v1/rpc/record_nfl_qualification_report",
                {"p_model_id": model_id, "p_protocol": PROTOCOL, "p_report": dossier})
-    return {"captured_forecasts": dossier["captured_forecasts"], "graded_forecasts": dossier["graded_forecasts"],
+    return {"scan_runs": dossier["scan_coverage"]["runs"],
+            "captured_forecasts": dossier["captured_forecasts"], "graded_forecasts": dossier["graded_forecasts"],
             "main_sample": dossier["main_sample"],
             "scopes": {k: {"supported": v["supported"], "player_games": v["player_games"], "games": v["games"],
                            "counts": v["counts"], "eligible_slices": v["eligible_slices"]}

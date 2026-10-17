@@ -9,7 +9,11 @@ create function private.immutable() returns trigger language plpgsql as $$ begin
 create table public.games(id uuid primary key, kickoff timestamptz);
 create table public.source_observations(id uuid primary key default gen_random_uuid(), game_id uuid, kind text, observed_at timestamptz, payload jsonb);
 create table private.nfl_shadow_model_manifests(model_id text primary key);
-create table private.nfl_shadow_forecasts(id uuid primary key, game_id uuid references public.games(id), model_id text, player text,
+create table private.nfl_shadow_scan_runs(id uuid primary key, model_id text, generated_at timestamptz, scan jsonb);
+insert into private.nfl_shadow_scan_runs values('00000000-0000-0000-0000-0000000000a1','m',now()-interval '2 days',
+ '{"coverage":{"cards":3,"priced":3,"unavailable":0},"blocker_counts":{"Quote older than 15 minutes":1}}'),
+ ('00000000-0000-0000-0000-0000000000a2','m',now()-interval '3 days','{"coverage":{"cards":5,"priced":0,"unavailable":5},"reason":"No props"}');
+create table private.nfl_shadow_forecasts(id uuid primary key, run_id uuid default '00000000-0000-0000-0000-0000000000a1', game_id uuid references public.games(id), model_id text, player text,
  market text, direction text, line numeric, forecast jsonb, recorded_at timestamptz default now());
 insert into private.nfl_shadow_model_manifests values('m');
 insert into public.games values('00000000-0000-0000-0000-000000000001', now()-interval '1 day'),('00000000-0000-0000-0000-000000000002', now()-interval '1 hour');
@@ -58,10 +62,15 @@ assert.deepEqual([Number(rows[0].yards), rows[0].corrections, Number(rows[0].odd
   [20, 1, -200, 'RB', 2026, 7, 'SEA']);
 assert.equal(rows[1].void, true); assert.equal(rows[1].closing_odds, null); // no closing quote for that line
 
+// Scan coverage lists every run, including ones that recorded no forecast.
+const runs = (await db.query(`select * from public.nfl_shadow_scan_coverage('m')`)).rows;
+assert.deepEqual(runs.map((r) => [r.recorded_forecasts, r.coverage.cards, r.reason]), [[0, 5, 'No props'], [3, 3, null]]);
+assert.deepEqual(runs[1].blocker_counts, { 'Quote older than 15 minutes': 1 });
 const id = (await db.query(`select public.record_nfl_qualification_report('m','qualification-2026-10-16','{"scopes":{}}') id`)).rows[0].id;
 assert.ok(id);
 const grants = (await db.query(`select has_function_privilege('authenticated','public.record_nfl_shadow_outcomes(jsonb)','execute') a,
  has_function_privilege('anon','public.nfl_shadow_evaluation_rows(text)','execute') b,
+ has_function_privilege('authenticated','public.nfl_shadow_scan_coverage(text)','execute') c,
  has_function_privilege('service_role','public.nfl_shadow_pending_outcomes()','execute') s`)).rows[0];
-assert.deepEqual(grants, { a: false, b: false, s: true });
+assert.deepEqual(grants, { a: false, b: false, c: false, s: true });
 console.log('nfl shadow outcomes ok');

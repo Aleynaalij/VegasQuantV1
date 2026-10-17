@@ -7,6 +7,8 @@
 --    stays immutable; a later different value is appended to private.nfl_shadow_outcome_corrections
 --    and the evaluation uses the latest version. Grading re-reads forecasts for 21 days after
 --    kickoff so corrections are seen.
+-- 3. Scan coverage: every hosted run, with its coverage counts, blocker reasons and the forecasts it
+--    recorded, so a dossier reports the candidates that never became forecasts too.
 create table private.nfl_shadow_outcome_corrections(
  id uuid primary key default gen_random_uuid(),
  forecast_id uuid not null references private.nfl_shadow_outcomes(forecast_id),
@@ -100,7 +102,14 @@ language sql stable security definer set search_path='' as $$
  left join lateral private.nfl_shadow_current_outcome(f.id) o on true
  where f.model_id=p_model_id
 $$;
-revoke all on function public.nfl_shadow_pending_outcomes(), public.record_nfl_shadow_outcomes(jsonb), public.nfl_shadow_evaluation_rows(text)
- from public, anon, authenticated;
-grant execute on function public.nfl_shadow_pending_outcomes(), public.record_nfl_shadow_outcomes(jsonb), public.nfl_shadow_evaluation_rows(text)
- to service_role;
+create function public.nfl_shadow_scan_coverage(p_model_id text) returns table(
+ run_id uuid, generated_at timestamptz, coverage jsonb, blocker_counts jsonb, per_game jsonb, reason text, recorded_forecasts int)
+language sql stable security definer set search_path='' as $$
+ select r.id, r.generated_at, r.scan->'coverage', r.scan->'blocker_counts', r.scan->'per_game', r.scan->>'reason',
+  (select count(*)::int from private.nfl_shadow_forecasts f where f.run_id=r.id)
+ from private.nfl_shadow_scan_runs r where r.model_id=p_model_id order by r.generated_at
+$$;
+revoke all on function public.nfl_shadow_pending_outcomes(), public.record_nfl_shadow_outcomes(jsonb), public.nfl_shadow_evaluation_rows(text),
+ public.nfl_shadow_scan_coverage(text) from public, anon, authenticated;
+grant execute on function public.nfl_shadow_pending_outcomes(), public.record_nfl_shadow_outcomes(jsonb), public.nfl_shadow_evaluation_rows(text),
+ public.nfl_shadow_scan_coverage(text) to service_role;
