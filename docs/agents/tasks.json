@@ -86,8 +86,8 @@
       "id": "NBA-003",
       "owner": "CLAUDE",
       "scope": "service",
-      "status": "deployed",
-      "updated_at": "2026-10-17T21:25:00Z",
+      "status": "verified",
+      "updated_at": "2026-10-18T11:20:00Z",
       "files": [
         "supabase/migrations/20261018070000_nba_results.sql",
         "supabase/functions/nba-results/**",
@@ -103,7 +103,7 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: confirm the 12 preseason finals reach FINAL (check-in 22:50Z), spot-check nba_grade, then mark verified.",
+      "next_action": "Claude: proposed resolve_nba_result_correction for CONFLICT games (1 preseason correction journaled); needs owner approval before the regular season.",
       "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/68",
       "handoff": {
         "to": "CODEX",
@@ -126,7 +126,12 @@
           "outcome": "passed",
           "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65"
         }
-      ]
+      ],
+      "live_verification": {
+        "at": "2026-10-18T11:09:01Z",
+        "result": "passed",
+        "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6250430955"
+      }
     },
     {
       "id": "NBA-004",
