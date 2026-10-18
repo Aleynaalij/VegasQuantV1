@@ -1,8 +1,21 @@
 "use client";
 import { useId, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabase";
 type Match = { key: string; label: string; url: string | null; status: string };
-export default function KalshiLink({ legKeys }: { legKeys: string[] }) {
+export default function KalshiLink({
+  legKeys,
+  label = "Find on Kalshi ↗",
+  beforeOpen,
+  disabled = false,
+  portalDialog = false,
+}: {
+  legKeys: string[];
+  label?: string;
+  beforeOpen?: () => Promise<boolean>;
+  disabled?: boolean;
+  portalDialog?: boolean;
+}) {
   const dialog = useRef<HTMLDialogElement>(null),
     title = useId();
   const [busy, setBusy] = useState(false),
@@ -10,7 +23,8 @@ export default function KalshiLink({ legKeys }: { legKeys: string[] }) {
     [error, setError] = useState(""),
     [confirmed, setConfirmed] = useState(false);
   async function check() {
-    if (busy) return;
+    if (busy || disabled) return;
+    if (beforeOpen && !(await beforeOpen())) return;
     setBusy(true);
     setResults([]);
     setError("");
@@ -46,78 +60,82 @@ export default function KalshiLink({ legKeys }: { legKeys: string[] }) {
       setBusy(false);
     }
   }
+  const modal = (
+    <dialog ref={dialog} className="entry-dialog" aria-labelledby={title}>
+      <h2 id={title}>Open selections on Kalshi</h2>
+      <p>
+        Exact player, game and target matches only. Review Kalshi’s current
+        price and settlement rules. Sportsbook prices and VQ approval do not
+        transfer to Kalshi.
+      </p>
+      {legKeys.length > 1 && (
+        <p>
+          Links open individual markets. This does not create a combined ticket.
+        </p>
+      )}
+      {busy && <p role="status">Checking available markets…</p>}
+      {error && <p role="alert">{error}</p>}
+      {!!results.length && (
+        <>
+          <label>
+            <input
+              type="checkbox"
+              checked={confirmed}
+              onChange={(e) => setConfirmed(e.target.checked)}
+            />{" "}
+            I am 21+ and meet Kalshi’s eligibility requirements.
+          </label>
+          <ul>
+            {results.map((r) => (
+              <li key={r.key}>
+                <strong>{r.label}</strong>
+                {r.url && confirmed ? (
+                  <p>
+                    <a
+                      className="btn"
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Open on Kalshi ↗
+                    </a>
+                  </p>
+                ) : (
+                  <p>
+                    {r.url
+                      ? "Exact match found · confirm eligibility to open"
+                      : r.status === "UNAVAILABLE"
+                        ? "Kalshi lookup unavailable. Try again."
+                        : "No exact available Kalshi match."}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      <button
+        type="button"
+        className="secondary"
+        onClick={() => dialog.current?.close()}
+      >
+        Close
+      </button>
+    </dialog>
+  );
   return (
     <>
       <button
         type="button"
         className="secondary"
-        disabled={busy}
+        disabled={busy || disabled}
         onClick={() => void check()}
       >
-        Find on Kalshi ↗
+        {label}
       </button>
-      <dialog ref={dialog} className="entry-dialog" aria-labelledby={title}>
-        <h2 id={title}>Open selections on Kalshi</h2>
-        <p>
-          Exact player, game and target matches only. Review Kalshi’s current
-          price and settlement rules. Sportsbook prices and VQ approval do not
-          transfer to Kalshi.
-        </p>
-        {legKeys.length > 1 && (
-          <p>
-            Links open individual markets. This does not create a combined
-            ticket.
-          </p>
-        )}
-        {busy && <p role="status">Checking available markets…</p>}
-        {error && <p role="alert">{error}</p>}
-        {!!results.length && (
-          <>
-            <label>
-              <input
-                type="checkbox"
-                checked={confirmed}
-                onChange={(e) => setConfirmed(e.target.checked)}
-              />{" "}
-              I am 21+ and meet Kalshi’s eligibility requirements.
-            </label>
-            <ul>
-              {results.map((r) => (
-                <li key={r.key}>
-                  <strong>{r.label}</strong>
-                  {r.url && confirmed ? (
-                    <p>
-                      <a
-                        className="btn"
-                        href={r.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Open on Kalshi ↗
-                      </a>
-                    </p>
-                  ) : (
-                    <p>
-                      {r.url
-                        ? "Exact match found · confirm eligibility to open"
-                        : r.status === "UNAVAILABLE"
-                          ? "Kalshi lookup unavailable. Try again."
-                          : "No exact available Kalshi match."}
-                    </p>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        <button
-          type="button"
-          className="secondary"
-          onClick={() => dialog.current?.close()}
-        >
-          Close
-        </button>
-      </dialog>
+      {portalDialog && typeof document !== "undefined"
+        ? createPortal(modal, document.body)
+        : modal}
     </>
   );
 }
