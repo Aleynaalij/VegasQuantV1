@@ -2,7 +2,12 @@
 Updated: 2026-10-18, saved-parlay Kalshi option
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
-## Current task · PARLAY-SAVE-KALSHI
+## Current task · PARLAY-REUSE
+Owner wants saved cards available after returning from Gambly, with editable reusable selections. Base af42e5e, branch `codex/parlay-reuse`. My parlays now precedes the library; the most recent card is also available in Legs. Saved combinations render as branded VQ cards with Reuse / edit a copy. Reusing resolves current catalog rows, excludes closed/missing/conflicting selections and explains omissions; original account snapshots are never changed. Draft supports individual removal and Clear selections, plus account-scoped session recovery of name and selection keys across reload/navigation. Saving updates the saved-card URL so a prior route does not reopen an older card. Existing Community, Gambly and Kalshi flows preserved. No schema, publication, NBA or bankroll changes.
+
+Validation: 260 unit tests, production webpack/TypeScript build and expanded 390/1280 production browser fixtures passed: reuse, individual removal, clear, reload recovery, changed-copy save and original preservation, plus existing Community/Gambly/Kalshi actions and expiry. React review: account-scoped recovery stores keys only, catalog resolves eligibility, no saved snapshot mutation, existing async epoch guards retained. Preparing CI/review and deployment. No live member writes or wagers.
+
+## Previous task · PARLAY-SAVE-KALSHI
 Owner requests Kalshi alongside Gambly in the saved-parlay prompt. Base 9f7e3e9, branch `codex/parlay-save-kalshi`. Added an explicit Open with Kalshi action using the confirmed saved leg keys, shared optional Community continuation and existing cutoff. Kalshi's native dialog portals outside the closing save dialog. Existing exact-match API, individual-market disclaimer and eligibility confirmation remain unchanged. No schema, provider or publishing changes. Synthetic phone/desktop regression covers Community failure/retry before Kalshi lookup, exact and unavailable matches, eligibility and expired actions. Validation: 259 tests, TypeScript and production webpack build passed. Synthetic production browser checks passed at 390/1280 widths, including Kalshi share failure/retry, correct saved keys, unavailable match, eligibility link and cutoff. Preparing CI and deployment.
 
 ## Previous task · PARLAY-SAVE-FOLLOW

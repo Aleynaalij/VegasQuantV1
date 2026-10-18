@@ -283,6 +283,67 @@ for (const width of [390, 1280]) {
   assert.match(await kalshi.innerText(), /does not create a combined/);
   await kalshi.getByRole("button", { name: "Close", exact: true }).click();
   assert.equal(shares, 4);
+  // Returning from an external tool leaves the saved card available to reuse.
+  const kalshiSaved = page.locator(".workshop-saved > details").first();
+  await kalshiSaved
+    .getByRole("button", { name: "Reuse / edit a copy", exact: true })
+    .click();
+  const draft = page.getByRole("region", {
+    name: "Your parlay draft",
+    exact: true,
+  });
+  assert.equal(
+    await draft.getByRole("button", { name: /^Remove / }).count(),
+    2,
+  );
+  await draft
+    .getByRole("button", { name: /^Remove / })
+    .first()
+    .click();
+  await page.reload();
+  await page
+    .getByRole("region", { name: "Your parlay draft", exact: true })
+    .waitFor();
+  assert.equal(
+    await draft.getByRole("button", { name: /^Remove / }).count(),
+    1,
+    "draft recovers after leaving/reloading",
+  );
+  await draft
+    .getByRole("button", { name: "Clear selections", exact: true })
+    .click();
+  assert.equal(
+    await draft.getByRole("button", { name: /^Remove / }).count(),
+    0,
+  );
+  await page
+    .locator(".workshop-saved > details")
+    .first()
+    .getByRole("button", { name: "Reuse / edit a copy", exact: true })
+    .click();
+  await draft
+    .getByRole("button", { name: /^Remove / })
+    .first()
+    .click();
+  await page
+    .getByRole("button", { name: "+ Add to parlay", exact: true })
+    .nth(0)
+    .click();
+  await save.click();
+  await prompt.waitFor();
+  assert.match(await prompt.innerText(), /Kalshi sample · copy/);
+  await prompt.getByRole("button", { name: "Done", exact: true }).click();
+  assert.equal(
+    mine.find((p) => p.title === "Kalshi sample").legs.length,
+    2,
+    "original saved selections stay intact",
+  );
+  assert.deepEqual(
+    mine
+      .find((p) => p.title === "Kalshi sample · copy")
+      .legs.map((l) => l.leg_key),
+    ["fixture:0", "fixture:11"],
+  );
   for (const title of ["Done sample", "Repeat sample", "Expired sample"]) {
     await page
       .getByRole("button", { name: "+ Create parlay", exact: true })
@@ -319,7 +380,7 @@ for (const width of [390, 1280]) {
       await page
         .locator(".workshop-saved > details")
         .first()
-        .getByText("Older sample parlay", { exact: true })
+        .getByRole("heading", { name: "Older sample parlay", exact: true })
         .waitFor();
       assert.match(
         await page.locator(".workshop-saved > details").first().innerText(),
@@ -349,5 +410,5 @@ for (const width of [390, 1280]) {
 }
 await browser.close();
 console.log(
-  "Parlay save: persistent bar, newest/highlighted card, optional sharing, share retry, Gambly and Kalshi dialogs passed at phone/desktop widths.",
+  "Parlay save: persistent bar, newest/highlighted card, optional sharing, share retry, Gambly/Kalshi, reuse/edit, clear, reload recovery and original preservation passed at phone/desktop widths.",
 );

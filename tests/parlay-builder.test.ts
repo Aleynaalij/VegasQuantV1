@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import {
   canBuildWith,
+  reusableSelections,
   legStatType,
   filterPublishedLegs,
   vqApprovedLeg,
@@ -79,7 +80,11 @@ test("Builder rejects conflicts across source types, stale legs, unsupported pha
   );
   assert.equal(selectionError(chosen, leg(), +now), null);
   assert.equal(
-    selectionError([...chosen, leg()], leg({ leg_key: "another", name: "Another Player" }), +now),
+    selectionError(
+      [...chosen, leg()],
+      leg({ leg_key: "another", name: "Another Player" }),
+      +now,
+    ),
     null,
   );
 });
@@ -148,4 +153,27 @@ test("Stat filters include legacy player props; approval and search combine with
   );
   assert.equal(vqApprovedLeg(leg({ odds: -200 }), undefined, -200), false);
   assert.equal(vqApprovedLeg(leg({ odds: -200 }), form, -180), false);
+});
+
+test("reuse keeps saved history intact and uses open current catalog selections only", () => {
+  const original = [
+    leg(),
+    leg({ leg_key: "closed", name: "Closed Player" }),
+    leg({ leg_key: "missing" }),
+  ];
+  const current = leg({ quote: "FanDuel -180" });
+  const reused = reusableSelections(
+    original.map((l) => l.leg_key),
+    [current, leg({ leg_key: "closed", result: "WIN" })],
+    +now,
+  );
+  assert.deepEqual(reused.legs, [current]);
+  assert.equal(reused.skipped, 2);
+  assert.equal(original[0].quote, "FanDuel -200");
+  assert.equal(original.length, 3);
+  assert.equal(
+    reusableSelections([current.leg_key, current.leg_key], [current], +now).legs
+      .length,
+    1,
+  );
 });

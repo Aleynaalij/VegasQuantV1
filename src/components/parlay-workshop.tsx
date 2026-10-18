@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { homeWeekStart } from "@/lib/home-week";
 import {
   canBuildWith,
+  reusableSelections,
   parlayCopy,
   parlayCopyLine,
   selectionError,
@@ -40,6 +41,7 @@ export default function ParlayWorkshop({
   const [saved, setSaved] = useState<MemberParlay[]>([]);
   const [chosen, setChosen] = useState<PublishedLeg[]>([]);
   const [open, setOpen] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -63,6 +65,9 @@ export default function ParlayWorkshop({
     async function load() {
       const n = ++epoch.current;
       setLoading(true);
+      setDraftReady(false);
+      setTitle("My parlay");
+      setOpen(false);
       setChosen([]);
       setSaved([]);
       setSavedId("");
@@ -121,6 +126,36 @@ export default function ParlayWorkshop({
           pinned ? [pinned, ...list.filter((p) => p.id !== recent)] : list,
         );
         if (pinned) setSavedId(pinned.id);
+        try {
+          const raw =
+            owner.current &&
+            sessionStorage.getItem(`vq-parlay-draft:${owner.current}`);
+          const draft = raw ? JSON.parse(raw) : null;
+          if (
+            draft &&
+            Array.isArray(draft.keys) &&
+            draft.keys.every((k: unknown) => typeof k === "string")
+          ) {
+            const restored = reusableSelections(
+              draft.keys,
+              weeklyLegs(catalog.data || []),
+            );
+            setChosen(restored.legs);
+            setTitle(
+              typeof draft.title === "string"
+                ? draft.title.slice(0, 80)
+                : "My parlay",
+            );
+            setOpen(restored.legs.length > 0);
+            if (restored.skipped)
+              setNotice(
+                `${restored.skipped} closed or unavailable selections were left out of your recovered draft. Saved cards are unchanged.`,
+              );
+          }
+        } catch {
+          /* Browser recovery is optional; saved cards live in your account. */
+        }
+        setDraftReady(true);
       }
       setLoading(false);
     }
@@ -153,6 +188,38 @@ export default function ParlayWorkshop({
       window.removeEventListener("focus", refreshCatalog);
     };
   }, []);
+  useEffect(() => {
+    if (!draftReady || !owner.current) return;
+    try {
+      const key = `vq-parlay-draft:${owner.current}`;
+      if (chosen.length)
+        sessionStorage.setItem(
+          key,
+          JSON.stringify({ title, keys: chosen.map((leg) => leg.leg_key) }),
+        );
+      else sessionStorage.removeItem(key);
+    } catch {
+      /* Account saves still work when browser storage is disabled. */
+    }
+  }, [chosen, title, draftReady]);
+  function reuse(parlay: MemberParlay) {
+    const restored = reusableSelections(
+      parlay.legs.map((leg) => leg.leg_key),
+      rows,
+    );
+    setChosen(restored.legs);
+    setTitle(`${parlay.title} · copy`.slice(0, 80));
+    setError("");
+    setSearch("");
+    setStatFilter("all");
+    setApprovedOnly(false);
+    setNotice(
+      restored.skipped
+        ? `${restored.skipped} closed or unavailable selections were left out. Your original saved card is unchanged.`
+        : "Editing a copy. Your original saved card is unchanged.",
+    );
+    start();
+  }
   function start() {
     setOpen(true);
     setTimeout(
@@ -240,6 +307,10 @@ export default function ParlayWorkshop({
       setNotice(`Saved “${confirmed.title}” to My parlays.`);
       setChosen([]);
       setOpen(false);
+      router.replace(
+        `/feed?view=${mode === "catalog" ? "legs" : "parlays"}&saved=${encodeURIComponent(confirmed.id)}#my-parlay-${confirmed.id}`,
+        { scroll: false },
+      );
     } catch {
       if (n === epoch.current) setError("Could not save. Please retry.");
     } finally {
@@ -321,7 +392,11 @@ export default function ParlayWorkshop({
       setError("This parlay has closed. You can still view it in My parlays.");
       return false;
     }
-    return continueAfterSave();
+    if (!(await continueAfterSave())) return false;
+    document
+      .getElementById(`my-parlay-${savedPrompt.id}`)
+      ?.scrollIntoView({ block: "center" });
+    return true;
   }
   async function viewSaved() {
     const id = savedPrompt?.id;
@@ -405,7 +480,11 @@ export default function ParlayWorkshop({
         >
           <div className="workshop-head">
             <h3>Your parlay · {chosen.length} legs</h3>
-            <button className="secondary" onClick={() => setOpen(false)}>
+            <button
+              className="secondary"
+              disabled={busy}
+              onClick={() => setOpen(false)}
+            >
               Close builder
             </button>
           </div>
@@ -422,6 +501,17 @@ export default function ParlayWorkshop({
               onChange={(e) => setTitle(e.target.value)}
             />
           </label>
+          <button
+            className="secondary"
+            disabled={busy || !chosen.length}
+            onClick={() => {
+              setChosen([]);
+              setError("");
+              setNotice("Draft selections cleared. Saved cards are unchanged.");
+            }}
+          >
+            Clear selections
+          </button>
           <ul>
             {chosen.map((r) => (
               <li key={r.leg_key}>
@@ -531,6 +621,96 @@ export default function ParlayWorkshop({
           </>
         )}
       </dialog>
+      {(mode === "parlays" || savedId) && (
+        <section className="workshop-saved" id="my-parlays">
+          <h2>My parlays</h2>
+          <p className="workshop-note">Most recently saved first.</p>
+          <p className="workshop-note">
+            Private saved combinations. Saving does not place a wager or add to
+            your tail record.
+          </p>
+          {!saved.length && !loading && (
+            <p>Your saved parlays will appear here.</p>
+          )}
+          {(mode === "parlays"
+            ? saved
+            : saved.filter((p) => p.id === savedId)
+          ).map((p) => (
+            <details
+              key={p.id}
+              id={`my-parlay-${p.id}`}
+              tabIndex={-1}
+              open={p.id === savedId ? true : undefined}
+              className={`workshop-leg${p.id === savedId ? " workshop-just-saved" : ""}`}
+            >
+              <summary>
+                {p.id === savedId && (
+                  <span className="workshop-new">Just saved</span>
+                )}
+                <strong>{p.title}</strong> · {p.legs.length} legs
+                {Date.parse(p.expires_at) <= Date.now() ? " · Closed" : ""}
+              </summary>
+              <CasinoCard
+                data={{
+                  variant: "parlay",
+                  eyebrow: "Your saved parlay",
+                  title: p.title,
+                  market: `${p.legs.length} selections`,
+                  legs: p.legs.map((leg) => ({
+                    name: leg.name,
+                    market: cleanMarket(leg.market),
+                  })),
+                  publishedAt: p.created_at,
+                  footnote:
+                    "Your saved selections. Not a wager confirmation. Combined odds unknown.",
+                }}
+              />
+              <button
+                className="btn"
+                disabled={busy || loading}
+                onClick={() => reuse(p)}
+              >
+                Reuse / edit a copy
+              </button>
+              <p className="workshop-note">
+                Remove legs, clear selections or add more below. Saving a
+                changed combination keeps this original.
+              </p>
+              <ul>
+                {p.legs.map((r) => (
+                  <li key={r.leg_key}>{parlayCopyLine(r)}</li>
+                ))}
+              </ul>
+              <p>
+                Combined odds unknown. Every leg must hit. Your selection is not
+                a Vegas Quant recommendation.
+              </p>
+              {p.community_post_id ? (
+                <Link href={`/community?post=${p.community_post_id}`}>
+                  View community card →
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  className="primary"
+                  disabled={sharing !== null}
+                  onClick={() => void share(p)}
+                >
+                  {sharing === p.id ? "Posting…" : "Post to Community"}
+                </button>
+              )}
+              {Date.parse(p.expires_at) > Date.now() && (
+                <GamblyLink
+                  url="https://gambly.com"
+                  selection={parlayCopy(p.legs)}
+                  kalshiLegKeys={p.legs.map((r) => r.leg_key)}
+                  label="Copy parlay & open Gambly ↗"
+                />
+              )}
+            </details>
+          ))}
+        </section>
+      )}
       {showCatalog && !loading && (
         <>
           <label className="workshop-search">
@@ -700,67 +880,6 @@ export default function ParlayWorkshop({
             </p>
           )}
         </>
-      )}
-      {mode === "parlays" && (
-        <section className="workshop-saved" id="my-parlays">
-          <h2>My parlays</h2>
-          <p className="workshop-note">Most recently saved first.</p>
-          <p className="workshop-note">
-            Private saved combinations. Saving does not place a wager or add to
-            your tail record.
-          </p>
-          {!saved.length && !loading && (
-            <p>Your saved parlays will appear here.</p>
-          )}
-          {saved.map((p) => (
-            <details
-              key={p.id}
-              id={`my-parlay-${p.id}`}
-              tabIndex={-1}
-              open={p.id === savedId ? true : undefined}
-              className={`workshop-leg${p.id === savedId ? " workshop-just-saved" : ""}`}
-            >
-              <summary>
-                {p.id === savedId && (
-                  <span className="workshop-new">Just saved</span>
-                )}
-                <strong>{p.title}</strong> · {p.legs.length} legs
-                {Date.parse(p.expires_at) <= Date.now() ? " · Closed" : ""}
-              </summary>
-              <ul>
-                {p.legs.map((r) => (
-                  <li key={r.leg_key}>{parlayCopyLine(r)}</li>
-                ))}
-              </ul>
-              <p>
-                Combined odds unknown. Every leg must hit. Your selection is not
-                a Vegas Quant recommendation.
-              </p>
-              {p.community_post_id ? (
-                <Link href={`/community?post=${p.community_post_id}`}>
-                  View community card →
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  className="primary"
-                  disabled={sharing !== null}
-                  onClick={() => void share(p)}
-                >
-                  {sharing === p.id ? "Posting…" : "Post to Community"}
-                </button>
-              )}
-              {Date.parse(p.expires_at) > Date.now() && (
-                <GamblyLink
-                  url="https://gambly.com"
-                  selection={parlayCopy(p.legs)}
-                  kalshiLegKeys={p.legs.map((r) => r.leg_key)}
-                  label="Copy parlay & open Gambly ↗"
-                />
-              )}
-            </details>
-          ))}
-        </section>
       )}
     </section>
   );
