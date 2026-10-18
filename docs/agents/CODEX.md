@@ -1,11 +1,14 @@
 # Codex · Kobe
-Updated: 2026-10-17, NBA Home cleanup and NBA-007 handoff
+Updated: 2026-10-18, NFL game loading review correction
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
 ## Current task · NFL-GAME-LOAD
 Owner reports NFL game pages showing an access prompt instead of published research and requests the fix for every matchup. Branch `codex/nfl-game-loading`, base f701035. Shared MatchupIntelligence now resolves the browser session and access explicitly, loads only the selected game's analysis/version history, market rows and official picks under existing RLS, and keeps same-account token events from clearing the page. Pending, denied, failed and unexpectedly empty published research have distinct states with retry. Requests time out instead of waiting indefinitely. No membership grants, policy changes, publication/record changes or NBA changes.
 
 Live database read: all 14 upcoming NFL games have research (1–6 versions each), including six Houston–Jacksonville versions. This verifies stored data, not the owner's browser session. Local validation: 248 tests and TypeScript passed; production webpack build passed. Browser fixtures cover two matchup routes at 390/1280 widths, delayed access, same-user token refresh, failed access/research, unexpected empty research, retry and denied access. Synthetic fixtures do not prove live member authorization. The new browser test is included in existing CI. Prepared for review; no production deployment claimed.
+
+### PR #79 review correction
+The automated review correctly found that official cards retained entry, closing, result and review arrays from the anonymous server snapshot. The correction refreshes all five related arrays (including reserve transactions) by this game's exact official pick IDs under existing RLS before committing the refreshed desk. No picks means no extra dependency requests. Denied access clears those arrays. Production webpack build and 390/1280 browser fixtures passed again; the new regression publishes no data and simulates an entry, close, result and process review arriving after page open, verifying they appear on focus without a reload. Current-head CI and peer review remain required; not live.
 
 ## Current integration state
 - NBA-002: #66 merged b73c8b1875371973a5bc9a3fa748c0468f361dc6.

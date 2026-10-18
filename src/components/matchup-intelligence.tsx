@@ -188,6 +188,11 @@ export default function MatchupIntelligence({
           analyses: [],
           markets: [],
           picks: [],
+          entries: [],
+          closings: [],
+          results: [],
+          reviews: [],
+          transactions: [],
         };
         if (!access.data?.allowed || !game) {
           setDesk(base);
@@ -229,8 +234,68 @@ export default function MatchupIntelligence({
             throw Error(
               "Published research could not be retrieved for this game. Please retry.",
             );
+          const related = {
+            entries: [] as Desk["entries"],
+            closings: [] as Desk["closings"],
+            results: [] as Desk["results"],
+            reviews: [] as Desk["reviews"],
+            transactions: [] as Desk["transactions"],
+          };
+          const pickIds = picks.data.map((p) => p.id);
+          if (pickIds.length) {
+            const [entries, closings, results, reviews, transactions] =
+              await Promise.all([
+                supabase
+                  .from("pick_entries")
+                  .select("*")
+                  .in("pick_id", pickIds)
+                  .order("created_at", { ascending: false })
+                  .abortSignal(signal),
+                supabase
+                  .from("closing_lines")
+                  .select("*")
+                  .in("pick_id", pickIds)
+                  .order("created_at", { ascending: false })
+                  .abortSignal(signal),
+                supabase
+                  .from("pick_results")
+                  .select("*")
+                  .in("pick_id", pickIds)
+                  .order("created_at", { ascending: false })
+                  .abortSignal(signal),
+                supabase
+                  .from("process_reviews")
+                  .select("*")
+                  .in("pick_id", pickIds)
+                  .order("created_at", { ascending: false })
+                  .abortSignal(signal),
+                supabase
+                  .from("bankroll_transactions")
+                  .select("*")
+                  .in("pick_id", pickIds)
+                  .order("created_at", { ascending: false })
+                  .abortSignal(signal),
+              ]);
+            if (
+              [entries, closings, results, reviews, transactions].some(
+                (r) => r.error,
+              )
+            )
+              throw Error(
+                "This game's pick records could not refresh. Please retry.",
+              );
+            if (!live || n !== epoch.current) return;
+            Object.assign(related, {
+              entries: entries.data,
+              closings: closings.data,
+              results: results.data,
+              reviews: reviews.data,
+              transactions: transactions.data,
+            });
+          }
           setDesk({
             ...base,
+            ...related,
             analyses: analyses.data.map((a) => ({ ...a, raw_handoff: "" })),
             markets: markets.data,
             picks: picks.data,

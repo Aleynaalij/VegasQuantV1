@@ -47,6 +47,8 @@ for (const width of [390, 1280]) {
   p.on("pageerror", (e) => console.error("page error", e.message));
   if (process.env.DEBUG_FIXTURE)
     p.on("console", (m) => console.log(m.type(), m.text()));
+  let official = false,
+    settled = false;
   let mode = "member",
     analysisReads = 0,
     deskReads = 0,
@@ -117,6 +119,83 @@ for (const width of [390, 1280]) {
           },
         ];
         if (mode === "missing-research") data = [];
+      }
+    }
+    if (path.endsWith("official_picks") && official)
+      data = [
+        {
+          id: "fixture-pick",
+          game_id: game.id,
+          stage_id: null,
+          analysis_id: "a2",
+          market: "Player Prop",
+          selection: "Sample Official Player 60+ rushing yards",
+          recommended_line: 59.5,
+          direction: "over",
+          odds: -150,
+          stake_cents: 1000,
+          model_probability: 65,
+          market_probability: 60,
+          edge: 5,
+          confidence: 6,
+          risk: 4,
+          predicted_close: "Sample close",
+          best_number: "59.5",
+          bet_grade: "B",
+          fear_index: 3,
+          timing: "Sample timing",
+          why_like: "Sample case.",
+          why_lose: "Sample risk.",
+          playable_number: "59.5",
+          pass_number: "69.5",
+          book: "Sample book",
+          created_at: new Date().toISOString(),
+        },
+      ];
+    const relatedTables = [
+      "pick_entries",
+      "closing_lines",
+      "pick_results",
+      "process_reviews",
+      "bankroll_transactions",
+    ];
+    if (relatedTables.some((t) => path.endsWith(t))) {
+      assert.equal(
+        url.searchParams.get("pick_id"),
+        "in.(fixture-pick)",
+        "dependent reads must stay scoped to this game's pick IDs",
+      );
+      if (settled) {
+        const common = {
+          id: "fixture-record",
+          pick_id: "fixture-pick",
+          source: "https://example.com",
+          created_at: new Date().toISOString(),
+        };
+        if (path.endsWith("pick_entries"))
+          data = [{ ...common, line: 59.5, odds: -160 }];
+        if (path.endsWith("closing_lines"))
+          data = [{ ...common, line: 59.5, odds: -170 }];
+        if (path.endsWith("pick_results"))
+          data = [
+            {
+              ...common,
+              result: "WIN",
+              away_score: 24,
+              home_score: 17,
+              profit_cents: 625,
+              bankroll_cents: null,
+            },
+          ];
+        if (path.endsWith("process_reviews"))
+          data = [
+            {
+              ...common,
+              grade: "A",
+              classification: "GOOD HANDICAP / GOOD RESULT",
+              lessons: "Sample review arrived after the page opened.",
+            },
+          ];
       }
     }
     return r.fulfill({ json: data });
@@ -197,6 +276,33 @@ for (const width of [390, 1280]) {
     }
   }
   mode = "member";
+  official = true;
+  await p.reload({ waitUntil: "domcontentloaded" });
+  const pickCard = p.locator(".official-card");
+  await pickCard.locator("summary.slip-expand-cta").click();
+  await pickCard.getByText("Not confirmed", { exact: true }).waitFor();
+  await pickCard.getByText("Pending", { exact: true }).waitFor();
+  settled = true;
+  await p.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await pickCard
+    .getByRole("heading", { name: "FINAL · 24 – 17", exact: true })
+    .waitFor();
+  await pickCard
+    .getByText("Sample review arrived after the page opened.", { exact: true })
+    .waitFor();
+  assert.match(
+    await pickCard.locator(".number-track > div").nth(1).innerText(),
+    /-160/,
+  );
+  assert.match(
+    await pickCard.locator(".number-track > div").nth(2).innerText(),
+    /-170/,
+  );
+  assert.equal(
+    await pickCard.getByText("Not confirmed", { exact: true }).count(),
+    0,
+  );
+  official = false;
   game = {
     ...firstGame,
     id: "g1",
