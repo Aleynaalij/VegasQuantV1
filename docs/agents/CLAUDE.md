@@ -11,7 +11,7 @@ Claimed files: `research/nba/engine.py`, `hosted_scan.py`, `shadow_report.py`, `
 - **Prepared, not live:** migration and the nba-results redeploy (starter/position) need owner approval.
 - **NBA props:** owner approved limited capture (points + rebounds, 8 games a run); the settings update is with the owner to run.
 
-Also open: NBA-003 (results) is merged and deployed; 12 preseason finals confirming, check-in 22:50Z. NBA-001 game-line check ~Oct 19 07:00Z. Codex owns NBA-005 (research board, `src/**`).
+Also open: NBA-003 (results) verified live (11 FINAL, 1 CONFLICT from an ESPN stat correction); a CONFLICT resolution function is proposed, pending owner approval. NBA-001 game-line check ~Oct 19 07:00Z. Codex owns NBA-005 (research board, `src/**`).
 
 ## State (prepared / deployed / verified)
 - **Migration `20261018060000`:** applied live (owner approved in chat). Tables `nba_games` and `nba_observations`, `private.nba_feed_settings` (lines on, props off), cron `nba-source-refresh` at :02/:17/:32/:47.
