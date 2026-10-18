@@ -82,25 +82,38 @@ for (const width of [390, 1280]) {
         },
       ];
     if (path.endsWith("published_leg_catalog")) data = legs;
-    if (path.endsWith("member_parlays")) data = mine;
+    if (path.endsWith("member_parlays"))
+      data = u.searchParams.has("id")
+        ? mine.find((p) => `eq.${p.id}` === u.searchParams.get("id")) || null
+        : mine;
     if (path.endsWith("create_member_parlay")) {
       creates++;
       const body = route.request().postDataJSON();
       assert.equal(body.p_leg_keys.length, 2);
-      const id = `22222222-2222-4222-8222-${String(creates).padStart(12, "0")}`;
-      mine = [
-        older,
-        ...mine.filter((p) => p.id !== older.id),
-        {
-          id,
-          title: body.p_title,
-          legs: legs.filter((l) => body.p_leg_keys.includes(l.leg_key)),
-          created_at: at,
-          expires_at: expires,
-          community_post_id: null,
-        },
-      ];
-      data = id;
+      const existing = mine.find(
+        (p) =>
+          p.legs
+            .map((l) => l.leg_key)
+            .sort()
+            .join() === [...body.p_leg_keys].sort().join(),
+      );
+      if (existing) data = existing.id;
+      else {
+        const id = `22222222-2222-4222-8222-${String(creates).padStart(12, "0")}`;
+        mine = [
+          older,
+          ...mine.filter((p) => p.id !== older.id),
+          {
+            id,
+            title: body.p_title,
+            legs: legs.filter((l) => body.p_leg_keys.includes(l.leg_key)),
+            created_at: at,
+            expires_at: expires,
+            community_post_id: null,
+          },
+        ];
+        data = id;
+      }
     }
     if (path.endsWith("share_member_parlay")) {
       shares++;
@@ -178,11 +191,11 @@ for (const width of [390, 1280]) {
   await page.getByLabel("Parlay name", { exact: true }).fill("Shared sample");
   await page
     .getByRole("button", { name: "+ Add to parlay", exact: true })
-    .nth(0)
+    .nth(4)
     .click();
   await page
     .getByRole("button", { name: "+ Add to parlay", exact: true })
-    .nth(0)
+    .nth(4)
     .click();
   await page
     .getByRole("button", { name: "Save my parlay", exact: true })
@@ -212,18 +225,18 @@ for (const width of [390, 1280]) {
     await page.locator(".workshop-saved > details").first().innerText(),
     /Shared sample/,
   );
-  for (const title of ["Done sample", "Expired sample"]) {
+  for (const title of ["Done sample", "Repeat sample", "Expired sample"]) {
     await page
       .getByRole("button", { name: "+ Create parlay", exact: true })
       .click();
     await page.getByLabel("Parlay name", { exact: true }).fill(title);
     await page
       .getByRole("button", { name: "+ Add to parlay", exact: true })
-      .nth(0)
+      .nth(title === "Done sample" ? 6 : title === "Repeat sample" ? 2 : 8)
       .click();
     await page
       .getByRole("button", { name: "+ Add to parlay", exact: true })
-      .nth(0)
+      .nth(title === "Done sample" ? 6 : title === "Repeat sample" ? 2 : 8)
       .click();
     await page
       .getByRole("button", { name: "Save my parlay", exact: true })
@@ -234,6 +247,27 @@ for (const width of [390, 1280]) {
       await prompt.getByRole("button", { name: "Done", exact: true }).click();
       await prompt.waitFor({ state: "hidden" });
       assert.equal(shares, 3, "Done honors the sharing checkbox");
+    } else if (title === "Repeat sample") {
+      assert.match(await prompt.innerText(), /already saved/);
+      assert.match(await prompt.innerText(), /Older sample parlay/);
+      await prompt
+        .getByRole("button", { name: "View My parlays", exact: true })
+        .click();
+      await page.goto(base + "/feed?view=legs");
+      await page
+        .getByRole("button", { name: "+ Create parlay", exact: true })
+        .waitFor();
+      await page.goto(base + "/feed?view=parlays");
+      await page
+        .locator(".workshop-saved > details")
+        .first()
+        .getByText("Older sample parlay", { exact: true })
+        .waitFor();
+      assert.match(
+        await page.locator(".workshop-saved > details").first().innerText(),
+        /Just saved/,
+      );
+      assert.equal(shares, 3);
     } else {
       await page.clock.install({ time: new Date(Date.now() + 2 * 86400000) });
       await prompt

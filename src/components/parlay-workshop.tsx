@@ -30,6 +30,9 @@ export default function ParlayWorkshop({
   const routeSaved = useSearchParams().get("saved") || "";
   const [savedId, setSavedId] = useState("");
   const [savedPrompt, setSavedPrompt] = useState<MemberParlay | null>(null);
+  const owner = useRef("");
+  const [promptVersion, setPromptVersion] = useState(0);
+  const [reusedSave, setReusedSave] = useState(false);
   const [shareChecked, setShareChecked] = useState(false);
   const saveDialog = useRef<HTMLDialogElement>(null);
   const [rows, setRows] = useState<PublishedLeg[]>([]);
@@ -64,13 +67,15 @@ export default function ParlayWorkshop({
       setSavedId("");
       focusedRoute.current = "";
       setSavedPrompt(null);
+      setPromptVersion(0);
       saveDialog.current?.close();
       setSharing(null);
       setSharedPost(null);
       setNotice("");
       setRows([]);
       setError("");
-      const [catalog, mine] = await Promise.all([
+      owner.current = "";
+      const [catalog, mine, session] = await Promise.all([
         supabase.rpc("published_leg_catalog", {
           p_since: homeWeekStart(new Date()),
         }),
@@ -80,20 +85,41 @@ export default function ParlayWorkshop({
           .order("created_at", { ascending: false })
           .order("id", { ascending: false })
           .limit(50),
+        supabase.auth.getSession(),
       ]);
       if (!live || n !== epoch.current) return;
       if (catalog.error || mine.error)
         setError("Your leg library could not load. Sign in and try again.");
       else {
         setRows(weeklyLegs(catalog.data || []));
-        setSaved(
-          [...(mine.data || [])].sort(
-            (a, b) =>
-              Date.parse(b.created_at) - Date.parse(a.created_at) ||
-              b.id.localeCompare(a.id),
-          ),
+        owner.current = session.data.session?.user.id || "";
+        let recent = routeSaved;
+        try {
+          recent ||= owner.current
+            ? sessionStorage.getItem(`vq-parlay-recent:${owner.current}`) || ""
+            : "";
+        } catch {
+          /* Storage can be disabled; the saved-card URL still works. */
+        }
+        const list = [...(mine.data || [])].sort(
+          (a, b) =>
+            Date.parse(b.created_at) - Date.parse(a.created_at) ||
+            b.id.localeCompare(a.id),
         );
-        if (mine.data?.some((p) => p.id === routeSaved)) setSavedId(routeSaved);
+        if (recent && !list.some((p) => p.id === recent)) {
+          const extra = await supabase
+            .from("member_parlays")
+            .select("id,title,legs,created_at,expires_at,community_post_id")
+            .eq("id", recent)
+            .maybeSingle();
+          if (!live || n !== epoch.current) return;
+          if (extra.data) list.push(extra.data);
+        }
+        const pinned = list.find((p) => p.id === recent);
+        setSaved(
+          pinned ? [pinned, ...list.filter((p) => p.id !== recent)] : list,
+        );
+        if (pinned) setSavedId(pinned.id);
       }
       setLoading(false);
     }
@@ -168,26 +194,47 @@ export default function ParlayWorkshop({
         );
         return;
       }
-      const readback = await supabase
-        .from("member_parlays")
-        .select("id,title,legs,created_at,expires_at,community_post_id")
-        .order("created_at", { ascending: false })
-        .order("id", { ascending: false })
-        .limit(50);
+      const [readback, confirmation] = await Promise.all([
+        supabase
+          .from("member_parlays")
+          .select("id,title,legs,created_at,expires_at,community_post_id")
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .limit(50),
+        supabase
+          .from("member_parlays")
+          .select("id,title,legs,created_at,expires_at,community_post_id")
+          .eq("id", result.data)
+          .single(),
+      ]);
       if (n !== epoch.current) return;
-      if (readback.error || !readback.data?.some((r) => r.id === result.data)) {
+      if (confirmation.error || !confirmation.data) {
         setError(
           "Save received, but confirmation could not load. Refresh before trying again.",
         );
         return;
       }
-      const confirmed = readback.data.find((p) => p.id === result.data)!;
+      const confirmed = confirmation.data;
+      setReusedSave(
+        saved.some((p) => p.id === confirmed.id) ||
+          confirmed.title !== title.trim(),
+      );
       setSaved([
         confirmed,
-        ...readback.data.filter((p) => p.id !== confirmed.id),
+        ...(readback.data || saved).filter((p) => p.id !== confirmed.id),
       ]);
+      try {
+        if (owner.current)
+          sessionStorage.setItem(
+            `vq-parlay-recent:${owner.current}`,
+            confirmed.id,
+          );
+      } catch {
+        /* The direct saved-card route remains available. */
+      }
       setSavedId(confirmed.id);
       setSavedPrompt(confirmed);
+      setPromptVersion((v) => v + 1);
       setShareChecked(false);
       setNotice(`Saved “${confirmed.title}” to My parlays.`);
       setChosen([]);
@@ -241,9 +288,9 @@ export default function ParlayWorkshop({
     }
   }
   useEffect(() => {
-    if (savedPrompt?.id && !saveDialog.current?.open)
+    if (promptVersion && !saveDialog.current?.open)
       saveDialog.current?.showModal();
-  }, [savedPrompt?.id]);
+  }, [promptVersion]);
   useEffect(() => {
     if (
       mode !== "parlays" ||
@@ -422,6 +469,12 @@ export default function ParlayWorkshop({
         <h2 id="parlay-saved-title">Parlay saved</h2>
         {savedPrompt && (
           <>
+            {reusedSave && (
+              <p>
+                This combination was already saved. Its saved name and card are
+                kept below.
+              </p>
+            )}
             <p>
               <strong>{savedPrompt.title}</strong> · {savedPrompt.legs.length}{" "}
               legs. It’s first in My parlays.
@@ -643,7 +696,7 @@ export default function ParlayWorkshop({
       {mode === "parlays" && (
         <section className="workshop-saved" id="my-parlays">
           <h2>My parlays</h2>
-          <p className="workshop-note">Newest saved first.</p>
+          <p className="workshop-note">Most recently saved first.</p>
           <p className="workshop-note">
             Private saved combinations. Saving does not place a wager or add to
             your tail record.
