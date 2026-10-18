@@ -88,7 +88,9 @@ export function gameResearchTopics(
         const raw = a.sections[heading];
         if (
           heading === "Game Summary" &&
-          /\d{4}-\d\d-\d\dT|material pregame research/i.test(String(raw))
+          /^[\s\S]*?·\s*\d{4}-\d\d-\d\dT\S+\.\s*Material pregame research update observed \S+\.?$/i.test(
+            String(raw),
+          )
         )
           return null;
         const text = memberResearchText(raw);

@@ -167,3 +167,16 @@ test("a newer role update supersedes an older summary", () => {
     /New starter/,
   );
 });
+
+test("substantive summaries may contain a kickoff timestamp", () => {
+  const current = version(4, {
+    "Game Summary":
+      "Kickoff 2026-10-18T13:30:00Z. The receiver rotation changed Sunday.",
+  });
+  assert.match(
+    gameResearchTopics([current, ...history], 4).find(
+      (t) => t.id === "overview",
+    )!.items[0].text,
+    /changed Sunday/,
+  );
+});
