@@ -139,3 +139,31 @@ test("new team-form statistics join the overview without replacing the football 
   assert.match(topics.find((t) => t.id === "form")!.items[0].text, /250/);
   assert.equal(topics.find((t) => t.id === "form")!.items[0].version, 4);
 });
+
+test("newer availability supersedes older injuries, while historical views retain their cutoff", () => {
+  const versions = [
+    version(2, { Availability: "Player cleared on Sunday." }),
+    version(1, { Injuries: "Player questionable Friday." }),
+  ];
+  assert.match(
+    gameResearchTopics(versions, 2).find((t) => t.id === "injuries")!.items[0]
+      .text,
+    /cleared/,
+  );
+  assert.match(
+    gameResearchTopics(versions, 1).find((t) => t.id === "injuries")!.items[0]
+      .text,
+    /questionable/,
+  );
+});
+test("a newer role update supersedes an older summary", () => {
+  const versions = [
+    version(2, { "Role update": "New starter confirmed." }),
+    version(1, { "Game Summary": "Earlier rotation." }),
+  ];
+  assert.match(
+    gameResearchTopics(versions, 2).find((t) => t.id === "overview")!.items[0]
+      .text,
+    /New starter/,
+  );
+});

@@ -84,27 +84,42 @@ export function gameResearchTopics(
   return topics
     .map(([id, label, keys]) => {
       const items: ResearchItem[] = [];
-      for (const heading of keys) {
-        for (const a of history) {
-          const raw = a.sections[heading];
-          if (
-            heading === "Game Summary" &&
-            /\d{4}-\d\d-\d\dT|material pregame research/i.test(String(raw))
-          )
-            continue;
-          const text = memberResearchText(raw);
-          if (!text) continue;
-          if (!items.some((i) => i.text === text))
-            items.push({
+      const item = (a: Analysis, heading: string): ResearchItem | null => {
+        const raw = a.sections[heading];
+        if (
+          heading === "Game Summary" &&
+          /\d{4}-\d\d-\d\dT|material pregame research/i.test(String(raw))
+        )
+          return null;
+        const text = memberResearchText(raw);
+        return text
+          ? {
               heading,
               text,
               version: a.version,
               at: a.created_at,
               sources: publicationSources(a),
-            });
-          break;
+            }
+          : null;
+      };
+      if (id === "overview" || id === "injuries") {
+        const primaryKeys = keys.filter((k) => k !== "Case and failure path");
+        const latest = history.flatMap((a) =>
+          primaryKeys
+            .map((k) => item(a, k))
+            .filter((v): v is ResearchItem => !!v),
+        )[0];
+        const fallback =
+          id === "overview"
+            ? history.map((a) => item(a, "Case and failure path")).find(Boolean)
+            : null;
+        if (latest || fallback) items.push((latest || fallback)!);
+      } else {
+        for (const heading of keys) {
+          const latest = history.map((a) => item(a, heading)).find(Boolean);
+          if (latest && !items.some((i) => i.text === latest.text))
+            items.push(latest);
         }
-        if ((id === "overview" || id === "injuries") && items.length) break;
       }
       if (id === "overview") {
         const form = history.find((a) =>

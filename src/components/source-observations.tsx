@@ -35,30 +35,28 @@ export default function SourceObservations({
     setError("");
     async function load() {
       const n = ++generation;
-      let query = supabase
-        .from("source_observations")
-        .select("id,kind,provider,source,observed_at,recorded_at,payload")
-        .eq("game_id", gameId)
-        .eq("kind", "odds")
-        .eq("payload->>book", "FanDuel")
-        .in("payload->>market", ["h2h", "spreads", "totals"])
-        .order("recorded_at", { ascending: false })
-        .limit(9);
-      if (before) query = query.lte("recorded_at", before);
-      const r = await query.abortSignal(AbortSignal.timeout(15000));
+      const results = await Promise.all(
+        Object.keys(markets).map(async (market) => {
+          let query = supabase
+            .from("source_observations")
+            .select("id,kind,provider,source,observed_at,recorded_at,payload")
+            .eq("game_id", gameId)
+            .eq("kind", "odds")
+            .eq("payload->>book", "FanDuel")
+            .eq("payload->>market", market)
+            .order("recorded_at", { ascending: false })
+            .limit(1);
+          if (before) query = query.lte("recorded_at", before);
+          return query.abortSignal(AbortSignal.timeout(15000));
+        }),
+      );
       if (!live || n !== generation) return;
-      setError(r.error ? "Sportsbook snapshots could not refresh." : "");
-      if (!r.error) {
-        const seen = new Set<string>();
-        setQuotes(
-          (r.data || []).filter((r) => {
-            const market = String(r.payload?.market || "");
-            if (seen.has(market)) return false;
-            seen.add(market);
-            return !!markets[market];
-          }),
-        );
-      }
+      setError(
+        results.some((r) => r.error)
+          ? "Some sportsbook snapshots could not refresh."
+          : "",
+      );
+      setQuotes(results.flatMap((r) => (r.error ? [] : r.data || [])));
     }
     void load();
     const timer = setInterval(load, 60000);
