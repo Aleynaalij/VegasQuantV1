@@ -107,24 +107,30 @@ for (const width of [390, 1280]) {
       url.searchParams.get("payload->>book") === "eq.FanDuel"
     ) {
       assert.equal(url.searchParams.get("game_id"), `eq.${game.id}`);
-      data = [
-        {
-          id: "q1",
-          kind: "odds",
-          provider: "The Odds API",
-          source: "https://example.com/quote",
-          observed_at: new Date().toISOString(),
-          recorded_at: new Date().toISOString(),
-          payload: {
-            book: "FanDuel",
-            market: "h2h",
-            outcomes: [
-              { name: "Sample Away", price: 128 },
-              { name: "Sample Home", price: -152 },
-            ],
-          },
-        },
-      ];
+      const market = url.searchParams.get("payload->>market");
+      assert.ok(["eq.h2h", "eq.spreads", "eq.totals"].includes(market));
+      assert.equal(url.searchParams.get("limit"), "1");
+      data =
+        market === "eq.h2h"
+          ? [
+              {
+                id: "q1",
+                kind: "odds",
+                provider: "The Odds API",
+                source: "https://example.com/quote",
+                observed_at: new Date().toISOString(),
+                recorded_at: new Date().toISOString(),
+                payload: {
+                  book: "FanDuel",
+                  market: "h2h",
+                  outcomes: [
+                    { name: "Sample Away", price: 128 },
+                    { name: "Sample Home", price: -152 },
+                  ],
+                },
+              },
+            ]
+          : [];
     }
     if (path.endsWith("desk_data")) deskReads++;
     if (
