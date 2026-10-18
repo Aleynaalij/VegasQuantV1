@@ -44,6 +44,7 @@ export default function SourceObservations({
             .eq("kind", "odds")
             .eq("payload->>book", "FanDuel")
             .eq("payload->>market", market)
+            .order("observed_at", { ascending: false, nullsFirst: false })
             .order("recorded_at", { ascending: false })
             .limit(1);
           if (before) query = query.lte("recorded_at", before);

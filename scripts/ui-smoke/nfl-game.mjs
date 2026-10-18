@@ -110,6 +110,10 @@ for (const width of [390, 1280]) {
       const market = url.searchParams.get("payload->>market");
       assert.ok(["eq.h2h", "eq.spreads", "eq.totals"].includes(market));
       assert.equal(url.searchParams.get("limit"), "1");
+      assert.equal(
+        url.searchParams.get("order"),
+        "observed_at.desc.nullslast,recorded_at.desc",
+      );
       data =
         market === "eq.h2h"
           ? [
