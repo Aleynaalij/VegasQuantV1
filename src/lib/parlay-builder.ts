@@ -158,3 +158,17 @@ export function parlayCopy(legs: PublishedLeg[]): string {
   if (lines.some((l) => !l)) throw Error("A player/stat line is missing.");
   return lines.join("\n");
 }
+
+/** Reuse current catalog rows only; saved snapshots remain historical. */
+export function reusableSelections(
+  keys: string[],
+  catalog: PublishedLeg[],
+  now = Date.now(),
+) {
+  const legs: PublishedLeg[] = [];
+  for (const key of [...new Set(keys)]) {
+    const leg = catalog.find((row) => row.leg_key === key);
+    if (leg && !selectionError(legs, leg, now)) legs.push(leg);
+  }
+  return { legs, skipped: new Set(keys).size - legs.length };
+}
