@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { homeWeekStart } from "@/lib/home-week";
 import {
@@ -25,6 +26,15 @@ export default function ParlayWorkshop({
 }: {
   mode: "catalog" | "parlays";
 }) {
+  const router = useRouter();
+  const routeSaved = useSearchParams().get("saved") || "";
+  const [savedId, setSavedId] = useState("");
+  const [savedPrompt, setSavedPrompt] = useState<MemberParlay | null>(null);
+  const owner = useRef("");
+  const [promptVersion, setPromptVersion] = useState(0);
+  const [reusedSave, setReusedSave] = useState(false);
+  const [shareChecked, setShareChecked] = useState(false);
+  const saveDialog = useRef<HTMLDialogElement>(null);
   const [rows, setRows] = useState<PublishedLeg[]>([]);
   const [saved, setSaved] = useState<MemberParlay[]>([]);
   const [chosen, setChosen] = useState<PublishedLeg[]>([]);
@@ -46,6 +56,7 @@ export default function ParlayWorkshop({
   const [title, setTitle] = useState("My parlay");
   const epoch = useRef(0);
   const builder = useRef<HTMLElement>(null);
+  const focusedRoute = useRef("");
   useEffect(() => {
     let live = true;
     async function load() {
@@ -53,12 +64,18 @@ export default function ParlayWorkshop({
       setLoading(true);
       setChosen([]);
       setSaved([]);
+      setSavedId("");
+      focusedRoute.current = "";
+      setSavedPrompt(null);
+      setPromptVersion(0);
+      saveDialog.current?.close();
       setSharing(null);
       setSharedPost(null);
       setNotice("");
       setRows([]);
       setError("");
-      const [catalog, mine] = await Promise.all([
+      owner.current = "";
+      const [catalog, mine, session] = await Promise.all([
         supabase.rpc("published_leg_catalog", {
           p_since: homeWeekStart(new Date()),
         }),
@@ -66,14 +83,43 @@ export default function ParlayWorkshop({
           .from("member_parlays")
           .select("id,title,legs,created_at,expires_at,community_post_id")
           .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
           .limit(50),
+        supabase.auth.getSession(),
       ]);
       if (!live || n !== epoch.current) return;
       if (catalog.error || mine.error)
         setError("Your leg library could not load. Sign in and try again.");
       else {
         setRows(weeklyLegs(catalog.data || []));
-        setSaved(mine.data || []);
+        owner.current = session.data.session?.user.id || "";
+        let recent = routeSaved;
+        try {
+          recent ||= owner.current
+            ? sessionStorage.getItem(`vq-parlay-recent:${owner.current}`) || ""
+            : "";
+        } catch {
+          /* Storage can be disabled; the saved-card URL still works. */
+        }
+        const list = [...(mine.data || [])].sort(
+          (a, b) =>
+            Date.parse(b.created_at) - Date.parse(a.created_at) ||
+            b.id.localeCompare(a.id),
+        );
+        if (recent && !list.some((p) => p.id === recent)) {
+          const extra = await supabase
+            .from("member_parlays")
+            .select("id,title,legs,created_at,expires_at,community_post_id")
+            .eq("id", recent)
+            .maybeSingle();
+          if (!live || n !== epoch.current) return;
+          if (extra.data) list.push(extra.data);
+        }
+        const pinned = list.find((p) => p.id === recent);
+        setSaved(
+          pinned ? [pinned, ...list.filter((p) => p.id !== recent)] : list,
+        );
+        if (pinned) setSavedId(pinned.id);
       }
       setLoading(false);
     }
@@ -148,20 +194,49 @@ export default function ParlayWorkshop({
         );
         return;
       }
-      const readback = await supabase
-        .from("member_parlays")
-        .select("id,title,legs,created_at,expires_at,community_post_id")
-        .order("created_at", { ascending: false })
-        .limit(50);
+      const [readback, confirmation] = await Promise.all([
+        supabase
+          .from("member_parlays")
+          .select("id,title,legs,created_at,expires_at,community_post_id")
+          .order("created_at", { ascending: false })
+          .order("id", { ascending: false })
+          .limit(50),
+        supabase
+          .from("member_parlays")
+          .select("id,title,legs,created_at,expires_at,community_post_id")
+          .eq("id", result.data)
+          .single(),
+      ]);
       if (n !== epoch.current) return;
-      if (readback.error || !readback.data?.some((r) => r.id === result.data)) {
+      if (confirmation.error || !confirmation.data) {
         setError(
           "Save received, but confirmation could not load. Refresh before trying again.",
         );
         return;
       }
-      setSaved(readback.data);
-      setNotice("Saved to Your parlays.");
+      const confirmed = confirmation.data;
+      setReusedSave(
+        saved.some((p) => p.id === confirmed.id) ||
+          confirmed.title !== title.trim(),
+      );
+      setSaved([
+        confirmed,
+        ...(readback.data || saved).filter((p) => p.id !== confirmed.id),
+      ]);
+      try {
+        if (owner.current)
+          sessionStorage.setItem(
+            `vq-parlay-recent:${owner.current}`,
+            confirmed.id,
+          );
+      } catch {
+        /* The direct saved-card route remains available. */
+      }
+      setSavedId(confirmed.id);
+      setSavedPrompt(confirmed);
+      setPromptVersion((v) => v + 1);
+      setShareChecked(false);
+      setNotice(`Saved “${confirmed.title}” to My parlays.`);
       setChosen([]);
       setOpen(false);
     } catch {
@@ -171,7 +246,7 @@ export default function ParlayWorkshop({
     }
   }
   async function share(parlay: MemberParlay) {
-    if (sharing) return;
+    if (sharing) return false;
     const n = epoch.current;
     setSharing(parlay.id);
     setError("");
@@ -181,7 +256,7 @@ export default function ParlayWorkshop({
       const result = await supabase.rpc("share_member_parlay", {
         p_parlay: parlay.id,
       });
-      if (n !== epoch.current) return;
+      if (n !== epoch.current) return false;
       if (result.error || !result.data)
         throw Error(
           result.error?.message || "Could not share your parlay. Please retry.",
@@ -191,9 +266,15 @@ export default function ParlayWorkshop({
           p.id === parlay.id ? { ...p, community_post_id: result.data } : p,
         ),
       );
+      setSavedPrompt((current) =>
+        current?.id === parlay.id
+          ? { ...current, community_post_id: result.data }
+          : current,
+      );
       setSharedPost(result.data);
       setNotice("Your Vegas Quant parlay card is posted to Community.");
       window.dispatchEvent(new Event("vq-community-changed"));
+      return true;
     } catch (error) {
       if (n === epoch.current)
         setError(
@@ -201,8 +282,57 @@ export default function ParlayWorkshop({
             ? error.message
             : "Could not share. Please retry.",
         );
+      return false;
     } finally {
       if (n === epoch.current) setSharing(null);
+    }
+  }
+  useEffect(() => {
+    if (promptVersion && !saveDialog.current?.open)
+      saveDialog.current?.showModal();
+  }, [promptVersion]);
+  useEffect(() => {
+    if (
+      mode !== "parlays" ||
+      !routeSaved ||
+      focusedRoute.current === routeSaved ||
+      !saved.some((p) => p.id === routeSaved)
+    )
+      return;
+    focusedRoute.current = routeSaved;
+    const card = document.getElementById(`my-parlay-${routeSaved}`);
+    card?.scrollIntoView({ block: "center" });
+    card?.focus({ preventScroll: true });
+  }, [mode, routeSaved, saved]);
+  async function continueAfterSave() {
+    if (!savedPrompt) return false;
+    if (
+      shareChecked &&
+      !savedPrompt.community_post_id &&
+      !(await share(savedPrompt))
+    )
+      return false;
+    saveDialog.current?.close();
+    return true;
+  }
+  async function openSavedGambly() {
+    if (!savedPrompt || Date.parse(savedPrompt.expires_at) <= Date.now()) {
+      setError("This parlay has closed. You can still view it in My parlays.");
+      return false;
+    }
+    return continueAfterSave();
+  }
+  async function viewSaved() {
+    const id = savedPrompt?.id;
+    if (!id || !(await continueAfterSave())) return;
+    if (mode === "catalog")
+      router.push(
+        `/feed?view=parlays&saved=${encodeURIComponent(id)}#my-parlay-${id}`,
+      );
+    else {
+      const card = document.getElementById(`my-parlay-${id}`);
+      card?.scrollIntoView({ block: "center" });
+      card?.focus({ preventScroll: true });
     }
   }
   const showCatalog = mode === "catalog" || open;
@@ -228,7 +358,7 @@ export default function ParlayWorkshop({
   );
   return (
     <section
-      className="parlay-workshop"
+      className={`parlay-workshop${open ? " workshop-building" : ""}`}
       aria-label="Published legs and parlay builder"
     >
       <div className="workshop-head">
@@ -255,7 +385,7 @@ export default function ParlayWorkshop({
         price’s break-even by 15+ points; it is not a model edge or a guarantee.
       </p>
       {loading && <p role="status">Loading your leg library…</p>}
-      {error && (
+      {error && !open && (
         <p role="alert" className="notice">
           {error}
         </p>
@@ -307,6 +437,20 @@ export default function ParlayWorkshop({
             ))}
           </ul>
           {!chosen.length && <p>Select legs below to get started.</p>}
+        </section>
+      )}
+      {open && (
+        <aside className="workshop-save-tray" aria-label="Save your parlay">
+          <div>
+            <strong>{chosen.length} legs selected</strong>
+            <small>{title.trim() || "Name your parlay above"}</small>
+          </div>
+          <button
+            className="secondary"
+            onClick={() => builder.current?.scrollIntoView({ block: "start" })}
+          >
+            Review
+          </button>
           <button
             className="btn"
             disabled={busy || chosen.length < 2 || !title.trim()}
@@ -314,8 +458,71 @@ export default function ParlayWorkshop({
           >
             {busy ? "Saving…" : "Save my parlay"}
           </button>
-        </section>
+          {error && <p role="alert">{error}</p>}
+        </aside>
       )}
+      <dialog
+        ref={saveDialog}
+        className="entry-dialog workshop-save-dialog"
+        aria-labelledby="parlay-saved-title"
+      >
+        <h2 id="parlay-saved-title">Parlay saved</h2>
+        {savedPrompt && (
+          <>
+            {reusedSave && (
+              <p>
+                This combination was already saved. Its saved name and card are
+                kept below.
+              </p>
+            )}
+            <p>
+              <strong>{savedPrompt.title}</strong> · {savedPrompt.legs.length}{" "}
+              legs. It’s first in My parlays.
+            </p>
+            {savedPrompt.community_post_id ? (
+              <p role="status">Your Vegas Quant card is posted to Community.</p>
+            ) : (
+              <label className="workshop-share-check">
+                <input
+                  type="checkbox"
+                  checked={shareChecked}
+                  disabled={sharing !== null}
+                  onChange={(e) => setShareChecked(e.target.checked)}
+                />
+                Share to Community when I continue
+              </label>
+            )}
+            <p className="workshop-note">
+              Community posts use your Vegas Quant parlay card.
+            </p>
+            {error && <p role="alert">{error}</p>}
+            <div className="workshop-actions">
+              <GamblyLink
+                url="https://gambly.com/"
+                selection={parlayCopy(savedPrompt.legs)}
+                label="Open with Gambly ↗"
+                portalDialog
+                beforeOpen={openSavedGambly}
+                disabled={sharing !== null}
+              />
+              <button
+                className="btn"
+                disabled={sharing !== null}
+                onClick={() => void viewSaved()}
+              >
+                {sharing ? "Posting…" : "View My parlays"}
+              </button>
+              <button
+                className="secondary"
+                disabled={sharing !== null}
+                onClick={() => void continueAfterSave()}
+              >
+                Done
+              </button>
+            </div>
+          </>
+        )}
+      </dialog>
       {showCatalog && !loading && (
         <>
           <label className="workshop-search">
@@ -487,8 +694,9 @@ export default function ParlayWorkshop({
         </>
       )}
       {mode === "parlays" && (
-        <section className="workshop-saved">
-          <h2>Your parlays</h2>
+        <section className="workshop-saved" id="my-parlays">
+          <h2>My parlays</h2>
+          <p className="workshop-note">Most recently saved first.</p>
           <p className="workshop-note">
             Private saved combinations. Saving does not place a wager or add to
             your tail record.
@@ -497,8 +705,17 @@ export default function ParlayWorkshop({
             <p>Your saved parlays will appear here.</p>
           )}
           {saved.map((p) => (
-            <details key={p.id} className="workshop-leg">
+            <details
+              key={p.id}
+              id={`my-parlay-${p.id}`}
+              tabIndex={-1}
+              open={p.id === savedId ? true : undefined}
+              className={`workshop-leg${p.id === savedId ? " workshop-just-saved" : ""}`}
+            >
               <summary>
+                {p.id === savedId && (
+                  <span className="workshop-new">Just saved</span>
+                )}
                 <strong>{p.title}</strong> · {p.legs.length} legs
                 {Date.parse(p.expires_at) <= Date.now() ? " · Closed" : ""}
               </summary>

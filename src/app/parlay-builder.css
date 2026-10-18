@@ -147,3 +147,93 @@
     padding: 16px;
   }
 }
+
+.workshop-building {
+  padding-bottom: 130px;
+}
+.workshop-save-tray {
+  position: fixed;
+  z-index: 45;
+  right: 16px;
+  bottom: 20px;
+  width: min(600px, calc(100vw - 32px));
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid #d6b663;
+  border-radius: 18px;
+  background: #101318fa;
+  box-shadow: 0 8px 30px #0008;
+}
+.workshop-save-tray > div {
+  flex: 1;
+  min-width: 90px;
+}
+.workshop-save-tray small {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--muted);
+}
+.workshop-save-tray p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.workshop-save-tray button {
+  min-height: 44px;
+}
+.workshop-share-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+}
+.parlay-workshop .workshop-share-check input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: #d6b663;
+}
+.workshop-just-saved {
+  border: 2px solid #e6c56e;
+  box-shadow: 0 0 0 3px #e6c56e18;
+  scroll-margin-top: 180px;
+}
+.workshop-new {
+  display: inline-block;
+  margin: 0 10px 8px 0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  color: #17130a;
+  background: #e6c56e;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+@media (max-width: 1000px) {
+  .workshop-save-tray {
+    bottom: calc(94px + env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 480px) {
+  .workshop-save-tray {
+    right: 10px;
+    width: calc(100vw - 20px);
+    padding: 10px;
+    gap: 8px;
+  }
+  .workshop-save-tray .secondary {
+    padding: 10px;
+  }
+  .workshop-save-tray .btn {
+    padding: 12px;
+  }
+  .workshop-save-tray small {
+    max-width: 100px;
+  }
+}
