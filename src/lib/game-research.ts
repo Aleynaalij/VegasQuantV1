@@ -12,7 +12,7 @@ export type ResearchTopic = {
   items: ResearchItem[];
 };
 const operational =
-  /\b(SHADOW_ONLY|R[1-8]|scanner|scanned|approved priced model|approved model|model registry|v0\.\d|hosted|input hashes|coverage journal|forecast rows|Research Board.*tier|preserv.*(?:tickets|bankroll)|publication gate)\b/i;
+  /\b(SHADOW_ONLY|R[1-8]|scanner|scanned|approved priced model|approved model|model registry|v0\.\d|hosted (?:journal|forecast|records)|input hashes|coverage journal|forecast rows|Research Board.*tier|preserv.*(?:tickets|bankroll)|publication gate)\b/i;
 /** Hide operational sentences, not football facts or the original stored evidence. */
 export function memberResearchText(value: unknown): string {
   if (typeof value !== "string") return "";

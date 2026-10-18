@@ -180,3 +180,18 @@ test("substantive summaries may contain a kickoff timestamp", () => {
     /changed Sunday/,
   );
 });
+
+test("ordinary football hosting language remains visible", () => {
+  assert.equal(
+    memberResearchText(
+      "Houston hosted Jacksonville last week. The home offense ran 30 times.",
+    ),
+    "Houston hosted Jacksonville last week. The home offense ran 30 times.",
+  );
+  assert.equal(
+    memberResearchText(
+      "A hosted journal stores scanner coverage. Houston hosted Jacksonville last week.",
+    ),
+    "Houston hosted Jacksonville last week.",
+  );
+});
