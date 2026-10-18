@@ -268,6 +268,13 @@ export default function ParlayWorkshop({
     saveDialog.current?.close();
     return true;
   }
+  async function openSavedGambly() {
+    if (!savedPrompt || Date.parse(savedPrompt.expires_at) <= Date.now()) {
+      setError("This parlay has closed. You can still view it in My parlays.");
+      return false;
+    }
+    return continueAfterSave();
+  }
   async function viewSaved() {
     const id = savedPrompt?.id;
     if (!id || !(await continueAfterSave())) return;
@@ -442,7 +449,7 @@ export default function ParlayWorkshop({
                 selection={parlayCopy(savedPrompt.legs)}
                 label="Open with Gambly ↗"
                 portalDialog
-                beforeOpen={continueAfterSave}
+                beforeOpen={openSavedGambly}
                 disabled={sharing !== null}
               />
               <button
@@ -455,7 +462,7 @@ export default function ParlayWorkshop({
               <button
                 className="secondary"
                 disabled={sharing !== null}
-                onClick={() => saveDialog.current?.close()}
+                onClick={() => void continueAfterSave()}
               >
                 Done
               </button>
