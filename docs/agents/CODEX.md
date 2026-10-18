@@ -1,8 +1,13 @@
 # Codex · Kobe
-Updated: 2026-10-18, game research content correction
+Updated: 2026-10-18, parlay save follow-through
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
-## Current task · GAME-RESEARCH-STORY
+## Current task · PARLAY-SAVE-FOLLOW
+Owner requests save follow the builder scroll, newest saved combination first and obvious, then a post-save prompt with optional Community sharing and Gambly. Branch `codex/parlay-save-follow`, base fb363b5. Fixed bottom save tray sits above mobile navigation; confirmation reads back the saved row, prepends/highlights/opens it, and offers a direct My parlays route with a focused saved-card anchor. Saved lists restore newest-first ordering on entry. The native saved dialog offers an unchecked Community checkbox, View My parlays, and the existing Gambly clipboard/open flow. Community action uses the existing branded share RPC; failed sharing keeps the prompt open with a retry, without repeating the save. Gambly can portal its dialog outside the closing save dialog. No schema, publishing-gate, result, or bankroll changes.
+
+Validation: 259 tests and production webpack/TypeScript build passed. Synthetic production browser checks passed at 390/1280: save at bottom of a long leg catalog, no tab-bar overlap, catalog-to-Parlays newest/open/highlighted card, sharing opt-in only, sharing failure/retry, correct Gambly dialog handoff. Existing shared component behavior retains adult confirmation and manual copy fallback. React checklist applied: guarded async account epochs, stable refs, accessible native dialogs, no per-scroll listeners. Current-head CI/review pending; not deployed. Owner authorized this UX fix and follow-up prompt.
+
+## Previous task · GAME-RESEARCH-STORY
 The owner's signed-in screenshots showed #79 loading successfully but the latest partial weather update replacing the football briefing. Branch `codex/game-research-story`, base 3fcab7b. Shared notebook now resolves matchup, injuries, workloads and weather independently across immutable versions with actual section publication dates; historical views cannot inherit newer topics or news/quotes. The default overview uses substantive football text and descriptive team form, not pipeline notes, empty unsupported-estimate tiles or a timestamp-only handoff. A game-specific weekly news timeline shows published material updates with sources, and FanDuel moneyline/spread/total snapshots are readable; technical source metadata is lazy and grouped.
 
 Data: appended 14 immutable DESCRIPTIVE_TEAM_FORM analysis addenda and 14 source observations at 2026-10-18T12:06:40Z. Fresh corrected nflverse 2026 weekly CSV hash `982d86fa324694c6934d0d57e1de94261fefb1de745f5985bc2e0b725dd6febb`, 5,575 rows, schema verified, no duplicate player/team/week keys. Prior REG weeks only; Rams LA/LAR and Washington WAS/WSH aliases verified. Raw totals, game counts and exclusive target-week cutoff stored in handoff/source payloads. Gross passing is before sack losses; rushing includes QB carries. Facts, not forecasts, picks or EV. Existing gates, model status, Hail Mary, records and histories preserved.
