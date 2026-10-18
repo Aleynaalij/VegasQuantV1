@@ -32,3 +32,4 @@ jobs:
           npx next start -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
           npm run ui:smoke
+          node scripts/ui-smoke/nfl-game.mjs

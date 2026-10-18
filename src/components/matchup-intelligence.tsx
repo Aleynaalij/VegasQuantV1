@@ -4,6 +4,7 @@ import FollowButton from "./follow-button";
 import Link from "next/link";
 import type { Access } from "@/lib/membership";
 import { supabase } from "@/lib/supabase";
+import { onUserChange } from "@/lib/auth-user";
 import { time, type Desk } from "@/lib/domain";
 import {
   searchMatchup,
@@ -62,9 +63,16 @@ function Facts({ groups }: { groups: ReturnType<typeof researchFacts> }) {
         <dl key={i}>
           {facts.map((f, j) =>
             f.kind === "note" ? (
-              <p key={j} className="mi-fact-note">{f.value}</p>
+              <p key={j} className="mi-fact-note">
+                {f.value}
+              </p>
             ) : (
-              <div key={j} className={f.kind !== "time" && f.value.length > 16 ? "wide" : ""}>
+              <div
+                key={j}
+                className={
+                  f.kind !== "time" && f.value.length > 16 ? "wide" : ""
+                }
+              >
                 {f.label && <dt>{f.label}</dt>}
                 <dd>
                   {f.kind === "link" ? (
@@ -123,52 +131,137 @@ export default function MatchupIntelligence({
     [selected, setSelected] = useState(""),
     [sort, setSort] = useState("kickoff"),
     [futureOnly, setFutureOnly] = useState(true),
-    [error, setError] = useState("");
+    [error, setError] = useState(""),
+    [loading, setLoading] = useState(true),
+    [signedIn, setSignedIn] = useState(false),
+    [retry, setRetry] = useState(0);
   const epoch = useRef(0);
   useEffect(() => {
     const q = new URLSearchParams(window.location.search).get("q");
     if (q) setQuery(q.slice(0, 160));
   }, []);
   useEffect(() => {
-    let live = true;
+    let live = true,
+      busy = false;
+    setLoading(true);
     async function refresh() {
+      if (busy || !live) return;
+      busy = true;
       const n = ++epoch.current;
       try {
-        const [directory, d, publicStatus] = await Promise.all([
-          supabase.rpc("matchup_directory"),
-          supabase.rpc("desk_data"),
-          supabase.rpc("public_research_status"),
+        // Resolve the persisted session before checking access. Never infer denial from
+        // the anonymous server render or from a failed research download.
+        const session = await supabase.auth.getSession();
+        if (session.error)
+          throw Error("Your session could not be checked. Please retry.");
+        if (!live || n !== epoch.current) return;
+        setSignedIn(!!session.data.session);
+        const signal = AbortSignal.timeout(20000);
+        const [directory, access, publicStatus] = await Promise.all([
+          supabase.rpc("matchup_directory").abortSignal(signal),
+          supabase.rpc("membership_status").abortSignal(signal),
+          supabase.rpc("public_research_status").abortSignal(signal),
         ]);
-        if (directory.error || d.error)
-          throw Error("Unable to refresh research. Please retry.");
-        if (live && n === epoch.current) {
-          setRows(
-            directory.data.map((row: DirectoryRow) => {
-              const status = publicStatus.data?.games?.find(
-                (g: { game_id: string }) => g.game_id === row.game.id,
-              );
-              return {
-                ...row,
-                research_available: publicStatus.error ? undefined : !!status,
-                research_updated_at: status?.updated_at,
-              };
-            }),
-          );
-          setDesk(d.data);
-          setError("");
+        if (access.error || typeof access.data?.allowed !== "boolean")
+          throw Error("Research access could not be checked. Please retry.");
+        if (directory.error)
+          throw Error("The game directory could not load. Please retry.");
+        if (!live || n !== epoch.current) return;
+        setRows(
+          directory.data.map((row: DirectoryRow) => {
+            const status = publicStatus.data?.games?.find(
+              (g: { game_id: string }) => g.game_id === row.game.id,
+            );
+            return {
+              ...row,
+              research_available: publicStatus.error ? undefined : !!status,
+              research_updated_at: status?.updated_at,
+            };
+          }),
+        );
+        const game = directory.data.find(
+          (r: DirectoryRow) => r.game.slug === slug,
+        )?.game;
+        const base = {
+          ...initial,
+          access: access.data,
+          analyses: [],
+          markets: [],
+          picks: [],
+        };
+        if (!access.data?.allowed || !game) {
+          setDesk(base);
+        } else {
+          // Only this game's history is needed here. desk_data also downloads every
+          // other game's history, all price snapshots and the entire audit trail.
+          // These reads retain the existing table RLS and membership checks.
+          const [analyses, markets, picks] = await Promise.all([
+            supabase
+              .from("analysis_versions")
+              .select(
+                "id,game_id,version,title,sections,projections,source,created_at,intelligence",
+              )
+              .eq("game_id", game.id)
+              .order("version", { ascending: false })
+              .abortSignal(signal),
+            supabase
+              .from("market_snapshots")
+              .select("*")
+              .eq("game_id", game.id)
+              .order("observed_at", { ascending: false })
+              .abortSignal(signal),
+            supabase
+              .from("official_picks")
+              .select("*")
+              .eq("game_id", game.id)
+              .order("created_at", { ascending: false })
+              .abortSignal(signal),
+          ]);
+          if (analyses.error || markets.error || picks.error)
+            throw Error("This game's research could not load. Please retry.");
+          if (!live || n !== epoch.current) return;
+          if (
+            !analyses.data.length &&
+            publicStatus.data?.games?.some(
+              (g: { game_id: string }) => g.game_id === game.id,
+            )
+          )
+            throw Error(
+              "Published research could not be retrieved for this game. Please retry.",
+            );
+          setDesk({
+            ...base,
+            analyses: analyses.data.map((a) => ({ ...a, raw_handoff: "" })),
+            markets: markets.data,
+            picks: picks.data,
+          } as Desk & { access?: Access });
         }
+        setError("");
       } catch (e) {
         if (live && n === epoch.current)
-          setError(e instanceof Error ? e.message : "Load failed");
+          setError(
+            e instanceof Error
+              ? e.message
+              : "Research could not load. Please retry.",
+          );
+      } finally {
+        if (live && n === epoch.current) {
+          busy = false;
+          setLoading(false);
+        }
       }
     }
     void refresh();
-    const listener = supabase.auth.onAuthStateChange(() => {
+    const stopAuth = onUserChange(() => {
       ++epoch.current;
+      busy = false;
       setRows(
         initial.games.map((game) => ({ game, analysis: null, market: null })),
       );
       setDesk(initial);
+      setSelected("");
+      setLoading(true);
+      setError("");
       setTimeout(() => void refresh(), 0);
     });
     const timer = setInterval(refresh, 30000);
@@ -176,11 +269,11 @@ export default function MatchupIntelligence({
     return () => {
       live = false;
       ++epoch.current;
-      listener.data.subscription.unsubscribe();
+      stopAuth();
       clearInterval(timer);
       window.removeEventListener("focus", refresh);
     };
-  }, [initial]);
+  }, [initial, slug, retry]);
   const row = slug ? rows.find((r) => r.game.slug === slug) : null;
   const versions = (
     row ? desk.analyses.filter((a) => a.game_id === row.game.id) : []
@@ -276,7 +369,17 @@ export default function MatchupIntelligence({
             )}
           </div>
         </div>
-        {error && <p role="alert">{error}</p>}
+        {error && (
+          <div role="alert">
+            <p>{error}</p>
+            <button
+              className="secondary"
+              onClick={() => setRetry((n) => n + 1)}
+            >
+              Retry research
+            </button>
+          </div>
+        )}
         {!row ? (
           <>
             <div className="mi-search">
@@ -324,7 +427,7 @@ export default function MatchupIntelligence({
               {filtered.length} {filtered.length === 1 ? "matchup" : "matchups"}
               {query ? ` matching “${query}”` : " on your board"}
             </p>
-            {!desk.access?.allowed && (
+            {!loading && !error && !desk.access?.allowed && (
               <p className="mi-access">
                 <Link href="/membership">Sign in or get research access</Link>{" "}
                 to see analyst projections, targets and history.
@@ -496,10 +599,30 @@ export default function MatchupIntelligence({
                 }}
               />
             </details>
-            {!desk.access?.allowed ? (
-              <Empty title="Your research desk is waiting">
+            {loading && !current ? (
+              <p role="status">Loading game research…</p>
+            ) : error && !current ? (
+              <Empty title="Research could not load">
+                Use Retry research above to reconnect.
+              </Empty>
+            ) : !desk.access?.allowed ? (
+              <Empty
+                title={
+                  signedIn
+                    ? "Check your research access"
+                    : "Sign in to view game research"
+                }
+              >
+                <span>
+                  {signedIn
+                    ? "Your account is signed in. Check your research pass and account verification in Account."
+                    : "Published research is available with an active research pass."}
+                </span>
+                <br />
                 <Link href="/membership">
-                  Sign in or choose a research pass →
+                  {signedIn
+                    ? "Check account access →"
+                    : "Sign in or choose a research pass →"}
                 </Link>
               </Empty>
             ) : (
@@ -576,7 +699,10 @@ export default function MatchupIntelligence({
                         ["Vegas", intel.vegas],
                         ["Bias check", intel.bias],
                       ]
-                        .map(([name, value]) => ({ name: String(name), groups: researchFacts(value) }))
+                        .map(([name, value]) => ({
+                          name: String(name),
+                          groups: researchFacts(value),
+                        }))
                         // Topics with nothing a member can use are left out.
                         .filter((t) => t.groups.length)
                         .map(({ name, groups }) => ({
