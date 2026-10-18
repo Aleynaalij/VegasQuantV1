@@ -1,162 +1,114 @@
 "use client";
-
-import Link from "next/link";
 import { useId, useState } from "react";
-import { ArrowRight } from "lucide-react";
 import { time, type Analysis } from "@/lib/domain";
-
-import SourceStatus from "./source-status";
-const categories = [
-  ["Quick read", ""],
-  ["Decisions & props", "Edge Analysis"],
-  ["Market", "Market"],
-  ["Matchup", "Defensive Matchups"],
-  ["Injuries", "Injuries"],
-  ["Weather", "Weather"],
-  ["Public vs sharp", "Public vs Sharp"],
-] as const;
-
+import { gameResearchTopics } from "@/lib/game-research";
 export default function ResearchNotebook({
   analysis,
-  slug,
+  versions = [analysis],
   official,
 }: {
   analysis: Analysis;
+  versions?: Analysis[];
   slug?: string;
   official: boolean;
 }) {
-  const [active, setActive] = useState(0);
-  const [expanded, setExpanded] = useState(false);
+  const [chosen, setChosen] = useState("overview");
+  const topics = gameResearchTopics(versions, analysis.version);
+  const active = topics.find((t) => t.id === chosen) || topics[0];
   const id = useId();
-  const [label, section] = categories[active];
-  const content = analysis.sections[section];
   return (
-    <div className="research-compact">
-      <SourceStatus
-        source={analysis.source}
-        at={analysis.created_at}
-        kind="Analyst publication"
-      />
+    <section className="research-compact" aria-label="Game research briefing">
       <div className="research-meta">
-        <span>
-          VERSION {analysis.version} · {time(analysis.created_at)}
-        </span>
-        <span>{official ? "Official play published" : "No official play"}</span>
+        <span>Updated {time(analysis.created_at)}</span>
+        <span>{official ? "Official play published" : "Matchup research"}</span>
       </div>
+      <p className="research-hint">
+        The week's research in one place. Each topic keeps its original date;
+        reports can change before kickoff.
+      </p>
       <div
         className="research-tabs"
         role="tablist"
         aria-label="Research categories"
       >
-        {categories.map(([name], index) => (
+        {topics.map((topic, index) => (
           <button
-            key={name}
-            id={`${id}-tab-${index}`}
+            key={topic.id}
+            id={`${id}-${topic.id}`}
             role="tab"
-            aria-selected={active === index}
+            aria-selected={active?.id === topic.id}
             aria-controls={`${id}-panel`}
-            tabIndex={active === index ? 0 : -1}
-            onClick={() => {
-              setActive(index);
-              setExpanded(false);
-            }}
+            tabIndex={active?.id === topic.id ? 0 : -1}
+            onClick={() => setChosen(topic.id)}
             onKeyDown={(event) => {
               const next =
                 event.key === "ArrowRight"
-                  ? (index + 1) % categories.length
+                  ? (index + 1) % topics.length
                   : event.key === "ArrowLeft"
-                    ? (index + categories.length - 1) % categories.length
+                    ? (index + topics.length - 1) % topics.length
                     : event.key === "Home"
                       ? 0
                       : event.key === "End"
-                        ? categories.length - 1
+                        ? topics.length - 1
                         : null;
               if (next !== null) {
                 event.preventDefault();
-                setActive(next);
-                setExpanded(false);
-                document.getElementById(`${id}-tab-${next}`)?.focus();
+                setChosen(topics[next].id);
+                document.getElementById(`${id}-${topics[next].id}`)?.focus();
               }
             }}
           >
-            {name}
+            {topic.label}
           </button>
         ))}
       </div>
       <div
         id={`${id}-panel`}
         role="tabpanel"
-        aria-labelledby={`${id}-tab-${active}`}
+        aria-labelledby={active ? `${id}-${active.id}` : undefined}
         tabIndex={0}
         className="research-body"
       >
-        {active === 0 ? (
-          <>
-            <h3>{analysis.title}</h3>
-            {[
-              ["Game Summary", "The quick read"],
-              ["Injuries", "Availability"],
-              ["Edge Analysis", "What we’re watching"],
-            ].map(([key, heading]) => {
-              const read = analysis.sections[key];
-              return read ? (
-                <section key={key}>
-                  <h4>{heading}</h4>
-                  <p className="preserve">
-                    {read.length > 900 ? read.slice(0, 900) + "…" : read}
-                  </p>
-                </section>
-              ) : null;
-            })}
-            <div className="research-fair-lines">
-              {[
-                ["True spread", "true_spread"],
-                ["True moneyline", "true_moneyline"],
-                ["True total", "true_total"],
-              ].map(([name, key]) => (
-                <div key={key}>
-                  <span>{name}</span>
-                  <strong>
-                    {analysis.projections[key] || "No supported estimate"}
-                  </strong>
-                </div>
-              ))}
-            </div>
-            <p className="research-hint">
-              Open a category for more detail and sources. Leans and watchlists
-              are not official wagers.
-            </p>
-          </>
-        ) : (
-          <>
-            <h3>{label}</h3>
-            <div
-              key={`${analysis.id}-${active}`}
-              className={
-                expanded ? "research-excerpt expanded" : "research-excerpt"
-              }
-            >
-              <p className="preserve">
-                {content || "Not yet provided by Vegas Quant Ultra."}
-              </p>
-            </div>
-            {content && (
-              <button
-                className="research-more"
-                aria-expanded={expanded}
-                onClick={() => setExpanded(!expanded)}
-              >
-                {expanded ? "Show less ↑" : "Read more ↓"}
-              </button>
+        <h3>{active?.label || "Matchup briefing"}</h3>
+        {active?.items.map((item, index) => (
+          <article className="game-research-topic" key={item.heading + index}>
+            {active.items.length > 1 && <h4>{item.heading}</h4>}
+            <small>
+              {item.version < analysis.version ? "Earlier topic · " : ""}
+              Published {time(item.at)} · v{item.version}
+            </small>
+            {active.id === "players" ||
+            active.id === "form" ||
+            item.heading === "Season so far" ? (
+              <ul className="game-workload-list">
+                {item.text
+                  .split("\n")
+                  .filter(Boolean)
+                  .map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+              </ul>
+            ) : (
+              <p className="preserve">{item.text}</p>
             )}
-          </>
+            {!!item.sources.length && (
+              <details className="game-research-sources">
+                <summary>Publication sources</summary>
+                {item.sources.map((url) => (
+                  <p key={url}>
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      {new URL(url).hostname} ↗
+                    </a>
+                  </p>
+                ))}
+              </details>
+            )}
+          </article>
+        ))}
+        {!active && (
+          <p>No football briefing has been published for this version.</p>
         )}
       </div>
-      {slug && (
-        <Link className="research-footer" href={`/games/${slug}`}>
-          Full report & version history <ArrowRight size={15} />
-        </Link>
-      )}
-    </div>
+    </section>
   );
 }

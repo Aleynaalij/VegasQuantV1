@@ -1,8 +1,15 @@
 # Codex · Kobe
-Updated: 2026-10-18, NFL game loading review correction
+Updated: 2026-10-18, game research content correction
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
-## Current task · NFL-GAME-LOAD
+## Current task · GAME-RESEARCH-STORY
+The owner's signed-in screenshots showed #79 loading successfully but the latest partial weather update replacing the football briefing. Branch `codex/game-research-story`, base 3fcab7b. Shared notebook now resolves matchup, injuries, workloads and weather independently across immutable versions with actual section publication dates; historical views cannot inherit newer topics or news/quotes. The default overview uses substantive football text and descriptive team form, not pipeline notes, empty unsupported-estimate tiles or a timestamp-only handoff. A game-specific weekly news timeline shows published material updates with sources, and FanDuel moneyline/spread/total snapshots are readable; technical source metadata is lazy and grouped.
+
+Data: appended 14 immutable DESCRIPTIVE_TEAM_FORM analysis addenda and 14 source observations at 2026-10-18T12:06:40Z. Fresh corrected nflverse 2026 weekly CSV hash `982d86fa324694c6934d0d57e1de94261fefb1de745f5985bc2e0b725dd6febb`, 5,575 rows, schema verified, no duplicate player/team/week keys. Prior REG weeks only; Rams LA/LAR and Washington WAS/WSH aliases verified. Raw totals, game counts and exclusive target-week cutoff stored in handoff/source payloads. Gross passing is before sack losses; rushing includes QB carries. Facts, not forecasts, picks or EV. Existing gates, model status, Hail Mary, records and histories preserved.
+
+Validation: 256 tests and production webpack build passed; expanded 390/1280 fixtures cover partial-update inheritance, matchup/injuries/workloads/team form, game-specific news, readable FanDuel prices, no empty projection tiles, plus all #79 access/refresh/settlement cases. React checklist: bounded game-scoped parallel reads, minimal dependencies, guarded async state, keyboard tabs and unknown data states. Preparing current-head CI/review; not yet deployed. No new schedule or paid provider feature enabled.
+
+## Previous task · NFL-GAME-LOAD
 Owner reports NFL game pages showing an access prompt instead of published research and requests the fix for every matchup. Branch `codex/nfl-game-loading`, base f701035. Shared MatchupIntelligence now resolves the browser session and access explicitly, loads only the selected game's analysis/version history, market rows and official picks under existing RLS, and keeps same-account token events from clearing the page. Pending, denied, failed and unexpectedly empty published research have distinct states with retry. Requests time out instead of waiting indefinitely. No membership grants, policy changes, publication/record changes or NBA changes.
 
 Live database read: all 14 upcoming NFL games have research (1–6 versions each), including six Houston–Jacksonville versions. This verifies stored data, not the owner's browser session. Local validation: 248 tests and TypeScript passed; production webpack build passed. Browser fixtures cover two matchup routes at 390/1280 widths, delayed access, same-user token refresh, failed access/research, unexpected empty research, retry and denied access. Synthetic fixtures do not prove live member authorization. The new browser test is included in existing CI. Prepared for review; no production deployment claimed.
