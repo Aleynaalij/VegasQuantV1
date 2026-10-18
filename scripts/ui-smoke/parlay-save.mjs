@@ -212,6 +212,41 @@ for (const width of [390, 1280]) {
     await page.locator(".workshop-saved > details").first().innerText(),
     /Shared sample/,
   );
+  for (const title of ["Done sample", "Expired sample"]) {
+    await page
+      .getByRole("button", { name: "+ Create parlay", exact: true })
+      .click();
+    await page.getByLabel("Parlay name", { exact: true }).fill(title);
+    await page
+      .getByRole("button", { name: "+ Add to parlay", exact: true })
+      .nth(0)
+      .click();
+    await page
+      .getByRole("button", { name: "+ Add to parlay", exact: true })
+      .nth(0)
+      .click();
+    await page
+      .getByRole("button", { name: "Save my parlay", exact: true })
+      .click();
+    await prompt.waitFor();
+    if (title === "Done sample") {
+      await prompt.getByRole("checkbox").check();
+      await prompt.getByRole("button", { name: "Done", exact: true }).click();
+      await prompt.waitFor({ state: "hidden" });
+      assert.equal(shares, 3, "Done honors the sharing checkbox");
+    } else {
+      await page.clock.install({ time: new Date(Date.now() + 2 * 86400000) });
+      await prompt
+        .getByRole("button", { name: "Open with Gambly ↗", exact: true })
+        .click();
+      await prompt.getByRole("alert").waitFor();
+      assert.match(await prompt.innerText(), /parlay has closed/);
+      assert.equal(await gambly.isVisible(), false);
+      await prompt
+        .getByRole("button", { name: "View My parlays", exact: true })
+        .click();
+    }
+  }
   await page.screenshot({ path: `/tmp/vq-parlay-save-${width}.png` });
   await ctx.close();
 }
