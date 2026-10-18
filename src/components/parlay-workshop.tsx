@@ -17,6 +17,7 @@ import {
   type PublishedLeg,
 } from "@/lib/parlay-builder";
 import GamblyLink from "./gambly-link";
+import KalshiLink from "./kalshi-link";
 import CasinoCard, { CasinoCardDownload } from "./casino-card";
 import { cleanMarket, type CasinoCardData } from "@/lib/casino-card";
 import { useLegForms, VqStamp } from "./leg-form";
@@ -315,7 +316,7 @@ export default function ParlayWorkshop({
     saveDialog.current?.close();
     return true;
   }
-  async function openSavedGambly() {
+  async function openSavedDestination() {
     if (!savedPrompt || Date.parse(savedPrompt.expires_at) <= Date.now()) {
       setError("This parlay has closed. You can still view it in My parlays.");
       return false;
@@ -497,12 +498,19 @@ export default function ParlayWorkshop({
             </p>
             {error && <p role="alert">{error}</p>}
             <div className="workshop-actions">
+              <KalshiLink
+                legKeys={savedPrompt.legs.map((leg) => leg.leg_key)}
+                label="Open with Kalshi ↗"
+                portalDialog
+                beforeOpen={openSavedDestination}
+                disabled={sharing !== null}
+              />
               <GamblyLink
                 url="https://gambly.com/"
                 selection={parlayCopy(savedPrompt.legs)}
                 label="Open with Gambly ↗"
                 portalDialog
-                beforeOpen={openSavedGambly}
+                beforeOpen={openSavedDestination}
                 disabled={sharing !== null}
               />
               <button
