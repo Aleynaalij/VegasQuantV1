@@ -195,3 +195,37 @@ test("ordinary football hosting language remains visible", () => {
     "Houston hosted Jacksonville last week.",
   );
 });
+
+test("carried-forward sections keep their original source and date, and do not outrank newly changed aliases", () => {
+  const first = version(1, {
+    Injuries: "Questionable Friday.",
+    "Game Summary": "Earlier rotation.",
+    Sources: "https://example.com/friday",
+  });
+  const second = version(2, {
+    ...first.sections,
+    Availability: "Cleared Sunday.",
+    "Role update": "New starter Sunday.",
+    Sources: "https://example.com/sunday",
+  });
+  const third = version(3, { ...second.sections });
+  const topics = gameResearchTopics([third, second, first], 3);
+  assert.equal(topics.find((t) => t.id === "injuries")!.items[0].version, 2);
+  assert.match(
+    topics.find((t) => t.id === "injuries")!.items[0].text,
+    /Cleared/,
+  );
+  assert.match(
+    topics.find((t) => t.id === "overview")!.items[0].text,
+    /New starter/,
+  );
+  const carried = gameResearchTopics(
+    [
+      version(2, { ...first.sections, Sources: "https://example.com/new" }),
+      first,
+    ],
+    2,
+  ).find((t) => t.id === "injuries")!.items[0];
+  assert.equal(carried.at, first.created_at);
+  assert.deepEqual(carried.sources, ["https://example.com/friday"]);
+});

@@ -94,23 +94,34 @@ export function gameResearchTopics(
         )
           return null;
         const text = memberResearchText(raw);
+        let origin = a;
+        if (text) {
+          for (const earlier of history.filter((v) => v.version < a.version)) {
+            const prior = memberResearchText(earlier.sections[heading]);
+            if (!prior) continue;
+            if (prior !== text) break;
+            origin = earlier;
+          }
+        }
         return text
           ? {
               heading,
               text,
-              version: a.version,
-              at: a.created_at,
-              sources: publicationSources(a),
+              version: origin.version,
+              at: origin.created_at,
+              sources: publicationSources(origin),
             }
           : null;
       };
       if (id === "overview" || id === "injuries") {
         const primaryKeys = keys.filter((k) => k !== "Case and failure path");
-        const latest = history.flatMap((a) =>
-          primaryKeys
-            .map((k) => item(a, k))
-            .filter((v): v is ResearchItem => !!v),
-        )[0];
+        const latest = history
+          .flatMap((a) =>
+            primaryKeys
+              .map((k) => item(a, k))
+              .filter((v): v is ResearchItem => !!v),
+          )
+          .sort((a, b) => b.version - a.version)[0];
         const fallback =
           id === "overview"
             ? history.map((a) => item(a, "Case and failure path")).find(Boolean)
@@ -128,13 +139,7 @@ export function gameResearchTopics(
           memberResearchText(a.sections["Team form"]),
         );
         if (form)
-          items.push({
-            heading: "Season so far",
-            text: memberResearchText(form.sections["Team form"]),
-            version: form.version,
-            at: form.created_at,
-            sources: publicationSources(form),
-          });
+          items.push({ ...item(form, "Team form")!, heading: "Season so far" });
       }
       return { id, label, items };
     })
