@@ -1,0 +1,151 @@
+import type { Analysis } from "./domain";
+export type ResearchItem = {
+  heading: string;
+  text: string;
+  version: number;
+  at: string;
+  sources: string[];
+};
+export type ResearchTopic = {
+  id: string;
+  label: string;
+  items: ResearchItem[];
+};
+const operational =
+  /\b(SHADOW_ONLY|R[1-8]|scanner|scanned|approved priced model|approved model|model registry|v0\.\d|hosted|input hashes|coverage journal|forecast rows|Research Board.*tier|preserv.*(?:tickets|bankroll)|publication gate)\b/i;
+/** Hide operational sentences, not football facts or the original stored evidence. */
+export function memberResearchText(value: unknown): string {
+  if (typeof value !== "string") return "";
+  return value
+    .replaceAll("\\n", "\n")
+    .split("\n")
+    .map((line) =>
+      line
+        .split(/(?<=[.!?])\s+(?=[A-Z])/u)
+        .filter((s) => !operational.test(s))
+        .join(" "),
+    )
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+}
+export function publicationSources(a: Analysis): string[] {
+  const urls =
+    ((a.sections.Sources || "") + " " + a.source).match(
+      /https:\/\/[^\s\\<>]+/g,
+    ) || [];
+  return [
+    ...new Set(
+      urls.flatMap((value) => {
+        try {
+          const url = new URL(value.replace(/[),.;]+$/, ""));
+          return url.protocol === "https:" && url.hostname ? [url.href] : [];
+        } catch {
+          return [];
+        }
+      }),
+    ),
+  ];
+}
+
+const topics = [
+  [
+    "overview",
+    "Overview",
+    ["Game Summary", "Role update", "Role change", "Case and failure path"],
+  ],
+  ["form", "Team form", ["Team form"]],
+  [
+    "matchup",
+    "Matchup",
+    [
+      "Defensive Matchups",
+      "Team Strength",
+      "QB Analysis",
+      "Offensive Line",
+      "Role update",
+      "Role change",
+    ],
+  ],
+  ["players", "Players & workload", ["Workload facts"]],
+  ["injuries", "Injuries", ["Injuries", "Availability"]],
+  ["weather", "Weather", ["Weather"]],
+  ["market", "Market context", ["Market", "Public vs Sharp"]],
+] as const;
+/** Topics retain actual publication dates. A weather update cannot erase the matchup;
+ * a historical view cannot inherit newer facts. Never inherit targets/projections. */
+export function gameResearchTopics(
+  versions: Analysis[],
+  through: number,
+): ResearchTopic[] {
+  const history = versions
+    .filter((a) => a.version <= through)
+    .sort((a, b) => b.version - a.version);
+  return topics
+    .map(([id, label, keys]) => {
+      const items: ResearchItem[] = [];
+      for (const heading of keys) {
+        for (const a of history) {
+          const raw = a.sections[heading];
+          if (
+            heading === "Game Summary" &&
+            /\d{4}-\d\d-\d\dT|material pregame research/i.test(String(raw))
+          )
+            continue;
+          const text = memberResearchText(raw);
+          if (!text) continue;
+          if (!items.some((i) => i.text === text))
+            items.push({
+              heading,
+              text,
+              version: a.version,
+              at: a.created_at,
+              sources: publicationSources(a),
+            });
+          break;
+        }
+        if ((id === "overview" || id === "injuries") && items.length) break;
+      }
+      if (id === "overview") {
+        const form = history.find((a) =>
+          memberResearchText(a.sections["Team form"]),
+        );
+        if (form)
+          items.push({
+            heading: "Season so far",
+            text: memberResearchText(form.sections["Team form"]),
+            version: form.version,
+            at: form.created_at,
+            sources: publicationSources(form),
+          });
+      }
+      return { id, label, items };
+    })
+    .filter((t) => t.items.length);
+}
+export type GameNewsRow = {
+  id: string;
+  title: string;
+  summary: string;
+  why_watch: string;
+  caution: string;
+  source_url: string;
+  source_at: string;
+  created_at: string;
+};
+export function footballNews(rows: GameNewsRow[]): GameNewsRow[] {
+  const seen = new Set<string>();
+  return rows.filter((r) => {
+    if (
+      /^(?:Sunday|Full.slate).*(?:coverage|props now visible)|^Coverage\b|scanner|feed run|model validation/i.test(
+        r.title,
+      ) ||
+      /\/research\/probability\//.test(r.source_url)
+    )
+      return false;
+    const key = r.title + "|" + r.summary;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return !!memberResearchText(r.summary);
+  });
+}

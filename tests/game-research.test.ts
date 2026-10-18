@@ -1,0 +1,141 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {
+  gameResearchTopics,
+  footballNews,
+  memberResearchText,
+  publicationSources,
+  type GameNewsRow,
+} from "../src/lib/game-research";
+import type { Analysis } from "../src/lib/domain";
+const version = (n: number, sections: Record<string, string>): Analysis => ({
+  id: `a${n}`,
+  game_id: "game",
+  version: n,
+  title: `Update ${n}`,
+  sections,
+  projections: { true_spread: "Private unsupported model output" },
+  raw_handoff: "private",
+  source: "VQ",
+  created_at: `2026-10-${10 + n}T12:00:00Z`,
+});
+const history = [
+  version(3, {
+    "Game Summary":
+      "Houston at Jacksonville · 2026-10-18T13:30:00Z. Material pregame research update observed now.",
+    Weather: "Rain risk increased to 60%.",
+    "Edge Analysis":
+      "No approved priced model is registered. SHADOW_ONLY output is not validated EV.",
+  }),
+  version(2, {
+    "Game Summary":
+      "Marks saw more carries last week; the receiver rotation changed after the trade.",
+    Injuries: "Montgomery was ruled out on Friday.",
+    "Defensive Matchups":
+      "The replacement left tackle changes the protection matchup.",
+    "Workload facts": "Marks: W4 6 carries\\nTuten: W4 17 carries",
+    Sources: "https://example.com/team-report",
+  }),
+  version(1, {
+    Weather: "Earlier forecast: 30% rain.",
+    Injuries: "Montgomery was questionable on Wednesday.",
+  }),
+];
+test("a weather-only update retains the newest actual matchup and injury topics with their own dates", () => {
+  const topics = gameResearchTopics(history, 3);
+  assert.match(
+    topics.find((t) => t.id === "overview")!.items[0].text,
+    /receiver rotation/,
+  );
+  const injuries = topics.find((t) => t.id === "injuries")!.items[0];
+  assert.equal(injuries.version, 2);
+  assert.equal(injuries.at, history[1].created_at);
+  assert.match(injuries.text, /ruled out/);
+  assert.match(
+    topics.find((t) => t.id === "matchup")!.items[0].text,
+    /left tackle/,
+  );
+  assert.match(topics.find((t) => t.id === "weather")!.items[0].text, /60%/);
+  assert.doesNotMatch(
+    JSON.stringify(topics),
+    /SHADOW_ONLY|Private unsupported|Material pregame/,
+  );
+});
+test("historical selection never pulls future injury or weather updates", () => {
+  const topics = gameResearchTopics(history, 1);
+  assert.match(
+    topics.find((t) => t.id === "injuries")!.items[0].text,
+    /questionable/,
+  );
+  assert.match(topics.find((t) => t.id === "weather")!.items[0].text, /30%/);
+  assert.doesNotMatch(
+    JSON.stringify(topics),
+    /ruled out|60%|receiver rotation/,
+  );
+});
+test("workload line breaks and football risks survive operational text removal", () => {
+  assert.equal(
+    memberResearchText(
+      "Marks had 15 carries. R7 restricts publication. Opportunity is not guaranteed.",
+    ),
+    "Marks had 15 carries. Opportunity is not guaranteed.",
+  );
+  assert.equal(
+    gameResearchTopics(history, 3)
+      .find((t) => t.id === "players")!
+      .items[0].text.split("\n").length,
+    2,
+  );
+});
+test("weekly football news excludes pipeline coverage and duplicate posts", () => {
+  const row: GameNewsRow = {
+    id: "news",
+    title: "Harrison traded to Houston",
+    summary: "Houston confirmed the receiver trade.",
+    why_watch: "Receiving shares may change.",
+    caution: "Roles remain uncertain.",
+    source_url: "https://example.com/team",
+    source_at: "2026-10-12T12:00Z",
+    created_at: "2026-10-12T12:01Z",
+  };
+  const rows = footballNews([
+    row,
+    { ...row, id: "duplicate" },
+    {
+      ...row,
+      id: "pipeline",
+      title: "Sunday coverage · props visible",
+      source_url:
+        "https://github.com/org/repo/research/probability/qualification.md",
+    },
+  ]);
+  assert.deepEqual(
+    rows.map((r) => r.id),
+    ["news"],
+  );
+});
+test("malformed publication links cannot crash the briefing", () => {
+  assert.deepEqual(
+    publicationSources(
+      version(1, {
+        Sources:
+          "https://[bad https://example.com/report\\nhttps://example.com/report",
+      }),
+    ),
+    ["https://example.com/report"],
+  );
+});
+test("new team-form statistics join the overview without replacing the football summary", () => {
+  const form = version(4, {
+    "Team form":
+      "Sample away: 250 gross passing yards/game.\nSample home: 130 rushing yards/game.",
+  });
+  const topics = gameResearchTopics([form, ...history], 4);
+  assert.equal(topics.find((t) => t.id === "overview")!.items.length, 2);
+  assert.match(
+    topics.find((t) => t.id === "overview")!.items[0].text,
+    /receiver rotation/,
+  );
+  assert.match(topics.find((t) => t.id === "form")!.items[0].text, /250/);
+  assert.equal(topics.find((t) => t.id === "form")!.items[0].version, 4);
+});

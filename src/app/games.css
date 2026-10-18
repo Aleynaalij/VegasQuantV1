@@ -428,3 +428,18 @@ html[data-theme] body .game-pair .team-logo-fallback {
   color: color-mix(in srgb, var(--gold) 22%, var(--panel));
   font-weight: 800;
 }
+
+/* Member game briefing: football content before source plumbing. */
+.game-research-topic + .game-research-topic { border-top: 1px solid var(--border, #303640); padding-top: 1rem; margin-top: 1rem; }
+.game-research-topic > small, .game-news-card > small, .game-news-card details > small { color: var(--muted, #aaa); display: block; font-size: .8rem; }
+.game-workload-list { list-style: none; padding: 0; display: grid; gap: .75rem; }
+.game-workload-list li { padding: .9rem; border: 1px solid var(--border, #303640); border-radius: 12px; line-height: 1.65; }
+.game-research-sources { margin-top: .75rem; font-size: .85rem; }
+.game-week-news { margin: 1.75rem 0; }
+.game-news-card { background: var(--panel, #10141c); border: 1px solid var(--border, #303640); border-radius: 16px; padding: 1.1rem; margin: 1rem 0; }
+.game-news-card h3 { margin: .6rem 0; font-size: 1.1rem; }
+.game-news-card p { line-height: 1.7; overflow-wrap: anywhere; }
+.game-news-card summary, .game-research-sources summary { color: var(--gold, #d9bd68); cursor: pointer; }
+.game-quote-card { padding: 1rem 0; border-bottom: 1px solid var(--border, #303640); }
+.game-quote-card h3 { font-size: 1rem; }
+.game-quote-card small { color: var(--muted, #aaa); }

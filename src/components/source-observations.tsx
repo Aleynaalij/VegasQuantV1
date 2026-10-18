@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { time } from "@/lib/domain";
+import { odd, time } from "@/lib/domain";
 import { SourceLink } from "./ui";
 type Observation = {
   id: string;
@@ -10,90 +10,155 @@ type Observation = {
   source: string;
   observed_at: string | null;
   recorded_at: string;
-  payload: Record<string, unknown>;
+  payload?: Record<string, unknown>;
 };
-function Facts({ value }: { value: unknown }) {
-  if (value == null) return <span>Not supplied</span>;
-  if (Array.isArray(value))
-    return (
-      <div>
-        {value.map((v, i) => (
-          <div className="mi-item" key={i}>
-            <Facts value={v} />
-          </div>
-        ))}
-      </div>
-    );
-  if (typeof value === "object")
-    return (
-      <dl className="mi-fields">
-        {Object.entries(value)
-          .filter(([, v]) => v != null)
-          .map(([k, v]) => (
-            <div key={k}>
-              <dt>{k.replaceAll("_", " ")}</dt>
-              <dd>
-                <Facts value={v} />
-              </dd>
-            </div>
-          ))}
-      </dl>
-    );
-  return <span>{String(value)}</span>;
-}
-export default function SourceObservations({ gameId }: { gameId: string }) {
-  const [rows, setRows] = useState<Observation[]>([]),
-    [error, setError] = useState("");
+const markets: Record<string, string> = {
+  h2h: "Moneyline",
+  spreads: "Spread",
+  totals: "Total",
+};
+export default function SourceObservations({
+  gameId,
+  before,
+}: {
+  gameId: string;
+  before?: string;
+}) {
+  const [quotes, setQuotes] = useState<Observation[]>([]),
+    [rows, setRows] = useState<Observation[]>([]),
+    [error, setError] = useState(""),
+    [rawOpen, setRawOpen] = useState(false);
   useEffect(() => {
-    let live = true;
+    let live = true,
+      generation = 0;
+    setQuotes([]);
+    setError("");
     async function load() {
-      const r = await supabase
+      const n = ++generation;
+      let query = supabase
         .from("source_observations")
-        .select("*")
+        .select("id,kind,provider,source,observed_at,recorded_at,payload")
         .eq("game_id", gameId)
+        .eq("kind", "odds")
+        .eq("payload->>book", "FanDuel")
+        .in("payload->>market", ["h2h", "spreads", "totals"])
         .order("recorded_at", { ascending: false })
-        .limit(30);
-      if (live) {
-        setError(r.error ? "Source updates are temporarily unavailable" : "");
-        setRows(r.data || []);
+        .limit(9);
+      if (before) query = query.lte("recorded_at", before);
+      const r = await query.abortSignal(AbortSignal.timeout(15000));
+      if (!live || n !== generation) return;
+      setError(r.error ? "Sportsbook snapshots could not refresh." : "");
+      if (!r.error) {
+        const seen = new Set<string>();
+        setQuotes(
+          (r.data || []).filter((r) => {
+            const market = String(r.payload?.market || "");
+            if (seen.has(market)) return false;
+            seen.add(market);
+            return !!markets[market];
+          }),
+        );
       }
     }
     void load();
-    const t = setInterval(load, 60000);
+    const timer = setInterval(load, 60000);
     return () => {
       live = false;
-      clearInterval(t);
+      generation++;
+      clearInterval(timer);
     };
-  }, [gameId]);
+  }, [gameId, before]);
+  useEffect(() => {
+    if (!rawOpen) return;
+    let live = true;
+    setRows([]);
+    let history = supabase
+      .from("source_observations")
+      .select("id,kind,provider,source,observed_at,recorded_at")
+      .eq("game_id", gameId)
+      .order("recorded_at", { ascending: false })
+      .limit(18);
+    if (before) history = history.lte("recorded_at", before);
+    void history.abortSignal(AbortSignal.timeout(15000)).then((r) => {
+      if (live) {
+        setRows(r.data || []);
+        if (r.error) setError("Source history could not load.");
+      }
+    });
+    return () => {
+      live = false;
+    };
+  }, [gameId, rawOpen, before]);
+  const groups = new Map<string, Observation[]>();
+  for (const row of rows) {
+    const key = row.kind + " · " + row.provider;
+    groups.set(key, [...(groups.get(key) || []), row]);
+  }
   return (
     <details className="mi-section">
-      <summary>Source updates · automated facts</summary>
+      <summary>Sportsbook board & source history</summary>
       <p className="muted">
-        Provider observations, separate from Vegas Quant analysis. Scores do not
-        automatically grade wagers. Odds are recorded quotes, not guaranteed
-        current availability.
+        FanDuel game lines from stored provider snapshots. Verify availability
+        with the book. These are prices, not recommendations.
       </p>
       {error && <p role="alert">{error}</p>}
-      {!rows.length && <p>No source updates received yet.</p>}
-      {rows.map((r) => (
-        <article className="mi-item" key={r.id}>
-          <strong>
-            {r.kind.toUpperCase()} · {r.provider}
-          </strong>
+      {!quotes.length && !error && (
+        <p>No FanDuel game-line snapshot is available.</p>
+      )}
+      {quotes.map((row) => (
+        <article className="game-quote-card" key={row.id}>
+          <h3>FanDuel · {markets[String(row.payload?.market)]}</h3>
+          {Array.isArray(row.payload?.outcomes) &&
+            row.payload.outcomes.map((outcome: unknown, i: number) => {
+              if (!outcome || typeof outcome !== "object") return null;
+              const o = outcome as Record<string, unknown>;
+              if (
+                typeof o.name !== "string" ||
+                typeof o.price !== "number" ||
+                !Number.isFinite(o.price) ||
+                Math.abs(o.price) < 100
+              )
+                return null;
+              return (
+                <p key={i}>
+                  <strong>{o.name}</strong>
+                  {typeof o.point === "number"
+                    ? ` ${o.point > 0 && row.payload?.market === "spreads" ? "+" : ""}${o.point}`
+                    : ""}{" "}
+                  <b>{odd(o.price)}</b>
+                </p>
+              );
+            })}
+          <small>
+            Observed {row.observed_at ? time(row.observed_at) : "time unknown"}{" "}
+            · Retrieved {time(row.recorded_at)}
+          </small>
           <p>
-            {r.observed_at
-              ? `Provider timestamp: ${time(r.observed_at)}`
-              : "Provider observation time not supplied"}
-            <br />
-            Retrieved {time(r.recorded_at)}
+            <SourceLink href={row.source}>Price source ↗</SourceLink>
           </p>
-          <SourceLink href={r.source}>Source</SourceLink>
-          <details>
-            <summary>View supplied data</summary>
-            <Facts value={r.payload} />
-          </details>
         </article>
       ))}
+      <details onToggle={(e) => setRawOpen(e.currentTarget.open)}>
+        <summary>Technical source history</summary>
+        {[...groups.entries()].map(([name, observations]) => (
+          <details key={name}>
+            <summary>
+              {name} · {observations.length} recent observations
+            </summary>
+            {observations.map((row) => (
+              <p key={row.id}>
+                {row.observed_at
+                  ? time(row.observed_at)
+                  : "Provider time unknown"}{" "}
+                · <SourceLink href={row.source}>Source ↗</SourceLink>
+              </p>
+            ))}
+          </details>
+        ))}
+        <small>
+          Latest 18 source records. Research and news are shown above.
+        </small>
+      </details>
     </details>
   );
 }

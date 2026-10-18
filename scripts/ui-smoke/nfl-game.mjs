@@ -87,6 +87,45 @@ for (const width of [390, 1280]) {
       ];
     if (path.endsWith("public_research_status"))
       data = { games: [{ game_id: game.id }] };
+    if (path.endsWith("research_feed_posts")) {
+      assert.equal(url.searchParams.get("game_id"), `eq.${game.id}`);
+      data = [
+        {
+          id: "news",
+          title: "Sample receiver trade this week",
+          summary: "Sample verified team transaction.",
+          why_watch: "Sample receiving rotation impact.",
+          caution: "Sample workload risk.",
+          source_url: "https://example.com/team",
+          source_at: "2026-10-15T12:00:00Z",
+          created_at: "2026-10-15T12:01:00Z",
+        },
+      ];
+    }
+    if (
+      path.endsWith("source_observations") &&
+      url.searchParams.get("payload->>book") === "eq.FanDuel"
+    ) {
+      assert.equal(url.searchParams.get("game_id"), `eq.${game.id}`);
+      data = [
+        {
+          id: "q1",
+          kind: "odds",
+          provider: "The Odds API",
+          source: "https://example.com/quote",
+          observed_at: new Date().toISOString(),
+          recorded_at: new Date().toISOString(),
+          payload: {
+            book: "FanDuel",
+            market: "h2h",
+            outcomes: [
+              { name: "Sample Away", price: 128 },
+              { name: "Sample Home", price: -152 },
+            ],
+          },
+        },
+      ];
+    }
     if (path.endsWith("desk_data")) deskReads++;
     if (
       ["analysis_versions", "market_snapshots", "official_picks"].some((t) =>
@@ -107,14 +146,38 @@ for (const width of [390, 1280]) {
           });
         data = [
           {
+            id: "a3",
+            game_id: game.id,
+            version: 3,
+            title: "Sample weather-only update",
+            sections: {
+              "Game Summary":
+                "Sample matchup · 2026-10-18T13:30:00Z. Material pregame research update observed now.",
+              Weather: "Sample latest gust forecast.",
+              "Team form":
+                "Sample away: 250 gross passing yards/game.\nSample home: 130 rushing yards/game.",
+              "Edge Analysis": "SHADOW_ONLY and scanner operations.",
+            },
+            projections: {},
+            source: "https://example.com",
+            created_at: "2026-10-17T12:00:00Z",
+            intelligence: null,
+          },
+          {
             id: "a2",
             game_id: game.id,
             version: 2,
-            title: "Sample verified game research",
-            sections: { "Game Summary": "Sample current matchup facts." },
+            title: "Sample full matchup report",
+            sections: {
+              "Game Summary": "Sample current matchup facts.",
+              "Defensive Matchups": "Sample protection matchup from this week.",
+              Injuries: "Sample starter ruled out Friday.",
+              "Workload facts":
+                "Sample Runner: W5 15 carries\\nSample Receiver: W5 8 targets",
+            },
             projections: {},
             source: "https://example.com",
-            created_at: new Date().toISOString(),
+            created_at: "2026-10-16T12:00:00Z",
             intelligence: null,
           },
         ];
@@ -217,6 +280,55 @@ for (const width of [390, 1280]) {
   release();
   await p.getByText("Sample current matchup facts.", { exact: true }).waitFor();
   assert.equal(deskReads, 0, "browser must never download the whole desk");
+  await p.getByRole("tab", { name: "Team form", exact: true }).click();
+  await p
+    .getByText("Sample away: 250 gross passing yards/game.", { exact: true })
+    .waitFor();
+  await p
+    .getByText("Sportsbook board & source history", { exact: true })
+    .click();
+  await p
+    .getByRole("heading", { name: "FanDuel · Moneyline", exact: true })
+    .waitFor();
+  assert.match(
+    await p.locator(".game-quote-card").innerText(),
+    /Sample Home.*-152/s,
+  );
+  assert.equal(
+    await p.getByText("View supplied data", { exact: true }).count(),
+    0,
+  );
+  await p
+    .getByText("Sportsbook board & source history", { exact: true })
+    .click();
+  await p.getByRole("tab", { name: "Matchup", exact: true }).click();
+  await p
+    .getByText("Sample protection matchup from this week.", { exact: true })
+    .waitFor();
+  await p.getByRole("tab", { name: "Injuries", exact: true }).click();
+  await p
+    .getByText("Sample starter ruled out Friday.", { exact: true })
+    .waitFor();
+  await p.getByRole("tab", { name: "Players & workload", exact: true }).click();
+  await p.getByText("Sample Runner: W5 15 carries", { exact: true }).waitFor();
+  await p
+    .getByRole("heading", {
+      name: "Sample receiver trade this week",
+      exact: true,
+    })
+    .waitFor();
+  assert.equal(await p.getByText(/SHADOW_ONLY and scanner/).count(), 0);
+  assert.equal(
+    await p.getByText("No supported estimate", { exact: true }).count(),
+    0,
+  );
+  await p.getByRole("tab", { name: "Overview", exact: true }).click();
+
+  if (width === 390 && process.env.GAME_RESEARCH_SCREENSHOT)
+    await p.screenshot({
+      path: process.env.GAME_RESEARCH_SCREENSHOT,
+      fullPage: true,
+    });
   // A background same-user token event must not clear already loaded research.
   gate = new Promise((resolve) => {
     release = resolve;

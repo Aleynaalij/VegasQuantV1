@@ -14,6 +14,7 @@ import {
 } from "@/lib/matchups";
 import { Shell, Badge, Panel, Empty } from "./ui";
 import SourceObservations from "./source-observations";
+import GameNews from "./game-news";
 import GameThread from "./game-thread";
 import ZoneNav from "./zone-nav";
 import PickCard from "./pick-card";
@@ -709,7 +710,7 @@ export default function MatchupIntelligence({
                 </div>
                 {current && (
                   <>
-                    <h2>{intel?.summary || current.title}</h2>
+                    <h2>{intel?.summary || "Matchup briefing"}</h2>
                     {intel?.next_review && (
                       <p>Next scheduled review: {intel.next_review}</p>
                     )}
@@ -800,6 +801,7 @@ export default function MatchupIntelligence({
                 ) : current ? (
                   <ResearchNotebook
                     analysis={current}
+                    versions={versions}
                     slug={row.game.slug}
                     official={official.length > 0}
                   />
@@ -808,36 +810,53 @@ export default function MatchupIntelligence({
                     No Vegas Quant analysis has been published for this game.
                   </Empty>
                 )}
-                <SourceObservations gameId={row.game.id} />
-                <details className="mi-section">
-                  <summary>
-                    Market snapshots ·{" "}
-                    {
-                      desk.markets.filter((m) => m.game_id === row.game.id)
-                        .length
-                    }
-                  </summary>
-                  {desk.markets
-                    .filter((m) => m.game_id === row.game.id)
-                    .map((m) => (
-                      <div className="mi-item" key={m.id}>
-                        <SourceStatus
-                          source={m.source}
-                          at={m.observed_at}
-                          historical
-                          kind="Market observation"
-                        />
-                        <Fields
-                          value={{
-                            spread: m.spread,
-                            moneyline: m.moneyline,
-                            total: m.total,
-                            notes: m.notes,
-                          }}
-                        />
-                      </div>
-                    ))}
-                </details>
+                <GameNews
+                  gameId={row.game.id}
+                  before={
+                    selected && current?.id !== versions[0]?.id
+                      ? current?.created_at
+                      : undefined
+                  }
+                />
+                <SourceObservations
+                  gameId={row.game.id}
+                  before={
+                    selected && current?.id !== versions[0]?.id
+                      ? current?.created_at
+                      : undefined
+                  }
+                />
+                {desk.markets.some((m) => m.game_id === row.game.id) && (
+                  <details className="mi-section">
+                    <summary>
+                      Market snapshots ·{" "}
+                      {
+                        desk.markets.filter((m) => m.game_id === row.game.id)
+                          .length
+                      }
+                    </summary>
+                    {desk.markets
+                      .filter((m) => m.game_id === row.game.id)
+                      .map((m) => (
+                        <div className="mi-item" key={m.id}>
+                          <SourceStatus
+                            source={m.source}
+                            at={m.observed_at}
+                            historical
+                            kind="Market observation"
+                          />
+                          <Fields
+                            value={{
+                              spread: m.spread,
+                              moneyline: m.moneyline,
+                              total: m.total,
+                              notes: m.notes,
+                            }}
+                          />
+                        </div>
+                      ))}
+                  </details>
+                )}
                 <details className="mi-section">
                   <summary>Update history · {versions.length} versions</summary>
                   {versions.map((a) => (
