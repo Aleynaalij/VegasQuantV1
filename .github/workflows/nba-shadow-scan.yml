@@ -1,12 +1,10 @@
 name: NBA shadow model scan
-# Prospective, research-only capture for the NBA v0.1 shadow journal (research/nba/README.md). Three
-# minutes after each nba-sync run, a stdlib-only check asks Supabase whether a fresh FanDuel points or
-# rebounds snapshot exists for an upcoming regular-season game; only then are dependencies installed and
-# the scan run and uploaded. The repo is public, so the job prints counts only. Needs repository secrets
+# Prospective, research-only capture for the NBA v0.1 shadow journal (research/nba/README.md). Supabase
+# starts it (cron nba-shadow-scan-dispatch) when a fresh FanDuel points or rebounds batch arrives for an
+# upcoming regular-season game; a stdlib-only check confirms the batch, and only then are dependencies
+# installed and the scan run and uploaded. The repo is public, so the job prints counts only. Needs repository secrets
 # SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY; without them it does nothing.
 on:
-  schedule:
-    - cron: '5,20,35,50 * * * *'
   workflow_dispatch:
 permissions:
   contents: read
