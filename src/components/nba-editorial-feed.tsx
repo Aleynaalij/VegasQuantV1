@@ -15,6 +15,7 @@ import { Shell } from "./ui";
 import CasinoCard, { CasinoCardDownload } from "./casino-card";
 import type { CasinoCardData } from "@/lib/casino-card";
 import GamblyLink from "./gambly-link";
+import NbaResearchFeed from "./nba-research-feed";
 import "@/app/nba-editorial.css";
 
 export default function NbaEditorialFeed() {
@@ -204,6 +205,10 @@ export default function NbaEditorialFeed() {
             </section>
           );
         })}
+        <section aria-labelledby="nba-research-heading">
+          <h2 id="nba-research-heading">NBA research board</h2>
+          <NbaResearchFeed />
+        </section>
       </div>
     </Shell>
   );

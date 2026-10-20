@@ -138,13 +138,12 @@ export default function HomeBrief({ games }: { games: Game[] }) {
           </span>
         </Link>
       </nav>
-      <Link href="/nba" className="vq-banner">
+      <Link href="/nba/zone" className="vq-banner">
         <span className="vq-chip hot">NEW</span>
         <span>
-          <b>NBA is coming to Vegas Quant.</b>
+          <b>NBA picks are in The Zone.</b>
           <small>
-            Picks begin once the regular season starts and the research is
-            ready.
+            View basketball selections, observed prices, sources and risks.
           </small>
         </span>
         <ArrowUpRight size={18} aria-hidden="true" />

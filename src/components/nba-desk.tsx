@@ -1,8 +1,8 @@
-import Link from "next/link";
+import NbaResearchFeed from "./nba-research-feed";
 import NbaGameBoard from "./nba-game-board";
 import NbaHomeBrief from "./nba-home-brief";
 import NbaHomeTickets from "./nba-home-tickets";
-import { CalendarDays, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import KickoffCountdown from "./kickoff-countdown";
 import { Empty, Panel, Shell } from "./ui";
 
@@ -106,12 +106,7 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
         ) : null}
         {view === "feed" ? (
           <Panel title="Basketball feed">
-            <Empty title="NBA selections">
-              <CalendarDays size={20} aria-hidden="true" />{" "}
-              <Link href="/nba/zone">
-                Open the NBA Zone for published picks →
-              </Link>
-            </Empty>
+            <NbaResearchFeed />
           </Panel>
         ) : null}
         {view === "history" ? (

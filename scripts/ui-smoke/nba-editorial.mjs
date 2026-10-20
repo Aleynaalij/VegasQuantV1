@@ -21,6 +21,31 @@ for (const width of [390, 1280]) {
     let data = [];
     if (path.endsWith("membership_status"))
       data = { allowed: member, admin: false };
+    if (path.endsWith("nba_research_results"))
+      data = member
+        ? [
+            {
+              id: 1,
+              player: "Fixture Research Player",
+              market: "player_points",
+              line: 24.5,
+              book: "BetRivers",
+              odds: -157,
+              cleared: 4,
+              sample: 5,
+              median: 30,
+              break_even: 61.1,
+              edge_points: 18.9,
+              why: "Synthetic research case.",
+              risk: "Synthetic risk.",
+              away_team: "Away",
+              home_team: "Home",
+              tipoff,
+              slug: "fixture",
+              result: "PENDING",
+            },
+          ]
+        : [];
     if (path.endsWith("nba_editorial_picks")) {
       if (fail)
         return r.fulfill({ status: 500, json: { message: "fixture error" } });
@@ -68,6 +93,9 @@ for (const width of [390, 1280]) {
   });
   await p.goto(base + "/nba/zone");
   await p.getByText("Fixture Player", { exact: true }).first().waitFor();
+  await p
+    .getByText("Fixture Research Player 25+ points", { exact: true })
+    .waitFor();
   assert.equal(
     await p.getByText("FanDuel +100 · observed", { exact: true }).count(),
     1,
