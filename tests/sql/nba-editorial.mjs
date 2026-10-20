@@ -21,6 +21,12 @@ await db.exec(
     "utf8",
   ),
 );
+await db.exec(
+  readFileSync(
+    "supabase/migrations/20261020023605_nba_editorial_provenance_and_revisions.sql",
+    "utf8",
+  ),
+);
 const base = {
   publication_key: "test",
   game_id: "00000000-0000-4000-8000-000000000001",
@@ -43,9 +49,28 @@ const base = {
     input_sha256: "a".repeat(64),
     availability_review: "Observed participation",
     role_review: "Starter",
+    generated_at: new Date(Date.now() - 5000).toISOString(),
+    quote_observation_id: "00000000-0000-4000-8000-000000000002",
+    source_files: ["role", "injury"].map((k) => ({
+      url: "https://example.com/" + k,
+      sha256: "a".repeat(64),
+      retrieved_at: new Date(Date.now() - 5000).toISOString(),
+    })),
   },
 };
-async function insert(p) {
+async function insert(p, validHash = true) {
+  if (validHash) {
+    const e = { ...p.evidence };
+    delete e.input_sha256;
+    delete e.input_hash_format;
+    const hash = (
+      await db.query(
+        "select encode(sha256(convert_to($1::jsonb::text,'UTF8')),'hex') as h",
+        [JSON.stringify(e)],
+      )
+    ).rows[0].h;
+    p = { ...p, evidence: { ...e, input_sha256: hash } };
+  }
   const keys = Object.keys(p),
     vals = keys.map((k) =>
       ["sources", "evidence"].includes(k) ? JSON.stringify(p[k]) : p[k],
@@ -68,7 +93,58 @@ await assert.rejects(
 const p = (await insert(base)).rows[0];
 assert.equal(p.quote_source_url, "https://example.com/quote");
 assert.equal(p.analysis_kind, "QUALITATIVE_EDITORIAL");
-await assert.rejects(insert(base), /unique constraint/);
+await assert.rejects(insert(base), /current publication/);
+await assert.rejects(
+  insert({ ...base, publication_key: "unlinked" }),
+  /current publication/,
+);
+await assert.rejects(
+  insert({
+    ...base,
+    publication_key: "missing-sources",
+    supersedes_id: p.id,
+    evidence: { ...base.evidence, source_files: [] },
+  }),
+  /complete timestamped source/,
+);
+await assert.rejects(
+  insert({
+    ...base,
+    publication_key: "missing-hash",
+    supersedes_id: p.id,
+    evidence: {
+      ...base.evidence,
+      source_files: [
+        { url: "https://example.com", retrieved_at: new Date().toISOString() },
+        {
+          url: "https://example.com/2",
+          sha256: "b".repeat(64),
+          retrieved_at: new Date().toISOString(),
+        },
+      ],
+    },
+  }),
+  /source hash and retrieval/,
+);
+await assert.rejects(
+  insert({ ...base, publication_key: "bad-hash", supersedes_id: p.id }, false),
+  /evidence hash mismatch/,
+);
+const revision = (
+  await insert({ ...base, publication_key: "revision", supersedes_id: p.id })
+).rows[0];
+await assert.rejects(
+  insert({ ...base, publication_key: "branch", supersedes_id: p.id }),
+  /current publication/,
+);
+const second = (
+  await insert({
+    ...base,
+    publication_key: "revision-2",
+    supersedes_id: revision.id,
+  })
+).rows[0];
+assert.equal(second.supersedes_id, revision.id);
 await assert.rejects(
   db.exec(`update nba_editorial_picks set odds=-120`),
   /immutable/,
@@ -93,7 +169,7 @@ assert.equal(
 await db.exec("set test.age='yes';");
 assert.equal(
   (await db.query("select * from nba_editorial_picks")).rows.length,
-  1,
+  3,
 );
 await assert.rejects(
   insert({ ...base, publication_key: "member" }),
