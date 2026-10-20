@@ -13,7 +13,7 @@ create table cron.job(jobname text primary key, schedule text, command text);
 create function cron.schedule(n text,s text,c text) returns bigint language sql as $$ insert into cron.job values(n,s,c) returning 1 $$;
 create function cron.unschedule(n text) returns boolean language sql as $$ delete from cron.job where jobname=n returning true $$;
 `);
-for (const m of ['20261018060000_nba_source_feed', '20261018070000_nba_results', '20261020010000_nba_research_board'])
+for (const m of ['20261018060000_nba_source_feed', '20261018070000_nba_results', '20261020010000_nba_research_board', '20261020020000_nba_research_board_quotes'])
   await db.exec(readFileSync(`supabase/migrations/${m}.sql`, 'utf8'));
 const hours = (h) => new Date(Date.now() + h * 3600000).toISOString();
 const game = (id, tip, extra = {}) => ({ provider_id: id, slug: `g-${id}`, away_team: 'Philadelphia 76ers', home_team: 'New York Knicks', tipoff: tip,
@@ -46,6 +46,7 @@ await assert.rejects(publish(await anunoby({ history: history([5, 5, 4, 4, 6]) }
 await assert.rejects(publish(await anunoby({ history: history([13, 8, 5]) })), /five games/);
 await assert.rejects(publish(await anunoby({ market: 'player_points' })), /does not match/);
 await assert.rejects(publish(await leg({ observation_id: await obs('p'), player: 'VJ Edgecombe' })), /regular-season/);
+await assert.rejects(publish(await anunoby({ observation_id: await obs('a') })), /newer snapshot/); // superseded quote
 await assert.rejects(publish(await anunoby()), /duplicate|unique/); // one leg per game, player and market
 
 // Records are immutable, member-readable, and graded by nba_grade.
