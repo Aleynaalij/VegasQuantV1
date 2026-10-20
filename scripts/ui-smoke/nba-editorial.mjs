@@ -37,7 +37,17 @@ for (const width of [390, 1280]) {
           rationale: "Fixture role and matchup case.",
           risk: "Fixture foul trouble risk.",
           unknowns: "Fixture final availability unknown.",
-          sources: [{ label: "Fixture source", url: "https://www.nba.com/" }],
+          sources: [
+            { label: "Fixture source", url: "https://www.nba.com/" },
+            { label: "Unhashed citation", url: "https://example.com/unhashed" },
+          ],
+          evidence_sources: [
+            {
+              url: "https://www.nba.com/",
+              sha256: "a".repeat(64),
+              retrieved_at: quote,
+            },
+          ],
           published_at: quote,
           expires_at: tipoff,
           quote_observed_at: quote,
@@ -63,6 +73,18 @@ for (const width of [390, 1280]) {
     1,
   );
   await p.getByText("Sources & availability", { exact: true }).click();
+  assert.equal(
+    await p.getByText("Preparation mode", { exact: true }).count(),
+    0,
+  );
+  assert.equal(
+    await p.getByRole("link", { name: "Unhashed citation ↗" }).count(),
+    0,
+  );
+  assert.equal(
+    await p.getByRole("link", { name: "Fixture source ↗" }).count(),
+    1,
+  );
   await p
     .getByText("Fixture final availability unknown.", { exact: true })
     .waitFor();

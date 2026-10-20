@@ -8,6 +8,7 @@ import {
   nbaEditorialCopy,
   nbaEditorialMarket,
   nbaEditorialOpen,
+  nbaEditorialSources,
   type NbaEditorialPick,
 } from "@/lib/nba-editorial";
 import { Shell } from "./ui";
@@ -40,7 +41,7 @@ export default function NbaEditorialFeed() {
           supabase
             .from("nba_editorial_picks")
             .select(
-              "id,publication_key,game_id,player,market,direction,line,odds,book,rationale,risk,unknowns,sources,supersedes_id,published_at,expires_at,quote_observed_at,quote_recorded_at,quote_source_url,game:nba_games(*)",
+              "id,publication_key,game_id,player,market,direction,line,odds,book,rationale,risk,unknowns,sources,evidence_sources:evidence->source_files,supersedes_id,published_at,expires_at,quote_observed_at,quote_recorded_at,quote_source_url,game:nba_games(*)",
             )
             .order("published_at", { ascending: false })
             .order("id", { ascending: false })
@@ -176,19 +177,13 @@ export default function NbaEditorialFeed() {
                   or official-pick status is assigned.
                 </p>
                 <ul>
-                  {p.sources
-                    .filter((s) => s.url.startsWith("https://"))
-                    .map((s) => (
-                      <li key={s.url}>
-                        <a
-                          href={s.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {s.label} ↗
-                        </a>
-                      </li>
-                    ))}
+                  {nbaEditorialSources(p).map((s) => (
+                    <li key={s.url}>
+                      <a href={s.url} target="_blank" rel="noopener noreferrer">
+                        {s.label} ↗
+                      </a>
+                    </li>
+                  ))}
                 </ul>
                 <a
                   href={p.quote_source_url}

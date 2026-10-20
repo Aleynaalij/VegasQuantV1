@@ -13,6 +13,7 @@ export type NbaEditorialPick = {
   risk: string;
   unknowns: string;
   sources: { label: string; url: string }[];
+  evidence_sources: { url: string; sha256: string; retrieved_at: string }[];
   supersedes_id: string | null;
   published_at: string;
   expires_at: string;
@@ -21,6 +22,17 @@ export type NbaEditorialPick = {
   quote_source_url: string;
   game: NbaGame | null;
 };
+export function nbaEditorialSources(
+  p: Pick<NbaEditorialPick, "sources" | "evidence_sources">,
+) {
+  return (p.evidence_sources || [])
+    .filter((s) => s.url.startsWith("https://"))
+    .map((s) => ({
+      ...s,
+      label:
+        p.sources.find((c) => c.url === s.url)?.label || "Recorded source data",
+    }));
+}
 export function nbaEditorialMarket(
   p: Pick<NbaEditorialPick, "market" | "direction" | "line">,
 ) {

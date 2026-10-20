@@ -54,10 +54,16 @@ const base = {
     source_files: ["role", "injury"].map((k) => ({
       url: "https://example.com/" + k,
       sha256: "a".repeat(64),
-      retrieved_at: new Date(Date.now() - 5000).toISOString(),
+      retrieved_at: new Date(Date.now() - 6000).toISOString(),
     })),
   },
 };
+await db.exec(
+  readFileSync(
+    "supabase/migrations/20261020024250_nba_editorial_source_timeline.sql",
+    "utf8",
+  ),
+);
 async function insert(p, validHash = true) {
   if (validHash) {
     const e = { ...p.evidence };
@@ -91,6 +97,21 @@ await assert.rejects(
   /check constraint/,
 );
 const p = (await insert(base)).rows[0];
+await assert.rejects(
+  insert({
+    ...base,
+    publication_key: "bad-timeline",
+    supersedes_id: p.id,
+    evidence: {
+      ...base.evidence,
+      source_files: base.evidence.source_files.map((s) => ({
+        ...s,
+        retrieved_at: new Date(Date.now() - 1000).toISOString(),
+      })),
+    },
+  }),
+  /before evidence generation/,
+);
 assert.equal(p.quote_source_url, "https://example.com/quote");
 assert.equal(p.analysis_kind, "QUALITATIVE_EDITORIAL");
 await assert.rejects(insert(base), /current publication/);
