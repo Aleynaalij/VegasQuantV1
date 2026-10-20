@@ -1,8 +1,9 @@
-import NbaDesk from "@/components/nba-desk";
+import NbaEditorialFeed from "@/components/nba-editorial-feed";
 export const metadata = {
-  title: "NBA | Vegas Quant",
-  description: "Vegas Quant basketball research preparation.",
+  title: "The Zone · NBA | Vegas Quant",
+  description:
+    "Vegas Quant NBA selections, observed prices, sources and matchup research.",
 };
 export default function Page() {
-  return <NbaDesk view="feed" />;
+  return <NbaEditorialFeed />;
 }

@@ -1,8 +1,15 @@
 # Codex · Kobe
-Updated: 2026-10-18, saved-parlay Kalshi option
+Updated: 2026-10-20, NBA editorial publication
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
-## Current task · PARLAY-REUSE
+## Current task · NBA-EDITORIAL-PUBLISH
+Owner requested publication of supported October 20 NBA selections now. Base 561e521; branch `codex/nba-editorial-publishing`. Claim: issue #65 comment 6281803838. The NBA Zone was a static placeholder. This change adds a separate immutable `nba_editorial_picks` table with exact FanDuel observation validation, current NBA game/cutoff checks, documented role/availability evidence and existing member/age RLS. NBA cards use shared CasinoCard and Gambly copy/open UI. No NFL gates, official picks, Home features, shadow approval, provider spending, schedules, bankrolls or grading are changed.
+
+Prepared publications: Towns over 11.5 rebounds (+100 observed October 19 7:00:56 PM ET) and Gilgeous-Alexander over 29.5 points (-118 observed 9:30:47 PM ET). Qualitative editorial judgments, no modeled probability/EV/confidence. Raw 2025–26 boxscores, current preseason participation and October 19 9:45 PM NBA injury PDF checked; absence from that report is not clearance. Boston–Detroit remains a coverage gap due to uncertain changed rotations and insufficient selection support.
+
+Validation: 262 tests, TypeScript and production webpack build passed. Dedicated migration tests cover exact quote/evidence rejection, immutable originals, permissions and pregame cutoff. Phone/desktop fixture test added to CI; local browser installation is being verified. Live schema/content/deployment pending; no publication claimed yet. Peer review/ACK requested through the existing coordination workflow.
+
+## Previous task · PARLAY-REUSE
 Owner wants saved cards available after returning from Gambly, with editable reusable selections. Base af42e5e, branch `codex/parlay-reuse`. My parlays now precedes the library; the most recent card is also available in Legs. Saved combinations render as branded VQ cards with Reuse / edit a copy. Reusing resolves current catalog rows, excludes closed/missing/conflicting selections and explains omissions; original account snapshots are never changed. Draft supports individual removal and Clear selections, plus account-scoped session recovery of name and selection keys across reload/navigation. Saving updates the saved-card URL so a prior route does not reopen an older card. Existing Community, Gambly and Kalshi flows preserved. No schema, publication, NBA or bankroll changes.
 
 Validation: 260 unit tests, production webpack/TypeScript build and expanded 390/1280 production browser fixtures passed: reuse, individual removal, clear, reload recovery, changed-copy save and original preservation, plus existing Community/Gambly/Kalshi actions and expiry. React review: account-scoped recovery stores keys only, catalog resolves eligibility, no saved snapshot mutation, existing async epoch guards retained. Preparing CI/review and deployment. No live member writes or wagers.

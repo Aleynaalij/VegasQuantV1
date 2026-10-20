@@ -1,0 +1,11 @@
+# NBA editorial selections
+
+On October 19, 2026 the owner requested publication of supported opening-day NBA picks now. This authorizes early qualitative editorial selections, superseding the preparation-only calendar wording for this publication. It does not approve the shadow model or authorize official/qualifying-edge picks.
+
+`nba_editorial_picks` stores immutable individual selections linked to `nba_games` and exact `nba_observations`. It deliberately does not use NFL `games`, `candidate_releases`, challenge stages or result records. The insert guard verifies a future regular-season game, full-game points/rebounds market, exact FanDuel player/direction/line/price, an observation at most eight hours old, and documented role/availability review. This eight-hour cap allows the existing six-hour collection cadence; the displayed price is always an observed snapshot, never represented as executable/live. Quote/provider and receipt timestamps are copied from the immutable observation. Publication time is assigned by the database. No odds are synthesized.
+
+The table has member/age RLS matching NBA observations, read-only client grants, and service-role insert permission. No client publisher or security-definer mutation RPC is introduced. All updates/deletes are prohibited. New material evidence or price changes require a new publication key and a same-game/player/market `supersedes_id`; the original survives. No notification messages are sent by inserts.
+
+The NBA Zone reads these rows and displays shared Vegas Quant playing cards, the case, risk, source/availability details, original observed price and existing Gambly clipboard/open flow. Copying closes at the earlier of original expiry and current tipoff, or on live/final/postponed/canceled status or a loaded superseding publication. The card can still be downloaded for reference. These selections do not appear as official, do not create model probability/EV claims, and do not change Home POD/Hail Mary, tails, bankrolls, NFL publishing, provider settings, schedules or grades.
+
+Evidence includes historical cutoff, source hashes, retrieval times, role/availability review and a canonical input hash. The NBA shadow model remains SHADOW_ONLY. Published case and risk are analyst inference; historical sample counts are descriptive, not forecasts or validated edges.
