@@ -13,7 +13,7 @@ create table public.nba_games(id uuid primary key,season_type integer,tipoff_tbd
 create table public.nba_observations(id uuid primary key,game_id uuid,kind text,payload jsonb,observed_at timestamptz,recorded_at timestamptz,source text);
 insert into nba_games values('00000000-0000-4000-8000-000000000001',2,false,now()+interval '1 day','STATUS_SCHEDULED');
 insert into nba_observations values('00000000-0000-4000-8000-000000000002','00000000-0000-4000-8000-000000000001','prop',
- '{"book":"FanDuel","market":"player_points","outcomes":[{"description":"Sample Player","name":"Over","point":20.5,"price":-110}]}',now()-interval '1 minute',now(),'https://example.com/quote');
+ '{"book":"FanDuel","market":"player_points","outcomes":[{"description":"Sample Player","name":"Over","point":20.5,"price":-110}]}',now()-interval '1 minute',now()-interval '10 seconds','https://example.com/quote');
 `);
 await db.exec(
   readFileSync(
@@ -86,6 +86,12 @@ async function insert(p, validHash = true) {
     vals,
   );
 }
+await db.exec(
+  readFileSync(
+    "supabase/migrations/20261020024912_nba_editorial_quote_timeline.sql",
+    "utf8",
+  ),
+);
 await assert.rejects(insert({ ...base, odds: -120 }), /exact recent/);
 await assert.rejects(insert({ ...base, direction: "Under" }), /exact recent/);
 await assert.rejects(
@@ -97,6 +103,14 @@ await assert.rejects(
   /check constraint/,
 );
 const p = (await insert(base)).rows[0];
+await db.exec("update nba_observations set recorded_at=now()");
+await assert.rejects(
+  insert({ ...base, publication_key: "before-quote", supersedes_id: p.id }),
+  /evidence must follow quote/,
+);
+await db.exec(
+  "update nba_observations set recorded_at=now()-interval '10 seconds'",
+);
 await assert.rejects(
   insert({
     ...base,

@@ -290,9 +290,7 @@ export function Shell({
           {active === "home" ? (
             <CommunityStories />
           ) : sport === "nba" ? (
-            <span>
-              {active === "feed" ? "Legs we like" : "Preparation mode"}
-            </span>
+            <span>{active === "feed" ? "Legs we like" : "NBA research"}</span>
           ) : null}
         </nav>
         <main id="main-content" tabIndex={-1}>

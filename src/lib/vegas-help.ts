@@ -32,7 +32,7 @@ export const helpTopics: HelpTopic[] = [
     category: "App guide",
     phrases: ["nba", "basketball", "sport switch", "switch sports"],
     answer:
-      "Use the NFL / NBA tabs at the top. NBA has its own Home, analysis, Zone, Records and rules pages. It is in preparation: discussion and research foundations are available, but pregame picks will not publish until the NBA regular season starts. NFL publications and histories stay separate.",
+      "Use the NFL / NBA tabs at the top. NBA has its own Home, analysis, Zone, Records and rules pages. Open the NBA Zone for published analyst selections, observed prices, sources and risks. NFL publications and histories stay separate.",
     href: "/nba",
     link: "Open NBA",
   },
@@ -127,7 +127,7 @@ export const helpTopics: HelpTopic[] = [
       "free picks",
     ],
     answer:
-      "The Zone contains published picks and analyst updates; Community is for member posts, comments and follows. Signed-in members can save and tail published picks and view their personal Records. Premium unlocks detailed research. New accounts receive a 14-day Premium trial with no card or automatic charge; current paid plans and access status appear in Account. NBA is in preparation, with no pregame picks until its regular season begins. No daily pick, outcome or profit is promised.",
+      "The Zone contains published picks and analyst updates; Community is for member posts, comments and follows. Signed-in members can save and tail published picks and view their personal Records. Premium unlocks detailed research. New accounts receive a 14-day Premium trial with no card or automatic charge; current paid plans and access status appear in Account. NBA selections have their own Zone with observed prices and source-backed cases. No daily pick, outcome or profit is promised.",
     href: "/membership",
     link: "Compare access options",
   },
@@ -273,7 +273,7 @@ export const helpTopics: HelpTopic[] = [
       "get started",
     ],
     answer:
-      "Vegas Quant is a sports research and community platform operated by JourneyBuilt, LLC. Home highlights the next kickoff, Pick of the Day and a separate Hail Mary. The Zone holds analyst research and Legs we like. Community lets members share slips and discuss games. Records shows the picks you tail and retains the published history. Use the NFL/NBA switch at the top; NBA is being prepared and is not publishing pregame picks yet. It is research, not a sportsbook.",
+      "Vegas Quant is a sports research and community platform operated by JourneyBuilt, LLC. Home highlights the next kickoff, Pick of the Day and a separate Hail Mary. The Zone holds analyst research and Legs we like. Community lets members share slips and discuss games. Records shows the picks you tail and retains the published history. Use the NFL/NBA switch at the top; NBA analyst selections appear in the NBA Zone. It is research, not a sportsbook.",
     href: "/",
     link: "Explore Vegas Quant",
   },
