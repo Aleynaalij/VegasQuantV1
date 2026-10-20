@@ -56,4 +56,5 @@ const g = (await db.query(`select has_function_privilege('authenticated','privat
  has_function_privilege('service_role','private.publish_nba_research_leg(jsonb)','execute') s,
  has_table_privilege('authenticated','public.nba_research_legs','insert') i, has_table_privilege('anon','public.nba_research_results','select') r`)).rows[0];
 assert.deepEqual(g, { a: false, s: true, i: false, r: true });
+assert.deepEqual((await db.query('select wins::int, losses::int, pushes::int, pending::int from public.nba_research_record()')).rows[0], { wins: 0, losses: 0, pushes: 0, pending: 1 });
 console.log('nba research board ok');

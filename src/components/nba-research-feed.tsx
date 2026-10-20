@@ -33,8 +33,8 @@ export type NbaResearchLeg = {
 /** The NBA Zone feed: labeled research legs (never official picks), member-only, graded from box scores. */
 export default function NbaResearchFeed() {
   const [legs, setLegs] = useState<NbaResearchLeg[] | null>(null);
-  // Every leg's grade, so the record covers the whole history, not just the legs listed.
-  const [grades, setGrades] = useState<{ result: string }[]>([]);
+  // The record over every leg, counted in the database, not just the legs listed.
+  const [total, setTotal] = useState<ReturnType<typeof nbaResearchRecord> | null>(null);
   const [access, setAccess] = useState<Access>(noAccess);
   const [error, setError] = useState("");
   useEffect(() => {
@@ -48,13 +48,14 @@ export default function NbaResearchFeed() {
           .order("tipoff", { ascending: false })
           .order("id")
           .limit(100),
-        supabase.from("nba_research_results").select("result").range(0, 9999),
+        supabase.rpc("nba_research_record").single(),
       ]);
       if (!live) return;
       setAccess(a.error ? noAccess : a.data);
       setError(r.error ? "The NBA research board could not load. Retry in a moment." : "");
       setLegs(r.error ? [] : ((r.data || []) as NbaResearchLeg[]));
-      setGrades(all.error ? [] : ((all.data || []) as { result: string }[]));
+      const t = all.data as Record<string, number | string> | null;
+      setTotal(all.error || !t ? null : { wins: Number(t.wins), losses: Number(t.losses), pushes: Number(t.pushes), pending: Number(t.pending) });
     }
     void load();
     const stop = onUserChange(() => void load());
@@ -77,7 +78,7 @@ export default function NbaResearchFeed() {
         Research legs appear here before tip-off when a line passes our rules.
       </Empty>
     );
-  const record = nbaResearchRecord(grades.length ? grades : legs);
+  const record = total ?? nbaResearchRecord(legs);
   return (
     <div className="nba-research">
       <p className="nba-research-label">

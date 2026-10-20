@@ -50,3 +50,14 @@ begin
 end $$;
 revoke all on function private.publish_nba_research_leg(jsonb) from public, anon, authenticated, service_role;
 grant execute on function private.publish_nba_research_leg(jsonb) to service_role;
+
+-- The NBA research record over every leg, counted in SQL (member access applies through the view).
+create or replace function public.nba_research_record()
+returns table(wins bigint, losses bigint, pushes bigint, pending bigint)
+language sql stable security invoker set search_path='' as $$
+ select count(*) filter (where result = 'WIN'), count(*) filter (where result = 'LOSS'), count(*) filter (where result = 'PUSH'),
+  count(*) filter (where result in ('PENDING', 'REVIEW'))
+ from public.nba_research_results
+$$;
+revoke all on function public.nba_research_record() from public;
+grant execute on function public.nba_research_record() to anon, authenticated, service_role;
