@@ -1,0 +1,63 @@
+.nba-research {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.nba-research ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+.nba-research-label,
+.nba-research-record,
+.nba-research-meta,
+.nba-research-risk {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.nba-research-record {
+  font-weight: 700;
+  color: var(--text);
+}
+.nba-research-leg {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.nba-research-leg p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.nba-research-leg header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+.nba-research-result {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  white-space: nowrap;
+}
+.nba-research-leg.is-win .nba-research-result {
+  color: #1e9e5a;
+  border-color: currentColor;
+}
+.nba-research-leg.is-loss .nba-research-result {
+  color: #d14343;
+  border-color: currentColor;
+}

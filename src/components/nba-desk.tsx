@@ -1,8 +1,8 @@
 import NbaGameBoard from "./nba-game-board";
 import NbaHomeBrief from "./nba-home-brief";
 import NbaHomeTickets from "./nba-home-tickets";
+import NbaResearchFeed from "./nba-research-feed";
 import {
-  CalendarDays,
   ShieldCheck,
 } from "lucide-react";
 import KickoffCountdown from "./kickoff-countdown";
@@ -22,7 +22,7 @@ const views = {
   },
   feed: {
     title: "The Zone · NBA",
-    intro: "Basketball research and selections will have their own space here.",
+    intro: "Research legs from recent form and the price. Official NBA picks wait for a validated model.",
   },
   history: {
     title: "NBA records",
@@ -108,11 +108,7 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
         ) : null}
         {view === "feed" ? (
           <Panel title="Basketball feed">
-            <Empty title="No NBA picks published">
-              <CalendarDays size={20} aria-hidden="true" /> We’ll begin
-              supported pregame selections once the regular season starts and
-              the data is ready. NFL research remains on the NFL side.
-            </Empty>
+            <NbaResearchFeed />
           </Panel>
         ) : null}
         {view === "history" ? (

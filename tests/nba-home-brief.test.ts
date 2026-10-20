@@ -70,3 +70,11 @@ test("a book's team spelling grades against the schedule's name", () => {
   assert.equal(nbaCanonicalTeam(" Boston Celtics "), "Boston Celtics");
   assert.equal(nbaCanonicalTeam("Over"), "Over");
 });
+
+test("NBA research legs show the member target and keep their own record", async () => {
+  const { nbaTarget, nbaResearchRecord } = await import("../src/lib/nba-research");
+  assert.equal(nbaTarget({ line: 24.5, market: "player_points" }), "25+ points");
+  assert.equal(nbaTarget({ line: 4.5, market: "player_rebounds" }), "5+ rebounds");
+  assert.deepEqual(nbaResearchRecord([{ result: "WIN" }, { result: "LOSS" }, { result: "WIN" }, { result: "PENDING" }, { result: "VOID" }]),
+    { wins: 2, losses: 1, pushes: 0, pending: 1 });
+});
