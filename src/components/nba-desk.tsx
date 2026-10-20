@@ -1,10 +1,8 @@
+import NbaResearchFeed from "./nba-research-feed";
 import NbaGameBoard from "./nba-game-board";
 import NbaHomeBrief from "./nba-home-brief";
 import NbaHomeTickets from "./nba-home-tickets";
-import NbaResearchFeed from "./nba-research-feed";
-import {
-  ShieldCheck,
-} from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import KickoffCountdown from "./kickoff-countdown";
 import { Empty, Panel, Shell } from "./ui";
 
@@ -22,7 +20,7 @@ const views = {
   },
   feed: {
     title: "The Zone · NBA",
-    intro: "Research legs from recent form and the price. Official NBA picks wait for a validated model.",
+    intro: "Basketball research and published analyst selections.",
   },
   history: {
     title: "NBA records",
@@ -68,7 +66,7 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
       <div className="nba-desk">
         <section className="nba-hero">
           <span className="nba-eyebrow">VEGAS QUANT · BASKETBALL</span>
-          <span className="badge muted">Preparation mode</span>
+          <span className="badge muted">NBA research</span>
           <h1>{copy.title}</h1>
           <p>{copy.intro}</p>
           <div className="nba-opening">
@@ -84,8 +82,8 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
           <div className="nba-launch-note">
             <ShieldCheck size={20} aria-hidden="true" />
             <span>
-              Pregame picks stay unpublished until the NBA regular season begins
-              and our research is ready.
+              Published analyst selections, sources and risks are available in
+              the NBA Zone.
             </span>
           </div>
         </section>
@@ -114,8 +112,9 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
         {view === "history" ? (
           <Panel title="Basketball history">
             <Empty title="A fresh NBA record">
-              There are no NBA selections or results to report yet. Basketball
-              results will remain separate from NFL records.
+              NBA result history is not available here yet. Published selections
+              are in the NBA Zone. Basketball results remain separate from NFL
+              records.
             </Empty>
           </Panel>
         ) : null}

@@ -64,8 +64,8 @@ export const productPages = {
         "Current offers appear on Account and at checkout. Monthly plans renew until canceled; the seasonal pass is a one-time purchase for the stated access window. Manage an existing subscription from Account. Cancellation and refunds are separate.",
       ],
       [
-        "Why is NBA in preparation mode?",
-        "We are building the NBA research foundation. NBA pregame selections will wait until the regular season begins and the supporting data is ready. Community discussion can still happen.",
+        "Where are NBA picks?",
+        "Open NBA → The Zone for published analyst selections, observed prices, source links and risks. Availability and prices can change; read each card. NBA research and records stay separate from NFL.",
       ],
       [
         "Why is the installed logo old?",

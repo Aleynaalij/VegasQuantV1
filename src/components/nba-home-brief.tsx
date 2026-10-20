@@ -363,9 +363,8 @@ export default function NbaHomeBrief({
         </nav>
       )}
       <p className="nba-home-note">
-        <ShieldCheck size={16} aria-hidden="true" /> Preparation mode: no NBA
-        picks are published until the regular season starts and the research is
-        ready.
+        <ShieldCheck size={16} aria-hidden="true" />
+        <Link href="/nba/zone">NBA picks are in The Zone →</Link>
       </p>
     </header>
   );
