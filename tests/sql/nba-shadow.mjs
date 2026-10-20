@@ -112,4 +112,40 @@ const grants = (await db.query(`select has_function_privilege('authenticated','p
  has_table_privilege('service_role','private.nba_shadow_forecasts','select') t`)).rows[0];
 assert.deepEqual(grants, { a: false, b: false, s: true, t: false });
 assert.match((await db.query(`select prosrc from pg_proc where proname='record_nba_result' and pronamespace='private'::regnamespace`)).rows[0].prosrc, /starter, position/);
+// Scan dispatcher: Supabase starts the GitHub scan once per fresh FanDuel points/rebounds batch of an
+// upcoming regular-season game, only with the Vault token, and re-sends a dispatch GitHub rejected.
+await db.exec(`create table vault.decrypted_secrets(name text, decrypted_secret text);
+ create table net.calls(id bigserial primary key, url text, body jsonb, headers jsonb);
+ create table net._http_response(id bigint, status_code int);
+ create function net.http_post(url text, body jsonb, headers jsonb) returns bigint language sql as $$ insert into net.calls(url, body, headers) values(url, body, headers) returning id $$;
+ create table private.workflow_dispatches(workflow text primary key, last_source_at timestamptz not null, dispatched_at timestamptz not null default now(),
+  request_id bigint, attempts int not null default 1);`);
+await db.exec(readFileSync('supabase/migrations/20261019010000_nba_shadow_scan_dispatch.sql', 'utf8').replace(/create extension[^;]*;/g, ''));
+assert.equal((await db.query(`select schedule from cron.job where jobname='nba-shadow-scan-dispatch'`)).rows[0].schedule, '*/5 * * * *');
+const dispatch = () => db.query('select private.dispatch_nba_shadow_scan()');
+const calls = async () => (await db.query('select id, url, body, headers from net.calls order by id')).rows;
+await db.query('select public.ingest_nba($1)', [{ provider: 'The Odds API NBA', games: [{ ...game('2', hours(10)), season_type: 2 }] }]);
+await db.query('select public.ingest_nba($1)', [{ provider: 'The Odds API NBA props', observations: [prop('2', 'd', outcomes(-110, -110))] }]);
+await dispatch();
+assert.equal((await calls()).length, 0); // no token yet
+await db.exec(`insert into vault.decrypted_secrets values('github_research_board_token', 'test-token')`);
+await dispatch();
+let sent = await calls();
+assert.equal(sent.length, 1);
+assert.match(sent[0].url, /nba-shadow-scan\.yml\/dispatches$/);
+assert.deepEqual([sent[0].body.ref, sent[0].headers.Authorization], ['main', 'Bearer test-token']);
+await dispatch(); // same batch, no answer yet: no second dispatch
+assert.equal((await calls()).length, 1);
+await db.query('insert into net._http_response values($1, 502)', [sent[0].id]);
+await dispatch(); // GitHub rejected it: re-sent
+assert.equal((await calls()).length, 2);
+await db.query('insert into net._http_response values($1, 204)', [(await calls())[1].id]);
+await dispatch(); // accepted: done
+assert.equal((await calls()).length, 2);
+assert.equal((await db.query(`select attempts from private.workflow_dispatches where workflow='nba-shadow-scan.yml'`)).rows[0].attempts, 2);
+await db.exec(`alter table public.nba_observations disable trigger immutable_nba_observation;
+ update public.nba_observations set recorded_at = now() - interval '20 minutes' where fingerprint = 'd';
+ alter table public.nba_observations enable trigger immutable_nba_observation`);
+await dispatch(); // nothing fresh
+assert.equal((await calls()).length, 2);
 console.log('nba shadow ok');
