@@ -35,6 +35,7 @@ import PricedRecord from "./priced-record";
 import BeatTheClose from "./beat-the-close";
 import MyTailRecord from "./my-tail-record";
 import HomeBrief from "./home-brief";
+import GamePicksShortcut from "./game-picks-shortcut";
 import DecisionBoard from "./decision-board";
 import PickCard from "./pick-card";
 import PublishedLegBoard from "./published-leg-board";
@@ -361,6 +362,9 @@ export default function DeskApp({
         )}
         {page === "home" && (
           <>
+            <SectionBoundary name="Game picks">
+              <GamePicksShortcut games={d.games} />
+            </SectionBoundary>
             <SectionBoundary name="Pick of the Day">
               <CandidateTracker activeOnly featured pickOfDay />
             </SectionBoundary>

@@ -7,6 +7,7 @@ import PriceFreshness from "./price-freshness";
 import GamblyLink from "./gambly-link";
 import RuleChips from "./rule-chips";
 import { citedRules } from "@/lib/nba-rules";
+import { readGamePublications } from "@/lib/game-picks";
 type Leg = {
   leg_key: string;
   name: string;
@@ -27,8 +28,10 @@ type Leg = {
 };
 export default function PublishedLegBoard({
   savedOnly = false,
+  gameId,
 }: {
   savedOnly?: boolean;
+  gameId?: string;
 }) {
   const [rows, setRows] = useState<Leg[]>([]),
     [filter, setFilter] = useState("ALL"),
@@ -62,6 +65,8 @@ export default function PublishedLegBoard({
           .from("published_legs")
           .select("*")
           .order("published_at", { ascending: false });
+        if (gameId)
+          q = q.eq("game_id", gameId).order("leg_key", { ascending: false });
         if (savedOnly) {
           const a = await supabase
             .from("saved_legs")
@@ -84,7 +89,14 @@ export default function PublishedLegBoard({
             a.data.map((r) => r.leg_key),
           );
         }
-        const r = await q.limit(1000);
+        const r = gameId
+          ? {
+              data: await readGamePublications<Leg>((from, to) =>
+                q.range(from, to),
+              ),
+              error: null,
+            }
+          : await q.limit(1000);
         if (live && n === epoch) {
           setFailed(!!r.error);
           if (!r.error) setRows(r.data || []);
@@ -93,7 +105,9 @@ export default function PublishedLegBoard({
               ? "Records could not load. Please retry."
               : r.data?.length
                 ? ""
-                : "No published selections yet.",
+                : gameId
+                  ? "No picks have been published for this game yet."
+                  : "No published selections yet.",
           );
         }
       } catch {
@@ -107,6 +121,11 @@ export default function PublishedLegBoard({
     const refresh = () => {
       if (live) void load();
     };
+    const refreshGame = () => {
+      if (gameId && document.visibilityState === "visible") refresh();
+    };
+    const timer = gameId ? setInterval(refreshGame, 30000) : null;
+    if (gameId) window.addEventListener("focus", refreshGame);
     window.addEventListener("vq-saved-changed", refresh);
     const auth = supabase.auth.onAuthStateChange((event) => {
       ++epoch;
@@ -120,8 +139,10 @@ export default function PublishedLegBoard({
       live = false;
       auth.data.subscription.unsubscribe();
       window.removeEventListener("vq-saved-changed", refresh);
+      if (timer) clearInterval(timer);
+      window.removeEventListener("focus", refreshGame);
     };
-  }, [savedOnly, retry]);
+  }, [savedOnly, gameId, retry]);
   const visible = rows.filter(
     (r) =>
       (filter === "ALL" || r.kind === filter) &&
@@ -131,7 +152,13 @@ export default function PublishedLegBoard({
   );
   return (
     <section className="published-board">
-      <h2>{savedOnly ? "Your saved legs" : "Every published selection"}</h2>
+      <h2>
+        {savedOnly
+          ? "Your saved legs"
+          : gameId
+            ? "All picks for this game"
+            : "Every published selection"}
+      </h2>
       <p>
         Original publication snapshots stay on record. Singles, Pick of the Day
         and Hail Mary tickets are shown separately. Unverified outcomes stay
