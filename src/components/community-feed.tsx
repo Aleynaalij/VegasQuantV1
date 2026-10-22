@@ -15,6 +15,7 @@ import CommunityParlayCard from "./community-parlay-card";
 import { COMMUNITY_PHOTO_BUCKET, MAX_PHOTO_BYTES } from "@/lib/community-photo";
 import { time } from "@/lib/domain";
 import { ImagePlus, Heart, MessageCircle, Share2 } from "lucide-react";
+import { NBA_PAUSED } from "@/lib/nba-paused";
 type Post = {
   id: string;
   user_id: string;
@@ -258,7 +259,7 @@ export default function CommunityFeed() {
     return () => URL.revokeObjectURL(url);
   }, [photo]);
   useEffect(() => {
-    setSport(routeSport === "nba" ? "nba" : "nfl");
+    setSport(routeSport === "nba" && !NBA_PAUSED ? "nba" : "nfl");
     setTargetPost(
       routePost && /^[0-9a-f-]{36}$/i.test(routePost) ? routePost : null,
     );

@@ -17,8 +17,6 @@ const pages = [
   { path: "/performance", expect: ["By sport"] },
   { path: "/community", expect: [] },
   { path: "/membership", expect: [] },
-  { path: "/nba", expect: [] },
-  { path: "/nba/rules", expect: ["R-12"] },
   { path: "/methodology", expect: [] },
   { path: "/no-such-page", expect: [] },
 ];

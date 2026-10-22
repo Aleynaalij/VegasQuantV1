@@ -22,7 +22,7 @@ export const helpTopics: HelpTopic[] = [
       "new app",
     ],
     answer:
-      "Home shows the next kickoff, game research, Pick of the Day and the separate Hail Mary feature. The Zone is the main analyst feed and research hub. Community is for member slips and discussion. Records opens with your tailed picks; Account manages profile, access, notifications and deletion. The sport switch at the top changes between NFL and NBA.",
+      "Home shows the next kickoff, game research, Pick of the Day and the separate Hail Mary feature. The Zone is the main analyst feed and research hub. Community is for member slips and discussion. Records opens with your tailed picks; Account manages profile, access, notifications and deletion. NBA is coming soon.",
     href: "/feed",
     link: "Start in The Zone",
   },
@@ -32,9 +32,9 @@ export const helpTopics: HelpTopic[] = [
     category: "App guide",
     phrases: ["nba", "basketball", "sport switch", "switch sports"],
     answer:
-      "Use the NFL / NBA tabs at the top. NBA has its own Home, analysis, Zone, Records and rules pages. Open the NBA Zone for published analyst selections, observed prices, sources and risks. NFL publications and histories stay separate.",
-    href: "/nba",
-    link: "Open NBA",
+      "NBA is coming soon. We're giving the season some time and collecting game data every day until it is a source we can reference, so we can see what players are doing this year before we publish NBA research. NFL is where our focus is for now.",
+    href: "/feed",
+    link: "Open the NFL Zone",
   },
   {
     id: "pick-of-day",

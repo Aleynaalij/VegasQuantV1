@@ -7,6 +7,8 @@ import AccountLink from "./account-link";
 import SwipeTabs from "./swipe-tabs";
 import TabScrub from "./tab-scrub";
 import CommunityStories from "./community-stories";
+import NbaComingSoon from "./nba-coming-soon";
+import { NBA_PAUSED } from "@/lib/nba-paused";
 import {
   ArrowUpRight,
   BookOpen,
@@ -88,12 +90,14 @@ export function Stat({
 export function Shell({
   children,
   active = "home",
-  sport = "nfl",
+  sport: requested = "nfl",
 }: {
   children: ReactNode;
   active?: string;
   sport?: "nfl" | "nba";
 }) {
+  // While NBA is paused every page wears the NFL chrome.
+  const sport = NBA_PAUSED ? "nfl" : requested;
   const home = sport === "nba" ? "/nba" : "/";
   const community = sport === "nba" ? "/community?sport=nba" : "/community";
   const feed = sport === "nba" ? "/nba/zone" : "/feed";
@@ -280,13 +284,17 @@ export function Shell({
           >
             NFL
           </Link>
-          <Link
-            href={nbaHref}
-            aria-current={sport === "nba" ? "page" : undefined}
-            className={sport === "nba" ? "selected" : ""}
-          >
-            NBA
-          </Link>
+          {NBA_PAUSED ? (
+            <NbaComingSoon />
+          ) : (
+            <Link
+              href={nbaHref}
+              aria-current={sport === "nba" ? "page" : undefined}
+              className={sport === "nba" ? "selected" : ""}
+            >
+              NBA
+            </Link>
+          )}
           {active === "home" ? (
             <CommunityStories />
           ) : sport === "nba" ? (

@@ -36,7 +36,8 @@ html[data-theme="dark"] body .sport-switch {
   border-bottom-color: var(--gold-line);
 }
 html[data-theme="dark"] body .sport-switch a,
-html[data-theme="dark"] body .sport-switch a + a {
+html[data-theme="dark"] body .sport-switch a + a,
+html[data-theme="dark"] body .sport-switch .nba-soon-chip {
   width: 58px;
   min-width: 58px;
   height: 58px;
