@@ -421,7 +421,6 @@
         "research/probability/**",
         "scripts/research-board/ngs.ts",
         "scripts/research-board/select.ts",
-        "tests/ngs/test_backtest.py",
         "tests/ngs/test_evaluate_holdout.py",
         "tests/probability/test_ngs_features.py",
         "tests/research-board-ngs.test.ts"
