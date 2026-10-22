@@ -1,8 +1,8 @@
 # Sportradar NFL live-data connection
 
-Owner requested NFL halftime support on October 22, 2026. This implements an **admin-only manual connection preview**, not an active live feed or public halftime product.
+Owner requested NFL halftime support on October 22, 2026. The connection supports manual verification and scheduled private research collection. See automatic collection below for cadence, limits and remaining gaps.
 
-## Current state
+## Initial setup state (superseded by activation below)
 
 - No Sportradar secret name was found in Supabase Vault or Vercel project environment metadata during setup.
 - Server adapter uses documented NFL v7 statistics and play-by-play endpoints.
@@ -49,3 +49,13 @@ Legacy icon URLs have matching gold artwork. Android/iOS may cache an installed 
 The connector also accepts `SPORTSRADAR_API_KEY`, the owner's existing sensitive secret name. The canonical `SPORTRADAR_API_KEY` takes precedence. No secret is read back, copied or printed.
 
 Run `node --import tsx scripts/sportradar-verify.ts` only in an authorized server environment. It makes at most three calls: current-week schedule, then one selected game's statistics and play-by-play. It prints hashes, source/receipt metadata and sanitized statuses, never keys or raw payloads. It is not a build hook or scheduled poll. A one-off deployment build-command override may run it after `npm run build` for setup verification. Receipt success does not prove live freshness or grant public display rights.
+
+## Automatic private collection — October 22 activation
+
+The owner verified a statistics preview for NE–CHI and authorized unattended collection. `private.dispatch_sportradar_collection()` calls the token-authenticated production `/api/internal/sportradar` route from Supabase Cron every five minutes. The owner does not need to open the app. Only the new dispatcher secret is shared through Vault; the provider key stays in Vercel.
+
+Schedule discovery is cached for twelve hours. Game feeds start ten minutes before scheduled kickoff and stop after six hours or a stored `closed` statistics response. Each run rotates at most two eligible games, least recently checked first; overlapping games can therefore have intervals longer than five minutes. Both statistics and play-by-play are attempted independently; ID and home/away team identity must match the provider schedule. Postponed/canceled games are excluded. Later corrections within the collection window append new snapshots; this does not implement long-term postgame correction reconciliation.
+
+`sportradar_runs` retains attempts, failures, missed rotations and interrupted workers. `sportradar_snapshots` retains private payloads, access level, exact source URL/hash and separate receipt/provider HTTP times. Anonymous/member reads and writes are denied; server service-role reads and inserts only for snapshots. No public display, grading, published selections, inferred availability, derived odds or model approval is added. Admin → Feeds reports the latest stored run and snapshots. Snapshot receipt is not live freshness validation. The public research-publishing agent can inspect the durable hosted evidence through its supported administrative connector, with timestamps and freshness limitations.
+
+Safety budgets are **150 attempted calls per rolling 24 hours and 500 per rolling 30 days**, including failures (five maximum per run). These are our local limits, not the account's verified quota. Manual previews also consume provider quota and are not counted in these automatic budgets. Provider 429/401/403 and schema/identity/storage failures remain visible; no automatic purchases or upgrades occur. Five-minute polling is a research sampling cadence, not a real-time trading or delivery guarantee. In a large slate the budget/rotation can leave coverage gaps. Trial expiry from the owner's receipt is November 21, 2026; commercial display/retention rights remain unverified. Raw trial collection stays private.
