@@ -67,7 +67,7 @@ export type NgsContext = {
  * The leg's NGS context, or null when the statistic has no NGS family. Only rows from before the
  * game's week count, so a later snapshot cannot leak the game itself into its own research.
  */
-export function ngsContext(leg: LegRef, snapshots: NgsSnapshot[]): NgsContext | null {
+export function ngsContext(leg: LegRef, snapshots: NgsSnapshot[], schedule: ScheduleGame[] = []): NgsContext | null {
   const stat = statFor(leg.metric);
   const snap = stat && snapshots.find((s) => s.stat_type === stat);
   if (!stat || !snap) return null;
@@ -103,12 +103,19 @@ export function ngsContext(leg: LegRef, snapshots: NgsSnapshot[]): NgsContext | 
       return `${m.fmt(v.player)} ${m.label} (league median ${m.fmt(v.league_median)})`;
     });
   const risks = ngsRisks(stat, leg.metric, metrics);
+  // The defense he faces: his team is the one his NGS rows carry; the opponent is the other side.
+  const own = mine[0].team_abbr;
+  const opponent = [...teams].find((t) => t !== own) ?? null;
+  const defense = opponent ? defenseMatchup(stat, prior, schedule, opponent) : null;
+  if (defense?.risk) risks.push(defense.risk);
+  const why = [parts.length ? `Next Gen Stats, ${span}: ${parts.join("; ")}.` : "", defense?.why ?? ""].filter(Boolean).join(" ");
   return {
-    why: parts.length ? `Next Gen Stats, ${span}: ${parts.join("; ")}.` : "",
+    why,
     risks,
     evidence: {
       stat_type: stat,
       weeks,
+      defense: defense?.evidence ?? null,
       metrics: Object.fromEntries(Object.entries(metrics).map(([k, v]) => [k, Object.fromEntries(Object.entries(v).map(([a, b]) => [a, Math.round(b * 100) / 100]))])),
       source_sha256: snap.source_sha256,
       retrieved_at: snap.retrieved_at,
@@ -136,4 +143,58 @@ function ngsRisks(stat: NgsSnapshot["stat_type"], metric: Contract["metric"], m:
   if (stat === "passing" && low("completion_percentage_above_expectation"))
     out.push(`He is completing passes below expectation (${plus(m.completion_percentage_above_expectation.player, "%")}).`);
   return out;
+}
+
+/** One game of the schedule (ESPN team codes), to tell which defense each NGS player-week faced. */
+export type ScheduleGame = { season: number; week: number; away_abbreviation: string; home_abbreviation: string };
+const MIN_DEFENSE_WEEKS = 2;
+const DEFENSE = {
+  receiving: { key: "avg_separation", weight: "targets", label: "of separation to receivers", unit: (v: number) => yds(v),
+    tight: "one of the tightest coverages in the league", soft: "one of the softest coverages in the league" },
+  rushing: { key: "rush_yards_over_expected_per_att", weight: "rush_attempts", label: "rush yards over expected per carry", unit: (v: number) => plus(v),
+    tight: "one of the stingiest run defenses in the league", soft: "one of the most generous run defenses in the league" },
+} as const;
+
+/**
+ * How the defense he faces has treated his position so far: the volume-weighted NGS metric of every
+ * opposing player-week against it in earlier weeks of the season, ranked among all defenses with at
+ * least two weeks of data. Descriptive only, like the rest of the NGS context.
+ */
+export function defenseMatchup(stat: NgsSnapshot["stat_type"], prior: NgsRow[], schedule: ScheduleGame[], opponent: string) {
+  if (stat === "passing") return null;
+  const spec = DEFENSE[stat];
+  const faced = new Map<string, string>();
+  for (const g of schedule) {
+    const away = ngsTeam(g.away_abbreviation), home = ngsTeam(g.home_abbreviation);
+    faced.set(`${g.season}|${g.week}|${away}`, home);
+    faced.set(`${g.season}|${g.week}|${home}`, away);
+  }
+  const sums = new Map<string, { value: number; weight: number; weeks: Set<number> }>();
+  for (const r of prior) {
+    const d = faced.get(`${num(r.season)}|${num(r.week)}|${r.team_abbr}`);
+    const v = num(r[spec.key]), w = num(r[spec.weight]);
+    if (!d || !Number.isFinite(v) || !Number.isFinite(w) || w <= 0) continue;
+    const t = sums.get(d) ?? { value: 0, weight: 0, weeks: new Set<number>() };
+    t.value += v * w;
+    t.weight += w;
+    t.weeks.add(num(r.week));
+    sums.set(d, t);
+  }
+  const allowed = [...sums].filter(([, t]) => t.weeks.size >= MIN_DEFENSE_WEEKS).map(([team, t]) => ({ team, value: t.value / t.weight }));
+  const mine = allowed.find((a) => a.team === opponent);
+  if (!mine || allowed.length < 8) return null;
+  // Rank 1 = allows the least (tightest), as a fan reads "the stingiest defense".
+  const rank = allowed.filter((a) => a.value < mine.value).length + 1;
+  const median = quantile(allowed.map((a) => a.value), 0.5);
+  const quarter = Math.ceil(allowed.length / 4);
+  const ordinal = (n: number) => {
+    const s = ["th", "st", "nd", "rd"], v = n % 100;
+    return n + (s[(v - 20) % 10] || s[v] || s[0]);
+  };
+  const where = rank <= quarter ? spec.tight : rank > allowed.length - quarter ? spec.soft : null;
+  return {
+    why: `Matchup: ${opponent} allows ${spec.unit(mine.value)} ${spec.label}, ${ordinal(rank)} lowest of ${allowed.length} defenses (median ${spec.unit(median)})${where === spec.soft ? `: ${spec.soft}` : ""}.`,
+    risk: where === spec.tight ? `He faces ${spec.tight} (${opponent}: ${spec.unit(mine.value)} ${spec.label}).` : null,
+    evidence: { opponent, metric: spec.key, allowed: Math.round(mine.value * 100) / 100, rank, defenses: allowed.length, median: Math.round(median * 100) / 100 },
+  };
 }

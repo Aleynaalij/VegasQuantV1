@@ -409,7 +409,7 @@
       "owner": "CLAUDE",
       "scope": "service",
       "status": "active",
-      "updated_at": "2026-10-22T23:20:00Z",
+      "updated_at": "2026-10-22T23:40:00Z",
       "files": [
         "research/probability/**",
         "tests/probability/test_ngs_features.py",
@@ -421,7 +421,7 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: model part done, v0.4 (NGS inputs) rejected under its pre-registered rule (research/probability/ngs-v0.4-plan.md); v0.3 stays. Remaining: review NGS-002 and run the flag holdout once."
+      "next_action": "Claude: model part merged in #101 (v0.4 rejected, v0.3 stays). Matchup context for research legs in review. Remaining: review NGS-002 and run the flag holdout once."
     }
   ]
 }

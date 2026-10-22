@@ -67,3 +67,35 @@ test("the published leg carries NGS context in why, risk, evidence and sources w
   assert.equal(plain.sources.length + 1, withNgs.sources.length);
   assert.equal(plain.research_evidence.ngs, null);
 });
+
+// Ten defenses over Weeks 1-2: offense team i plays defense team i's partner. BUF allows the least
+// separation, MIA the most. Receivers on the offense facing each defense carry that separation.
+import { defenseMatchup, type ScheduleGame } from "../scripts/research-board/ngs";
+const TEAMS = ["BUF", "MIA", "NE", "NYJ", "KC", "LV", "DEN", "LAC", "DAL", "PHI", "WSH", "NYG"];
+const schedule: ScheduleGame[] = [1, 2].flatMap((week) =>
+  [0, 2, 4, 6, 8, 10].map((i) => ({ season: 2026, week, away_abbreviation: TEAMS[i], home_abbreviation: TEAMS[i + 1] })));
+const allowed: Record<string, number> = { BUF: 1.5, MIA: 4.5, NE: 2.6, NYJ: 2.7, KC: 2.8, LV: 2.9, DEN: 3.0, LAC: 3.1, DAL: 3.2, PHI: 3.3, WSH: 3.4, NYG: 3.5 };
+const ngsTeam = (t: string) => (t === "WSH" ? "WAS" : t);
+const facing = schedule.flatMap((g) => [
+  rec(`vs ${g.home_abbreviation} ${g.week}`, ngsTeam(g.away_abbreviation), g.week, allowed[g.home_abbreviation], 0),
+  rec(`vs ${g.away_abbreviation} ${g.week}`, ngsTeam(g.home_abbreviation), g.week, allowed[g.away_abbreviation], 0),
+]);
+
+test("matchup: the defense he faces is ranked by what it allowed to his position in earlier weeks", () => {
+  const snap: NgsSnapshot = { ...receiving, rows: [...facing, rec("Terry McLaurin", "WAS", 5, 3, 0)] };
+  const c = ngsContext(leg("Terry McLaurin", "receiving_yards"), [snap], schedule)!;
+  // McLaurin plays for WAS, so in BUF @ WSH he faces BUF: the tightest coverage.
+  const d = c.evidence!.defense as { opponent: string; rank: number; defenses: number; allowed: number };
+  assert.deepEqual([d.opponent, d.rank, d.defenses, d.allowed], ["BUF", 1, 12, 1.5]);
+  assert.match(c.why, /Matchup: BUF allows 1\.5 yds of separation to receivers, 1st lowest of 12 defenses/);
+  assert.ok(c.risks.some((r) => /tightest coverages in the league \(BUF/.test(r)));
+});
+
+test("matchup: a soft defense is noted in the why, not the risk; too little data says nothing", () => {
+  const soft = defenseMatchup("receiving", facing, schedule, "MIA")!;
+  assert.match(soft.why, /12th lowest of 12 defenses .*: one of the softest coverages/);
+  assert.equal(soft.risk, null);
+  assert.equal(defenseMatchup("receiving", facing.filter((r) => r.week === "1"), schedule, "BUF"), null, "one week is not enough");
+  assert.equal(defenseMatchup("passing", facing, schedule, "BUF"), null);
+  assert.equal(defenseMatchup("receiving", facing, [], "BUF"), null, "no schedule, no matchup");
+});
