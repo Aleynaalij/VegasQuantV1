@@ -17,7 +17,7 @@ create table public.sportradar_snapshots (
 create index sportradar_snapshot_lookup on public.sportradar_snapshots(feed,retrieved_at desc);
 alter table public.sportradar_runs enable row level security;
 alter table public.sportradar_snapshots enable row level security;
-revoke all on public.sportradar_runs,public.sportradar_snapshots from public,anon,authenticated;
+revoke all on public.sportradar_runs,public.sportradar_snapshots from public,anon,authenticated,service_role;
 grant select,insert,update on public.sportradar_runs to service_role;
 grant select,insert on public.sportradar_snapshots to service_role;
 -- Serialize claim and budget decisions across concurrent invocations. Invoker/service-only.
