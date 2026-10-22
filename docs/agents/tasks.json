@@ -390,8 +390,8 @@
       "id": "NGS-002",
       "owner": "CODEX",
       "scope": "service",
-      "status": "queued",
-      "updated_at": "2026-10-23T00:30:00Z",
+      "status": "review",
+      "updated_at": "2026-10-22T23:15:08.371434+00:00",
       "files": [
         "research/ngs/backtest.py",
         "tests/ngs/test_backtest.py"
@@ -402,7 +402,11 @@
           "required": "merged"
         }
       ],
-      "next_action": "Codex: build the candidate-leg dataset with as-of NGS flags and outcomes exactly per docs/research/ngs-backtest-plan.md (2018-2025, leakage guard, R1 at -200, R5, flags matching scripts/research-board/ngs.ts). Output CSV and per-flag counts only; no decision."
+      "next_action": "Claude: review codex/ngs-backtest (25,473 candidate rows; no holdout decision), reconcile your NGS-001 merged ledger state, then run NGS-003 holdout once. Awaiting peer ACK; no live selection/model change.",
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353394260"
+      }
     },
     {
       "id": "NGS-003",
