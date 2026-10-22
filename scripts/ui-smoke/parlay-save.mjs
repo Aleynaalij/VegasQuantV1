@@ -147,6 +147,16 @@ for (const width of [390, 1280]) {
     });
   });
   await page.goto(base + "/feed?view=legs");
+  // A fresh member must acknowledge the app refresh before using the workshop.
+  const refresh = page.getByRole("dialog", { name: "Get the new gold Vegas Quant app" });
+  await refresh.waitFor();
+  const continueApp = refresh.getByRole("button", { name: "Continue to Vegas Quant" });
+  assert.equal(await continueApp.isEnabled(), false);
+  await page.keyboard.press("Escape");
+  assert.equal(await refresh.isVisible(), true);
+  await refresh.getByRole("checkbox").check();
+  await continueApp.click();
+  await refresh.waitFor({ state: "hidden" });
   await page
     .getByRole("button", { name: "+ Add to parlay", exact: true })
     .first()

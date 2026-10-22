@@ -18,7 +18,8 @@ export class SportradarError extends Error {
   constructor(public code: string) { super(code); }
 }
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const LIMIT = 8 * 1024 * 1024;
+// Keep private preview responses below the hosting response limit, including evidence metadata.
+const LIMIT = 3 * 1024 * 1024;
 /** Manual admin preview only. No polling, publishing, result grading or provider-ID guessing. */
 export async function fetchSportradarGame(
   config: SportradarConfig,
