@@ -71,7 +71,8 @@ def feature(history, opponent_history, league_history, position, market):
         np.log(max(oc, .01)/max(league_c, .01)), len(h)/16,
         float(position == "QB"), float(position == "TE")])
 
-def prepare(frame, market):
+def prepare(frame, market, ngs=None):
+    """ngs: optional ngs_features.NgsIndex; its earlier-week inputs are appended (v0.4)."""
     frame = normalize(frame)
     required = {"player_id", "recent_team", "opponent_team", "season", "week",
                 "season_type", "position", *MARKETS[market][:2]}
@@ -96,6 +97,8 @@ def prepare(frame, market):
             pos = row["position"]
             if pos in allowed_positions and len(h) >= 4 and weighted([r[count] for r in h[-16:]]) >= minimum:
                 x = feature(h, defense[(row["opponent_team"], pos)], league[pos], pos, market)
+                if ngs is not None:
+                    x = np.concatenate([x, ngs.features(market, row["player_id"], int(season), int(week))])
                 result.append({"season": int(season), "week": int(week), "player_id": row["player_id"],
                     "game_key": f"{int(season)}:{int(week)}:"+":".join(sorted([row["recent_team"],row["opponent_team"]])),
                     "team": row["recent_team"], "opponent": row["opponent_team"], "position": pos,
@@ -172,12 +175,15 @@ def metrics(p, y):
         "ece": sum(b["n"]*abs(b["predicted"]-b["observed"]) for b in bins)/len(y),
         "calibration_bins": bins}
 
-def train(frame, train_end=2022, calibration_year=2023, test_year=2024):
+def train(frame, train_end=2022, calibration_year=2023, test_year=2024, ngs=None, version=VERSION):
     if not train_end < calibration_year < test_year:
         raise ValueError("Train/calibration/test must be chronological and disjoint")
-    artifact, report = {"version": VERSION, "models": {}, "features": FEATURES}, {"version": VERSION, "markets": {}}
+    artifact, report = {"version": version, "models": {}, "features": FEATURES}, {"version": version, "markets": {}}
+    if ngs is not None:
+        from ngs_features import FEATURES as NGS_FEATURES
+        artifact["features_by_market"] = {m: FEATURES + NGS_FEATURES[m] for m in MARKETS}
     for market in MARKETS:
-        rows = prepare(frame, market)
+        rows = prepare(frame, market, ngs)
         sets = [[r for r in rows if r["season"] <= train_end],
                 [r for r in rows if r["season"] == calibration_year],
                 [r for r in rows if r["season"] == test_year]]

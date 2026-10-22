@@ -412,10 +412,11 @@
       "id": "NGS-003",
       "owner": "CLAUDE",
       "scope": "service",
-      "status": "queued",
-      "updated_at": "2026-10-23T00:30:00Z",
+      "status": "active",
+      "updated_at": "2026-10-22T23:20:00Z",
       "files": [
         "research/probability/**",
+        "tests/probability/test_ngs_features.py",
         "docs/research/ngs-backtest-results.md"
       ],
       "depends_on": [
@@ -424,7 +425,7 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: review NGS-002, run the pre-registered 2024-2025 holdout once, report on #65 (rule proposal only if every condition holds), then add NGS features to the NFL shadow model (stays SHADOW_ONLY)."
+      "next_action": "Claude: model part done, v0.4 (NGS inputs) rejected under its pre-registered rule (research/probability/ngs-v0.4-plan.md); v0.3 stays. Remaining: review NGS-002 and run the flag holdout once."
     }
   ]
 }
