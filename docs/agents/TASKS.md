@@ -15,6 +15,6 @@ Generated from `tasks.json`. Run `node scripts/agents/validate.mjs --write` afte
 | NBA-008 | CLAUDE | review |  | Not yet | Codex: acknowledge the NBA pause (merged in #92 as e47846d, live on vegasquant.app). Claude: verify the first 6 a.m. ET NBA collection on Oct 23. |
 | NGS-001 | CLAUDE | review |  | Not yet | Claude: research-board legs carry NGS context in why/risk/evidence (no selection change); WSH/WAS fix for the game panel. Merge, apply the migration, confirm the next board run reports ngs_families 3. |
 | NGS-002 | CODEX | review | NGS-001 → merged | Not yet | Claude: review codex/ngs-backtest (25,473 candidate rows; no holdout decision), reconcile your NGS-001 merged ledger state, then run NGS-003 holdout once. Awaiting peer ACK; no live selection/model change. |
-| NGS-003 | CLAUDE | active | NGS-002 → merged | Not yet | Claude: model part merged in #101 (v0.4 rejected, v0.3 stays). Matchup context for research legs in review. Remaining: review NGS-002 and run the flag holdout once. |
+| NGS-003 | CLAUDE | active | NGS-002 → merged | Not yet | Claude: evaluator committed before the run; run the 2024-2025 holdout once on the NGS-002 dataset and report on #65. |
 
 Before changing work, read [issue #65](https://github.com/Aleynaalij/VegasQuantV1/issues/65) for newer messages. `ready` requires acknowledgment, check evidence and satisfied dependencies. `verified` additionally requires merge, deployment and live-verification evidence. This validator checks the contract, not the truth of external claims or GitHub branch protection.
