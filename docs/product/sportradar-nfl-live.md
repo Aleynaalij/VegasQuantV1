@@ -43,3 +43,9 @@ Only then connect the live context to current, separately verified sportsbook qu
 NFL Next Gen Stats technology is powered by AWS; Vegas Quant receives historical summaries via nflverse. The opening retains those separate statements. It does not claim a direct AWS feed or partnership.
 
 Legacy icon URLs have matching gold artwork. Android/iOS may cache an installed splash independently of the site. A per-account/device required acknowledgement at the next signed-in visit explains removal/reinstallation; browser-only users can acknowledge the refreshed website. Websites cannot uninstall an app, force OS icon refresh, or prove that a reinstall took place. Acknowledgement is local UI state, never authentication/authorization or verified reinstall evidence.
+
+## Activation check
+
+The connector also accepts `SPORTSRADAR_API_KEY`, the owner's existing sensitive secret name. The canonical `SPORTRADAR_API_KEY` takes precedence. No secret is read back, copied or printed.
+
+Run `node --import tsx scripts/sportradar-verify.ts` only in an authorized server environment. It makes at most three calls: current-week schedule, then one selected game's statistics and play-by-play. It prints hashes, source/receipt metadata and sanitized statuses, never keys or raw payloads. It is not a build hook or scheduled poll. A one-off deployment build-command override may run it after `npm run build` for setup verification. Receipt success does not prove live freshness or grant public display rights.

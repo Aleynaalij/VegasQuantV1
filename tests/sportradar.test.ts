@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { fetchSportradarGame, sportradarStatus } from "../src/lib/sportradar-nfl";
+import { fetchSportradarGame, fetchSportradarCurrentWeek, sportradarStatus } from "../src/lib/sportradar-nfl";
 const id = "b0563750-d49e-4362-b862-8439170dd4b7";
 const config = { key: "test-only-private-key", enabled: "true", access: "trial" };
 const fake = (fn: (url: string, init?: RequestInit) => Promise<Response>) => fn as typeof fetch;
@@ -42,4 +42,15 @@ test("Sportradar provider errors never expose credentials or upstream response b
 test("Sportradar bounds payload size and rejects invalid JSON", async () => {
   await assert.rejects(fetchSportradarGame(config, id, "pbp", fake(async () => new Response("x".repeat(8 * 1024 * 1024 + 1), { headers: { "content-type": "application/json" } }))), /response_too_large/);
   await assert.rejects(fetchSportradarGame(config, id, "pbp", fake(async () => new Response("invalid", { headers: { "content-type": "application/json" } }))), /schema_unverified/);
+});
+
+test("Sportradar current-week discovery preserves source evidence and never guesses a game ID", async () => {
+  const result = await fetchSportradarCurrentWeek(config, fake(async (url, init) => {
+    assert.equal(url, "https://api.sportradar.com/nfl/official/trial/v7/en/games/current_week/schedule.json");
+    assert.equal(new Headers(init?.headers).get("x-api-key"), config.key);
+    return Response.json({ week: { games: [{ id, status: "created" }] } });
+  }));
+  assert.equal(result.provider_generated_at, null);
+  assert.ok(result.sha256);
+  assert.equal((result.payload.week as { games: unknown[] }).games.length, 1);
 });

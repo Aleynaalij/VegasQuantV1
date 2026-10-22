@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 
 export type SportradarConfig = { key?: string; enabled?: string; access?: string };
 export const sportradarConfig = (): SportradarConfig => ({
-  key: process.env.SPORTRADAR_API_KEY,
+  // Accept the owner’s existing secret name without retrieving or copying its value.
+  key: process.env.SPORTRADAR_API_KEY || process.env.SPORTSRADAR_API_KEY,
   enabled: process.env.SPORTRADAR_NFL_ENABLED,
   access: process.env.SPORTRADAR_ACCESS_LEVEL,
 });
@@ -21,15 +22,12 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Keep private preview responses below the hosting response limit, including evidence metadata.
 const LIMIT = 3 * 1024 * 1024;
 /** Manual admin preview only. No polling, publishing, result grading or provider-ID guessing. */
-export async function fetchSportradarGame(
+async function fetchDocument(
   config: SportradarConfig,
-  gameId: string,
-  feed: "statistics" | "pbp",
+  sourceUrl: string,
   fetcher: typeof fetch = fetch,
 ) {
-  if (!UUID.test(gameId) || !["statistics", "pbp"].includes(feed)) throw new SportradarError("invalid_request");
   if (sportradarStatus(config).blockers.length) throw new SportradarError("not_configured");
-  const sourceUrl = `https://api.sportradar.com/nfl/official/${config.access}/v7/en/games/${gameId}/${feed}.json`;
   let response: Response;
   try {
     response = await fetcher(sourceUrl, {
@@ -62,10 +60,9 @@ export async function fetchSportradarGame(
   const bytes = Buffer.concat(chunks);
   let payload: Record<string, unknown>;
   try { payload = JSON.parse(bytes.toString("utf8")); } catch { throw new SportradarError("provider_schema_unverified"); }
-  if (!payload || Array.isArray(payload) || payload.id !== gameId || typeof payload.status !== "string") throw new SportradarError("provider_game_identity_unverified");
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new SportradarError("provider_schema_unverified");
   return {
-    provider: "Sportradar NFL v7", access: config.access, feed,
-    game_id: gameId, source_url: sourceUrl,
+    provider: "Sportradar NFL v7", access: config.access, source_url: sourceUrl,
     retrieved_at: new Date().toISOString(),
     provider_last_modified: response.headers.get("last-modified"),
     provider_date: response.headers.get("date"),
@@ -74,4 +71,14 @@ export async function fetchSportradarGame(
     payload,
     limitations: ["Manual private preview; not a durable source observation or published selection", "Receipt time does not prove event freshness; validate clocks, corrections and game mapping", "Trial entitlement and commercial display rights must be confirmed before public use", "No sportsbook odds, clearance, forecasts or result grading are inferred"],
   };
+}
+
+export async function fetchSportradarGame(config: SportradarConfig, gameId: string, feed: "statistics" | "pbp", fetcher: typeof fetch = fetch) {
+  if (!UUID.test(gameId) || !["statistics", "pbp"].includes(feed)) throw new SportradarError("invalid_request");
+  const result = await fetchDocument(config, `https://api.sportradar.com/nfl/official/${config.access}/v7/en/games/${gameId}/${feed}.json`, fetcher);
+  if (result.payload.id !== gameId || typeof result.payload.status !== "string") throw new SportradarError("provider_game_identity_unverified");
+  return { ...result, game_id: gameId, feed };
+}
+export async function fetchSportradarCurrentWeek(config: SportradarConfig, fetcher: typeof fetch = fetch) {
+  return fetchDocument(config, `https://api.sportradar.com/nfl/official/${config.access}/v7/en/games/current_week/schedule.json`, fetcher);
 }
