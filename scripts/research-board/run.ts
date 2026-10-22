@@ -8,6 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import { csvRows } from "../../supabase/functions/result-sync/grade.ts";
 import type { Observation } from "../../supabase/functions/result-sync/prices.ts";
 import { BOARD_MARKETS, candidate, gameLegs, pickBoard, selectionKey, type BoardGame } from "./select.ts";
+import { ngsContext, type NgsSnapshot } from "./ngs.ts";
 
 const HORIZON = 7 * 86400000;
 /** The validator accepts quotes up to eight hours old; stay inside it. */
@@ -91,6 +92,20 @@ async function main() {
     (published.data || []).filter((l) => l.game_id && l.name && l.market).map((l) => selectionKey(l.game_id, l.name, l.market)),
   );
 
+  // Next Gen Stats: the latest stored snapshot of each family that covers the slate's season. Context
+  // only, so a missing table or failed read leaves the board as it was.
+  const ngs: NgsSnapshot[] = [];
+  for (const stat of ["passing", "rushing", "receiving"] as const) {
+    const r = await db
+      .from("nfl_ngs_snapshots")
+      .select("stat_type,rows,source_sha256,retrieved_at")
+      .eq("stat_type", stat)
+      .contains("seasons", [slate[0].season])
+      .order("retrieved_at", { ascending: false })
+      .limit(1);
+    if (!r.error && r.data?.[0]) ngs.push(r.data[0] as NgsSnapshot);
+  }
+
   const legs = slate.flatMap((g) => gameLegs(g, observations, rows, now));
   const board = pickBoard(legs, seen, limit, perGame);
   // Research boards bind each leg to its own game explicitly; the stage only satisfies the release's
@@ -117,7 +132,7 @@ async function main() {
     const r = await db.from("candidate_releases").insert({
       stage_id: stageId,
       title: `Research board · ${g.away_abbreviation} @ ${g.home_abbreviation}`,
-      candidates: mine.map(candidate),
+      candidates: mine.map((l) => candidate(l, ngsContext(l, ngs))),
       expires_at: g.kickoff,
       publication_key: `research-board-${g.id}-${hour}`,
     });
@@ -131,7 +146,7 @@ async function main() {
       published_legs += mine.length;
     }
   }
-  report({ games: slate.length, quotes: observations.length, qualifying: legs.length, published_releases, published_legs, blocked, failed, dry_run: dry });
+  report({ games: slate.length, quotes: observations.length, ngs_families: ngs.length, qualifying: legs.length, published_releases, published_legs, blocked, failed, dry_run: dry });
   // Fail the run, so the workflow turns red, on any operational error or when nothing it tried publishes.
   if (failed || (attempted && !published_releases)) process.exit(1);
 }

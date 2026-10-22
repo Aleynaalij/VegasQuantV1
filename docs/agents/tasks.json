@@ -335,7 +335,7 @@
       "owner": "CLAUDE",
       "scope": "application",
       "status": "review",
-      "updated_at": "2026-10-22T21:00:00Z",
+      "updated_at": "2026-10-23T00:30:00Z",
       "files": [
         "src/lib/nba-paused.ts",
         "src/components/nba-coming-soon.tsx",
@@ -354,7 +354,73 @@
         "tests/nba-daily-collection.test.ts"
       ],
       "depends_on": [],
-      "next_action": "Claude: NBA paused by the owner (Oct 22). NBA pages redirect home with a coming-soon note, the NBA chip carries a Soon sticker, NBA feeds collect once at 6 a.m. ET (results confirm 9:10 a.m.) and the shadow scan dispatcher is unscheduled. Merge, apply the migration, verify the 6 a.m. run. CODEX-NBA-008/009/011 are cancelled."
+      "next_action": "Codex: acknowledge the NBA pause (merged in #92 as e47846d, live on vegasquant.app). Claude: verify the first 6 a.m. ET NBA collection on Oct 23.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/92",
+      "checks": [
+        {
+          "name": "269 unit tests, typecheck, build, ui-smoke incl. nba-paused (chip, note, focus, /nba redirects) on PR #92",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/92"
+        }
+      ],
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6350557351"
+      }
+    },
+    {
+      "id": "NGS-001",
+      "owner": "CLAUDE",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-23T00:30:00Z",
+      "files": [
+        "scripts/research-board/ngs.ts",
+        "scripts/research-board/select.ts",
+        "scripts/research-board/run.ts",
+        "tests/research-board-ngs.test.ts",
+        "supabase/migrations/20261023000000_nfl_ngs_team_codes.sql",
+        "tests/sql/ngs-context.mjs",
+        "docs/research/ngs-backtest-plan.md"
+      ],
+      "depends_on": [],
+      "next_action": "Claude: research-board legs carry NGS context in why/risk/evidence (no selection change); WSH/WAS fix for the game panel. Merge, apply the migration, confirm the next board run reports ngs_families 3."
+    },
+    {
+      "id": "NGS-002",
+      "owner": "CODEX",
+      "scope": "service",
+      "status": "queued",
+      "updated_at": "2026-10-23T00:30:00Z",
+      "files": [
+        "research/ngs/backtest.py",
+        "tests/ngs/test_backtest.py"
+      ],
+      "depends_on": [
+        {
+          "task": "NGS-001",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Codex: build the candidate-leg dataset with as-of NGS flags and outcomes exactly per docs/research/ngs-backtest-plan.md (2018-2025, leakage guard, R1 at -200, R5, flags matching scripts/research-board/ngs.ts). Output CSV and per-flag counts only; no decision."
+    },
+    {
+      "id": "NGS-003",
+      "owner": "CLAUDE",
+      "scope": "service",
+      "status": "queued",
+      "updated_at": "2026-10-23T00:30:00Z",
+      "files": [
+        "research/probability/**",
+        "docs/research/ngs-backtest-results.md"
+      ],
+      "depends_on": [
+        {
+          "task": "NGS-002",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Claude: review NGS-002, run the pre-registered 2024-2025 holdout once, report on #65 (rule proposal only if every condition holds), then add NGS features to the NFL shadow model (stays SHADOW_ONLY)."
     }
   ]
 }
