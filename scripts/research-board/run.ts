@@ -8,7 +8,7 @@ import { createClient } from "@supabase/supabase-js";
 import { csvRows } from "../../supabase/functions/result-sync/grade.ts";
 import type { Observation } from "../../supabase/functions/result-sync/prices.ts";
 import { BOARD_MARKETS, candidate, gameLegs, pickBoard, selectionKey, type BoardGame } from "./select.ts";
-import { ngsContext, type NgsSnapshot, type ScheduleGame } from "./ngs.ts";
+import { currentTeam, ngsContext, type NgsSnapshot, type ScheduleGame } from "./ngs.ts";
 
 const HORIZON = 7 * 86400000;
 /** The validator accepts quotes up to eight hours old; stay inside it. */
@@ -143,7 +143,7 @@ async function main() {
     const r = await db.from("candidate_releases").insert({
       stage_id: stageId,
       title: `Research board · ${g.away_abbreviation} @ ${g.home_abbreviation}`,
-      candidates: mine.map((l) => candidate(l, ngsContext(l, ngs, schedule))),
+      candidates: mine.map((l) => candidate(l, ngsContext({ ...l, team: currentTeam(rows, l.player, l.game.season, l.game.week) }, ngs, schedule))),
       expires_at: g.kickoff,
       publication_key: `research-board-${g.id}-${hour}`,
     });

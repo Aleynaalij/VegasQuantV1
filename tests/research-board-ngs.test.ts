@@ -70,7 +70,7 @@ test("the published leg carries NGS context in why, risk, evidence and sources w
 
 // Ten defenses over Weeks 1-2: offense team i plays defense team i's partner. BUF allows the least
 // separation, MIA the most. Receivers on the offense facing each defense carry that separation.
-import { defenseMatchup, type ScheduleGame } from "../scripts/research-board/ngs";
+import { currentTeam, defenseMatchup, type ScheduleGame } from "../scripts/research-board/ngs";
 const TEAMS = ["BUF", "MIA", "NE", "NYJ", "KC", "LV", "DEN", "LAC", "DAL", "PHI", "WSH", "NYG"];
 const schedule: ScheduleGame[] = [1, 2].flatMap((week) =>
   [0, 2, 4, 6, 8, 10].map((i) => ({ season: 2026, week, away_abbreviation: TEAMS[i], home_abbreviation: TEAMS[i + 1] })));
@@ -83,7 +83,7 @@ const facing = schedule.flatMap((g) => [
 
 test("matchup: the defense he faces is ranked by what it allowed to his position in earlier weeks", () => {
   const snap: NgsSnapshot = { ...receiving, rows: [...facing, rec("Terry McLaurin", "WAS", 5, 3, 0)] };
-  const c = ngsContext(leg("Terry McLaurin", "receiving_yards"), [snap], schedule)!;
+  const c = ngsContext({ ...leg("Terry McLaurin", "receiving_yards"), team: "WSH" }, [snap], schedule)!;
   // McLaurin plays for WAS, so in BUF @ WSH he faces BUF: the tightest coverage.
   const d = c.evidence!.defense as { opponent: string; rank: number; defenses: number; allowed: number };
   assert.deepEqual([d.opponent, d.rank, d.defenses, d.allowed], ["BUF", 1, 12, 1.5]);
@@ -98,4 +98,33 @@ test("matchup: a soft defense is noted in the why, not the risk; too little data
   assert.equal(defenseMatchup("receiving", facing.filter((r) => r.week === "1"), schedule, "BUF"), null, "one week is not enough");
   assert.equal(defenseMatchup("passing", facing, schedule, "BUF"), null);
   assert.equal(defenseMatchup("receiving", facing, [], "BUF"), null, "no schedule, no matchup");
+});
+
+test("matchup: a blank NGS value is missing, not zero separation", () => {
+  // MIA faced BUF in Week 1: a MIA receiver row with null separation and 40 targets must not drag BUF toward zero.
+  const blank = { ...rec("Blank Row", "MIA", 1, 0, 0, 40), avg_separation: null as unknown as string };
+  const withBlank = defenseMatchup("receiving", [...facing, blank], schedule, "BUF")!;
+  const without = defenseMatchup("receiving", facing, schedule, "BUF")!;
+  assert.deepEqual(withBlank.evidence, without.evidence);
+});
+
+test("matchup: his team comes from box scores; a traded player without one gets no matchup line", () => {
+  const snap: NgsSnapshot = { ...receiving, rows: [...facing, rec("Terry McLaurin", "BUF", 5, 3, 0)] };
+  // His only recent NGS row is with BUF (his former team); box scores say he now plays for WSH.
+  const traded = ngsContext({ ...leg("Terry McLaurin", "receiving_yards"), team: "WSH" }, [snap], schedule)!;
+  assert.equal((traded.evidence!.defense as { opponent: string }).opponent, "BUF");
+  for (const team of [null, undefined, "DAL"]) {
+    const c = ngsContext({ ...leg("Terry McLaurin", "receiving_yards"), team }, [snap], schedule)!;
+    assert.equal(c.evidence!.defense, null, `team ${team}`);
+    assert.doesNotMatch(c.why, /Matchup:/);
+  }
+  const box = [
+    { season: "2026", week: "5", season_type: "REG", player_display_name: "Terry McLaurin", team: "BUF" },
+    { season: "2026", week: "6", season_type: "REG", player_display_name: "Terry McLaurin", team: "WSH" },
+    { season: "2026", week: "7", season_type: "REG", player_display_name: "Terry McLaurin", team: "DAL" }, // the game's own week
+    { season: "2025", week: "17", season_type: "REG", player_display_name: "Terry McLaurin", team: "LA" },
+  ];
+  assert.equal(currentTeam(box, "Terry McLaurin", 2026, 7), "WAS");
+  assert.equal(currentTeam(box, "Terry McLaurin", 2026, 1), "LAR", "previous season, legacy code mapped");
+  assert.equal(currentTeam(box, "Nobody", 2026, 7), null);
 });

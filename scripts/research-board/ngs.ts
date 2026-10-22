@@ -6,12 +6,19 @@ import type { Contract } from "../../supabase/functions/result-sync/grade.ts";
 
 export type NgsRow = Record<string, string>;
 export type NgsSnapshot = { stat_type: "passing" | "rushing" | "receiving"; rows: NgsRow[]; source_sha256: string; retrieved_at: string };
-type LegRef = { player: string; metric: Contract["metric"]; game: { season: number; week: number; away_abbreviation: string; home_abbreviation: string } };
+type LegRef = {
+  player: string;
+  metric: Contract["metric"];
+  game: { season: number; week: number; away_abbreviation: string; home_abbreviation: string };
+  /** His team from his latest weekly box-score row before the game; without it there is no matchup line. */
+  team?: string | null;
+};
 
 export const NGS_ATTRIBUTION = "NFL Next Gen Stats via nflverse (CC BY 4.0)";
 export const NGS_SOURCE = { url: "https://nextgenstats.nfl.com/", label: NGS_ATTRIBUTION };
-/** Games (ESPN) write Washington as WSH; NGS writes WAS. */
-const ngsTeam = (abbr: string) => (abbr === "WSH" ? "WAS" : abbr);
+/** Games (ESPN) write Washington as WSH; NGS writes WAS. Older nflverse rows use legacy codes. */
+const ALIASES: Record<string, string> = { WSH: "WAS", LA: "LAR", STL: "LAR", SD: "LAC", OAK: "LV" };
+const ngsTeam = (abbr: string) => ALIASES[abbr] ?? abbr;
 const RECENT_WEEKS = 3;
 
 type Metric = { key: string; label: string; weight?: string; fmt: (v: number) => string };
@@ -38,7 +45,8 @@ const METRICS: Record<NgsSnapshot["stat_type"], Metric[]> = {
 const statFor = (metric: Contract["metric"]): NgsSnapshot["stat_type"] | null =>
   metric === "receiving_yards" || metric === "receptions" ? "receiving" : metric === "rushing_yards" ? "rushing" : metric === "passing_yards" ? "passing" : null;
 
-const num = (v: string | undefined) => (v === undefined || v === "" ? NaN : Number(v));
+// Stored snapshots keep a blank NGS value as null; it is missing, never zero.
+const num = (v: string | null | undefined) => (v === undefined || v === null || v === "" ? NaN : Number(v));
 const quantile = (xs: number[], q: number) => {
   const s = xs.filter(Number.isFinite).sort((a, b) => a - b);
   if (!s.length) return NaN;
@@ -103,9 +111,10 @@ export function ngsContext(leg: LegRef, snapshots: NgsSnapshot[], schedule: Sche
       return `${m.fmt(v.player)} ${m.label} (league median ${m.fmt(v.league_median)})`;
     });
   const risks = ngsRisks(stat, leg.metric, metrics);
-  // The defense he faces: his team is the one his NGS rows carry; the opponent is the other side.
-  const own = mine[0].team_abbr;
-  const opponent = [...teams].find((t) => t !== own) ?? null;
+  // The defense he faces: the other side from his current team, taken from his weekly box-score rows
+  // (every game he plays), never from NGS rows, which can predate a trade between these two teams.
+  const own = leg.team ? ngsTeam(leg.team) : null;
+  const opponent = own && teams.has(own) ? [...teams].find((t) => t !== own) ?? null : null;
   const defense = opponent ? defenseMatchup(stat, prior, schedule, opponent) : null;
   if (defense?.risk) risks.push(defense.risk);
   const why = [parts.length ? `Next Gen Stats, ${span}: ${parts.join("; ")}.` : "", defense?.why ?? ""].filter(Boolean).join(" ");
@@ -197,4 +206,16 @@ export function defenseMatchup(stat: NgsSnapshot["stat_type"], prior: NgsRow[], 
     risk: where === spec.tight ? `He faces ${spec.tight} (${opponent}: ${spec.unit(mine.value)} ${spec.label}).` : null,
     evidence: { opponent, metric: spec.key, allowed: Math.round(mine.value * 100) / 100, rank, defenses: allowed.length, median: Math.round(median * 100) / 100 },
   };
+}
+
+/** His team in his latest weekly box-score row before the game (nflverse weekly player stats). */
+export function currentTeam(rows: Record<string, string>[], player: string, season: number, week: number): string | null {
+  const who = playerName(player);
+  let best: Record<string, string> | null = null;
+  for (const r of rows) {
+    const s = num(r.season), w = num(r.week);
+    if (r.season_type !== "REG" || !(s < season || (s === season && w < week)) || playerName(r.player_display_name || "") !== who) continue;
+    if (!best || s > num(best.season) || (s === num(best.season) && w > num(best.week))) best = r;
+  }
+  return best?.team ? ngsTeam(best.team) : null;
 }
