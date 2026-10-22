@@ -2,6 +2,7 @@ from datetime import datetime, timedelta, timezone
 import json
 from pathlib import Path
 import sys
+import re
 import unittest
 import numpy as np
 import pandas as pd
@@ -144,7 +145,9 @@ class HostedScanTests(unittest.TestCase):
             paths = [directory / "player_box_2025.csv", directory / "player_box_2026.csv"]
             cut = frame.game_date < "2025-12-01"
             frame[cut].to_csv(paths[0], index=False)
-            frame[~cut].to_csv(paths[1], index=False)
+            # The live 2026 file has rows with no athlete id, which makes pandas read every id as a float.
+            blank = frame[~cut].head(1).assign(athlete_id=None)
+            pd.concat([frame[~cut], blank]).to_csv(paths[1], index=False)
             return paths
         original = h.download
         h.download = fake_download
@@ -162,6 +165,8 @@ class HostedScanTests(unittest.TestCase):
         self.assertEqual((f["observation_id"], f["market"], f["line"], f["over_odds"], f["under_odds"]), ("o-player_points-3", "player_points", 12.5, -110, -110))
         self.assertFalse(f["forecast"]["official_eligible"])
         self.assertEqual({x["team"] for x in scan["forecasts"]}, {"Boston Celtics", "New York Knicks"})
+        # The journal requires integer-string athlete ids ('^\\d+$'), never '1234.0'.
+        self.assertTrue(all(re.fullmatch(r"\d+", x["athlete_id"]) for x in scan["forecasts"]), [x["athlete_id"] for x in scan["forecasts"]])
 
 
 
