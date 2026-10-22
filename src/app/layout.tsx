@@ -28,6 +28,7 @@ import PhoneContactPrompt from "@/components/phone-contact-prompt";
 import Welcome from "@/components/welcome";
 import ThemePrompt from "@/components/theme-settings";
 import DailyLuck from "@/components/daily-luck";
+import BrandOpening from "@/components/brand-opening";
 import AgeAccessBoundary from "@/components/age-access-boundary";
 
 // Self-hosted at build time and preloaded (replaces the render-blocking Google Fonts @import).
@@ -58,7 +59,7 @@ export const metadata: Metadata = {
     statusBarStyle: "default",
     title: "Vegas Quant",
   },
-  icons: { apple: "/icons/vq-prestige-apple.png" },
+  icons: { apple: "/icons/vq-lounge-apple.png" },
   title: "Vegas Quant | Sports Intelligence",
   description:
     "NFL research, live scores and transparent picks. Find the play. Understand the case. Keep the record.",
@@ -66,7 +67,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#070b14",
+  themeColor: "#07080b",
 };
 export default function RootLayout({
   children,
@@ -88,6 +89,7 @@ export default function RootLayout({
               "try{localStorage.removeItem('vq-theme-v1');localStorage.removeItem('vq-theme-v2')}catch(e){}",
           }}
         />
+        <BrandOpening />
         <ThemePrompt />
         <NotificationProvider>
           <AgeAccessBoundary
