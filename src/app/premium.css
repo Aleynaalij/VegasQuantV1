@@ -674,7 +674,7 @@ html[data-theme] body .top-actions .top-profile:focus-visible { outline: 3px sol
 .vq-brand-opening small { margin-top:7px; color:#aeb2bd; font:400 11px/1.5 var(--font-body),sans-serif; }
 .vq-welcome-mark { width:110px; height:auto; margin-bottom:18px; }
 @keyframes vq-opening-exit { 0%,82% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
-@media (prefers-reduced-motion:reduce) { .vq-brand-opening { animation-duration:.25s; } }
+@media (prefers-reduced-motion:reduce) { .vq-brand-opening { animation:vq-opening-exit .25s step-end both !important; } }
 
 .vq-policy { max-width:820px; margin:0 auto; padding:18px 0 30px; }
 .vq-policy header .vq-mark { width:88px; height:66px; display:block; margin-bottom:18px; }
