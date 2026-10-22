@@ -15,6 +15,7 @@ export default function BrandOpening() {
       <span className="vq-opening-name">VEGAS QUANT</span>
       <span className="vq-opening-enhanced"><b>|</b> Enhanced With NFL Next Gen Stats</span>
       <small>Historical data via nflverse</small>
+      <small className="vq-opening-aws">NGS technology powered by AWS</small>
     </div>
   );
 }

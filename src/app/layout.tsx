@@ -28,6 +28,7 @@ import PhoneContactPrompt from "@/components/phone-contact-prompt";
 import Welcome from "@/components/welcome";
 import ThemePrompt from "@/components/theme-settings";
 import DailyLuck from "@/components/daily-luck";
+import AppRefreshNotice from "@/components/app-refresh-notice";
 import BrandOpening from "@/components/brand-opening";
 import AgeAccessBoundary from "@/components/age-access-boundary";
 
@@ -95,6 +96,7 @@ export default function RootLayout({
           <AgeAccessBoundary
             extras={
               <>
+                <AppRefreshNotice />
                 <Welcome />
                 <ProfileSetupGate />
                 <NotificationBootstrap />
