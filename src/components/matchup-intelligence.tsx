@@ -24,6 +24,7 @@ import { researchFacts } from "@/lib/research-facts";
 import ResearchNotebook from "./research-notebook";
 import SourceStatus from "./source-status";
 import { gamePicksPath } from "@/lib/game-picks";
+import NgsContext from "./ngs-context";
 function Fields({ value }: { value: unknown }) {
   if (value == null) return <p className="muted">Not supplied.</p>;
   if (Array.isArray(value))
@@ -812,6 +813,11 @@ export default function MatchupIntelligence({
                     No Vegas Quant analysis has been published for this game.
                   </Empty>
                 )}
+                <NgsContext
+                  key={`${row.game.id}-${selected}`}
+                  gameId={row.game.id}
+                  before={selected && current?.id !== versions[0]?.id ? current?.created_at : undefined}
+                />
                 <GameNews
                   gameId={row.game.id}
                   before={
