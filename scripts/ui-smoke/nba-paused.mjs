@@ -21,15 +21,23 @@ for (const width of [390, 1280]) {
   await note(p).waitFor();
   assert.match(await note(p).innerText(), /collecting game data every day/);
   assert.match(await note(p).innerText(), /NFL has been great/);
+  // The page behind the note is inert: Tab never reaches it (after the last button the browser's own UI
+  // may take focus, read as <body>). Focus returns to the chip when the note closes.
+  for (let i = 0; i < 6; i++) {
+    await p.keyboard.press("Tab");
+    const where = await p.evaluate(() => document.activeElement === document.body || !!document.activeElement?.closest("dialog[open]"));
+    assert.equal(where, true, "focus reached the page behind the note");
+  }
   await p.keyboard.press("Escape");
-  await note(p).waitFor({ state: "detached" });
+  await note(p).waitFor({ state: "hidden" });
+  assert.equal(await p.evaluate(() => document.activeElement?.classList.contains("nba-soon-chip")), true, "focus not returned to the chip");
   assert.equal(await p.evaluate(() => document.documentElement.scrollWidth - window.innerWidth <= 1), true);
   for (const path of ["/nba", "/nba/zone", "/nba/games/any-game"]) {
     await p.goto(base + path, { waitUntil: "networkidle" });
     assert.equal(new URL(p.url()).pathname, "/", path);
     await note(p).waitFor();
     await note(p).getByRole("button", { name: "Back to NFL" }).click();
-    await note(p).waitFor({ state: "detached" });
+    await note(p).waitFor({ state: "hidden" });
   }
   await ctx.close();
 }
