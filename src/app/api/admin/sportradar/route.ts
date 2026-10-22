@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { appOrigin, requestUser } from "@/lib/billing-server";
+import { appOrigin, requestUser, serviceDb } from "@/lib/billing-server";
 import { fetchSportradarCurrentWeek, fetchSportradarGame, sportradarConfig, SportradarError, sportradarStatus } from "@/lib/sportradar-nfl";
 export const dynamic = "force-dynamic";
 const reply = (body: object, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -11,7 +11,10 @@ async function authorized(req: Request) {
 }
 export async function GET(req: Request) {
   if (!await authorized(req)) return reply({ error: "Verified administrator required." }, 403);
-  return reply(sportradarStatus(sportradarConfig()));
+  const db = serviceDb();
+  const runs = await db.from("sportradar_runs").select("id,started_at,finished_at,status,calls,detail").order("started_at",{ascending:false}).limit(1).maybeSingle();
+  const snapshots = await db.from("sportradar_snapshots").select("id,game_id,feed,retrieved_at,sha256,provider_last_modified").order("retrieved_at",{ascending:false}).limit(5);
+  return reply({...sportradarStatus(sportradarConfig()),automatic:{latest_run:runs.data,snapshots:snapshots.data||[],error:runs.error||snapshots.error?"Automatic collector storage unavailable":null}});
 }
 const input = z.union([z.object({ action: z.literal("schedule") }).strict(), z.object({ game_id: z.string().uuid(), feed: z.enum(["statistics", "pbp"]) }).strict()]);
 export async function POST(req: Request) {
