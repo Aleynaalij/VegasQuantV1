@@ -15,6 +15,7 @@ await db.exec(`create role anon; create role authenticated; create role service_
  insert into public.games values('${game}',2026,7,'nfl','NE','CHI');`);
 const migration = readdirSync("supabase/migrations").find((name) => name.endsWith("_nfl_ngs_weekly_context.sql"));
 await db.exec(readFileSync(`supabase/migrations/${migration}`, "utf8"));
+await db.exec(readFileSync("supabase/migrations/20261023000000_nfl_ngs_team_codes.sql", "utf8"));
 const row = (week, id="00-0000001") => ({ season: "2026", season_type: "REG", week: String(week), player_gsis_id: id, player_display_name: "Synthetic Player", team_abbr: "NE" });
 const at = new Date(Date.now()-60000).toISOString();
 const p = { stat_type: "passing", seasons: [2025,2026], source_url: "https://github.com/nflverse/nflverse-data/releases/download/nextgen_stats/ngs_passing.csv.gz", source_sha256: "a".repeat(64),
@@ -35,6 +36,15 @@ const context = (await db.query("select public.nfl_ngs_game_context($1) c",[game
 assert.equal(context.datasets[0].rows.length,1);
 assert.equal(context.datasets[0].rows[0].week,"6","current week and season totals excluded");
 assert.equal((await db.query("select public.nfl_ngs_game_context($1,$2) c",[game,"2020-01-01T00:00:00Z"])).rows[0].c.datasets.length,0,"later ingestion cannot backfill earlier research");
+// Games write Washington as WSH; NGS writes WAS. A Commanders game still matches its players.
+const wsh = "00000000-0000-4000-8000-000000000002";
+await db.exec(`reset role; insert into public.games values('${wsh}',2026,7,'nfl','WSH','CHI')`);
+await db.exec("set role service_role");
+await db.query("select public.ingest_nfl_ngs($1::jsonb)",[JSON.stringify({...p,stat_type:"receiving",source_url:p.source_url.replace("passing","receiving"),source_sha256:"b".repeat(64),row_count:1,rows:[{...row(6,"00-0000002"),team_abbr:"WAS"}]})]);
+await db.exec("reset role; set role authenticated; set test.member='yes'; set test.age='yes'");
+const commanders = (await db.query("select public.nfl_ngs_game_context($1) c",[wsh])).rows[0].c.datasets.find((d) => d.stat_type === "receiving");
+assert.equal(commanders.rows.length,1,"WSH game matches WAS players");
+assert.equal(commanders.rows[0].team_abbr,"WAS");
 await db.exec("reset role; set role service_role");
 await assert.rejects(db.query("select public.ingest_nfl_ngs($1::jsonb)",[JSON.stringify({...p,source_url:"https://example.com/fake"})]),/check constraint/);
 await assert.rejects(db.query("select public.ingest_nfl_ngs($1::jsonb)",[JSON.stringify({...p,row_count:2,rows:[row(6),row(6)]})]),/Duplicate/);

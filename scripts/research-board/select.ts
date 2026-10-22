@@ -6,6 +6,7 @@ import { legHistory } from "../../supabase/functions/result-sync/history.ts";
 import { playerName, type Contract, type Game } from "../../supabase/functions/result-sync/grade.ts";
 import { bookQuotes, type Observation } from "../../supabase/functions/result-sync/prices.ts";
 import { breakEven, checkLeg, verdict, bestPrices } from "../../src/lib/leg-rules.ts";
+import { NGS_SOURCE, type NgsContext } from "./ngs.ts";
 
 /** Provider market -> contract metric and the wording the grader parses. */
 export const BOARD_MARKETS = {
@@ -164,8 +165,13 @@ export function pickBoard(legs: BoardLeg[], published: Set<string>, limit = 8, p
 const signed = (p: number) => (p > 0 ? `+${p}` : String(p));
 const unit = (m: Contract["metric"]) => (m === "receptions" ? "" : " yds");
 
-/** The published candidate object for one research leg: structured, gradable, plainly labeled. */
-export function candidate(l: BoardLeg) {
+const BASE_RISK = "Research lean from recent form and the market price only; no validated model edge is claimed. Check injuries and role before kickoff.";
+
+/**
+ * The published candidate object for one research leg: structured, gradable, plainly labeled. Next
+ * Gen Stats context, when there is any, is added to the why and risk; it never changes the selection.
+ */
+export function candidate(l: BoardLeg, ngs: NgsContext | null = null) {
   const be = Math.round(breakEven(l.price));
   const rate = Math.round((l.cleared / l.sample) * 100);
   const matchup = `${l.game.away_team} @ ${l.game.home_team}`;
@@ -181,14 +187,15 @@ export function candidate(l: BoardLeg) {
     quote_observed_at: l.observedAt,
     copy_text: `${l.player} ${l.threshold}+ ${l.market.replace(/^Full game · \d+\+ /, "")}`,
     gambly_url: "https://gambly.com/",
-    why: `Cleared ${l.threshold}+ in ${l.cleared} of the last ${l.sample} games (median ${Math.round(l.median * 10) / 10}${unit(l.metric)}): ${rate}% against the ${be}% this price needs.${l.best ? ` Best price: ${l.best.book} ${signed(l.best.price)}.` : ""}`,
-    risk: "Research lean from recent form and the market price only; no validated model edge is claimed. Check injuries and role before kickoff.",
+    why: `Cleared ${l.threshold}+ in ${l.cleared} of the last ${l.sample} games (median ${Math.round(l.median * 10) / 10}${unit(l.metric)}): ${rate}% against the ${be}% this price needs.${l.best ? ` Best price: ${l.best.book} ${signed(l.best.price)}.` : ""}${ngs?.why ? ` ${ngs.why}` : ""}`,
+    risk: [...(ngs?.risks || []), BASE_RISK].join(" "),
     analysis_kind: "RESEARCH_BOARD",
     pick_of_day: false,
     fun_play: false,
     sources: [
       { url: `https://www.espn.com/nfl/game/_/gameId/${l.game.provider_id}`, label: "ESPN game page" },
       { url: `https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_${l.game.season}.csv`, label: "nflverse weekly player stats" },
+      ...(ngs?.evidence ? [NGS_SOURCE] : []),
     ],
     research_evidence: {
       cleared: l.cleared,
@@ -200,6 +207,7 @@ export function candidate(l: BoardLeg) {
       best_book: l.best?.book ?? null,
       best_price: l.best?.price ?? null,
       source: "nflverse weekly player stats; The Odds API prop snapshots",
+      ngs: ngs?.evidence ?? null,
     },
   };
 }
