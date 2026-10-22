@@ -413,7 +413,7 @@
       "owner": "CLAUDE",
       "scope": "service",
       "status": "active",
-      "updated_at": "2026-10-22T23:45:00Z",
+      "updated_at": "2026-10-22T23:55:00Z",
       "files": [
         "docs/research/ngs-backtest-results.json",
         "docs/research/ngs-backtest-results.md",
@@ -428,7 +428,7 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: evaluator committed before the run; run the 2024-2025 holdout once on the NGS-002 dataset and report on #65."
+      "next_action": "Claude: holdout run once: no NGS flag qualifies (largest adverse gap 1.8 pts vs 8 required). Owner decision pending: keep NGS numbers as description, drop F1-F6 from risk text."
     }
   ]
 }
