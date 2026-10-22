@@ -36,21 +36,22 @@ test("NGS context uses only his last three weeks before the game, matched across
   // Target-weighted: (1.5*10 + 2.5*6) / 16 = 1.875
   assert.equal((c.evidence!.metrics as Record<string, { player: number }>).avg_separation.player, 1.88);
   assert.match(c.why, /^Next Gen Stats, Weeks 5-6: 1\.9 yds separation at the catch point \(league median 3\.\d yds\)/);
-  assert.equal(c.risks.length, 2);
-  assert.match(c.risks[0], /less separation than most receivers/);
-  assert.match(c.risks[1], /after-catch gains well above expectation/);
+  // F1 (low separation) and F3 (YAC over expected) fire, but only as evidence: the holdout found no
+  // flag predicts a miss, so they never reach the risk text.
+  assert.deepEqual(c.flags, ["F1", "F3"]);
+  assert.deepEqual(c.evidence!.flags, ["F1", "F3"]);
 });
 
-test("a player under NGS minimums gets a plain risk note; unsupported stats get nothing", () => {
+test("a player under NGS minimums gets no NGS line; unsupported stats get nothing", () => {
   const none = ngsContext(leg("Nobody Here", "receptions"), [receiving])!;
   assert.equal(none.why, "");
   assert.equal(none.evidence, null);
-  assert.match(none.risks[0], /No Next Gen Stats receiving line/);
+  assert.deepEqual(none.flags, []);
   assert.equal(ngsContext(leg("Terry McLaurin", "def_sacks"), [receiving]), null);
   assert.equal(ngsContext(leg("Terry McLaurin", "rushing_yards"), [receiving]), null, "no rushing snapshot loaded");
 });
 
-test("the published leg carries NGS context in why, risk, evidence and sources without changing the selection", () => {
+test("the published leg carries NGS context in why, evidence and sources, never in risk, without changing the selection", () => {
   const l = leg("Terry McLaurin", "receiving_yards");
   const plain = candidate(l);
   const withNgs = candidate(l, ngsContext(l, [receiving]));
@@ -61,7 +62,7 @@ test("the published leg carries NGS context in why, risk, evidence and sources w
     { ...plain.research_evidence, ngs: null },
   );
   assert.ok(withNgs.why.startsWith(plain.why) && /Next Gen Stats/.test(withNgs.why));
-  assert.match(withNgs.risk, /less separation[\s\S]*no validated model edge is claimed/);
+  assert.equal(withNgs.risk, plain.risk, "NGS never changes the risk text");
   assert.equal(withNgs.research_evidence.ngs?.stat_type, "receiving");
   assert.equal(withNgs.sources.at(-1)?.url, "https://nextgenstats.nfl.com/");
   assert.equal(plain.sources.length + 1, withNgs.sources.length);
@@ -88,13 +89,12 @@ test("matchup: the defense he faces is ranked by what it allowed to his position
   const d = c.evidence!.defense as { opponent: string; rank: number; defenses: number; allowed: number };
   assert.deepEqual([d.opponent, d.rank, d.defenses, d.allowed], ["BUF", 1, 12, 1.5]);
   assert.match(c.why, /Matchup: BUF allows 1\.5 yds of separation to receivers, 1st lowest of 12 defenses/);
-  assert.ok(c.risks.some((r) => /tightest coverages in the league \(BUF/.test(r)));
+  assert.match(c.why, /: one of the tightest coverages in the league\./);
 });
 
-test("matchup: a soft defense is noted in the why, not the risk; too little data says nothing", () => {
+test("matchup: a soft defense is described in the why too; too little data says nothing", () => {
   const soft = defenseMatchup("receiving", facing, schedule, "MIA")!;
   assert.match(soft.why, /12th lowest of 12 defenses .*: one of the softest coverages/);
-  assert.equal(soft.risk, null);
   assert.equal(defenseMatchup("receiving", facing.filter((r) => r.week === "1"), schedule, "BUF"), null, "one week is not enough");
   assert.equal(defenseMatchup("passing", facing, schedule, "BUF"), null);
   assert.equal(defenseMatchup("receiving", facing, [], "BUF"), null, "no schedule, no matchup");

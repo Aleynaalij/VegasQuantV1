@@ -169,7 +169,7 @@ const BASE_RISK = "Research lean from recent form and the market price only; no 
 
 /**
  * The published candidate object for one research leg: structured, gradable, plainly labeled. Next
- * Gen Stats context, when there is any, is added to the why and risk; it never changes the selection.
+ * Gen Stats context, when there is any, is added to the why; it never changes the risk or the selection.
  */
 export function candidate(l: BoardLeg, ngs: NgsContext | null = null) {
   const be = Math.round(breakEven(l.price));
@@ -188,7 +188,7 @@ export function candidate(l: BoardLeg, ngs: NgsContext | null = null) {
     copy_text: `${l.player} ${l.threshold}+ ${l.market.replace(/^Full game · \d+\+ /, "")}`,
     gambly_url: "https://gambly.com/",
     why: `Cleared ${l.threshold}+ in ${l.cleared} of the last ${l.sample} games (median ${Math.round(l.median * 10) / 10}${unit(l.metric)}): ${rate}% against the ${be}% this price needs.${l.best ? ` Best price: ${l.best.book} ${signed(l.best.price)}.` : ""}${ngs?.why ? ` ${ngs.why}` : ""}`,
-    risk: [...(ngs?.risks || []), BASE_RISK].join(" "),
+    risk: BASE_RISK,
     analysis_kind: "RESEARCH_BOARD",
     pick_of_day: false,
     fun_play: false,
