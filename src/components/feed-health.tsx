@@ -4,6 +4,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { time, type Game } from "@/lib/domain";
 import { Shell, Panel } from "./ui";
+import SportradarConnection from "./sportradar-connection";
 import SourceObservations from "./source-observations";
 import ManualResult from "./manual-result";
 import { feedAlerts, researchDeadline } from "@/lib/feed-health";
@@ -117,6 +118,7 @@ export default function FeedHealth() {
         <p>Sign in and verify your administrator account.</p>
       ) : (
         <>
+          <SportradarConnection />
           <Panel title="Needs attention">
             <div className="notebook" role="status">
               {error && <p>{error}</p>}

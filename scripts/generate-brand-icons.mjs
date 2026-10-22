@@ -11,3 +11,12 @@ for (const [name, size, mask] of [['192', 192, false], ['512', 512, false], ['ap
 await fs.writeFile('src/app/icon.svg', svg());
 await fs.writeFile('public/icons/vq-prestige-app.svg', svg());
 await fs.writeFile('public/icons/vq-prestige-maskable.svg', svg(true));
+
+// Replace legacy install URLs as well: previously installed manifests may still request them.
+for (const file of await fs.readdir('public/icons')) {
+  if (!file.endsWith('.png') || file.startsWith('vq-lounge-')) continue;
+  const { width } = await sharp(`public/icons/${file}`).metadata();
+  await sharp(Buffer.from(svg(file.includes('maskable')))).resize(width, width)
+    .png({ palette: true, colours: 64, dither: 0 }).toFile(`public/icons/${file}.new`);
+  await fs.rename(`public/icons/${file}.new`, `public/icons/${file}`);
+}
