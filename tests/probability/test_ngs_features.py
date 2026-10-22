@@ -47,6 +47,15 @@ class NgsFeatureTests(unittest.TestCase):
         self.assertGreater(f[0], 2.5 - 3.0)  # shrunk toward the mean
         self.assertAlmostEqual(f[-1], 2 / MAX_WEEKS)
 
+    def test_every_receiving_rate_is_target_weighted(self):
+        league = [rec(2025, w, f"L{i}", 3.0, share=20.0, yac=0.0) for w in range(1, 4) for i in range(10)]
+        light = [rec(2025, 1, "P", 3.0, targets=1, share=60.0, yac=6.0, receptions=1)]
+        heavy = [rec(2025, 2, "P", 3.0, targets=15, share=20.0, yac=0.0, receptions=1)]
+        f = self.index(league + light + heavy).features("receiving", "P", 2025, 3)
+        # The one-target week barely moves air share or YAC; equal or reception weights would.
+        self.assertLess(f[1], 2.5)
+        self.assertLess(f[2], 0.4)
+
     def test_rushing_inputs(self):
         idx = self.index([rec(2024, 1, "L", 3.0)], [rush(2024, w, f"L{i}", 0.0) for w in (1, 2) for i in range(4)] + [rush(2024, 1, "R", -1.0, box=40.0)])
         f = idx.features("rushing", "R", 2024, 2)

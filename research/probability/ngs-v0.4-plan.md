@@ -52,9 +52,17 @@ validation files, and v0.3's published 2025 Brier scores reproduce exactly. Full
 | Market | Test | v0.3 Brier | v0.4 Brier | v0.4 − v0.3 | 95% interval | Rule |
 |---|---|---:|---:|---:|---|---|
 | Rushing | 2025 (750 player-games) | 0.156575 | 0.157042 | +0.00047 | −0.00032 to +0.00120 | fails (upper ≥ 0) |
-| Receiving | 2025 (2,109) | 0.143622 | 0.144055 | +0.00043 | −0.00076 to +0.00157 | fails |
+| Receiving | 2025 (2,109) | 0.143622 | 0.144081 | +0.00046 | −0.00073 to +0.00166 | fails |
 | Rushing | 2026 Weeks 1–6 (226) | 0.148992 | 0.150556 | +0.00156 | +0.00025 to +0.00297 | fails (worse) |
-| Receiving | 2026 Weeks 1–6 (674) | 0.146806 | 0.148512 | +0.00171 | −0.00042 to +0.00375 | fails |
+| Receiving | 2026 Weeks 1–6 (674) | 0.146806 | 0.148735 | +0.00193 | −0.00024 to +0.00401 | fails |
+
+**Correction, disclosed.** The first run (`superseded-first-run-*.json`) did not match the plan for
+two receiving inputs. It averaged air-yard share equally per week and weighted YAC over expected by
+receptions, where the plan says every receiving rate is weighted by targets (found in review on
+#101). The code was corrected to the plan as written, not the plan to the code, and both
+comparisons were rerun once. The table above is the plan-conforming run. Rushing is identical to
+the first run because its weights did not change. Receiving moved by under 0.0003 Brier and still
+fails both tests, so the decision did not change.
 
 Lower Brier is better. The NGS inputs made forecasts slightly worse in every test, significantly
 so for rushing on fresh 2026 games. A likely reason: v0.3 already uses each player's workload and

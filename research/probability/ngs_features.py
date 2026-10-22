@@ -14,11 +14,12 @@ import pandas as pd
 
 MAX_WEEKS = 8
 PSEUDO_WEEKS = 4
-# (input name, NGS column, weight column or None for a plain weekly mean)
+# (input name, NGS column, weight column). The plan weights every receiving rate by targets and
+# every rushing rate by carries.
 SPEC = {
     "receiving": [("ngs_separation", "avg_separation", "targets"),
-                  ("ngs_air_share", "percent_share_of_intended_air_yards", None),
-                  ("ngs_yac_oe", "avg_yac_above_expectation", "receptions")],
+                  ("ngs_air_share", "percent_share_of_intended_air_yards", "targets"),
+                  ("ngs_yac_oe", "avg_yac_above_expectation", "targets")],
     "rushing": [("ngs_ryoe", "rush_yards_over_expected_per_att", "rush_attempts"),
                 ("ngs_box8", "percent_attempts_gte_eight_defenders", "rush_attempts")],
 }
@@ -41,7 +42,7 @@ class NgsIndex:
             d = d.dropna(subset=cols).sort_values(["season", "week"])
             keys = list(zip(d.season.astype(int), d.week.astype(int)))
             values = d[cols].to_numpy(dtype=float)
-            w = np.column_stack([d[c].to_numpy(dtype=float) if c else np.ones(len(d)) for c in weights])
+            w = np.column_stack([d[c].to_numpy(dtype=float) for c in weights])
             w = np.where(np.isfinite(w) & (w > 0), w, 0.0)
             by_player = defaultdict(list)
             for key, pid, v, ww in zip(keys, d.player_gsis_id, values, w):
