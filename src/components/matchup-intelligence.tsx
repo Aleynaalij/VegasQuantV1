@@ -23,6 +23,7 @@ import ResearchSections from "./research-sections";
 import { researchFacts } from "@/lib/research-facts";
 import ResearchNotebook from "./research-notebook";
 import SourceStatus from "./source-status";
+import { gamePicksPath } from "@/lib/game-picks";
 function Fields({ value }: { value: unknown }) {
   if (value == null) return <p className="muted">Not supplied.</p>;
   if (Array.isArray(value))
@@ -421,6 +422,7 @@ export default function MatchupIntelligence({
                 ? `${time(row.game.kickoff)} · ${row.game.venue}`
                 : "Choose your game for the case, injury updates, sources and discussion."}
             </p>
+            {row && <Link className="vq-btn" href={gamePicksPath(row.game.slug)}>View all game picks →</Link>}
             {row && (
               <div className="follow-row" aria-label="Follow these teams">
                 <FollowButton

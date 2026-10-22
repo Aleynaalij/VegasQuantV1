@@ -3,6 +3,7 @@ import { Barlow_Condensed, DM_Sans, Manrope } from "next/font/google";
 import "./base.css";
 import "./shell.css";
 import "./home.css";
+import "./game-picks.css";
 import "./picks.css";
 import "./research.css";
 import "./admin.css";
