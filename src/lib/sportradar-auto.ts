@@ -15,7 +15,7 @@ export async function collectSportradar(db: SupabaseClient) {
  const run=check(await db.rpc('claim_sportradar_run')) as string|null;
  if(!run)return {status:'already_checked'};
  const errors:string[]=[];let saved=0;let skipped=0;
- const reserve=async()=>{if(!check(await db.rpc('reserve_sportradar_call',{p_run:run})))throw new SportradarError('local_request_budget_reached');};
+ const reserve=async()=>{if(!check(await db.rpc('reserve_sportradar_call',{p_run:run})))throw new SportradarError('local_request_budget_reached');await new Promise(resolve=>setTimeout(resolve,1100));};
  const save=async(r:Awaited<ReturnType<typeof fetchSportradarCurrentWeek>>,feed:string,game_id:string|null)=>{
   check(await db.from('sportradar_snapshots').insert({run_id:run,game_id,feed,source_url:r.source_url,sha256:r.sha256,retrieved_at:r.retrieved_at,provider_last_modified:r.provider_last_modified,provider_date:r.provider_date,payload:r.payload,access:r.access}));saved++;
  };
