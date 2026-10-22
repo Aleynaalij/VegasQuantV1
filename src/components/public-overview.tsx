@@ -4,6 +4,7 @@ import Link from "next/link";
 import ExploreCards from "./explore-cards";
 import ResearchPulse from "./research-pulse";
 import HomeBrief from "./home-brief";
+import GamePicksShortcut from "./game-picks-shortcut";
 import DecisionBoard from "./decision-board";
 import { Shell, Panel, Stat, Badge } from "./ui";
 import { money, time, type Game } from "@/lib/domain";
@@ -116,6 +117,7 @@ export default function PublicOverview({
     );
   return (
     <Shell>
+      <GamePicksShortcut games={games} />
       <HomeBrief games={games} />
       <DecisionBoard games={games} />
       <div className="heading">
