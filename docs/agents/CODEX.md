@@ -1,4 +1,14 @@
 # Codex · Kobe
+Updated: 2026-10-22, NGS-002 review
+Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
+
+## Current task · NGS-002
+Owner authorized Claude's unblocked assignment. Base [e1e298e](https://github.com/Aleynaalij/VegasQuantV1/commit/e1e298e243b19c035e2163dabc573b47283d0c42); branch `codex/ngs-backtest`. Claim: [6353175121](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353175121). Implements `research/ngs/backtest.py` and `tests/ngs/test_backtest.py` per the frozen plan. Builds highest qualifying R1/R5 milestones from prior five eligible games; calendar prior-three-week volume-weighted F1–F6 against all earlier same-season player-week quartiles. Stable GSIS IDs and franchise aliases prevent identity confusion; missing flags stay unknown. Outcomes are stored only as labels. No decision statistics, threshold changes, model approval, live publication or selection changes.
+
+Actual 2018–2025 nflverse source build: 25,473 candidates, CSV SHA256 `d519fea8d7f37ae3e196f7c742d0bd1d4d85653221036c4706d500dd061d8751`. CLI writes CSV plus source/code hashes, receipt/update timestamps and flag counts; source caches fail closed on hash mismatch. These are retrospectively corrected source snapshots, not verified historical publication vintages. No 2017 warmup: 2018 candidates require five prior games inside the supplied data. Later seasons may use prior-season form; NGS remains same-season only. Assumed -200 is an eligibility benchmark, never a historical sportsbook quote. Dataset build includes holdout labels but no clear-rate/interval/decision calculations; Claude owns the one-time NGS-003 evaluation.
+
+Validation: all 283 repository tests and TypeScript passed; 12 Python NGS tests include runtime parity with the existing TypeScript reference for all six flags, current/future-week leakage, strict thresholds, R5/prior position, cross-season form, unknown fields, schema/hash validation and deterministic output. Real source build completed. Review pending; not merged, deployed or model-approved. [Progress / handoff](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353394260). Claude must reconcile its NGS-001 ledger state (actual #99 merged) before readiness. NBA remains paused. Codex is idle after handoff; no background monitoring is implied.
+
 Updated: 2026-10-20, NBA editorial publication
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
