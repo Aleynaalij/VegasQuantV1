@@ -1,6 +1,6 @@
 // Next Gen Stats context for a research leg: the player's tracking metrics over his last three
 // regular-season weeks before the game, set against the league's median player-week. Descriptive
-// only: it adds to a leg's why and risk, never decides whether a leg is published.
+// only: it adds to a leg's why, never to its risk, and never decides whether a leg is published.
 import { playerName } from "../../supabase/functions/result-sync/grade.ts";
 import type { Contract } from "../../supabase/functions/result-sync/grade.ts";
 
@@ -67,7 +67,9 @@ const mean = (rows: NgsRow[], m: Metric) => {
 
 export type NgsContext = {
   why: string;
-  risks: string[];
+  /** F1-F6 of docs/research/ngs-backtest-plan.md that fire, kept as evidence only: the 2024-2025
+   * holdout (docs/research/ngs-backtest-results.md) found none predicts a miss, so none is a risk. */
+  flags: string[];
   evidence: Record<string, unknown> | null;
 };
 
@@ -92,7 +94,7 @@ export function ngsContext(leg: LegRef, snapshots: NgsSnapshot[], schedule: Sche
   if (!mine.length)
     return {
       why: "",
-      risks: [`No Next Gen Stats ${stat} line for him in the last ${RECENT_WEEKS} weeks (below NGS volume minimums), so his efficiency can't be checked.`],
+      flags: [],
       evidence: null,
     };
   const metrics: Record<string, { player: number; league_median: number; league_p25: number; league_p75: number }> = {};
@@ -110,20 +112,20 @@ export function ngsContext(leg: LegRef, snapshots: NgsSnapshot[], schedule: Sche
       const v = metrics[m.key];
       return `${m.fmt(v.player)} ${m.label} (league median ${m.fmt(v.league_median)})`;
     });
-  const risks = ngsRisks(stat, leg.metric, metrics);
+  const flags = ngsFlags(stat, leg.metric, metrics);
   // The defense he faces: the other side from his current team, taken from his weekly box-score rows
   // (every game he plays), never from NGS rows, which can predate a trade between these two teams.
   const own = leg.team ? ngsTeam(leg.team) : null;
   const opponent = own && teams.has(own) ? [...teams].find((t) => t !== own) ?? null : null;
   const defense = opponent ? defenseMatchup(stat, prior, schedule, opponent) : null;
-  if (defense?.risk) risks.push(defense.risk);
   const why = [parts.length ? `Next Gen Stats, ${span}: ${parts.join("; ")}.` : "", defense?.why ?? ""].filter(Boolean).join(" ");
   return {
     why,
-    risks,
+    flags,
     evidence: {
       stat_type: stat,
       weeks,
+      flags,
       defense: defense?.evidence ?? null,
       metrics: Object.fromEntries(Object.entries(metrics).map(([k, v]) => [k, Object.fromEntries(Object.entries(v).map(([a, b]) => [a, Math.round(b * 100) / 100]))])),
       source_sha256: snap.source_sha256,
@@ -133,24 +135,17 @@ export function ngsContext(leg: LegRef, snapshots: NgsSnapshot[], schedule: Sche
   };
 }
 
-/** Plain-language warnings where his tracking numbers sit in the league's weak quarter. */
-function ngsRisks(stat: NgsSnapshot["stat_type"], metric: Contract["metric"], m: Record<string, { player: number; league_median: number; league_p25: number; league_p75: number }>) {
+/** Which of F1-F6 fire: his tracking numbers in the league's weak quarter (see the backtest plan). */
+function ngsFlags(stat: NgsSnapshot["stat_type"], metric: Contract["metric"], m: Record<string, { player: number; league_median: number; league_p25: number; league_p75: number }>) {
+  const low = (k: string) => !!m[k] && m[k].player < m[k].league_p25;
+  const high = (k: string) => !!m[k] && m[k].player > m[k].league_p75;
   const out: string[] = [];
-  const low = (k: string) => m[k] && m[k].player < m[k].league_p25;
-  const high = (k: string) => m[k] && m[k].player > m[k].league_p75;
-  if (stat === "receiving") {
-    if (low("avg_separation")) out.push(`He gets less separation than most receivers (${m.avg_separation.player.toFixed(1)} yds), so his catches lean on contested targets.`);
-    if (metric === "receptions" && low("catch_percentage")) out.push(`He catches a smaller share of his targets than most (${Math.round(m.catch_percentage.player)}%).`);
-    if (metric === "receiving_yards" && high("avg_yac_above_expectation"))
-      out.push(`His yardage leans on after-catch gains well above expectation (${plus(m.avg_yac_above_expectation.player)} per catch), which tend to come back down.`);
-  }
-  if (stat === "rushing") {
-    if (low("rush_yards_over_expected_per_att"))
-      out.push(`He is gaining less than his blocking and the defense predict (${plus(m.rush_yards_over_expected_per_att.player)} yds per carry over expected).`);
-    if (high("percent_attempts_gte_eight_defenders")) out.push(`He runs into stacked 8+ man boxes on ${Math.round(m.percent_attempts_gte_eight_defenders.player)}% of carries.`);
-  }
-  if (stat === "passing" && low("completion_percentage_above_expectation"))
-    out.push(`He is completing passes below expectation (${plus(m.completion_percentage_above_expectation.player, "%")}).`);
+  if (stat === "receiving" && low("avg_separation")) out.push("F1");
+  if (metric === "receptions" && low("catch_percentage")) out.push("F2");
+  if (metric === "receiving_yards" && high("avg_yac_above_expectation")) out.push("F3");
+  if (stat === "rushing" && low("rush_yards_over_expected_per_att")) out.push("F4");
+  if (stat === "rushing" && high("percent_attempts_gte_eight_defenders")) out.push("F5");
+  if (stat === "passing" && low("completion_percentage_above_expectation")) out.push("F6");
   return out;
 }
 
@@ -202,8 +197,7 @@ export function defenseMatchup(stat: NgsSnapshot["stat_type"], prior: NgsRow[], 
   };
   const where = rank <= quarter ? spec.tight : rank > allowed.length - quarter ? spec.soft : null;
   return {
-    why: `Matchup: ${opponent} allows ${spec.unit(mine.value)} ${spec.label}, ${ordinal(rank)} lowest of ${allowed.length} defenses (median ${spec.unit(median)})${where === spec.soft ? `: ${spec.soft}` : ""}.`,
-    risk: where === spec.tight ? `He faces ${spec.tight} (${opponent}: ${spec.unit(mine.value)} ${spec.label}).` : null,
+    why: `Matchup: ${opponent} allows ${spec.unit(mine.value)} ${spec.label}, ${ordinal(rank)} lowest of ${allowed.length} defenses (median ${spec.unit(median)})${where ? `: ${where}` : ""}.`,
     evidence: { opponent, metric: spec.key, allowed: Math.round(mine.value * 100) / 100, rank, defenses: allowed.length, median: Math.round(median * 100) / 100 },
   };
 }

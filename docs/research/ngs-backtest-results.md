@@ -34,9 +34,12 @@ little beyond each player's recent volume and output.
 - nflverse files are corrected snapshots, not point-in-time publication vintages.
 - Missing flags (player under NGS volume minimums) are excluded, not counted as unflagged.
 
-## Decision for the owner
+## Decision (owner, October 22, 2026)
 
-The plan allows failed flags to "stay as descriptive context or be removed from the risk text."
-Recommendation: keep the NGS numbers in the leg's "why", but stop presenting F1–F6 as **risks**.
-Calling them risks implies they predict misses, and this test says they don't. The defensive
-matchup line (#103) has not been tested; it should be described the same way until it is.
+The owner approved the recommendation: research legs keep the NGS numbers in their "why", and
+nothing from NGS goes into the risk text.
+- F1–F6 are still computed, but are recorded only as `research_evidence.ngs.flags`. That keeps the
+  backtest's definition reproducible and the parity test meaningful.
+- The defensive matchup line, untested so far, is described in the "why" as well, tight or soft.
+- The NGS-002 dataset was built before this change. Only the code hash it records differs, since
+  the flag definitions did not change.

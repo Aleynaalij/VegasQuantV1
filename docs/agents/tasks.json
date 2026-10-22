@@ -413,14 +413,18 @@
       "owner": "CLAUDE",
       "scope": "service",
       "status": "active",
-      "updated_at": "2026-10-22T23:55:00Z",
+      "updated_at": "2026-10-23T00:10:00Z",
       "files": [
         "docs/research/ngs-backtest-results.json",
         "docs/research/ngs-backtest-results.md",
         "research/ngs/evaluate_holdout.py",
         "research/probability/**",
+        "scripts/research-board/ngs.ts",
+        "scripts/research-board/select.ts",
+        "tests/ngs/test_backtest.py",
         "tests/ngs/test_evaluate_holdout.py",
-        "tests/probability/test_ngs_features.py"
+        "tests/probability/test_ngs_features.py",
+        "tests/research-board-ngs.test.ts"
       ],
       "depends_on": [
         {
@@ -428,7 +432,7 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: holdout run once: no NGS flag qualifies (largest adverse gap 1.8 pts vs 8 required). Owner decision pending: keep NGS numbers as description, drop F1-F6 from risk text."
+      "next_action": "Claude: holdout found no NGS flag predicts a miss; per owner decision, NGS stays in the why only (flags kept as evidence). Merge #104."
     }
   ]
 }

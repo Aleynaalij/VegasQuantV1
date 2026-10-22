@@ -106,7 +106,7 @@ class BacktestTest(unittest.TestCase):
                 result=subprocess.run(['node','--import','tsx','--input-type=module','-e',script],cwd=ROOT,
                     input=json.dumps(payload),text=True,capture_output=True,check=True)
                 ts=json.loads(result.stdout)
-                self.assertEqual(sum(flags.values()),len(ts['risks']))
+                self.assertEqual(sorted(f for f,v in flags.items() if v),sorted(ts['flags']))
                 self.assertTrue(all(v==1 for v in flags.values()))
                 for key,val in e.items():
                     self.assertAlmostEqual(ts['evidence']['metrics'][key]['player'],val['player'],places=2)
