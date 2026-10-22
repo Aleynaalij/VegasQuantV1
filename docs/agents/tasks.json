@@ -329,6 +329,32 @@
           "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/76"
         }
       ]
+    },
+    {
+      "id": "NBA-008",
+      "owner": "CLAUDE",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-22T21:00:00Z",
+      "files": [
+        "src/lib/nba-paused.ts",
+        "src/components/nba-coming-soon.tsx",
+        "src/app/nba/layout.tsx",
+        "src/components/ui.tsx",
+        "src/app/nba.css",
+        "src/app/lounge.css",
+        "src/components/community-feed.tsx",
+        "src/components/home-brief.tsx",
+        "src/lib/vegas-help.ts",
+        "scripts/ui-smoke/nba-paused.mjs",
+        "scripts/ui-smoke/check.mjs",
+        ".github/workflows/ci.yml",
+        "supabase/migrations/20261022010000_nba_daily_collection.sql",
+        "tests/sql/nba-daily-collection.mjs",
+        "tests/nba-daily-collection.test.ts"
+      ],
+      "depends_on": [],
+      "next_action": "Claude: NBA paused by the owner (Oct 22). NBA pages redirect home with a coming-soon note, the NBA chip carries a Soon sticker, NBA feeds collect once at 6 a.m. ET (results confirm 9:10 a.m.) and the shadow scan dispatcher is unscheduled. Merge, apply the migration, verify the 6 a.m. run. CODEX-NBA-008/009/011 are cancelled."
     }
   ]
 }

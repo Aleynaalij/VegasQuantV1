@@ -1,7 +1,6 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  ArrowUpRight,
   CalendarDays,
   Radio,
   ShieldCheck,
@@ -138,16 +137,6 @@ export default function HomeBrief({ games }: { games: Game[] }) {
           </span>
         </Link>
       </nav>
-      <Link href="/nba/zone" className="vq-banner">
-        <span className="vq-chip hot">NEW</span>
-        <span>
-          <b>NBA picks are in The Zone.</b>
-          <small>
-            View basketball selections, observed prices, sources and risks.
-          </small>
-        </span>
-        <ArrowUpRight size={18} aria-hidden="true" />
-      </Link>
     </header>
   );
 }
