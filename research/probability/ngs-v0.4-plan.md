@@ -42,3 +42,23 @@ release (`ngs_receiving.csv.gz`, `ngs_rushing.csv.gz`), recorded with SHA-256 li
 Whatever the result, the model stays **SHADOW_ONLY**: no official picks and no gate change. The
 2026 prospective journal, the owner's approval and `private.nfl_selection_model_approvals`
 still govern any release.
+
+## Result (October 22, 2026): v0.4 not adopted; v0.3 stays
+
+The plan above was committed (`defd74e`) before the comparison ran. Data hashes match the v0.3
+validation files, and v0.3's published 2025 Brier scores reproduce exactly. Full output is in
+`artifacts/v0.4-rejected/`.
+
+| Market | Test | v0.3 Brier | v0.4 Brier | v0.4 − v0.3 | 95% interval | Rule |
+|---|---|---:|---:|---:|---|---|
+| Rushing | 2025 (750 player-games) | 0.156575 | 0.157042 | +0.00047 | −0.00032 to +0.00120 | fails (upper ≥ 0) |
+| Receiving | 2025 (2,109) | 0.143622 | 0.144055 | +0.00043 | −0.00076 to +0.00157 | fails |
+| Rushing | 2026 Weeks 1–6 (226) | 0.148992 | 0.150556 | +0.00156 | +0.00025 to +0.00297 | fails (worse) |
+| Receiving | 2026 Weeks 1–6 (674) | 0.146806 | 0.148512 | +0.00171 | −0.00042 to +0.00375 | fails |
+
+Lower Brier is better. The NGS inputs made forecasts slightly worse in every test, significantly
+so for rushing on fresh 2026 games. A likely reason: v0.3 already uses each player's workload and
+yards per opportunity, which carry most of what weekly NGS summaries add, and NGS weekly rows exist
+only above a volume minimum. Per the plan, no other input set is tried on these seasons. The
+`ngs_features` code stays available, off by default, for a future plan with a new untouched
+evaluation period. NGS remains descriptive research context on the board and game pages.
