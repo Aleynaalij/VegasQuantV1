@@ -178,6 +178,9 @@ def run(db: Supabase, now: datetime, workdir: Path):
         return {"model_id": artifact["model_id"], "generated_at": iso(now), "summary": dict(summary), "forecasts": []}
     files = download(now, workdir)
     history = pd.concat([pd.read_csv(p, low_memory=False) for p in files], ignore_index=True)
+    # hoopR files can carry rows with no athlete id; pandas then reads every id as a float ("123.0"),
+    # which the journal rejects. Drop those rows and keep ids as integers.
+    history = history[history.athlete_id.notna()].assign(athlete_id=lambda d: d.athlete_id.astype("int64"))
     positions = (history.sort_values("game_date").groupby(history.athlete_id.astype(str)).athlete_position_abbreviation.last().to_dict())
     current = season_rows(db, now, positions)
     if len(current):
@@ -240,7 +243,12 @@ def main():
         return
     with tempfile.TemporaryDirectory() as tmp:
         scan = run(db, now, Path(tmp))
-    result = db.request("/rest/v1/rpc/record_nba_shadow_scan", {"p": scan}) if scan["forecasts"] else {"inserted": 0}
+    try:
+        result = db.request("/rest/v1/rpc/record_nba_shadow_scan", {"p": scan}) if scan["forecasts"] else {"inserted": 0}
+    except urllib.error.HTTPError as e:
+        # The database's rule message (no players, prices or probabilities) so a rejected scan can be diagnosed.
+        print(json.dumps({"rejected": e.code, "message": json.loads(e.read().decode() or "{}").get("message")}))
+        raise
     counts = {k: v for k, v in scan["summary"].items() if isinstance(v, int)}
     print(json.dumps({"forecasts": len(scan["forecasts"]), "inserted": result.get("inserted"), **counts}))
 
