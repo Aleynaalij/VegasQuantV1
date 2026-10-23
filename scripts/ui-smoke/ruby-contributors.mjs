@@ -61,7 +61,20 @@ for (const width of [390, 1280]) {
   await page.route("**/rest/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     let body;
-    if (path.endsWith("/rpc/ruby_home"))
+    if (path.endsWith("/community_profiles")) {
+      const profile = {
+        user_id: uid,
+        username: "OmaticsZone",
+        avatar: "ruby",
+        region: "Sample",
+        visible: true,
+      };
+      body = (route.request().headers()["accept"] || "").includes(
+        "vnd.pgrst.object",
+      )
+        ? profile
+        : [profile];
+    } else if (path.endsWith("/rpc/ruby_home"))
       body = {
         user_id: uid,
         day,
