@@ -49,6 +49,12 @@ await db.exec(
   ),
 );
 await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261023212700_ruby_feature_account_erasure.sql",
+    "utf8",
+  ),
+);
+await db.exec(
   `insert into public.ruby_contributors(user_id,brand,theme) values('${a}','OmaticsZone','orbit');insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values('${b}','https://example.invalid','key','auth');insert into public.notification_preferences(user_id,push_enabled) values('${b}',true) on conflict(user_id) do update set push_enabled=true;set app.uid='${a}';set role authenticated;`,
 );
 const id = "00000000-0000-4000-8000-000000000010";
@@ -188,6 +194,14 @@ assert.equal(
     )
   ).rows[0].n,
   0,
+);
+await db.exec(
+  `reset role;update public.ruby_daily_features set submission_id='00000000-0000-4000-8000-000000000020';delete from auth.users where id='${a}';`,
+);
+assert.equal(
+  (await db.query("select verified_by from public.ruby_daily_features")).rows[0]
+    .verified_by,
+  null,
 );
 await db.exec(`reset role;set role anon`);
 await assert.rejects(
