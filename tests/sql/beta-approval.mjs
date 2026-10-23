@@ -27,8 +27,12 @@ create function private.membership_status() returns jsonb language sql stable se
 create function private.community_member_allowed(target uuid) returns boolean language sql stable security definer set search_path='' as $$select auth.uid() is not null$$;
 create function private.community_activity() returns jsonb language sql stable security definer set search_path='' as $$select '{"private":"data"}'::jsonb$$;
 create function private.register_push() returns boolean language sql stable security definer set search_path='' as $$select true$$;
+create function private.leg_tail_counts(p_legs text[]) returns table(leg_key text,tail_count bigint) language sql stable security definer set search_path='' as $$select unnest(p_legs),1::bigint$$;
+create function private.admin_leg_model_estimates(p_keys text[]) returns table(leg_key text,research_probability numeric,push_probability numeric,direction text,line numeric,odds numeric,blockers integer,recorded_at timestamptz) language plpgsql stable security definer set search_path='' as $$begin
+ if not private.is_admin() then raise exception 'Admin access required';end if;
+ return query select unnest(p_keys),0.5::numeric,0::numeric,'over'::text,1::numeric,(-110)::numeric,0,now();end$$;
 revoke all on all functions in schema private from public;
-grant execute on function private.has_membership(),private.membership_status(),private.community_member_allowed(uuid),private.community_activity(),private.register_push() to authenticated;
+grant execute on function private.has_membership(),private.membership_status(),private.community_member_allowed(uuid),private.community_activity(),private.register_push(),private.leg_tail_counts(text[]),private.admin_leg_model_estimates(text[]) to authenticated;
 grant usage on schema auth,private,storage to authenticated,anon;
 grant select,insert,update on public.community_profiles to authenticated;
 grant select on public.candidate_releases to anon,authenticated;
@@ -40,10 +44,15 @@ await db.exec(readFileSync('supabase/migrations/'+migration,'utf8'));
 const asUser=async(id,aal='aal1')=>{await db.exec(`reset role;set test.uid='${id}';set test.aal='${aal}';set role authenticated`);};
 const result=async(q)=> (await db.query(q)).rows[0];
 await asUser(existing);
+assert.equal((await db.query("select * from private.leg_tail_counts(array['a','b'])")).rows.length,2,'approved member table-returning RPC works');
+await assert.rejects(db.exec("select * from private.admin_leg_model_estimates(array['a'])"),/Admin access required/);
 assert.equal((await result('select private.has_membership() ok')).ok,true,'existing member retained');
 assert.equal((await result('select count(*)::int n from public.candidate_releases')).n,1);
 await db.exec(`reset role;insert into auth.users(id,email,email_confirmed_at) values('${pending}','pending@example.test',now()),('${declined}','declined@example.test',now())`);
 await asUser(pending);
+await assert.rejects(db.exec("select * from private.leg_tail_counts(array['a'])"),/Account approval required/);
+await assert.rejects(db.exec("select * from private.admin_leg_model_estimates(array['a'])"),/Account approval required/);
+await assert.rejects(db.exec("select * from private.before_beta_leg_tail_counts(array['a'])"),/permission denied/);
 let status=(await result('select public.beta_application_status() s')).s;
 assert.equal(status.state,'pending');assert.equal(status.approved,false);assert.equal(status.onboarding_complete,false);
 assert.equal((await result('select private.has_membership() ok')).ok,false,'trial cannot bypass approval');
@@ -60,6 +69,7 @@ assert.equal((await result('select private.register_push() ok')).ok,true,'onboar
 await asUser(admin);
 await assert.rejects(db.exec('select public.admin_beta_applications()'),/Verified administrator/);
 await asUser(admin,'aal2');
+assert.equal((await db.query("select * from private.admin_leg_model_estimates(array['a','b'])")).rows.length,2,'approved verified admin table RPC works');
 let queue=(await result('select public.admin_beta_applications() q')).q;
 assert.equal(queue.pending,2);assert.equal(queue.applications.find(a=>a.user_id===pending).ready,true);
 await assert.rejects(db.exec(`select public.review_beta_application('${declined}','approved')`),/must confirm email/);

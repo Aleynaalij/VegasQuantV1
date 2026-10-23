@@ -104,7 +104,14 @@ create policy beta_approved_storage on storage.objects as restrictive for all to
  using((select private.beta_account_allowed())) with check((select private.beta_account_allowed()));
 
 -- Definer RPCs bypass RLS. Preserve original bodies/ACLs and interpose approval on each member
--- entry point. Onboarding/status/public-preview/admin helpers are explicitly excluded.
+-- entry point, including RETURNS TABLE/SETOF entry points. Onboarding/status/public-preview/admin
+-- helpers are explicitly excluded. Public-schema definer functions were separately reviewed:
+-- begin_community_photo/share_member_parlay depend on guarded membership/owned rows;
+-- preflight_nfl_selection/restrict_community_member/enable_health_push enforce admin checks;
+-- nba_grade uses public grading data; request/cancel_account_deletion_request preserve self-service.
+-- Future public definer entry points require an explicit approval/access review as well.
+-- Pending authenticated users intentionally see less than anonymous public-preview visitors;
+-- their boundary exposes onboarding/status/account controls until approved.
 do $$declare f record;args text;oldname text;body text;begin
  for f in select p.oid,p.proname,p.prorettype,p.proretset,pg_get_function_arguments(p.oid) declaration,
  pg_get_function_identity_arguments(p.oid) identity,pg_get_function_result(p.oid) result
@@ -113,7 +120,6 @@ do $$declare f record;args text;oldname text;body text;begin
  and p.proname not like 'beta_%' and p.proname not in
  ('age_member_allowed','age_verification_status','is_admin','membership_status','public_overview','public_research_status',
  'push_public_key','register_push','admin_beta_applications','review_beta_application') loop
- if f.proretset then raise exception 'Review set-returning member RPC % before migration',f.proname;end if;
  oldname='before_beta_'||f.proname;
  select coalesce(string_agg('$'||i,','),'') into args from generate_series(1,(select pronargs from pg_proc where oid=f.oid))i;
  execute replace(pg_get_functiondef(f.oid),'FUNCTION private.'||f.proname||'(','FUNCTION private.'||oldname||'(');
@@ -124,7 +130,8 @@ do $$declare f record;args text;oldname text;body text;begin
  body=format('begin return private.beta_account_allowed() and private.%I(%s);end',oldname,args);
  else
  body=format('begin if auth.uid() is not null and not private.beta_account_allowed() then raise exception ''Account approval required'' using errcode=''42501'';end if;%s end',
- case when f.result='void' then format('perform private.%I(%s);return;',oldname,args) else format('return private.%I(%s);',oldname,args)end);
+ case when f.proretset then format('return query select * from private.%I(%s);return;',oldname,args)
+ when f.result='void' then format('perform private.%I(%s);return;',oldname,args) else format('return private.%I(%s);',oldname,args)end);
  end if;
  execute format('create or replace function private.%I(%s) returns %s language plpgsql security definer set search_path='''' as %L',f.proname,f.declaration,f.result,body);
  end loop;

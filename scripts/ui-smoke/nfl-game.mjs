@@ -62,6 +62,8 @@ for (const width of [390, 1280]) {
     if (process.env.DEBUG_FIXTURE) console.log("fixture", path);
     if (r.request().method() === "OPTIONS") return r.fulfill({ status: 204 });
     let data = [];
+    if (path.endsWith("beta_application_status"))
+      return r.fulfill({ json: { state: "approved", approved: true, onboarding_complete: true } });
     if (path.endsWith("age_verification_status"))
       data = { required: true, verified: true };
     if (path.endsWith("membership_status")) {

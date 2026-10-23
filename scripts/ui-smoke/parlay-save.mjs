@@ -70,6 +70,8 @@ for (const width of [390, 1280]) {
       return route.fulfill({ status: 204 });
     if (path.endsWith("membership_status"))
       data = { allowed: true, admin: false, member_code: "SAMPLE" };
+    if (path.endsWith("beta_application_status"))
+      return route.fulfill({ json: { state: "approved", approved: true, onboarding_complete: true } });
     if (path.endsWith("age_verification_status"))
       data = { required: true, verified: true };
     if (path.endsWith("community_profiles"))

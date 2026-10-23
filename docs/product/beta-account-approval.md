@@ -1,12 +1,16 @@
 # Testing access approvals
 
-New accounts confirm email and finish their own username/photo and any required age check before entering the app. They then see **Application pending approval**. Pending/declined users can manage their account, recover access, complete age/profile setup, contact support and delete their account. They cannot enter member research or Community, save/tail, upload community photos or buy access around the queue. Existing anonymous public previews remain public.
+New accounts confirm email and finish their own username/photo and any required age check before entering the app. They then see **Application pending approval**. Pending/declined users can manage their account, recover access, complete age/profile setup, contact support and delete their account. They cannot enter member research or Community, save/tail, upload community photos or buy access around the queue. Existing anonymous public previews remain public. Pending signed-in applicants intentionally have less access than anonymous preview visitors until approved; signing in does not grant membership.
 
 Verified administrators open **Account → Account approval queue**. The queue lists pending applications oldest first, 50 per page, including email, username and setup readiness. Approve is disabled until setup is complete; the database independently rechecks it. Decline leaves the account intact without app access. Reviews are audited, transactional, and accept only still-pending applications, so stale/double clicks cannot overwrite another decision. There is no automatic approval or email/SMS promise. Applicant status checks every 30 seconds and on focus, plus a Check status button. No JWT approval claim or client metadata is trusted.
 
 At migration activation, existing accounts are explicitly approved as a baseline; no signup before the trigger installation can fall into a race between baseline and enforcement. New auth inserts get pending rows. Approved access still obeys existing email, age, admin MFA and membership rules. A promo, paid pass or trial never grants approval.
 
 Authorization is enforced by restrictive member-table/storage policies, wrappers around existing private SECURITY DEFINER member RPCs, a checkout guard and research/social delivery checks. Own onboarding/preferences and account deletion remain accessible under their existing protections. New member entry points must include the same approval predicate; the migration is a snapshot of existing RPCs and tables, not a future-DDL event trigger.
+
+The private RPC wrappers preserve scalar, void and TABLE/SETOF results; set-returning functions use `RETURN QUERY` after the same approval check. The regression fixture includes the production signatures of `private.leg_tail_counts(text[])` and `private.admin_leg_model_estimates(text[])`, preserving the latter's administrator check.
+
+Public SECURITY DEFINER entry points are outside that private-function wrapper loop. The reviewed exceptions are `begin_community_photo` and `share_member_parlay` (existing guarded membership/owned rows), `preflight_nfl_selection`, `restrict_community_member` and `enable_health_push` (administrator checks), `nba_grade` (existing public grading), and account-deletion request/cancel functions (self service). These exclusions do not authorize new public entry points: any future public SECURITY DEFINER function needs a separate approval/access review.
 
 ## Validation and release
 
