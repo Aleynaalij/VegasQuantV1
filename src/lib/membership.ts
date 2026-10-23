@@ -1,4 +1,6 @@
 export type Access = {
+  approval_required?: boolean;
+  approval_state?: "pending" | "approved" | "declined";
   complimentary_premium?: boolean;
   trial_active?: boolean;
   trial_expires_at?: string | null;

@@ -432,6 +432,34 @@
         }
       ],
       "next_action": "Claude: holdout found no NGS flag predicts a miss; per owner decision, NGS stays in the why only (flags kept as evidence). Merge #104."
+    },
+    {
+      "id": "BETA-001",
+      "owner": "CODEX",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-22T23:57:36.413459+00:00",
+      "files": [
+        "src/components/beta-access-boundary.tsx",
+        "src/components/admin-approval-queue.tsx",
+        "src/components/membership.tsx",
+        "src/app/layout.tsx",
+        "src/app/api/checkout/route.ts",
+        "src/lib/membership.ts",
+        "src/app/account.css",
+        "supabase/migrations/20261022234719_beta_account_approval.sql",
+        "tests/sql/beta-approval.mjs",
+        "tests/beta-approval.test.ts",
+        "scripts/ui-smoke/beta-approval.mjs",
+        "scripts/ui-smoke/stub.mjs",
+        "docs/product/beta-account-approval.md"
+      ],
+      "depends_on": [],
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353909726"
+      },
+      "next_action": "Claude: review private-beta account approval migration and UI; ACK required before integration. Codex: apply tested hosted migration, deploy and verify after peer review and actual-head CI. Existing accounts must retain access."
     }
   ]
 }

@@ -221,3 +221,5 @@ html[data-theme] body .screen-account .research-more {
 html[data-theme] body .photo-status {
   color: var(--muted);
 }
+
+.beta-review-actions{display:flex;gap:12px;flex-wrap:wrap}.beta-application{max-width:680px;width:100%}.beta-application h1{font-size:clamp(1.8rem,5vw,2.8rem)}

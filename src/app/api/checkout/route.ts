@@ -43,7 +43,13 @@ export async function POST(req: Request) {
         { error: "The 2026 season has ended." },
         { status: 409 },
       );
-    const { data: access } = await auth.db.rpc("membership_status");
+    const { data: access, error: accessError } =
+      await auth.db.rpc("membership_status");
+    if (accessError || access?.approval_required)
+      return Response.json(
+        { error: "Account approval is required before checkout." },
+        { status: 403 },
+      );
     if (access?.allowed || access?.admin_account)
       return Response.json(
         { error: "You already have access; no purchase is needed." },

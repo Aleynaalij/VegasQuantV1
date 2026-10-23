@@ -31,6 +31,7 @@ import DailyLuck from "@/components/daily-luck";
 import AppRefreshNotice from "@/components/app-refresh-notice";
 import BrandOpening from "@/components/brand-opening";
 import AgeAccessBoundary from "@/components/age-access-boundary";
+import BetaAccessBoundary from "@/components/beta-access-boundary";
 
 // Self-hosted at build time and preloaded (replaces the render-blocking Google Fonts @import).
 const body = DM_Sans({
@@ -93,19 +94,21 @@ export default function RootLayout({
         <BrandOpening />
         <ThemePrompt />
         <NotificationProvider>
-          <AgeAccessBoundary
-            extras={
-              <>
-                <AppRefreshNotice />
-                <Welcome />
-                <ProfileSetupGate />
-                <NotificationBootstrap />
-                <PhoneContactPrompt />
-                <DailyLuck />
-              </>
-            }
-          >
-            {children}
+          <AgeAccessBoundary>
+            <BetaAccessBoundary
+              extras={
+                <>
+                  <AppRefreshNotice />
+                  <Welcome />
+                  <ProfileSetupGate />
+                  <NotificationBootstrap />
+                  <PhoneContactPrompt />
+                  <DailyLuck />
+                </>
+              }
+            >
+              {children}
+            </BetaAccessBoundary>
           </AgeAccessBoundary>
         </NotificationProvider>
       </body>

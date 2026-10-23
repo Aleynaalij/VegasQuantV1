@@ -1,4 +1,14 @@
 # Codex · Kobe
+Updated: 2026-10-22, BETA-001 review
+Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
+
+## Current task · BETA-001 (BETA-APPROVALS)
+Owner requests administrator-approved new accounts during testing. Base 0b1b94ff46abed87367b78202c52ff1b3ac2e19b; branch `codex/beta-approvals`; [claim](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353803044). Signup trigger defaults all new accounts to pending, with an explicit existing-account approved baseline serialized against auth inserts. Applicants finish email/profile/required age verification before review. Root boundary shows setup, waiting, error or declined states and refreshes every 30 seconds/on focus. Account recovery/settings/deletion remain reachable. Verified admins have an Account approval queue with readiness, Approve/Decline and audited atomic decisions. No hosted decisions performed. Public anonymous previews remain public; no change to published picks/model gates or schedules.
+
+Enforcement: restrictive member-table/storage RLS; approval guard on private definer member RPCs (original copies revoked); membership still respects existing age/payment semantics. Trials/promos/checkout cannot bypass approval. Research/social delivery checks protect pending recipients. Only trusted database rows carry authorization, never user metadata/JWT approval claims. New future member tables/RPCs must opt into the same gate. See docs/product/beta-account-approval.md.
+
+Validation: 288 repository tests, TypeScript and production webpack build pass. PostgreSQL-compatible migration tests cover new/existing users, owner profile access, direct RPC/table/storage denial, hidden original functions, admin MFA, email/age readiness, duplicate/stale reviews, same-session approval, checkout/push and anonymous previews. Synthetic phone/desktop browser flow (390/1280) passes setup, pending, source error, approval transition and admin review. React review: account-bound generations discard stale checks; cleanup for polling/listeners; no approval trusted from browser state. Pre-change advisors have existing public definer/password warnings; migration adds only private definer helpers and invoker public wrappers. No hosted schema applied or frontend deployed yet. Peer ACK/review and actual-head CI required before integration, per INTEGRATION-CHECKLIST. No production verification claimed.
+
 Updated: 2026-10-22, NGS-002 review
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
