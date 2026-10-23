@@ -51,7 +51,7 @@ export function notificationLink(value: string) {
   try {
     const u = new URL(value, "https://vegasquant.app");
     return u.origin === "https://vegasquant.app" &&
-      /^\/(community|notifications|membership|account|messages)(\/|$)/.test(
+      /^\/(community|notifications|membership|account|messages|feed)(\/|$)/.test(
         u.pathname,
       )
       ? u.pathname + u.search + u.hash
