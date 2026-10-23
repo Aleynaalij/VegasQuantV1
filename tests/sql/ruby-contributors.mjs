@@ -149,6 +149,46 @@ assert.equal(
     .rows[0].n,
   0,
 );
+await db.exec(
+  `reset role;delete from public.member_blocks;insert into public.ruby_contributors(user_id,brand,theme) values('${b}','FranksCorner','corner');update public.notification_preferences set disabled_types=array['contributor'] where user_id='${c}';insert into storage.objects values('community-photos','${b}/00000000-0000-4000-8000-000000000020.jpg','${b}');set app.uid='${b}';set role authenticated;`,
+);
+await assert.rejects(
+  db.exec(
+    `select public.submit_ruby('00000000-0000-4000-8000-000000000020','NBA','Screenshot test','[]','','${a}/00000000-0000-4000-8000-000000000020.jpg',null,null)`,
+  ),
+  /Upload your own/,
+);
+await db.exec(
+  `select public.submit_ruby('00000000-0000-4000-8000-000000000020','NBA','Screenshot test','[]','','${b}/00000000-0000-4000-8000-000000000020.jpg',null,null);reset role;`,
+);
+assert.equal(
+  (
+    await db.query(
+      `select count(*)::int n from public.notifications where type='contributor' and recipient_id='${c}'`,
+    )
+  ).rows[0].n,
+  1,
+);
+await db.exec(`set app.uid='${a}';set role authenticated;`);
+assert.equal(
+  (
+    await db.query(
+      `select count(*)::int n from storage.objects where name='${b}/00000000-0000-4000-8000-000000000020.jpg'`,
+    )
+  ).rows[0].n,
+  1,
+);
+await db.exec(
+  `reset role;insert into public.member_blocks values('${a}','${b}');set role authenticated;`,
+);
+assert.equal(
+  (
+    await db.query(
+      `select count(*)::int n from storage.objects where name='${b}/00000000-0000-4000-8000-000000000020.jpg'`,
+    )
+  ).rows[0].n,
+  0,
+);
 await db.exec(`reset role;set role anon`);
 await assert.rejects(
   db.query("select * from public.ruby_submissions"),
