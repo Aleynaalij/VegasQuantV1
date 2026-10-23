@@ -102,6 +102,7 @@ for (const [list, auth] of [
         failures.push(`${label}: HTTP ${status}`);
       if (errors.length)
         failures.push(`${label}: page error · ${errors[0].slice(0, 200)}`);
+      if (path === "/") await page.locator(".ruby-home-details").evaluateAll(nodes => nodes.forEach(node => node.open = true));
       const state = await page.evaluate(() => ({
         overflow: document.documentElement.scrollWidth - window.innerWidth,
         text: document.body.innerText,
