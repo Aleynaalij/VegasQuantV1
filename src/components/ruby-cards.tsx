@@ -439,6 +439,7 @@ function Composer({
               <label>
                 Sport
                 <select
+                  aria-label="Sport"
                   value={sport}
                   onChange={(e) => setSport(e.target.value as "NFL" | "NBA")}
                   disabled={busy}
