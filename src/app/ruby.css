@@ -625,3 +625,8 @@
     scroll-behavior: auto !important;
   }
 }
+
+.ruby-note,
+.ruby-price > span {
+  overflow-wrap: anywhere;
+}
