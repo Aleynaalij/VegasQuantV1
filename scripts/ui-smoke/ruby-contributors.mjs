@@ -9,7 +9,12 @@ const browser = await chromium.launch({
   args: ["--no-sandbox", "--disable-dev-shm-usage"],
 });
 const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
-for (const width of [390, 1280]) {
+for (const { width, photoOnly } of [
+  { width: 390, photoOnly: true },
+  { width: 1280, photoOnly: true },
+  { width: 390, photoOnly: false },
+  { width: 1280, photoOnly: false },
+]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
   await ctx.addInitScript(() => {
     sessionStorage.setItem("vq-prompt-shown", "fixture");
@@ -92,11 +97,21 @@ for (const width of [390, 1280]) {
     else if (path.endsWith("/ruby_daily_features")) body = [];
     else if (path.endsWith("/rpc/submit_ruby")) {
       const p = route.request().postDataJSON();
-      assert.equal(p.p_sport, "NBA");
-      assert.deepEqual(p.p_legs, [
-        "Sample X 20+ points",
-        "Sample Y 5+ rebounds",
-      ]);
+      if (photoOnly) {
+        assert.equal(p.p_title, "OmaticsZone’s daily lay");
+        assert.equal(p.p_sport, "NFL");
+        assert.deepEqual(p.p_legs, []);
+        assert.equal(p.p_note, "");
+        assert.equal(p.p_book, null);
+        assert.equal(p.p_odds, null);
+        assert.equal(p.p_photo, `${uid}/${p.p_id}.jpg`);
+      } else {
+        assert.equal(p.p_sport, "NBA");
+        assert.deepEqual(p.p_legs, [
+          "Sample X 20+ points",
+          "Sample Y 5+ rebounds",
+        ]);
+      }
       submits++;
       mine = {
         id: p.p_id,
@@ -108,7 +123,7 @@ for (const width of [390, 1280]) {
         title: p.p_title,
         legs: p.p_legs,
         note: p.p_note,
-        photo_path: null,
+        photo_path: p.p_photo,
         sportsbook: p.p_book,
         reported_odds: p.p_odds,
         created_at: new Date().toISOString(),
@@ -121,17 +136,58 @@ for (const width of [390, 1280]) {
       body: JSON.stringify(body),
     });
   });
+  const png = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
+    "base64",
+  );
+  await page.route("**/api/community/photo?post=*", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        path: `${uid}/${new URL(route.request().url()).searchParams.get("post")}.jpg`,
+      }),
+    }),
+  );
+  await page.route("**/storage/v1/object/sign/**", (route) =>
+    route.request().method() === "POST"
+      ? route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({
+            signedURL:
+              "/object/sign/community-photos/fixture.jpg?token=fixture",
+          }),
+        })
+      : route.fulfill({ status: 200, contentType: "image/png", body: png }),
+  );
   await page.goto(base + "/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Submit today’s lay" }).click();
-  await page.getByLabel("Sport", { exact: true }).selectOption("NBA");
-  await page.getByLabel("Card title").fill("Sample Ruby drop");
-  await page
-    .getByLabel("Your legs")
-    .fill("Sample X 20+ points\nSample Y 5+ rebounds");
-  await page.getByLabel("Sportsbook · optional").fill("Sample Book");
-  await page.getByLabel("Combined odds · optional").fill("+250");
-  await page.getByText("Preview your Ruby card", { exact: true }).click();
-  assert.ok(await page.locator(".ruby-modal .ruby-orbit").count());
+  if (photoOnly) {
+    assert.equal(
+      await page
+        .locator(
+          ".ruby-modal input[required],.ruby-modal textarea[required],.ruby-modal select[required]",
+        )
+        .count(),
+      0,
+    );
+    await page
+      .locator(".ruby-modal input[type=file]")
+      .setInputFiles({ name: "slip.png", mimeType: "image/png", buffer: png });
+    await page.getByAltText("Your original screenshot preview").waitFor();
+  } else {
+    await page.getByText("Add details · optional", { exact: true }).click();
+    await page.getByLabel("Sport", { exact: true }).selectOption("NBA");
+    await page.getByLabel("Card title").fill("Sample Ruby drop");
+    await page
+      .getByLabel("Your legs")
+      .fill("Sample X 20+ points\nSample Y 5+ rebounds");
+    await page.getByLabel("Sportsbook · optional").fill("Sample Book");
+    await page.getByLabel("Combined odds · optional").fill("+250");
+    await page.getByText("Preview your Ruby card", { exact: true }).click();
+    assert.ok(await page.locator(".ruby-modal .ruby-orbit").count());
+  }
   await page
     .getByRole("button", { name: "Publish to The Zone", exact: true })
     .click();
@@ -145,11 +201,20 @@ for (const width of [390, 1280]) {
   await page.locator(".ruby-card.ruby-orbit").waitFor();
   for (const theme of ["orbit", "diagonal", "corner", "skyline"])
     assert.equal(await page.locator(`.ruby-card.ruby-${theme}`).count(), 1);
-  assert.ok(
-    (await page.locator(".ruby-card.ruby-orbit").innerText()).includes(
-      "Contributor-reported combined odds",
-    ),
-  );
+  if (photoOnly) {
+    assert.ok(
+      (await page.locator(".ruby-card.ruby-orbit").innerText()).includes(
+        "OmaticsZone’s daily lay",
+      ),
+    );
+    await page.locator(".ruby-card.ruby-orbit .community-photo img").waitFor();
+  } else {
+    assert.ok(
+      (await page.locator(".ruby-card.ruby-orbit").innerText()).includes(
+        "Contributor-reported combined odds",
+      ),
+    );
+  }
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth + 1,
@@ -158,7 +223,7 @@ for (const width of [390, 1280]) {
   );
   assert.deepEqual(errors, []);
   console.log(
-    `PASS Ruby composer, preview, NBA member submission, daily lock, four templates and Zone link @${width}`,
+    `PASS Ruby composer, preview, NBA member submission, daily lock, four templates and Zone link @${width} photoOnly=${photoOnly}`,
   );
   await ctx.close();
 }

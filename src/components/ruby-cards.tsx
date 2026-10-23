@@ -339,7 +339,7 @@ function Composer({
       const result = await supabase.rpc("submit_ruby", {
         p_id: id,
         p_sport: sport,
-        p_title: title,
+        p_title: title.trim() || `${state.contributor!.brand}’s daily lay`,
         p_legs: legs,
         p_note: note,
         p_photo: path,
@@ -433,47 +433,11 @@ function Composer({
             </header>
             <form onSubmit={submit}>
               <p>
-                One NFL or NBA lay per Eastern day. Published cards are
-                permanent. Check your slip before posting.
+                Upload your screenshot and publish. No title, description or
+                typed legs needed. One lay per Eastern day.
               </p>
-              <label>
-                Sport
-                <select
-                  aria-label="Sport"
-                  value={sport}
-                  onChange={(e) => setSport(e.target.value as "NFL" | "NBA")}
-                  disabled={busy}
-                >
-                  <option>NFL</option>
-                  <option>NBA</option>
-                </select>
-              </label>
-              <label>
-                Card title
-                <input
-                  autoFocus
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                  maxLength={90}
-                  placeholder="Give your lay a name"
-                  disabled={busy}
-                />
-              </label>
-              <label>
-                Your legs · one per line
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  rows={5}
-                  placeholder={
-                    "Player / team · market · selection\nAdd every leg exactly as it appears"
-                  }
-                  disabled={busy}
-                />
-              </label>
               <label className="ruby-upload">
-                <Upload size={18} /> Or upload your slip
+                <Upload size={18} /> Upload your slip
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -508,36 +472,73 @@ function Composer({
                 kept intact. No automatic transcription. Crop out account
                 numbers and balances before upload.
               </p>
-              <div className="ruby-fields">
+              <details className="ruby-optional-fields">
+                <summary>Add details · optional</summary>
                 <label>
-                  Sportsbook · optional
+                  Sport · optional (NFL by default)
+                  <select
+                    aria-label="Sport"
+                    value={sport}
+                    onChange={(e) => setSport(e.target.value as "NFL" | "NBA")}
+                    disabled={busy}
+                  >
+                    <option>NFL</option>
+                    <option>NBA</option>
+                  </select>
+                </label>
+                <label>
+                  Card title · optional
                   <input
-                    name="book"
-                    maxLength={80}
-                    placeholder="Sportsbook"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    maxLength={90}
+                    placeholder="Give your lay a name"
                     disabled={busy}
                   />
                 </label>
                 <label>
-                  Combined odds · optional
-                  <input
-                    name="odds"
-                    placeholder="+450"
-                    maxLength={8}
+                  Your legs · optional, one per line
+                  <textarea
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    rows={5}
+                    placeholder={
+                      "Player / team · market · selection\nAdd every leg exactly as it appears"
+                    }
                     disabled={busy}
                   />
                 </label>
-              </div>
-              <label>
-                Your angle · optional
-                <textarea
-                  value={note}
-                  maxLength={1000}
-                  rows={2}
-                  onChange={(e) => setNote(e.target.value)}
-                  disabled={busy}
-                />
-              </label>
+                <div className="ruby-fields">
+                  <label>
+                    Sportsbook · optional
+                    <input
+                      name="book"
+                      maxLength={80}
+                      placeholder="Sportsbook"
+                      disabled={busy}
+                    />
+                  </label>
+                  <label>
+                    Combined odds · optional
+                    <input
+                      name="odds"
+                      placeholder="+450"
+                      maxLength={8}
+                      disabled={busy}
+                    />
+                  </label>
+                </div>
+                <label>
+                  Your angle · optional
+                  <textarea
+                    value={note}
+                    maxLength={1000}
+                    rows={2}
+                    onChange={(e) => setNote(e.target.value)}
+                    disabled={busy}
+                  />
+                </label>
+              </details>
               <details>
                 <summary>Preview your Ruby card</summary>
                 <RubyCard
@@ -548,7 +549,7 @@ function Composer({
                     theme: contributor.theme,
                     submission_day: state.day!,
                     sport,
-                    title: title || "Your daily lay",
+                    title: title.trim() || `${contributor.brand}’s daily lay`,
                     legs: rubyLegs(text),
                     note,
                     photo_path: null,

@@ -643,3 +643,14 @@
   max-width: 100%;
   box-sizing: border-box;
 }
+
+.ruby-optional-fields[open] {
+  display: grid;
+  gap: 17px;
+}
+.ruby-optional-fields > summary {
+  cursor: pointer;
+  color: #d6bdc5;
+  font-size: 13px;
+  padding: 10px 0;
+}
