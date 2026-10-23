@@ -81,3 +81,10 @@ export function rubyPrice(n: number) {
 export function rubyLink(id: string) {
   return `/feed?view=contributors&ruby=${encodeURIComponent(id)}#ruby-${encodeURIComponent(id)}`;
 }
+
+export function currentRubyFeature(
+  day: string | undefined,
+  rows: RubyFeature[] = [],
+): RubyFeature | null {
+  return day && rows[0]?.day === day ? rows[0] : null;
+}
