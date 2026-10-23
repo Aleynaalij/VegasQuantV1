@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import {
   rubyBrands,
+  currentRubyFeature,
   rubyLegs,
   rubyLink,
   rubyOdds,
@@ -614,11 +615,10 @@ export default function RubyHub({
     const next = (s.data || {}) as RubyHomeState;
     setState(next);
     setSlips(r.data || []);
-    setFeature(f.data?.[0]?.day === next.day ? f.data[0] : null);
+    const todayFeature = currentRubyFeature(next.day, f.data || []);
+    setFeature(todayFeature);
     setError("");
-    const neededId =
-      selectedId ||
-      (f.data?.[0]?.day === next.day ? f.data[0].submission_id : "");
+    const neededId = selectedId || todayFeature?.submission_id || "";
     if (neededId && !r.data?.some((x) => x.id === neededId)) {
       const one = await supabase
         .from("ruby_submissions")
