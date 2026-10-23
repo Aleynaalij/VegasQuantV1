@@ -1,7 +1,13 @@
 import { execFileSync } from "node:child_process";
 import test from "node:test";
 import assert from "node:assert/strict";
-import { rubyBrands, rubyLegs, rubyOdds, rubyLink } from "../src/lib/ruby.ts";
+import {
+  currentRubyFeature,
+  rubyBrands,
+  rubyLegs,
+  rubyOdds,
+  rubyLink,
+} from "../src/lib/ruby.ts";
 import { notificationLink } from "../src/lib/notifications.ts";
 test("permanent Ruby identities have four different template signatures", () => {
   assert.equal(new Set(rubyBrands.map((x) => x.brand)).size, 4);
@@ -32,4 +38,19 @@ test("Ruby server permissions and transactional publication", () => {
     stdio: "pipe",
     timeout: 60000,
   });
+});
+
+test("empty feature responses never match missing account dates", () => {
+  assert.equal(currentRubyFeature(undefined, []), null);
+  assert.equal(currentRubyFeature("2026-10-23", []), null);
+  const feature = {
+    day: "2026-10-22",
+    submission_id: "old",
+    verified_odds: 100,
+    sportsbook: "Sample",
+    source_url: "https://example.invalid",
+    observed_at: "2026-10-22T12:00:00Z",
+  };
+  assert.equal(currentRubyFeature("2026-10-23", [feature]), null);
+  assert.equal(currentRubyFeature("2026-10-22", [feature]), feature);
 });
