@@ -630,3 +630,16 @@
 .ruby-price > span {
   overflow-wrap: anywhere;
 }
+
+.ruby-hub {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+  max-width: 100%;
+}
+.ruby-hub > section,
+.ruby-contributors,
+.ruby-people {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
