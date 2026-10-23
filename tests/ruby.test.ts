@@ -1,0 +1,35 @@
+import { execFileSync } from "node:child_process";
+import test from "node:test";
+import assert from "node:assert/strict";
+import { rubyBrands, rubyLegs, rubyOdds, rubyLink } from "../src/lib/ruby.ts";
+import { notificationLink } from "../src/lib/notifications.ts";
+test("permanent Ruby identities have four different template signatures", () => {
+  assert.equal(new Set(rubyBrands.map((x) => x.brand)).size, 4);
+  assert.equal(new Set(rubyBrands.map((x) => x.theme)).size, 4);
+});
+test("typed slips preserve exact selections; missing odds stay unknown", () => {
+  assert.deepEqual(rubyLegs("  A over 15.5\n\n B 2+ receptions "), [
+    "A over 15.5",
+    "B 2+ receptions",
+  ]);
+  assert.equal(rubyOdds(""), null);
+  assert.equal(rubyOdds("+450"), 450);
+  assert.equal(rubyOdds("-150"), -150);
+  for (const value of ["2.5", "NaN", "+99", "1000000", "+100 boost"])
+    assert.throws(() => rubyOdds(value));
+});
+test("contributor notifications open the exact Zone card and reject foreign links", () => {
+  assert.equal(
+    notificationLink(rubyLink("test-card")),
+    "/feed?view=contributors&ruby=test-card#ruby-test-card",
+  );
+  assert.equal(notificationLink("//evil.test/feed"), "/notifications");
+  assert.equal(notificationLink("/feed-evil"), "/notifications");
+});
+
+test("Ruby server permissions and transactional publication", () => {
+  execFileSync(process.execPath, ["tests/sql/ruby-contributors.mjs"], {
+    stdio: "pipe",
+    timeout: 60000,
+  });
+});
