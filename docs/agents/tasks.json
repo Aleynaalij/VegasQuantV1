@@ -348,7 +348,6 @@
         "src/lib/vegas-help.ts",
         "scripts/ui-smoke/nba-paused.mjs",
         "scripts/ui-smoke/check.mjs",
-        ".github/workflows/ci.yml",
         "supabase/migrations/20261022010000_nba_daily_collection.sql",
         "tests/sql/nba-daily-collection.mjs",
         "tests/nba-daily-collection.test.ts"
