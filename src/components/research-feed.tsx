@@ -24,6 +24,7 @@ const WeekendMoneylineCard = dynamic(() => import("./weekend-moneyline-card"));
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
+import RubyHub from "./ruby-cards";
 import ZoneNav from "./zone-nav";
 import HowItWorks from "./how-it-works";
 import SectionBoundary from "./section-boundary";
@@ -74,8 +75,11 @@ const isWinPost = (p: Post) =>
 export default function ResearchFeed() {
   const searchParams = useSearchParams();
   const routeView = searchParams.get("view");
-  const routeRelease = /^[a-f0-9-]{36}$/i.test(searchParams.get("release") || "")
-    ? searchParams.get("release")! : "";
+  const routeRelease = /^[a-f0-9-]{36}$/i.test(
+    searchParams.get("release") || "",
+  )
+    ? searchParams.get("release")!
+    : "";
   const [posts, setPosts] = useState<Post[]>([]),
     [access, setAccess] = useState<Access>(noAccess),
     [loading, setLoading] = useState(true),
@@ -137,7 +141,9 @@ export default function ResearchFeed() {
               }
         }
         // A link from Home may point past the first page: fetch that release too.
-        const wanted = routeRelease || window.location.hash.match(/^#release-([\w-]+)$/)?.[1];
+        const wanted =
+          routeRelease ||
+          window.location.hash.match(/^#release-([\w-]+)$/)?.[1];
         if (wanted && !list.some((r) => r.id === wanted)) {
           const one = await supabase
             .from("candidate_releases")
@@ -269,15 +275,17 @@ export default function ResearchFeed() {
   useEffect(() => {
     const view = routeView;
     setZoneView(
-      view === "legs"
-        ? "Legs"
-        : view === "parlays"
-          ? "Parlays"
-          : view === "wins"
-            ? "Wins"
-            : view === "injury"
-              ? "Injury watch"
-              : "Latest",
+      view === "contributors"
+        ? "Contributors"
+        : view === "legs"
+          ? "Legs"
+          : view === "parlays"
+            ? "Parlays"
+            : view === "wins"
+              ? "Wins"
+              : view === "injury"
+                ? "Injury watch"
+                : "Latest",
     );
     setFilter(view === "injury" ? "Injury watch" : "All");
     setLimit(20);
@@ -303,9 +311,11 @@ export default function ResearchFeed() {
           : timeline;
   // Direct card links bypass archive depth without changing publication history.
   const visibleTimeline = routeRelease
-    ? [...filteredTimeline].sort((a, b) =>
-        (b.kind === "selection" && b.value.id === routeRelease ? 1 : 0) -
-        (a.kind === "selection" && a.value.id === routeRelease ? 1 : 0))
+    ? [...filteredTimeline].sort(
+        (a, b) =>
+          (b.kind === "selection" && b.value.id === routeRelease ? 1 : 0) -
+          (a.kind === "selection" && a.value.id === routeRelease ? 1 : 0),
+      )
     : filteredTimeline;
   return (
     <Shell active="feed">
@@ -329,9 +339,18 @@ export default function ResearchFeed() {
             Saved legs →
           </Link>
         </header>
-        <HowItWorks />
+        {(zoneView === "Contributors" || zoneView === "Latest") &&
+          access.allowed && (
+            <RubyHub selectedId={searchParams.get("ruby") || ""} />
+          )}
+        {zoneView !== "Contributors" && <HowItWorks />}
         {zoneView === "Parlays" && <WeekendMoneylineCard />}
-        {(zoneView === "Legs" || zoneView === "Parlays") && <ParlayWorkshop key={zoneView} mode={zoneView === "Legs" ? "catalog" : "parlays"} />}
+        {(zoneView === "Legs" || zoneView === "Parlays") && (
+          <ParlayWorkshop
+            key={zoneView}
+            mode={zoneView === "Legs" ? "catalog" : "parlays"}
+          />
+        )}
         <details className="zone-extra-filters">
           <summary>More research filters</summary>
           <nav className="feed-filters" aria-label="Filter feed">
@@ -364,214 +383,234 @@ export default function ResearchFeed() {
         {!loading && (
           <>
             <div className="feed-stream">
-              {(zoneView === "Legs" ? [] : visibleTimeline).slice(0, limit).map((item) => {
-                const p = item.kind === "post" ? item.value : null;
-                const content =
-                  p?.market_label ===
-                  "zone-win:ravens-falcons-full5-20261011" ? (
-                    <RavensWinningSlip key={p.id} publishedAt={p.created_at} />
-                  ) : p?.market_label === "zone-win:london-live6-20261011" ? (
-                    <LondonWinningSlip
-                      key={p.id}
-                      publishedAt={p.created_at}
-                      variant="live-six"
-                    />
-                  ) : p?.market_label === "zone-win:london-q1-20261011" ? (
-                    <LondonWinningSlip key={p.id} publishedAt={p.created_at} />
-                  ) : p?.result_leg_key && p.result_details ? (
-                    <AutomaticResultCard
-                      key={p.id}
-                      details={p.result_details}
-                      matchup={p.matchup}
-                      publishedAt={p.created_at}
-                    />
-                  ) : p ? (
-                    <article className="feed-post" key={p.id}>
-                      <div className="feed-byline">
-                        <span className="feed-avatar">
-                          <BrandMark />
-                        </span>
-                        <div>
-                          <strong>Vegas Quant Ultra</strong>
-                          <time dateTime={p.created_at}>
-                            {time(p.created_at)}
-                          </time>
-                        </div>
-                        <Badge>{p.category}</Badge>
-                      </div>
-                      <h2>{p.title}</h2>
-                      <div className="feed-summary">
-                        <small>WHAT CHANGED</small>
-                        <p>{p.summary}</p>
-                      </div>
-                      <details className="feed-post-details">
-                        <summary>Read the case, market & next check ↓</summary>
-                        <div className="feed-summary">
-                          <small>WHY IT MATTERS · ANALYST READ</small>
-                          <p>{p.why_watch}</p>
-                        </div>
-                        <div className="feed-matchup">
-                          <div className="feed-teams">
-                            <strong>{p.away_code}</strong>
-                            <span>@</span>
-                            <strong>{p.home_code}</strong>
-                            <span className="feed-watch">
-                              <Eye size={14} /> WATCHING
-                            </span>
-                          </div>
-                          <p>{p.matchup}</p>
-                          <div className="feed-price">
-                            <small>
-                              OBSERVED MARKET · NOT A RECOMMENDATION
-                            </small>
-                            <strong>{p.market_label}</strong>
-                            <time dateTime={p.source_at}>
-                              Snapshot {time(p.source_at)} · Prices may change
+              {(["Legs", "Contributors"].includes(zoneView)
+                ? []
+                : visibleTimeline
+              )
+                .slice(0, limit)
+                .map((item) => {
+                  const p = item.kind === "post" ? item.value : null;
+                  const content =
+                    p?.market_label ===
+                    "zone-win:ravens-falcons-full5-20261011" ? (
+                      <RavensWinningSlip
+                        key={p.id}
+                        publishedAt={p.created_at}
+                      />
+                    ) : p?.market_label === "zone-win:london-live6-20261011" ? (
+                      <LondonWinningSlip
+                        key={p.id}
+                        publishedAt={p.created_at}
+                        variant="live-six"
+                      />
+                    ) : p?.market_label === "zone-win:london-q1-20261011" ? (
+                      <LondonWinningSlip
+                        key={p.id}
+                        publishedAt={p.created_at}
+                      />
+                    ) : p?.result_leg_key && p.result_details ? (
+                      <AutomaticResultCard
+                        key={p.id}
+                        details={p.result_details}
+                        matchup={p.matchup}
+                        publishedAt={p.created_at}
+                      />
+                    ) : p ? (
+                      <article className="feed-post" key={p.id}>
+                        <div className="feed-byline">
+                          <span className="feed-avatar">
+                            <BrandMark />
+                          </span>
+                          <div>
+                            <strong>Vegas Quant Ultra</strong>
+                            <time dateTime={p.created_at}>
+                              {time(p.created_at)}
                             </time>
                           </div>
+                          <Badge>{p.category}</Badge>
                         </div>
-                        <div className="feed-next">
-                          <Clock3 size={17} />
-                          <div>
-                            <small>NEXT CHECK</small>
-                            <p>{p.next_check}</p>
-                          </div>
+                        <h2>{p.title}</h2>
+                        <div className="feed-summary">
+                          <small>WHAT CHANGED</small>
+                          <p>{p.summary}</p>
                         </div>
-                        <details className="feed-context">
+                        <details className="feed-post-details">
                           <summary>
-                            Sources & uncertainty <ChevronDown size={16} />
+                            Read the case, market & next check ↓
                           </summary>
-                          <h3>What could change the read</h3>
-                          <p>{p.caution}</p>
-                          <a
-                            href={p.source_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <div className="feed-summary">
+                            <small>WHY IT MATTERS · ANALYST READ</small>
+                            <p>{p.why_watch}</p>
+                          </div>
+                          <div className="feed-matchup">
+                            <div className="feed-teams">
+                              <strong>{p.away_code}</strong>
+                              <span>@</span>
+                              <strong>{p.home_code}</strong>
+                              <span className="feed-watch">
+                                <Eye size={14} /> WATCHING
+                              </span>
+                            </div>
+                            <p>{p.matchup}</p>
+                            <div className="feed-price">
+                              <small>
+                                OBSERVED MARKET · NOT A RECOMMENDATION
+                              </small>
+                              <strong>{p.market_label}</strong>
+                              <time dateTime={p.source_at}>
+                                Snapshot {time(p.source_at)} · Prices may change
+                              </time>
+                            </div>
+                          </div>
+                          <div className="feed-next">
+                            <Clock3 size={17} />
+                            <div>
+                              <small>NEXT CHECK</small>
+                              <p>{p.next_check}</p>
+                            </div>
+                          </div>
+                          <details className="feed-context">
+                            <summary>
+                              Sources & uncertainty <ChevronDown size={16} />
+                            </summary>
+                            <h3>What could change the read</h3>
+                            <p>{p.caution}</p>
+                            <a
+                              href={p.source_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Source <ArrowUpRight size={14} />
+                            </a>
+                          </details>
+                          <Link
+                            className="feed-research"
+                            href={
+                              p.game?.slug
+                                ? `/matchups/${p.game.slug}`
+                                : `/matchups?q=${encodeURIComponent(p.matchup.split(" @ ")[0])}`
+                            }
                           >
-                            Source <ArrowUpRight size={14} />
-                          </a>
+                            Open matchup research <ArrowUpRight size={16} />
+                          </Link>
                         </details>
-                        <Link
-                          className="feed-research"
-                          href={
-                            p.game?.slug
-                              ? `/matchups/${p.game.slug}`
-                              : `/matchups?q=${encodeURIComponent(p.matchup.split(" @ ")[0])}`
-                          }
-                        >
-                          Open matchup research <ArrowUpRight size={16} />
-                        </Link>
-                      </details>
-                    </article>
-                  ) : item.kind === "edge" ? (
-                    <EdgeReleaseCard key={item.key} release={item.value} />
-                  ) : item.kind === "selection" &&
-                    BILLS_WIN_IDS.includes(item.value.id) ? (
-                    <BillsWinningSlip
-                      publishedAt={item.value.created_at}
-                      halftime={
-                        item.value.id === "0d8e8f5a-2470-473b-9271-c396829bb429"
-                      }
-                    />
-                  ) : item.kind === "selection" && isParlay(item.value) ? (
-                    // Parlays show their card straight away; no collapsed drop header.
-                    <div
-                      className="zone-parlay"
-                      style={{ scrollMarginTop: 140 }}
-                      key={item.key}
-                      id={`release-${item.value.id}`}
-                    >
-                      <CandidateTracker snapshot={item.value} />
-                    </div>
-                  ) : item.kind === "selection" ? (
-                    <ZoneDrop
-                      key={item.key}
-                      id={`release-${item.value.id}`}
-                      open={openRelease === item.value.id}
-                      body={() => <CandidateTracker snapshot={item.value} />}
-                    >
-                      <summary>
-                        <span className="eyebrow">
-                          {item.value.candidates.every((c) => c.research)
-                            ? "RESEARCH BOARD"
-                            : "PICK DROP"}{" "}
-                          · {time(item.value.created_at)}
-                        </span>
-                        <strong>{item.value.title}</strong>
-                        <span>
-                          {item.value.candidates[0]?.parlay
-                            ? `One parlay · ${item.value.candidates.filter((c) => !c.parlay).length} legs`
-                            : `${item.value.candidates.length} ${item.value.candidates.length === 1 ? "selection" : "selections"}`}{" "}
-                          ·{" "}
-                          <span className="zone-expand">
-                            <span aria-hidden="true">＋</span> Expand
+                      </article>
+                    ) : item.kind === "edge" ? (
+                      <EdgeReleaseCard key={item.key} release={item.value} />
+                    ) : item.kind === "selection" &&
+                      BILLS_WIN_IDS.includes(item.value.id) ? (
+                      <BillsWinningSlip
+                        publishedAt={item.value.created_at}
+                        halftime={
+                          item.value.id ===
+                          "0d8e8f5a-2470-473b-9271-c396829bb429"
+                        }
+                      />
+                    ) : item.kind === "selection" && isParlay(item.value) ? (
+                      // Parlays show their card straight away; no collapsed drop header.
+                      <div
+                        className="zone-parlay"
+                        style={{ scrollMarginTop: 140 }}
+                        key={item.key}
+                        id={`release-${item.value.id}`}
+                      >
+                        <CandidateTracker snapshot={item.value} />
+                      </div>
+                    ) : item.kind === "selection" ? (
+                      <ZoneDrop
+                        key={item.key}
+                        id={`release-${item.value.id}`}
+                        open={openRelease === item.value.id}
+                        body={() => <CandidateTracker snapshot={item.value} />}
+                      >
+                        <summary>
+                          <span className="eyebrow">
+                            {item.value.candidates.every((c) => c.research)
+                              ? "RESEARCH BOARD"
+                              : "PICK DROP"}{" "}
+                            · {time(item.value.created_at)}
                           </span>
-                        </span>
-                      </summary>
-                    </ZoneDrop>
-                  ) : null;
-                return (
-                  <div className="zone-item" key={item.key}>
-                    <SectionBoundary name="This update">
-                      {content}
-                    </SectionBoundary>
-                    {p &&
-                      !p.market_label.startsWith("zone-win:") &&
-                      !p.result_details && (
-                        <DownloadCard
-                          title={p.title}
-                          subtitle={p.matchup}
-                          publishedAt={p.created_at}
-                          sections={[
-                            {
-                              heading: p.market_label.startsWith("zone-win:")
-                                ? "Result"
-                                : "Summary",
-                              text: p.summary,
-                            },
-                            {
-                              heading: p.market_label.startsWith("zone-win:")
-                                ? "Winning legs"
-                                : "Analyst case",
-                              text: p.why_watch.split(
-                                " Original pregame release:",
-                              )[0],
-                            },
-                            ...(!p.market_label.startsWith("zone-win:")
-                              ? [
-                                  {
-                                    heading: "Observed market",
-                                    text: p.market_label,
-                                  },
-                                ]
-                              : []),
-                            {
-                              heading: "Source / uncertainty",
-                              text: p.caution,
-                            },
-                            { heading: "Next check", text: p.next_check },
-                            { heading: "Source", text: p.source_url },
-                          ]}
-                        />
-                      )}
-                  </div>
-                );
-              })}
+                          <strong>{item.value.title}</strong>
+                          <span>
+                            {item.value.candidates[0]?.parlay
+                              ? `One parlay · ${item.value.candidates.filter((c) => !c.parlay).length} legs`
+                              : `${item.value.candidates.length} ${item.value.candidates.length === 1 ? "selection" : "selections"}`}{" "}
+                            ·{" "}
+                            <span className="zone-expand">
+                              <span aria-hidden="true">＋</span> Expand
+                            </span>
+                          </span>
+                        </summary>
+                      </ZoneDrop>
+                    ) : null;
+                  return (
+                    <div className="zone-item" key={item.key}>
+                      <SectionBoundary name="This update">
+                        {content}
+                      </SectionBoundary>
+                      {p &&
+                        !p.market_label.startsWith("zone-win:") &&
+                        !p.result_details && (
+                          <DownloadCard
+                            title={p.title}
+                            subtitle={p.matchup}
+                            publishedAt={p.created_at}
+                            sections={[
+                              {
+                                heading: p.market_label.startsWith("zone-win:")
+                                  ? "Result"
+                                  : "Summary",
+                                text: p.summary,
+                              },
+                              {
+                                heading: p.market_label.startsWith("zone-win:")
+                                  ? "Winning legs"
+                                  : "Analyst case",
+                                text: p.why_watch.split(
+                                  " Original pregame release:",
+                                )[0],
+                              },
+                              ...(!p.market_label.startsWith("zone-win:")
+                                ? [
+                                    {
+                                      heading: "Observed market",
+                                      text: p.market_label,
+                                    },
+                                  ]
+                                : []),
+                              {
+                                heading: "Source / uncertainty",
+                                text: p.caution,
+                              },
+                              { heading: "Next check", text: p.next_check },
+                              { heading: "Source", text: p.source_url },
+                            ]}
+                          />
+                        )}
+                    </div>
+                  );
+                })}
             </div>
-            {zoneView !== "Legs" && zoneView !== "Parlays" && !visibleTimeline.length && !error && (
-              <p className="feed-empty">
-                No updates in this category yet. Check back as the next decision
-                develops.
-              </p>
-            )}
-            {zoneView !== "Legs" && visibleTimeline.length > limit && (
-              <button
-                className="secondary feed-more"
-                onClick={() => setLimit((l) => l + pageSize)}
-              >
-                Load more updates
-              </button>
-            )}
+            {zoneView !== "Contributors" &&
+              zoneView !== "Legs" &&
+              zoneView !== "Parlays" &&
+              !visibleTimeline.length &&
+              !error && (
+                <p className="feed-empty">
+                  No updates in this category yet. Check back as the next
+                  decision develops.
+                </p>
+              )}
+            {zoneView !== "Contributors" &&
+              zoneView !== "Legs" &&
+              visibleTimeline.length > limit && (
+                <button
+                  className="secondary feed-more"
+                  onClick={() => setLimit((l) => l + pageSize)}
+                >
+                  Load more updates
+                </button>
+              )}
           </>
         )}
         <details

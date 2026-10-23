@@ -34,6 +34,7 @@ import WeeklyPerformance from "./weekly-performance";
 import PricedRecord from "./priced-record";
 import BeatTheClose from "./beat-the-close";
 import MyTailRecord from "./my-tail-record";
+import RubyHub from "./ruby-cards";
 import HomeBrief from "./home-brief";
 import GamePicksShortcut from "./game-picks-shortcut";
 import DecisionBoard from "./decision-board";
@@ -80,7 +81,11 @@ export default function DeskApp({
     async function refresh() {
       if (fetching || document.visibilityState === "hidden") return;
       fetching = true;
-      const { data, error } = await supabase.rpc(page === "home" || page === "history" ? "desk_data_compact" : "desk_data");
+      const { data, error } = await supabase.rpc(
+        page === "home" || page === "history"
+          ? "desk_data_compact"
+          : "desk_data",
+      );
       if (live) {
         if (error) {
           setD({ ...initial, access: noAccess } as Desk);
@@ -362,31 +367,40 @@ export default function DeskApp({
         )}
         {page === "home" && (
           <>
+            <SectionBoundary name="Ruby contributors">
+              <RubyHub home />
+            </SectionBoundary>
             <SectionBoundary name="Game picks">
               <GamePicksShortcut games={d.games} />
             </SectionBoundary>
             <SectionBoundary name="Pick of the Day">
               <CandidateTracker activeOnly featured pickOfDay />
             </SectionBoundary>
-            <SectionBoundary name="Next kickoff">
-              <HomeBrief games={d.games} />
-            </SectionBoundary>
-            <SectionBoundary name="Scores">
-              <DecisionBoard games={d.games} />
-            </SectionBoundary>
+            <details className="ruby-home-details">
+              <summary>Games & scores</summary>
+              <SectionBoundary name="Next kickoff">
+                <HomeBrief games={d.games} />
+              </SectionBoundary>
+              <SectionBoundary name="Scores">
+                <DecisionBoard games={d.games} />
+              </SectionBoundary>
+            </details>
             <SectionBoundary name="Hail Mary">
               <CandidateTracker activeOnly featured funPlayOnly />
             </SectionBoundary>
-            <HowItWorks />
-            <SectionBoundary name="Research updates">
-              <ResearchPulse />
-            </SectionBoundary>
-            <SectionBoundary name="Explore">
-              <ExploreCards />
-            </SectionBoundary>
-            <SectionBoundary name="For you">
-              <ForYou games={d.games} />
-            </SectionBoundary>
+            <details className="ruby-home-details">
+              <summary>Research & more</summary>
+              <HowItWorks />
+              <SectionBoundary name="Research updates">
+                <ResearchPulse />
+              </SectionBoundary>
+              <SectionBoundary name="Explore">
+                <ExploreCards />
+              </SectionBoundary>
+              <SectionBoundary name="For you">
+                <ForYou games={d.games} />
+              </SectionBoundary>
+            </details>
           </>
         )}
         {page === "home" && access.admin && (

@@ -1,3 +1,4 @@
+import "./ruby.css";
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, DM_Sans, Manrope } from "next/font/google";
 import "./base.css";
