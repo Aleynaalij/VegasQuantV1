@@ -112,7 +112,7 @@ const safeTarget = (value) => {
         "/notifications",
         "/membership",
       ].includes(url.pathname) ||
-      /^\/(community|account|messages)(\/|$)/.test(url.pathname)
+      /^\/(community|account|messages|feed)(\/|$)/.test(url.pathname)
     )
       return url.pathname + url.search + url.hash;
   } catch {}
