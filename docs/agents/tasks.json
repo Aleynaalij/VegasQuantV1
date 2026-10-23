@@ -334,7 +334,7 @@
       "id": "NBA-008",
       "owner": "CLAUDE",
       "scope": "application",
-      "status": "review",
+      "status": "deployed",
       "updated_at": "2026-10-23T00:30:00Z",
       "files": [
         "src/lib/nba-paused.ts",
@@ -348,13 +348,12 @@
         "src/lib/vegas-help.ts",
         "scripts/ui-smoke/nba-paused.mjs",
         "scripts/ui-smoke/check.mjs",
-        ".github/workflows/ci.yml",
         "supabase/migrations/20261022010000_nba_daily_collection.sql",
         "tests/sql/nba-daily-collection.mjs",
         "tests/nba-daily-collection.test.ts"
       ],
       "depends_on": [],
-      "next_action": "Codex: acknowledge the NBA pause (merged in #92 as e47846d, live on vegasquant.app). Claude: verify the first 6 a.m. ET NBA collection on Oct 23.",
+      "next_action": "Claude: verify the first 6 a.m. ET NBA collection (Oct 23 10:00Z/10:05Z, confirm 13:10Z) and the live /nba redirect, then mark verified.",
       "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/92",
       "checks": [
         {
@@ -366,13 +365,19 @@
       "handoff": {
         "to": "CODEX",
         "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6350557351"
+      },
+      "merged_commit": "e47846d46f7bf80c5aa292e8e9c1d71b6693c987",
+      "deployment_url": "https://vegasquant.app/",
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353131440"
       }
     },
     {
       "id": "NGS-001",
       "owner": "CLAUDE",
       "scope": "application",
-      "status": "review",
+      "status": "deployed",
       "updated_at": "2026-10-23T00:30:00Z",
       "files": [
         "scripts/research-board/ngs.ts",
@@ -384,7 +389,25 @@
         "docs/research/ngs-backtest-plan.md"
       ],
       "depends_on": [],
-      "next_action": "Claude: research-board legs carry NGS context in why/risk/evidence (no selection change); WSH/WAS fix for the game panel. Merge, apply the migration, confirm the next board run reports ngs_families 3."
+      "next_action": "Claude: confirm a research-board release carries research_evidence.ngs on the next run.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/99",
+      "merged_commit": "e1e298e243b19c035e2163dabc573b47283d0c42",
+      "deployment_url": "https://github.com/Aleynaalij/VegasQuantV1/actions/workflows/research-board.yml",
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6352635663"
+      },
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353175121"
+      },
+      "checks": [
+        {
+          "name": "283 unit tests incl. NGS context and WSH/WAS SQL case; typecheck; CI on #99; team-code migration applied live and verified on Commanders games",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/99"
+        }
+      ]
     },
     {
       "id": "NGS-002",
@@ -412,8 +435,8 @@
       "id": "NGS-003",
       "owner": "CLAUDE",
       "scope": "service",
-      "status": "active",
-      "updated_at": "2026-10-23T00:10:00Z",
+      "status": "review",
+      "updated_at": "2026-10-23T00:30:00Z",
       "files": [
         "docs/research/ngs-backtest-results.json",
         "docs/research/ngs-backtest-results.md",
@@ -431,7 +454,24 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: holdout found no NGS flag predicts a miss; per owner decision, NGS stays in the why only (flags kept as evidence). Merge #104."
+      "next_action": "Codex: NGS-001 is now recorded deployed, so NGS-002 can move to merged (bdd91ac); then Claude marks NGS-003 merged (#104, 28c0202). Outcome: no NGS flag or model input adopted; NGS stays descriptive in the why.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/104",
+      "merged_commit": "28c0202af9c113abbd32894be980786fd8452ba3",
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353879184"
+      },
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353995620"
+      },
+      "checks": [
+        {
+          "name": "Pre-registered 2024-2025 holdout run once (evaluator committed first, 53d4073): no flag qualifies; v0.4 model test (#101) rejected; CI green on #104",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/104"
+        }
+      ]
     }
   ]
 }
