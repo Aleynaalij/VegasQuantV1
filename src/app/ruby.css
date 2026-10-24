@@ -766,6 +766,27 @@ html[data-theme] body a.ruby-primary {
   border-color: #bad8e8;
 }
 
+.ruby-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ruby-standings {
+  overflow-x: auto;
+}
+.ruby-standings table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.ruby-standings th,
+.ruby-standings td {
+  text-align: left;
+  padding: 12px 8px;
+  border-bottom: 1px solid #ffffff20;
+}
+.ruby-standings td {
+  font-variant-numeric: tabular-nums;
+}
+
 .ruby-encore.ruby-card { background: linear-gradient(155deg, #49203f, #1d121e 65%); border: 2px solid #d491b0; }
-.ruby-encore.ruby-card::before { background: repeating-linear-gradient(0deg, transparent 0 34px, #e5a6cd12 35px 36px); }
-.ruby-encore .ruby-monogram, .ruby-encore .ruby-avatar { border-radius: 50% 12px 50% 12px; background: #662747; color: #ffe2ef; }
