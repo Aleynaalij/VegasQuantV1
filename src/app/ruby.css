@@ -204,6 +204,31 @@ html[data-theme] body a.ruby-primary {
 .ruby-orbit.ruby-card {
   background: radial-gradient(ellipse at 90% 0, #772a4e, #21121d 60%);
 }
+.ruby-marquee.ruby-card {
+  border-color: #e5ae91;
+  border-top: 5px solid #c87079;
+  background: linear-gradient(155deg, #521c32, #21121c 65%);
+}
+.ruby-marquee.ruby-card::before {
+  inset: 9px;
+  border: 1px solid #e5ae912b;
+  border-radius: 12px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0 23px,
+    #e5ae910a 24px 25px
+  );
+}
+.ruby-marquee .ruby-monogram,
+.ruby-marquee .ruby-avatar {
+  border-radius: 15px;
+  border: 1px solid #e5ae91;
+  background: #5b2338;
+  color: #ffe3cc;
+}
+.ruby-marquee .ruby-signature h3 {
+  letter-spacing: -0.04em;
+}
 .ruby-orbit.ruby-card::before {
   background: repeating-radial-gradient(
     circle at 110% 0,
@@ -952,3 +977,5 @@ html[data-theme] body a.ruby-primary {
   color: #d5d1c4;
   font-size: 12px;
 }
+
+.ruby-encore.ruby-card { background: linear-gradient(155deg, #49203f, #1d121e 65%); border: 2px solid #d491b0; }

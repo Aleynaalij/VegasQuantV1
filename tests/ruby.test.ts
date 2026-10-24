@@ -9,9 +9,15 @@ import {
   rubyLink,
 } from "../src/lib/ruby.ts";
 import { notificationLink } from "../src/lib/notifications.ts";
-test("permanent Ruby identities have five different template signatures", () => {
-  assert.equal(new Set(rubyBrands.map((x) => x.brand)).size, 5);
-  assert.equal(new Set(rubyBrands.map((x) => x.theme)).size, 5);
+test("permanent Ruby identities have seven different template signatures", () => {
+  assert.equal(new Set(rubyBrands.map((x) => x.brand)).size, 7);
+  assert.equal(new Set(rubyBrands.map((x) => x.theme)).size, 7);
+  assert.deepEqual(rubyBrands.find((x) => x.brand === "MarkKuban"), {
+    brand: "MarkKuban",
+    theme: "marquee",
+    monogram: "MK",
+    tagline: "Make your Mark.",
+  });
 });
 test("typed slips preserve exact selections; missing odds stay unknown", () => {
   assert.deepEqual(rubyLegs("  A over 15.5\n\n B 2+ receptions "), [
@@ -35,6 +41,13 @@ test("contributor notifications open the exact Zone card and reject foreign link
 
 test("Ruby server permissions and transactional publication", () => {
   execFileSync(process.execPath, ["tests/sql/ruby-contributors.mjs"], {
+    stdio: "pipe",
+    timeout: 60000,
+  });
+});
+
+test("MarkKuban server signature remains restricted to its assigned template", () => {
+  execFileSync(process.execPath, ["tests/sql/markkuban-contributor.mjs"], {
     stdio: "pipe",
     timeout: 60000,
   });

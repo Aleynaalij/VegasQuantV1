@@ -29,6 +29,13 @@ export const rubyBrands = [
     monogram: "HM",
     tagline: "The Houston connection.",
   },
+  {
+    brand: "MarkKuban",
+    theme: "marquee",
+    monogram: "MK",
+    tagline: "Make your Mark.",
+  },
+  { brand: "SoloHendrix", theme: "encore", monogram: "SH", tagline: "Set your own tempo." },
 ] as const;
 export type RubyContributor = {
   user_id: string;
