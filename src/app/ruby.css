@@ -771,22 +771,211 @@ html[data-theme] body a.ruby-primary {
   flex-wrap: wrap;
   gap: 10px;
 }
-.ruby-standings {
-  overflow-x: auto;
+/* Capper board: the same felt table, gold rail and scoreboard digits as the next-kickoff card. */
+.ruby-board {
+  position: relative;
+  margin: 18px 0;
+  padding: 22px 20px 18px;
+  border: 2px solid var(--gold-deep, #b48a36);
+  border-radius: 26px;
+  background:
+    repeating-linear-gradient(45deg, #ffffff06 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(-45deg, #ffffff06 0 1px, transparent 1px 22px),
+    radial-gradient(
+      120% 90% at 50% 30%,
+      var(--felt-a, #10382b),
+      var(--felt-b, #06140f)
+    );
+  box-shadow:
+    0 22px 50px #000a,
+    inset 0 0 0 6px #0004;
+  color: #fbf8ef;
 }
-.ruby-standings table {
+.ruby-board::after {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid #e8c46a66;
+  border-radius: 18px;
+  pointer-events: none;
+}
+.ruby-board > * {
+  position: relative;
+  z-index: 1;
+}
+.ruby-board header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ruby-board-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--gold, #e8c46a);
+  font:
+    800 14px/1 var(--font-board),
+    sans-serif;
+  letter-spacing: 0.22em;
+}
+.ruby-board-kicker i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #1ed883;
+  box-shadow: 0 0 0 3px #1ed88322;
+}
+.ruby-board-chip {
+  padding: 7px 12px;
+  border: 1px solid #e8c46a66;
+  border-radius: 999px;
+  background: #00000040;
+  color: var(--gold, #e8c46a);
+  font:
+    800 10px/1 var(--font-board),
+    sans-serif;
+  letter-spacing: 0.16em;
+}
+.ruby-board table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
+  border-collapse: separate;
+  border-spacing: 0 6px;
+  white-space: nowrap;
 }
-.ruby-standings th,
-.ruby-standings td {
+.ruby-board th,
+.ruby-board td {
+  padding: 6px 4px;
+  border: 0;
+  background: none;
+  text-align: center;
+}
+.ruby-board thead th {
+  padding-bottom: 2px;
+  color: #a89c7d;
+  text-transform: uppercase;
+  font:
+    800 11px/1 var(--font-board),
+    sans-serif;
+  letter-spacing: 0.16em;
+}
+.ruby-board thead th:nth-child(2),
+.ruby-board tbody th {
   text-align: left;
-  padding: 12px 8px;
-  border-bottom: 1px solid #ffffff20;
 }
-.ruby-standings td {
+.ruby-board abbr {
+  text-decoration: none;
+}
+.ruby-board tbody tr {
+  background: #00000033;
+}
+.ruby-board tbody tr > :first-child {
+  border-radius: 10px 0 0 10px;
+}
+.ruby-board tbody tr > :last-child {
+  border-radius: 0 10px 10px 0;
+}
+.ruby-board tbody th {
+  width: 100%;
+  max-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #fbf8ef;
+  font:
+    800 clamp(17px, 4.6vw, 22px) / 1 var(--font-board),
+    sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.ruby-board-rank {
+  width: 30px;
+  color: var(--gold, #e8c46a);
+  font:
+    800 16px/1 var(--font-board),
+    sans-serif;
+}
+.ruby-board tbody tr:first-child .ruby-board-rank {
+  color: var(--gold-hi, #f3dc9a);
+  text-shadow: 0 0 10px #e8c46a88;
+}
+/* Scoreboard digit tiles. */
+.ruby-board td b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 6px;
+  border: 1px solid #e8c46a40;
+  border-radius: 8px;
+  background: #050607;
+  box-shadow: inset 0 2px 6px #000c;
+  color: var(--gold-hi, #f3dc9a);
+  font:
+    800 20px/1 var(--font-board),
+    sans-serif;
   font-variant-numeric: tabular-nums;
+}
+.ruby-board p {
+  margin: 10px 2px 0;
+  color: #d5d1c4;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.ruby-person-record {
+  color: var(--gold, #e8c46a);
+  font:
+    800 15px/1 var(--font-board),
+    sans-serif;
+  letter-spacing: 0.06em;
+}
+@media (max-width: 420px) {
+  .ruby-board {
+    padding: 20px 14px 16px;
+  }
+  .ruby-board td b {
+    min-width: 30px;
+    height: 32px;
+    font-size: 17px;
+  }
+}
+/* One capper's record, shown when a member opens that contributor. */
+.ruby-profile-record {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 14px;
+  margin: 4px 0 16px;
+  padding: 14px 16px;
+  border: 1px solid #e8c46a66;
+  border-radius: 16px;
+  background: radial-gradient(
+    120% 140% at 0% 0%,
+    var(--felt-a, #10382b),
+    var(--felt-b, #06140f)
+  );
+  color: #fbf8ef;
+}
+.ruby-profile-record strong {
+  font:
+    800 20px/1 var(--font-board),
+    sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.ruby-profile-rank,
+.ruby-profile-wl {
+  color: var(--gold-hi, #f3dc9a);
+  font:
+    800 20px/1 var(--font-board),
+    sans-serif;
+  letter-spacing: 0.04em;
+}
+.ruby-profile-record small {
+  flex-basis: 100%;
+  color: #d5d1c4;
+  font-size: 12px;
 }
 
 .ruby-encore.ruby-card { background: linear-gradient(155deg, #49203f, #1d121e 65%); border: 2px solid #d491b0; }

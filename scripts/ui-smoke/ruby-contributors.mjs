@@ -381,9 +381,15 @@ for (const { width, photoOnly } of [
     .getByRole("region", { name: "Confirm your slip result" })
     .waitFor({ state: "detached" });
   assert.equal(reported, "WIN");
-  const standings = page.locator(".ruby-standings");
-  await standings.waitFor();
-  assert.ok((await standings.innerText()).includes("The GOAT\t3\t1\t0\t1"));
+  const board = page.locator(".ruby-board");
+  await board.waitFor();
+  assert.deepEqual(
+    await board
+      .locator("tbody tr")
+      .first()
+      .evaluate((row) => [...row.cells].map((c) => c.textContent.trim())),
+    ["1", "The GOAT", "3", "1", "0", "1"],
+  );
   reviewing = false;
   reported = null;
   // Only an admin sees "Remove from The Zone"; it records a hide for that card.
@@ -412,6 +418,8 @@ for (const { width, photoOnly } of [
   await page.goto(base + "/feed", { waitUntil: "networkidle" });
   await page.locator(".ruby-contributors").waitFor();
   member = true;
+  reviewing = true;
+  reported = "WIN";
   await page.goto(base + "/feed", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
   assert.equal(await page.locator(".ruby-hub").count(), 0);
@@ -424,7 +432,20 @@ for (const { width, photoOnly } of [
     .getByRole("link", { name: "Contributors" })
     .click();
   await page.locator(".ruby-contributors").waitFor();
+  // Members don't see the board or records on the row; opening a capper shows their rank.
+  await page.waitForLoadState("networkidle");
+  assert.equal(await page.locator(".ruby-board").count(), 0);
+  assert.equal(await page.locator(".ruby-person-record").count(), 0);
+  await page
+    .locator(".ruby-people")
+    .getByRole("button", { name: /The GOAT/ })
+    .click();
+  const record = page.locator(".ruby-profile-record");
+  await record.waitFor();
+  assert.match(await record.textContent(), /The GOAT#1 of 13–1/);
   member = false;
+  reviewing = false;
+  reported = null;
   assert.deepEqual(errors, []);
   console.log(
     `PASS Ruby composer, preview, NBA member submission, daily lock, five templates and Zone link @${width} photoOnly=${photoOnly}`,

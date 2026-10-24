@@ -20,6 +20,8 @@ import {
   rubyLink,
   rubyOdds,
   rubyPrice,
+  rankCappers,
+  type CapperRecord,
   type RubySlip,
   type RubyFeature,
   type RubyHomeState,
@@ -883,15 +885,7 @@ export default function RubyHub({
   contributorsOnly?: boolean;
 }) {
   const [state, setState] = useState<RubyHomeState>({});
-  const [records, setRecords] = useState<
-    {
-      brand: string;
-      wins: number;
-      losses: number;
-      voids: number;
-      total: number;
-    }[]
-  >([]);
+  const [records, setRecords] = useState<CapperRecord[]>([]);
   const [slips, setSlips] = useState<RubySlip[]>([]);
   const [originalFeatured, setOriginalFeatured] = useState<RubySlip | null>(
     null,
@@ -996,6 +990,11 @@ export default function RubyHub({
       (!home || s.submission_day === state.day),
   );
   if (contributorsOnly && !state.contributor && !state.admin) return null;
+  // Contributors and admins see the whole board; members see one capper's record by opening them.
+  const insider = !!state.contributor || !!state.admin;
+  const ranked = rankCappers(records);
+  const profile =
+    selected === "All" ? null : ranked.find((r) => r.brand === selected);
   return (
     <div className="ruby-hub">
       {home && state.contributor && (
@@ -1032,40 +1031,55 @@ export default function RubyHub({
       {home && state.due?.length ? (
         <ResultPrompt state={state} onSaved={() => void refresh()} />
       ) : null}
-      {records.length > 0 && (
-        <section className="ruby-double-up">
-          <h2>Capper standings</h2>
-          <p>
-            Contributor-reported results · sorted by wins. Voids and pending
-            slips are excluded from wins/losses. Small samples aren’t proof of
-            future performance.
-          </p>
-          <div className="ruby-standings">
-            <table>
-              <thead>
-                <tr>
-                  <th>Contributor</th>
-                  <th>W</th>
-                  <th>L</th>
-                  <th>Void</th>
-                  <th>Pending</th>
+      {insider && ranked.length > 0 && (
+        <section className="ruby-board" aria-labelledby="ruby-board-title">
+          <header>
+            <span className="ruby-board-kicker" id="ruby-board-title">
+              <i aria-hidden="true" /> CAPPER BOARD
+            </span>
+            <span className="ruby-board-chip">SELF-REPORTED</span>
+          </header>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Capper</th>
+                <th scope="col">W</th>
+                <th scope="col">L</th>
+                <th scope="col">
+                  <abbr title="Void">V</abbr>
+                </th>
+                <th scope="col">
+                  <abbr title="Pending">P</abbr>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {ranked.map((r) => (
+                <tr key={r.brand}>
+                  <td className="ruby-board-rank">{r.rank}</td>
+                  <th scope="row">{r.brand}</th>
+                  <td>
+                    <b>{r.wins}</b>
+                  </td>
+                  <td>
+                    <b>{r.losses}</b>
+                  </td>
+                  <td>
+                    <b>{r.voids}</b>
+                  </td>
+                  <td>
+                    <b>{r.pending}</b>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {[...records]
-                  .sort((a, b) => b.wins - a.wins || a.losses - b.losses)
-                  .map((r) => (
-                    <tr key={r.brand}>
-                      <th>{r.brand}</th>
-                      <td>{r.wins}</td>
-                      <td>{r.losses}</td>
-                      <td>{r.voids}</td>
-                      <td>{r.total - r.wins - r.losses - r.voids}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+              ))}
+            </tbody>
+          </table>
+          <p>
+            Results are reported by each capper the day after, not independently
+            verified. Voids and pending slips stay out of wins and losses. Small
+            samples aren’t proof of future performance.
+          </p>
         </section>
       )}
       <section className="ruby-contributors">
@@ -1100,11 +1114,14 @@ export default function RubyHub({
             >
               <span className="ruby-avatar">{b.monogram}</span>
               <strong>{b.brand}</strong>
-              <span>
-                {records.find((r) => r.brand === b.brand)
-                  ? `${records.find((r) => r.brand === b.brand)!.wins}W–${records.find((r) => r.brand === b.brand)!.losses}L · self-reported`
-                  : "No reported results"}
-              </span>
+              {insider && (
+                <span className="ruby-person-record">
+                  {(() => {
+                    const r = ranked.find((x) => x.brand === b.brand);
+                    return r ? `${r.wins}–${r.losses}` : "No results yet";
+                  })()}
+                </span>
+              )}
               <span>
                 {slips.some(
                   (s) => s.brand === b.brand && s.submission_day === state.day,
@@ -1115,6 +1132,27 @@ export default function RubyHub({
             </button>
           ))}
         </nav>
+        {selected !== "All" && (
+          <div className="ruby-profile-record" role="status">
+            <strong>{selected}</strong>
+            {profile && profile.wins + profile.losses + profile.voids > 0 ? (
+              <>
+                <span className="ruby-profile-rank">
+                  #{profile.rank} of {ranked.length}
+                </span>
+                <span className="ruby-profile-wl">
+                  {profile.wins}–{profile.losses}
+                </span>
+                <small>
+                  {profile.voids} void · {profile.pending} pending ·
+                  self-reported, not independently verified
+                </small>
+              </>
+            ) : (
+              <small>No reported results yet.</small>
+            )}
+          </div>
+        )}
         {error && (
           <p role="status">
             {error} <button onClick={() => void refresh()}>Retry</button>
