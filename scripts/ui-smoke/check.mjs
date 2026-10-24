@@ -102,7 +102,19 @@ for (const [list, auth] of [
         failures.push(`${label}: HTTP ${status}`);
       if (errors.length)
         failures.push(`${label}: page error · ${errors[0].slice(0, 200)}`);
-      if (path === "/") await page.locator(".ruby-home-details").evaluateAll(nodes => nodes.forEach(node => node.open = true));
+      if (path === "/") {
+        // The next-kickoff card sits open on Home, directly under Today's Double Up.
+        const kickoff = await page.evaluate(() => {
+          const card = document.querySelector(".home-brief");
+          return {
+            visible: !!card && !card.closest("details") && card.getBoundingClientRect().height > 0,
+            afterDoubleUp: card?.previousElementSibling?.classList.contains("ruby-double-up") ?? false,
+          };
+        });
+        if (!kickoff.visible || !kickoff.afterDoubleUp)
+          failures.push(`${label}: next-kickoff card not shown under Today's Double Up`);
+        await page.locator(".ruby-home-details").evaluateAll(nodes => nodes.forEach(node => node.open = true));
+      }
       const state = await page.evaluate(() => ({
         overflow: document.documentElement.scrollWidth - window.innerWidth,
         text: document.body.innerText,
