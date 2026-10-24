@@ -788,3 +788,5 @@ html[data-theme] body a.ruby-primary {
 .ruby-standings td {
   font-variant-numeric: tabular-nums;
 }
+
+.ruby-encore.ruby-card { background: linear-gradient(155deg, #49203f, #1d121e 65%); border: 2px solid #d491b0; }
