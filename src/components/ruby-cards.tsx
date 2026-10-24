@@ -739,9 +739,12 @@ function Composer({
 export default function RubyHub({
   home = false,
   selectedId = "",
+  contributorsOnly = false,
 }: {
   home?: boolean;
   selectedId?: string;
+  /** Show only to contributors and admins; everyone else opens it from the Contributors tab. */
+  contributorsOnly?: boolean;
 }) {
   const [state, setState] = useState<RubyHomeState>({});
   const [slips, setSlips] = useState<RubySlip[]>([]);
@@ -843,6 +846,7 @@ export default function RubyHub({
       (selected === "All" || s.brand === selected) &&
       (!home || s.submission_day === state.day),
   );
+  if (contributorsOnly && !state.contributor && !state.admin) return null;
   return (
     <div className="ruby-hub">
       {home && state.contributor && (

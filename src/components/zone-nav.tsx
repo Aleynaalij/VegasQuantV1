@@ -4,9 +4,9 @@ export default function ZoneNav({ active = "Latest" }: { active?: string }) {
     <nav className="zone-views" aria-label="Zone views" data-swipe-tabs>
       {[
         ["Latest", "/feed"],
-        ["Contributors", "/feed?view=contributors"],
-        ["Parlays", "/feed?view=parlays"],
         ["Legs", "/feed?view=legs"],
+        ["Parlays", "/feed?view=parlays"],
+        ["Contributors", "/feed?view=contributors"],
         ["Wins", "/feed?view=wins"],
         ["Games", "/matchups"],
         ["Injury watch", "/feed?view=injury"],

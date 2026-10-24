@@ -339,9 +339,14 @@ export default function ResearchFeed() {
             Saved legs →
           </Link>
         </header>
+        {/* Members open The Zone on research and AI legs; contributor lays are one tap away.
+            Contributors and admins still see them first on Latest. */}
         {(zoneView === "Contributors" || zoneView === "Latest") &&
           access.allowed && (
-            <RubyHub selectedId={searchParams.get("ruby") || ""} />
+            <RubyHub
+              selectedId={searchParams.get("ruby") || ""}
+              contributorsOnly={zoneView === "Latest"}
+            />
           )}
         {zoneView !== "Contributors" && <HowItWorks />}
         {zoneView === "Parlays" && <WeekendMoneylineCard />}
