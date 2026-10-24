@@ -1033,39 +1033,61 @@ export default function RubyHub({
         <ResultPrompt state={state} onSaved={() => void refresh()} />
       ) : null}
       {records.length > 0 && (
-        <section className="ruby-double-up">
-          <h2>Capper standings</h2>
+        <section className="ruby-board" aria-labelledby="ruby-board-title">
+          <header>
+            <span className="ruby-board-kicker" id="ruby-board-title">
+              <i aria-hidden="true" /> CAPPER BOARD
+            </span>
+            <span className="ruby-board-chip">SELF-REPORTED</span>
+          </header>
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Capper</th>
+                <th scope="col">W</th>
+                <th scope="col">L</th>
+                <th scope="col">
+                  <abbr title="Void">V</abbr>
+                </th>
+                <th scope="col">
+                  <abbr title="Pending">P</abbr>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...records]
+                .sort(
+                  (a, b) =>
+                    b.wins - a.wins ||
+                    a.losses - b.losses ||
+                    a.brand.localeCompare(b.brand),
+                )
+                .map((r, i) => (
+                  <tr key={r.brand}>
+                    <td className="ruby-board-rank">{i + 1}</td>
+                    <th scope="row">{r.brand}</th>
+                    <td>
+                      <b>{r.wins}</b>
+                    </td>
+                    <td>
+                      <b>{r.losses}</b>
+                    </td>
+                    <td>
+                      <b>{r.voids}</b>
+                    </td>
+                    <td>
+                      <b>{r.total - r.wins - r.losses - r.voids}</b>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
           <p>
-            Contributor-reported results · sorted by wins. Voids and pending
-            slips are excluded from wins/losses. Small samples aren’t proof of
-            future performance.
+            Results are reported by each capper the day after, not independently
+            verified. Voids and pending slips stay out of wins and losses. Small
+            samples aren’t proof of future performance.
           </p>
-          <div className="ruby-standings">
-            <table>
-              <thead>
-                <tr>
-                  <th>Contributor</th>
-                  <th>W</th>
-                  <th>L</th>
-                  <th>Void</th>
-                  <th>Pending</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...records]
-                  .sort((a, b) => b.wins - a.wins || a.losses - b.losses)
-                  .map((r) => (
-                    <tr key={r.brand}>
-                      <th>{r.brand}</th>
-                      <td>{r.wins}</td>
-                      <td>{r.losses}</td>
-                      <td>{r.voids}</td>
-                      <td>{r.total - r.wins - r.losses - r.voids}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
         </section>
       )}
       <section className="ruby-contributors">
@@ -1100,10 +1122,11 @@ export default function RubyHub({
             >
               <span className="ruby-avatar">{b.monogram}</span>
               <strong>{b.brand}</strong>
-              <span>
-                {records.find((r) => r.brand === b.brand)
-                  ? `${records.find((r) => r.brand === b.brand)!.wins}W–${records.find((r) => r.brand === b.brand)!.losses}L · self-reported`
-                  : "No reported results"}
+              <span className="ruby-person-record">
+                {(() => {
+                  const r = records.find((x) => x.brand === b.brand);
+                  return r ? `${r.wins}–${r.losses}` : "No results yet";
+                })()}
               </span>
               <span>
                 {slips.some(

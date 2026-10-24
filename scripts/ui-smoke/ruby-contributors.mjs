@@ -381,9 +381,15 @@ for (const { width, photoOnly } of [
     .getByRole("region", { name: "Confirm your slip result" })
     .waitFor({ state: "detached" });
   assert.equal(reported, "WIN");
-  const standings = page.locator(".ruby-standings");
-  await standings.waitFor();
-  assert.ok((await standings.innerText()).includes("The GOAT\t3\t1\t0\t1"));
+  const board = page.locator(".ruby-board");
+  await board.waitFor();
+  assert.deepEqual(
+    await board
+      .locator("tbody tr")
+      .first()
+      .evaluate((row) => [...row.cells].map((c) => c.textContent.trim())),
+    ["1", "The GOAT", "3", "1", "0", "1"],
+  );
   reviewing = false;
   reported = null;
   // Only an admin sees "Remove from The Zone"; it records a hide for that card.
