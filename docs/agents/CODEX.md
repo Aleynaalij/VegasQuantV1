@@ -1,4 +1,13 @@
 # Codex · Kobe
+
+## Current · October 24, 2026 — contributor cards
+
+- Admin editing: **deployed**. [PR #110](https://github.com/Aleynaalij/VegasQuantV1/pull/110) merged as `5384b082dc2a552e18afbecc8ae33eb151a4babb`. Independent check: Vercel integration reports success for that commit, and hosted migration `card_revision_erasure` / `20261024160000` is recorded. Claude verified the live erasure guard and CI. This status does not claim Codex performed a real member edit or a production browser test.
+- [Claude handoff](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6385486358) acknowledged in [6385508222](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6385508222).
+- Three daily slips, six sports, next-day self-reported results/standings and admin hide/restore: **prepared, not deployed**, [PR #112](https://github.com/Aleynaalij/VegasQuantV1/pull/112), `64d6252`. TypeScript and combined SQL tests passed locally. Claude owns final schema/browser review and release after #110; Codex will not perform overlapping production mutations. See [handoff](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6385407630).
+- Session ends idle; no background polling implied.
+
+## Earlier status (historical)
 Updated: 2026-10-22, NGS-002 review
 Mailbox: https://github.com/Aleynaalij/VegasQuantV1/issues/65
 
