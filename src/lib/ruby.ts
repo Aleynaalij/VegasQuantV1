@@ -37,6 +37,8 @@ export type RubyContributor = {
   active: boolean;
 };
 export type RubySlip = {
+  revision?: number;
+  edited_at?: string | null;
   id: string;
   user_id: string;
   brand: string;
