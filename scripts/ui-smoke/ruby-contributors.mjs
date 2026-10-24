@@ -214,6 +214,7 @@ for (const { width, photoOnly } of [
     await page.getByLabel("Combined odds · optional").fill("+250");
     await page.getByText("Preview your card", { exact: true }).click();
     assert.ok(await page.locator(".ruby-modal .ruby-diamond").count());
+    assert.equal(await page.locator(".ruby-modal .ruby-gambly").count(), 0);
   }
   await page
     .getByRole("button", { name: "Publish to The Zone", exact: true })
@@ -256,6 +257,24 @@ for (const { width, photoOnly } of [
       ),
     );
   }
+  // Every published lay opens with Gambly; typed legs are copied first.
+  const gambly = page
+    .locator(".ruby-card.ruby-diamond .ruby-gambly")
+    .getByRole("button", {
+      name: photoOnly
+        ? "Open with Gambly ↗"
+        : "Copy lay & open with Gambly ↗",
+      exact: true,
+    });
+  await gambly.click();
+  await page
+    .getByRole("heading", {
+      name: photoOnly
+        ? "You must be 21 or older"
+        : "Copy here. Paste in Gambly.",
+    })
+    .waitFor();
+  await page.getByRole("button", { name: "Cancel" }).click();
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth + 1,

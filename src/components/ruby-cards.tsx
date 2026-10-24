@@ -17,6 +17,7 @@ import {
   type RubyHomeState,
 } from "@/lib/ruby";
 import CommunityPhoto from "./community-photo";
+import GamblyLink from "./gambly-link";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
 import {
   MAX_SELECTED_PHOTO_BYTES,
@@ -190,6 +191,20 @@ export function RubyCard({
           <ArrowUpRight size={18} />
         </Link>
       </footer>
+      {slip.id !== "preview" && (
+        <div className="ruby-gambly">
+          {/* Screenshot-only lays have no typed legs to copy, so they just open Gambly. */}
+          <GamblyLink
+            url="https://gambly.com/"
+            selection={slip.legs.length ? slip.legs.join("\n") : undefined}
+            label={
+              slip.legs.length
+                ? "Copy lay & open with Gambly ↗"
+                : "Open with Gambly ↗"
+            }
+          />
+        </div>
+      )}
       {admin && <AdminCardEditor slip={slip} onSaved={onFeatured} />}
       {!!slip.revision && (
         <p className="ruby-fine">
