@@ -1,19 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
+import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
-import { onUserChange } from "./auth-user";
 
-// Records (the published record, performance and tailed-pick history) are admin-only. One
-// is_admin check per signed-in account is shared by every component that asks.
-let cached: { uid: string | null; admin: Promise<boolean> } | null = null;
+// Records (the published record, performance and tailed-pick history) are admin-only. is_admin
+// needs an MFA-verified (aal2) session, so one check is shared per account *and* assurance level:
+// completing MFA in the same account re-checks.
+let cached: { key: string; admin: Promise<boolean> } | null = null;
 
-export async function checkAdmin(): Promise<boolean> {
-  const { data } = await supabase.auth.getSession();
-  const uid = data.session?.user.id ?? null;
-  if (!uid) return false;
-  if (cached?.uid !== uid)
+function assurance(token: string) {
+  try {
+    const part = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    return String(JSON.parse(atob(part)).aal ?? "");
+  } catch {
+    return "";
+  }
+}
+export const sessionKey = (s: Session | null) =>
+  s ? `${s.user.id}:${assurance(s.access_token)}` : null;
+
+async function adminFor(key: string | null) {
+  if (!key) return false;
+  if (cached?.key !== key)
     cached = {
-      uid,
+      key,
       admin: Promise.resolve(supabase.rpc("is_admin")).then(
         (r) => !r.error && r.data === true,
         () => false,
@@ -22,24 +32,34 @@ export async function checkAdmin(): Promise<boolean> {
   return cached.admin;
 }
 
+export async function checkAdmin(): Promise<boolean> {
+  const { data } = await supabase.auth.getSession();
+  return adminFor(sessionKey(data.session));
+}
+
 /** true or false once known; null while checking. */
 export function useIsAdmin() {
   const [admin, setAdmin] = useState<boolean | null>(null);
   useEffect(() => {
     let live = true;
-    const load = () =>
-      void checkAdmin().then((a) => {
-        if (live) setAdmin(a);
-      });
-    load();
-    const stop = onUserChange(() => {
-      cached = null;
+    let current: string | null | undefined;
+    const sync = (session: Session | null) => {
+      const key = sessionKey(session);
+      if (key === current) return;
+      current = key;
       setAdmin(null);
-      load();
-    });
+      void adminFor(key).then((a) => {
+        if (live && current === key) setAdmin(a);
+      });
+    };
+    void supabase.auth.getSession().then((r) => sync(r.data.session));
+    // Sign-in, sign-out, a different account or a completed MFA step all change the key.
+    const { data } = supabase.auth.onAuthStateChange((_event, session) =>
+      sync(session),
+    );
     return () => {
       live = false;
-      stop();
+      data.subscription.unsubscribe();
     };
   }, []);
   return admin;
