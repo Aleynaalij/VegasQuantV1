@@ -53,6 +53,7 @@ import ResearchPulse from "./research-pulse";
 import SourceStatus from "./source-status";
 import ResearchNotebook from "./research-notebook";
 import RecordsDashboard from "./records-dashboard";
+import { useIsAdmin } from "@/lib/use-admin";
 const pct = (v: number | null) => (v === null ? "—" : `${v.toFixed(2)}%`);
 const value = (s: unknown) =>
   s === undefined || s === null || s === "" ? "Awaiting analyst" : String(s);
@@ -65,6 +66,8 @@ export default function DeskApp({
   page: "home" | "game" | "history" | "performance";
   gameSlug?: string;
 }) {
+  // Records (published record, performance, tailed-pick history) are for the admin only.
+  const admin = useIsAdmin();
   const [d, setD] = useState(initial),
     [checkingAccess, setCheckingAccess] = useState(true),
     [error, setError] = useState(""),
@@ -282,6 +285,19 @@ export default function DeskApp({
     URL.revokeObjectURL(url);
   }
   const access = (d as Desk & { access?: Access }).access || noAccess;
+  if ((page === "history" || page === "performance") && admin !== true)
+    return (
+      <Shell active="home">
+        <p className="vq-soft-notice" role="status">
+          {admin === null ? "Checking access…" : "Records are private."}
+        </p>
+        {admin === false && (
+          <Link className="secondary" href="/">
+            Back to Home
+          </Link>
+        )}
+      </Shell>
+    );
   if (
     !access.allowed &&
     (!["home", "history"].includes(page) ||

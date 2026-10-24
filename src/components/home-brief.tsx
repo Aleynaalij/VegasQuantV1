@@ -8,6 +8,7 @@ import {
 import type { Game } from "@/lib/domain";
 import TeamLogo from "./team-logo";
 import KickoffCountdown from "./kickoff-countdown";
+import AdminOnly from "./admin-only";
 const nick = (team: string) => team.split(" ").at(-1) || team;
 const when = (iso: string, opts: Intl.DateTimeFormatOptions) =>
   new Date(iso).toLocaleString("en-US", {
@@ -129,13 +130,15 @@ export default function HomeBrief({ games }: { games: Game[] }) {
             <small>What changed & why</small>
           </span>
         </Link>
-        <Link href="/history">
-          <ShieldCheck size={18} aria-hidden="true" />
-          <span>
-            <b>The record</b>
-            <small>Every outcome</small>
-          </span>
-        </Link>
+        <AdminOnly>
+          <Link href="/history">
+            <ShieldCheck size={18} aria-hidden="true" />
+            <span>
+              <b>The record</b>
+              <small>Every outcome</small>
+            </span>
+          </Link>
+        </AdminOnly>
       </nav>
     </header>
   );

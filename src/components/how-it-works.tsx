@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AdminOnly from "./admin-only";
 
 // One collapsed explainer, shared by Home and The Zone, so screens open with content.
 export default function HowItWorks() {
@@ -15,8 +16,11 @@ export default function HowItWorks() {
             <Link href="/">Home</Link>: the next kickoff and the Pick of the
             Day. <Link href="/feed">The Zone</Link>: game research, injury news
             and legs we like. <Link href="/community">Community</Link>: member
-            slips and game talk. <Link href="/history">Records</Link>: every
-            published outcome, wins and losses.
+            slips and game talk.{" "}
+            <AdminOnly>
+              <Link href="/history">Records</Link>: every published outcome,
+              wins and losses.
+            </AdminOnly>
           </p>
         </section>
         <section>

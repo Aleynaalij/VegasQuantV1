@@ -13,8 +13,9 @@ const pages = [
   { path: "/feed?view=wins", expect: ["Five legs. One $218 win."] },
   { path: "/matchups", expect: ["Seahawks"] },
   { path: "/matchups/sample-sea-den-2026-10-15", expect: ["Follow Seahawks", "Follow Broncos"] },
-  { path: "/history", expect: ["Vegas Quant published record", "Sample"] },
-  { path: "/performance", expect: ["By sport"] },
+  // Records are admin-only.
+  { path: "/history", expect: ["Records are private."] },
+  { path: "/performance", expect: ["Records are private."] },
   { path: "/community", expect: [] },
   { path: "/membership", expect: [] },
   { path: "/methodology", expect: [] },
@@ -24,7 +25,11 @@ const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
   { path: "/", expect: ["Pick of the Day", "For you", "Your tailed parlays", "More teams this week"] },
   { path: "/community", expect: ["Community", "SampleMember", "Sample post body."] },
-  { path: "/history", expect: ["Profit at published prices", "1 graded pick was published without a price", "Beat the close", "1–1–1"] },
+  { path: "/history", expect: ["Records are private."] },
+];
+const admin = [
+  { path: "/history", expect: ["Vegas Quant published record", "Profit at published prices", "1 graded pick was published without a price", "Beat the close", "1–1–1"] },
+  { path: "/performance", expect: ["By sport"] },
 ];
 const session = () => {
   const exp = Math.floor(Date.now() / 1000) + 86400 * 400;
@@ -55,9 +60,10 @@ const browser = await chromium.launch(
     : {},
 );
 const failures = [];
-for (const [list, auth] of [
-  [pages, false],
-  [signedIn, true],
+for (const [list, auth, isAdmin] of [
+  [pages, false, false],
+  [signedIn, true, false],
+  [admin, true, true],
 ])
   for (const [width, height] of [
     [390, 844],
@@ -68,10 +74,14 @@ for (const [list, auth] of [
       reducedMotion: "reduce",
     });
     if (auth) await ctx.addInitScript(session);
+    if (isAdmin)
+      await ctx.route("**/rest/v1/rpc/is_admin", (route) =>
+        route.fulfill({ contentType: "application/json", body: "true" }),
+      );
     const page = await ctx.newPage();
     await page.clock.install({ time: new Date("2026-10-14T02:00:00Z") });
     for (const { path, expect } of list) {
-      const label = `${path} @${width}${auth ? " signed in" : ""}`;
+      const label = `${path} @${width}${isAdmin ? " admin" : auth ? " signed in" : ""}`;
       const before = failures.length;
       const errors = [];
       page.removeAllListeners("pageerror");
@@ -123,6 +133,12 @@ for (const [list, auth] of [
       if (state.overflow > 1)
         failures.push(`${label}: scrolls sideways by ${state.overflow}px`);
       if (state.fatal) failures.push(`${label}: shows the full-page error`);
+      // The Records tab is in the menu for the admin only.
+      const recordsTabs = await page
+        .locator(`${width < 760 ? ".mobile-nav" : ".sidebar"} a[href="/history"]`)
+        .count();
+      if (recordsTabs !== (isAdmin ? 1 : 0))
+        failures.push(`${label}: ${recordsTabs} Records tab(s) in the menu`);
       for (const t of expect)
         if (!state.text.toLowerCase().includes(t.toLowerCase()))
           failures.push(`${label}: missing "${t}"`);
