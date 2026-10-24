@@ -8,6 +8,7 @@ import SwipeTabs from "./swipe-tabs";
 import TabScrub from "./tab-scrub";
 import CommunityStories from "./community-stories";
 import NbaComingSoon from "./nba-coming-soon";
+import AdminOnly from "./admin-only";
 import { NBA_PAUSED } from "@/lib/nba-paused";
 import {
   ArrowUpRight,
@@ -175,18 +176,20 @@ export function Shell({
             <Users size={19} />
             Community
           </Link>
-          <Link
-            className={
-              ["history", "performance"].includes(active) ? "active" : ""
-            }
-            aria-current={
-              ["history", "performance"].includes(active) ? "page" : undefined
-            }
-            href={records}
-          >
-            <History size={18} />
-            Records
-          </Link>
+          <AdminOnly>
+            <Link
+              className={
+                ["history", "performance"].includes(active) ? "active" : ""
+              }
+              aria-current={
+                ["history", "performance"].includes(active) ? "page" : undefined
+              }
+              href={records}
+            >
+              <History size={18} />
+              Records
+            </Link>
+          </AdminOnly>
           <Link
             className={active === "account" ? "active" : ""}
             aria-current={active === "account" ? "page" : undefined}
@@ -357,18 +360,20 @@ export function Shell({
             <Users size={19} />
             Community
           </Link>
-          <Link
-            className={
-              ["history", "performance"].includes(active) ? "active" : ""
-            }
-            aria-current={
-              ["history", "performance"].includes(active) ? "page" : undefined
-            }
-            href={records}
-          >
-            <History size={19} />
-            Records
-          </Link>
+          <AdminOnly>
+            <Link
+              className={
+                ["history", "performance"].includes(active) ? "active" : ""
+              }
+              aria-current={
+                ["history", "performance"].includes(active) ? "page" : undefined
+              }
+              href={records}
+            >
+              <History size={19} />
+              Records
+            </Link>
+          </AdminOnly>
           <Link
             className={active === "account" ? "active" : ""}
             aria-current={active === "account" ? "page" : undefined}

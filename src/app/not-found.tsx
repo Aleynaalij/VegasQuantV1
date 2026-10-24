@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Shell } from "@/components/ui";
+import AdminOnly from "@/components/admin-only";
 export default function NotFound() {
   const nba = usePathname()?.startsWith("/nba") ?? false;
   return (
@@ -19,9 +20,11 @@ export default function NotFound() {
           <Link className="text-link" href="/nba">
             NBA desk →
           </Link>
-          <Link className="text-link" href="/history">
-            Records →
-          </Link>
+          <AdminOnly>
+            <Link className="text-link" href="/history">
+              Records →
+            </Link>
+          </AdminOnly>
         </div>
       </div>
     </Shell>

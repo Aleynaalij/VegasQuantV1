@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Bookmark, Flame } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { savedLegs, tailCounts, tailedLegs } from "@/lib/leg-data";
+import { useIsAdmin } from "@/lib/use-admin";
 
 export default function LegActions({
   legKey,
@@ -14,6 +15,7 @@ export default function LegActions({
   expired?: boolean;
   parlay?: boolean;
 }) {
+  const admin = useIsAdmin();
   const [uid, setUid] = useState<string | null>(null);
   const [saved, setSaved] = useState(false),
     [tail, setTail] = useState(false);
@@ -215,19 +217,31 @@ export default function LegActions({
         onClick={() => void toggle("leg_tails")}
       >
         <Flame size={16} />
-        {tail ? (expired ? "In your Records" : "Tailing") : "I’m tailing"}
+        {tail
+          ? expired && admin
+            ? "In your Records"
+            : "Tailing"
+          : "I’m tailing"}
         {count > 0 ? ` · ${count}` : ""}
       </button>
       <small>
         {parlay ? (
           <>
-            Tailing adds this parlay to <Link href="/">Home</Link> and{" "}
-            <Link href="/history">your Records</Link>.
+            Tailing adds this parlay to <Link href="/">Home</Link>
+            {admin && (
+              <>
+                {" "}
+                and <Link href="/history">your Records</Link>
+              </>
+            )}
+            .
           </>
-        ) : (
+        ) : admin ? (
           <>
             Tailing adds this pick to <Link href="/history">your Records</Link>.
           </>
+        ) : (
+          <>Tailing marks this pick as one you’re following.</>
         )}{" "}
         It does not place or record a wager.
       </small>

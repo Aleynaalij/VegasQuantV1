@@ -10,6 +10,7 @@ import { findRule } from "@/lib/nba-rules";
 import { legMarket, legMatchup } from "@/lib/today";
 import { time } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
+import { checkAdmin, useIsAdmin } from "@/lib/use-admin";
 
 type Message = {
   id: number;
@@ -52,6 +53,7 @@ async function cite(
       };
     }
     if (intent.kind === "record") {
+      if (!(await checkAdmin())) return { topic: fallback };
       const r = await supabase.rpc("public_research_status");
       if (r.error || !r.data) return { topic: fallback };
       const line = recordLine(r.data.results || []);
@@ -101,6 +103,7 @@ async function cite(
   }
 }
 export default function AskVegas() {
+  const admin = useIsAdmin();
   const dialog = useRef<HTMLDialogElement>(null);
   const launcher = useRef<HTMLButtonElement>(null);
   const end = useRef<HTMLDivElement>(null);
@@ -274,7 +277,8 @@ export default function AskVegas() {
                       {m.topic?.answer ||
                         "I don’t have a built-in answer for that wording. Try a short topic such as ‘tail a pick’, ‘NBA’ or ‘account access’, or browse all topics. I can’t see your account, answer general questions or make changes for you."}
                     </p>
-                    {m.topic ? (
+                    {m.topic &&
+                    (admin || !m.topic.href.startsWith("/history")) ? (
                       <Link href={m.topic.href} onClick={close}>
                         {m.topic.link} <ArrowUpRight size={15} />
                       </Link>

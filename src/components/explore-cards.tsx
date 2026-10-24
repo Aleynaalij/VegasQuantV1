@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowUpRight, Radio, BookOpen, History } from "lucide-react";
+import AdminOnly from "./admin-only";
 export default function ExploreCards() {
   return (
     <nav className="explore-cards" aria-label="Explore Vegas Quant">
@@ -19,14 +20,16 @@ export default function ExploreCards() {
         </span>
         <ArrowUpRight size={17} />
       </Link>
-      <Link href="/history">
-        <History size={21} />
-        <span>
-          <strong>See the record</strong>
-          <small>Every outcome stays on record</small>
-        </span>
-        <ArrowUpRight size={17} />
-      </Link>
+      <AdminOnly>
+        <Link href="/history">
+          <History size={21} />
+          <span>
+            <strong>See the record</strong>
+            <small>Every outcome stays on record</small>
+          </span>
+          <ArrowUpRight size={17} />
+        </Link>
+      </AdminOnly>
     </nav>
   );
 }

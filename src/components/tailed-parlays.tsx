@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { useIsAdmin } from "@/lib/use-admin";
 type Ticket = {
   leg_key: string;
   name: string;
@@ -12,6 +13,7 @@ type Ticket = {
   expires_at: string;
 };
 export default function TailedParlays() {
+  const admin = useIsAdmin();
   const [rows, setRows] = useState<Ticket[]>([]),
     [signedIn, setSignedIn] = useState(false),
     [notice, setNotice] = useState("");
@@ -93,7 +95,16 @@ export default function TailedParlays() {
   return notice ? (
     <p role="status">{notice}</p>
   ) : (
-    <Link className="vq-foryou-tails" href={rows.length === 1 ? `/feed#release-${rows[0].release_id}` : "/history"}>
+    <Link
+      className="vq-foryou-tails"
+      href={
+        rows.length === 1
+          ? `/feed#release-${rows[0].release_id}`
+          : admin
+            ? "/history"
+            : "/feed"
+      }
+    >
       <span>Your tailed parlays</span>
       <b>{rows.length}</b>
       <small>{rows.length === 1 ? "parlay" : "parlays"}</small>
