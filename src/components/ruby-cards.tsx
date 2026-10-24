@@ -7,6 +7,8 @@ import { onUserChange } from "@/lib/auth-user";
 import {
   rubyBrands,
   contributorTier,
+  contributorSports,
+  type ContributorSport,
   currentRubyFeature,
   rubyLegs,
   rubyLink,
@@ -20,8 +22,8 @@ import CommunityPhoto from "./community-photo";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
 
 export function RubyCard({
-  slip,
-  feature,
+  slip: suppliedSlip,
+  feature: suppliedFeature,
   admin = false,
   onFeatured,
 }: {
@@ -30,6 +32,8 @@ export function RubyCard({
   admin?: boolean;
   onFeatured?: () => void;
 }) {
+  const slip = suppliedSlip;
+  const feature = slip.revision ? undefined : suppliedFeature;
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState("");
   const [featuring, setFeaturing] = useState(false);
@@ -162,6 +166,34 @@ export function RubyCard({
           </div>
         )
       )}
+      {slip.reported_result && (
+        <p className="ruby-fine">
+          Contributor-reported: {slip.reported_result} · not independently
+          verified
+        </p>
+      )}
+      {admin && (
+        <button
+          type="button"
+          className="ruby-text-link"
+          onClick={async () => {
+            const r = await supabase.rpc("hide_ruby", {
+              p_submission: slip.id,
+              p_hidden: !slip.hidden,
+            });
+            setNotice(
+              r.error
+                ? r.error.message
+                : slip.hidden
+                  ? "Restored to The Zone."
+                  : "Removed from The Zone. History and record retained.",
+            );
+            if (!r.error) onFeatured?.();
+          }}
+        >
+          {slip.hidden ? "Restore to The Zone" : "Remove from The Zone"}
+        </button>
+      )}
       <footer>
         <span>
           {slip.submission_day} · Contributor opinion
@@ -184,7 +216,17 @@ export function RubyCard({
           <ArrowUpRight size={18} />
         </Link>
       </footer>
-      {admin && !feature && (
+      {admin && <AdminCardEditor slip={slip} onSaved={onFeatured} />}
+      {!!slip.revision && (
+        <p className="ruby-fine">
+          Edited by admin · revision {slip.revision}. Original retained in
+          history.
+          {suppliedFeature
+            ? " Original featured quote does not apply to this revision."
+            : ""}
+        </p>
+      )}
+      {admin && !suppliedFeature && (
         <details className="ruby-curate">
           <summary>Feature as Double Up</summary>
           <form onSubmit={featureLay}>
@@ -227,6 +269,146 @@ export function RubyCard({
   );
 }
 
+function AdminCardEditor({
+  slip,
+  onSaved,
+}: {
+  slip: RubySlip;
+  onSaved?: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [editing, setEditing] = useState(false);
+  async function save(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    setBusy(true);
+    setMessage("");
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) throw new Error("Sign in again.");
+      let photo = f.get("remove_photo") ? null : slip.photo_path;
+      const file = f.get("photo");
+      if (file instanceof File && file.size) {
+        if (file.size > 5_000_000)
+          throw new Error("Choose a screenshot under 5 MB.");
+        const body = new FormData();
+        body.set("photo", file);
+        const response = await fetch(
+          `/api/community/photo?post=${crypto.randomUUID()}`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${data.session.access_token}` },
+            body,
+          },
+        );
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Upload failed.");
+        photo = result.path;
+      }
+      const { error } = await supabase.rpc("edit_ruby", {
+        p_submission: slip.id,
+        p_expected: slip.revision || 0,
+        p_title: String(f.get("title")).trim(),
+        p_legs: rubyLegs(String(f.get("legs"))),
+        p_note: String(f.get("note")),
+        p_sport: String(f.get("sport")),
+        p_book: String(f.get("book")).trim() || null,
+        p_odds: rubyOdds(String(f.get("odds"))),
+        p_photo: photo,
+      });
+      if (error) throw new Error(error.message);
+      setEditing(false);
+      setMessage("Card updated. Original preserved.");
+      onSaved?.();
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Could not save.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="ruby-curate">
+      <button
+        type="button"
+        className="ruby-primary"
+        onClick={() => setEditing(!editing)}
+        disabled={busy}
+      >
+        {editing ? "Cancel edit" : "Edit card"}
+      </button>
+      {editing && (
+        <form onSubmit={save} key={`${slip.id}-${slip.revision || 0}`}>
+          <p>
+            Admin edit. The original stays in history. Edits do not create a
+            extra daily submission or resend publication alerts.
+          </p>
+          <label>
+            Title · optional
+            <input name="title" defaultValue={slip.title} maxLength={90} />
+          </label>
+          <label>
+            Sport
+            <select name="sport" defaultValue={slip.sport}>
+              {contributorSports.map((s) => (
+                <option key={s}>{s}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Legs · optional
+            <textarea
+              name="legs"
+              defaultValue={slip.legs.join("\n")}
+              rows={5}
+            />
+          </label>
+          <label>
+            Description · optional
+            <textarea name="note" defaultValue={slip.note} maxLength={1000} />
+          </label>
+          <label>
+            Sportsbook · optional
+            <input
+              name="book"
+              defaultValue={slip.sportsbook || ""}
+              maxLength={80}
+            />
+          </label>
+          <label>
+            Combined odds · optional
+            <input
+              name="odds"
+              defaultValue={slip.reported_odds ?? ""}
+              inputMode="text"
+            />
+          </label>
+          <label>
+            Replace screenshot · optional
+            <input
+              name="photo"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+            />
+          </label>
+          {slip.photo_path && (
+            <label>
+              <span>
+                <input name="remove_photo" type="checkbox" /> Remove current
+                screenshot
+              </span>
+            </label>
+          )}
+          <button className="ruby-primary" disabled={busy}>
+            {busy ? "Saving…" : "Save changes"}
+          </button>
+        </form>
+      )}
+      {message && <p role="status">{message}</p>}
+    </div>
+  );
+}
+
 function Composer({
   state,
   onPublished,
@@ -239,7 +421,7 @@ function Composer({
   const [message, setMessage] = useState("");
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
-  const [sport, setSport] = useState<"NFL" | "NBA">("NFL");
+  const [sport, setSport] = useState<ContributorSport>("NFL");
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState("");
@@ -361,7 +543,7 @@ function Composer({
       // A lost RPC response can follow a committed insert: never delete its source image.
       if (path) {
         const { data: stored, error } = await supabase
-          .from("ruby_submissions")
+          .from("ruby_cards")
           .select("id")
           .eq("id", pending.current)
           .maybeSingle();
@@ -394,12 +576,10 @@ function Composer({
         </span>
         <h2>{contributor.brand}</h2>
         <p>
-          {state.submitted
-            ? "Your daily lay is live. Next slip opens at midnight Eastern."
-            : "Your take. Your card. One lay a day."}
+          {`${state.submission_count || 0} / 3 slips posted today. Resets at midnight Eastern.`}
         </p>
       </div>
-      {state.submitted ? (
+      {(state.submission_count || 0) >= 3 && state.submitted ? (
         <Link className="ruby-primary" href={rubyLink(state.submitted)}>
           View your lay <ArrowUpRight size={17} />
         </Link>
@@ -407,6 +587,11 @@ function Composer({
         <button className="ruby-primary" onClick={() => setOpen(true)}>
           <Plus size={17} /> Submit today’s lay
         </button>
+      )}
+      {state.submitted && (state.submission_count || 0) < 3 && (
+        <Link className="ruby-text-link" href={rubyLink(state.submitted)}>
+          View your lay
+        </Link>
       )}
       {message && <p role="status">{message}</p>}
       {open && (
@@ -437,7 +622,7 @@ function Composer({
             <form onSubmit={submit}>
               <p>
                 Upload your screenshot and publish. No title, description or
-                typed legs needed. One lay per Eastern day.
+                typed legs needed. Up to three slips per Eastern day.
               </p>
               <label className="ruby-upload">
                 <Upload size={18} /> Upload your slip
@@ -484,11 +669,14 @@ function Composer({
                   <select
                     aria-label="Sport"
                     value={sport}
-                    onChange={(e) => setSport(e.target.value as "NFL" | "NBA")}
+                    onChange={(e) =>
+                      setSport(e.target.value as ContributorSport)
+                    }
                     disabled={busy}
                   >
-                    <option>NFL</option>
-                    <option>NBA</option>
+                    {contributorSports.map((s) => (
+                      <option key={s}>{s}</option>
+                    ))}
                   </select>
                 </label>
                 <label>
@@ -576,6 +764,93 @@ function Composer({
   );
 }
 
+function ResultPrompt({
+  state,
+  onSaved,
+}: {
+  state: RubyHomeState;
+  onSaved: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [confirmed, setConfirmed] = useState(false);
+  const card = state.due?.[0];
+  useEffect(() => {
+    setConfirmed(false);
+    setMessage("");
+  }, [card?.id]);
+  if (!card) return null;
+  async function report(outcome: string) {
+    setBusy(true);
+    setMessage("");
+    const r = await supabase.rpc("report_ruby", {
+      p_submission: card!.id,
+      p_outcome: outcome,
+      p_revision: card!.revision,
+    });
+    setBusy(false);
+    if (r.error) setMessage(r.error.message);
+    else onSaved();
+  }
+  return (
+    <section className="ruby-double-up" aria-label="Confirm your slip result">
+      <span className="ruby-eyebrow">
+        YOUR RECORD · {state.due!.length} TO REVIEW
+      </span>
+      <h2>Did this slip clear?</h2>
+      <h3>{card.title}</h3>
+      {card.legs.map((l, i) => (
+        <p key={i}>{l}</p>
+      ))}
+      {card.photo_path && (
+        <CommunityPhoto
+          path={card.photo_path}
+          title="Original submission to review"
+        />
+      )}
+      <p>
+        Only confirm once every leg has settled. Your answer is shown as
+        contributor-reported, not independently verified. Pending slips stay out
+        of your win/loss record.
+      </p>
+      <label>
+        <input
+          type="checkbox"
+          checked={confirmed}
+          onChange={(e) => setConfirmed(e.target.checked)}
+        />{" "}
+        All legs have settled; I checked the ticket.
+      </label>
+      <div className="ruby-result-actions">
+        {[
+          ["WIN", "Cleared"],
+          ["LOSS", "Didn’t clear"],
+          ["VOID", "Voided / refunded"],
+        ].map(([v, label]) => (
+          <button
+            type="button"
+            className="ruby-primary"
+            key={v}
+            disabled={busy || !confirmed}
+            onClick={() => void report(v)}
+          >
+            {label}
+          </button>
+        ))}
+        <button
+          type="button"
+          className="ruby-text-link"
+          disabled={busy}
+          onClick={() => void report("PENDING")}
+        >
+          Still pending · ask tomorrow
+        </button>
+      </div>
+      {message && <p role="status">{message}</p>}
+    </section>
+  );
+}
+
 export default function RubyHub({
   home = false,
   selectedId = "",
@@ -584,7 +859,19 @@ export default function RubyHub({
   selectedId?: string;
 }) {
   const [state, setState] = useState<RubyHomeState>({});
+  const [records, setRecords] = useState<
+    {
+      brand: string;
+      wins: number;
+      losses: number;
+      voids: number;
+      total: number;
+    }[]
+  >([]);
   const [slips, setSlips] = useState<RubySlip[]>([]);
+  const [originalFeatured, setOriginalFeatured] = useState<RubySlip | null>(
+    null,
+  );
   const [feature, setFeature] = useState<RubyFeature | null>(null);
   const [selected, setSelected] = useState("All");
   const [error, setError] = useState("");
@@ -597,6 +884,7 @@ export default function RubyHub({
     if (!session.data.session) {
       setState({});
       setSlips([]);
+      setOriginalFeatured(null);
       setFeature(null);
       setError("");
       return;
@@ -604,7 +892,7 @@ export default function RubyHub({
     const [s, r, f] = await Promise.all([
       supabase.rpc("ruby_home"),
       supabase
-        .from("ruby_submissions")
+        .from("ruby_cards")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(home ? 20 : limit),
@@ -621,14 +909,27 @@ export default function RubyHub({
     }
     const next = (s.data || {}) as RubyHomeState;
     setState(next);
+    const record = await supabase.rpc("ruby_record_summary");
+    if (version !== epoch.current) return;
+    setRecords(record.error ? [] : record.data || []);
     setSlips(r.data || []);
     const todayFeature = currentRubyFeature(next.day, f.data || []);
     setFeature(todayFeature);
+    setOriginalFeatured(null);
+    if (home && todayFeature) {
+      const original = await supabase
+        .from("ruby_submissions")
+        .select("*")
+        .eq("id", todayFeature.submission_id)
+        .maybeSingle();
+      if (version !== epoch.current) return;
+      if (original.data) setOriginalFeatured(original.data);
+    }
     setError("");
     const neededId = selectedId || todayFeature?.submission_id || "";
     if (neededId && !r.data?.some((x) => x.id === neededId)) {
       const one = await supabase
-        .from("ruby_submissions")
+        .from("ruby_cards")
         .select("*")
         .eq("id", neededId)
         .maybeSingle();
@@ -642,6 +943,7 @@ export default function RubyHub({
       epoch.current++;
       setState({});
       setSlips([]);
+      setOriginalFeatured(null);
       setFeature(null);
       void refresh();
     });
@@ -661,7 +963,8 @@ export default function RubyHub({
         .getElementById(`ruby-${selectedId}`)
         ?.scrollIntoView({ block: "start" });
   }, [selectedId, slips]);
-  const featured = feature && slips.find((s) => s.id === feature.submission_id);
+  const featured =
+    feature && slips.find((s) => s.id === feature.submission_id && !s.hidden);
   const visible = slips.filter(
     (s) =>
       (!home || selected !== "All") &&
@@ -689,12 +992,54 @@ export default function RubyHub({
             </p>
           </div>
           {featured && feature ? (
-            <RubyCard slip={featured} feature={feature} />
+            <RubyCard
+              slip={originalFeatured || featured}
+              feature={originalFeatured ? feature : undefined}
+            />
           ) : (
             <Link className="ruby-text-link" href="/feed?view=contributors">
               Explore contributor lays <ArrowUpRight size={16} />
             </Link>
           )}
+        </section>
+      )}
+      {home && state.due?.length ? (
+        <ResultPrompt state={state} onSaved={() => void refresh()} />
+      ) : null}
+      {records.length > 0 && (
+        <section className="ruby-double-up">
+          <h2>Capper standings</h2>
+          <p>
+            Contributor-reported results · sorted by wins. Voids and pending
+            slips are excluded from wins/losses. Small samples aren’t proof of
+            future performance.
+          </p>
+          <div className="ruby-standings">
+            <table>
+              <thead>
+                <tr>
+                  <th>Contributor</th>
+                  <th>W</th>
+                  <th>L</th>
+                  <th>Void</th>
+                  <th>Pending</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...records]
+                  .sort((a, b) => b.wins - a.wins || a.losses - b.losses)
+                  .map((r) => (
+                    <tr key={r.brand}>
+                      <th>{r.brand}</th>
+                      <td>{r.wins}</td>
+                      <td>{r.losses}</td>
+                      <td>{r.voids}</td>
+                      <td>{r.total - r.wins - r.losses - r.voids}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
       <section className="ruby-contributors">
@@ -729,6 +1074,11 @@ export default function RubyHub({
             >
               <span className="ruby-avatar">{b.monogram}</span>
               <strong>{b.brand}</strong>
+              <span>
+                {records.find((r) => r.brand === b.brand)
+                  ? `${records.find((r) => r.brand === b.brand)!.wins}W–${records.find((r) => r.brand === b.brand)!.losses}L · self-reported`
+                  : "No reported results"}
+              </span>
               <span>
                 {slips.some(
                   (s) => s.brand === b.brand && s.submission_day === state.day,
