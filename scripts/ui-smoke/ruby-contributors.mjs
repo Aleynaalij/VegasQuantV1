@@ -91,11 +91,17 @@ for (const { width, photoOnly } of [
           active: true,
         },
         submitted: mine?.id || null,
+        submission_count: mine ? 1 : 0,
+        due: [],
         admin: false,
       };
     else if (path.endsWith("/ruby_submissions") || path.endsWith("/ruby_cards"))
       body = mine ? [mine, ...slips] : slips;
-    else if (path.endsWith("/ruby_daily_features")) body = [];
+    else if (
+      path.endsWith("/ruby_daily_features") ||
+      path.endsWith("/rpc/ruby_record_summary")
+    )
+      body = [];
     else if (path.endsWith("/rpc/submit_ruby")) {
       const p = route.request().postDataJSON();
       if (photoOnly) {
@@ -196,7 +202,7 @@ for (const { width, photoOnly } of [
   assert.equal(submits, 1);
   assert.equal(
     await page.getByRole("button", { name: "Submit today’s lay" }).count(),
-    0,
+    1,
   );
   await page.getByRole("link", { name: "View your lay" }).click();
   await page.locator(".ruby-card.ruby-diamond").waitFor();

@@ -726,3 +726,26 @@
   background: #1a2834;
   border-color: #bad8e8;
 }
+
+.ruby-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ruby-standings {
+  overflow-x: auto;
+}
+.ruby-standings table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.ruby-standings th,
+.ruby-standings td {
+  text-align: left;
+  padding: 12px 8px;
+  border-bottom: 1px solid #ffffff20;
+}
+.ruby-standings td {
+  font-variant-numeric: tabular-nums;
+}
