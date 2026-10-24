@@ -219,6 +219,13 @@ for (const { width, photoOnly } of [
     .getByRole("button", { name: "Publish to The Zone", exact: true })
     .click();
   await page.getByRole("link", { name: "View your lay" }).waitFor();
+  // The gold link button keeps its dark label under the dark theme's link color.
+  assert.equal(
+    await page
+      .getByRole("link", { name: "View your lay" })
+      .evaluate((a) => getComputedStyle(a).color),
+    "rgb(32, 25, 13)",
+  );
   assert.equal(submits, 1);
   if (photoOnly) {
     // A full-screen phone screenshot is shrunk in the browser below the 4.5 MB platform limit.
