@@ -334,8 +334,8 @@
       "id": "NBA-008",
       "owner": "CLAUDE",
       "scope": "application",
-      "status": "deployed",
-      "updated_at": "2026-10-23T00:30:00Z",
+      "status": "verified",
+      "updated_at": "2026-10-24T14:30:00Z",
       "files": [
         "src/lib/nba-paused.ts",
         "src/components/nba-coming-soon.tsx",
@@ -353,7 +353,7 @@
         "tests/nba-daily-collection.test.ts"
       ],
       "depends_on": [],
-      "next_action": "Claude: verify the first 6 a.m. ET NBA collection (Oct 23 10:00Z/10:05Z, confirm 13:10Z) and the live /nba redirect, then mark verified.",
+      "next_action": "Done: NBA paused on the live site; NBA data collects once each morning (6:00/6:05 ET, 9:10 ET confirm).",
       "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/92",
       "checks": [
         {
@@ -371,6 +371,11 @@
       "acknowledgment": {
         "by": "CODEX",
         "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353131440"
+      },
+      "live_verification": {
+        "at": "2026-10-24T14:30:00Z",
+        "result": "passed",
+        "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6385004281"
       }
     },
     {
