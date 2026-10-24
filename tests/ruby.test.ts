@@ -9,9 +9,9 @@ import {
   rubyLink,
 } from "../src/lib/ruby.ts";
 import { notificationLink } from "../src/lib/notifications.ts";
-test("permanent Ruby identities have four different template signatures", () => {
-  assert.equal(new Set(rubyBrands.map((x) => x.brand)).size, 4);
-  assert.equal(new Set(rubyBrands.map((x) => x.theme)).size, 4);
+test("permanent Ruby identities have five different template signatures", () => {
+  assert.equal(new Set(rubyBrands.map((x) => x.brand)).size, 5);
+  assert.equal(new Set(rubyBrands.map((x) => x.theme)).size, 5);
 });
 test("typed slips preserve exact selections; missing odds stay unknown", () => {
   assert.deepEqual(rubyLegs("  A over 15.5\n\n B 2+ receptions "), [

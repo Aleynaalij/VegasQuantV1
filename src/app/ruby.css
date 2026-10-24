@@ -654,3 +654,75 @@
   font-size: 13px;
   padding: 10px 0;
 }
+
+/* The owner's diamond signature: graphite, platinum and faceted ice. */
+.ruby-diamond.ruby-card {
+  border: 1px solid #d7edfa;
+  background:
+    radial-gradient(ellipse at 100% 0, #344955, transparent 55%),
+    linear-gradient(135deg, #111820, #070b10 70%);
+  box-shadow:
+    inset 0 0 0 4px #d5edff0c,
+    0 16px 40px #0005;
+}
+.ruby-diamond.ruby-card::before {
+  opacity: 0.6;
+  background:
+    conic-gradient(
+      from 45deg at 80% 18%,
+      transparent 0 45deg,
+      #c5e8fc12 45deg 90deg,
+      transparent 90deg 180deg,
+      #c5e8fc0c 180deg 225deg,
+      transparent 225deg
+    ),
+    linear-gradient(135deg, transparent 48%, #e4f5ff12 49%, transparent 50%);
+}
+.ruby-diamond .ruby-tier {
+  color: #e3f5ff;
+  border-color: #d5edff80;
+  background: #bddfff0a;
+}
+.ruby-diamond .ruby-monogram,
+.ruby-diamond .ruby-vq,
+.ruby-diamond .ruby-signature p,
+.ruby-diamond .ruby-card-label,
+.ruby-diamond .ruby-eyebrow {
+  color: #d3eaf6;
+}
+.ruby-diamond .ruby-signature h3 {
+  font-family: Georgia, serif;
+  font-size: 30px;
+  letter-spacing: -0.035em;
+  color: #f2faff;
+}
+.ruby-diamond .ruby-avatar {
+  border-radius: 14px;
+  border-color: #d4efff;
+  background: conic-gradient(
+    from 45deg,
+    #14212d,
+    #6d8795,
+    #1a2a37,
+    #b1cad5,
+    #14212d
+  );
+  color: white;
+  box-shadow: 0 0 0 4px #a8d5ee16;
+}
+.ruby-diamond.ruby-composer-home {
+  background: linear-gradient(115deg, #253442, #10151c);
+  border-color: #b9d4e373;
+}
+.ruby-diamond .ruby-card-label {
+  border-color: #c5e5fa33;
+}
+.ruby-diamond .ruby-monogram {
+  letter-spacing: 0;
+}
+.ruby-diamond.ruby-screenshot-preview,
+.ruby-diamond.ruby-person.is-selected {
+  color: #e3f5ff;
+  background: #1a2834;
+  border-color: #bad8e8;
+}

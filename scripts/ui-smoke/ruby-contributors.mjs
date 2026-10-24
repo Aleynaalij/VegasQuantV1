@@ -45,6 +45,7 @@ for (const { width, photoOnly } of [
   let mine = null,
     submits = 0;
   const slips = [
+    ["OmaticsZone", "orbit"],
     ["SoDegenerate", "diagonal"],
     ["FranksCorner", "corner"],
     ["HoustonMikesHub", "skyline"],
@@ -85,8 +86,8 @@ for (const { width, photoOnly } of [
         day,
         contributor: {
           user_id: uid,
-          brand: "OmaticsZone",
-          theme: "orbit",
+          brand: "The GOAT",
+          theme: "diamond",
           active: true,
         },
         submitted: mine?.id || null,
@@ -98,7 +99,7 @@ for (const { width, photoOnly } of [
     else if (path.endsWith("/rpc/submit_ruby")) {
       const p = route.request().postDataJSON();
       if (photoOnly) {
-        assert.equal(p.p_title, "OmaticsZone’s daily lay");
+        assert.equal(p.p_title, "The GOAT’s daily lay");
         assert.equal(p.p_sport, "NFL");
         assert.deepEqual(p.p_legs, []);
         assert.equal(p.p_note, "");
@@ -116,8 +117,8 @@ for (const { width, photoOnly } of [
       mine = {
         id: p.p_id,
         user_id: uid,
-        brand: "OmaticsZone",
-        theme: "orbit",
+        brand: "The GOAT",
+        theme: "diamond",
         submission_day: day,
         sport: p.p_sport,
         title: p.p_title,
@@ -185,8 +186,8 @@ for (const { width, photoOnly } of [
       .fill("Sample X 20+ points\nSample Y 5+ rebounds");
     await page.getByLabel("Sportsbook · optional").fill("Sample Book");
     await page.getByLabel("Combined odds · optional").fill("+250");
-    await page.getByText("Preview your Ruby card", { exact: true }).click();
-    assert.ok(await page.locator(".ruby-modal .ruby-orbit").count());
+    await page.getByText("Preview your card", { exact: true }).click();
+    assert.ok(await page.locator(".ruby-modal .ruby-diamond").count());
   }
   await page
     .getByRole("button", { name: "Publish to The Zone", exact: true })
@@ -198,19 +199,21 @@ for (const { width, photoOnly } of [
     0,
   );
   await page.getByRole("link", { name: "View your lay" }).click();
-  await page.locator(".ruby-card.ruby-orbit").waitFor();
-  for (const theme of ["orbit", "diagonal", "corner", "skyline"])
+  await page.locator(".ruby-card.ruby-diamond").waitFor();
+  for (const theme of ["diamond", "orbit", "diagonal", "corner", "skyline"])
     assert.equal(await page.locator(`.ruby-card.ruby-${theme}`).count(), 1);
   if (photoOnly) {
     assert.ok(
-      (await page.locator(".ruby-card.ruby-orbit").innerText()).includes(
-        "OmaticsZone’s daily lay",
+      (await page.locator(".ruby-card.ruby-diamond").innerText()).includes(
+        "The GOAT’s daily lay",
       ),
     );
-    await page.locator(".ruby-card.ruby-orbit .community-photo img").waitFor();
+    await page
+      .locator(".ruby-card.ruby-diamond .community-photo img")
+      .waitFor();
   } else {
     assert.ok(
-      (await page.locator(".ruby-card.ruby-orbit").innerText()).includes(
+      (await page.locator(".ruby-card.ruby-diamond").innerText()).includes(
         "Contributor-reported combined odds",
       ),
     );
@@ -223,7 +226,7 @@ for (const { width, photoOnly } of [
   );
   assert.deepEqual(errors, []);
   console.log(
-    `PASS Ruby composer, preview, NBA member submission, daily lock, four templates and Zone link @${width} photoOnly=${photoOnly}`,
+    `PASS Ruby composer, preview, NBA member submission, daily lock, five templates and Zone link @${width} photoOnly=${photoOnly}`,
   );
   await ctx.close();
 }

@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import {
   rubyBrands,
+  contributorTier,
   currentRubyFeature,
   rubyLegs,
   rubyLink,
@@ -90,7 +91,7 @@ export function RubyCard({
           VQ <span>VEGAS QUANT</span>
         </span>
         <span className="ruby-tier">
-          <Gem size={12} /> RUBY
+          <Gem size={12} /> {contributorTier(brand.theme)}
         </span>
       </div>
       <div className="ruby-signature">
@@ -386,10 +387,10 @@ function Composer({
   }
   const contributor = state.contributor!;
   return (
-    <section className="ruby-composer-home">
+    <section className={`ruby-composer-home ruby-${contributor.theme}`}>
       <div>
         <span className="ruby-eyebrow">
-          <Gem size={13} /> YOUR RUBY DESK
+          <Gem size={13} /> YOUR {contributorTier(contributor.theme)} DESK
         </span>
         <h2>{contributor.brand}</h2>
         <p>
@@ -419,7 +420,9 @@ function Composer({
           >
             <header>
               <div>
-                <span className="ruby-eyebrow">{contributor.brand} · RUBY</span>
+                <span className="ruby-eyebrow">
+                  {contributor.brand} · {contributorTier(contributor.theme)}
+                </span>
                 <h2 id="ruby-compose-title">Make your daily lay.</h2>
               </div>
               <button
@@ -456,7 +459,9 @@ function Composer({
                 <div
                   className={`ruby-screenshot-preview ruby-${contributor.theme}`}
                 >
-                  <span>{contributor.brand} · RUBY</span>
+                  <span>
+                    {contributor.brand} · {contributorTier(contributor.theme)}
+                  </span>
                   <img src={preview} alt="Your original screenshot preview" />
                   <button
                     type="button"
@@ -468,9 +473,9 @@ function Composer({
                 </div>
               )}
               <p className="ruby-fine">
-                Screenshots are framed in your Ruby template, with the original
-                kept intact. No automatic transcription. Crop out account
-                numbers and balances before upload.
+                Screenshots are framed in your signature template, with the
+                original kept intact. No automatic transcription. Crop out
+                account numbers and balances before upload.
               </p>
               <details className="ruby-optional-fields">
                 <summary>Add details · optional</summary>
@@ -540,7 +545,7 @@ function Composer({
                 </label>
               </details>
               <details>
-                <summary>Preview your Ruby card</summary>
+                <summary>Preview your card</summary>
                 <RubyCard
                   slip={{
                     id: "preview",
@@ -695,8 +700,8 @@ export default function RubyHub({
       <section className="ruby-contributors">
         <header>
           <div>
-            <span className="ruby-eyebrow">FOUR VOICES. THEIR OWN GAME.</span>
-            <h2>Ruby contributors</h2>
+            <span className="ruby-eyebrow">THEIR VOICES. THEIR OWN GAME.</span>
+            <h2>Signature contributors</h2>
           </div>
           {home && (
             <Link href="/feed?view=contributors" className="ruby-text-link">

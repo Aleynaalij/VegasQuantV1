@@ -55,6 +55,21 @@ await db.exec(
   ),
 );
 await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261024080046_goat_diamond_contributor.sql",
+    "utf8",
+  ),
+);
+await db.exec(
+  `insert into public.ruby_contributors(user_id,brand,theme) values('${c}','The GOAT','diamond')`,
+);
+await assert.rejects(
+  db.exec(
+    `update public.ruby_contributors set theme='orbit' where user_id='${c}'`,
+  ),
+  /check constraint|unique constraint/,
+);
+await db.exec(
   `insert into public.ruby_contributors(user_id,brand,theme) values('${a}','OmaticsZone','orbit');insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values('${b}','https://example.invalid','key','auth');insert into public.notification_preferences(user_id,push_enabled) values('${b}',true) on conflict(user_id) do update set push_enabled=true;set app.uid='${a}';set role authenticated;`,
 );
 const id = "00000000-0000-4000-8000-000000000010";
