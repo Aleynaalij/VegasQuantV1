@@ -1,5 +1,11 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
 import { ArrowUpRight, Check, Copy, Gem, Plus, Upload, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -740,9 +746,12 @@ export default function RubyHub({
   home = false,
   selectedId = "",
   contributorsOnly = false,
+  afterDoubleUp,
 }: {
   home?: boolean;
   selectedId?: string;
+  /** Home: shown directly under Today's Double Up, before the contributors row. */
+  afterDoubleUp?: ReactNode;
   /** Show only to contributors and admins; everyone else opens it from the Contributors tab. */
   contributorsOnly?: boolean;
 }) {
@@ -879,6 +888,7 @@ export default function RubyHub({
           )}
         </section>
       )}
+      {home && afterDoubleUp}
       <section className="ruby-contributors">
         <header>
           <div>

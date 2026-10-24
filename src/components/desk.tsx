@@ -368,7 +368,14 @@ export default function DeskApp({
         {page === "home" && (
           <>
             <SectionBoundary name="Ruby contributors">
-              <RubyHub home />
+              <RubyHub
+                home
+                afterDoubleUp={
+                  <SectionBoundary name="Next kickoff">
+                    <HomeBrief games={d.games} />
+                  </SectionBoundary>
+                }
+              />
             </SectionBoundary>
             <SectionBoundary name="Game picks">
               <GamePicksShortcut games={d.games} />
@@ -378,9 +385,6 @@ export default function DeskApp({
             </SectionBoundary>
             <details className="ruby-home-details">
               <summary>Games & scores</summary>
-              <SectionBoundary name="Next kickoff">
-                <HomeBrief games={d.games} />
-              </SectionBoundary>
               <SectionBoundary name="Scores">
                 <DecisionBoard games={d.games} />
               </SectionBoundary>
