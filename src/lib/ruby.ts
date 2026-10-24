@@ -1,5 +1,11 @@
 export const rubyBrands = [
   {
+    brand: "The GOAT",
+    theme: "diamond",
+    monogram: "G",
+    tagline: "The standard is different.",
+  },
+  {
     brand: "OmaticsZone",
     theme: "orbit",
     monogram: "OZ",
@@ -87,4 +93,8 @@ export function currentRubyFeature(
   rows: RubyFeature[] = [],
 ): RubyFeature | null {
   return day && rows[0]?.day === day ? rows[0] : null;
+}
+
+export function contributorTier(theme: string) {
+  return theme === "diamond" ? "DIAMOND" : "RUBY";
 }
