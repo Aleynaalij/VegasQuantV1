@@ -9,6 +9,22 @@ const browser = await chromium.launch({
   args: ["--no-sandbox", "--disable-dev-shm-usage"],
 });
 const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
+// Noise keeps the PNG over 10 MB, larger than the platform's 4.5 MB request body limit.
+const { default: sharp } = await import("sharp");
+const phoneScreenshot = await sharp(
+  Uint8Array.from({ length: 1320 * 2868 * 3 }, () => (Math.random() * 256) | 0),
+  { raw: { width: 1320, height: 2868, channels: 3 } },
+)
+  .png({ compressionLevel: 1 })
+  .toBuffer();
+assert.ok(phoneScreenshot.length > 5_000_000);
+const { readFile } = await import("node:fs/promises");
+const refreshVersion = (
+  await readFile(
+    new URL("../../src/components/app-refresh-notice.tsx", import.meta.url),
+    "utf8",
+  )
+).match(/const VERSION = "([^"]+)"/)[1];
 for (const { width, photoOnly } of [
   { width: 390, photoOnly: true },
   { width: 1280, photoOnly: true },
@@ -16,8 +32,14 @@ for (const { width, photoOnly } of [
   { width: 1280, photoOnly: false },
 ]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
-  await ctx.addInitScript(() => {
+  await ctx.addInitScript((refresh) => {
     sessionStorage.setItem("vq-prompt-shown", "fixture");
+    // This member already acknowledged the app-refresh notice, which otherwise opens over the
+    // composer after ~2 s while the large screenshot is being prepared.
+    localStorage.setItem(
+      "vq-app-refresh:00000000-0000-0000-0000-000000000001",
+      refresh,
+    );
     localStorage.setItem(
       "sb-127-auth-token",
       JSON.stringify({
@@ -35,7 +57,7 @@ for (const { width, photoOnly } of [
         },
       }),
     );
-  });
+  }, refreshVersion);
   const page = await ctx.newPage();
   page.setDefaultTimeout(15000);
   const errors = [];
@@ -141,15 +163,17 @@ for (const { width, photoOnly } of [
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
     "base64",
   );
-  await page.route("**/api/community/photo?post=*", (route) =>
-    route.fulfill({
+  let uploadedPhoto = null;
+  await page.route("**/api/community/photo?post=*", (route) => {
+    uploadedPhoto = route.request().postDataBuffer();
+    return route.fulfill({
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({
         path: `${uid}/${new URL(route.request().url()).searchParams.get("post")}.jpg`,
       }),
-    }),
-  );
+    });
+  });
   await page.route("**/storage/v1/object/sign/**", (route) =>
     route.request().method() === "POST"
       ? route.fulfill({
@@ -173,9 +197,11 @@ for (const { width, photoOnly } of [
         .count(),
       0,
     );
-    await page
-      .locator(".ruby-modal input[type=file]")
-      .setInputFiles({ name: "slip.png", mimeType: "image/png", buffer: png });
+    await page.locator(".ruby-modal input[type=file]").setInputFiles({
+      name: "slip.png",
+      mimeType: "image/png",
+      buffer: phoneScreenshot,
+    });
     await page.getByAltText("Your original screenshot preview").waitFor();
   } else {
     await page.getByText("Add details · optional", { exact: true }).click();
@@ -194,6 +220,11 @@ for (const { width, photoOnly } of [
     .click();
   await page.getByRole("link", { name: "View your lay" }).waitFor();
   assert.equal(submits, 1);
+  if (photoOnly) {
+    // A full-screen phone screenshot is shrunk in the browser below the 4.5 MB platform limit.
+    assert.ok(uploadedPhoto && uploadedPhoto.length < 4_400_000);
+    assert.ok(uploadedPhoto.includes(Buffer.from("image/jpeg")));
+  }
   assert.equal(
     await page.getByRole("button", { name: "Submit today’s lay" }).count(),
     0,

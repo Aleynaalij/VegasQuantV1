@@ -12,7 +12,11 @@ import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
 import CommunityPhoto from "./community-photo";
 import CommunityParlayCard from "./community-parlay-card";
-import { COMMUNITY_PHOTO_BUCKET, MAX_PHOTO_BYTES } from "@/lib/community-photo";
+import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
+import {
+  MAX_SELECTED_PHOTO_BYTES,
+  uploadCommunityPhoto,
+} from "@/lib/community-photo-client";
 import { time } from "@/lib/domain";
 import { ImagePlus, Heart, MessageCircle, Share2 } from "lucide-react";
 import { NBA_PAUSED } from "@/lib/nba-paused";
@@ -393,25 +397,11 @@ export default function CommunityFeed() {
         if (generation !== mutationEpoch.current) return;
         if (session.data.session?.user.id !== uid)
           throw Error("Sign in again before posting.");
-        const form = new FormData();
-        form.set("photo", photo);
-        const response = await fetch(`/api/community/photo?post=${postId}`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.data.session.access_token}`,
-          },
-          body: form,
-        });
-        const data = await response.json().catch(() => null);
-        if (!data)
-          throw Error(
-            response.status === 413
-              ? "Photo is too large to upload. Choose a smaller image."
-              : "Photo upload could not complete. Please retry.",
-          );
-        if (!response.ok || !data.path)
-          throw Error(data.error || "Photo upload failed.");
-        uploaded = data.path;
+        uploaded = await uploadCommunityPhoto(
+          photo,
+          postId,
+          session.data.session.access_token,
+        );
       }
       if (generation !== mutationEpoch.current) return;
       const r = await supabase.from("community_posts").insert({
@@ -667,12 +657,12 @@ export default function CommunityFeed() {
                           return;
                         }
                         if (
-                          file.size > MAX_PHOTO_BYTES ||
+                          file.size > MAX_SELECTED_PHOTO_BYTES ||
                           !["image/jpeg", "image/png", "image/webp"].includes(
                             file.type,
                           )
                         ) {
-                          setNotice("Choose a JPG, PNG or WebP under 5 MB.");
+                          setNotice("Choose a JPG, PNG or WebP under 25 MB.");
                           e.target.value = "";
                           setPhoto(null);
                           return;
