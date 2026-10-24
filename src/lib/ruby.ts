@@ -36,7 +36,18 @@ export type RubyContributor = {
   theme: string;
   active: boolean;
 };
+export const contributorSports = [
+  "Soccer",
+  "NFL",
+  "NHL",
+  "NBA",
+  "Baseball",
+  "WNBA",
+] as const;
+export type ContributorSport = (typeof contributorSports)[number];
 export type RubySlip = {
+  hidden?: boolean;
+  reported_result?: string | null;
   revision?: number;
   edited_at?: string | null;
   id: string;
@@ -44,7 +55,7 @@ export type RubySlip = {
   brand: string;
   theme: string;
   submission_day: string;
-  sport: "NFL" | "NBA";
+  sport: ContributorSport;
   title: string;
   legs: string[];
   note: string;
@@ -66,6 +77,15 @@ export type RubyHomeState = {
   day?: string;
   contributor?: RubyContributor | null;
   submitted?: string | null;
+  submission_count?: number;
+  due?: {
+    id: string;
+    brand: string;
+    title: string;
+    revision: number;
+    legs: string[];
+    photo_path: string | null;
+  }[];
   admin?: boolean;
 };
 export function rubyLegs(value: string) {

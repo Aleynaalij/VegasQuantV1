@@ -60,7 +60,9 @@ await db.exec(
     "utf8",
   ),
 );
-await db.exec(`create function private.is_admin() returns boolean language sql as 'select public.is_admin()';create function private.immutable() returns trigger language plpgsql as $$begin raise exception 'Published records are immutable. Add a new version or an explicit correction event.';end$$;`);
+await db.exec(
+  `create function private.is_admin() returns boolean language sql as 'select public.is_admin()';create function private.immutable() returns trigger language plpgsql as $$begin raise exception 'Published records are immutable. Add a new version or an explicit correction event.';end$$;`,
+);
 await db.exec(
   fs.readFileSync(
     "supabase/migrations/20261024134617_admin_contributor_card_revisions.sql",
@@ -247,11 +249,22 @@ assert.equal(
 );
 // Revisions stay append-only even for the table owner: no direct delete, rewrite or editor scrub.
 await db.exec(`reset role`);
-const revisions = async () => (await db.query(`select count(*)::int n from public.ruby_card_revisions`)).rows[0].n;
+const revisions = async () =>
+  (await db.query(`select count(*)::int n from public.ruby_card_revisions`))
+    .rows[0].n;
 assert.equal(await revisions(), 1);
-await assert.rejects(db.exec(`delete from public.ruby_card_revisions`), /immutable/);
-await assert.rejects(db.exec(`update public.ruby_card_revisions set title='overwrite'`), /immutable/);
-await assert.rejects(db.exec(`update public.ruby_card_revisions set edited_by=null`), /immutable/);
+await assert.rejects(
+  db.exec(`delete from public.ruby_card_revisions`),
+  /immutable/,
+);
+await assert.rejects(
+  db.exec(`update public.ruby_card_revisions set title='overwrite'`),
+  /immutable/,
+);
+await assert.rejects(
+  db.exec(`update public.ruby_card_revisions set edited_by=null`),
+  /immutable/,
+);
 // Erasing a separate editing admin keeps the revision and only clears its editor.
 const editor = "00000000-0000-4000-8000-0000000000e1";
 const second = "00000000-0000-4000-8000-0000000000e2";
@@ -260,7 +273,11 @@ await db.exec(`insert into auth.users values('${editor}','editor@example.com',no
  select '${second}',user_id,brand,theme,submission_day,sport,'Second edit',legs,note,id,2,'${editor}' from public.ruby_submissions where id='${id}';
  delete from auth.users where id='${editor}';`);
 assert.deepEqual(
-  (await db.query(`select title, edited_by from public.ruby_card_revisions where id='${second}'`)).rows[0],
+  (
+    await db.query(
+      `select title, edited_by from public.ruby_card_revisions where id='${second}'`,
+    )
+  ).rows[0],
   { title: "Second edit", edited_by: null },
 );
 assert.equal(await revisions(), 2);
@@ -281,5 +298,102 @@ await assert.rejects(
 );
 console.log(
   "PASS Ruby daily cross-sport quota, idempotency, immutability, contributor-only publishing, notifications/push dedup, +100 curation floor, stale quote rejection and block isolation",
+);
+await db.exec(`reset role`);
+await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261024190000_contributor_records.sql",
+    "utf8",
+  ),
+);
+await db.exec(
+  `set app.uid='${b}';set app.admin='false';set role authenticated;`,
+);
+for (const suffix of ["030", "031"])
+  await db.exec(
+    `select public.submit_ruby('00000000-0000-4000-8000-000000000${suffix}','Soccer','Extra slip','["Team A","Team B"]','',null,null,null)`,
+  );
+await assert.rejects(
+  db.exec(
+    `select public.submit_ruby('00000000-0000-4000-8000-000000000032','WNBA','Fourth','["A","B"]','',null,null,null)`,
+  ),
+  /three daily/,
+);
+assert.equal(
+  (await db.query(`select (public.ruby_home()->>'submission_count')::int n`))
+    .rows[0].n,
+  3,
+);
+const reviewId = "00000000-0000-4000-8000-000000000030";
+await assert.rejects(
+  db.exec(`select public.report_ruby('${reviewId}','WIN',0)`),
+  /next Eastern day/,
+);
+await assert.rejects(
+  db.exec(`select public.hide_ruby('${reviewId}',true)`),
+  /Verified admin/,
+);
+await db.exec(
+  `reset role;update public.ruby_submissions set submission_day=current_date-2 where id='${reviewId}';set role authenticated;`,
+);
+await db.exec(`select public.report_ruby('${reviewId}','WIN',0)`);
+await assert.rejects(
+  db.exec(`select public.report_ruby('${reviewId}','LOSS',0)`),
+  /already reported/,
+);
+await db.exec(`set app.uid='${c}'`);
+await assert.rejects(
+  db.exec(`select public.report_ruby('${reviewId}','LOSS',0)`),
+  /own contributor/,
+);
+await db.exec(
+  `set app.admin='true';select public.hide_ruby('${reviewId}',true);set app.admin='false';set app.uid='${b}';`,
+);
+assert.equal(
+  (
+    await db.query(
+      `select count(*)::int n from public.ruby_cards where id='${reviewId}'`,
+    )
+  ).rows[0].n,
+  0,
+);
+assert.equal(
+  (await db.query(`select public.ruby_record_summary() r`)).rows[0].r.find(
+    (x) => x.brand === "FranksCorner",
+  ).wins,
+  1,
+);
+await db.exec(
+  `set app.admin='true';select public.hide_ruby('${reviewId}',false);`,
+);
+assert.equal(
+  (
+    await db.query(
+      `select count(*)::int n from public.ruby_cards where id='${reviewId}'`,
+    )
+  ).rows[0].n,
+  1,
+);
+// The sport constraint was dropped by name; the revisions' sportsbook checks (length, and book
+// given with odds) must survive.
+await db.exec(`reset role`);
+assert.deepEqual(
+  (
+    await db.query(
+      `select conname from pg_constraint where conrelid='public.ruby_card_revisions'::regclass and contype='c' and pg_get_constraintdef(oid) like '%sport%' order by 1`,
+    )
+  ).rows.map((r) => r.conname),
+  [
+    "ruby_card_revisions_sport_check",
+    "ruby_submissions_check1",
+    "ruby_submissions_sportsbook_check",
+  ],
+);
+await assert.rejects(
+  db.exec(`select private.report_ruby('${reviewId}','MAYBE',0)`),
+  /Choose cleared/,
+);
+console.log(
+  "PASS three-slip quota, all-sport constraints, next-day results, owner-only reporting, duplicate result rejection and admin hide/restore with retained record",
 );
 await db.close();
