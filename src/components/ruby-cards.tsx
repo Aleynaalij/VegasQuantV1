@@ -18,6 +18,7 @@ import {
 } from "@/lib/ruby";
 import CommunityPhoto from "./community-photo";
 import GamblyLink from "./gambly-link";
+import { communityPhotoPng } from "@/lib/community-photo-clipboard";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
 import {
   MAX_SELECTED_PHOTO_BYTES,
@@ -193,14 +194,21 @@ export function RubyCard({
       </footer>
       {slip.id !== "preview" && (
         <div className="ruby-gambly">
-          {/* Screenshot-only lays have no typed legs to copy, so they just open Gambly. */}
+          {/* Typed legs copy as text; a screenshot-only lay copies the screenshot itself. */}
           <GamblyLink
             url="https://gambly.com/"
             selection={slip.legs.length ? slip.legs.join("\n") : undefined}
+            image={
+              !slip.legs.length && slip.photo_path
+                ? () => communityPhotoPng(slip.photo_path!)
+                : undefined
+            }
             label={
               slip.legs.length
                 ? "Copy lay & open with Gambly ↗"
-                : "Open with Gambly ↗"
+                : slip.photo_path
+                  ? "Copy screenshot & open with Gambly ↗"
+                  : "Open with Gambly ↗"
             }
           />
         </div>

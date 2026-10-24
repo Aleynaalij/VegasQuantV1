@@ -18,6 +18,12 @@ const phoneScreenshot = await sharp(
   .png({ compressionLevel: 1 })
   .toBuffer();
 assert.ok(phoneScreenshot.length > 5_000_000);
+// What storage serves back: a decodable JPEG, as the server stores every photo.
+const storedSlip = await sharp({
+  create: { width: 60, height: 120, channels: 3, background: "white" },
+})
+  .jpeg()
+  .toBuffer();
 const { readFile } = await import("node:fs/promises");
 const refreshVersion = (
   await readFile(
@@ -32,6 +38,9 @@ for (const { width, photoOnly } of [
   { width: 1280, photoOnly: false },
 ]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+  await ctx.grantPermissions(["clipboard-read", "clipboard-write"], {
+    origin: base,
+  });
   await ctx.addInitScript((refresh) => {
     sessionStorage.setItem("vq-prompt-shown", "fixture");
     // This member already acknowledged the app-refresh notice, which otherwise opens over the
@@ -159,10 +168,6 @@ for (const { width, photoOnly } of [
       body: JSON.stringify(body),
     });
   });
-  const png = Buffer.from(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
-    "base64",
-  );
   let uploadedPhoto = null;
   await page.route("**/api/community/photo?post=*", (route) => {
     uploadedPhoto = route.request().postDataBuffer();
@@ -184,7 +189,11 @@ for (const { width, photoOnly } of [
               "/object/sign/community-photos/fixture.jpg?token=fixture",
           }),
         })
-      : route.fulfill({ status: 200, contentType: "image/png", body: png }),
+      : route.fulfill({
+          status: 200,
+          contentType: "image/jpeg",
+          body: storedSlip,
+        }),
   );
   await page.goto(base + "/", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Submit today’s lay" }).click();
@@ -257,24 +266,48 @@ for (const { width, photoOnly } of [
       ),
     );
   }
-  // Every published lay opens with Gambly; typed legs are copied first.
-  const gambly = page
+  // Every published lay opens with Gambly: typed legs copy as text, a screenshot-only lay
+  // copies the screenshot itself as a PNG.
+  await page
     .locator(".ruby-card.ruby-diamond .ruby-gambly")
     .getByRole("button", {
       name: photoOnly
-        ? "Open with Gambly ↗"
+        ? "Copy screenshot & open with Gambly ↗"
         : "Copy lay & open with Gambly ↗",
       exact: true,
-    });
-  await gambly.click();
-  await page
-    .getByRole("heading", {
-      name: photoOnly
-        ? "You must be 21 or older"
-        : "Copy here. Paste in Gambly.",
     })
+    .click();
+  await page
+    .getByRole("heading", { name: "Copy here. Paste in Gambly." })
     .waitFor();
-  await page.getByRole("button", { name: "Cancel" }).click();
+  if (photoOnly) {
+    await page
+      .locator("dialog[open]")
+      .getByLabel("I confirm I am 21 or older.")
+      .check();
+    await page
+      .locator("dialog[open]")
+      .getByRole("button", { name: "Copy screenshot to clipboard" })
+      .click();
+    await page
+      .locator("dialog[open]")
+      .getByText("YOUR SCREENSHOT IS COPIED")
+      .waitFor();
+    assert.deepEqual(
+      await page.evaluate(async () =>
+        (await navigator.clipboard.read()).flatMap((item) => item.types),
+      ),
+      ["image/png"],
+    );
+    await page
+      .locator("dialog[open]")
+      .getByRole("link", { name: "Open Gambly · Paste screenshot there ↗" })
+      .waitFor();
+  }
+  await page
+    .locator("dialog[open]")
+    .getByRole("button", { name: "Cancel" })
+    .click();
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth + 1,
