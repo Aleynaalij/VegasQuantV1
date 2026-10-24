@@ -18,6 +18,10 @@ import {
 } from "@/lib/ruby";
 import CommunityPhoto from "./community-photo";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
+import {
+  MAX_SELECTED_PHOTO_BYTES,
+  uploadCommunityPhoto,
+} from "@/lib/community-photo-client";
 
 export function RubyCard({
   slip: suppliedSlip,
@@ -193,10 +197,14 @@ export function RubyCard({
           history.
           {suppliedFeature
             ? " Original featured quote does not apply to this revision."
-            : ""}
+            : admin
+              ? " Edited cards can’t be featured: Home shows the original slip."
+              : ""}
         </p>
       )}
-      {admin && !suppliedFeature && (
+      {/* Featuring records the original submission and Home renders it, so a revised card must
+          not offer a quote verified against its edited legs. */}
+      {admin && !suppliedFeature && !slip.revision && (
         <details className="ruby-curate">
           <summary>Feature as Double Up</summary>
           <form onSubmit={featureLay}>
@@ -259,23 +267,12 @@ function AdminCardEditor({
       if (!data.session) throw new Error("Sign in again.");
       let photo = f.get("remove_photo") ? null : slip.photo_path;
       const file = f.get("photo");
-      if (file instanceof File && file.size) {
-        if (file.size > 5_000_000)
-          throw new Error("Choose a screenshot under 5 MB.");
-        const body = new FormData();
-        body.set("photo", file);
-        const response = await fetch(
-          `/api/community/photo?post=${crypto.randomUUID()}`,
-          {
-            method: "POST",
-            headers: { Authorization: `Bearer ${data.session.access_token}` },
-            body,
-          },
+      if (file instanceof File && file.size)
+        photo = await uploadCommunityPhoto(
+          file,
+          crypto.randomUUID(),
+          data.session.access_token,
         );
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.error || "Upload failed.");
-        photo = result.path;
-      }
       const { error } = await supabase.rpc("edit_ruby", {
         p_submission: slip.id,
         p_expected: slip.revision || 0,
@@ -473,19 +470,8 @@ function Composer({
         throw new Error("Your account changed. Reopen the form.");
       const id = pending.current || crypto.randomUUID();
       pending.current = id;
-      if (file) {
-        const photo = new FormData();
-        photo.set("photo", file);
-        const response = await fetch(`/api/community/photo?post=${id}`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${data.session.access_token}` },
-          body: photo,
-        });
-        const result = await response.json();
-        if (!response.ok)
-          throw new Error(result.error || "Screenshot upload failed.");
-        path = result.path;
-      }
+      if (file)
+        path = await uploadCommunityPhoto(file, id, data.session.access_token);
       if (version !== epoch.current)
         throw new Error("Account changed. Submission cancelled.");
       const result = await supabase.rpc("submit_ruby", {
@@ -598,8 +584,8 @@ function Composer({
                   disabled={busy}
                   onChange={(e) => {
                     const f = e.target.files?.[0] || null;
-                    if (f && f.size > 5_000_000) {
-                      setMessage("Choose a screenshot under 5 MB.");
+                    if (f && f.size > MAX_SELECTED_PHOTO_BYTES) {
+                      setMessage("Choose a screenshot under 25 MB.");
                       return;
                     }
                     setFile(f);
