@@ -7,6 +7,7 @@ import { isGamblyUrl } from "@/lib/gambly";
 export default function GamblyLink({
   url,
   selection,
+  image,
   label,
   kalshiLegKeys,
   beforeOpen,
@@ -15,6 +16,8 @@ export default function GamblyLink({
 }: {
   url: string;
   selection?: string;
+  /** An image to copy instead of text, e.g. a contributor's slip screenshot (PNG). */
+  image?: () => Promise<Blob>;
   label?: string;
   kalshiLegKeys?: string[];
   beforeOpen?: () => Promise<boolean>;
@@ -27,12 +30,19 @@ export default function GamblyLink({
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
   const title = useId();
+  const copying = Boolean(selection || image);
   async function copy() {
-    if (!selection || busy) return;
+    if (!copying || busy) return;
     setBusy(true);
     setCopyError(false);
     try {
-      await navigator.clipboard.writeText(selection);
+      // The clipboard write starts inside the tap (Safari requires it); the image is a pending
+      // ClipboardItem value that resolves once the screenshot has been prepared.
+      if (selection) await navigator.clipboard.writeText(selection);
+      else
+        await navigator.clipboard.write([
+          new ClipboardItem({ "image/png": image!() }),
+        ]);
       setCopied(true);
     } catch {
       setCopyError(true);
@@ -44,14 +54,14 @@ export default function GamblyLink({
   const modal = (
     <dialog className="entry-dialog" ref={dialog} aria-labelledby={title}>
       <h2 id={title}>
-        {selection ? "Copy here. Paste in Gambly." : "You must be 21 or older"}
+        {copying ? "Copy here. Paste in Gambly." : "You must be 21 or older"}
       </h2>
-      {selection && (
+      {copying && (
         <p className="notice">
           <strong>
-            Before you leave: copy the pick below. On Gambly, press and hold the
-            chat box, tap PASTE, then press Enter or Send. The pick will not
-            appear there automatically.
+            Before you leave: copy the {selection ? "pick" : "screenshot"}{" "}
+            below. On Gambly, press and hold the chat box, tap PASTE, then press
+            Enter or Send. It will not appear there automatically.
           </strong>
         </p>
       )}
@@ -74,24 +84,38 @@ export default function GamblyLink({
         />{" "}
         I confirm I am 21 or older.
       </label>
-      {confirmed && selection && !copied && !copyError && (
+      {confirmed && copying && !copied && !copyError && (
         <button
           className="btn primary"
           disabled={busy}
           onClick={() => void copy()}
         >
-          {busy ? "Copying…" : "Copy pick to clipboard"}
+          {busy
+            ? "Copying…"
+            : selection
+              ? "Copy pick to clipboard"
+              : "Copy screenshot to clipboard"}
         </button>
       )}
       {copied && (
         <p className="notice" role="status">
           <strong>
-            YOUR PICK IS COPIED TO YOUR CLIPBOARD. On the next site, PASTE it
-            into Gambly’s chat box, then press Enter or Send.
+            YOUR {selection ? "PICK" : "SCREENSHOT"} IS COPIED TO YOUR
+            CLIPBOARD. On the next site, PASTE it into Gambly’s chat box, then
+            press Enter or Send.
           </strong>
         </p>
       )}
-      {copyError && (
+      {copyError && !selection && (
+        <p role="alert">
+          <strong>
+            This browser can’t copy images automatically. Cancel, press and hold
+            the screenshot on the card, choose Copy, then open Gambly and paste
+            it into the chat box.
+          </strong>
+        </p>
+      )}
+      {copyError && selection && (
         <div role="alert">
           <p>
             <strong>
@@ -107,7 +131,7 @@ export default function GamblyLink({
           />
         </div>
       )}
-      {confirmed && (!selection || copied || copyError) && (
+      {confirmed && (!copying || copied || copyError) && (
         <a
           className="btn primary"
           href={url}
@@ -116,9 +140,9 @@ export default function GamblyLink({
           onClick={() => dialog.current?.close()}
         >
           {copyError
-            ? "I copied the text · Open Gambly ↗"
-            : selection
-              ? "Open Gambly · Paste pick there ↗"
+            ? `I copied the ${selection ? "text" : "screenshot"} · Open Gambly ↗`
+            : copying
+              ? `Open Gambly · Paste ${selection ? "pick" : "screenshot"} there ↗`
               : "Continue to Gambly ↗"}
         </a>
       )}

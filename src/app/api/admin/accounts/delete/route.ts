@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { appOrigin, requestUser, serviceDb } from "@/lib/billing-server";
+import { requestUser, sameOrigin, serviceDb } from "@/lib/billing-server";
 import { type ErasurePlan } from "@/lib/account-erasure-billing";
 import { prepareAccountErasure } from "@/lib/account-erasure";
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ const reply = (body: object, status: number) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 
 export async function POST(req: Request) {
-  if (req.headers.get("origin") !== appOrigin())
+  if (!sameOrigin(req))
     return reply({ error: "Invalid origin." }, 403);
   const auth = await requestUser(req);
   if (!auth) return reply({ error: "Sign in as an administrator." }, 401);

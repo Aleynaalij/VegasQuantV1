@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { appOrigin, requestUser } from "@/lib/billing-server";
+import { requestUser, sameOrigin } from "@/lib/billing-server";
 import {
   COMMUNITY_PHOTO_BUCKET,
   MAX_UPLOAD_BODY_BYTES,
@@ -11,8 +11,13 @@ export const runtime = "nodejs";
 const reply = (data: object, status: number) =>
   Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
 export async function POST(req: Request) {
-  if (req.headers.get("origin") !== appOrigin())
-    return reply({ error: "Invalid origin." }, 403);
+  if (!sameOrigin(req))
+    return reply(
+      {
+        error: `Invalid origin (${req.headers.get("origin") || "none"}). Open vegasquant.app directly and retry.`,
+      },
+      403,
+    );
   const auth = await requestUser(req);
   if (!auth) return reply({ error: "Sign in before uploading." }, 401);
   const id = new URL(req.url).searchParams.get("post");

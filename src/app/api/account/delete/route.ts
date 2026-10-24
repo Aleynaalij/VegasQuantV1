@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { appOrigin, requestUser, serviceDb } from "@/lib/billing-server";
+import { requestUser, serviceDb, sameOrigin } from "@/lib/billing-server";
 import { supabaseUrl, publishableKey } from "@/lib/supabase";
 import { type ErasurePlan } from "@/lib/account-erasure-billing";
 import { prepareAccountErasure } from "@/lib/account-erasure";
@@ -21,8 +21,7 @@ function claims(token: string): { session_id?: string; aal?: string } {
 const reply = (body: object, status: number) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 export async function POST(req: Request) {
-  if (req.headers.get("origin") !== appOrigin())
-    return reply({ error: "Invalid origin." }, 403);
+  if (!sameOrigin(req)) return reply({ error: "Invalid origin." }, 403);
   const auth = await requestUser(req);
   if (!auth?.user.email)
     return reply(

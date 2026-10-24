@@ -6,14 +6,13 @@ import {
   type AgeAttempt,
   synchronizeAge,
 } from "@/lib/age-server";
-import { appOrigin, serviceDb } from "@/lib/billing-server";
+import { appOrigin, serviceDb, sameOrigin } from "@/lib/billing-server";
 import { ageConsentVersion, safeIdentityUrl } from "@/lib/age-verification";
 export const dynamic = "force-dynamic";
 const reply = (body: object, status = 200) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 export async function POST(req: Request) {
-  if (req.headers.get("origin") !== appOrigin())
-    return reply({ error: "Invalid origin." }, 403);
+  if (!sameOrigin(req)) return reply({ error: "Invalid origin." }, 403);
   if (!identityConfigured())
     return reply(
       { error: "Independent age verification is not activated yet." },

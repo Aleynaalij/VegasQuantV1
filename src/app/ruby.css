@@ -396,6 +396,15 @@ html[data-theme] body a.ruby-primary {
   padding-top: 16px;
   border-top: 1px solid #d6a9b233;
 }
+.ruby-gambly {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.ruby-gambly > .btn {
+  flex: 1;
+}
 .ruby-card > footer > span {
   flex: 1;
   font-size: 9px;

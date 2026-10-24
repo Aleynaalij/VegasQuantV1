@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { appOrigin, requestUser, serviceDb } from "@/lib/billing-server";
+import { requestUser, sameOrigin, serviceDb } from "@/lib/billing-server";
 import { fetchSportradarCurrentWeek, fetchSportradarGame, sportradarConfig, SportradarError, sportradarStatus } from "@/lib/sportradar-nfl";
 export const dynamic = "force-dynamic";
 const reply = (body: object, status = 200) => Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 }
 const input = z.union([z.object({ action: z.literal("schedule") }).strict(), z.object({ game_id: z.string().uuid(), feed: z.enum(["statistics", "pbp"]) }).strict()]);
 export async function POST(req: Request) {
-  if (req.headers.get("origin") !== appOrigin()) return reply({ error: "Invalid origin." }, 403);
+  if (!sameOrigin(req)) return reply({ error: "Invalid origin." }, 403);
   if (!await authorized(req)) return reply({ error: "Verified administrator required." }, 403);
   let body: z.infer<typeof input>;
   try {

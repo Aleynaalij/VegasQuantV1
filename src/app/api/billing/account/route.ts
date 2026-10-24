@@ -2,6 +2,7 @@ import {
   appOrigin,
   billingEnabled,
   requestUser,
+  sameOrigin,
   serviceDb,
   stripeClient,
 } from "@/lib/billing-server";
@@ -36,7 +37,7 @@ export async function GET(req: Request) {
   }
 }
 export async function POST(req: Request) {
-  if (req.headers.get("origin") !== appOrigin())
+  if (!sameOrigin(req))
     return Response.json({ error: "Invalid origin" }, { status: 403 });
   const auth = await requestUser(req);
   if (!auth)
