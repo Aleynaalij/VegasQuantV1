@@ -418,6 +418,8 @@ for (const { width, photoOnly } of [
   await page.goto(base + "/feed", { waitUntil: "networkidle" });
   await page.locator(".ruby-contributors").waitFor();
   member = true;
+  reviewing = true;
+  reported = "WIN";
   await page.goto(base + "/feed", { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
   assert.equal(await page.locator(".ruby-hub").count(), 0);
@@ -430,7 +432,20 @@ for (const { width, photoOnly } of [
     .getByRole("link", { name: "Contributors" })
     .click();
   await page.locator(".ruby-contributors").waitFor();
+  // Members don't see the board or records on the row; opening a capper shows their rank.
+  await page.waitForLoadState("networkidle");
+  assert.equal(await page.locator(".ruby-board").count(), 0);
+  assert.equal(await page.locator(".ruby-person-record").count(), 0);
+  await page
+    .locator(".ruby-people")
+    .getByRole("button", { name: /The GOAT/ })
+    .click();
+  const record = page.locator(".ruby-profile-record");
+  await record.waitFor();
+  assert.match(await record.textContent(), /The GOAT#1 of 13–1/);
   member = false;
+  reviewing = false;
+  reported = null;
   assert.deepEqual(errors, []);
   console.log(
     `PASS Ruby composer, preview, NBA member submission, daily lock, five templates and Zone link @${width} photoOnly=${photoOnly}`,

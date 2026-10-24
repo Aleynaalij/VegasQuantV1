@@ -120,3 +120,29 @@ export function currentRubyFeature(
 export function contributorTier(theme: string) {
   return theme === "diamond" ? "DIAMOND" : "RUBY";
 }
+export type CapperRecord = {
+  brand: string;
+  wins: number;
+  losses: number;
+  voids: number;
+  total: number;
+};
+/**
+ * Ranks cappers from their reported records: most wins first, then fewer losses. Identical
+ * records share a rank (1, 2, 2, 4); ties are listed by name.
+ */
+export function rankCappers(records: CapperRecord[]) {
+  const sorted = [...records].sort(
+    (a, b) =>
+      b.wins - a.wins || a.losses - b.losses || a.brand.localeCompare(b.brand),
+  );
+  return sorted.map((r) => ({
+    ...r,
+    pending: Math.max(0, r.total - r.wins - r.losses - r.voids),
+    rank:
+      1 +
+      sorted.filter(
+        (o) => o.wins > r.wins || (o.wins === r.wins && o.losses < r.losses),
+      ).length,
+  }));
+}
