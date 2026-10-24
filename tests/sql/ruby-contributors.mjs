@@ -60,6 +60,14 @@ await db.exec(
     "utf8",
   ),
 );
+await db.exec(`create function private.is_admin() returns boolean language sql as 'select public.is_admin()';create function private.immutable() returns trigger language plpgsql as $$begin if tg_op='DELETE' and pg_trigger_depth()>1 then return old;end if;raise exception 'Immutable';end$$;`);
+await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261024134617_admin_contributor_card_revisions.sql",
+    "utf8",
+  ),
+);
+await db.exec(fs.readFileSync("docs/product/proposed-card-revision-erasure.sql", "utf8"));
 await db.exec(
   `insert into public.ruby_contributors(user_id,brand,theme) values('${c}','The GOAT','diamond')`,
 );
@@ -77,6 +85,28 @@ const call = `select public.submit_ruby('${id}','NFL','Daily test','["A over 1.5
 const submit = call.replace("'','',null,null", "'',null,null,null");
 await db.exec(submit);
 await db.exec(submit);
+await db.exec(`set app.admin='false'`);
+const editCall = `select public.edit_ruby('${id}',0,'Corrected title','["A over 1.5","B over 2.5"]','Updated note','NFL',null,null,null)`;
+await assert.rejects(db.exec(editCall), /Verified admin/);
+await db.exec(`set app.admin='true'`);
+await db.exec(editCall);
+assert.equal(
+  (await db.query(`select title from public.ruby_cards where id='${id}'`))
+    .rows[0].title,
+  "Corrected title",
+);
+assert.equal(
+  (await db.query(`select title from public.ruby_submissions where id='${id}'`))
+    .rows[0].title,
+  "Daily test",
+);
+await assert.rejects(db.exec(editCall), /Card changed/);
+await assert.rejects(
+  db.exec(`update public.ruby_card_revisions set title='overwrite'`),
+  /permission denied/,
+);
+await db.exec(`set app.admin='false'`);
+
 assert.equal(
   (await db.query("select count(*)::int n from public.ruby_submissions"))
     .rows[0].n,

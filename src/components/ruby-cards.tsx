@@ -20,8 +20,8 @@ import CommunityPhoto from "./community-photo";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
 
 export function RubyCard({
-  slip,
-  feature,
+  slip: suppliedSlip,
+  feature: suppliedFeature,
   admin = false,
   onFeatured,
 }: {
@@ -30,6 +30,8 @@ export function RubyCard({
   admin?: boolean;
   onFeatured?: () => void;
 }) {
+  const slip = suppliedSlip;
+  const feature = slip.revision ? undefined : suppliedFeature;
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState("");
   const [featuring, setFeaturing] = useState(false);
@@ -184,7 +186,17 @@ export function RubyCard({
           <ArrowUpRight size={18} />
         </Link>
       </footer>
-      {admin && !feature && (
+      {admin && <AdminCardEditor slip={slip} onSaved={onFeatured} />}
+      {!!slip.revision && (
+        <p className="ruby-fine">
+          Edited by admin · revision {slip.revision}. Original retained in
+          history.
+          {suppliedFeature
+            ? " Original featured quote does not apply to this revision."
+            : ""}
+        </p>
+      )}
+      {admin && !suppliedFeature && (
         <details className="ruby-curate">
           <summary>Feature as Double Up</summary>
           <form onSubmit={featureLay}>
@@ -224,6 +236,145 @@ export function RubyCard({
       )}
       {notice && <p role="status">{notice}</p>}
     </article>
+  );
+}
+
+function AdminCardEditor({
+  slip,
+  onSaved,
+}: {
+  slip: RubySlip;
+  onSaved?: () => void;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [editing, setEditing] = useState(false);
+  async function save(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    setBusy(true);
+    setMessage("");
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) throw new Error("Sign in again.");
+      let photo = f.get("remove_photo") ? null : slip.photo_path;
+      const file = f.get("photo");
+      if (file instanceof File && file.size) {
+        if (file.size > 5_000_000)
+          throw new Error("Choose a screenshot under 5 MB.");
+        const body = new FormData();
+        body.set("photo", file);
+        const response = await fetch(
+          `/api/community/photo?post=${crypto.randomUUID()}`,
+          {
+            method: "POST",
+            headers: { Authorization: `Bearer ${data.session.access_token}` },
+            body,
+          },
+        );
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || "Upload failed.");
+        photo = result.path;
+      }
+      const { error } = await supabase.rpc("edit_ruby", {
+        p_submission: slip.id,
+        p_expected: slip.revision || 0,
+        p_title: String(f.get("title")).trim(),
+        p_legs: rubyLegs(String(f.get("legs"))),
+        p_note: String(f.get("note")),
+        p_sport: String(f.get("sport")),
+        p_book: String(f.get("book")).trim() || null,
+        p_odds: rubyOdds(String(f.get("odds"))),
+        p_photo: photo,
+      });
+      if (error) throw new Error(error.message);
+      setEditing(false);
+      setMessage("Card updated. Original preserved.");
+      onSaved?.();
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Could not save.");
+    } finally {
+      setBusy(false);
+    }
+  }
+  return (
+    <div className="ruby-curate">
+      <button
+        type="button"
+        className="ruby-primary"
+        onClick={() => setEditing(!editing)}
+        disabled={busy}
+      >
+        {editing ? "Cancel edit" : "Edit card"}
+      </button>
+      {editing && (
+        <form onSubmit={save} key={`${slip.id}-${slip.revision || 0}`}>
+          <p>
+            Admin edit. The original stays in history. Edits do not create a
+            second daily submission or resend publication alerts.
+          </p>
+          <label>
+            Title · optional
+            <input name="title" defaultValue={slip.title} maxLength={90} />
+          </label>
+          <label>
+            Sport
+            <select name="sport" defaultValue={slip.sport}>
+              <option>NFL</option>
+              <option>NBA</option>
+            </select>
+          </label>
+          <label>
+            Legs · optional
+            <textarea
+              name="legs"
+              defaultValue={slip.legs.join("\n")}
+              rows={5}
+            />
+          </label>
+          <label>
+            Description · optional
+            <textarea name="note" defaultValue={slip.note} maxLength={1000} />
+          </label>
+          <label>
+            Sportsbook · optional
+            <input
+              name="book"
+              defaultValue={slip.sportsbook || ""}
+              maxLength={80}
+            />
+          </label>
+          <label>
+            Combined odds · optional
+            <input
+              name="odds"
+              defaultValue={slip.reported_odds ?? ""}
+              inputMode="text"
+            />
+          </label>
+          <label>
+            Replace screenshot · optional
+            <input
+              name="photo"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+            />
+          </label>
+          {slip.photo_path && (
+            <label>
+              <span>
+                <input name="remove_photo" type="checkbox" /> Remove current
+                screenshot
+              </span>
+            </label>
+          )}
+          <button className="ruby-primary" disabled={busy}>
+            {busy ? "Saving…" : "Save changes"}
+          </button>
+        </form>
+      )}
+      {message && <p role="status">{message}</p>}
+    </div>
   );
 }
 
@@ -361,7 +512,7 @@ function Composer({
       // A lost RPC response can follow a committed insert: never delete its source image.
       if (path) {
         const { data: stored, error } = await supabase
-          .from("ruby_submissions")
+          .from("ruby_cards")
           .select("id")
           .eq("id", pending.current)
           .maybeSingle();
@@ -585,6 +736,9 @@ export default function RubyHub({
 }) {
   const [state, setState] = useState<RubyHomeState>({});
   const [slips, setSlips] = useState<RubySlip[]>([]);
+  const [originalFeatured, setOriginalFeatured] = useState<RubySlip | null>(
+    null,
+  );
   const [feature, setFeature] = useState<RubyFeature | null>(null);
   const [selected, setSelected] = useState("All");
   const [error, setError] = useState("");
@@ -597,6 +751,7 @@ export default function RubyHub({
     if (!session.data.session) {
       setState({});
       setSlips([]);
+      setOriginalFeatured(null);
       setFeature(null);
       setError("");
       return;
@@ -604,7 +759,7 @@ export default function RubyHub({
     const [s, r, f] = await Promise.all([
       supabase.rpc("ruby_home"),
       supabase
-        .from("ruby_submissions")
+        .from("ruby_cards")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(home ? 20 : limit),
@@ -624,11 +779,21 @@ export default function RubyHub({
     setSlips(r.data || []);
     const todayFeature = currentRubyFeature(next.day, f.data || []);
     setFeature(todayFeature);
+    setOriginalFeatured(null);
+    if (home && todayFeature) {
+      const original = await supabase
+        .from("ruby_submissions")
+        .select("*")
+        .eq("id", todayFeature.submission_id)
+        .maybeSingle();
+      if (version !== epoch.current) return;
+      if (original.data) setOriginalFeatured(original.data);
+    }
     setError("");
     const neededId = selectedId || todayFeature?.submission_id || "";
     if (neededId && !r.data?.some((x) => x.id === neededId)) {
       const one = await supabase
-        .from("ruby_submissions")
+        .from("ruby_cards")
         .select("*")
         .eq("id", neededId)
         .maybeSingle();
@@ -642,6 +807,7 @@ export default function RubyHub({
       epoch.current++;
       setState({});
       setSlips([]);
+      setOriginalFeatured(null);
       setFeature(null);
       void refresh();
     });
@@ -689,7 +855,10 @@ export default function RubyHub({
             </p>
           </div>
           {featured && feature ? (
-            <RubyCard slip={featured} feature={feature} />
+            <RubyCard
+              slip={originalFeatured || featured}
+              feature={originalFeatured ? feature : undefined}
+            />
           ) : (
             <Link className="ruby-text-link" href="/feed?view=contributors">
               Explore contributor lays <ArrowUpRight size={16} />
