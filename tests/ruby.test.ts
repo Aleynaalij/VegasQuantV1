@@ -9,9 +9,9 @@ import {
   rubyLink,
 } from "../src/lib/ruby.ts";
 import { notificationLink } from "../src/lib/notifications.ts";
-test("permanent Ruby identities have six different template signatures", () => {
-  assert.equal(new Set(rubyBrands.map((x) => x.brand)).size, 6);
-  assert.equal(new Set(rubyBrands.map((x) => x.theme)).size, 6);
+test("permanent Ruby identities have seven different template signatures", () => {
+  assert.equal(new Set(rubyBrands.map((x) => x.brand)).size, 7);
+  assert.equal(new Set(rubyBrands.map((x) => x.theme)).size, 7);
   assert.deepEqual(rubyBrands.find((x) => x.brand === "MarkKuban"), {
     brand: "MarkKuban",
     theme: "marquee",
