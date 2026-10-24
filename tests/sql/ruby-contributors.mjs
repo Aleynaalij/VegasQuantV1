@@ -60,14 +60,19 @@ await db.exec(
     "utf8",
   ),
 );
-await db.exec(`create function private.is_admin() returns boolean language sql as 'select public.is_admin()';create function private.immutable() returns trigger language plpgsql as $$begin if tg_op='DELETE' and pg_trigger_depth()>1 then return old;end if;raise exception 'Immutable';end$$;`);
+await db.exec(`create function private.is_admin() returns boolean language sql as 'select public.is_admin()';create function private.immutable() returns trigger language plpgsql as $$begin raise exception 'Published records are immutable. Add a new version or an explicit correction event.';end$$;`);
 await db.exec(
   fs.readFileSync(
     "supabase/migrations/20261024134617_admin_contributor_card_revisions.sql",
     "utf8",
   ),
 );
-await db.exec(fs.readFileSync("docs/product/proposed-card-revision-erasure.sql", "utf8"));
+await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261024160000_card_revision_erasure.sql",
+    "utf8",
+  ),
+);
 await db.exec(
   `insert into public.ruby_contributors(user_id,brand,theme) values('${c}','The GOAT','diamond')`,
 );
@@ -240,9 +245,30 @@ assert.equal(
   ).rows[0].n,
   0,
 );
+// Revisions stay append-only even for the table owner: no direct delete, rewrite or editor scrub.
+await db.exec(`reset role`);
+const revisions = async () => (await db.query(`select count(*)::int n from public.ruby_card_revisions`)).rows[0].n;
+assert.equal(await revisions(), 1);
+await assert.rejects(db.exec(`delete from public.ruby_card_revisions`), /immutable/);
+await assert.rejects(db.exec(`update public.ruby_card_revisions set title='overwrite'`), /immutable/);
+await assert.rejects(db.exec(`update public.ruby_card_revisions set edited_by=null`), /immutable/);
+// Erasing a separate editing admin keeps the revision and only clears its editor.
+const editor = "00000000-0000-4000-8000-0000000000e1";
+const second = "00000000-0000-4000-8000-0000000000e2";
+await db.exec(`insert into auth.users values('${editor}','editor@example.com',now(),'old');
+ insert into public.ruby_card_revisions(id,user_id,brand,theme,submission_day,sport,title,legs,note,submission_id,revision,edited_by)
+ select '${second}',user_id,brand,theme,submission_day,sport,'Second edit',legs,note,id,2,'${editor}' from public.ruby_submissions where id='${id}';
+ delete from auth.users where id='${editor}';`);
+assert.deepEqual(
+  (await db.query(`select title, edited_by from public.ruby_card_revisions where id='${second}'`)).rows[0],
+  { title: "Second edit", edited_by: null },
+);
+assert.equal(await revisions(), 2);
 await db.exec(
   `reset role;update public.ruby_daily_features set submission_id='00000000-0000-4000-8000-000000000020';delete from auth.users where id='${a}';`,
 );
+// Erasing the contributor (who also made the first edit) removes the card and its revisions.
+assert.equal(await revisions(), 0);
 assert.equal(
   (await db.query("select verified_by from public.ruby_daily_features")).rows[0]
     .verified_by,

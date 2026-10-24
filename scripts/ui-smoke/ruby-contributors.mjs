@@ -93,7 +93,7 @@ for (const { width, photoOnly } of [
         submitted: mine?.id || null,
         admin: false,
       };
-    else if (path.endsWith("/ruby_submissions"))
+    else if (path.endsWith("/ruby_submissions") || path.endsWith("/ruby_cards"))
       body = mine ? [mine, ...slips] : slips;
     else if (path.endsWith("/ruby_daily_features")) body = [];
     else if (path.endsWith("/rpc/submit_ruby")) {
