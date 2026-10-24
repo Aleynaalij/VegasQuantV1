@@ -1,9 +1,9 @@
-import { appOrigin, requestUser } from "@/lib/billing-server";
+import { requestUser, sameOrigin } from "@/lib/billing-server";
 import { sendPushTest } from "@/lib/push-test-server";
 import { validPushEndpoint } from "@/lib/push";
 export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
-  if (req.headers.get("origin") !== appOrigin())
+  if (!sameOrigin(req))
     return Response.json({ error: "Invalid origin" }, { status: 403 });
   const auth = await requestUser(req);
   if (!auth)

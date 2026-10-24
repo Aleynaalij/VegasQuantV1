@@ -5,6 +5,7 @@ import {
   billingEnabled,
   billingMode,
   requestUser,
+  sameOrigin,
   serviceDb,
   stripeClient,
 } from "@/lib/billing-server";
@@ -14,7 +15,7 @@ export async function POST(req: Request) {
       { error: "Checkout is not configured yet." },
       { status: 503 },
     );
-  if (req.headers.get("origin") !== appOrigin())
+  if (!sameOrigin(req))
     return Response.json({ error: "Invalid origin." }, { status: 403 });
   const auth = await requestUser(req);
   if (!auth)

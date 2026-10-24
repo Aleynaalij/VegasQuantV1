@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { appOrigin, requestUser } from "@/lib/billing-server";
+import { requestUser, sameOrigin } from "@/lib/billing-server";
 import { COMMUNITY_PHOTO_BUCKET, photoPath } from "@/lib/community-photo";
 const reply = (data: object, status: number) =>
   Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
@@ -7,8 +7,7 @@ export async function DELETE(
   req: Request,
   ctx: { params: Promise<{ id: string }> },
 ) {
-  if (req.headers.get("origin") !== appOrigin())
-    return reply({ error: "Invalid origin." }, 403);
+  if (!sameOrigin(req)) return reply({ error: "Invalid origin." }, 403);
   const auth = await requestUser(req);
   if (!auth) return reply({ error: "Sign in." }, 401);
   const { id } = await ctx.params;

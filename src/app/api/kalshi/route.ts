@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { appOrigin, requestUser } from "@/lib/billing-server";
+import { requestUser, sameOrigin } from "@/lib/billing-server";
 import {
   kalshiTarget,
   kalshiEvent,
@@ -11,8 +11,7 @@ export const runtime = "nodejs";
 const reply = (body: object, status = 200) =>
   Response.json(body, { status, headers: { "Cache-Control": "no-store" } });
 export async function POST(req: Request) {
-  if (req.headers.get("origin") !== appOrigin())
-    return reply({ error: "Invalid origin." }, 403);
+  if (!sameOrigin(req)) return reply({ error: "Invalid origin." }, 403);
   const auth = await requestUser(req);
   if (!auth) return reply({ error: "Sign in to check Kalshi." }, 401);
   if (Number(req.headers.get("content-length") || 0) > 10000)
