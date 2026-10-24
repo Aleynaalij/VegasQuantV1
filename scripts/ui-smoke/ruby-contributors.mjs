@@ -74,7 +74,8 @@ for (const { width, photoOnly } of [
   const day = "2026-10-23",
     uid = "00000000-0000-0000-0000-000000000001";
   let mine = null,
-    submits = 0;
+    submits = 0,
+    member = false;
   const slips = [
     ["OmaticsZone", "orbit"],
     ["SoDegenerate", "diagonal"],
@@ -115,12 +116,14 @@ for (const { width, photoOnly } of [
       body = {
         user_id: uid,
         day,
-        contributor: {
-          user_id: uid,
-          brand: "The GOAT",
-          theme: "diamond",
-          active: true,
-        },
+        contributor: member
+          ? null
+          : {
+              user_id: uid,
+              brand: "The GOAT",
+              theme: "diamond",
+              active: true,
+            },
         submitted: mine?.id || null,
         admin: false,
       };
@@ -314,6 +317,24 @@ for (const { width, photoOnly } of [
     ),
     false,
   );
+  // The contributor sees contributor lays first on Latest; a general member opens The Zone on
+  // research and AI legs, and reaches contributor lays from the Contributors tab.
+  await page.goto(base + "/feed", { waitUntil: "networkidle" });
+  await page.locator(".ruby-contributors").waitFor();
+  member = true;
+  await page.goto(base + "/feed", { waitUntil: "networkidle" });
+  await page.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
+  assert.equal(await page.locator(".ruby-hub").count(), 0);
+  assert.deepEqual(
+    (await page.locator(".zone-views a").allInnerTexts()).slice(0, 4),
+    ["Latest", "Legs", "Parlays", "Contributors"],
+  );
+  await page
+    .locator(".zone-views")
+    .getByRole("link", { name: "Contributors" })
+    .click();
+  await page.locator(".ruby-contributors").waitFor();
+  member = false;
   assert.deepEqual(errors, []);
   console.log(
     `PASS Ruby composer, preview, NBA member submission, daily lock, five templates and Zone link @${width} photoOnly=${photoOnly}`,
