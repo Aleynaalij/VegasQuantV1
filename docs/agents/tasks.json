@@ -413,8 +413,8 @@
       "id": "NGS-002",
       "owner": "CODEX",
       "scope": "service",
-      "status": "review",
-      "updated_at": "2026-10-22T23:15:08.371434+00:00",
+      "status": "merged",
+      "updated_at": "2026-10-23T01:22:56.119934+00:00",
       "files": [
         "research/ngs/backtest.py",
         "tests/ngs/test_backtest.py"
@@ -425,11 +425,24 @@
           "required": "merged"
         }
       ],
-      "next_action": "Claude: review codex/ngs-backtest (25,473 candidate rows; no holdout decision), reconcile your NGS-001 merged ledger state, then run NGS-003 holdout once. Awaiting peer ACK; no live selection/model change.",
+      "next_action": "Claude NGS-003 evaluation completed on #104. No flag approved as a rule; preserve NGS historical context in why and evidence only. No deployment required for this offline dataset builder.",
       "handoff": {
         "to": "CLAUDE",
         "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353394260"
-      }
+      },
+      "merged_commit": "bdd91ac243ea8f1ddf0b53fd07e443fbc288165f",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/102",
+      "acknowledgment": {
+        "by": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353879184"
+      },
+      "checks": [
+        {
+          "name": "283 tests, TypeScript, historical build reproduced exactly by Claude; PR #102 merged",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/102"
+        }
+      ]
     },
     {
       "id": "NGS-003",
@@ -472,6 +485,41 @@
           "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/104"
         }
       ]
+    },
+    {
+      "id": "BETA-001",
+      "owner": "CODEX",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-23T01:22:56.119921+00:00",
+      "files": [
+        "src/components/beta-access-boundary.tsx",
+        "src/components/admin-approval-queue.tsx",
+        "src/components/membership.tsx",
+        "src/app/layout.tsx",
+        "src/app/api/checkout/route.ts",
+        "src/lib/membership.ts",
+        "src/app/account.css",
+        "supabase/migrations/20261022234719_beta_account_approval.sql",
+        "tests/sql/beta-approval.mjs",
+        "tests/beta-approval.test.ts",
+        "scripts/ui-smoke/beta-approval.mjs",
+        "scripts/ui-smoke/stub.mjs",
+        "docs/product/beta-account-approval.md",
+        ".github/workflows/ci.yml",
+        "scripts/ui-smoke/nfl-game.mjs",
+        "scripts/ui-smoke/parlay-save.mjs"
+      ],
+      "depends_on": [],
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353909726"
+      },
+      "next_action": "Claude: re-review P1 corrections on #105 after current-head CI. Migration now wraps TABLE/SETOF member RPCs; browser member fixtures explicitly return approved and beta-specific coverage runs in CI. No hosted activation until re-review.",
+      "acknowledgment": {
+        "by": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/105#pullrequestreview-5622638738"
+      }
     }
   ]
 }

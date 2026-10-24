@@ -1,6 +1,7 @@
 "use client";
 import FollowTopics from "./follow-topics";
 import AdminMembers from "./admin-members";
+import AdminApprovalQueue from "./admin-approval-queue";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -135,7 +136,7 @@ export default function Membership() {
       }
       setNotice(
         signup
-          ? "Confirm your email, then return here to sign in. If you entered a friends code, activate it below after signing in."
+          ? "Confirm your email, then sign in and finish your profile. Vegas Quant is in testing: new accounts require administrator approval before app access."
           : "Signed in.",
       );
       await refresh();
@@ -327,7 +328,12 @@ export default function Membership() {
           {notice}
         </p>
       )}
-      {access.admin && <AdminMembers />}
+      {access.admin && (
+        <>
+          <AdminApprovalQueue />
+          <AdminMembers />
+        </>
+      )}
       {session ? (
         <Panel
           id="access-settings"
@@ -337,17 +343,21 @@ export default function Membership() {
           <div className="notebook">
             <p>{session.user.email}</p>
             <p>
-              {access.admin_account
-                ? access.admin
-                  ? "Administrator · Full access"
-                  : "Administrator · Complete verification to open your board. No paid pass needed."
-                : access.allowed
-                  ? access.complimentary_premium
-                    ? "Complimentary Premium active · Existing member"
-                    : access.trial_active
-                      ? "Premium research active · 14-day signup trial included"
-                      : "Premium research active"
-                  : "Free Community · Published picks and personal tracking included"}
+              {access.approval_required
+                ? access.approval_state === "declined"
+                  ? "Application not approved · Testing access unavailable"
+                  : "Application pending approval · Finish your profile below"
+                : access.admin_account
+                  ? access.admin
+                    ? "Administrator · Full access"
+                    : "Administrator · Complete verification to open your board. No paid pass needed."
+                  : access.allowed
+                    ? access.complimentary_premium
+                      ? "Complimentary Premium active · Existing member"
+                      : access.trial_active
+                        ? "Premium research active · 14-day signup trial included"
+                        : "Premium research active"
+                    : "Free Community · Published picks and personal tracking included"}
               {access.expires_at
                 ? ` · Expires ${new Date(access.expires_at).toLocaleString("en-US", { timeZone: "America/New_York" })} ET`
                 : ""}
@@ -362,7 +372,9 @@ export default function Membership() {
               </nav>
             )}
             <Link className="primary" href="/">
-              Open the sports desk →
+              {access.approval_required
+                ? "View application status →"
+                : "Open the sports desk →"}
             </Link>{" "}
             <button
               className="research-more"
@@ -374,6 +386,12 @@ export default function Membership() {
         </Panel>
       ) : (
         <Panel title={signup ? "Create your account" : "Sign in"}>
+          {signup && (
+            <p>
+              We’re in a private testing phase. Finish signup and your profile,
+              then wait for administrator approval before entering the app.
+            </p>
+          )}
           <form className="member-form" onSubmit={auth}>
             <label>
               Email
@@ -485,7 +503,10 @@ export default function Membership() {
           </button>
         </Panel>
       )}
-      {session && !access.allowed && !access.admin_account && <FriendPass />}
+      {session &&
+        !access.approval_required &&
+        !access.allowed &&
+        !access.admin_account && <FriendPass />}
       {access.admin_account && !access.admin && (
         <Panel title="Admin security · Two-step verification">
           <div className="notebook">

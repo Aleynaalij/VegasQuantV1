@@ -43,6 +43,7 @@ http.createServer((req, res) => {
   if (rpc("desk_data")) return json(res, desk);
   if (rpc("matchup_directory")) return json(res, games.map((game) => ({ game, analysis: null, market: null })));
   if (rpc("public_research_status")) return json(res, { updated_at: NOW, games: [], results: [{ id: "r1", game: "BUF @ LAR", published_at: pick.created_at, selection: pick.selection, odds: -110, result: "WIN", profit_cents: 1818, stake_cents: 2000, closing_recorded: false }] });
+  if (rpc("beta_application_status")) return json(res, { state: "approved", approved: true, onboarding_complete: true });
   if (rpc("membership_status")) return json(res, { allowed: true, admin: false, member_code: "SAMPLE" });
   if (rpc("age_verification_status")) return json(res, { required: true, verified: true, state: "verified", version: 1, retry_after: null });
   if (rpc("is_admin")) return json(res, false);
