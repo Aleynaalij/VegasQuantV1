@@ -566,8 +566,11 @@ function Composer({
           await supabase.storage.from(COMMUNITY_PHOTO_BUCKET).remove([path]);
           pending.current = null;
         } else if (stored && version === epoch.current) {
+          // Published despite the lost response: start the next slip fresh, as on normal success.
           setOpen(false);
           setMessage("Your lay is published in The Zone.");
+          setFile(null);
+          pending.current = null;
           onPublished();
           return;
         }
