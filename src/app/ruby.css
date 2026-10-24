@@ -57,6 +57,11 @@
   text-decoration: none;
   cursor: pointer;
 }
+/* shell.css forces every dark-theme link to the brand ink with !important, which on this gold
+   button leaves the label unreadable. This more specific rule keeps a link button's dark label. */
+html[data-theme] body a.ruby-primary {
+  color: #20190d !important;
+}
 .ruby-primary:disabled {
   opacity: 0.55;
   cursor: wait;
