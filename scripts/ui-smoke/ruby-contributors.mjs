@@ -75,7 +75,12 @@ for (const { width, photoOnly } of [
     uid = "00000000-0000-0000-0000-000000000001";
   let mine = null,
     submits = 0,
-    member = false;
+    member = false,
+    full = false,
+    reviewing = false,
+    reported = null,
+    adminView = false,
+    hidden = null;
   const slips = [
     ["OmaticsZone", "orbit"],
     ["SoDegenerate", "diagonal"],
@@ -125,11 +130,46 @@ for (const { width, photoOnly } of [
               active: true,
             },
         submitted: mine?.id || null,
-        admin: false,
+        submission_count: full ? 3 : mine ? 1 : 0,
+        due:
+          reviewing && !reported
+            ? [
+                {
+                  id: "00000000-0000-4000-8000-0000000000aa",
+                  brand: "The GOAT",
+                  title: "Yesterday’s lay",
+                  revision: 0,
+                  legs: ["Sample A ML", "Sample B ML"],
+                  photo_path: null,
+                },
+              ]
+            : [],
+        admin: adminView,
       };
     else if (path.endsWith("/ruby_submissions") || path.endsWith("/ruby_cards"))
       body = mine ? [mine, ...slips] : slips;
-    else if (path.endsWith("/ruby_daily_features")) body = [];
+    else if (path.endsWith("/rpc/ruby_record_summary"))
+      body = reviewing
+        ? [
+            {
+              brand: "The GOAT",
+              wins: reported === "WIN" ? 3 : 2,
+              losses: 1,
+              voids: 0,
+              total: 5,
+            },
+          ]
+        : [];
+    else if (path.endsWith("/rpc/report_ruby")) {
+      const r = route.request().postDataJSON();
+      assert.equal(r.p_submission, "00000000-0000-4000-8000-0000000000aa");
+      assert.equal(r.p_revision, 0);
+      reported = r.p_outcome;
+      body = "00000000-0000-4000-8000-0000000000ab";
+    } else if (path.endsWith("/rpc/hide_ruby")) {
+      hidden = route.request().postDataJSON();
+      body = "00000000-0000-4000-8000-0000000000ac";
+    } else if (path.endsWith("/ruby_daily_features")) body = [];
     else if (path.endsWith("/rpc/submit_ruby")) {
       const p = route.request().postDataJSON();
       if (photoOnly) {
@@ -232,13 +272,6 @@ for (const { width, photoOnly } of [
     .getByRole("button", { name: "Publish to The Zone", exact: true })
     .click();
   await page.getByRole("link", { name: "View your lay" }).waitFor();
-  // The gold link button keeps its dark label under the dark theme's link color.
-  assert.equal(
-    await page
-      .getByRole("link", { name: "View your lay" })
-      .evaluate((a) => getComputedStyle(a).color),
-    "rgb(32, 25, 13)",
-  );
   assert.equal(submits, 1);
   if (photoOnly) {
     // A full-screen phone screenshot is shrunk in the browser below the 4.5 MB platform limit.
@@ -247,9 +280,24 @@ for (const { width, photoOnly } of [
   }
   assert.equal(
     await page.getByRole("button", { name: "Submit today’s lay" }).count(),
+    1,
+  );
+  // After the third slip of the day, "View your lay" becomes the gold button; it keeps its dark
+  // label under the dark theme's link color.
+  full = true;
+  await page.reload({ waitUntil: "networkidle" });
+  const viewLay = page.locator("a.ruby-primary", { hasText: "View your lay" });
+  await viewLay.waitFor();
+  assert.equal(
+    await viewLay.evaluate((a) => getComputedStyle(a).color),
+    "rgb(32, 25, 13)",
+  );
+  assert.equal(
+    await page.getByRole("button", { name: "Submit today’s lay" }).count(),
     0,
   );
-  await page.getByRole("link", { name: "View your lay" }).click();
+  full = false;
+  await viewLay.click();
   await page.locator(".ruby-card.ruby-diamond").waitFor();
   for (const theme of ["diamond", "orbit", "diagonal", "corner", "skyline"])
     assert.equal(await page.locator(`.ruby-card.ruby-${theme}`).count(), 1);
@@ -317,6 +365,48 @@ for (const { width, photoOnly } of [
     ),
     false,
   );
+  // The next day, Home asks about each earlier slip one at a time; results feed the standings.
+  reviewing = true;
+  await page.goto(base + "/", { waitUntil: "networkidle" });
+  const prompt = page.getByRole("region", { name: "Confirm your slip result" });
+  await prompt.getByRole("heading", { name: "Did this slip clear?" }).waitFor();
+  assert.ok((await prompt.innerText()).includes("Yesterday’s lay"));
+  const cleared = prompt.getByRole("button", { name: "Cleared", exact: true });
+  assert.equal(await cleared.isDisabled(), true);
+  await prompt
+    .getByLabel("All legs have settled; I checked the ticket.")
+    .check();
+  await cleared.click();
+  await page
+    .getByRole("region", { name: "Confirm your slip result" })
+    .waitFor({ state: "detached" });
+  assert.equal(reported, "WIN");
+  const standings = page.locator(".ruby-standings");
+  await standings.waitFor();
+  assert.ok((await standings.innerText()).includes("The GOAT\t3\t1\t0\t1"));
+  reviewing = false;
+  reported = null;
+  // Only an admin sees "Remove from The Zone"; it records a hide for that card.
+  await page.goto(base + "/feed?view=contributors", {
+    waitUntil: "networkidle",
+  });
+  await page.locator(".ruby-contributors").waitFor();
+  assert.equal(
+    await page.getByRole("button", { name: "Remove from The Zone" }).count(),
+    0,
+  );
+  adminView = true;
+  await page.reload({ waitUntil: "networkidle" });
+  const remove = page
+    .locator(".ruby-card.ruby-orbit")
+    .getByRole("button", { name: "Remove from The Zone" });
+  await remove.click();
+  await page
+    .locator(".ruby-card.ruby-orbit")
+    .getByText("Removed from The Zone. History and record retained.")
+    .waitFor();
+  assert.equal(hidden.p_hidden, true);
+  adminView = false;
   // The contributor sees contributor lays first on Latest; a general member opens The Zone on
   // research and AI legs, and reaches contributor lays from the Contributors tab.
   await page.goto(base + "/feed", { waitUntil: "networkidle" });
