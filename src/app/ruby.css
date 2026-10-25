@@ -561,6 +561,28 @@ html[data-theme] body a.ruby-primary {
   width: 100%;
   font-size: 12px;
 }
+.ruby-paste,
+.ruby-paste-target {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  border: 1px solid #a15d73;
+  border-radius: 14px;
+  padding: 12px 15px;
+  background: #2a1420;
+  color: #f6f1ef;
+  font: inherit;
+  font-weight: 700;
+}
+.ruby-paste-target {
+  border-style: dashed;
+  font-weight: 400;
+  font-size: 13px;
+  color: #f1c0ca;
+  caret-color: transparent;
+}
 .ruby-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;

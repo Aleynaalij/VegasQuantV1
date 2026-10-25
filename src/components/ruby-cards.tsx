@@ -7,7 +7,16 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Check, Copy, Gem, Plus, Upload, X } from "lucide-react";
+import {
+  ArrowUpRight,
+  Check,
+  ClipboardPaste,
+  Copy,
+  Gem,
+  Plus,
+  Upload,
+  X,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import {
@@ -30,7 +39,11 @@ import { AnalystDoubleUpCard } from "./analyst-double-up";
 import type { AnalystDoubleUp } from "@/lib/analyst-double-up";
 import CommunityPhoto from "./community-photo";
 import GamblyLink from "./gambly-link";
-import { communityPhotoPng } from "@/lib/community-photo-clipboard";
+import {
+  clipboardPhoto,
+  communityPhotoPng,
+  pastedPhoto,
+} from "@/lib/community-photo-clipboard";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
 import {
   MAX_SELECTED_PHOTO_BYTES,
@@ -455,6 +468,28 @@ function Composer({
   const [sport, setSport] = useState<ContributorSport>("NFL");
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [pasteHelp, setPasteHelp] = useState(false);
+  function choosePhoto(f: File | null) {
+    if (f && f.size > MAX_SELECTED_PHOTO_BYTES) {
+      setMessage("Choose a screenshot under 25 MB.");
+      return;
+    }
+    setMessage("");
+    setPasteHelp(false);
+    setFile(f);
+  }
+  async function pastePhoto() {
+    try {
+      const f = await clipboardPhoto();
+      if (f) return choosePhoto(f);
+      setMessage(
+        "No screenshot on your clipboard. Copy the slip image first, then tap Paste.",
+      );
+    } catch {
+      // Browsers that block clipboard reads still allow a press-and-hold paste.
+      setPasteHelp(true);
+    }
+  }
   const [preview, setPreview] = useState("");
   const modal = useRef<HTMLElement | null>(null);
   useEffect(() => {
@@ -642,7 +677,15 @@ function Composer({
                 <X />
               </button>
             </header>
-            <form onSubmit={submit}>
+            <form
+              onSubmit={submit}
+              onPaste={(e) => {
+                const f = pastedPhoto(e.clipboardData);
+                if (!f || busy) return;
+                e.preventDefault();
+                choosePhoto(f);
+              }}
+            >
               <p>
                 Upload your screenshot and publish. No title, description or
                 typed legs needed. Up to three slips per Eastern day.
@@ -653,16 +696,29 @@ function Composer({
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   disabled={busy}
-                  onChange={(e) => {
-                    const f = e.target.files?.[0] || null;
-                    if (f && f.size > MAX_SELECTED_PHOTO_BYTES) {
-                      setMessage("Choose a screenshot under 25 MB.");
-                      return;
-                    }
-                    setFile(f);
-                  }}
+                  onChange={(e) => choosePhoto(e.target.files?.[0] || null)}
                 />
               </label>
+              <button
+                type="button"
+                className="ruby-paste"
+                disabled={busy}
+                onClick={() => void pastePhoto()}
+              >
+                <ClipboardPaste size={18} /> Paste screenshot
+              </button>
+              {pasteHelp && (
+                <div
+                  className="ruby-paste-target"
+                  contentEditable
+                  suppressContentEditableWarning
+                  role="textbox"
+                  aria-label="Press and hold here, then choose Paste"
+                  onInput={(e) => (e.currentTarget.textContent = "")}
+                >
+                  Press and hold here, then choose Paste.
+                </div>
+              )}
               {preview && (
                 <div
                   className={`ruby-screenshot-preview ruby-${contributor.theme}`}
