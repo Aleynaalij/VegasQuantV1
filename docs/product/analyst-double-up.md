@@ -1,0 +1,23 @@
+# Analyst Double Up — owner authorization October 25, 2026
+
+The owner authorized a research-based **analyst pick** publishing path for the daily Double Up while v0.3 remains SHADOW_ONLY. This is not validation, an approval-registry entry, calculated EV, an OFFICIAL pick or the separate Pick of the Day. The NFL-only editorial pause for NBA remains unchanged. Contributor opinions remain separate.
+
+## Daily research and publishing
+
+During authorized NFL research, review the upcoming slate for a defensible Double Up. Do not force the feature or leg count. Publish only after all evidence is ready, using `public.publish_analyst_double_up(p jsonb)` as the research service or an MFA-verified admin. No synthetic production tickets. Research may begin early; publication still requires every leg within two hours of its confirmed kickoff, pregame, with exact immutable quotes no older than 15 minutes. This means an afternoon-only lay cannot be published at 7 AM under the unchanged kickoff rule.
+
+The RPC creates an immutable `nfl_analyst_double_ups` ticket and reserves the **same** `ruby_daily_features.day` slot as contributor curation, in one transaction. Existing featured contributor tickets cannot be replaced. Existing Home Hail Mary and Pick of the Day are preserved. The Zone displays the analyst ticket on Latest/Parlays; direct links are `/feed?double_up=<id>#analyst-<id>`. Home shows it only for the current Eastern date. Copying closes at the earliest included kickoff; the original remains readable/downloadable.
+
+The normal notification emitter runs once after successful publication, with the `contributor` type, Vegas Quant actor label and the direct card link. Eligibility, opt-outs, consent-aware push, erasure, quiet hours and existing delivery logic remain in force. A queue is not a delivery receipt. No new settings, email, SMS or external messaging are enabled.
+
+## Payload and checks
+
+- `id`: a new UUID. Identical retry returns the existing ticket without notifications; changed content under that UUID fails.
+- `title`: up to 90 characters; `sportsbook`: the same collected book for every leg.
+- `candidates`: three or four fully researched pregame leaves. Use the exact existing `selection_gate` schema from [NFL gate](nfl-selection-gate.md), **omitting** `model_id`, `model_probability`, `forecast_source_url`, numerical edge/EV/confidence, approval/status/POD claims. Each leaf includes exact name, full-game market, player/stat-only `copy_text`, odds, book, immutable current/initial observation IDs and quote source/provider timestamp.
+- Existing `private.nfl_selection_errors` still validates last-five+ consecutive historical screening, below-median preferred overs, workload/role, explicit availability, TE receptions, latest exact quote, initial price movement and kickoff window. **Only** the exact missing-approved-model error is excluded on this separate path. Other/new errors fail closed. History clear rate is a screen, not a probability estimate. No official/candidate gate is altered.
+- `combined_odds`: actual whole-slip American price, **+100 or greater**, not multiplied individual prices, inferred correlation or assumed boost.
+- `quote_observation_id`: immutable `source_observations` record of that complete sportsbook quote, `kind:odds`, exact HTTPS source; payload `{market:"parlay", book, price, price_basis:"sportsbook_complete_slip", source_sha256, provider_updated_at, legs}`. `legs` is the ordered array of `{game_id,name,market,odds}` matching all leaves, and `game_id` on the observation is the first included game. Record through the existing source ingestion path. Provider time, database receipt and source evidence remain separate. The sportsbook/source must really offer that exact slip; a caller-supplied object cannot establish authenticity by itself.
+- `review`: `generated_at`, `historical_cutoff`, `correlation_review`, `failure_scenarios`, `market_context` (injuries/weather/news/line movement/splits, unknown where unavailable), `material_unknowns`, `sources:[{url,sha256,retrieved_at}]`. Workload, availability and history source links must be in the provenance list. Retrieval must precede cutoff/generation; generation and whole-slip quote must be fresh. Hash the exact fetched bytes. Source truth remains the analyst’s responsibility.
+
+Read back the ticket and same-day feature after publishing; report ID/link, coverage gaps and notification state accurately. Missing exact full-slip price means **no Double Up publication**, even if individual odds are present. No model registry, official results, bankrolls, provider settings or schedules are changed by this path.

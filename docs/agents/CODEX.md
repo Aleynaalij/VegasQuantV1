@@ -1,5 +1,9 @@
 # Codex · Kobe
 
+## Current · October 25, 2026 — analyst Double Up
+
+Owner authorized a separate analyst-pick Double Up route, without approving or validating v0.3. Branch `codex/analyst-double-up`; additive RPC/table, same Eastern-day feature slot as contributor curation, Home/Zone card and Gambly/download actions. Read [analyst publishing contract](../product/analyst-double-up.md) during NFL research. Existing model/official gates and NBA pause remain unchanged. Backend/frontend validation and deployment status are recorded in the issue #65 coordination thread; do not claim a daily ticket exists without actual readback.
+
 ## Current · October 24, 2026 — contributor cards
 
 - Admin editing: **deployed**. [PR #110](https://github.com/Aleynaalij/VegasQuantV1/pull/110) merged as `5384b082dc2a552e18afbecc8ae33eb151a4babb`. Independent check: Vercel integration reports success for that commit, and hosted migration `card_revision_erasure` / `20261024160000` is recorded. Claude verified the live erasure guard and CI. This status does not claim Codex performed a real member edit or a production browser test.

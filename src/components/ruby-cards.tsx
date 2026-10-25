@@ -26,6 +26,8 @@ import {
   type RubyFeature,
   type RubyHomeState,
 } from "@/lib/ruby";
+import { AnalystDoubleUpCard } from "./analyst-double-up";
+import type { AnalystDoubleUp } from "@/lib/analyst-double-up";
 import CommunityPhoto from "./community-photo";
 import GamblyLink from "./gambly-link";
 import { communityPhotoPng } from "@/lib/community-photo-clipboard";
@@ -891,6 +893,9 @@ export default function RubyHub({
   const [originalFeatured, setOriginalFeatured] = useState<RubySlip | null>(
     null,
   );
+  const [analystTicket, setAnalystTicket] = useState<AnalystDoubleUp | null>(
+    null,
+  );
   const [feature, setFeature] = useState<RubyFeature | null>(null);
   const [selected, setSelected] = useState("All");
   const [error, setError] = useState("");
@@ -905,6 +910,7 @@ export default function RubyHub({
       setSlips([]);
       setOriginalFeatured(null);
       setFeature(null);
+      setAnalystTicket(null);
       setError("");
       return;
     }
@@ -934,8 +940,18 @@ export default function RubyHub({
     setSlips(r.data || []);
     const todayFeature = currentRubyFeature(next.day, f.data || []);
     setFeature(todayFeature);
+    setAnalystTicket(null);
+    if (home && todayFeature?.analyst_ticket_id) {
+      const analyst = await supabase
+        .from("nfl_analyst_double_ups")
+        .select("*")
+        .eq("id", todayFeature.analyst_ticket_id)
+        .maybeSingle();
+      if (version !== epoch.current) return;
+      if (analyst.data) setAnalystTicket(analyst.data);
+    }
     setOriginalFeatured(null);
-    if (home && todayFeature) {
+    if (home && todayFeature?.submission_id) {
       const original = await supabase
         .from("ruby_submissions")
         .select("*")
@@ -964,6 +980,7 @@ export default function RubyHub({
       setSlips([]);
       setOriginalFeatured(null);
       setFeature(null);
+      setAnalystTicket(null);
       void refresh();
     });
     const interval = setInterval(() => void refresh(), 60000);
@@ -1011,12 +1028,16 @@ export default function RubyHub({
             <span className="ruby-eyebrow">TODAY’S DOUBLE UP</span>
             <h2>One lay. +100 or better.</h2>
             <p>
-              {featured
-                ? "Today’s featured contributor lay. See the complete slip and quote below."
-                : "The daily feature appears here after a qualifying slip and its combined price are verified."}
+              {analystTicket
+                ? "Today’s Vegas Quant analyst lay. See the complete slip, sources and risks below."
+                : featured
+                  ? "Today’s featured contributor lay. See the complete slip and quote below."
+                  : "The daily feature appears here after a qualifying slip and its combined price are verified."}
             </p>
           </div>
-          {featured && feature ? (
+          {analystTicket ? (
+            <AnalystDoubleUpCard ticket={analystTicket} />
+          ) : featured && feature ? (
             <RubyCard
               slip={originalFeatured || featured}
               feature={originalFeatured ? feature : undefined}

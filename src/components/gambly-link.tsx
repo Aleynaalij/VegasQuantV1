@@ -156,7 +156,7 @@ export default function GamblyLink({
   );
   return (
     <>
-      {kalshiLegKeys?.length || kalshiTexts ? (
+      {!disabled && (kalshiLegKeys?.length || kalshiTexts) ? (
         <KalshiLink legKeys={kalshiLegKeys} texts={kalshiTexts} />
       ) : null}
       <button
