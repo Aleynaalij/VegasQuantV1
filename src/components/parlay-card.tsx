@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import LegActions from "./leg-actions";
 import GamblyLink from "./gambly-link";
 import CasinoCard, { CasinoCardDownload } from "./casino-card";
@@ -35,6 +36,21 @@ export default function ParlayCard({
   publishedAt: string;
   expiresAt: string;
 }) {
+  const [deadlineReached, setDeadlineReached] = useState(false);
+  useEffect(() => {
+    setDeadlineReached(false);
+    const remaining = Date.parse(expiresAt) - Date.now();
+    if (!Number.isFinite(remaining) || remaining <= 0) {
+      setDeadlineReached(true);
+      return;
+    }
+    const timer = setTimeout(() => setDeadlineReached(true), remaining);
+    return () => clearTimeout(timer);
+  }, [expiresAt]);
+  const expired =
+    deadlineReached ||
+    !Number.isFinite(Date.parse(expiresAt)) ||
+    Date.now() >= Date.parse(expiresAt);
   const key = c.original_leg_key || `candidate:${releaseId}:1`;
   const card: CasinoCardData = {
     variant: "parlay",
@@ -66,9 +82,10 @@ export default function ParlayCard({
       )}
       {c.worth_a_dollar ? (
         <p>
-          Ten sleepers. Ten games. One dollar, see what happens. Just for fun ·
-          every leg must clear. Analyst-selected targets; market availability
-          must be checked at your sportsbook.
+          {c.parlay_legs.length} sleepers. {c.parlay_legs.length} games. One
+          dollar, see what happens. Just for fun · every leg must clear.
+          Analyst-selected targets; market availability must be checked at your
+          sportsbook.
         </p>
       ) : (
         <p>{c.why}</p>
@@ -83,11 +100,7 @@ export default function ParlayCard({
       <p>
         <strong>Next update:</strong> {c.next}
       </p>
-      <LegActions
-        legKey={key}
-        parlay
-        expired={Date.now() >= Date.parse(expiresAt)}
-      />
+      <LegActions legKey={key} parlay expired={expired} />
       <p>
         <Link href="/">See your tailed parlays on Home →</Link>
       </p>
@@ -100,6 +113,7 @@ export default function ParlayCard({
           )
           .join("\n")}
         label="Copy parlay & open Gambly ↗"
+        disabled={expired}
       />
       <details>
         <summary>
@@ -110,8 +124,7 @@ export default function ParlayCard({
         {c.worth_a_dollar && <p>{c.why}</p>}
         {c.parlay_legs.map((l) => (
           <p key={l.name}>
-            <strong>{l.name}:</strong> {l.why}{" "}
-            {l.risk}
+            <strong>{l.name}:</strong> {l.why} {l.risk}
           </p>
         ))}
         {c.sources.map((s) => (
