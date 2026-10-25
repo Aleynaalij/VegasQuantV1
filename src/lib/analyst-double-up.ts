@@ -40,7 +40,7 @@ export type AnalystDoubleUp = {
 };
 export function analystCard(ticket: AnalystDoubleUp): CasinoCardData {
   return {
-    variant: "parlay",
+    variant: ticket.candidates.length === 1 ? "pick" : "parlay",
     eyebrow: "VEGAS QUANT · ANALYST PICK",
     title: ticket.title,
     market: "Today’s Double Up",
