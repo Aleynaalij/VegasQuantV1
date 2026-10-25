@@ -43,7 +43,20 @@ test("Kalshi route reads authoritative legs and never substitutes another target
           result: null,
         },
       ]);
-    if (u.includes("/rest/v1/nfl_analyst_double_ups")) return Response.json([{ id: "750624ef-5a59-43dd-9880-05706c512fcb", candidates: [{ name: "Tyler Huntley", market: "300+ passing yards", game_id: "game" }], expires_at: expired ? "2020-01-01T00:00:00Z" : kickoff }]);
+    if (u.includes("/rest/v1/nfl_analyst_double_ups"))
+      return Response.json([
+        {
+          id: "750624ef-5a59-43dd-9880-05706c512fcb",
+          candidates: [
+            {
+              name: "Tyler Huntley",
+              market: "300+ passing yards",
+              game_id: "game",
+            },
+          ],
+          expires_at: expired ? "2020-01-01T00:00:00Z" : kickoff,
+        },
+      ]);
     if (u.includes("/rest/v1/games")) return Response.json([game]);
     if (u.startsWith("https://external-api.kalshi.com/")) {
       calls++;
@@ -204,6 +217,114 @@ test("Typed legs match one exact open market across the series and never guess b
     );
     assert.equal(body.text_results[3].label, "Knicks moneyline");
     assert.equal(seriesCalls, 2);
+  } finally {
+    globalThis.fetch = original;
+  }
+});
+
+test("Typed props find their series in Kalshi's sports catalog and link one exact market", async () => {
+  const original = globalThis.fetch;
+  const close = new Date(Date.now() + 86400000).toISOString();
+  const market = (event: string, title: string, n: number, rules: string) => ({
+    ticker: `${event}-${title.replace(/\W/g, "").toUpperCase().slice(0, 12)}-${n}`,
+    event_ticker: event,
+    title,
+    status: "active",
+    market_type: "binary",
+    rules_primary: rules,
+    open_time: new Date(Date.now() - 60000).toISOString(),
+    close_time: close,
+    floor_strike: n - 0.5,
+    strike_type: "greater",
+  });
+  const series: Record<string, object[]> = {
+    KXNBAPTS: [
+      market(
+        "KXNBAPTS-26OCT25BOSNYK",
+        "Sample Star: 25+ points",
+        25,
+        "If Sample Star records 25+ points in the Boston vs New York game",
+      ),
+      market(
+        "KXNBAPTS-26OCT25BOSNYK",
+        "Sample Star: 30+ points",
+        30,
+        "If Sample Star records 30+ points in the Boston vs New York game",
+      ),
+    ],
+    KXNFLTD: [
+      market(
+        "KXNFLTD-26OCT26SEADEN",
+        "Sample Back: 1+ touchdowns",
+        1,
+        "If Sample Back scores 1+ touchdowns in the Seattle vs Denver game",
+      ),
+    ],
+    KXNFLPASSTD: [
+      market(
+        "KXNFLPASSTD-26OCT26SEADEN",
+        "Sample Back: 1+ passing touchdowns",
+        1,
+        "If Sample Back records 1+ passing touchdowns",
+      ),
+    ],
+  };
+  const asked: string[] = [];
+  globalThis.fetch = async (input) => {
+    const u = String(input instanceof Request ? input.url : input);
+    if (u.includes("/auth/v1/user"))
+      return Response.json({
+        id: "user",
+        email_confirmed_at: "2026-01-01T00:00:00Z",
+      });
+    if (u.startsWith("https://external-api.kalshi.com/trade-api/v2/series"))
+      return Response.json({
+        series: [
+          { ticker: "KXNBAPTS", title: "Pro Basketball player points" },
+          { ticker: "KXNFLTD", title: "Pro Football anytime touchdown" },
+          { ticker: "KXNFLPASSTD", title: "Pro Football passing touchdowns" },
+          { ticker: "KXNBAGAME", title: "Pro Basketball game winner" },
+        ],
+      });
+    if (u.startsWith("https://external-api.kalshi.com/trade-api/v2/markets")) {
+      const t = new URL(u).searchParams.get("series_ticker")!;
+      asked.push(t);
+      return Response.json({ cursor: "", markets: series[t] || [] });
+    }
+    throw Error("Unexpected fetch " + u);
+  };
+  try {
+    const { POST } = await import("../src/app/api/kalshi/route");
+    const res = await POST(
+      new Request("https://vegasquant.app/api/kalshi", {
+        method: "POST",
+        headers: {
+          origin: "https://vegasquant.app",
+          "content-type": "application/json",
+          authorization: "Bearer sample",
+        },
+        body: JSON.stringify({
+          texts: [
+            "Sample Star 25+ points",
+            "Sample Star 25+ pts",
+            "Sample Star 28+ points",
+            "Sample Back anytime TD",
+            "Other Player 25+ points",
+          ],
+        }),
+      }),
+    );
+    const body = await res.json();
+    assert.deepEqual(
+      body.text_results.map((r: { status: string }) => r.status),
+      ["MATCH", "MATCH", "NO_MATCH", "MATCH", "NO_MATCH"],
+    );
+    assert.match(
+      body.text_results[0].url,
+      /^https:\/\/kalshi.com\/markets\/kxnbapts\/x\/kxnbapts-26oct25bosnyk\?op_market_ticker=KXNBAPTS-/,
+    );
+    assert.match(body.text_results[3].url, /\/markets\/kxnfltd\//);
+    assert.deepEqual(asked.sort(), ["KXNBAPTS", "KXNFLTD"]);
   } finally {
     globalThis.fetch = original;
   }
