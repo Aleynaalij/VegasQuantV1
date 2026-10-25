@@ -146,6 +146,12 @@ await db.exec(
     "utf8",
   ),
 );
+await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261025123946_double_up_single.sql",
+    "utf8",
+  ),
+);
 const leaves = [];
 for (let i = 0; i < 3; i++) {
   const leg = structuredClone(c);
@@ -234,7 +240,7 @@ await assert.rejects(publish(), /Verified admin/);
 await db.exec("reset role;set app.role='service_role';");
 await rejected(
   (x) => (x.candidates = x.candidates.slice(0, 2)),
-  /Three or four/,
+  /One supported/,
 );
 await rejected(
   (x) => (x.candidates[0].selection_gate.model_probability = 0.9),
@@ -289,6 +295,44 @@ await db.exec(
 );
 await rejected(() => {}, /already featured/);
 await db.exec("delete from public.ruby_daily_features");
+// A single is permitted, but cannot reuse an unrelated quote or invent its price.
+const single = structuredClone(p);
+single.candidates = [single.candidates[0]];
+single.combined_odds = 100;
+single.candidates[0].odds = 100;
+single.quote_observation_id = quote;
+await db.query(
+  `update public.source_observations set payload=jsonb_set(payload,'{outcomes}',$1::jsonb) where id=$2`,
+  [
+    JSON.stringify([
+      {
+        description: single.candidates[0].name,
+        name: "Over",
+        point: 39.5,
+        price: 100,
+      },
+    ]),
+    quote,
+  ],
+);
+await db.exec("begin");
+assert.equal((await publish(single)).rows[0].id, p.id);
+await db.exec("rollback");
+await assert.rejects(publish({ ...single, combined_odds: 110 }), /own exact/);
+await db.query(
+  `update public.source_observations set payload=jsonb_set(payload,'{outcomes}',$1::jsonb) where id=$2`,
+  [
+    JSON.stringify(
+      leaves.map((l) => ({
+        description: l.name,
+        name: "Over",
+        point: 39.5,
+        price: -200,
+      })),
+    ),
+    quote,
+  ],
+);
 assert.equal((await publish()).rows[0].id, p.id);
 assert.equal((await publish()).rows[0].id, p.id);
 assert.equal(
