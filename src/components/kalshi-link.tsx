@@ -7,6 +7,7 @@ export default function KalshiLink({
   legKeys = [],
   texts = [],
   label = "Find on Kalshi ↗",
+  copyText,
   beforeOpen,
   disabled = false,
   portalDialog = false,
@@ -15,6 +16,8 @@ export default function KalshiLink({
   /** Typed legs with no published game (e.g. contributor lays), matched by exact text. */
   texts?: string[];
   label?: string;
+  /** The legs as text, copied when Kalshi opens so they can be pasted into Kalshi's search. */
+  copyText?: string;
   beforeOpen?: () => Promise<boolean>;
   disabled?: boolean;
   portalDialog?: boolean;
@@ -25,9 +28,17 @@ export default function KalshiLink({
     [results, setResults] = useState<Match[]>([]),
     [error, setError] = useState(""),
     [confirmed, setConfirmed] = useState(false),
-    [checked, setChecked] = useState(false);
+    [checked, setChecked] = useState(false),
+    [copied, setCopied] = useState(false);
   async function check() {
     if (busy || disabled) return;
+    // Copy inside the tap itself: browsers only allow clipboard writes from a user gesture.
+    setCopied(false);
+    if (copyText)
+      void navigator.clipboard
+        ?.writeText(copyText)
+        .then(() => setCopied(true))
+        .catch(() => {});
     if (beforeOpen && !(await beforeOpen())) return;
     setBusy(true);
     setResults([]);
@@ -89,6 +100,14 @@ export default function KalshiLink({
       {legKeys.length + texts.length > 1 && (
         <p>
           Links open individual markets. This does not create a combined ticket.
+        </p>
+      )}
+      {copied && (
+        <p className="notice" role="status">
+          <strong>
+            Your legs are copied. Kalshi can’t take a ready-made ticket, so open
+            each market below, or paste a leg into Kalshi’s search.
+          </strong>
         </p>
       )}
       {busy && <p role="status">Checking available markets…</p>}

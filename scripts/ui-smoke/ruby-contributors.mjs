@@ -478,11 +478,18 @@ for (const { width, photoOnly } of [
     )
     .waitFor();
   if (photoOnly) assert.equal(kalshiTexts, null);
-  else
+  else {
     assert.deepEqual(kalshiTexts, [
       "Sample X 20+ points",
       "Sample Y 5+ rebounds",
     ]);
+    // Kalshi can't take a ticket, so the typed legs are copied for its search.
+    await kalshi.getByText("Your legs are copied.", { exact: false }).waitFor();
+    assert.equal(
+      await page.evaluate(() => navigator.clipboard.readText()),
+      "Sample X 20+ points\nSample Y 5+ rebounds",
+    );
+  }
   await kalshi.getByLabel(/I am 21\+/).check();
   await kalshi.getByRole("link", { name: "Browse Kalshi ↗" }).waitFor();
   await kalshi.getByRole("button", { name: "Close" }).click();

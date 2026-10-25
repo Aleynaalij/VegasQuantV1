@@ -6,6 +6,7 @@ import {
   exactKalshiMarket,
   exactKalshiMarketForText,
   kalshiMarketUrl,
+  propSeries,
   type KalshiMarket,
 } from "@/lib/kalshi";
 export const runtime = "nodejs";
@@ -43,23 +44,39 @@ export async function POST(req: Request) {
     return reply({ error: "Could not read selections. Please retry." }, 503);
   const resolvedLegs = [...(legs.data || [])];
   // Resolve analyst keys from immutable, member-readable tickets, never client targets.
-  const analystKeys = keys.map((key) => ({ key, match: /^analyst:([0-9a-f-]{36}):(\d{1,2})$/.exec(key) })).filter((item) => item.match);
+  const analystKeys = keys
+    .map((key) => ({
+      key,
+      match: /^analyst:([0-9a-f-]{36}):(\d{1,2})$/.exec(key),
+    }))
+    .filter((item) => item.match);
   if (analystKeys.length) {
-    const tickets = await auth.db.from("nfl_analyst_double_ups")
-      .select("id,candidates,expires_at").in("id", [...new Set(analystKeys.map((item) => item.match![1]))]);
-    if (tickets.error) return reply({ error: "Could not read selections. Please retry." }, 503);
+    const tickets = await auth.db
+      .from("nfl_analyst_double_ups")
+      .select("id,candidates,expires_at")
+      .in("id", [...new Set(analystKeys.map((item) => item.match![1]))]);
+    if (tickets.error)
+      return reply({ error: "Could not read selections. Please retry." }, 503);
     for (const { key, match } of analystKeys) {
       const ticket = tickets.data?.find((row) => row.id === match![1]);
       const candidate = ticket?.candidates?.[Number(match![2])];
-      if (candidate && typeof candidate.name === "string" && typeof candidate.market === "string") {
-        resolvedLegs.push({ leg_key: key, name: candidate.name, market: candidate.market,
-          game_id: candidate.game_id, expires_at: ticket!.expires_at, result: null });
+      if (
+        candidate &&
+        typeof candidate.name === "string" &&
+        typeof candidate.market === "string"
+      ) {
+        resolvedLegs.push({
+          leg_key: key,
+          name: candidate.name,
+          market: candidate.market,
+          game_id: candidate.game_id,
+          expires_at: ticket!.expires_at,
+          result: null,
+        });
       }
     }
   }
-  const ids = [
-    ...new Set(resolvedLegs.map((l) => l.game_id).filter(Boolean)),
-  ];
+  const ids = [...new Set(resolvedLegs.map((l) => l.game_id).filter(Boolean))];
   const games = ids.length
     ? await auth.db
         .from("games")
@@ -71,7 +88,9 @@ export async function POST(req: Request) {
   const jobs = keys.map((key) => {
     const leg = resolvedLegs.find((l) => l.leg_key === key);
     const game = games.data?.find((g) => g.id === leg?.game_id);
-    const target = leg ? kalshiTarget(leg.name, leg.market) : null;
+    // Published legs keep the exact-event path, which needs a known series.
+    const parsed = leg ? kalshiTarget(leg.name, leg.market) : null;
+    const target = parsed?.series ? parsed : null;
     const event =
       target &&
       game &&
@@ -89,11 +108,46 @@ export async function POST(req: Request) {
   const snapshots = new Map<string, KalshiMarket[]>();
   const seriesMarkets = new Map<string, KalshiMarket[]>();
   let unavailable = false;
-  const seriesList = [
+  // Props without a known series: find their series by name in Kalshi's sports catalog.
+  const propStats = [
     ...new Set(
-      texts.map((t) => t.target?.series).filter((v): v is string => !!v),
+      texts
+        .filter((t) => t.target && !t.target.series)
+        .map((t) => t.target!.stat),
     ),
   ];
+  const candidates = new Map<string, string[]>();
+  if (propStats.length)
+    try {
+      const r = await fetch(
+        "https://external-api.kalshi.com/trade-api/v2/series?category=Sports",
+        { next: { revalidate: 3600 }, signal: AbortSignal.timeout(8000) },
+      );
+      if (!r.ok) throw Error("Kalshi unavailable");
+      const data = await r.json();
+      if (!Array.isArray(data.series)) throw Error("Bad series response");
+      for (const stat of propStats)
+        candidates.set(
+          stat,
+          data.series
+            .filter(
+              (x: { ticker?: unknown; title?: unknown }) =>
+                typeof x.ticker === "string" &&
+                propSeries(stat, x.ticker, String(x.title || "")),
+            )
+            .map((x: { ticker: string }) => x.ticker)
+            .slice(0, 6),
+        );
+    } catch {
+      unavailable = true;
+    }
+  const seriesFor = (t: (typeof texts)[number]) =>
+    !t.target
+      ? null
+      : t.target.series
+        ? [t.target.series]
+        : candidates.get(t.target.stat) || null;
+  const seriesList = [...new Set(texts.flatMap((t) => seriesFor(t) || []))];
   await Promise.all(
     seriesList.map(async (series) => {
       try {
@@ -156,7 +210,7 @@ export async function POST(req: Request) {
         label: j.leg
           ? `${j.leg.name} · ${j.leg.market}`
           : "Selection unavailable",
-        url: market && j.target ? kalshiMarketUrl(market, j.target) : null,
+        url: market && j.target ? kalshiMarketUrl(market) : null,
         status: market
           ? "MATCH"
           : j.event && !snapshots.has(j.event)
@@ -165,7 +219,11 @@ export async function POST(req: Request) {
       };
     }),
     text_results: texts.map((t, i) => {
-      const markets = t.target ? seriesMarkets.get(t.target.series) : null;
+      const list = seriesFor(t);
+      const markets =
+        list && list.every((x) => seriesMarkets.has(x))
+          ? list.flatMap((x) => seriesMarkets.get(x)!)
+          : null;
       const market =
         t.target && markets
           ? exactKalshiMarketForText(t.target, markets)
@@ -173,7 +231,7 @@ export async function POST(req: Request) {
       return {
         key: `text:${i}`,
         label: t.text,
-        url: market && t.target ? kalshiMarketUrl(market, t.target) : null,
+        url: market && t.target ? kalshiMarketUrl(market) : null,
         status: market
           ? "MATCH"
           : t.target && !markets

@@ -41,7 +41,7 @@ test("Kalshi requires exact full-game player, threshold, date and market semanti
     { title: "Lamar Jackson: 300+ passing yards" },
   ])
     assert.equal(exactKalshiMarket(t, e, [{ ...m, ...patch }], now), undefined);
-  const u = new URL(kalshiMarketUrl(m, t));
+  const u = new URL(kalshiMarketUrl(m));
   assert.equal(u.hostname, "kalshi.com");
   assert.equal(u.searchParams.get("op_market_ticker"), m.ticker);
   assert.equal(u.searchParams.size, 1);
@@ -56,4 +56,53 @@ test("Kalshi requires exact full-game player, threshold, date and market semanti
     kalshiTarget("Evan Engram 3+ receptions", "Player Prop")?.target,
     3,
   );
+});
+
+test("Typed player props parse to a stat and leave the series to Kalshi's catalog", async () => {
+  const { propSeries } = await import("../src/lib/kalshi");
+  assert.deepEqual(kalshiTarget("Sample Star 25+ points", "Player Prop"), {
+    player: "Sample Star",
+    target: 25,
+    stat: "points",
+    series: "",
+  });
+  assert.equal(
+    kalshiTarget("Sample Star 8+ reb", "Player Prop")!.stat,
+    "rebounds",
+  );
+  assert.equal(
+    kalshiTarget("Sample Star 3+ 3-pointers", "Player Prop")!.stat,
+    "threes",
+  );
+  assert.deepEqual(kalshiTarget("Sample Back anytime TD", "Player Prop"), {
+    player: "Sample Back",
+    target: 1,
+    stat: "touchdowns",
+    series: "",
+  });
+  assert.equal(
+    kalshiTarget("Sample QB 2+ passing TDs", "Player Prop")!.stat,
+    "passing touchdowns",
+  );
+  // Known NFL yardage series stay fixed; unknown words and unders never parse.
+  assert.equal(
+    kalshiTarget("Sample WR 50+ receiving yards", "Player Prop")!.series,
+    "KXNFLRECYDS",
+  );
+  assert.equal(kalshiTarget("Sample Star 25+ vibes", "Player Prop"), null);
+  assert.equal(
+    kalshiTarget("Sample Star under 25.5 points", "Player Prop"),
+    null,
+  );
+  assert.equal(kalshiTarget("Knicks moneyline", "Player Prop"), null);
+  assert.ok(propSeries("points", "KXNBAPTS", "Pro Basketball player points"));
+  assert.ok(propSeries("points", "KXWNBAPOINTS", "WNBA player points"));
+  assert.ok(
+    propSeries("touchdowns", "KXNFLTD", "Pro Football anytime touchdown"),
+  );
+  assert.equal(
+    propSeries("touchdowns", "KXNFLPASSTD", "Pro Football passing touchdowns"),
+    false,
+  );
+  assert.equal(propSeries("points", "KXNCAAFPTS", "College points"), false);
 });

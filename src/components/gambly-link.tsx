@@ -171,7 +171,7 @@ export default function GamblyLink({
         {label ||
           (selection ? "Copy pick & open Gambly ↗" : "Open in Gambly ↗")}
       </button>
-      <KalshiLink legKeys={kalshiLegKeys} texts={kalshiTexts} label="Kalshi ↗" disabled={disabled} beforeOpen={beforeOpen} portalDialog={portalDialog} />
+      <KalshiLink legKeys={kalshiLegKeys} texts={kalshiTexts} copyText={selection} label="Kalshi ↗" disabled={disabled} beforeOpen={beforeOpen} portalDialog={portalDialog} />
       </div>
       {portalDialog && typeof document !== "undefined"
         ? createPortal(modal, document.body)
