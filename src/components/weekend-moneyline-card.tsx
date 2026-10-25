@@ -28,7 +28,7 @@ export default function WeekendMoneylineCard() {
       <CasinoCard data={face} />
       <p className="notice">One-time prediction card · Not a VQ Approved or official pick. Combined odds and payout are unverified.</p>
       {expired ? <p role="status">Kickoff has passed. Original predictions preserved; copying is closed.</p> :
-        <GamblyLink url="https://gambly.com" selection={weekendMoneylineCopy} label="Copy moneyline card & open Gambly ↗" />}
+        <GamblyLink url="https://gambly.com" selection={weekendMoneylineCopy} label="Copy moneyline card & open Gambly ↗" kalshiTexts={card.legs.map(l => `${l.name} moneyline`)} />}
       <details>
         <summary>Why these teams · risks & sources</summary>
         <p>Prepared {time(card.preparedAt)} from this week’s published matchup research and stored FanDuel moneyline observations. These are qualitative winner leans, not a priced model forecast. No combined probability, EV or confidence score is supplied.</p>
