@@ -33,6 +33,7 @@ export default function KalshiLink({
     try {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
+      if (!legKeys.length) return;
       if (!token) throw Error("Sign in to check Kalshi.");
       const rows: Match[] = [];
       const unique = [...new Set(legKeys)];
@@ -73,6 +74,9 @@ export default function KalshiLink({
           Links open individual markets. This does not create a combined ticket.
         </p>
       )}
+      {!legKeys.length && <p>No verified market mapping is available for this ticket. You can browse Kalshi; this does not copy or recreate the slip.</p>}
+      {!legKeys.length && <label><input type="checkbox" checked={confirmed} onChange={(e) => setConfirmed(e.target.checked)} /> I am 21+ and meet Kalshi’s eligibility requirements.</label>}
+      {!legKeys.length && confirmed && <p><a className="btn" href="https://kalshi.com" target="_blank" rel="noopener noreferrer">Browse Kalshi ↗</a></p>}
       {busy && <p role="status">Checking available markets…</p>}
       {error && <p role="alert">{error}</p>}
       {!!results.length && (

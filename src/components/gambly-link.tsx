@@ -153,7 +153,7 @@ export default function GamblyLink({
   );
   return (
     <>
-      {kalshiLegKeys?.length ? <KalshiLink legKeys={kalshiLegKeys} /> : null}
+            <div className="ticket-destinations">
       <button
         className="btn"
         disabled={disabled}
@@ -168,6 +168,8 @@ export default function GamblyLink({
         {label ||
           (selection ? "Copy pick & open Gambly ↗" : "Open in Gambly ↗")}
       </button>
+      <KalshiLink legKeys={kalshiLegKeys || []} label="Kalshi ↗" disabled={disabled} beforeOpen={beforeOpen} portalDialog={portalDialog} />
+      </div>
       {portalDialog && typeof document !== "undefined"
         ? createPortal(modal, document.body)
         : modal}

@@ -993,3 +993,6 @@ html[data-theme] body a.ruby-primary {
 .analyst-double-up p { overflow-wrap: anywhere; }
 .analyst-double-up a { color: var(--gold, #e8c46a); }
 .analyst-double-up .ruby-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+.ticket-destinations { display: grid; gap: 12px; width: 100%; min-width: 0; }
+.ticket-destinations > button { width: 100%; }

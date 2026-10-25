@@ -95,6 +95,7 @@ export function AnalystDoubleUpCard({ ticket }: { ticket: AnalystDoubleUp }) {
         <GamblyLink
           url="https://gambly.com"
           selection={analystCopy(ticket)}
+          kalshiLegKeys={ticket.candidates.map((_, index) => `analyst:${ticket.id}:${index}`)}
           disabled={!analystOpen(ticket, now)}
         />
         <CasinoCardDownload data={data} />

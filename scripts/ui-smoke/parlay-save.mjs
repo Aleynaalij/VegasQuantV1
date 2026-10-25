@@ -268,13 +268,13 @@ for (const width of [390, 1280]) {
   await prompt.getByRole("checkbox").check();
   shareFails = true;
   await prompt
-    .getByRole("button", { name: "Open with Kalshi ↗", exact: true })
+    .getByRole("button", { name: "Kalshi ↗", exact: true })
     .click();
   await prompt.getByRole("alert").waitFor();
   assert.equal(kalshiChecks, 0, "failed share keeps destination closed");
   shareFails = false;
   await prompt
-    .getByRole("button", { name: "Open with Kalshi ↗", exact: true })
+    .getByRole("button", { name: "Kalshi ↗", exact: true })
     .click();
   const kalshi = page.getByRole("dialog", {
     name: "Open selections on Kalshi",
@@ -406,7 +406,7 @@ for (const width of [390, 1280]) {
       assert.match(await prompt.innerText(), /parlay has closed/);
       assert.equal(await gambly.isVisible(), false);
       await prompt
-        .getByRole("button", { name: "Open with Kalshi ↗", exact: true })
+        .getByRole("button", { name: "Kalshi ↗", exact: true })
         .click();
       assert.equal(await kalshi.isVisible(), false);
       assert.equal(kalshiChecks, 1);

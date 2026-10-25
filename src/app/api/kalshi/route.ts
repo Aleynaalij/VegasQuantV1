@@ -29,6 +29,21 @@ export async function POST(req: Request) {
     .in("leg_key", keys);
   if (legs.error)
     return reply({ error: "Could not read selections. Please retry." }, 503);
+  // Resolve analyst keys from immutable, member-readable tickets, never client targets.
+  const analystKeys = keys.map((key) => ({ key, match: /^analyst:([0-9a-f-]{36}):(\d{1,2})$/.exec(key) })).filter((item) => item.match);
+  if (analystKeys.length) {
+    const tickets = await auth.db.from("nfl_analyst_double_ups")
+      .select("id,candidates,expires_at").in("id", [...new Set(analystKeys.map((item) => item.match![1]))]);
+    if (tickets.error) return reply({ error: "Could not read selections. Please retry." }, 503);
+    for (const { key, match } of analystKeys) {
+      const ticket = tickets.data?.find((row) => row.id === match![1]);
+      const candidate = ticket?.candidates?.[Number(match![2])];
+      if (candidate && typeof candidate.name === "string" && typeof candidate.market === "string") {
+        legs.data?.push({ leg_key: key, name: candidate.name, market: candidate.market,
+          game_id: candidate.game_id, expires_at: ticket!.expires_at, result: null });
+      }
+    }
+  }
   const ids = [
     ...new Set((legs.data || []).map((l) => l.game_id).filter(Boolean)),
   ];

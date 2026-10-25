@@ -7,6 +7,8 @@ test("Kalshi route reads authoritative legs and never substitutes another target
   const original = globalThis.fetch;
   let mode = "match",
     calls = 0;
+  let key = "official:sample";
+  let expired = false;
   const kickoff = new Date(Date.now() + 86400000).toISOString();
   const { kalshiEvent } = await import("../src/lib/kalshi");
   const game = {
@@ -41,6 +43,7 @@ test("Kalshi route reads authoritative legs and never substitutes another target
           result: null,
         },
       ]);
+    if (u.includes("/rest/v1/nfl_analyst_double_ups")) return Response.json([{ id: "750624ef-5a59-43dd-9880-05706c512fcb", candidates: [{ name: "Tyler Huntley", market: "300+ passing yards", game_id: "game" }], expires_at: expired ? "2020-01-01T00:00:00Z" : kickoff }]);
     if (u.includes("/rest/v1/games")) return Response.json([game]);
     if (u.startsWith("https://external-api.kalshi.com/")) {
       calls++;
@@ -77,7 +80,7 @@ test("Kalshi route reads authoritative legs and never substitutes another target
           "content-type": "application/json",
           ...(auth ? { authorization: "Bearer sample" } : {}),
         },
-        body: JSON.stringify({ keys: ["official:sample"] }),
+        body: JSON.stringify({ keys: [key] }),
       });
     assert.equal((await POST(req(false))).status, 401);
     assert.equal((await POST(req(true, "https://example.com"))).status, 403);
@@ -93,6 +96,17 @@ test("Kalshi route reads authoritative legs and never substitutes another target
     assert.equal(body.results[0].status, "UNAVAILABLE");
     assert.equal(body.results[0].url, null);
     assert.equal(calls, 3);
+    key = "analyst:750624ef-5a59-43dd-9880-05706c512fcb:0";
+    mode = "match";
+    body = await (await POST(req())).json();
+    assert.equal(body.results[0].status, "MATCH");
+    expired = true;
+    body = await (await POST(req())).json();
+    assert.equal(body.results[0].status, "NO_MATCH");
+    assert.equal(calls, 4);
+    key = "analyst:750624ef-5a59-43dd-9880-05706c512fcb:9";
+    body = await (await POST(req())).json();
+    assert.equal(body.results[0].url, null);
   } finally {
     globalThis.fetch = original;
   }
