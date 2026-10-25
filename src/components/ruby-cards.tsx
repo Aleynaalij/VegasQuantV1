@@ -238,6 +238,7 @@ export function RubyCard({
           <GamblyLink
             url="https://gambly.com/"
             selection={slip.legs.length ? slip.legs.join("\n") : undefined}
+            kalshiTexts={slip.legs}
             image={
               !slip.legs.length && slip.photo_path
                 ? () => communityPhotoPng(slip.photo_path!)

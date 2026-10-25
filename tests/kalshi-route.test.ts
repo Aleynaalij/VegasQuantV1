@@ -111,3 +111,100 @@ test("Kalshi route reads authoritative legs and never substitutes another target
     globalThis.fetch = original;
   }
 });
+
+test("Typed legs match one exact open market across the series and never guess between games", async () => {
+  const original = globalThis.fetch;
+  const close = new Date(Date.now() + 86400000).toISOString();
+  const market = (
+    event: string,
+    player: string,
+    n: number,
+    closes = close,
+  ) => ({
+    ticker: `${event}-${player.replace(/\W/g, "").toUpperCase()}-${n}`,
+    event_ticker: event,
+    title: `${player}: ${n}+ receiving yards`,
+    status: "active",
+    market_type: "binary",
+    rules_primary: `If ${player} records ${n}+ receiving yards in the Sample Pro Football game`,
+    open_time: new Date(Date.now() - 60000).toISOString(),
+    close_time: closes,
+    floor_strike: n - 0.5,
+    strike_type: "greater",
+  });
+  const pages: Record<string, object> = {
+    "": {
+      cursor: "page2",
+      markets: [
+        market("KXNFLRECYDS-26OCT26SEADEN", "Sample Receiver", 50),
+        market("KXNFLRECYDS-26OCT26SEADEN", "Twice Player", 40),
+      ],
+    },
+    page2: {
+      cursor: "",
+      markets: [
+        market("KXNFLRECYDS-26NOV02SEALAR", "Twice Player", 40),
+        // Next week's game only: not this lay's game, so never linked.
+        market(
+          "KXNFLRECYDS-26NOV02SEALAR",
+          "Later Player",
+          30,
+          new Date(Date.now() + 8 * 86400000).toISOString(),
+        ),
+      ],
+    },
+  };
+  let seriesCalls = 0;
+  globalThis.fetch = async (input) => {
+    const u = String(input instanceof Request ? input.url : input);
+    if (u.includes("/auth/v1/user"))
+      return Response.json({
+        id: "user",
+        email_confirmed_at: "2026-01-01T00:00:00Z",
+      });
+    if (u.startsWith("https://external-api.kalshi.com/")) {
+      const q = new URL(u).searchParams;
+      assert.equal(q.get("series_ticker"), "KXNFLRECYDS");
+      seriesCalls++;
+      return Response.json(pages[q.get("cursor") || ""]);
+    }
+    throw Error("Unexpected fetch " + u);
+  };
+  try {
+    const { POST } = await import("../src/app/api/kalshi/route");
+    const res = await POST(
+      new Request("https://vegasquant.app/api/kalshi", {
+        method: "POST",
+        headers: {
+          origin: "https://vegasquant.app",
+          "content-type": "application/json",
+          authorization: "Bearer sample",
+        },
+        body: JSON.stringify({
+          texts: [
+            "Sample Receiver 50+ receiving yards",
+            "Sample Receiver 60+ receiving yards",
+            "Twice Player 40+ receiving yards",
+            "Knicks moneyline",
+            "Later Player 30+ receiving yards",
+          ],
+        }),
+      }),
+    );
+    assert.equal(res.status, 200);
+    const body = await res.json();
+    assert.deepEqual(body.results, []);
+    assert.deepEqual(
+      body.text_results.map((r: { status: string }) => r.status),
+      ["MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH"],
+    );
+    assert.match(
+      body.text_results[0].url,
+      /^https:\/\/kalshi.com\/markets\/kxnflrecyds\//,
+    );
+    assert.equal(body.text_results[3].label, "Knicks moneyline");
+    assert.equal(seriesCalls, 2);
+  } finally {
+    globalThis.fetch = original;
+  }
+});

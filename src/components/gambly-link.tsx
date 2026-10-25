@@ -10,6 +10,7 @@ export default function GamblyLink({
   image,
   label,
   kalshiLegKeys,
+  kalshiTexts,
   beforeOpen,
   disabled = false,
   portalDialog = false,
@@ -20,6 +21,8 @@ export default function GamblyLink({
   image?: () => Promise<Blob>;
   label?: string;
   kalshiLegKeys?: string[];
+  /** Typed legs to match on Kalshi when there are no published leg keys. */
+  kalshiTexts?: string[];
   beforeOpen?: () => Promise<boolean>;
   disabled?: boolean;
   portalDialog?: boolean;
@@ -153,7 +156,7 @@ export default function GamblyLink({
   );
   return (
     <>
-            <div className="ticket-destinations">
+      <div className="ticket-destinations">
       <button
         className="btn"
         disabled={disabled}
@@ -168,7 +171,7 @@ export default function GamblyLink({
         {label ||
           (selection ? "Copy pick & open Gambly ↗" : "Open in Gambly ↗")}
       </button>
-      <KalshiLink legKeys={kalshiLegKeys || []} label="Kalshi ↗" disabled={disabled} beforeOpen={beforeOpen} portalDialog={portalDialog} />
+      <KalshiLink legKeys={kalshiLegKeys} texts={kalshiTexts} label="Kalshi ↗" disabled={disabled} beforeOpen={beforeOpen} portalDialog={portalDialog} />
       </div>
       {portalDialog && typeof document !== "undefined"
         ? createPortal(modal, document.body)

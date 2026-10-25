@@ -154,6 +154,7 @@ export default function NbaEditorialFeed() {
                 <GamblyLink
                   url="https://gambly.com/"
                   selection={nbaEditorialCopy(p)}
+                  kalshiTexts={nbaEditorialCopy(p).split("\n").filter(Boolean)}
                   beforeOpen={async () =>
                     nbaEditorialOpen(p, Date.now(), superseded.has(p.id))
                   }

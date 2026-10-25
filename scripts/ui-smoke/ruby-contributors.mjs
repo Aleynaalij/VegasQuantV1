@@ -268,6 +268,23 @@ for (const { width, photoOnly } of [
     });
   });
   let uploadedPhoto = null;
+  let kalshiTexts = null;
+  await page.route("**/api/kalshi", (route) => {
+    const body = route.request().postDataJSON();
+    kalshiTexts = body.texts;
+    return route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        results: [],
+        text_results: body.texts.map((t, i) => ({
+          key: `text:${i}`,
+          label: t,
+          url: null,
+          status: "NO_MATCH",
+        })),
+      }),
+    });
+  });
   await page.route("**/api/community/photo?post=*", (route) => {
     uploadedPhoto = route.request().postDataBuffer();
     return route.fulfill({
@@ -415,6 +432,33 @@ for (const { width, photoOnly } of [
     .locator("dialog[open]")
     .getByRole("button", { name: "Cancel" })
     .click();
+  // Kalshi is offered beside Gambly: typed legs are checked for an exact market; a
+  // screenshot-only lay (or no exact match) can still browse Kalshi.
+  await page
+    .locator(".ruby-card.ruby-diamond .ruby-gambly")
+    .getByRole("button", { name: "Kalshi ↗", exact: true })
+    .click();
+  const kalshi = page.locator("dialog[open]");
+  await kalshi
+    .getByRole("heading", { name: "Open selections on Kalshi" })
+    .waitFor();
+  await kalshi
+    .getByText(
+      photoOnly ? "No typed legs to match." : "No exact Kalshi market",
+      {
+        exact: false,
+      },
+    )
+    .waitFor();
+  if (photoOnly) assert.equal(kalshiTexts, null);
+  else
+    assert.deepEqual(kalshiTexts, [
+      "Sample X 20+ points",
+      "Sample Y 5+ rebounds",
+    ]);
+  await kalshi.getByLabel(/I am 21\+/).check();
+  await kalshi.getByRole("link", { name: "Browse Kalshi ↗" }).waitFor();
+  await kalshi.getByRole("button", { name: "Close" }).click();
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth + 1,
