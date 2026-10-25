@@ -322,11 +322,38 @@ for (const { width, photoOnly } of [
         .count(),
       0,
     );
-    await page.locator(".ruby-modal input[type=file]").setInputFiles({
-      name: "slip.png",
-      mimeType: "image/png",
-      buffer: phoneScreenshot,
-    });
+    if (width < 760) {
+      // Phone: copy the slip image elsewhere, then tap Paste screenshot.
+      await page.evaluate(async (b64) => {
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            "image/png": new Blob([bytes], { type: "image/png" }),
+          }),
+        ]);
+      }, phoneScreenshot.toString("base64"));
+      await page.getByRole("button", { name: "Paste screenshot" }).click();
+      await page.getByAltText("Your original screenshot preview").waitFor();
+      await page.getByRole("button", { name: "Remove screenshot" }).click();
+      // Press-and-hold Paste (or Ctrl/Cmd+V) anywhere in the composer works too.
+      await page.evaluate((b64) => {
+        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+        const data = new DataTransfer();
+        data.items.add(new File([bytes], "slip.png", { type: "image/png" }));
+        document.querySelector(".ruby-modal form").dispatchEvent(
+          new ClipboardEvent("paste", {
+            clipboardData: data,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+      }, phoneScreenshot.toString("base64"));
+    } else
+      await page.locator(".ruby-modal input[type=file]").setInputFiles({
+        name: "slip.png",
+        mimeType: "image/png",
+        buffer: phoneScreenshot,
+      });
     await page.getByAltText("Your original screenshot preview").waitFor();
   } else {
     await page.getByText("Add details · optional", { exact: true }).click();
