@@ -99,3 +99,18 @@ export function kalshiMarketUrl(m: KalshiMarket, target: KalshiTarget) {
   url.searchParams.set("op_market_ticker", m.ticker);
   return url.href;
 }
+/**
+ * A typed leg with no published game (e.g. a contributor lay): the same exact player, stat and
+ * target checks as exactKalshiMarket, across every open market in the stat's series. Linked only
+ * when exactly one market matches, so a player with two open games is never guessed.
+ */
+export function exactKalshiMarketForText(
+  target: KalshiTarget,
+  markets: KalshiMarket[],
+  now = Date.now(),
+) {
+  const found = markets.filter(
+    (m) => exactKalshiMarket(target, m.event_ticker, [m], now) === m,
+  );
+  return found.length === 1 ? found[0] : null;
+}

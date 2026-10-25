@@ -100,6 +100,10 @@ export default function ParlayCard({
           )
           .join("\n")}
         label="Copy parlay & open Gambly ↗"
+        kalshiTexts={c.parlay_legs.map(
+          (leg) =>
+            `${leg.name} ${leg.market.replace(/^Full game\s*[·:—-]\s*/i, "")}`,
+        )}
       />
       <details>
         <summary>
@@ -110,8 +114,7 @@ export default function ParlayCard({
         {c.worth_a_dollar && <p>{c.why}</p>}
         {c.parlay_legs.map((l) => (
           <p key={l.name}>
-            <strong>{l.name}:</strong> {l.why}{" "}
-            {l.risk}
+            <strong>{l.name}:</strong> {l.why} {l.risk}
           </p>
         ))}
         {c.sources.map((s) => (

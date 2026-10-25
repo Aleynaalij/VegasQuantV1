@@ -10,6 +10,7 @@ export default function GamblyLink({
   image,
   label,
   kalshiLegKeys,
+  kalshiTexts,
   beforeOpen,
   disabled = false,
   portalDialog = false,
@@ -20,6 +21,8 @@ export default function GamblyLink({
   image?: () => Promise<Blob>;
   label?: string;
   kalshiLegKeys?: string[];
+  /** Typed legs to match on Kalshi when there are no published leg keys. */
+  kalshiTexts?: string[];
   beforeOpen?: () => Promise<boolean>;
   disabled?: boolean;
   portalDialog?: boolean;
@@ -153,7 +156,9 @@ export default function GamblyLink({
   );
   return (
     <>
-      {kalshiLegKeys?.length ? <KalshiLink legKeys={kalshiLegKeys} /> : null}
+      {kalshiLegKeys?.length || kalshiTexts ? (
+        <KalshiLink legKeys={kalshiLegKeys} texts={kalshiTexts} />
+      ) : null}
       <button
         className="btn"
         disabled={disabled}
