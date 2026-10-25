@@ -520,6 +520,9 @@ for (const { width, photoOnly } of [
     await page.locator(".analyst-double-up").textContent(),
     /No validated model edge/,
   );
+  const destinations = page.locator(".analyst-double-up .ticket-destinations");
+  assert.match(await destinations.locator(":scope > button").nth(0).textContent(), /Gambly/);
+  assert.equal(await destinations.locator(":scope > button").nth(1).textContent(), "Kalshi ↗");
   await page.locator(".analyst-double-up summary").click();
   await page
     .getByRole("heading", { name: "Sample A 40+ receiving yards" })
@@ -563,6 +566,7 @@ for (const { width, photoOnly } of [
     ),
     false,
   );
+  assert.equal(await page.locator(".analyst-double-up").getByRole("button", { name: "Kalshi ↗", exact: true }).isDisabled(), true);
   assert.deepEqual(errors, []);
   console.log(
     `PASS Ruby composer, preview, NBA member submission, daily lock, five templates and Zone link @${width} photoOnly=${photoOnly}`,
