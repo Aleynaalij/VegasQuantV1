@@ -23,6 +23,8 @@ export type ParlayCandidate = {
   }[];
   sources: { label: string; url: string }[];
   original_leg_key?: string;
+  // The validated leaves this bundle references (candidate:<release>:<n>), one per parlay leg.
+  leg_keys?: string[];
 };
 export default function ParlayCard({
   candidate: c,
@@ -100,10 +102,16 @@ export default function ParlayCard({
           )
           .join("\n")}
         label="Copy parlay & open Gambly ↗"
-        kalshiTexts={c.parlay_legs.map(
-          (leg) =>
-            `${leg.name} ${leg.market.replace(/^Full game\s*[·:—-]\s*/i, "")}`,
-        )}
+        // Published leaves keep their game, so Kalshi checks that exact game; text matching is only
+        // for older bundles without leaf keys.
+        {...(c.leg_keys?.length === c.parlay_legs.length
+          ? { kalshiLegKeys: c.leg_keys }
+          : {
+              kalshiTexts: c.parlay_legs.map(
+                (leg) =>
+                  `${leg.name} ${leg.market.replace(/^Full game\s*[·:—-]\s*/i, "")}`,
+              ),
+            })}
       />
       <details>
         <summary>

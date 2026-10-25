@@ -101,7 +101,12 @@ test("Kalshi route reads authoritative legs and never substitutes another target
 test("Typed legs match one exact open market across the series and never guess between games", async () => {
   const original = globalThis.fetch;
   const close = new Date(Date.now() + 86400000).toISOString();
-  const market = (event: string, player: string, n: number) => ({
+  const market = (
+    event: string,
+    player: string,
+    n: number,
+    closes = close,
+  ) => ({
     ticker: `${event}-${player.replace(/\W/g, "").toUpperCase()}-${n}`,
     event_ticker: event,
     title: `${player}: ${n}+ receiving yards`,
@@ -109,7 +114,7 @@ test("Typed legs match one exact open market across the series and never guess b
     market_type: "binary",
     rules_primary: `If ${player} records ${n}+ receiving yards in the Sample Pro Football game`,
     open_time: new Date(Date.now() - 60000).toISOString(),
-    close_time: close,
+    close_time: closes,
     floor_strike: n - 0.5,
     strike_type: "greater",
   });
@@ -123,7 +128,16 @@ test("Typed legs match one exact open market across the series and never guess b
     },
     page2: {
       cursor: "",
-      markets: [market("KXNFLRECYDS-26NOV02SEALAR", "Twice Player", 40)],
+      markets: [
+        market("KXNFLRECYDS-26NOV02SEALAR", "Twice Player", 40),
+        // Next week's game only: not this lay's game, so never linked.
+        market(
+          "KXNFLRECYDS-26NOV02SEALAR",
+          "Later Player",
+          30,
+          new Date(Date.now() + 8 * 86400000).toISOString(),
+        ),
+      ],
     },
   };
   let seriesCalls = 0;
@@ -158,6 +172,7 @@ test("Typed legs match one exact open market across the series and never guess b
             "Sample Receiver 60+ receiving yards",
             "Twice Player 40+ receiving yards",
             "Knicks moneyline",
+            "Later Player 30+ receiving yards",
           ],
         }),
       }),
@@ -167,7 +182,7 @@ test("Typed legs match one exact open market across the series and never guess b
     assert.deepEqual(body.results, []);
     assert.deepEqual(
       body.text_results.map((r: { status: string }) => r.status),
-      ["MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH"],
+      ["MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH", "NO_MATCH"],
     );
     assert.match(
       body.text_results[0].url,

@@ -101,16 +101,20 @@ export function kalshiMarketUrl(m: KalshiMarket, target: KalshiTarget) {
 }
 /**
  * A typed leg with no published game (e.g. a contributor lay): the same exact player, stat and
- * target checks as exactKalshiMarket, across every open market in the stat's series. Linked only
- * when exactly one market matches, so a player with two open games is never guessed.
+ * target checks as exactKalshiMarket, across every open market in the stat's series. Only markets
+ * closing within TEXT_MATCH_WINDOW_MS count, so a later week's game is never offered for this one,
+ * and a link is given only when exactly one market matches, so two open games are never guessed.
  */
+export const TEXT_MATCH_WINDOW_MS = 4 * 86400000;
 export function exactKalshiMarketForText(
   target: KalshiTarget,
   markets: KalshiMarket[],
   now = Date.now(),
 ) {
   const found = markets.filter(
-    (m) => exactKalshiMarket(target, m.event_ticker, [m], now) === m,
+    (m) =>
+      Date.parse(m.close_time) <= now + TEXT_MATCH_WINDOW_MS &&
+      exactKalshiMarket(target, m.event_ticker, [m], now) === m,
   );
   return found.length === 1 ? found[0] : null;
 }
