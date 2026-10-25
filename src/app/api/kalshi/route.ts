@@ -41,8 +41,24 @@ export async function POST(req: Request) {
     : { data: [], error: null };
   if (legs.error)
     return reply({ error: "Could not read selections. Please retry." }, 503);
+  const resolvedLegs = [...(legs.data || [])];
+  // Resolve analyst keys from immutable, member-readable tickets, never client targets.
+  const analystKeys = keys.map((key) => ({ key, match: /^analyst:([0-9a-f-]{36}):(\d{1,2})$/.exec(key) })).filter((item) => item.match);
+  if (analystKeys.length) {
+    const tickets = await auth.db.from("nfl_analyst_double_ups")
+      .select("id,candidates,expires_at").in("id", [...new Set(analystKeys.map((item) => item.match![1]))]);
+    if (tickets.error) return reply({ error: "Could not read selections. Please retry." }, 503);
+    for (const { key, match } of analystKeys) {
+      const ticket = tickets.data?.find((row) => row.id === match![1]);
+      const candidate = ticket?.candidates?.[Number(match![2])];
+      if (candidate && typeof candidate.name === "string" && typeof candidate.market === "string") {
+        resolvedLegs.push({ leg_key: key, name: candidate.name, market: candidate.market,
+          game_id: candidate.game_id, expires_at: ticket!.expires_at, result: null });
+      }
+    }
+  }
   const ids = [
-    ...new Set((legs.data || []).map((l) => l.game_id).filter(Boolean)),
+    ...new Set(resolvedLegs.map((l) => l.game_id).filter(Boolean)),
   ];
   const games = ids.length
     ? await auth.db
@@ -53,7 +69,7 @@ export async function POST(req: Request) {
   if (games.error)
     return reply({ error: "Could not verify the game. Please retry." }, 503);
   const jobs = keys.map((key) => {
-    const leg = legs.data?.find((l) => l.leg_key === key);
+    const leg = resolvedLegs.find((l) => l.leg_key === key);
     const game = games.data?.find((g) => g.id === leg?.game_id);
     const target = leg ? kalshiTarget(leg.name, leg.market) : null;
     const event =
