@@ -80,7 +80,42 @@ for (const { width, photoOnly } of [
     reviewing = false,
     reported = null,
     adminView = false,
-    hidden = null;
+    hidden = null,
+    analystActive = false,
+    analystExpired = false;
+  const analyst = () => ({
+    id: "22222222-2222-4222-8222-222222222222",
+    day,
+    title: "Daily analyst fixture",
+    candidates: ["Sample A", "Sample B", "Sample C"].map((name) => ({
+      name,
+      market: "Full game · 40+ receiving yards",
+      copy_text: `${name} 40+ receiving yards`,
+      selection_gate: {
+        opportunity_case: "Supported targets and routes",
+        failure_path: "Stalled drives",
+        game_script_review: "Shared workload reviewed",
+        role_source_url: "https://example.invalid/role",
+        availability_source_url: "https://example.invalid/active",
+        history_source_url: "https://example.invalid/logs",
+      },
+    })),
+    sportsbook: "FanDuel",
+    combined_odds: 238,
+    source_url: "https://example.invalid/slip",
+    observed_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    expires_at: new Date(
+      Date.now() + (analystExpired ? -60000 : 3600000),
+    ).toISOString(),
+    review: {
+      correlation_review: "Target competition reviewed",
+      failure_scenarios: "Shared offensive failure",
+      market_context: "Exact fixture quote",
+      material_unknowns: "Sample weather unknown",
+      sources: [],
+    },
+  });
   const slips = [
     ["OmaticsZone", "orbit"],
     ["SoDegenerate", "diagonal"],
@@ -169,7 +204,28 @@ for (const { width, photoOnly } of [
     } else if (path.endsWith("/rpc/hide_ruby")) {
       hidden = route.request().postDataJSON();
       body = "00000000-0000-4000-8000-0000000000ac";
-    } else if (path.endsWith("/ruby_daily_features")) body = [];
+    } else if (path.endsWith("/ruby_daily_features"))
+      body = analystActive
+        ? [
+            {
+              day,
+              submission_id: null,
+              analyst_ticket_id: analyst().id,
+              verified_odds: 238,
+              sportsbook: "FanDuel",
+              source_url: "https://example.invalid/slip",
+              observed_at: new Date().toISOString(),
+            },
+          ]
+        : [];
+    else if (path.endsWith("/nfl_analyst_double_ups"))
+      body = analystActive
+        ? (route.request().headers()["accept"] || "").includes(
+            "vnd.pgrst.object",
+          )
+          ? analyst()
+          : [analyst()]
+        : [];
     else if (path.endsWith("/rpc/submit_ruby")) {
       const p = route.request().postDataJSON();
       if (photoOnly) {
@@ -446,6 +502,67 @@ for (const { width, photoOnly } of [
   member = false;
   reviewing = false;
   reported = null;
+  // Analyst Double Up shares Home’s slot and appears for ordinary members in The Zone.
+  analystActive = true;
+  member = true;
+  await page.goto(base + "/", { waitUntil: "networkidle" });
+  await page.locator(".analyst-double-up").waitFor();
+  assert.equal(await page.locator(".analyst-double-up").count(), 1);
+  assert.match(
+    await page.locator(".analyst-double-up").textContent(),
+    /ANALYST PICK/,
+  );
+  assert.match(
+    await page.locator(".analyst-double-up").textContent(),
+    /FanDuel \+238/,
+  );
+  assert.match(
+    await page.locator(".analyst-double-up").textContent(),
+    /No validated model edge/,
+  );
+  await page.locator(".analyst-double-up summary").click();
+  await page
+    .getByRole("heading", { name: "Sample A 40+ receiving yards" })
+    .waitFor();
+  await page
+    .locator(".analyst-double-up")
+    .getByRole("button", { name: /Gambly/ })
+    .click();
+  await page
+    .locator("dialog[open]")
+    .getByLabel("I confirm I am 21 or older.")
+    .check();
+  await page
+    .locator("dialog[open]")
+    .getByRole("button", { name: "Copy pick to clipboard", exact: true })
+    .click();
+  assert.equal(
+    await page.evaluate(() => navigator.clipboard.readText()),
+    "Sample A 40+ receiving yards\nSample B 40+ receiving yards\nSample C 40+ receiving yards",
+  );
+  await page.keyboard.press("Escape");
+  await page.goto(base + "/feed?double_up=" + analyst().id, {
+    waitUntil: "networkidle",
+  });
+  await page.locator(".analyst-double-up").waitFor();
+  analystExpired = true;
+  await page.reload({ waitUntil: "networkidle" });
+  await page
+    .getByText("Pregame copying closed. Original ticket retained.")
+    .waitFor();
+  assert.equal(
+    await page
+      .locator(".analyst-double-up")
+      .getByRole("button", { name: /Gambly/ })
+      .isDisabled(),
+    true,
+  );
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth + 1,
+    ),
+    false,
+  );
   assert.deepEqual(errors, []);
   console.log(
     `PASS Ruby composer, preview, NBA member submission, daily lock, five templates and Zone link @${width} photoOnly=${photoOnly}`,

@@ -35,7 +35,12 @@ export const rubyBrands = [
     monogram: "MK",
     tagline: "Make your Mark.",
   },
-  { brand: "TrapVegas", theme: "encore", monogram: "TV", tagline: "Set your own tempo." },
+  {
+    brand: "TrapVegas",
+    theme: "encore",
+    monogram: "TV",
+    tagline: "Set your own tempo.",
+  },
 ] as const;
 export type RubyContributor = {
   user_id: string;
@@ -73,7 +78,8 @@ export type RubySlip = {
 };
 export type RubyFeature = {
   day: string;
-  submission_id: string;
+  submission_id: string | null;
+  analyst_ticket_id?: string | null;
   verified_odds: number;
   sportsbook: string;
   source_url: string;
