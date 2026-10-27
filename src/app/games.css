@@ -1,0 +1,445 @@
+/* The Zone · Games view (matchup board, game research workspace) — consolidated from the legacy stylesheets on 2026-10-14.
+ * Generated in cascade order; repeated selectors merged. Edit here. */
+.workspace-index {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+  margin: 24px 0;
+}
+.workspace-index h2 {
+  margin: 12px 0;
+  font-size: 20px;
+}
+.workspace-index p {
+  color: var(--muted, #94a3aa);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.workspace-index > a > span:last-child {
+  color: var(--green, #72dbb4);
+  font-size: 13px;
+}
+.mi-search label:first-child {
+  flex: 1;
+}
+.mi-official {
+  border-color: #79dfb8;
+}
+.mi-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 22px 0;
+  font-size: 12px;
+}
+.mi-version {
+  display: grid;
+  width: 100%;
+  gap: 7px;
+  text-align: left;
+  padding: 16px;
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.mi-version span {
+  font-size: 12px;
+  color: var(--muted);
+}
+.mi-group {
+  margin-top: 32px;
+}
+.mi-group > h2::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: #2c3c44;
+}
+.game-pair span {
+  font-size: 15px;
+  color: #829b9c;
+}
+.mi-game > .badge {
+  margin: 6px 0 12px;
+}
+.mi-target {
+  padding: 20px;
+  border: 1px solid #394149;
+  border-radius: 14px;
+  margin: 12px 0;
+  background: #fff !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
+}
+.mi-watch {
+  display: block;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  background: #fff !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
+}
+.workspace-index > a {
+  display: block;
+  padding: 22px;
+  border: 1px solid var(--border, #29383e);
+  border-radius: 14px;
+  text-decoration: none;
+  background: #fff !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
+}
+.mi-historical {
+  padding: 14px;
+  border: 1px solid #ad9860;
+  border-radius: 10px;
+  background: #fff7e8 !important;
+  color: #74510f !important;
+  border-color: #ead8ac !important;
+  box-shadow: none;
+}
+.mi-access {
+  font-size: 14px;
+  background: #fff7e8 !important;
+  color: #74510f !important;
+  border-color: #ead8ac !important;
+  box-shadow: none;
+}
+.game-pair {
+  display: flex;
+  margin: 22px 0 6px;
+  align-items: center;
+  gap: 10px;
+}
+.game-pair strong {
+  font-family: var(--font-display), Arial, sans-serif;
+  letter-spacing: -1px;
+  font-size: 28px;
+}
+.game-pair > span {
+  font-size: 14px;
+  color: #71839a;
+}
+.mi-game:before {
+  content: "";
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-deep, #b48a36), var(--gold, #e8c46a));
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+.slate-windows button.selected {
+  font-weight: 700;
+}
+.mi-search {
+  display: flex;
+  margin: 24px 0;
+  align-items: end;
+  border: 1px solid #2c4049;
+  color: var(--text) !important;
+  box-shadow: 0 4px 18px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 2%, transparent);
+  padding: 18px;
+  border-radius: 14px;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.mi-search label {
+  display: grid;
+  gap: 9px;
+  color: #b4c4c9;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+}
+.mi-search input {
+  width: 100%;
+  color: var(--text);
+  padding: 12px;
+  border-radius: 11px;
+  font-size: 15px;
+  min-height: 46px;
+}
+.mi-search select {
+  width: 100%;
+  color: var(--text);
+  padding: 12px;
+  border-radius: 11px;
+  font-size: 15px;
+  min-height: 46px;
+}
+.slate-windows {
+  display: flex;
+  scrollbar-width: thin;
+  overflow-x: auto;
+  gap: 8px;
+  padding: 0 0 12px;
+}
+.slate-windows button {
+  flex-shrink: 0;
+  padding: 9px 16px;
+  font-size: 12px;
+  min-height: 40px;
+  border-radius: 8px;
+}
+.slate-count {
+  font-size: 11px;
+  margin: 10px 0 20px;
+}
+.mi-group > h2 {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  font-size: 16px;
+  margin: 22px 0 12px;
+}
+.mi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.mi-game {
+  text-decoration: none;
+  color: var(--text) !important;
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition:
+    transform 0.16s,
+    border-color 0.16s;
+}
+.mi-game:hover {
+  box-shadow: 0 10px 24px color-mix(in srgb, color-mix(in srgb, var(--gold) 22%, var(--panel)) 8%, transparent);
+  transform: translateY(-3px);
+  border-color: var(--brand-ink) !important;
+}
+.mi-game .game-pair {
+  gap: 8px !important;
+  margin: 5px 0 0;
+}
+.mi-game .game-pair .team-logo {
+  width: 36px !important;
+  height: 36px !important;
+}
+.mi-game h3 {
+  line-height: 1.5;
+  color: #52657d;
+  font-size: 11px;
+  font-weight: 500;
+  margin: 0;
+}
+.mi-game p {
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 11px;
+  margin: 0;
+}
+.mi-game .badge {
+  align-self: flex-start;
+}
+.mi-game small {
+  color: var(--muted);
+  line-height: 1.6;
+  display: block;
+  font-size: 11px;
+}
+.mi-card-action {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 750;
+  color: var(--brand);
+}
+.analysis-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 0 16px;
+}
+.analysis-tools label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.analysis-tools select {
+  min-height: 38px;
+  padding: 7px 10px;
+}
+.analysis-tools .secondary {
+  margin-left: auto;
+  font-size: 11px;
+  min-height: 38px;
+}
+html[data-theme="dark"] .slate-windows button.selected {
+  background: var(--brand) !important;
+  color: white !important;
+}
+/* Phones: 16px search fields (smaller text makes iOS zoom on focus). Must follow the base .mi-search rules. */
+@media (max-width: 700px) {
+  .workspace-index {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 480px) {
+  .mi-search {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .mi-game {
+    padding: 18px;
+  }
+}
+@media (hover: hover) {
+  .mi-game:hover {
+    border-color: #6da388;
+    background: #192e32;
+    transform: translateY(-2px);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .mi-game {
+    transition:
+      background 0.18s,
+      border-color 0.18s,
+      transform 0.18s;
+  }
+}
+@media (max-width: 600px) {
+  .mi-search {
+    padding: 16px;
+    gap: 12px;
+  }
+  .mi-game {
+    padding: 21px;
+  }
+}
+@media (max-width: 760px) {
+  .game-pair .team-logo {
+    width: 40px;
+    height: 40px;
+  }
+}
+@media (max-width: 1100px) {
+  .mi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 760px) {
+  .mi-search {
+    padding: 14px !important;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .mi-grid {
+    gap: 14px;
+    grid-template-columns: 1fr !important;
+  }
+  .mi-game {
+    padding: 18px !important;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+  }
+  .mi-game .eyebrow {
+    grid-column: 1 / -1;
+  }
+  .mi-game h3 {
+    grid-column: 1 / -1;
+  }
+  .mi-game .mi-card-action {
+    grid-column: 1 / -1;
+  }
+  .mi-game .game-pair {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .mi-game .game-pair strong {
+    font-size: 28px;
+  }
+  .mi-game .game-pair .team-logo {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .mi-game .badge {
+    font-size: 11px;
+  }
+  .mi-group > h2 {
+    font-size: 15px;
+  }
+  .analysis-tools {
+    gap: 6px;
+  }
+  .analysis-tools label {
+    font-size: 11px;
+  }
+  .analysis-tools select {
+    font-size: 11px;
+  }
+  .analysis-tools .secondary {
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mi-game {
+    transition: none;
+  }
+}
+@media (max-width: 600px) {
+  .mi-search input,
+  .mi-search select {
+    font-size: 16px;
+  }
+}
+/* Team names size to the card itself, so long pairs ("Seahawks @ Broncos") fit on phones, tablets and desktop grids. */
+.mi-game {
+  container-type: inline-size;
+}
+.mi-game .game-pair strong {
+  font-size: 20px;
+  font-size: clamp(14px, 6.6cqi, 25px);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mi-game .game-pair .team-logo {
+  flex-shrink: 0;
+}
+/* Tablets: with the desktop sidebar, two cards per row are too narrow for team names, so use one. */
+@media (max-width: 900px) {
+  .mi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+/* Letter badges shown when a team logo can't load: dark text on the light badge. */
+html[data-theme] body .game-pair .team-logo-fallback {
+  color: color-mix(in srgb, var(--gold) 22%, var(--panel));
+  font-weight: 800;
+}
+
+/* Member game briefing: football content before source plumbing. */
+.game-research-topic + .game-research-topic { border-top: 1px solid var(--border, #303640); padding-top: 1rem; margin-top: 1rem; }
+.game-research-topic > small, .game-news-card > small, .game-news-card details > small { color: var(--muted, #aaa); display: block; font-size: .8rem; }
+.game-workload-list { list-style: none; padding: 0; display: grid; gap: .75rem; }
+.game-workload-list li { padding: .9rem; border: 1px solid var(--border, #303640); border-radius: 12px; line-height: 1.65; }
+.game-research-sources { margin-top: .75rem; font-size: .85rem; }
+.game-week-news { margin: 1.75rem 0; }
+.game-news-card { background: var(--panel, #10141c); border: 1px solid var(--border, #303640); border-radius: 16px; padding: 1.1rem; margin: 1rem 0; }
+.game-news-card h3 { margin: .6rem 0; font-size: 1.1rem; }
+.game-news-card p { line-height: 1.7; overflow-wrap: anywhere; }
+.game-news-card summary, .game-research-sources summary { color: var(--gold, #d9bd68); cursor: pointer; }
+.game-quote-card { padding: 1rem 0; border-bottom: 1px solid var(--border, #303640); }
+.game-quote-card h3 { font-size: 1rem; }
+.game-quote-card small { color: var(--muted, #aaa); }

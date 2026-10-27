@@ -1,0 +1,156 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import type { User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
+
+import BrandMark from "./brand-mark";
+import { markPromptShown, wantPrompt } from "@/lib/prompt-queue";
+
+const VERSION = 1;
+
+export default function Welcome() {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    // This metadata is a UI preference, never an authorization or payment check.
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      const current = session?.user ?? null;
+      setUser(current);
+      if (current && current.user_metadata.vq_welcome_version !== VERSION)
+        wantPrompt("profile");
+      setOpen(
+        Boolean(
+          current && current.user_metadata.vq_welcome_version !== VERSION,
+        ),
+      );
+    });
+    const show = () => {
+      setError("");
+      setOpen(true);
+    };
+    window.addEventListener("vq:welcome", show);
+    return () => {
+      data.subscription.unsubscribe();
+      window.removeEventListener("vq:welcome", show);
+    };
+  }, []);
+
+  useEffect(() => {
+    const element = dialog.current;
+    if (!open || !element) return;
+    const previousOverflow = document.body.style.overflow;
+    element.showModal();
+    // Onboarding uses up the visit; optional pop-ups (alerts, phone, daily luck) wait.
+    markPromptShown("profile");
+    document.body.style.overflow = "hidden";
+    return () => {
+      element.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  async function acknowledge() {
+    setBusy(true);
+    setError("");
+    try {
+      if (user) {
+        const { error } = await supabase.auth.updateUser({
+          data: {
+            vq_welcome_version: VERSION,
+            vq_welcome_acknowledged_at: new Date().toISOString(),
+          },
+        });
+        if (error) throw error;
+      }
+      setOpen(false);
+    } catch {
+      setError(
+        "We couldn’t save this yet. Try again, or continue and we’ll remind you next time.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <dialog
+      ref={dialog}
+      className="vq-welcome"
+      aria-labelledby="welcome-title"
+      aria-describedby="welcome-intro"
+      onCancel={(event) => event.preventDefault()}
+    >
+      <div className="vq-welcome-content">
+        <BrandMark className="vq-welcome-mark" />
+        <p className="vq-welcome-eyebrow">WELCOME TO VEGAS QUANT</p>
+        <h2 id="welcome-title">
+          Find your game.
+          <br />
+          Join the conversation.
+        </h2>
+        <p id="welcome-intro">
+          Home shows today’s highlights. The Zone brings game analysis, injury
+          updates and picks together. Community is where members share slips and
+          talk sports. No wager is required.
+        </p>
+        <div className="vq-welcome-sections">
+          <section>
+            <h3>Choose your way to play</h3>
+            <p>
+              Follow Along for free, or Track My Bets to record wagers you
+              already placed. Checking in never creates a bet.
+            </p>
+          </section>
+          <section>
+            <h3>Research when you want it</h3>
+            <p>
+              Published official slips, edge cards and basic tracking are free.
+              Premium unlocks Vegas Quant Ultra’s full matchup analysis and
+              research history. No qualifying edge? The challenge pauses. The
+              $20 experiment’s roughly $640 target is aspirational.
+            </p>
+          </section>
+          <section className="vq-welcome-risk">
+            <h3>Know the limits</h3>
+            <p>
+              This is analysis and entertainment, not a sportsbook or an
+              investment strategy. We do not accept or place bets. Projections
+              can be wrong, and no pick or profit is guaranteed. Any wager can
+              lose, including your entire stake. Only risk money you can afford
+              to lose.
+            </p>
+          </section>
+        </div>
+        {error && (
+          <p role="alert" className="vq-welcome-error">
+            {error}
+          </p>
+        )}
+      </div>
+      <footer className="vq-welcome-footer">
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void acknowledge()}
+        >
+          {busy ? "Saving…" : "I understand — continue"}
+        </button>
+        {error && (
+          <button
+            type="button"
+            className="vq-welcome-retry"
+            onClick={() => setOpen(false)}
+          >
+            Continue without saving
+          </button>
+        )}
+        <small>Better decisions. No promises.</small>
+      </footer>
+    </dialog>
+  );
+}

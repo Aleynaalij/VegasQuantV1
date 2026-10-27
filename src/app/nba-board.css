@@ -1,0 +1,188 @@
+.nba-live-board {
+  padding: clamp(16px, 3vw, 28px);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--panel);
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.nba-live-board > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.nba-live-board h2 {
+  font-size: clamp(24px, 4vw, 34px);
+  margin: 6px 0;
+}
+.nba-board-note,
+.nba-board-empty {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+.nba-board-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.nba-board-tabs button {
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  min-height: 44px;
+}
+.nba-board-tabs button[aria-pressed="true"] {
+  background: var(--gold, #e8c46a);
+  color: #17130a;
+}
+.nba-board-games {
+  display: grid;
+  gap: 12px;
+}
+.nba-board-game {
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.nba-board-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.nba-board-meta strong {
+  color: var(--gold, #e8c46a);
+}
+.nba-board-game h3 {
+  font-size: 23px;
+  line-height: 1.2;
+  margin: 14px 0 10px;
+}
+.nba-board-game h3 span {
+  font-size: 16px;
+  color: var(--muted);
+}
+.nba-board-game p {
+  font-size: 14px;
+  line-height: 1.6;
+}
+.nba-board-game small {
+  color: var(--muted);
+  line-height: 1.6;
+  font-size: 12px;
+}
+.nba-board-score {
+  font-weight: 800 !important;
+  font-size: 20px !important;
+}
+.nba-board-source {
+  margin: 10px 0;
+}
+.nba-board-source a,
+.nba-board-observation a {
+  color: var(--gold, #e8c46a);
+  font-size: 13px;
+}
+.nba-board-details {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
+.nba-board-details summary {
+  min-height: 44px;
+  cursor: pointer;
+  display: list-item;
+  padding: 10px 0;
+}
+.nba-board-details h4 {
+  margin: 18px 0 10px;
+}
+.nba-board-observation {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.nba-board-observation p {
+  margin: 5px 0;
+}
+.nba-board-observation ul {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+.nba-live-board button:focus-visible,
+.nba-live-board summary:focus-visible,
+.nba-live-board a:focus-visible {
+  outline: 3px solid var(--gold, #e8c46a);
+  outline-offset: 3px;
+}
+@media (max-width: 480px) {
+  .nba-live-board > header {
+    align-items: flex-start;
+  }
+  .nba-live-board > header button {
+    padding: 10px;
+    min-width: 90px;
+  }
+  .nba-board-game {
+    padding: 14px;
+  }
+}
+
+.nba-research-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0;
+}
+.nba-research-filters label {
+  display: grid;
+  gap: 8px;
+  flex: 1 1 180px;
+  font-size: 13px;
+  min-width: 0;
+}
+.nba-research-filters input,
+.nba-research-filters select {
+  width: 100%;
+  min-height: 44px;
+  min-width: 0;
+}
+.nba-price-card {
+  padding: 18px;
+  margin: 16px 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+}
+.nba-price-card h4 {
+  margin: 8px 0;
+  font-size: 20px;
+}
+.nba-price-card > strong {
+  color: var(--gold, #e8c46a);
+  font-size: 14px;
+}
+.nba-book-quotes {
+  list-style: none;
+  padding: 0 !important;
+}
+.nba-book-quotes li,
+.nba-form-row {
+  display: grid;
+  gap: 6px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.nba-form {
+  margin-top: 14px;
+}
+.nba-form-row {
+  font-size: 13px;
+}

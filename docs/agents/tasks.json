@@ -1,0 +1,482 @@
+{
+  "version": 1,
+  "tasks": [
+    {
+      "id": "NBA-001",
+      "owner": "CLAUDE",
+      "scope": "service",
+      "status": "verified",
+      "updated_at": "2026-10-19T10:25:00Z",
+      "files": [
+        "supabase/functions/nba-sync/**",
+        "supabase/migrations/20261018060000_nba_source_feed.sql",
+        "tests/nba-feed.test.ts",
+        "tests/nba-source-feed.test.ts",
+        "tests/sql/nba-source-feed.mjs",
+        "docs/product/nba-source-feed.md",
+        "docs/agents/CLAUDE.md"
+      ],
+      "depends_on": [],
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/64",
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236375001"
+      },
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236468339"
+      },
+      "checks": [
+        {
+          "name": "221 tests, typecheck, verify and ui-smoke CI on PR #64",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/actions/runs/39044301084"
+        },
+        {
+          "name": "Live nba-sync v2 run 2026-10-17T16:02Z: 48 games, 96 observations, lines not due, props off",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236375001"
+        }
+      ],
+      "next_action": "Done: lines pull every 3 hours (306 quotes per pull), props per event on the 6h/2h/30-min cadence. Credits tracked in feed_runs.",
+      "merged_commit": "6cbb0055b5c248bfd5604a785db8cece539e73c8",
+      "deployment_url": "https://uowearboulykfcwnuirn.supabase.co/functions/v1/nba-sync",
+      "live_verification": {
+        "at": "2026-10-19T10:02:02Z",
+        "result": "passed",
+        "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6265417980"
+      }
+    },
+    {
+      "id": "NBA-002",
+      "owner": "CODEX",
+      "scope": "application",
+      "status": "merged",
+      "updated_at": "2026-10-17T20:16:10.706846+00:00",
+      "files": [
+        "src/components/nba-desk.tsx",
+        "src/components/nba-game-board.tsx",
+        "src/lib/nba-board.ts",
+        "src/app/nba-board.css",
+        "tests/nba-board.test.ts",
+        "scripts/ui-smoke/nba-board.mjs",
+        "docs/agents/CODEX.md"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-001",
+          "required": "merged"
+        }
+      ],
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/66",
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6235628723"
+      },
+      "acknowledgment": {
+        "by": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236401725"
+      },
+      "checks": [
+        {
+          "name": "220 tests, typecheck, build and browser fixtures",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/66"
+        }
+      ],
+      "next_action": "Merged #66; deployed rendering/access verification remains separate from fixture checks.",
+      "merged_commit": "b73c8b1875371973a5bc9a3fa748c0468f361dc6"
+    },
+    {
+      "id": "NBA-003",
+      "owner": "CLAUDE",
+      "scope": "service",
+      "status": "verified",
+      "updated_at": "2026-10-18T11:20:00Z",
+      "files": [
+        "supabase/migrations/20261018070000_nba_results.sql",
+        "supabase/functions/nba-results/**",
+        "tests/nba-results.test.ts",
+        "tests/sql/nba-results.mjs",
+        "docs/product/nba-results.md",
+        "docs/product/nba-source-feed.md",
+        "docs/agents/CLAUDE.md"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-001",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Claude: proposed resolve_nba_result_correction for CONFLICT games (1 preseason correction journaled); needs owner approval before the regular season.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/68",
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6238912185"
+      },
+      "merged_commit": "6299909c3b0d06d6b69099dd4cde150a4f0fbddb",
+      "deployment_url": "https://uowearboulykfcwnuirn.supabase.co/functions/v1/nba-results",
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239675816"
+      },
+      "checks": [
+        {
+          "name": "Results parse/grader tests and SQL harness, verify CI on PR #68",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/68"
+        },
+        {
+          "name": "Live: 12 preseason finals recorded, in the 3-hour confirmation window at 21:13Z",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65"
+        }
+      ],
+      "live_verification": {
+        "at": "2026-10-18T11:09:01Z",
+        "result": "passed",
+        "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6250430955"
+      }
+    },
+    {
+      "id": "NBA-004",
+      "owner": "CLAUDE",
+      "scope": "service",
+      "status": "deployed",
+      "updated_at": "2026-10-19T10:25:00Z",
+      "files": [
+        "research/nba/engine.py",
+        "research/nba/hosted_scan.py",
+        "research/nba/shadow_report.py",
+        "research/nba/MODEL.md",
+        "research/nba/README.md",
+        "research/nba/requirements.txt",
+        "research/nba/artifacts/**",
+        "supabase/migrations/20261018080000_nba_shadow.sql",
+        ".github/workflows/nba-shadow-scan.yml",
+        ".github/workflows/nba-shadow-report.yml",
+        ".github/workflows/nba-model.yml",
+        "tests/nba_model/**",
+        "tests/nba-shadow.test.ts",
+        "tests/sql/nba-shadow.mjs",
+        "supabase/migrations/20261018090000_nba_shadow_hardening.sql"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-003",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Claude: no shadow capture yet. GitHub ran the 15-minute scan schedule only 11 times in 32 hours and missed the first props snapshot; a Supabase cron dispatcher (like research-board-dispatch) is proposed and awaits the owner's OK.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/70",
+      "merged_commit": "c145b5919695ce152922f8fce8622004eaa9b4b1",
+      "deployment_url": "https://github.com/Aleynaalij/VegasQuantV1/actions/workflows/nba-shadow-scan.yml",
+      "checks": [
+        {
+          "name": "Model unit tests, SQL harness, verify CI on PR #70; holdout Brier beats baseline (points 0.1229 vs 0.1251, rebounds 0.1143 vs 0.1177)",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/70"
+        }
+      ],
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239698446"
+      },
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/70"
+      }
+    },
+    {
+      "id": "COORD-002",
+      "owner": "CODEX",
+      "scope": "documentation",
+      "status": "complete",
+      "updated_at": "2026-10-17T16:03:00Z",
+      "files": [
+        "docs/agents/tasks.json",
+        "docs/agents/TASKS.md",
+        "docs/agents/INTEGRATION-CHECKLIST.md",
+        "docs/agents/README.md",
+        "scripts/agents/validate.mjs",
+        "tests/agent-coordination.test.ts",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        ".github/ISSUE_TEMPLATE/agent-task.yml",
+        ".github/workflows/agent-coordination.yml"
+      ],
+      "depends_on": [],
+      "handoff": null,
+      "acknowledgment": null,
+      "checks": [
+        {
+          "name": "Coordination validator, six regression tests, typecheck and YAML parse",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/commit/5730b4e818b45f4a03b58ad951d5d4e70394ec51"
+        }
+      ],
+      "next_action": "Claude: read the new workflow and ACK the pending NBA-002 handoff. Both agents maintain their own task entries.",
+      "completion_evidence": "https://github.com/Aleynaalij/VegasQuantV1/commit/5730b4e818b45f4a03b58ad951d5d4e70394ec51"
+    },
+    {
+      "id": "NBA-006",
+      "owner": "CLAUDE",
+      "scope": "application",
+      "status": "deployed",
+      "updated_at": "2026-10-17T21:25:00Z",
+      "files": [
+        "src/components/nba-home-brief.tsx",
+        "src/components/nba-team-logo.tsx",
+        "src/lib/nba-home.ts",
+        "tests/nba-home-brief.test.ts"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-001",
+          "required": "merged"
+        }
+      ],
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239704018"
+      },
+      "next_action": "Claude: verify the live NBA home hero on opening night (Oct 20) shows the lead game and the live state.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/72",
+      "merged_commit": "a4304610adface8669dab55d7a7a52fcae23a232",
+      "deployment_url": "https://vegasquant.app/nba",
+      "checks": [
+        {
+          "name": "Home hero tests, typecheck, verify and ui-smoke CI; flicker fix #75; Codex live check of /nba hero and game link",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6241171294"
+        }
+      ],
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/72#issuecomment-6239886853"
+      }
+    },
+    {
+      "id": "NBA-005",
+      "owner": "CODEX",
+      "scope": "application",
+      "status": "merged",
+      "updated_at": "2026-10-17T20:16:33.948526+00:00",
+      "files": [
+        "src/components/nba-game-board.tsx",
+        "src/lib/nba-board.ts",
+        "src/app/nba-board.css",
+        "tests/nba-board.test.ts",
+        "scripts/ui-smoke/nba-board.mjs",
+        "docs/agents/CODEX.md"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-001",
+          "required": "merged"
+        }
+      ],
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/69",
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/69"
+      },
+      "acknowledgment": {
+        "by": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/pull/69#issuecomment-6240163768"
+      },
+      "checks": [
+        {
+          "name": "Current-head CI for merged research board",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/actions/runs/39065691787"
+        }
+      ],
+      "next_action": "Merged #69. Public production schedule renders and signed-out member gate is visible; full member comparison/form verification is still pending.",
+      "merged_commit": "103634de6abc223781d3ac71cdc1b79f2595c6c0"
+    },
+    {
+      "id": "NBA-007",
+      "owner": "CODEX",
+      "scope": "application",
+      "status": "review",
+      "updated_at": "2026-10-17T20:18:29.940938+00:00",
+      "files": [
+        "src/app/nba/games/[slug]/page.tsx",
+        "src/components/nba-game-detail.tsx",
+        "src/app/nba-game-detail.css",
+        "scripts/ui-smoke/nba-game.mjs"
+      ],
+      "depends_on": [
+        {
+          "task": "NBA-005",
+          "required": "merged"
+        },
+        {
+          "task": "NBA-003",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Claude: review replacement #76 after current-head checks; #74 superseded. Loading skeleton/cache and game deep links preserved on merged main e37b2c8. No live game-page verification claimed.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/76",
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6240350392"
+      },
+      "checks": [
+        {
+          "name": "247 local tests, typecheck/build and 390/1280 fixtures including delayed-loading skeleton",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/76"
+        }
+      ]
+    },
+    {
+      "id": "NBA-008",
+      "owner": "CLAUDE",
+      "scope": "application",
+      "status": "verified",
+      "updated_at": "2026-10-24T14:30:00Z",
+      "files": [
+        "src/lib/nba-paused.ts",
+        "src/components/nba-coming-soon.tsx",
+        "src/app/nba/layout.tsx",
+        "src/components/ui.tsx",
+        "src/app/nba.css",
+        "src/app/lounge.css",
+        "src/components/community-feed.tsx",
+        "src/components/home-brief.tsx",
+        "src/lib/vegas-help.ts",
+        "scripts/ui-smoke/nba-paused.mjs",
+        "scripts/ui-smoke/check.mjs",
+        "supabase/migrations/20261022010000_nba_daily_collection.sql",
+        "tests/sql/nba-daily-collection.mjs",
+        "tests/nba-daily-collection.test.ts"
+      ],
+      "depends_on": [],
+      "next_action": "Done: NBA paused on the live site; NBA data collects once each morning (6:00/6:05 ET, 9:10 ET confirm).",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/92",
+      "checks": [
+        {
+          "name": "269 unit tests, typecheck, build, ui-smoke incl. nba-paused (chip, note, focus, /nba redirects) on PR #92",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/92"
+        }
+      ],
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6350557351"
+      },
+      "merged_commit": "e47846d46f7bf80c5aa292e8e9c1d71b6693c987",
+      "deployment_url": "https://vegasquant.app/",
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353131440"
+      },
+      "live_verification": {
+        "at": "2026-10-24T14:30:00Z",
+        "result": "passed",
+        "evidence": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6385004281"
+      }
+    },
+    {
+      "id": "NGS-001",
+      "owner": "CLAUDE",
+      "scope": "application",
+      "status": "deployed",
+      "updated_at": "2026-10-23T00:30:00Z",
+      "files": [
+        "scripts/research-board/ngs.ts",
+        "scripts/research-board/select.ts",
+        "scripts/research-board/run.ts",
+        "tests/research-board-ngs.test.ts",
+        "supabase/migrations/20261023000000_nfl_ngs_team_codes.sql",
+        "tests/sql/ngs-context.mjs",
+        "docs/research/ngs-backtest-plan.md"
+      ],
+      "depends_on": [],
+      "next_action": "Claude: confirm a research-board release carries research_evidence.ngs on the next run.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/99",
+      "merged_commit": "e1e298e243b19c035e2163dabc573b47283d0c42",
+      "deployment_url": "https://github.com/Aleynaalij/VegasQuantV1/actions/workflows/research-board.yml",
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6352635663"
+      },
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353175121"
+      },
+      "checks": [
+        {
+          "name": "283 unit tests incl. NGS context and WSH/WAS SQL case; typecheck; CI on #99; team-code migration applied live and verified on Commanders games",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/99"
+        }
+      ]
+    },
+    {
+      "id": "NGS-002",
+      "owner": "CODEX",
+      "scope": "service",
+      "status": "review",
+      "updated_at": "2026-10-22T23:15:08.371434+00:00",
+      "files": [
+        "research/ngs/backtest.py",
+        "tests/ngs/test_backtest.py"
+      ],
+      "depends_on": [
+        {
+          "task": "NGS-001",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Claude: review codex/ngs-backtest (25,473 candidate rows; no holdout decision), reconcile your NGS-001 merged ledger state, then run NGS-003 holdout once. Awaiting peer ACK; no live selection/model change.",
+      "handoff": {
+        "to": "CLAUDE",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353394260"
+      }
+    },
+    {
+      "id": "NGS-003",
+      "owner": "CLAUDE",
+      "scope": "service",
+      "status": "review",
+      "updated_at": "2026-10-23T00:30:00Z",
+      "files": [
+        "docs/research/ngs-backtest-results.json",
+        "docs/research/ngs-backtest-results.md",
+        "research/ngs/evaluate_holdout.py",
+        "research/probability/**",
+        "scripts/research-board/ngs.ts",
+        "scripts/research-board/select.ts",
+        "tests/ngs/test_evaluate_holdout.py",
+        "tests/probability/test_ngs_features.py",
+        "tests/research-board-ngs.test.ts"
+      ],
+      "depends_on": [
+        {
+          "task": "NGS-002",
+          "required": "merged"
+        }
+      ],
+      "next_action": "Codex: NGS-001 is now recorded deployed, so NGS-002 can move to merged (bdd91ac); then Claude marks NGS-003 merged (#104, 28c0202). Outcome: no NGS flag or model input adopted; NGS stays descriptive in the why.",
+      "pr": "https://github.com/Aleynaalij/VegasQuantV1/pull/104",
+      "merged_commit": "28c0202af9c113abbd32894be980786fd8452ba3",
+      "handoff": {
+        "to": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353879184"
+      },
+      "acknowledgment": {
+        "by": "CODEX",
+        "url": "https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353995620"
+      },
+      "checks": [
+        {
+          "name": "Pre-registered 2024-2025 holdout run once (evaluator committed first, 53d4073): no flag qualifies; v0.4 model test (#101) rejected; CI green on #104",
+          "outcome": "passed",
+          "evidence": "https://github.com/Aleynaalij/VegasQuantV1/pull/104"
+        }
+      ]
+    }
+  ]
+}

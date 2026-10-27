@@ -1,0 +1,78 @@
+/* Separate sport desks share the Vegas Quant shell. */
+.sport-switch { display: flex; align-items: center; gap: 6px; padding: 12px 24px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.sport-switch a { display: inline-flex; justify-content: center; align-items: center; min-height: 44px; min-width: 76px; padding: 8px 20px; border-radius: 12px; color: var(--muted); font-weight: 750; text-decoration: none; }
+.sport-switch a.selected { background: var(--brand); color: #fff; }
+.sport-switch a:focus-visible, .nba-destinations a:focus-visible { outline: 3px solid var(--brand-ink); outline-offset: 3px; }
+.sport-switch > span { margin-left: auto; color: var(--muted); font-size: 12px; }
+.nba-desk { display: grid; gap: 20px; max-width: 1100px; margin: 0 auto; }
+.nba-hero { padding: clamp(24px, 5vw, 48px); border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
+.nba-eyebrow { display: block; font-size: 12px; letter-spacing: .12em; color: var(--muted); font-weight: 750; margin-bottom: 16px; }
+.nba-hero h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.12; margin: 20px 0 16px; max-width: 700px; }
+.nba-hero > p { color: var(--muted); line-height: 1.7; max-width: 640px; }
+.nba-launch-note { display: flex; gap: 12px; padding-top: 20px; margin-top: 24px; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.6; }
+.nba-launch-note svg { flex-shrink: 0; margin-top: 2px; }
+.nba-destinations, .nba-priorities { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.nba-destinations a { display: grid; gap: 12px; padding: 24px; border: 1px solid var(--line); background: var(--panel); border-radius: 16px; color: var(--text); text-decoration: none; }
+.nba-destinations strong { font-size: 20px; }
+.nba-destinations span, .nba-priorities p, .nba-readiness span { color: var(--muted); font-size: 14px; line-height: 1.7; }
+.nba-priorities article { padding: 18px; border: 1px solid var(--line); border-radius: 12px; }
+.nba-priorities h3 { margin: 0 0 10px; }
+.nba-priorities p { margin: 0; }
+.nba-readiness { padding: 4px 24px 8px; }
+.nba-readiness p { display: grid; gap: 6px; padding: 16px 0; margin: 0; border-bottom: 1px solid var(--line); }
+.nba-readiness strong { color: var(--text); }
+.nba-priorities { padding: 20px 24px 24px; }
+.nba-readiness p:last-child { border-bottom: 0; }
+@media (max-width: 600px) {
+  .sport-switch { padding: 10px 16px; }
+  .nba-destinations, .nba-priorities { grid-template-columns: 1fr; }
+  .nba-readiness { padding: 0 20px 4px; }
+  .nba-priorities { padding: 16px 20px 20px; gap: 12px; }
+}
+.zone-views { display:flex; gap:8px; overflow-x:auto; padding:8px 0; }
+.zone-views a { flex-shrink:0; padding:12px 18px; border:1px solid var(--line); border-radius:12px; color:var(--text); text-decoration:none; font-weight:700; }
+.zone-views .selected { background:var(--brand); color:white; }
+.community-feed { display:grid; gap:20px; max-width:900px; margin:auto; }
+.community-composer, .social-post { border:1px solid var(--line); background:var(--panel); padding:24px; border-radius:16px; display:grid; gap:14px; }
+.community-composer label { display:grid; gap:7px; }
+.community-composer input,.community-composer textarea,.community-composer select,.social-post textarea { width:100%; max-width:100%; box-sizing:border-box; padding:12px; color:var(--text); border-radius:10px; }
+.social-post p { white-space:pre-wrap; overflow-wrap:anywhere; }
+.social-post header,.social-actions { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.social-actions button { min-height:44px; }
+.social-post ol { padding-left:24px; }
+.social-post .member-label { color:var(--brand-ink); font-size:12px; letter-spacing:.08em; }
+.social-comments { border-top:1px solid var(--line); padding-top:16px; display:grid; gap:12px; }
+.social-comments form { display:grid; gap:10px; }
+.social-comments article { border-left:2px solid var(--line); padding-left:12px; }
+.zone-views a:focus-visible { outline:3px solid var(--brand-ink); outline-offset:3px; }
+/* NBA home hero: reuses the NFL vq-home hero; only the live score and the preparation note are NBA-only. */
+.nba-home-brief .nba-hero-score { font-size: clamp(28px, 6vw, 40px); font-weight: 800; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; }
+.nba-home-note { display: flex; align-items: center; gap: 8px; margin: 0; color: var(--muted); font-size: 13px; line-height: 1.5; }
+.nba-home-note svg { flex-shrink: 0; }
+#nba-slate { scroll-margin-top: 80px; }
+.nba-home-stale { margin: 0; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); font-size: 13px; }
+/* Loading card: the same shape as the matchup card, so the real game swaps in without a jump. */
+.nba-skeleton .nba-sk-logo { display: block; width: 64px; height: 64px; border-radius: 50%; background: rgba(255,255,255,.08); }
+/* Same size formula as the real name (lounge.css: clamp(26px, 7.6vw, 42px) at line-height 0.95). */
+.nba-skeleton .nba-sk-name { display: block; width: min(150px, 32vw); height: calc(clamp(26px, 7.6vw, 42px) * 0.95); border-radius: 6px; background: rgba(255,255,255,.08); }
+.nba-home-brief .nba-sk-line { display: block; width: min(260px, 60vw); height: 22px; border-radius: 6px; background: color-mix(in srgb, var(--muted) 18%, transparent); }
+@media (prefers-reduced-motion: no-preference) {
+  .nba-skeleton .nba-sk-logo, .nba-skeleton .nba-sk-name, .nba-home-brief .nba-sk-line, .nba-home-brief .nba-sk-count { animation: nba-sk-pulse 1.2s ease-in-out infinite alternate; }
+}
+/* Sized like the real countdown (163x40) and slate row content (26px logos) to avoid a layout jump. */
+.nba-home-brief .nba-sk-count { display: block; width: 163px; height: 40px; border-radius: 8px; background: rgba(255,255,255,.08); }
+.nba-home-brief .nba-sk-row { height: 26px; }
+@keyframes nba-sk-pulse { from { opacity: .55; } to { opacity: 1; } }
+@media (min-width: 761px) { .nba-skeleton .nba-sk-logo { width: 88px; height: 88px; } }
+/* NBA paused: the chip carries a "Soon" sticker and opens a short note instead of the NBA desk. */
+.sport-switch .nba-soon-chip { position: relative; display: inline-flex; justify-content: center; align-items: center; min-height: 44px; min-width: 76px; padding: 8px 20px; border: 0; border-radius: 12px; background: transparent; color: var(--muted); font: inherit; font-weight: 750; cursor: pointer; }
+.sport-switch .nba-soon-chip:focus-visible, .nba-soon-dialog button:focus-visible { outline: 3px solid var(--brand-ink); outline-offset: 3px; }
+.nba-soon-chip .nba-soon-sticker { position: absolute; top: -4px; right: -10px; transform: rotate(8deg); }
+.nba-soon-sticker { display: inline-block; padding: 2px 7px; border-radius: 999px; background: var(--gold, #e8c46a); color: #17120a; font-size: 10px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; line-height: 1.4; box-shadow: 0 2px 6px #0003; }
+.nba-soon-dialog { width: min(440px, calc(100% - 32px)); max-width: none; padding: 0; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); color: var(--text); box-shadow: 0 20px 60px #0008; }
+.nba-soon-dialog::backdrop { background: #000a; }
+.nba-soon-body { position: relative; padding: 28px 24px 24px; }
+.nba-soon-dialog h2 { margin: 12px 0 10px; font-size: 22px; }
+.nba-soon-dialog p { margin: 0 0 20px; color: var(--muted); line-height: 1.6; font-size: 15px; }
+.nba-soon-close { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 50%; background: transparent; color: var(--muted); cursor: pointer; }
+.nba-soon-ok { width: 100%; min-height: 44px; border: 0; border-radius: 12px; background: var(--brand); color: #fff; font: inherit; font-weight: 750; cursor: pointer; }

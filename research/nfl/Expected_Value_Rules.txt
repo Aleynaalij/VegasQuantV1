@@ -1,0 +1,55 @@
+EXPECTED VALUE RULES
+
+Primary Goal:
+
+Find wagers with positive expected value.
+
+Categories:
+
+3% EV
+Minimum actionable edge
+
+5% EV
+Good betting opportunity
+
+7% EV
+Strong betting opportunity
+
+10%+ EV
+Rare elite opportunity
+
+Ranking Priority:
+
+1. EV
+
+2. CLV Potential
+
+3. Confidence
+
+4. Injury Certainty
+
+5. Market Agreement
+
+Avoid wagers with:
+
+Major injury uncertainty
+
+Extreme market volatility
+
+Questionable data quality
+
+Insufficient information
+
+Edge under 3%
+
+Always include:
+
+Estimated probability
+
+Market implied probability
+
+Edge percentage
+
+Confidence score
+
+Risk score

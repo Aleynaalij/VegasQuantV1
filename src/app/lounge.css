@@ -1,0 +1,600 @@
+/*
+ * Lounge: the luxury sportsbook room the Vegas Quant cards live in.
+ * Dark, gold trim, felt and a betting-board layout; green and red only mean win/live and loss.
+ * Loaded after premium.css, which holds the tokens.
+ */
+
+/* Room: near-black with a soft spotlight and the card-back lattice. */
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(900px 420px at 50% -8%, #e8c46a14, transparent 65%),
+    repeating-linear-gradient(45deg, #ffffff05 0 1px, transparent 1px 26px),
+    repeating-linear-gradient(-45deg, #ffffff05 0 1px, transparent 1px 26px),
+    var(--bg) !important;
+  background-attachment: fixed !important;
+}
+
+/* ---------- Shell ---------- */
+html[data-theme="dark"] body :is(.topbar, .sidebar) {
+  background: #07080bdd !important;
+  border-color: var(--gold-line) !important;
+}
+html[data-theme="dark"] body .mobile-nav {
+  background: #07080bf0 !important;
+  border-top: 1px solid var(--gold-line) !important;
+}
+html[data-theme="dark"] body .mobile-nav a.active { color: var(--gold-hi) !important; }
+html[data-theme="dark"] body .mobile-nav a.active svg { color: var(--gold) !important; }
+html[data-theme="dark"] body .mobile-nav a.active::before {
+  background: var(--gold);
+  box-shadow: 0 0 10px #e8c46a66;
+}
+
+/* NFL / NBA: casino chips with striped edges. */
+html[data-theme="dark"] body .sport-switch {
+  gap: 12px;
+  border-bottom-color: var(--gold-line);
+}
+html[data-theme="dark"] body .sport-switch a,
+html[data-theme="dark"] body .sport-switch a + a,
+html[data-theme="dark"] body .sport-switch .nba-soon-chip {
+  width: 58px;
+  min-width: 58px;
+  height: 58px;
+  min-height: 58px;
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: 0;
+  background:
+    radial-gradient(circle, #171b24 0 54%, #2c313d 55% 58%, transparent 59%),
+    repeating-conic-gradient(#3a404d 0 15deg, #171b24 15deg 30deg);
+  color: var(--muted) !important;
+  font: 800 14px/1 var(--font-board), sans-serif;
+  letter-spacing: 0.08em;
+  box-shadow: 0 4px 10px #0008, inset 0 0 0 2px #0006;
+}
+html[data-theme="dark"] body .sport-switch a.selected {
+  background:
+    radial-gradient(circle, #20180a 0 54%, #f3dc9a 55% 58%, transparent 59%),
+    repeating-conic-gradient(#e8c46a 0 15deg, #6b4e18 15deg 30deg) !important;
+  color: var(--gold-hi) !important;
+  box-shadow: 0 6px 16px #000a, 0 0 0 1px #e8c46a55;
+}
+
+/* ---------- Shared surfaces ---------- */
+html[data-theme="dark"] body :is(.panel, .feed-post, .candidate-tracker, .feed-featured, .mi-game, .leg-record, .community-panel, .sports-ticker, .notebook, .official-card) {
+  background: linear-gradient(180deg, #ffffff05, transparent 40%), var(--panel) !important;
+  border-color: var(--line) !important;
+  box-shadow: inset 0 0 0 1px #e8c46a0f, 0 12px 30px #0007 !important;
+}
+html[data-theme="dark"] body .eyebrow { color: var(--gold); }
+html[data-theme="dark"] body a.text-link,
+html[data-theme="dark"] body .text-link { color: var(--gold-hi); }
+
+/* ---------- Home: Pick of the Day ---------- */
+html[data-theme] .candidate-tracker.vq-pod-strip {
+  border: 1px solid var(--gold-line) !important;
+  border-left: 4px solid var(--gold) !important;
+  background: linear-gradient(100deg, #1a160c, #0e1117 60%) !important;
+}
+html[data-theme] .vq-pod-badge { color: var(--gold); }
+html[data-theme] .vq-pod-badge::before { content: "♠ "; }
+html[data-theme] .vq-pod-copy strong { color: var(--text); }
+html[data-theme] .vq-pod-chevron { color: var(--gold); }
+html[data-theme] .vq-pod-strip[open] > .vq-pod-headline { border-bottom-color: var(--gold-line); }
+
+/* ---------- Home: the felt table (next kickoff) ---------- */
+html[data-theme] .vq-hero {
+  border: 2px solid var(--gold-deep);
+  border-radius: 26px;
+  background:
+    repeating-linear-gradient(45deg, #ffffff06 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(-45deg, #ffffff06 0 1px, transparent 1px 22px),
+    radial-gradient(120% 90% at 50% 30%, var(--felt-a), var(--felt-b));
+  box-shadow: 0 22px 50px #000a, inset 0 0 0 6px #0004;
+}
+/* Gold inner rail instead of the tech grid. */
+html[data-theme] .vq-hero::after {
+  inset: 9px;
+  border: 1px solid #e8c46a66;
+  border-radius: 18px;
+  background: none;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+html[data-theme] .vq-kicker {
+  color: var(--gold);
+  font: 800 14px/1 var(--font-board), sans-serif;
+  letter-spacing: 0.22em;
+}
+html[data-theme] .vq-kicker i {
+  background: #1ed883;
+  box-shadow: 0 0 0 3px #1ed88322;
+  animation: none;
+}
+html[data-theme] .vq-chip {
+  color: var(--gold);
+  background: #00000040;
+  border-color: #e8c46a66;
+  font-family: var(--font-board), sans-serif;
+  letter-spacing: 0.16em;
+}
+html[data-theme] .vq-team b {
+  font: 800 clamp(26px, 7.6vw, 42px) / 0.95 var(--font-board), sans-serif;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #fbf8ef;
+}
+html[data-theme] .vq-at {
+  color: var(--gold);
+  font: 700 20px/1 var(--font-board), sans-serif;
+}
+html[data-theme] .vq-hero-meta {
+  color: #d5d1c4;
+  border-color: #e8c46a26;
+}
+/* Countdown: scoreboard digits. */
+html[data-theme] .vq-countdown > span {
+  background: #050607;
+  border: 1px solid #e8c46a40;
+  box-shadow: inset 0 2px 6px #000c;
+  border-radius: 8px;
+}
+html[data-theme] .vq-countdown b {
+  color: var(--gold-hi);
+  font: 800 24px/1 var(--font-board), sans-serif;
+  letter-spacing: 0.04em;
+}
+html[data-theme] .vq-countdown small { color: #a89c7d; }
+/* Gold is the one action color. */
+html[data-theme] body a.vq-btn {
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 45%, var(--gold-deep));
+  color: #17120a !important;
+  box-shadow: 0 8px 20px #0009, inset 0 1px 0 #fff6;
+  border: 1px solid #f7e6b0;
+  font-weight: 800;
+}
+html[data-theme] body a.vq-btn.ghost {
+  background: #00000040;
+  border: 1px solid #e8c46a77;
+  color: var(--gold-hi) !important;
+  box-shadow: none;
+}
+
+/* ---------- Home: the board (upcoming games) ---------- */
+html[data-theme] .vq-slate {
+  gap: 0;
+  border: 1px solid var(--gold-line);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--panel);
+}
+html[data-theme] body .vq-slate a {
+  border: 0;
+  border-radius: 0;
+  border-top: 1px solid var(--line);
+  background: transparent;
+  padding: 14px 16px;
+}
+html[data-theme] body .vq-slate a:first-child { border-top: 0; }
+html[data-theme] .vq-slate-teams b {
+  font: 700 19px/1 var(--font-board), sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+html[data-theme] .vq-slate-teams small { color: var(--gold-deep); }
+html[data-theme] .vq-slate time {
+  color: var(--gold);
+  font: 700 16px/1 var(--font-board), sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ---------- Home: shortcut tiles, marked with suits ---------- */
+html[data-theme] body .vq-tiles a {
+  position: relative;
+  border-color: var(--line);
+  background: linear-gradient(180deg, #ffffff05, transparent), var(--panel);
+  box-shadow: inset 0 0 0 1px #e8c46a0d;
+}
+html[data-theme] .vq-tiles svg { color: var(--gold); }
+html[data-theme] .vq-tiles a::after {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  font-size: 16px;
+  color: #e8c46a55;
+}
+html[data-theme] .vq-tiles a:nth-child(1)::after { content: "♣"; }
+html[data-theme] .vq-tiles a:nth-child(2)::after { content: "♠"; }
+html[data-theme] .vq-tiles a:nth-child(3)::after { content: "♦"; color: #ff6b7866; }
+html[data-theme] .vq-tiles b {
+  font: 800 19px/1.1 var(--font-board), sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+html[data-theme] body a.vq-banner {
+  border-color: var(--gold-line);
+  background: linear-gradient(90deg, #e8c46a12, transparent 70%), var(--panel);
+}
+html[data-theme] .vq-chip.hot { color: #17120a; background: var(--gold); border-color: var(--gold); }
+
+/* ---------- Home: section headers like a sportsbook board ---------- */
+html[data-theme] body :is(.vq-today, .vq-foryou) h2,
+html[data-theme] body .records-title {
+  font: 800 22px/1 var(--font-board), sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+html[data-theme] body :is(.vq-today, .vq-foryou) > header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--gold-line);
+}
+html[data-theme] body :is(.vq-today, .vq-foryou) > header a { color: var(--gold-hi); }
+html[data-theme] body .vq-today li em {
+  border-color: #e8c46a66;
+  color: var(--gold-hi);
+  font-family: var(--font-board), sans-serif;
+  font-size: 15px;
+}
+html[data-theme] body .vq-today h3 {
+  color: var(--gold);
+  font: 700 14px/1 var(--font-board), sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+html[data-theme] body .follow-button[aria-pressed="true"] {
+  background: var(--gold);
+  color: #17120a;
+}
+html[data-theme] body .follow-button { border-color: #e8c46a55; }
+
+/* ---------- Links and small labels: gold, not electric blue ---------- */
+html[data-theme] body :is(.vq-updated, .vq-foryou li, .vq-foryou > header, .research-pulse) a,
+html[data-theme] body .top-actions button.text-link,
+html[data-theme] body .top-actions > a:not(.avatar) {
+  color: var(--gold-hi) !important;
+}
+html[data-theme] body .sports-ticker summary b { color: var(--gold-hi) !important; }
+html[data-theme] body .sports-ticker .ticker-label {
+  background: transparent !important;
+  color: var(--gold) !important;
+  border-color: #e8c46a77 !important;
+  font-family: var(--font-board), sans-serif;
+  letter-spacing: 0.16em;
+}
+
+/* ---------- Gold-filled controls: dark ink on gold ---------- */
+html[data-theme="dark"] body :is(
+  .primary, button.primary, a.primary, .btn, .btn.primary, .ask-vegas-launcher, .skip-link, .vq-welcome-footer button,
+  .zone-views a.selected, .section-switch .selected, .slate-windows button.selected,
+  .feed-filters button.selected, .board-filters button[aria-pressed="true"],
+  .vq-board-head button[aria-pressed="true"], button[aria-pressed="true"]
+) {
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 50%, var(--gold-deep)) !important;
+  border-color: #f7e6b0 !important;
+  color: #17120a !important;
+  box-shadow: 0 6px 16px #0008, inset 0 1px 0 #fff5 !important;
+}
+html[data-theme="dark"] body :is(.primary, .btn, .ask-vegas-launcher) :is(svg, span, b, strong) { color: #17120a !important; }
+/* The chips keep their own look (declared again so they win over the rule above). */
+html[data-theme="dark"] body .sport-switch a.selected {
+  color: var(--gold-hi) !important;
+  border: 0 !important;
+}
+html[data-theme="dark"] body :is(.secondary, button.secondary, a.secondary) {
+  border-color: #e8c46a55 !important;
+}
+
+/* ---------- Page titles: sportsbook board lettering ---------- */
+html[data-theme="dark"] body :is(.heading h1, .feed-head h1, .vq-policy h1) {
+  font: 800 clamp(34px, 9vw, 52px) / 0.95 var(--font-board), sans-serif;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+/* ---------- Community ---------- */
+html[data-theme="dark"] body .community-feed > header h1,
+html[data-theme="dark"] body .community-feed h1 {
+  font: 800 clamp(34px, 9vw, 52px) / 0.95 var(--font-board), sans-serif;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+html[data-theme="dark"] body .initials {
+  background: #1a160c !important;
+  color: var(--gold-hi) !important;
+  box-shadow: 0 0 0 2px #e8c46a66;
+}
+html[data-theme="dark"] body .social-post .member-label { color: var(--gold); }
+
+/* Desktop: the board stays one list of rows (not three tiles), and the sidebar uses gold. */
+@media (min-width: 761px) {
+  html[data-theme] .vq-slate { grid-template-columns: 1fr; }
+  html[data-theme] .vq-slate a { flex-direction: row; align-items: center; }
+}
+html[data-theme="dark"] body .sidebar nav a.active svg { color: var(--gold) !important; }
+html[data-theme="dark"] body .sidebar nav a.active { box-shadow: inset 3px 0 0 var(--gold) !important; }
+html[data-theme] body .vq-home .vq-slate time { color: var(--gold); }
+
+/* ---------- Admin portal: members (Account page, administrators only) ---------- */
+.admin-members {
+  display: grid;
+  gap: 14px;
+  margin: 16px 0 24px;
+  padding: 18px;
+  border: 1px solid var(--gold-line);
+  border-left: 4px solid var(--gold);
+  border-radius: 18px;
+  background: linear-gradient(180deg, #e8c46a0a, transparent 40%), var(--panel);
+}
+.admin-members > header { display: grid; gap: 4px; }
+html[data-theme] body .admin-members h2 {
+  margin: 0;
+  font: 800 30px/1 var(--font-board), sans-serif;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.admin-members > header nav { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 13px; }
+html[data-theme] body .admin-members > header nav a { color: var(--gold-hi); }
+.admin-members-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.admin-members-stats > div {
+  display: grid;
+  gap: 2px;
+  padding: 10px 8px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel2);
+  text-align: center;
+}
+html[data-theme] body .admin-members-stats b {
+  font: 800 26px/1 var(--font-board), sans-serif;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+html[data-theme] body .admin-members-stats .live b { color: var(--money); }
+html[data-theme] body .admin-members-stats .never b { color: var(--loss); }
+html[data-theme] body .admin-members-stats .gold b { color: var(--gold); }
+html[data-theme] body .admin-members-stats small { font-size: 11px; color: var(--muted); line-height: 1.2; }
+.admin-members-tools { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.admin-members-list { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.admin-members-list li { display: grid; gap: 6px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.admin-members-list li:first-child { border-top: 0; }
+.admin-member-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.admin-member-head > span { display: grid; min-width: 0; }
+html[data-theme] body .admin-member-head b { color: var(--text); font-size: 15px; }
+html[data-theme] body .admin-member-head small { color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
+.admin-member-head em {
+  flex: none;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-style: normal;
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+html[data-theme] body .admin-member-head em.tone-live { color: var(--money); }
+html[data-theme] body .admin-member-head em.tone-recent { color: var(--gold); }
+html[data-theme] body .admin-member-head em.tone-idle { color: var(--faint); }
+html[data-theme] body .admin-member-head em.tone-never { color: var(--loss); }
+html[data-theme] body .admin-member-facts { margin: 0; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+html[data-theme] body .admin-member-remove { justify-self: start; color: var(--loss) !important; font-size: 13px; }
+.admin-member-delete { display: grid; gap: 8px; padding: 12px; border: 1px solid #ff546855; border-radius: 12px; background: #ff54680d; }
+.admin-member-delete label { display: grid; gap: 6px; font-size: 13px; }
+.admin-member-delete > div { display: flex; align-items: center; gap: 12px; }
+html[data-theme] body .admin-member-delete small { color: var(--muted); font-size: 12px; line-height: 1.5; }
+html[data-theme] body .admin-member-delete .danger {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--loss);
+  color: #fff;
+  font-weight: 800;
+}
+html[data-theme] body .admin-member-delete .danger:disabled { opacity: 0.45; }
+.admin-members-pages { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
+html[data-theme] body .admin-members-note { margin: 0; font-size: 12px; color: var(--faint); }
+@media (max-width: 480px) {
+  .admin-members-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .admin-members-tools { grid-template-columns: 1fr; }
+}
+
+/* ---------- Tab bar: gold on the page you're on, and slide-to-switch ---------- */
+html[data-theme="dark"] body .mobile-nav {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+html[data-theme="dark"] body .mobile-nav a {
+  -webkit-tap-highlight-color: transparent;
+  transition: color .14s ease, background-color .14s ease, transform .14s ease;
+}
+html[data-theme="dark"] body .mobile-nav a svg { transition: color .14s ease, transform .14s ease; }
+/* The Zone's monogram follows the tab colour instead of its blue brand fills. */
+html[data-theme="dark"] body .mobile-nav .vq-mark path { fill: var(--faint); transition: fill .14s ease; }
+/* The page you're on (or the tab under your finger while sliding): gold icon, gold label, lit chip. */
+html[data-theme="dark"] body .mobile-nav a.active,
+html[data-theme="dark"] body .mobile-nav a.scrub-target {
+  color: var(--gold-hi) !important;
+  background: radial-gradient(ellipse at 50% 30%, #e8c46a24, transparent 70%) !important;
+}
+html[data-theme="dark"] body .mobile-nav a:is(.active, .scrub-target) svg { color: var(--gold) !important; }
+html[data-theme="dark"] body .mobile-nav a:is(.active, .scrub-target) .vq-mark path { fill: var(--gold-hi); }
+html[data-theme="dark"] body .mobile-nav a:is(.active, .scrub-target) .vq-mark path:nth-child(even) { fill: var(--gold-deep); }
+html[data-theme="dark"] body .mobile-nav a.scrub-target::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 28%;
+  right: 28%;
+  height: 3px;
+  border-radius: 0 0 4px 4px;
+  background: var(--gold);
+  box-shadow: 0 0 10px #e8c46a66;
+}
+html[data-theme="dark"] body .mobile-nav a.scrub-target { position: relative; transform: translateY(-3px); }
+html[data-theme="dark"] body .mobile-nav a.scrub-target svg { transform: scale(1.14); }
+/* While sliding, only the tab under the finger is lit. */
+html[data-theme="dark"] body .mobile-nav:is(.scrubbing, .scrub-pending) a.active:not(.scrub-target) {
+  color: var(--faint) !important;
+  background: transparent !important;
+}
+html[data-theme="dark"] body .mobile-nav:is(.scrubbing, .scrub-pending) a.active:not(.scrub-target) svg { color: var(--faint) !important; }
+html[data-theme="dark"] body .mobile-nav:is(.scrubbing, .scrub-pending) a.active:not(.scrub-target)::before { opacity: 0; }
+html[data-theme="dark"] body .mobile-nav:is(.scrubbing, .scrub-pending) a.active:not(.scrub-target) .vq-mark path { fill: var(--faint); }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme="dark"] body .mobile-nav a,
+  html[data-theme="dark"] body .mobile-nav a svg { transition: none; transform: none; }
+}
+/* The monogram on the gold "Ask Vegas" chip is dark ink, not the old blue. */
+html[data-theme="dark"] body .ask-vegas-launcher .vq-mark path { fill: #17120a; }
+html[data-theme="dark"] body .ask-vegas-launcher .vq-mark path:nth-child(even) { fill: #5a4518; }
+
+/* ---------- Every card on the lounge palette (replaces leftover teal and blue surfaces) ---------- */
+html[data-theme="dark"] body :is(
+  .topic-reader, .mi-section, .mi-target, .stats, .proof-list article, .member-feed-card, .run-card-preview,
+  .edge-pick, .edge-release, .weekly-flashcard, .vq-welcome, .entry-balance-preview, .bankroll-quick-edit,
+  .membership-lock, .vq-luck, .pass-grid > div, .profile-setup-dialog .member-form, .balance-next
+) {
+  background: linear-gradient(180deg, #ffffff05, transparent 40%), var(--panel) !important;
+  border-color: var(--line) !important;
+  box-shadow: inset 0 0 0 1px #e8c46a0f, 0 12px 30px #0007 !important;
+}
+/* Cards inside cards: a step lighter, hairline border. */
+html[data-theme="dark"] body :is(
+  .mi-item, .candidate-facts div, .pick-numbers, .pick-splits, .price-rules, .vq-luck-table,
+  .vq-welcome-footer, .top-actions .install-notice, .publish-review pre, .update-tags span
+) {
+  background: var(--panel2) !important;
+  border-color: var(--line) !important;
+}
+/* Hover on a card or row: a whisper of gold. */
+html[data-theme="dark"] body :is(
+  .mi-game:hover, .explore-cards a:hover, .community-person:hover, .community-person:focus-visible,
+  .sidebar nav a:hover, .secondary:hover
+) {
+  background: linear-gradient(90deg, #e8c46a14, transparent 80%), var(--panel2) !important;
+}
+/* Topic, filter and choice chips: dark felt chips; the chosen one is gold with dark ink. */
+html[data-theme="dark"] body :is(
+  .topic-tabs button, .research-tabs button, .action-tabs button, .join-choices button, .vq-luck-choices button
+) {
+  background: var(--panel2) !important;
+  border: 1px solid #e8c46a33 !important;
+  color: var(--muted) !important;
+}
+html[data-theme="dark"] body :is(
+  .topic-tabs button[aria-selected="true"], .research-tabs button[aria-selected="true"],
+  .action-tabs button.selected, .join-choices button.selected
+) {
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold) 50%, var(--gold-deep)) !important;
+  border-color: #f7e6b0 !important;
+  color: #17120a !important;
+  font-weight: 700;
+}
+html[data-theme="dark"] body :is(.mfa-setup input, .ask-vegas-form input) {
+  background: #07080b !important;
+  border-color: var(--line) !important;
+}
+/* Initials, avatars and icon badges: gold on black instead of green. */
+html[data-theme="dark"] body :is(.community-avatar.initials, .member-event-icon, .avatar, .empty-symbol, .journey-stop.current .journey-dot) {
+  background: #e8c46a1a !important;
+  color: var(--gold-hi) !important;
+  border-color: #e8c46a55 !important;
+}
+html[data-theme="dark"] body .mi-group > h2::after { background: var(--gold-line) !important; }
+
+/* ---------- Research topics ("Go a little deeper") ---------- */
+html[data-theme="dark"] body .topic-reader { border-radius: 20px; }
+html[data-theme="dark"] body .topic-tabs { border-bottom-color: var(--gold-line) !important; }
+html[data-theme="dark"] body .topic-heading h2 { font-family: var(--font-board), sans-serif; letter-spacing: 0.01em; }
+.mi-facts { display: grid; gap: 14px; }
+.mi-facts dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: dense;
+  gap: 10px;
+  margin: 0;
+}
+.mi-facts dl > div {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel2);
+  min-width: 0;
+}
+.mi-facts dl > div.wide { grid-column: 1 / -1; }
+.mi-facts dt {
+  color: var(--gold);
+  font-family: var(--font-board), sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.mi-facts dd {
+  margin: 4px 0 0;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.mi-facts dd a { color: var(--gold-hi); }
+.mi-fact-note {
+  grid-column: 1 / -1;
+  margin: 2px 2px 0;
+  color: var(--faint);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ---------- Leg form: "Cleared 4 of last 5" against the price, and admin rule checks ---------- */
+.leg-form { margin: 10px 0 4px; }
+.leg-form > p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin: 0;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel2);
+}
+.leg-form > p strong { color: var(--text); font-size: 14px; }
+.leg-form > p span { color: var(--faint); font-size: 12px; }
+.leg-form.good > p { border-color: #4caf7a66; }
+.leg-form.good > p strong { color: #8fe0ad; }
+.leg-form.bad > p { border-color: #e0605566; }
+.leg-form.bad > p strong { color: #f0a49c; }
+.leg-rules { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.leg-rules summary { cursor: pointer; }
+.leg-rules ul { margin: 6px 0 0; padding-left: 16px; display: grid; gap: 3px; }
+.leg-rules .rule-pass b, b.rule-pass { color: #8fe0ad; }
+.leg-rules .rule-fail b, b.rule-fail { color: #f0a49c; }
+.leg-rules .rule-unknown b, b.rule-unknown { color: var(--gold); }
+.vq-today-form { color: var(--faint); font-size: 11px; }
+.vq-today-form.good { color: #8fe0ad; }
+.vq-today-form.bad { color: #f0a49c; }
+.vq-today-research { margin-left: 6px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); vertical-align: middle; }
+.priced-record-gates { display: grid; gap: 6px; margin-top: 12px; }
+.priced-record-gates p { display: flex; justify-content: space-between; gap: 10px; margin: 0; padding: 8px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel2); font-size: 13px; }
+.priced-record-gates small { color: var(--faint); }
+.priced-record-gates b.up { color: #8fe0ad; }
+.priced-record-gates b.down { color: #f0a49c; }
+.leg-model { margin: 6px 0 0; font-size: 12px; color: var(--muted); }
+.leg-model b { color: var(--gold-hi); }
+.leg-books { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 6px 0 0; font-size: 12px; color: var(--faint); }
+.leg-books b { color: var(--muted); font-weight: 600; }
+.leg-books b.best { color: var(--gold-hi); }
+/* Stamp of approval on recommended legs: passes every rule, form beats the price by 15+ points. */
+.vq-stamp { display: inline-flex; align-items: center; gap: 5px; margin: 0 0 8px; padding: 3px 9px 3px 6px; border: 1.5px solid var(--gold); border-radius: 999px; color: var(--gold); font-size: 10.5px; font-weight: 800; letter-spacing: .08em; transform: rotate(-3deg); box-shadow: 0 0 0 2px rgba(0,0,0,.25) inset; }
+.vq-stamp > span { display: inline-grid; place-items: center; width: 15px; height: 15px; border-radius: 50%; background: var(--gold); color: #111; font-size: 10px; }
+.vq-stamp.compact { margin: 0 0 0 6px; padding: 0; border: 0; box-shadow: none; transform: none; vertical-align: middle; }

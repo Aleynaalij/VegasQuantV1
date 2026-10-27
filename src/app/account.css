@@ -1,0 +1,223 @@
+/* Account (sign-in, settings, MFA, alerts, followed topics) — consolidated from the legacy stylesheets on 2026-10-14.
+ * Generated in cascade order; repeated selectors merged. Edit here. */
+.member-notice {
+  padding: 16px;
+  border: 1px solid #3e5c4b;
+  border-radius: 8px;
+  margin: 16px 0;
+  overflow-wrap: anywhere;
+}
+.mfa-qr {
+  background: white;
+  padding: 12px;
+  width: 220px;
+  max-width: 100%;
+}
+.mfa-setup {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+  max-width: 520px;
+}
+.mfa-setup label {
+  display: grid;
+  gap: 8px;
+}
+.mfa-setup input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 12px;
+  background: #0b1419;
+  color: #f4f5f4;
+  border: 1px solid #42534e;
+  border-radius: 8px;
+  font-family: monospace;
+}
+.mfa-alternative {
+  margin-top: 20px;
+}
+.mfa-alternative summary {
+  cursor: pointer;
+  color: #85cfb8;
+}
+.mfa-alternative .mfa-qr {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  margin: 16px 0;
+}
+.vq-welcome-about {
+  color: #75deb0;
+  border: 1px solid #34423e;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-top: 8px;
+}
+.alert-preference input {
+  appearance: none;
+  width: 50px;
+  height: 28px;
+  border-radius: 20px;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.alert-preference input::before {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  top: 4px;
+  left: 4px;
+}
+.alert-preference input:checked::before {
+  left: 26px;
+}
+.alert-preference {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px;
+  margin: 18px 0;
+  border: 1px solid #365848;
+  border-radius: 14px;
+  color: #14233a;
+}
+.alert-preference > span {
+  min-width: 0;
+  font-weight: 600;
+}
+.alert-preference strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.alert-preference input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: 50px;
+  min-width: 50px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  margin: 0;
+  border-radius: 20px;
+}
+.alert-preference input[type="checkbox"]:focus-visible {
+  outline: 3px solid var(--brand);
+  outline-offset: 4px;
+}
+.alert-preference input[type="checkbox"]:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.account-wayfinding {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0 0 22px;
+}
+.account-wayfinding a {
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  display: grid;
+  gap: 5px;
+}
+.account-wayfinding small {
+  font-size: 11px;
+  font-weight: 400;
+}
+.account-tools {
+  margin: 18px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.account-tools a {
+  font-size: 11px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.follow-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #dce3ef;
+  border-radius: 12px;
+  padding: 10px 13px;
+  background: #fff;
+  color: #23324c;
+  font-weight: 700;
+}
+.follow-topics {
+  margin: 24px 0;
+}
+.follow-topics input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dce3ef;
+  border-radius: 12px;
+  background: #fff;
+  color: #18243b;
+}
+.follow-topics select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  color: #18243b;
+}
+.follow-chips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.follow-topics form {
+  display: grid;
+  gap: 12px;
+}
+html[data-theme="dark"] .alert-preference input[type="checkbox"]:checked {
+  background: var(--brand) !important;
+}
+.profile-setup-dialog .photo-status {
+  font-size: 13px;
+  line-height: 1.5;
+}
+@media (max-width: 760px) {
+  .account-wayfinding {
+    gap: 7px;
+  }
+  .account-wayfinding a {
+    padding: 12px 10px;
+    font-size: 11px;
+  }
+  .account-wayfinding small {
+    font-size: 11px;
+  }
+}
+
+/* Green is for wins: Account links and hints use the brand blue / muted text. */
+html[data-theme] body .vq-welcome-about {
+  color: var(--brand-ink);
+  border-color: var(--line-strong) !important;
+  background: var(--panel) !important;
+  font-weight: 700;
+}
+html[data-theme] body .screen-account .research-more {
+  color: var(--brand-ink);
+  font-weight: 700;
+}
+html[data-theme] body .photo-status {
+  color: var(--muted);
+}

@@ -1,0 +1,73 @@
+# Vegas Quant Premium design system
+
+The lounge: a dark luxury sportsbook room that matches the Vegas Quant cards (2026-10-15). Gold trim, felt and a betting-board layout; tokens in `src/app/premium.css`, lounge styling in `src/app/lounge.css` (loaded last), cards in `src/components/casino-card.*`. Navigation: Home / The Zone / Community / Records / Account, with separate NFL and NBA desks (see `community-zone.md`).
+
+## Theme
+- Vegas Quant is dark only (2026-10-14). `<html>` renders with `data-theme="dark"` from the server, the Light mode and Appearance setting were removed, and old saved theme choices are cleared on load.
+- Light-theme styles were deleted on 2026-10-14: every `html[data-theme="light"]` and `html:not([data-theme="dark"])` rule, the theme picker's CSS, and 245 light color declarations in the legacy files that the dark theme always overrode. Deletion was checked in the browser (computed styles of every element on 20 pages, phone and desktop, signed in and out) and by pixel-identical screenshots. Light colors that remain in legacy files are either still visible (no dark override) or only reached in hover/focus states the check could not see; remove those as each page is migrated.
+- Tokens live on `html[data-theme="dark"]:root`. Change colors here, not in components.
+
+| Token | Use |
+| --- | --- |
+| `--bg`, `--bg-raised` | Page and inset backgrounds |
+| `--panel`, `--panel2`, `--panel3` | Card surfaces, from base to most raised |
+| `--line`, `--line-strong` | Borders and dividers |
+| `--text`, `--muted`, `--faint` | Text, from primary to tertiary |
+| `--brand`, `--brand-hi`, `--brand-ink` | Gold: actions, selection and links |
+| `--gold`, `--gold-hi`, `--gold-deep`, `--gold-line` | Trim, rails, hairlines and board numerals |
+| `--felt-a`, `--felt-b` | The next-kickoff table felt |
+| `--money` | Wins, positive CLV and live/positive status only |
+| `--warn` | Unverified prices, stale quotes and cautions |
+| `--loss` | Losses and live-game alerts |
+
+## Rules
+- Green means money won or positive edge. Never use it for warnings; unverified prices use `--warn`.
+- Gold is the one action color: one primary (gold, dark ink) action per card; secondary actions are gold-outlined ghosts. No electric blue.
+- Selected tabs, filters and pressed toggles are gold with dark ink; unselected ones are outlined. NFL/NBA are poker chips.
+- Team names, page titles, section titles and countdown digits use the condensed board font (`--font-board`, Barlow Condensed), uppercase. Body text stays DM Sans.
+- Lists of games read as one board (shared dividers), not separate tiles. Suits (♠ ♥ ♦ ♣) are quiet section markers; red suits are the only red that isn't a loss.
+- Numbers use tabular figures so prices and countdowns don't jitter.
+- Minimum text size is 11px. All text meets WCAG AA contrast on the dark theme.
+
+## Brand
+The logo is the **prestige VQ**: an original interlocking serif VQ monogram, drawn in `BrandMark` and `public/brand/vq-mark.svg`. Cool silver `#E4EAF4`, royal blue `#4378FF`, midnight navy `#0B1220`. Installed app assets are `public/icons/vq-prestige-*.png`; legacy icon URLs also resolve to the current mark. Use the monogram for small icons and a spaced VEGAS QUANT wordmark for opening screens. Vegas Quant is a product of JourneyBuilt, LLC.
+
+## Identity
+Signed-in members with a community profile see their photo in the top bar, linking to their profile and activity. Home doesn't show the profile card to them; signed-out visitors still see the Join the community card.
+
+## Home
+`HomeBrief` (`src/components/home-brief.tsx`) leads Home: the next kickoff with team logos and a live countdown (`kickoff-countdown.tsx`), the next three games, three shortcuts and the NBA banner. New hero classes use the `vq-` prefix so legacy styles never reach them.
+
+## Pick cards
+`PickCard` opens as a betting slip: team logos and matchup, the market label and selection, an odds box with the book, and a key-numbers strip (edge, model %, market %, grade or confidence). The full slip below is unchanged.
+
+## Records
+`RecordsDashboard` leads the Ledger: record, net P/L, ROI and closing line value, a settled P/L chart and recent form. Numbers come from `lib/performance.ts`, the same source as the Performance tab.
+
+## NBA rules
+`lib/nba-rules.ts` holds the Bible's R-01 to R-40 in five groups; `/nba/rules` is the rulebook. Picks and published legs show their cited rules as chips linking to the rule.
+
+Citations are required for NBA official picks (migration `20261014015003_nba_bible_rule_citations`):
+- `games.sport` is `'nfl'` or `'nba'`; every existing game is NFL.
+- `official_picks.rule_ids` is filled by a trigger from the case/risk text (`why_like`, `why_lose`) when empty, and validated against R-01..R-40.
+- An NBA pick with no citation is rejected at publish time. NFL picks are unaffected.
+- To publish an NBA pick, the game must be stored with `sport = 'nba'`. The admin "Add game" form has a Sport choice (NFL / NBA); after `publish` saves the game it calls `set_game_sport` (migration `20261014170710_admin_game_sport.sql`), which follows the same locks: admin only, not after an official pick, not after kickoff.
+
+## Legacy stylesheets
+- `dark-surfaces.css` is generated from the legacy files: every element they force onto a white or cream background gets a dark surface in dark mode. Remove entries as legacy rules are retired.
+- Dead CSS (selectors whose classes appear nowhere in the code) was removed from the legacy files on 2026-10-14. That cut about 950 lines and 280 selectors, and was checked by pixel-comparing 60 renders (15 pages × phone/desktop × dark/light) before and after.
+- **The Zone moved (2026-10-14):** every rule for the 56 Zone-only classes (feed, selections, tickets, win slips) was moved out of the four legacy files into `src/app/zone.css`, in cascade order. 257 selectors merged into 200 rules, and the legacy files lost about 600 lines. Pixel comparison of all 60 renders showed zero changes. Grouped `:is()` rules stay in the legacy files for now, because splitting them would change specificity.
+- **Records moved (2026-10-14):** 14 Records-only classes moved to `src/app/records.css` (63 selectors merged into 50 rules). Element-level comparison caught three cascade-order differences, which are pinned in the file. All 60 renders match.
+- **Games view moved (2026-10-14):** 17 Games-only classes moved to `src/app/games.css` (122 selectors merged into 75 rules). Phone-size `@media` blocks are kept after the base rules they override, and phone search fields stay 16px. All 30 dark renders match. Team names now size to their card, so they fit at every width, and the game grid is one column below 900px.
+- **Community and Account moved (2026-10-14):** 28 Community-only classes moved to `src/app/community.css` (217 selectors merged into 156 rules) and 11 Account-only classes to `src/app/account.css` (42 into 38). Signed-in screens were added to the pixel check (40 renders, all matching). One phone-only margin that never applied in the old cascade was dropped rather than revived. Account links and the photo hint use brand blue instead of win-green.
+- **Legacy files retired (2026-10-14):** `globals.css`, `experience.css`, `sports-light.css` and `master.css` are gone. Their remaining rules were split by the components that use each class into `base.css` (font import, element defaults, keyframes), `shell.css` (navigation, buttons, forms, cards, notices, plus any rule shared by more than one area), `home.css`, `picks.css`, `research.css` and `admin.css`. These load where the legacy files did, and each keeps the original cascade order. A grouped `:is()` rule only goes to an area file when every class in it belongs to that area. Checks: computed styles of every element matched the previous build on 21 pages (phone and desktop, signed in and out), and all 42 screenshots were identical. Hover and focus states weren't compared.
+- CSS load order (`src/app/layout.tsx`): base, ask-vegas, shell, home, picks, research, admin, then the page files (zone, records, games, community, account, age-verification, nba), then dark-surfaces and premium. Put new rules in the file for their area; put tokens and cross-page polish in `premium.css`.
+
+## UI checks
+- `npm run ui:smoke` (CI job `ui-smoke`) builds against `scripts/ui-smoke/stub.mjs`, a synthetic Supabase stand-in, and loads the key pages at 390px and 1280px, signed out and signed in. It fails on server errors, page crashes, the full-page error, sideways scroll, or missing main content (for example Home's Pick of the Day, "Legs we like" and "For you" when signed in). Locally: start the stub, build with `NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321`, run `next start -p 3100`, then the check.
+- Fonts load through `next/font` (DM Sans as `--font-body`, Manrope as `--font-display`). Don't add font `@import`s.
+
+## Alerts and leaderboard
+- **Price alerts.** When a pick release is republished with new prices (a candidate's `supersedes_release_id`), members who tailed or saved a leg of the old release get one push (`kind = 'price'`, event key `price:<new release id>`). Age rules match research alerts. Tapping it opens `/feed?view=legs#release-<id>`; the service worker only opens known in-app paths. Migration `20261014173204_price_alerts_and_tail_leaderboard.sql`.
+- **Automatic line tracking** needs the odds feed in `supabase/functions/source-sync` turned on (`ODDS_API_KEY`, `ODDS_FEED_ENABLED=true`, `ODDS_PROPS_ENABLED=true`). Until then, price moves come from published revisions. Polling follows `source-sync/cadence.ts`: game lines every 2 hours (every 15 minutes within 2 hours of a kickoff); player props for the next 7 days, per game every 6 hours when more than 24 hours away, every 3 hours inside 24 hours, and every 15 minutes inside 2 hours. Distant events retain their own fetch clocks when a near game refreshes. Every research game requests standard and alternate rushing, receiving and passing yards, plus individual defensive sacks (8 markets); published-pick games add receptions markets (10 total). Market-set changes invalidate older fetch clocks once so newly added markets are requested immediately. Collection does not qualify a passing or sacks model. Numeric defensive sacks now have a reviewed-contract grading implementation with half-sack precision and immutable correction observations; binary record-a-sack Yes/No stays unsupported. New sacks selections remain blocked by the publication gate pending separate model and exact settlement validation. A wider horizon requests available FanDuel markets earlier, but does not guarantee the book has posted them. No fixed monthly-credit guarantee is implied; costs depend on returned markets and actual fetches. Feed run details retain the 168-hour horizon and per-event timestamps. result-sync matches each pick to its exact FanDuel line ("60+" = Over 59.5) and stores the first price seen and the latest up to kickoff in `leg_market_prices`; Home's Today list shows "FanDuel now" and Records compares published prices with the closing price. Runs that are not due repeat the last fetch's status, so health alerts stay current.
+- **Tail leaderboard** (Community): `tail_leaderboard(days)` counts tailed legs graded with a verified (https) result source, for members with a visible profile and at least 3 decided legs, ranked by the 95% Wilson lower bound of win rate. Tails can only be added before a release expires and can't be removed after it starts.

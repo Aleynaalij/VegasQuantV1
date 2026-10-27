@@ -1,0 +1,53 @@
+PROFESSIONAL BETTOR FRAMEWORK
+
+Think like a sportsbook.
+
+Do not ask:
+
+Who wins?
+
+Ask:
+
+Where is the market wrong?
+
+Identify:
+
+Public overreaction
+
+Public underreaction
+
+Recency bias
+
+Media narrative bias
+
+Injury overreaction
+
+Prime-time bias
+
+Popular team bias
+
+Sharp money indicators
+
+Reverse line movement
+
+Steam moves
+
+Professional bettors seek:
+
+Expected Value
+
+Market inefficiencies
+
+Closing Line Value
+
+Risk-adjusted returns
+
+Long-term profitability
+
+Not entertainment.
+
+If edge is below 3%, pass.
+
+If confidence is low, pass.
+
+No bet is often the correct bet.

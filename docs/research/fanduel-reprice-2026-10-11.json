@@ -1,0 +1,108 @@
+{
+  "retrieved_at": "2026-10-11T01:39:10.550Z",
+  "quote_update_time": null,
+  "source_type": "FanDuel Research public page snapshots",
+  "executable_availability_verified": false,
+  "moneylines": [
+    {
+      "team": "Jacksonville Jaguars",
+      "odds": -405,
+      "game_id": "cd87e913-e8e8-4f2a-b43e-ea96589b64ae",
+      "source": "https://www.fanduel.com/research/jaguars-vs-eagles-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Cincinnati Bengals",
+      "odds": -330,
+      "game_id": "caa0c563-016d-4808-ab5b-84615cb88949",
+      "source": "https://www.fanduel.com/research/bengals-vs-dolphins-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Houston Texans",
+      "odds": -370,
+      "game_id": "006f65d8-b6a5-4e21-b3e7-4818e6c8c3be",
+      "source": "https://www.fanduel.com/research/texans-vs-titans-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Las Vegas Raiders",
+      "odds": 166,
+      "game_id": "9c00e686-c7d5-45cc-a5b4-e047603618fd",
+      "source": "https://www.fanduel.com/research/patriots-vs-raiders-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Washington Commanders",
+      "odds": -190,
+      "game_id": "4e2f24a7-6969-483a-99a6-036a731c01d4",
+      "source": "https://www.fanduel.com/research/commanders-vs-giants-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Cleveland Browns",
+      "odds": 116,
+      "game_id": "861cdc6d-0024-4d89-bb2c-81f9260a054b",
+      "source": "https://www.fanduel.com/research/jets-vs-browns-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Green Bay Packers",
+      "odds": 104,
+      "game_id": "c1e72971-1588-4ca4-97d0-dad8aec46ab6",
+      "source": "https://www.fanduel.com/research/bears-vs-packers-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Pittsburgh Steelers",
+      "odds": -148,
+      "game_id": "c609096a-0802-49d6-a1cc-ab8631d274e8",
+      "source": "https://www.fanduel.com/research/steelers-vs-colts-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Detroit Lions",
+      "odds": -245,
+      "game_id": "e94aa992-5971-48db-93bd-fbcd6d58791c",
+      "source": "https://www.fanduel.com/research/lions-vs-cardinals-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Seattle Seahawks",
+      "odds": -174,
+      "game_id": "32583bdb-49b4-4cb1-810b-3b0d03f36fb8",
+      "source": "https://www.fanduel.com/research/seahawks-vs-49ers-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    },
+    {
+      "team": "Atlanta Falcons",
+      "odds": -168,
+      "game_id": "a0be8293-d111-49c9-ad24-89893fbb4f45",
+      "source": "https://www.fanduel.com/research/falcons-vs-ravens-predictions-odds-picks-best-bets-for-nfl-week-5-2026"
+    }
+  ],
+  "feed": [
+    {
+      "name": "Jacksonville Jaguars",
+      "market": "Moneyline",
+      "odds": -405,
+      "source": "https://www.fanduel.com/research/jaguars-vs-eagles-predictions-odds-picks-best-bets-for-nfl-week-5-2026",
+      "quote_context": "FanDuel Research page snapshot retrieved October 10, 2026, around 9:38 PM ET. Provider quote-update time is not supplied; verify the available price in FanDuel. Price-only update; original matchup analysis is retained."
+    },
+    {
+      "name": "Tennessee Titans",
+      "market": "Spread +7",
+      "odds": -105,
+      "source": "https://www.fanduel.com/research/texans-vs-titans-predictions-odds-picks-best-bets-for-nfl-week-5-2026",
+      "quote_context": "FanDuel Research page snapshot retrieved October 10, 2026, around 9:38 PM ET. Provider quote-update time is not supplied; verify the available price in FanDuel. Price-only update; original matchup analysis is retained."
+    },
+    {
+      "name": "Miami Dolphins",
+      "market": "Spread +7",
+      "odds": -115,
+      "source": "https://www.fanduel.com/research/bengals-vs-dolphins-predictions-odds-picks-best-bets-for-nfl-week-5-2026",
+      "quote_context": "FanDuel Research page snapshot retrieved October 10, 2026, around 9:38 PM ET. Provider quote-update time is not supplied; verify the available price in FanDuel. Price-only update; original matchup analysis is retained."
+    },
+    {
+      "name": "Indianapolis Colts",
+      "market": "Spread +3",
+      "odds": null,
+      "source": "https://www.fanduel.com/research/steelers-vs-colts-predictions-odds-picks-best-bets-for-nfl-week-5-2026",
+      "quote_context": "FanDuel Research page snapshot retrieved October 10, 2026, around 9:38 PM ET. Provider quote-update time is not supplied; verify the available price in FanDuel. Price-only update; original matchup analysis is retained. FanDuel's page lists Indianapolis +2.5 at -105; that does not price the original +3 selection."
+    }
+  ],
+  "replaced_release_ids": [
+    "e04323da-5621-492b-bd5f-dede2bb300c3",
+    "1dd98df7-49cd-4a7b-813b-2ffad0a2d472"
+  ]
+}

@@ -1,0 +1,120 @@
+#nba-slate {
+  min-width: 0;
+  max-width: 100%;
+}
+.nba-home-tickets {
+  min-width: 0;
+  margin-top: 24px;
+}
+.nba-home-tickets > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+.nba-home-tickets h2 {
+  margin: 5px 0;
+  font-size: 26px;
+}
+.nba-home-tickets > header a {
+  color: var(--gold, #e8c46a);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.nba-ticket-hint {
+  color: var(--muted);
+  font-size: 13px;
+}
+.nba-ticket-rail {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 8px 2px 18px;
+  overscroll-behavior-x: contain;
+}
+.nba-game-ticket {
+  flex: 0 0 min(290px, 85vw);
+  min-width: 0;
+  scroll-snap-align: start;
+  border: 1px solid #b99446;
+  border-radius: 20px;
+  background: linear-gradient(150deg, #16291f, #0c1117 72%);
+  padding: 18px;
+  color: #f6f2e8;
+  position: relative;
+}
+.nba-ticket-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #e8c46a;
+  letter-spacing: 1.3px;
+  font-size: 10px;
+}
+.nba-ticket-top b {
+  font-size: 22px;
+  opacity: 0.7;
+}
+.nba-ticket-matchup {
+  display: grid;
+  grid-template-columns: 1fr 20px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 24px 0;
+}
+.nba-ticket-matchup > span {
+  color: #e8c46a;
+  text-align: center;
+}
+.nba-ticket-team {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.nba-ticket-team img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+.nba-ticket-team b {
+  color: #f6f2e8;
+  font-size: 18px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.nba-ticket-fallback {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #b99446;
+  border-radius: 50%;
+  font-size: 13px;
+}
+.nba-ticket-bottom {
+  display: grid;
+  gap: 8px;
+  border-top: 1px dashed #b9944666;
+  padding-top: 16px;
+}
+.nba-ticket-bottom strong {
+  font-size: 14px;
+}
+.nba-ticket-bottom span,
+.nba-ticket-bottom small {
+  color: #bcc4bd;
+  font-size: 12px;
+}
+
+.nba-ticket-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.nba-ticket-link:focus-visible {
+  outline: 2px solid #e8c46a;
+  outline-offset: 8px;
+  border-radius: 8px;
+}

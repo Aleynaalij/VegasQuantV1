@@ -1,0 +1,20 @@
+# Shared task board
+
+Generated from `tasks.json`. Run `node scripts/agents/validate.mjs --write` after updates. These are reported states, not a live monitor.
+
+| Task | Owner | State | Dependencies | Handoff acknowledged | Next action |
+|---|---|---|---|---|---|
+| NBA-001 | CLAUDE | verified |  | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236468339) | Done: lines pull every 3 hours (306 quotes per pull), props per event on the 6h/2h/30-min cadence. Credits tracked in feed_runs. |
+| NBA-002 | CODEX | merged | NBA-001 → merged | [CLAUDE](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6236401725) | Merged #66; deployed rendering/access verification remains separate from fixture checks. |
+| NBA-003 | CLAUDE | verified | NBA-001 → merged | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239675816) | Claude: proposed resolve_nba_result_correction for CONFLICT games (1 preseason correction journaled); needs owner approval before the regular season. |
+| NBA-004 | CLAUDE | deployed | NBA-003 → merged | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6239698446) | Claude: no shadow capture yet. GitHub ran the 15-minute scan schedule only 11 times in 32 hours and missed the first props snapshot; a Supabase cron dispatcher (like research-board-dispatch) is proposed and awaits the owner's OK. |
+| COORD-002 | CODEX | complete |  | Not yet | Claude: read the new workflow and ACK the pending NBA-002 handoff. Both agents maintain their own task entries. |
+| NBA-006 | CLAUDE | deployed | NBA-001 → merged | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/pull/72#issuecomment-6239886853) | Claude: verify the live NBA home hero on opening night (Oct 20) shows the lead game and the live state. |
+| NBA-005 | CODEX | merged | NBA-001 → merged | [CLAUDE](https://github.com/Aleynaalij/VegasQuantV1/pull/69#issuecomment-6240163768) | Merged #69. Public production schedule renders and signed-out member gate is visible; full member comparison/form verification is still pending. |
+| NBA-007 | CODEX | review | NBA-005 → merged, NBA-003 → merged | Not yet | Claude: review replacement #76 after current-head checks; #74 superseded. Loading skeleton/cache and game deep links preserved on merged main e37b2c8. No live game-page verification claimed. |
+| NBA-008 | CLAUDE | verified |  | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353131440) | Done: NBA paused on the live site; NBA data collects once each morning (6:00/6:05 ET, 9:10 ET confirm). |
+| NGS-001 | CLAUDE | deployed |  | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353175121) | Claude: confirm a research-board release carries research_evidence.ngs on the next run. |
+| NGS-002 | CODEX | review | NGS-001 → merged | Not yet | Claude: review codex/ngs-backtest (25,473 candidate rows; no holdout decision), reconcile your NGS-001 merged ledger state, then run NGS-003 holdout once. Awaiting peer ACK; no live selection/model change. |
+| NGS-003 | CLAUDE | review | NGS-002 → merged | [CODEX](https://github.com/Aleynaalij/VegasQuantV1/issues/65#issuecomment-6353995620) | Codex: NGS-001 is now recorded deployed, so NGS-002 can move to merged (bdd91ac); then Claude marks NGS-003 merged (#104, 28c0202). Outcome: no NGS flag or model input adopted; NGS stays descriptive in the why. |
+
+Before changing work, read [issue #65](https://github.com/Aleynaalij/VegasQuantV1/issues/65) for newer messages. `ready` requires acknowledgment, check evidence and satisfied dependencies. `verified` additionally requires merge, deployment and live-verification evidence. This validator checks the contract, not the truth of external claims or GitHub branch protection.

@@ -1,0 +1,231 @@
+.vq-luck {
+  color: #edf2ff;
+  background: linear-gradient(145deg, #172337, #080e1b);
+  border: 1px solid #66758e;
+  border-radius: 24px;
+  width: min(440px, calc(100% - 28px));
+  max-height: calc(100dvh - 32px);
+  padding: 24px;
+  overflow: auto;
+  box-shadow: 0 24px 100px #0009;
+}
+.vq-luck::backdrop {
+  background: #020610c9;
+  backdrop-filter: blur(7px);
+}
+.vq-luck button {
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.vq-luck-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #acbddd;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.vq-luck-top button {
+  margin-left: auto;
+  background: none;
+  border: 0;
+  font-size: 28px;
+  min-width: 44px;
+  min-height: 44px;
+}
+.vq-luck h2 {
+  font-size: 34px;
+  margin: 20px 0 6px;
+  letter-spacing: -1px;
+}
+.vq-luck-sub {
+  color: #a9b7cd;
+  margin: 0 0 24px;
+}
+.vq-luck-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.vq-luck-choices button {
+  border: 1px solid #5c6f90;
+  border-radius: 18px;
+  background: #1b2a44;
+  padding: 22px 10px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+}
+.vq-luck-choices button > span {
+  font-size: 40px;
+  color: #cfdaef;
+}
+.vq-luck-choices small {
+  font-size: 11px;
+  color: #b5c2d8;
+}
+.vq-luck-table {
+  position: relative;
+  isolation: isolate;
+  text-align: center;
+  border: 1px solid #5d718c;
+  border-radius: 70px 70px 22px 22px;
+  padding: 22px 12px;
+  background: radial-gradient(ellipse at top, #23434e, #102333 65%);
+  overflow: hidden;
+}
+.vq-luck-table > p {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #bfd0dd;
+}
+.vq-luck-watermark {
+  position: absolute;
+  z-index: -1;
+  top: 35%;
+  left: 30%;
+  font: italic 80px Georgia;
+  opacity: 0.07;
+}
+.vq-luck-versus {
+  margin: 0 35px;
+  color: #829ab2;
+}
+.vq-luck-dice {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  margin: 20px 0;
+}
+.vq-luck-dice > div {
+  background: linear-gradient(135deg, #eff4fa, #a3b4ce);
+  color: #101c32;
+  border-radius: 16px;
+  width: 90px;
+  height: 100px;
+  box-shadow: 0 8px 0 #71839d;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.vq-luck-dice small {
+  font: 12px Georgia;
+  letter-spacing: 3px;
+}
+.vq-luck-dice span {
+  font-size: 60px;
+  line-height: 1;
+}
+.vq-luck-hand {
+  display: flex;
+  justify-content: center;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin: 12px 0 22px;
+}
+.vq-luck-card {
+  background: #eef2f7;
+  color: #15223a;
+  border-radius: 8px;
+  min-width: 48px;
+  height: 70px;
+  padding: 5px;
+  font: bold 23px Georgia;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 3px 8px #0005;
+}
+.vq-luck-card.red {
+  color: #b83b50;
+}
+.vq-luck-card.back {
+  color: #bac7dd;
+  background: repeating-linear-gradient(
+    45deg,
+    #1b3052,
+    #1b3052 5px,
+    #233c62 5px,
+    #233c62 6px
+  );
+  border: 2px solid #9aaecb;
+  justify-content: center;
+  font-style: italic;
+}
+.vq-luck-primary,
+.vq-luck-actions button {
+  border: 1px solid var(--brand);
+  border-radius: 12px;
+  background: var(--brand);
+  padding: 12px 24px;
+  min-height: 46px;
+}
+.vq-luck-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+.vq-luck-actions button:last-child {
+  background: #23354d;
+}
+.vq-luck-note,
+.vq-luck-rules {
+  font-size: 12px;
+  line-height: 1.6;
+  color: #aebcd1;
+  margin: 18px 0;
+}
+.vq-luck-rules {
+  font-size: 11px;
+}
+.vq-luck-close {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  border: 1px solid #64728c;
+  border-radius: 12px;
+  min-height: 44px;
+}
+.vq-luck-reset {
+  display: block;
+  text-align: center;
+  margin-top: 12px;
+  color: #a0afc5;
+  font-size: 10px;
+}
+.vq-luck-result > span {
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.vq-luck-result h3 {
+  font-size: 22px;
+  margin: 12px 0 4px;
+}
+.vq-luck-result p {
+  font-size: 13px;
+  color: #bccce0;
+}
+.vq-luck-meter {
+  display: flex;
+  gap: 5px;
+  max-width: 180px;
+  margin: 12px auto;
+}
+.vq-luck-meter i {
+  height: 7px;
+  background: #40536b;
+  flex: 1;
+  border-radius: 5px;
+}
+.vq-luck-result.loss i:first-child,
+.vq-luck-result.push i:nth-child(-n + 2),
+.vq-luck-result.win i {
+  background: #8de0c1;
+}
+.vq-luck button:focus-visible {
+  outline: 3px solid var(--brand-ink);
+  outline-offset: 4px;
+}

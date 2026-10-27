@@ -1,0 +1,503 @@
+/* Picks: pick cards, legs, alerts, prices, team marks. Split from the legacy stylesheets on 2026-10-14, in their cascade order. */
+.official-card .panel-head {
+  padding: 0 0 14px;
+  border: 0;
+}
+.official-card > p {
+  font-size: 11px;
+  margin: 0;
+}
+.official-card > h2 {
+  font-size: 30px;
+  margin: 13px 0;
+}
+.official-price {
+  font-weight: 700;
+}
+.official-price span {
+  margin-left: 9px;
+  font-weight: 400;
+}
+.pick-finances {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid #35473d;
+  border-bottom: 1px solid #35473d;
+  padding: 20px 0;
+}
+.pick-finances span,
+.pick-numbers span {
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+}
+.pick-finances strong {
+  font-size: 22px;
+  display: block;
+  margin-top: 4px;
+}
+.pick-numbers {
+  grid-template-columns: repeat(3, 1fr);
+}
+.number-track {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  padding: 16px 0;
+  margin-top: 18px;
+  border-top: 1px solid #304437;
+}
+.number-track small {
+  font-size: 11px;
+  color: var(--muted);
+  display: block;
+}
+.number-track strong {
+  font-size: 11px;
+  display: block;
+}
+.number-track strong span {
+  color: var(--muted);
+}
+.callout-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted);
+  margin: 16px 0;
+}
+.pick-reason p,
+.review-block p {
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.price-rules p {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 11px;
+  margin: 0 0 7px;
+}
+.price-rules p:last-child {
+  margin: 0;
+}
+.price-rules strong {
+  text-align: right;
+}
+.key-alert {
+  font-size: 11px !important;
+  background: #39301c;
+  padding: 10px !important;
+  color: var(--gold) !important;
+  margin: 8px 0 !important;
+  border-radius: 4px;
+}
+.result-block,
+.review-block {
+  padding: 18px 0;
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+}
+.result-block h3,
+.review-block h3 {
+  font-size: 11px;
+}
+.result-block p {
+  font-size: 12px;
+}
+.pick-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 23px;
+}
+.pick-bottom a {
+  display: flex;
+  gap: 5px;
+  color: var(--green);
+}
+@media (max-width: 720px) {
+  .official-card {
+    padding: 18px;
+  }
+  .official-card > h2 {
+    font-size: 26px;
+  }
+  .pick-finances strong {
+    font-size: 21px;
+  }
+  .pick-finances span {
+    font-size: 11px;
+  }
+  .pick-numbers span {
+    font-size: 11px;
+  }
+  .pick-numbers b {
+    font-size: 14px;
+  }
+  .number-track {
+    gap: 6px;
+  }
+  .number-track small {
+    font-size: 11px;
+  }
+  .number-track strong {
+    font-size: 11px;
+  }
+  .pick-bottom {
+    flex-wrap: wrap;
+  }
+}
+.member-watermarked .official-card {
+  position: relative;
+  isolation: isolate;
+}
+.member-watermarked .official-card::after {
+  content: var(--member-mark);
+  position: absolute;
+  inset: 45% 8px auto auto;
+  color: rgba(174, 203, 188, 0.12);
+  font-size: 11px;
+  letter-spacing: 2px;
+  pointer-events: none;
+  z-index: 1;
+  text-shadow:
+    0 100px rgba(174, 203, 188, 0.1),
+    0 -100px rgba(174, 203, 188, 0.1);
+  max-width: 90%;
+  overflow: hidden;
+}
+.pick-publication, .official-card > .pick-odds-notice { font-size: 12px; line-height: 1.6; color: var(--muted); }
+.official-card > .pick-odds-notice { padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; }
+.copy-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 16px 0; }
+.copy-pick button { min-height: 44px; padding: 10px 18px; border-radius: 8px; font-size: 13px; }
+.copy-pick [role="status"] { font-size: 12px; color: var(--muted); }
+.copy-pick textarea { width: 100%; font-size: 14px; }
+.slip-details { border-top:1px solid var(--border,#29383e); margin-top:16px; }
+.slip-details > summary { cursor:pointer; padding:16px 0; font-weight:600; }
+.slip-why{font-size:14px;line-height:1.7}
+.slip-why strong{color:#79dfb8;margin-right:7px}
+.slip-why a{display:block;margin-top:6px}
+.pick-win-banner { display:flex; align-items:center; margin-bottom:24px; border-radius:18px; color:#87edbd; }
+.pick-win-banner h2 { margin:4px 0; }
+.pick-win-banner p { margin:4px 0; }
+.pick-win-check { flex-shrink:0; filter:drop-shadow(0 0 12px #73dcb366); animation:pick-win-pop 700ms ease-out both; }
+@media (prefers-reduced-motion:reduce) {
+  .pick-win-check { animation:none; }
+}
+@media (max-width:380px) {
+  .pick-win-banner { gap:12px; padding:18px 12px; }
+  .pick-win-check { width:60px; height:60px; }
+}
+.slip-brand-signature { display:flex; align-items:center; gap:9px; }
+.slip-brand-signature .vq-mark { width:26px; height:20px; }
+.official-card {
+  padding: 28px;
+}
+.official-card > .panel-head {
+  padding: 0 0 18px;
+  margin: 0 0 20px;
+  border-bottom: 1px solid #365244;
+}
+.official-card > h2 {
+  font-size: clamp(26px, 3.2vw, 40px);
+  line-height: 1.2;
+  letter-spacing: -1.2px;
+  max-width: 24ch;
+  margin-bottom: 16px;
+}
+.official-price {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  font-size: 40px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1.5px;
+}
+.official-price span {
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.slip-why {
+  max-width: 70ch;
+}
+.pick-odds-notice {
+  border: 0;
+  border-left: 2px solid #4a6555;
+  border-radius: 0;
+  padding: 8px 12px;
+  max-width: 75ch;
+}
+.pick-publication {
+  font-size: 11px;
+}
+.pick-numbers {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid #355244;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #355244;
+}
+.pick-numbers > div {
+  padding: 15px;
+}
+.pick-numbers span {
+  font-size: 11px;
+  color: #b2c8ba;
+}
+.pick-numbers b {
+  font-size: 21px;
+  font-variant-numeric: tabular-nums;
+}
+.pick-finances {
+  gap: 12px;
+  margin: 20px 0;
+}
+.pick-finances > div {
+  padding: 18px;
+  border-radius: 14px;
+}
+.pick-finances strong {
+  font-variant-numeric: tabular-nums;
+}
+.number-track {
+  border-style: dashed;
+  border-color: #4a6355;
+}
+.pick-reason {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+.pick-reason h3 {
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  margin: 18px 0 0;
+}
+.pick-reason p {
+  font-size: 14px;
+  line-height: 1.85;
+  max-width: 78ch;
+}
+.price-rules {
+  background: #0c1812;
+  border-radius: 14px;
+  padding: 10px 18px;
+}
+.pick-bottom {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.pick-win-banner {
+  background: linear-gradient(120deg, #254e35, #183425);
+  border: 1px solid #4b7d5b;
+  padding: 24px;
+  gap: 20px;
+}
+.pick-win-banner h2 {
+  font-size: 32px;
+  letter-spacing: -0.7px;
+}
+@media (max-width: 600px) {
+  .official-card {
+    padding: 22px 18px;
+    border-radius: 23px;
+  }
+  .official-card > h2 {
+    font-size: 30px;
+    letter-spacing: -0.8px;
+  }
+  .official-price {
+    font-size: 37px;
+  }
+  .pick-numbers > div {
+    padding: 13px 10px;
+  }
+  .pick-numbers b {
+    font-size: 19px;
+  }
+  .pick-numbers span {
+    font-size: 11px;
+  }
+  .pick-finances {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .pick-finances > div:last-child {
+    grid-column: 1/-1;
+  }
+  .pick-win-banner {
+    padding: 18px 14px;
+    gap: 14px;
+  }
+  .pick-win-check {
+    width: 54px;
+    height: 54px;
+  }
+  .pick-win-banner h2 {
+    font-size: 29px;
+  }
+  .pick-win-banner p {
+    font-size: 12px;
+  }
+}
+@media (max-width: 360px) {
+  .pick-numbers {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.community-compact-slip .pick-win-banner {
+  padding: 16px;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.community-compact-slip .pick-win-check {
+  width: 40px;
+  height: 40px;
+}
+.community-compact-slip .pick-win-banner h2 {
+  font-size: 24px;
+}
+.community-compact-slip .pick-win-banner p {
+  margin: 3px 0;
+  font-size: 13px;
+}
+.community-compact-slip h2 {
+  font-size: clamp(22px, 2.5vw, 30px);
+}
+.community-compact-slip .official-price {
+  font-size: 32px;
+}
+.community-compact-slip .pick-odds-notice {
+  font-size: 12px;
+  padding: 10px;
+}
+.slip-expand-cta {
+  padding: 18px !important;
+  margin: 16px 0;
+  text-align: center;
+  border-radius: 12px;
+  color: #adf5d7;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 0 18px #83dfb91c;
+  cursor: pointer;
+  list-style: none;
+}
+.slip-expand-cta::-webkit-details-marker {
+  display: none;
+}
+.slip-expand-cta:hover,
+.slip-expand-cta:focus-visible {
+  background: #285441;
+  outline: 2px solid #aef5d8;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .community-compact-slip {
+    padding: 20px;
+  }
+}
+.pick-splits {
+  margin: 20px 0;
+  padding: 16px;
+  border: 1px solid #30483f;
+  border-radius: 14px;
+  background: #101c20;
+}
+.pick-splits > strong {
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+}
+.pick-splits p,
+.pick-splits small {
+  color: #a8b8bb;
+  line-height: 1.5;
+}
+.split-observation {
+  padding: 14px 0;
+  border-bottom: 1px solid #30483f;
+}
+.split-observation span {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+.split-observation meter {
+  display: block;
+  width: 100%;
+  height: 14px;
+  accent-color: #80dfbb;
+}
+.copy-pick .entry-dialog input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}
+.official-card {
+  background: #fff !important;
+  border-color: var(--line) !important;
+  color: var(--text) !important;
+}
+.btn.primary {
+  background: var(--brand) !important;
+  color: #fff !important;
+  border-color: var(--brand) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--brand) 13%, transparent);
+}
+.btn.primary:hover {
+  background: var(--brand) !important;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  padding: 12px 18px;
+  border-radius: 12px;
+  background: var(--brand);
+  color: #fff;
+  font-weight: 750;
+  border: 1px solid var(--brand);
+  gap: 8px;
+}
+.pick-odds-notice {
+  color: #74510f !important;
+}
+.official-price {
+  color: var(--brand);
+}
+.pick-numbers > div, .pick-finances > div {
+  background: #f5f8fd;
+  color: var(--text);
+  border-color: var(--line) !important;
+}
+.team-logo-fallback {
+  display: grid;
+  place-items: center;
+  background: #dbeaff;
+  border-radius: 50%;
+  font-size: 11px;
+  color: var(--brand);
+}
+.slip-why, .pick-publication {
+  color: var(--text) !important;
+}
+.player-portrait { display: grid; place-items: center; flex: 0 0 88px; width: 88px; height: 64px; overflow: hidden; border-radius: 14px; background: linear-gradient(145deg,#e0edff,#f7faff); border: 1px solid #cbdcf1; color: var(--brand); font-size: 20px; font-weight: 800; }
+.player-portrait img { width: 88px; height: 64px; object-fit: contain; object-position: center bottom; }
+.official-card {
+  border-radius: 16px;
+  border: 1px solid var(--line) !important;
+  box-shadow: 0 2px 3px #14233a03;
+}
+.game-comment{background:#fff;border:1px solid #e0e5ee;border-radius:16px;padding:20px;margin:14px 0}
+.game-comment header{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.game-comment header img{border-radius:50%;object-fit:cover}
+.game-comment p{white-space:pre-wrap;overflow-wrap:anywhere}
+.game-comment small{color:#69788b}

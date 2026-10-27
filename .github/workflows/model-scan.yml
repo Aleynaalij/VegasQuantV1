@@ -1,0 +1,36 @@
+name: Hosted shadow model scan
+# Prospective, research-only capture for the v0.3 shadow journal (research/probability/qualification.md).
+# Every 10 minutes a stdlib-only check asks Supabase whether a fresh FanDuel prop snapshot exists for
+# an upcoming NFL game; only then are dependencies installed and the scan run and uploaded. The repo is
+# public, so the job prints counts only. Needs repository secrets SUPABASE_URL and
+# SUPABASE_SERVICE_ROLE_KEY; without them it does nothing.
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hosted-shadow-scan
+  cancel-in-progress: false
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # shell: bash runs with pipefail, so a failure before `| tee` fails the job instead of passing.
+      - id: due
+        shell: bash
+        run: python research/probability/hosted_scan.py --check | tee -a "$GITHUB_OUTPUT"
+      - if: steps.due.outputs.fresh == 'true'
+        run: pip install -r research/probability/requirements.txt
+      - if: steps.due.outputs.fresh == 'true'
+        shell: bash
+        run: python research/probability/hosted_scan.py | tee -a "$GITHUB_STEP_SUMMARY"

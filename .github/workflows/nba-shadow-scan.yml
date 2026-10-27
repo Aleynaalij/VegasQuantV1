@@ -1,0 +1,34 @@
+name: NBA shadow model scan
+# Prospective, research-only capture for the NBA v0.1 shadow journal (research/nba/README.md). Supabase
+# starts it (cron nba-shadow-scan-dispatch) when a fresh FanDuel points or rebounds batch arrives for an
+# upcoming regular-season game; a stdlib-only check confirms the batch, and only then are dependencies
+# installed and the scan run and uploaded. The repo is public, so the job prints counts only. Needs repository secrets
+# SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY; without them it does nothing.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: nba-shadow-scan
+  cancel-in-progress: false
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # shell: bash runs with pipefail, so a failure before `| tee` fails the job instead of passing.
+      - id: due
+        shell: bash
+        run: python research/nba/hosted_scan.py --check | tee -a "$GITHUB_OUTPUT"
+      - if: steps.due.outputs.fresh == 'true'
+        run: pip install -r research/nba/requirements.txt
+      - if: steps.due.outputs.fresh == 'true'
+        shell: bash
+        run: python research/nba/hosted_scan.py | tee -a "$GITHUB_STEP_SUMMARY"

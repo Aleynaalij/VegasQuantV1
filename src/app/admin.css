@@ -1,0 +1,215 @@
+/* Admin tools. Split from the legacy stylesheets on 2026-10-14, in their cascade order. */
+.action-tabs button {
+  padding: 8px 12px;
+  font-size: 11px;
+  border: 1px solid var(--line);
+  background: #131b23;
+  color: var(--muted);
+  border-radius: 5px;
+}
+.action-tabs button.selected {
+  border-color: #446d58;
+  background: #1d352b;
+  color: var(--green);
+}
+.wide {
+  width: 100%;
+}
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 18px;
+}
+.form-grid .full {
+  grid-column: 1/-1;
+}
+.auth-panel {
+  max-width: 570px;
+  margin: 40px auto;
+}
+.auth-panel form {
+  padding: 25px;
+}
+.auth-panel .form-grid {
+  display: block;
+}
+.auth-panel .text-link {
+  margin: 18px 0 5px;
+}
+.auth-panel p {
+  font-size: 11px;
+}
+.admin-status {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  color: var(--muted);
+  font-size: 11px;
+  flex-wrap: wrap;
+  margin-bottom: 25px;
+}
+.admin-status a {
+  margin-left: auto;
+  color: var(--green);
+}
+.action-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 25px;
+}
+.admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 24px;
+}
+.admin-grid form {
+  padding: 23px;
+}
+.admin-grid .notebook p {
+  font-size: 12px;
+}
+.form-divider {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.check-field {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 11px;
+  margin-bottom: 20px;
+}
+.form-footer {
+  border-top: 1px solid var(--line);
+  padding-top: 20px;
+  margin-top: 10px;
+}
+.publish-review {
+  margin-top: 25px;
+  border: 1px solid #5a6541;
+  background: #18231c;
+  border-radius: 8px;
+  padding: 23px;
+}
+.publish-review .panel-head {
+  padding: 0 0 18px;
+}
+.publish-review pre {
+  background: #0c1410;
+  padding: 18px;
+  border-radius: 5px;
+  font-size: 11px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.panel-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.share-page {
+  max-width: 650px;
+  padding-bottom: 40px;
+}
+.share-page > .brand {
+  margin-bottom: 18px;
+}
+.share-page > .eyebrow {
+  line-height: 1.8;
+  margin-bottom: 22px;
+}
+.share-page > .primary {
+  margin: 20px 0;
+}
+.share-page > .muted {
+  font-size: 11px;
+}
+@media (max-width: 1190px) {
+  .admin-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-grid aside {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .form-grid .full {
+    grid-column: auto;
+  }
+  .admin-grid form {
+    padding: 18px;
+  }
+  .action-tabs {
+    flex-wrap: nowrap;
+    overflow: auto;
+    padding-bottom: 8px;
+  }
+  .action-tabs button {
+    white-space: nowrap;
+    font-size: 11px;
+    min-height: 42px;
+  }
+  .auth-panel {
+    margin: 20px 0;
+  }
+  .admin-status {
+    font-size: 11px;
+    gap: 10px;
+  }
+  .admin-status a {
+    margin: 0;
+  }
+  .publish-review {
+    padding: 18px;
+  }
+  .publish-review pre {
+    font-size: 11px;
+  }
+  .publish-review p {
+    font-size: 12px;
+  }
+  .share-page {
+    padding-bottom: 25px;
+  }
+  .share-page > .eyebrow {
+    font-size: 11px;
+  }
+}
+.correction-review { padding:18px 0; border-top:1px solid #293b42; overflow-wrap:anywhere; }
+.correction-review textarea { min-height:90px; }
+.publishing-checks,.publication-summary { padding:16px; border:1px solid var(--border,#29383e); border-radius:12px; margin:16px 0; }
+.publishing-checks p { line-height:1.6; }
+.publishing-checks details p { font-size:12px; }
+.publish-review pre { overflow:auto; max-height:420px; }
+.intel-entry { margin:16px 0; }
+.intel-entry pre { overflow:auto; max-height:350px; font-size:12px; }
+.mi-admin textarea{width:100%;min-height:180px}
+.mi-admin select,.mi-admin input{width:100%;min-height:44px}
+.mi-admin label{display:grid;gap:8px;margin:16px 0}
+.mi-preview{max-height:400px;overflow:auto;font-size:12px;white-space:pre-wrap}
+.manual-result {
+  display: grid;
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+  margin-top: 12px;
+}
+.manual-result label {
+  display: grid;
+  gap: 4px;
+  font-size: 12px;
+}
+.manual-result [role="alert"] {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+@media (max-width: 640px) {
+  .manual-result {
+    grid-template-columns: 1fr;
+  }
+}

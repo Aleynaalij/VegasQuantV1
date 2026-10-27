@@ -1,0 +1,36 @@
+begin;
+select set_config('vq.test.author',(select user_id::text from community_profiles where visible and avatar is not null and username !~* '^Member_[a-f0-9]{8}$' order by user_id limit 1),true);
+select set_config('vq.test.target',(select user_id::text from community_profiles where visible and avatar is not null and username !~* '^Member_[a-f0-9]{8}$' order by user_id offset 1 limit 1),true);
+select set_config('request.jwt.claim.sub',current_setting('vq.test.author'),true);
+set local role authenticated;
+do $$
+declare post uuid; target_post uuid; n integer; bad boolean; begin
+ insert into public.community_posts(user_id,sport,kind,title,body,legs,author_name) values(auth.uid(),'nfl','slip','ROLLBACK TEST','Permission validation only','["Player test selection"]','SPOOFED') returning id into post;
+ if (select author_name from public.community_posts where id=post)='SPOOFED' then raise exception 'Author snapshot spoofed';end if;
+ bad=false;begin insert into public.community_posts(user_id,sport,kind,title,body) values(auth.uid(),'nfl','talk','RATE TEST','Must fail');exception when raise_exception then bad=true;end;
+ if not bad then raise exception 'Rate limit failed';end if;
+ insert into public.community_post_comments(post_id,user_id,body) values(post,auth.uid(),'ROLLBACK COMMENT');
+ insert into public.community_reactions(post_id,user_id) values(post,auth.uid());
+ if not exists(select 1 from jsonb_array_elements(public.community_feed('nfl',100,false)) x where x->>'id'=post::text and x->>'reactions'='1' and x->>'comments'='1' and x->>'reacted'='true') then raise exception 'Feed counts failed';end if;
+ perform set_config('request.jwt.claim.sub',current_setting('vq.test.target'),true);
+ insert into public.community_posts(user_id,sport,kind,title,body) values(auth.uid(),'nfl','talk','ROLLBACK TARGET','Following validation only') returning id into target_post;
+ perform set_config('request.jwt.claim.sub',current_setting('vq.test.author'),true);
+ insert into public.member_follows(user_id,target_user_id) values(auth.uid(),current_setting('vq.test.target')::uuid);
+ if not exists(select 1 from jsonb_array_elements(public.community_feed('nfl',100,true)) x where x->>'id'=target_post::text) then raise exception 'Following feed omitted target';end if;
+ if exists(select 1 from jsonb_array_elements(public.community_feed('nfl',100,true)) x where x->>'id'=post::text) then raise exception 'Following feed included unfollowed author';end if;
+ insert into public.community_reports(post_id,user_id,reason) values(target_post,auth.uid(),'ROLLBACK MODERATION TEST');
+ if not exists(select 1 from public.community_reports where post_id=target_post) then raise exception 'Own report unreadable';end if;
+ perform set_config('request.jwt.claim.sub',gen_random_uuid()::text,true);
+ delete from public.community_posts where id=post; get diagnostics n=row_count;if n<>0 then raise exception 'Cross-user deletion allowed';end if;
+ bad=false;begin insert into public.community_reactions(post_id,user_id) values(post,current_setting('vq.test.author')::uuid);exception when insufficient_privilege then bad=true;end;
+ if not bad then raise exception 'Reaction impersonation allowed';end if;
+ perform set_config('request.jwt.claim.sub',current_setting('vq.test.author'),true);
+ delete from public.community_posts where id=post;
+ if exists(select 1 from public.community_post_comments where post_id=post) or exists(select 1 from public.community_reactions where post_id=post) then raise exception 'Cascades failed';end if;
+ bad=false;begin insert into public.community_posts(user_id,sport,kind,title,body,legs) values(auth.uid(),'nba','slip','BLOCKED NBA','Preparation','["Test leg"]');exception when check_violation then bad=true;end;
+ if not bad then raise exception 'NBA guard failed';end if;
+ if has_table_privilege('anon','public.community_posts','select') then raise exception 'Anonymous member content exposed';end if;
+ if has_table_privilege('authenticated','public.community_posts','update') then raise exception 'Published posts mutable';end if;
+end $$;
+rollback;
+select 'PASS: author snapshots, posting, comments, reactions, counts, follows, following feed, reports, rate limits, ownership, cascades, NBA gate, anonymous denial and immutability; all fixtures rolled back' as verification;

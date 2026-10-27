@@ -1,0 +1,50 @@
+name: Research board
+# Every three hours, publish the strongest rule-passing player-prop legs on the week's NFL slate to
+# the legs feed as labeled research (scripts/research-board). Official picks stay behind the NFL
+# selection gate. The repo is public, so the job prints counts only. Needs repository secrets
+# SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY; without them it does nothing.
+on:
+  schedule:
+    # Hourly at an off-peak minute; the script publishes at most every 2.5 hours (see run.ts), so
+    # a run GitHub delays or drops is picked up by the next one.
+    - cron: '37 * * * *'
+  workflow_dispatch:
+    inputs:
+      scheduled:
+        description: Timer run (publish only if no board went out in 2.5 hours)
+        type: boolean
+        default: false
+      dry_run:
+        description: Select legs without publishing
+        type: boolean
+        default: false
+      limit:
+        description: Most legs this run (default 8, at most 60)
+        type: number
+        default: 8
+      per_game:
+        description: Most legs per game this run (default 3, at most 12)
+        type: number
+        default: 3
+permissions:
+  contents: read
+concurrency:
+  group: research-board
+  cancel-in-progress: false
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      # bash with pipefail, so a failing run is not hidden by tee.
+      - shell: bash
+        run: npx tsx scripts/research-board/run.ts ${{ (github.event_name == 'schedule' || inputs.scheduled) && '--scheduled' || '' }} ${{ inputs.dry_run && '--dry-run' || '' }} --limit=${{ inputs.limit || 8 }} --per-game=${{ inputs.per_game || 3 }} | tee -a "$GITHUB_STEP_SUMMARY"
