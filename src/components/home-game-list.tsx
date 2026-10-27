@@ -245,7 +245,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
     >
       {draftNotice ? <p role="status">{draftNotice}</p> : null}
       {chosen.length ? (
-        <Link className="vq-btn" href="/community?build=1#zone-builder">
+        <Link className="vq-btn" href="/parlays">
           Build your lay · {chosen.length} selected →
         </Link>
       ) : null}

@@ -10,7 +10,6 @@ import {
 import Link from "next/link";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
-import ParlayWorkshop from "./parlay-workshop";
 import RubyHub from "./ruby-cards";
 import ZoneNav from "./zone-nav";
 import CommunityPhoto from "./community-photo";
@@ -614,15 +613,6 @@ export default function CommunityFeed() {
         </header>
         {/* Keeps the research board, Pick of the Day, wins and injury watch one tap away. */}
         <ZoneNav active="Latest" />
-        <details
-          id="zone-builder"
-          open={
-            searchParams.has("build") || searchParams.has("saved") || undefined
-          }
-        >
-          <summary>Build or open your lay</summary>
-          <ParlayWorkshop mode="parlays" />
-        </details>
         {blocked.length ? (
           <details>
             <summary>Blocked members · {blocked.length}</summary>
