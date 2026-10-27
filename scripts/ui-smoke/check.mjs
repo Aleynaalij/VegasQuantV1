@@ -8,7 +8,7 @@ const { chromium } = await import(
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const pages = [
   { path: "/", expect: ["Next kickoff", "21+"] },
-  { path: "/feed", expect: ["The Zone", "How it works", "RESEARCH BOARD"] },
+  { path: "/feed", expect: ["The Zone", "Signature contributors", "TODAY’S DOUBLE UP", "Legs", "Injury watch"] },
   { path: "/feed?view=parlays", expect: ["Sample Sunday sleeper parlay", "3-leg parlay"] },
   { path: "/feed?view=wins", expect: ["Five legs. One $218 win."] },
   { path: "/matchups", expect: ["Seahawks"] },
@@ -23,7 +23,7 @@ const pages = [
 ];
 const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
-  { path: "/", expect: ["Pick of the Day", "For you", "Your tailed parlays", "More teams this week"] },
+  { path: "/", expect: ["Next kickoff", "Matchup", "Simulator"] },
   { path: "/community", expect: ["Community", "SampleMember", "Sample post body."] },
   { path: "/history", expect: ["Records are private."] },
 ];
@@ -113,16 +113,12 @@ for (const [list, auth, isAdmin] of [
       if (errors.length)
         failures.push(`${label}: page error · ${errors[0].slice(0, 200)}`);
       if (path === "/") {
-        // The next-kickoff card sits open on Home, directly under Today's Double Up.
+        // The next-kickoff card leads Home's carousel, open and visible.
         const kickoff = await page.evaluate(() => {
-          const card = document.querySelector(".home-brief");
-          return {
-            visible: !!card && !card.closest("details") && card.getBoundingClientRect().height > 0,
-            afterDoubleUp: card?.previousElementSibling?.classList.contains("ruby-double-up") ?? false,
-          };
+          const card = document.querySelector(".vq-feature-carousel .home-brief");
+          return !!card && !card.closest("details") && card.getBoundingClientRect().height > 0;
         });
-        if (!kickoff.visible || !kickoff.afterDoubleUp)
-          failures.push(`${label}: next-kickoff card not shown under Today's Double Up`);
+        if (!kickoff) failures.push(`${label}: next-kickoff card not shown in Home's carousel`);
         await page.locator(".ruby-home-details").evaluateAll(nodes => nodes.forEach(node => node.open = true));
       }
       const state = await page.evaluate(() => ({

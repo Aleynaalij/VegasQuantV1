@@ -120,7 +120,7 @@ export function rubyPrice(n: number) {
   return n > 0 ? `+${n}` : String(n);
 }
 export function rubyLink(id: string) {
-  return `/feed?view=contributors&ruby=${encodeURIComponent(id)}#ruby-${encodeURIComponent(id)}`;
+  return `/community?ruby=${encodeURIComponent(id)}#ruby-${encodeURIComponent(id)}`;
 }
 
 export function currentRubyFeature(

@@ -932,11 +932,15 @@ function ResultPrompt({
 
 export default function RubyHub({
   home = false,
+  composerOnly = false,
+  zone = false,
   selectedId = "",
   contributorsOnly = false,
   afterDoubleUp,
 }: {
   home?: boolean;
+  composerOnly?: boolean;
+  zone?: boolean;
   selectedId?: string;
   /** Home: shown directly under Today's Double Up, before the contributors row. */
   afterDoubleUp?: ReactNode;
@@ -997,7 +1001,8 @@ export default function RubyHub({
     const todayFeature = currentRubyFeature(next.day, f.data || []);
     setFeature(todayFeature);
     setAnalystTicket(null);
-    if (home && todayFeature?.analyst_ticket_id) {
+    // Home and The Zone both show the daily feature, analyst ticket included.
+    if ((home || zone) && todayFeature?.analyst_ticket_id) {
       const analyst = await supabase
         .from("nfl_analyst_double_ups")
         .select("*")
@@ -1007,7 +1012,7 @@ export default function RubyHub({
       if (analyst.data) setAnalystTicket(analyst.data);
     }
     setOriginalFeatured(null);
-    if (home && todayFeature?.submission_id) {
+    if ((home || zone) && todayFeature?.submission_id) {
       const original = await supabase
         .from("ruby_submissions")
         .select("*")
@@ -1069,16 +1074,31 @@ export default function RubyHub({
   const ranked = rankCappers(records);
   const profile =
     selected === "All" ? null : ranked.find((r) => r.brand === selected);
+  if (composerOnly)
+    return (
+      <div className="ruby-hub">
+        {state.contributor ? (
+          <Composer
+            key={state.user_id}
+            state={state}
+            onPublished={() => void refresh()}
+          />
+        ) : null}
+        {state.due?.length ? (
+          <ResultPrompt state={state} onSaved={() => void refresh()} />
+        ) : null}
+      </div>
+    );
   return (
     <div className="ruby-hub">
-      {home && state.contributor && (
+      {(home || zone) && state.contributor && (
         <Composer
           key={state.user_id}
           state={state}
           onPublished={() => void refresh()}
         />
       )}
-      {home && (
+      {(home || zone) && (
         <section className="ruby-double-up">
           <div>
             <span className="ruby-eyebrow">TODAY’S DOUBLE UP</span>
@@ -1099,14 +1119,17 @@ export default function RubyHub({
               feature={originalFeatured ? feature : undefined}
             />
           ) : (
-            <Link className="ruby-text-link" href="/feed?view=contributors">
+            <Link
+              className="ruby-text-link"
+              href="/community#zone-contributors"
+            >
               Explore contributor lays <ArrowUpRight size={16} />
             </Link>
           )}
         </section>
       )}
       {home && afterDoubleUp}
-      {home && state.due?.length ? (
+      {(home || zone) && state.due?.length ? (
         <ResultPrompt state={state} onSaved={() => void refresh()} />
       ) : null}
       {insider && ranked.length > 0 && (
@@ -1167,7 +1190,10 @@ export default function RubyHub({
             <h2>Signature contributors</h2>
           </div>
           {home && (
-            <Link href="/feed?view=contributors" className="ruby-text-link">
+            <Link
+              href="/community#zone-contributors"
+              className="ruby-text-link"
+            >
               View all <ArrowUpRight size={16} />
             </Link>
           )}

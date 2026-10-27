@@ -10,6 +10,9 @@ import {
 import Link from "next/link";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
+import ParlayWorkshop from "./parlay-workshop";
+import RubyHub from "./ruby-cards";
+import ZoneNav from "./zone-nav";
 import CommunityPhoto from "./community-photo";
 import CommunityParlayCard from "./community-parlay-card";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
@@ -594,9 +597,23 @@ export default function CommunityFeed() {
     <Shell active="community" sport={sport}>
       <div className="community-feed">
         <header className="community-feed-heading">
-          <h1>Community</h1>
-          <Link href="/feed">The Zone →</Link>
+          <h1>The Zone</h1>
+          <a href="#zone-contributors">Contributor lays ↓</a>
         </header>
+        {/* Keeps the research board, Pick of the Day, wins and injury watch one tap away. */}
+        <ZoneNav active="Latest" />
+        <details
+          id="zone-builder"
+          open={
+            searchParams.has("build") || searchParams.has("saved") || undefined
+          }
+        >
+          <summary>Build or open your lay</summary>
+          <ParlayWorkshop mode="parlays" />
+        </details>
+        <section id="zone-contributors">
+          <RubyHub zone selectedId={searchParams.get("ruby") || ""} />
+        </section>
         {blocked.length ? (
           <details>
             <summary>Blocked members · {blocked.length}</summary>

@@ -527,6 +527,8 @@ for (const { width, photoOnly } of [
     .getByRole("region", { name: "Confirm your slip result" })
     .waitFor({ state: "detached" });
   assert.equal(reported, "WIN");
+  // The standings live in The Zone.
+  await go(page, base + "/community");
   const board = page.locator(".ruby-board");
   await board.waitFor();
   assert.deepEqual(
@@ -557,8 +559,8 @@ for (const { width, photoOnly } of [
     .waitFor();
   assert.equal(hidden.p_hidden, true);
   adminView = false;
-  // The contributor sees contributor lays first on Latest; a general member opens The Zone on
-  // research and AI legs, and reaches contributor lays from the Contributors tab.
+  // The Zone (/feed redirects there) leads with contributor lays for everyone and keeps the
+  // research views one tap away; a member reaches contributor lays from the Contributors tab too.
   await go(page, base + "/feed");
   await page.locator(".ruby-contributors").waitFor();
   member = true;
@@ -566,7 +568,7 @@ for (const { width, photoOnly } of [
   reported = "WIN";
   await go(page, base + "/feed");
   await page.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
-  assert.equal(await page.locator(".ruby-hub").count(), 0);
+  assert.equal(new URL(page.url()).pathname, "/community");
   assert.deepEqual(
     (await page.locator(".zone-views a").allInnerTexts()).slice(0, 4),
     ["Latest", "Legs", "Parlays", "Contributors"],
@@ -590,10 +592,10 @@ for (const { width, photoOnly } of [
   member = false;
   reviewing = false;
   reported = null;
-  // Analyst Double Up shares Home’s slot and appears for ordinary members in The Zone.
+  // The analyst Double Up appears for ordinary members in The Zone.
   analystActive = true;
   member = true;
-  await go(page, base + "/");
+  await go(page, base + "/community");
   await page.locator(".analyst-double-up").waitFor();
   assert.equal(await page.locator(".analyst-double-up").count(), 1);
   assert.match(
