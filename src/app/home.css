@@ -758,10 +758,11 @@ html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd !
 .vq-prop-copy { display: flex; align-items: center; gap: 12px; padding: 10px 12px 0; }
 .vq-prop-copy button { min-height: 40px; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: .8rem; }
 .vq-prop-copy span { color: #8ce3bd; font-size: .78rem; }
-/* A glowing chevron tells members a game opens; it settles once the game is open. */
-.vq-game-time { display: inline-flex; align-items: center; gap: 6px; max-width: none; }
-.vq-game-time > span:first-child { white-space: nowrap; }
-.vq-expand-cue { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1px solid #e8ca7d88; background: #1d2a22; color: #f4dc99; box-sizing: border-box; animation: vq-expand-glow 1.8s ease-in-out infinite; transition: transform .2s ease; }
-.vq-game-row[open] .vq-expand-cue { transform: rotate(180deg); animation: none; box-shadow: none; }
-@keyframes vq-expand-glow { 0%, 100% { box-shadow: 0 0 0 0 #e8ca7d00; } 50% { box-shadow: 0 0 10px 2px #e8ca7d99; } }
-@media (prefers-reduced-motion: reduce) { .vq-expand-cue { animation: none; box-shadow: 0 0 8px 1px #e8ca7d77; transition: none; } }
+/* A softly glowing "Tap to expand" tells members a game opens; it settles once the game is open. */
+.vq-expand-cue { display: block; text-align: center; font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #e8ca7d; padding-top: 2px; animation: vq-expand-glow 2.4s ease-in-out infinite; }
+.vq-expand-open { display: none; }
+.vq-game-row[open] .vq-expand-cue { animation: none; color: #a7b0ad; text-shadow: none; opacity: 1; }
+.vq-game-row[open] .vq-expand-closed { display: none; }
+.vq-game-row[open] .vq-expand-open { display: inline; }
+@keyframes vq-expand-glow { 0%, 100% { opacity: .7; text-shadow: none; } 50% { opacity: 1; text-shadow: 0 0 8px #e8ca7d88; } }
+@media (prefers-reduced-motion: reduce) { .vq-expand-cue { animation: none; opacity: 1; text-shadow: 0 0 6px #e8ca7d55; } }

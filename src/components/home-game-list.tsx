@@ -270,19 +270,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                   <b>{g.home_team.split(" ").at(-1)}</b>
                 </span>
                 <span className="vq-game-time">
-                  <span>{kickoffText(g.kickoff)} ET</span>
-                  <span className="vq-expand-cue" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" width="14" height="14">
-                      <path
-                        d="M6 9l6 6 6-6"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2.6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
+                  {kickoffText(g.kickoff)} ET
                 </span>
               </span>
               {lines[g.id] ? (
@@ -292,6 +280,10 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                   away={g.away_team}
                 />
               ) : null}
+              <span className="vq-expand-cue">
+                <span className="vq-expand-closed">Tap to expand</span>
+                <span className="vq-expand-open">Tap to close</span>
+              </span>
             </summary>
             <div className="vq-game-props">
               {notice ? (
