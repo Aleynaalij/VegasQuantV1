@@ -743,7 +743,7 @@ html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd !
 .vq-gauge .vq-gauge-fill { stroke: currentColor; }
 .vq-gauge b { position: absolute; top: 13px; font: 800 .8rem/1 var(--font-board); }
 .vq-gauge small { margin-top: 1px; color: #8f9a94; font-size: .55rem; letter-spacing: .08em; }
-.vq-gauge.is-good, .vq-ml-lean.is-good b { color: #b8f05a; }
+.vq-gauge.is-good, .vq-ml-lean.is-good b { color: #8ce3bd; }
 .vq-gauge.is-mid, .vq-ml-lean.is-mid b { color: #f2cf6b; }
 .vq-gauge.is-low, .vq-ml-lean.is-low b { color: #ff6b6b; }
 .vq-gauge.is-empty { color: #5e655e; }
