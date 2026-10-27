@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { homeWeekStart } from "@/lib/home-week";
 import {
@@ -28,6 +28,7 @@ export default function ParlayWorkshop({
   mode: "catalog" | "parlays";
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const routeSaved = useSearchParams().get("saved") || "";
   const [savedId, setSavedId] = useState("");
   const [savedPrompt, setSavedPrompt] = useState<MemberParlay | null>(null);
@@ -308,8 +309,14 @@ export default function ParlayWorkshop({
       setNotice(`Saved “${confirmed.title}” to My parlays.`);
       setChosen([]);
       setOpen(false);
+      // Stay on this page: replacing to another route would unmount the workshop and its
+      // "Parlay saved" prompt.
+      const here =
+        pathname === "/community"
+          ? "/community?build=1"
+          : `/feed?view=${mode === "catalog" ? "legs" : "parlays"}`;
       router.replace(
-        `/community?build=1&saved=${encodeURIComponent(confirmed.id)}#my-parlay-${confirmed.id}`,
+        `${here}&saved=${encodeURIComponent(confirmed.id)}#my-parlay-${confirmed.id}`,
         { scroll: false },
       );
     } catch {

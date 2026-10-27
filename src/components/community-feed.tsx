@@ -12,6 +12,7 @@ import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
 import ParlayWorkshop from "./parlay-workshop";
 import RubyHub from "./ruby-cards";
+import ZoneNav from "./zone-nav";
 import CommunityPhoto from "./community-photo";
 import CommunityParlayCard from "./community-parlay-card";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
@@ -599,6 +600,8 @@ export default function CommunityFeed() {
           <h1>The Zone</h1>
           <a href="#zone-contributors">Contributor lays ↓</a>
         </header>
+        {/* Keeps the research board, Pick of the Day, wins and injury watch one tap away. */}
+        <ZoneNav active="Latest" />
         <details
           id="zone-builder"
           open={

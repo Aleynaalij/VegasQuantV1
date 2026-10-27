@@ -1001,7 +1001,8 @@ export default function RubyHub({
     const todayFeature = currentRubyFeature(next.day, f.data || []);
     setFeature(todayFeature);
     setAnalystTicket(null);
-    if (home && todayFeature?.analyst_ticket_id) {
+    // Home and The Zone both show the daily feature, analyst ticket included.
+    if ((home || zone) && todayFeature?.analyst_ticket_id) {
       const analyst = await supabase
         .from("nfl_analyst_double_ups")
         .select("*")
@@ -1011,7 +1012,7 @@ export default function RubyHub({
       if (analyst.data) setAnalystTicket(analyst.data);
     }
     setOriginalFeatured(null);
-    if (home && todayFeature?.submission_id) {
+    if ((home || zone) && todayFeature?.submission_id) {
       const original = await supabase
         .from("ruby_submissions")
         .select("*")
@@ -1097,7 +1098,7 @@ export default function RubyHub({
           onPublished={() => void refresh()}
         />
       )}
-      {home && (
+      {(home || zone) && (
         <section className="ruby-double-up">
           <div>
             <span className="ruby-eyebrow">TODAY’S DOUBLE UP</span>
