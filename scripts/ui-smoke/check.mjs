@@ -23,7 +23,7 @@ const pages = [
 ];
 const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
-  { path: "/", expect: ["Next kickoff", "Matchup", "Simulator"] },
+  { path: "/", expect: ["Next kickoff", "Kickoff", "Simulator", "Swipe left for Simulator"] },
   { path: "/community", expect: ["Community", "SampleMember", "Sample post body."] },
   { path: "/history", expect: ["Records are private."] },
 ];
