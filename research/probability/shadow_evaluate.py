@@ -68,15 +68,17 @@ def outcomes(pending, frames):
 
 
 PAGE = 1000  # PostgREST's row cap per call
+# Scan runs carry large stored scans; 1,000 a call outgrew the database statement timeout.
+COVERAGE_PAGE = 25
 
 
-def paged(db: Supabase, rpc: str, body: dict, key: str) -> list:
-    """Every row of a keyset-paged RPC (ordered by `key`, at most PAGE rows a call)."""
+def paged(db: Supabase, rpc: str, body: dict, key: str, size: int = PAGE) -> list:
+    """Every row of a keyset-paged RPC (ordered by `key`, at most `size` rows a call)."""
     rows, after = [], None
     while True:
-        page = db.request(f"/rest/v1/rpc/{rpc}", {**body, "p_after": after, "p_limit": PAGE}) or []
+        page = db.request(f"/rest/v1/rpc/{rpc}", {**body, "p_after": after, "p_limit": size}) or []
         rows += page
-        if len(page) < PAGE:
+        if len(page) < size:
             return rows
         after = page[-1][key]
 
@@ -347,7 +349,7 @@ def build_report(rows, model_id: str, input_sources=None, runs=None) -> dict:
 def report(db: Supabase, fetch=download) -> dict:
     model_id = json.loads(MODEL.read_text())["model_id"]
     rows = paged(db, "nfl_shadow_evaluation_rows", {"p_model_id": model_id}, "forecast_id")
-    runs = paged(db, "nfl_shadow_scan_coverage", {"p_model_id": model_id}, "run_id")
+    runs = paged(db, "nfl_shadow_scan_coverage", {"p_model_id": model_id}, "run_id", COVERAGE_PAGE)
     input_sources = []
     if rows:
         seasons = {int(r["season"]) for r in rows}
