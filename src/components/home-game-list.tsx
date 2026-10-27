@@ -16,6 +16,7 @@ import {
 } from "@/lib/home-props";
 import {
   canBuildWith,
+  parlayCopyLine,
   selectionError,
   type PublishedLeg,
 } from "@/lib/parlay-builder";
@@ -40,6 +41,30 @@ export default function HomeGameList({ games }: { games: Game[] }) {
   const [chosen, setChosen] = useState<string[]>([]);
   const [draftNotice, setDraftNotice] = useState("");
   const [openKey, setOpenKey] = useState("");
+  const [copied, setCopied] = useState<Record<string, string>>({});
+  // Same player + stat lines the Gambly copy uses, one per line, for the props on screen.
+  async function copyAll(gameId: string, rows: Leg[]) {
+    const text = rows
+      .map(
+        (r) =>
+          parlayCopyLine(r as unknown as PublishedLeg) ||
+          r.copy_text ||
+          `${r.name} ${r.market}`,
+      )
+      .join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied((c) => ({
+        ...c,
+        [gameId]: `Copied ${rows.length} leg${rows.length === 1 ? "" : "s"}.`,
+      }));
+    } catch {
+      setCopied((c) => ({
+        ...c,
+        [gameId]: "Copy is unavailable in this browser.",
+      }));
+    }
+  }
   const [statFilter, setStatFilter] = useState<Record<string, string>>({});
   const [lines, setLines] = useState<Record<string, MoneylineRead>>({});
   const { forms } = useLegForms(legs.map((l) => l.leg_key));
@@ -245,7 +270,19 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                   <b>{g.home_team.split(" ").at(-1)}</b>
                 </span>
                 <span className="vq-game-time">
-                  {kickoffText(g.kickoff)} ET <span aria-hidden="true">⌄</span>
+                  <span>{kickoffText(g.kickoff)} ET</span>
+                  <span className="vq-expand-cue" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="14" height="14">
+                      <path
+                        d="M6 9l6 6 6-6"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.6"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </span>
                 </span>
               </span>
               {lines[g.id] ? (
@@ -297,15 +334,29 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                             key={stat}
                             type="button"
                             aria-pressed={active === stat}
-                            onClick={() =>
-                              setStatFilter((f) => ({ ...f, [g.id]: stat }))
-                            }
+                            onClick={() => {
+                              setStatFilter((f) => ({ ...f, [g.id]: stat }));
+                              setCopied((c) => ({ ...c, [g.id]: "" }));
+                            }}
                           >
                             {stat}
                           </button>
                         ))}
                       </div>
                     ) : null}
+                    <div className="vq-prop-copy">
+                      <button
+                        type="button"
+                        className="secondary"
+                        onClick={() => void copyAll(g.id, shown)}
+                      >
+                        Copy all {shown.length} leg
+                        {shown.length === 1 ? "" : "s"}
+                      </button>
+                      {copied[g.id] ? (
+                        <span role="status">{copied[g.id]}</span>
+                      ) : null}
+                    </div>
                     <div className="vq-prop-table">
                       <div className="vq-prop-head" aria-hidden="true">
                         <span>Player</span>
