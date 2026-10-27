@@ -23,6 +23,7 @@ import "./notifications.css";
 import NotificationProvider from "@/components/notification-provider";
 import "./parlay-builder.css";
 import "./performance.css";
+import "./ui-polish.css";
 import NotificationBootstrap from "@/components/notification-bootstrap";
 import ProfileSetupGate from "@/components/profile-setup-gate";
 import PhoneContactPrompt from "@/components/phone-contact-prompt";
