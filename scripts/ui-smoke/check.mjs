@@ -29,7 +29,7 @@ const signedIn = [
 ];
 const admin = [
   { path: "/history", expect: ["Vegas Quant published record", "Profit at published prices", "1 graded pick was published without a price", "Beat the close", "1–1–1"] },
-  { path: "/performance", expect: ["By sport"] },
+  { path: "/performance", expect: ["By sport", "Research model vs the market", "Too close to call"] },
 ];
 const session = () => {
   const exp = Math.floor(Date.now() / 1000) + 86400 * 400;
