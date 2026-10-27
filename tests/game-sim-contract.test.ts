@@ -134,3 +134,48 @@ test("Runs with no plays never reach the renderer, and kneel-downs count as QB c
   assert.equal(qb.rushing.yds, -2);
   assert.deepEqual(box.team.away, { plays: 36, yards: 243, turnovers: 1 });
 });
+
+test("The engine's own fixture format converts to home-relative field positions", async () => {
+  // Snapshot of research/game_sim/demo.json from Codex's #133 (eeb8759).
+  const engine = (
+    await import("./fixtures/game-sim-engine-demo.json", {
+      with: { type: "json" },
+    })
+  ).default;
+  const r = parseSimRun(engine);
+  assert.ok(r.ok, r.ok ? "" : r.errors.join("\n"));
+  if (!r.ok) return;
+  assert.equal(r.run.mode, "demo");
+  assert.equal(r.run.distributions, null);
+  assert.equal(r.run.replay.seed, null);
+  const [first] = r.run.events;
+  assert.equal(first.ball_start_x, 25);
+  assert.equal(situationText(r.run, first), "1st & 10 at VQA 25");
+  const xp = r.run.events.find((e) => e.play_type === "extra_point")!;
+  assert.equal(xp.down, null, "kicks have no down");
+  assert.equal(xp.made, true);
+  const run = r.run.events.find((e) => e.play_type === "run")!;
+  assert.equal(run.made, null, "made applies only to kicks");
+  assert.equal(r.run.events.at(-1)!.score_after.home, 7);
+  // Teams switching ends: the same plays with home defending the right goal land on the same
+  // home-relative spots.
+  const flipped = JSON.parse(JSON.stringify(engine));
+  for (const e of flipped.replay.events) {
+    for (const s of [e.before, e.after]) s.home_defends = "right";
+    for (const k of ["ball_start_x", "ball_end_x"])
+      if (e[k] != null) e[k] = 100 - e[k];
+  }
+  const f = parseSimRun(flipped);
+  assert.ok(f.ok);
+  if (!f.ok) return;
+  assert.deepEqual(
+    f.run.events.map((e) => [e.ball_start_x, e.ball_end_x]),
+    r.run.events.map((e) => [e.ball_start_x, e.ball_end_x]),
+  );
+  // A malformed engine file is rejected with the engine's field path.
+  const broken = JSON.parse(JSON.stringify(engine));
+  broken.replay.events[2].before.home_defends = "north";
+  const b = parseSimRun(broken) as { ok: false; errors: string[] };
+  assert.equal(b.ok, false);
+  assert.match(b.errors.join(), /replay\.events\.2\.before\.home_defends/);
+});
