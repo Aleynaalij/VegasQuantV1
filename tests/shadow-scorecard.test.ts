@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { scorecardVerdict } from "../src/lib/shadow-scorecard";
 
 test("The scorecard only calls a winner beyond two clustered standard errors", () => {
-  // Live numbers from Oct 27: receiving all weeks, rushing all weeks, rushing week 7.
+  // Example differences and clustered standard errors of the size seen in weeks 6–7.
   assert.equal(
     scorecardVerdict({ brier_diff: "-0.0081", brier_diff_se: "0.0083" }),
     "Too close to call",
