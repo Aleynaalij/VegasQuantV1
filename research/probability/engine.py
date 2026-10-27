@@ -71,8 +71,9 @@ def feature(history, opponent_history, league_history, position, market):
         np.log(max(oc, .01)/max(league_c, .01)), len(h)/16,
         float(position == "QB"), float(position == "TE")])
 
-def prepare(frame, market, ngs=None):
-    """ngs: optional ngs_features.NgsIndex; its earlier-week inputs are appended (v0.4)."""
+def prepare(frame, market, ngs=None, lines=None):
+    """ngs: optional ngs_features.NgsIndex; its earlier-week inputs are appended (v0.4).
+    lines: optional game_lines.GameLines; the game's spread/total inputs are appended (v0.5)."""
     frame = normalize(frame)
     required = {"player_id", "recent_team", "opponent_team", "season", "week",
                 "season_type", "position", *MARKETS[market][:2]}
@@ -99,6 +100,8 @@ def prepare(frame, market, ngs=None):
                 x = feature(h, defense[(row["opponent_team"], pos)], league[pos], pos, market)
                 if ngs is not None:
                     x = np.concatenate([x, ngs.features(market, row["player_id"], int(season), int(week))])
+                if lines is not None:
+                    x = np.concatenate([x, lines.features(market, row["recent_team"], row["opponent_team"], int(season), int(week))])
                 result.append({"season": int(season), "week": int(week), "player_id": row["player_id"],
                     "game_key": f"{int(season)}:{int(week)}:"+":".join(sorted([row["recent_team"],row["opponent_team"]])),
                     "team": row["recent_team"], "opponent": row["opponent_team"], "position": pos,

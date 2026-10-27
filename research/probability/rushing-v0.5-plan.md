@@ -64,3 +64,27 @@ with its own artifact hash, and scored against FanDuel's no-vig price on settled
 Whatever the result, the model stays **SHADOW_ONLY**. Qualification under
 `qualification-2026-10-16`, the owner's approval and `private.nfl_selection_model_approvals`
 still govern any release.
+
+## Result (October 27, 2026): v0.5 rejected at stage 1; rushing stays v0.3
+
+The plan above was committed (`ec9b6de`) before the comparison ran. Data hashes match the v0.3 and
+v0.4 files, and v0.3's published 2025 rushing Brier (0.156575) reproduces exactly. Full output is
+in `artifacts/v0.5-rejected/`.
+
+| Sample | Player-games (games) | v0.3 Brier | v0.5 Brier | v0.5 − v0.3 | 95% interval | Rule |
+|---|---:|---:|---:|---:|---|---|
+| 2026 Week 7 (primary, untouched) | 39 (14) | 0.199442 | 0.199520 | +0.00008 | −0.00232 to +0.00263 | fails (above 0) |
+| 2025 (secondary) | 750 (269) | 0.156575 | 0.157085 | +0.00051 | −0.00029 to +0.00135 | fails |
+
+Only Week 7 of 2026 had player logs when this ran, so the primary sample is small; the result does
+not depend on it, because 2025 fails on its own.
+
+The game's spread and total did not help v0.3 predict rushing yards. A likely reason: v0.3's
+recent-workload inputs already track the team's run share, and the closing line moves mostly on
+information (injuries, depth charts) that shows up in the very next workload. Per the plan, nothing
+is captured and no other input set is tried on these weeks. `game_lines.py` stays available, off by
+default.
+
+What this means for rushing: v0.3 rushing remains SHADOW_ONLY and is not a qualification
+candidate on current evidence. It does not feed the research board or any user-facing pick; the
+board's rushing leans use recent form and the market price only.
