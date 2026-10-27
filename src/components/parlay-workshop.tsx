@@ -312,11 +312,13 @@ export default function ParlayWorkshop({
       // Stay on this page: replacing to another route would unmount the workshop and its
       // "Parlay saved" prompt.
       const here =
-        pathname === "/community"
-          ? "/community?build=1"
-          : `/feed?view=${mode === "catalog" ? "legs" : "parlays"}`;
+        pathname === "/parlays"
+          ? "/parlays?"
+          : pathname === "/community"
+            ? "/community?build=1&"
+            : `/feed?view=${mode === "catalog" ? "legs" : "parlays"}&`;
       router.replace(
-        `${here}&saved=${encodeURIComponent(confirmed.id)}#my-parlay-${confirmed.id}`,
+        `${here}saved=${encodeURIComponent(confirmed.id)}#my-parlay-${confirmed.id}`,
         { scroll: false },
       );
     } catch {
@@ -410,9 +412,7 @@ export default function ParlayWorkshop({
     const id = savedPrompt?.id;
     if (!id || !(await continueAfterSave())) return;
     if (mode === "catalog")
-      router.push(
-        `/community?build=1&saved=${encodeURIComponent(id)}#my-parlay-${id}`,
-      );
+      router.push(`/parlays?saved=${encodeURIComponent(id)}#my-parlay-${id}`);
     else {
       const card = document.getElementById(`my-parlay-${id}`);
       card?.scrollIntoView({ block: "center" });

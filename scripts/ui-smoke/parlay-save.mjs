@@ -209,8 +209,8 @@ for (const width of [390, 1280]) {
   await prompt
     .getByRole("button", { name: "View My parlays", exact: true })
     .click();
-  // My parlays now opens in The Zone's lay builder.
-  await page.waitForURL(/\/community\?build=1.*saved=/);
+  // My parlays opens its own workspace, outside The Zone.
+  await page.waitForURL(/\/parlays\?saved=/);
   const first = page.locator(".workshop-saved > details").first();
   await first.waitFor();
   assert.match(await first.innerText(), /My newest sample/);
