@@ -92,6 +92,7 @@ test("Box score and play text come only from the events", () => {
             "pass_incomplete",
             "sack",
             "fumble_lost",
+            "kneel",
           ].includes(e.play_type),
       )
       .reduce((a, e) => a + e.yards, 0);
@@ -107,4 +108,29 @@ test("Box score and play text come only from the events", () => {
     null,
     "kickoffs have no down",
   );
+});
+
+test("Runs with no plays never reach the renderer, and kneel-downs count as QB carries", () => {
+  const empty = clone();
+  empty.events = [];
+  assert.match(
+    (parseSimRun(empty) as { errors: string[] }).errors.join(),
+    /run has no events/,
+  );
+  empty.status = "blocked";
+  empty.blockers = ["no play-by-play source"];
+  assert.match(
+    (parseSimRun(empty) as { errors: string[] }).errors.join(),
+    /run blocked: no play-by-play source/,
+  );
+  const r = parseSimRun(demo);
+  assert.ok(r.ok);
+  if (!r.ok) return;
+  const box = boxScore(r.run);
+  const kneels = r.run.events.filter((e) => e.play_type === "kneel");
+  assert.equal(kneels.length, 2);
+  const qb = box.players.find((p) => p.player_id === "vqb-qb")!;
+  assert.equal(qb.rushing.att, 2);
+  assert.equal(qb.rushing.yds, -2);
+  assert.deepEqual(box.team.away, { plays: 36, yards: 243, turnovers: 1 });
 });

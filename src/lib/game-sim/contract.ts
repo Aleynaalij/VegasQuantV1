@@ -178,6 +178,13 @@ export function parseSimRun(
 /** Event-stream invariants the renderer relies on. */
 export function runErrors(run: SimRun): string[] {
   const errors: string[] = [];
+  // The renderer plays events; a run without any (e.g. a blocked run) has nothing to show.
+  if (!run.events.length)
+    errors.push(
+      run.status === "blocked"
+        ? `run blocked: ${run.blockers.join("; ") || "no reason given"}`
+        : "run has no events",
+    );
   if (run.mode === "demo" ? !run.is_demo : run.is_demo)
     errors.push("is_demo must be true exactly for demo runs");
   if ((run.mode === "scenario") !== !!run.scenario)
@@ -328,14 +335,17 @@ export function boxScore(run: SimRun) {
       "sack",
       "interception",
       "fumble_lost",
+      "kneel",
     ].includes(e.play_type);
     if (scrimmage) {
       team[e.possession].plays++;
       if (e.play_type !== "interception") team[e.possession].yards += e.yards;
     }
     if (e.turnover) team[e.possession].turnovers++;
-    if (e.play_type === "run" && rusher) {
-      const l = line(rusher);
+    // A kneel-down is a quarterback rushing attempt, as in official box scores.
+    const carrier = e.play_type === "kneel" ? (rusher ?? passer) : rusher;
+    if ((e.play_type === "run" || e.play_type === "kneel") && carrier) {
+      const l = line(carrier);
       l.rushing.att++;
       l.rushing.yds += e.yards;
       if (e.touchdown) l.rushing.td++;
