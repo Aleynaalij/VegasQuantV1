@@ -56,3 +56,17 @@ penalty_yards. Declined/offset flags on ordinary plays fall through to the
 ordinary outcome. Preserve scoring/compound exclusions and count routing.
 Same source/seed1701/10000 runs/oldOT/gate; no coupling/promotion regardless of
 in-sample pass. Preserve all prior results. Report support gaps explicitly.
+
+## Development experiment 0.1.7 — frozen before fitting
+Accept Claude's timeout/late-clock diagnosis. Template source timeout rows only
+when an immediately following same-game/same-quarter scrimmage state is available
+within eight rows with exactly the same clock; ambiguous contexts stay excluded.
+Use the source timeout_team mapped relative to that state's possession (offense or
+defense), elapsed0. At simulation time never sample a timeout for an exhausted
+team; condition the existing chosen context on legal remaining timeout actions.
+No synthetic timeout strategy, clock refund or automatic field-goal rule.
+For Q2/Q4/OT clock buckets use <=10s,11–30s,31–120s,normal. Retain exact existing
+prefix backoff/min30. All other0.1.6 settings/source/seed1701/10000oldOT/gate
+unchanged, including unsupported-censoring blocker. Any improvement is in-sample
+only; preserve old artifacts/results. Sources' play gaps are still empirical;
+adding timeout rows alone does not establish a complete clock-control policy.
