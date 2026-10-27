@@ -37,6 +37,8 @@ import BeatTheClose from "./beat-the-close";
 import MyTailRecord from "./my-tail-record";
 import RubyHub from "./ruby-cards";
 import HomeBrief from "./home-brief";
+import HomeFeatureCarousel from "./home-feature-carousel";
+import HomeGameList from "./home-game-list";
 import GamePicksShortcut from "./game-picks-shortcut";
 import DecisionBoard from "./decision-board";
 import PickCard from "./pick-card";
@@ -384,44 +386,15 @@ export default function DeskApp({
         )}
         {page === "home" && (
           <>
-            <SectionBoundary name="Ruby contributors">
-              <RubyHub
-                home
-                afterDoubleUp={
-                  <SectionBoundary name="Next kickoff">
-                    <HomeBrief games={d.games} />
-                  </SectionBoundary>
-                }
-              />
+            <SectionBoundary name="Contributor submission">
+              <RubyHub home composerOnly />
             </SectionBoundary>
-            <SectionBoundary name="Game picks">
-              <GamePicksShortcut games={d.games} />
+            <SectionBoundary name="Next kickoff">
+              <HomeFeatureCarousel games={d.games} />
             </SectionBoundary>
-            <SectionBoundary name="Pick of the Day">
-              <CandidateTracker activeOnly featured pickOfDay />
+            <SectionBoundary name="Game props">
+              <HomeGameList games={d.games} />
             </SectionBoundary>
-            <details className="ruby-home-details">
-              <summary>Games & scores</summary>
-              <SectionBoundary name="Scores">
-                <DecisionBoard games={d.games} />
-              </SectionBoundary>
-            </details>
-            <SectionBoundary name="Hail Mary">
-              <CandidateTracker activeOnly featured funPlayOnly />
-            </SectionBoundary>
-            <details className="ruby-home-details">
-              <summary>Research & more</summary>
-              <HowItWorks />
-              <SectionBoundary name="Research updates">
-                <ResearchPulse />
-              </SectionBoundary>
-              <SectionBoundary name="Explore">
-                <ExploreCards />
-              </SectionBoundary>
-              <SectionBoundary name="For you">
-                <ForYou games={d.games} />
-              </SectionBoundary>
-            </details>
           </>
         )}
         {page === "home" && access.admin && (
