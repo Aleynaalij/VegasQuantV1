@@ -39,7 +39,7 @@ class StateTests(unittest.TestCase):
         for kind in ('interception','fumble_lost','punt'):
             self.assertEqual(transition(State(),Action(kind,8,spot=0)).after.yardline,80)
             self.assertEqual(transition(State(),Action(kind,8,spot=40)).after.yardline,60)
-    def test_final_and_unimplemented_overtime(self):
+    def test_regulation_boundary_requires_explicit_ot_start(self):
         n=transition(State(period=4,clock=2,home_score=7),Action('kneel',2,-1)).after
         self.assertEqual(n.phase,'final')
         n=transition(State(period=4,clock=2),Action('kneel',2,-1)).after
@@ -53,7 +53,7 @@ class StateTests(unittest.TestCase):
     def test_reject_bad_states_actions(self):
         for kw in ({'clock':901},{'down':5},{'yardline':0},{'distance':76},{'home_score':-1}):
             with self.subTest(kw=kw),self.assertRaises(ValueError):State(**kw)
-        for a in (Action('run',901,1),Action('run',0,1),Action('pass_incomplete',1,5),Action('sack',1,1),Action('penalty',1),Action('run',1,76)):
+        for a in (Action('run',901,1),Action('run',0,1),Action('pass_incomplete',1,5),Action('sack',1,1),Action('unimplemented',1),Action('run',1,76)):
             with self.subTest(a=a),self.assertRaises(ValueError):transition(State(),a)
     def test_long_script_score_conservation(self):
         s=State();events=[]

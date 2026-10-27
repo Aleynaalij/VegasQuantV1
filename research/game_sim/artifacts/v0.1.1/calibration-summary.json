@@ -1,0 +1,43 @@
+{
+  "protocol_id": "vq-game-research-baseline-2026-10-27",
+  "model_artifact_sha256": "f80b3bafef9ab8c9e95af8cde279f20c07d14041bdcf1d332f124c04709aeb86",
+  "evaluation_kind": "2023 retrospective calibration diagnostics; not untouched holdout or prospective evidence",
+  "training_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "calibration_sha256": "4649804ee0f0a40b41e51ec75a1ce921949d7fab5459213488656b92f78560e8",
+  "training_games": 271,
+  "calibration_games": 272,
+  "summary": {
+    "margin": {
+      "n_games": 272,
+      "mean_crps": 8.226673876470588,
+      "baseline_mean_crps": 8.065627410398262,
+      "difference": 0.16104646607232595,
+      "game_bootstrap95": [
+        -0.009344878620532779,
+        0.3268502673529858
+      ],
+      "coverage80": 0.8602941176470589,
+      "width80": 43.0
+    },
+    "total": {
+      "n_games": 272,
+      "mean_crps": 8.105959808235294,
+      "baseline_mean_crps": 7.598448874927213,
+      "difference": 0.5075109333080814,
+      "game_bootstrap95": [
+        0.17591152479929043,
+        0.8357225433580054
+      ],
+      "coverage80": 0.7573529411764706,
+      "width80": 30.0
+    }
+  },
+  "home_win_brier": {
+    "n": 272,
+    "ties_excluded": 0,
+    "brier": 0.250386560000001
+  },
+  "market_benchmark": "Not scored: no independently verified contemporaneous price/distribution mapping supplied",
+  "status": "SHADOW_ONLY",
+  "adopted": false
+}

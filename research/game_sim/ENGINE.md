@@ -1,3 +1,5 @@
+> Milestone1 historical record. For the completed runnable research baseline, see RUNNING.md.
+
 # Game engine milestone 1: actual PBP audit and regulation transition kernel
 
 Owner direction October 27, 2026; #132. No changes to v0.3, UI, provider settings,
