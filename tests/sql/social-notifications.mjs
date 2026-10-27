@@ -72,8 +72,11 @@ await db.query(`update private.notification_deliveries set lease_until=now()-int
 jobs=(await db.query('select public.claim_social_notification_deliveries() jobs')).rows[0].jobs;const reclaimed=jobs.find(j=>j.id===bobJob.id);assert.ok(reclaimed);assert.notEqual(reclaimed.lease,bobJob.lease);
 await db.query(`select public.finish_social_notification_delivery($1,$2,'sent')`,[bobJob.id,bobJob.lease]);assert.equal((await db.query('select state from private.notification_deliveries where id=$1',[bobJob.id])).rows[0].state,'leased');
 await db.query(`update private.notification_deliveries set attempts=5,lease_until=now()-interval '1 second',due_at=now()-interval '1 second' where id=$1`,[bobJob.id]);await db.query('select public.claim_social_notification_deliveries()');assert.equal((await db.query('select state from private.notification_deliveries where id=$1',[bobJob.id])).rows[0].state,'dead');
+// The guard counts per user per clock minute. Seed this minute and the next just under the cap so
+// the check can't pass by rolling into a fresh minute partway through the loop.
+await db.query(`insert into private.notification_action_rates(user_id,window_at,attempts) select $1,date_trunc('minute',now())+m*interval '1 minute',58 from generate_series(0,1) m on conflict(user_id,window_at) do update set attempts=58`,[c]);
 let rateRejected=false;
-for(let i=0;i<65;i++){
+for(let i=0;i<5;i++){
  try{await db.exec(`delete from public.community_reactions where post_id='${p2}' and user_id='${c}';insert into public.community_reactions(post_id,user_id)values('${p2}','${c}');`);}catch(error){assert.match(error.message,/Please wait/);rateRejected=true;break;}
 }
 assert.equal(rateRejected,true);

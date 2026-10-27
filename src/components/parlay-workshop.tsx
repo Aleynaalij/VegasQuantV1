@@ -175,9 +175,11 @@ export default function ParlayWorkshop({
     };
     const refreshTimer = setInterval(() => void refreshCatalog(), 60000);
     window.addEventListener("focus", refreshCatalog);
-    const { data } = supabase.auth.onAuthStateChange((event) => {
-      if (event !== "INITIAL_SESSION" && event !== "TOKEN_REFRESHED")
-        void load();
+    // Supabase repeats SIGNED_IN when a tab regains focus or another tab signs in. Reload (which
+    // clears the draft and closes the save dialog) only when the account actually changes.
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
+      if ((session?.user.id || "") !== owner.current) void load();
     });
     return () => {
       live = false;
