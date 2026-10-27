@@ -119,7 +119,7 @@ def transition(s:State,a:Action)->Event:
         if y>=s.yardline:y=max(0,s.yardline//2)
         if -y>=100-s.yardline:y=-((100-s.yardline)//2)
         spot=s.yardline-y
-        if a.automatic_first:n=new_series(n,s.possession,spot)
+        if a.automatic_first or y>=s.distance:n=new_series(n,s.possession,spot)
         elif a.loss_of_down and s.down==4:n=new_series(n,other(s.possession),100-spot)
         else:n=replace(n,yardline=spot,down=s.down+int(a.loss_of_down),distance=max(1,s.distance-y))
     elif a.kind=='defensive_touchdown':

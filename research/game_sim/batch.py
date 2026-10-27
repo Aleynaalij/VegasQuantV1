@@ -27,9 +27,9 @@ def game(model,seed,*,both_possessions=True,max_events=1200,trace=False,workload
     sampler=Sampler(model,seed,prepared_tables);receiver=sampler.rng.choice(('home','away'))
     s=State(possession='away' if receiver=='home' else 'home',phase='kickoff',down=None,distance=None,yardline=65,second_half_receiver='away' if receiver=='home' else 'home',ot_both_possessions=both_possessions)
     allocator=Allocator(workload_context,seed ^ 0x51A7) if workload_context else None
-    events=[];kinds=Counter();rejected=Counter()
+    events=[];kinds=Counter();rejected=Counter();scoring=Counter()
     for sequence in range(max_events):
-        if s.phase=='final':return dict(seed=seed,home=s.home_score,away=s.away_score,event_count=sequence,kinds=dict(kinds),fallbacks=dict(sampler.fallbacks),rejected_templates=dict(rejected),events=events,workload=allocator.result() if allocator else None)
+        if s.phase=='final':return dict(seed=seed,home=s.home_score,away=s.away_score,event_count=sequence,scoring=dict(scoring),kinds=dict(kinds),fallbacks=dict(sampler.fallbacks),rejected_templates=dict(rejected),events=events,workload=allocator.result() if allocator else None)
         if s.phase=='overtime_required':a=Action('start_overtime',receiving_side=sampler.rng.choice(('home','away')))
         elif s.clock==0 and s.phase!='try':a=Action('end_period')
         else:
@@ -40,6 +40,9 @@ def game(model,seed,*,both_possessions=True,max_events=1200,trace=False,workload
                 except ValueError as e:rejected[str(e)]+=1
             else:raise ValueError('no legal empirical transition after 100 attempts')
         event=transition(s,a);kinds[a.kind]+=1
+        delta=event.after.home_score+event.after.away_score-s.home_score-s.away_score
+        if delta==6:scoring['touchdowns']+=1
+        if a.kind=='field_goal' and delta==3:scoring['field_goals']+=1
         participants=allocator.apply(event) if allocator else []
         if trace:events.append(dict(sequence=sequence,before=asdict(s),action=asdict(a),after=asdict(event.after),participants=participants))
         s=event.after

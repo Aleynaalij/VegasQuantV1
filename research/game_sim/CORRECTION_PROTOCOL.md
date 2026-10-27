@@ -24,3 +24,13 @@ team EPA effects and player historical opportunities use the same weights;
 retain raw counts and weighted support separately. Priors unchanged. QB scrambles
 remain in rushing EPA and QB carry volume (not standard dropback EPA); count
 qb_scramble explicitly. No coupling until baseline gate passes.
+
+## Development experiment 0.1.5 — frozen after 0.1.4 gate failed
+0.1.4 corrects enforcement and brings punts into range, but TD/points still fail.
+Next hypothesis is overly broad state pooling: 4–10 yards to gain and the entire
+red zone share outcomes even when goal-to-go geometry differs. Before fitting,
+fix new distance bins 1,2,3,4–6,7–10,11+; field bins 0–5,6–10,11–20,21–40,
+41–60,61–80,81–100, each marked goal-to-go when distance equals yardline.
+Keep the same prefix backoff, minimum30, seed, run count and reproduction gate.
+This is disclosed in-sample model development, not an untouched validation or
+permission to select a flattering model. Preserve all earlier failed gate results.

@@ -5,13 +5,18 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other
 
-MODEL_ID='vq-empirical-game/0.1.1'
+MODEL_ID='vq-empirical-game/0.1.5'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
     return int(f)
 def bucket(s):
-    return (s.phase,s.down or 0,'short' if (s.distance or 0)<=3 else 'medium' if (s.distance or 0)<=10 else 'long','red' if s.yardline<=20 else 'mid' if s.yardline<=60 else 'back','late' if s.period in (2,4,5) and s.clock<=120 else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
+    distance=s.distance or 0
+    distance_bin=str(distance) if distance<=3 else '4-6' if distance<=6 else '7-10' if distance<=10 else '11+'
+    field_bin=next(str(edge) for edge in (5,10,20,40,60,80,100) if s.yardline<=edge)
+    if s.phase=='scrimmage' and distance==s.yardline:field_bin+=':goal'
+    return (s.phase,s.down or 0,distance_bin,field_bin,'late' if s.period in (2,4,5) and s.clock<=120 else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
+
 def contexts(s):
     b=bucket(s)
     return ['|'.join(map(str,b[:n])) for n in (6,4,3,2,1)]
@@ -19,7 +24,12 @@ def source_state(r):
     side='home' if r['posteam']==r['home_team'] else 'away'
     kind=r['play_type']
     phase='try' if kind=='extra_point' or r.get('two_point_attempt')=='1' else 'kickoff' if kind=='kickoff' else 'scrimmage'
-    return State(period=integer(r['qtr']),clock=integer(r['quarter_seconds_remaining']),possession=side,yardline=integer(r['yardline_100']) if phase=='scrimmage' else 65,down=integer(r['down']) if phase=='scrimmage' else None,distance=integer(r['ydstogo']) if phase=='scrimmage' else None,home_score=integer(r['posteam_score'] if side=='home' else r['defteam_score']),away_score=integer(r['defteam_score'] if side=='home' else r['posteam_score']),phase=phase)
+    # nflverse kickoff posteam is the receiver; the kernel stores the kicker.
+    home_score=integer(r['posteam_score'] if side=='home' else r['defteam_score'])
+    away_score=integer(r['defteam_score'] if side=='home' else r['posteam_score'])
+    possession=other(side) if phase=='kickoff' else side
+    return State(period=integer(r['qtr']),clock=integer(r['quarter_seconds_remaining']),possession=possession,yardline=integer(r['yardline_100']) if phase=='scrimmage' else 65,down=integer(r['down']) if phase=='scrimmage' else None,distance=integer(r['ydstogo']) if phase=='scrimmage' else None,home_score=home_score,away_score=away_score,phase=phase)
+
 
 def fit(paths):
     counts=Counter();buckets=defaultdict(list);sources=[];templates=[];ids={};seen_sources=set();seen_games=set()
@@ -51,14 +61,15 @@ def fit(paths):
                         following=next((t for t in rows[i+1:i+10] if t['game_id']==r['game_id'] and t['posteam'] and t.get('down') and t.get('yardline_100')),None)
                         if following is None:raise ValueError('kickoff landing missing')
                         a=dict(kind='kickoff',elapsed=elapsed,receiver_yardline=integer(following['yardline_100']))
-                        if following['posteam']==r['posteam']:a['receiving_side']='same'
-                elif kind=='no_play' and r.get('penalty')=='1':
+                        if following['posteam']==r['defteam']:a['receiving_side']='same'
+                elif r.get('penalty')=='1':
                     if nxt['posteam']!=r['posteam'] or nxt['qtr']!=r['qtr']:raise ValueError('compound penalty')
+                    if nxt.get('posteam_score')!=r.get('posteam_score') or nxt.get('defteam_score')!=r.get('defteam_score'):raise ValueError('scoring penalty combination')
                     gain=s.yardline-integer(nxt['yardline_100']);nd=integer(nxt['down'])
-                    auto=r.get('first_down_penalty')=='1';loss=nd==s.down+1
-                    if nd not in (s.down,s.down+1) and not(auto and nd==1):raise ValueError('compound down enforcement')
+                    # A source first down by yardage is not an automatic-first foul.
+                    auto=r.get('first_down_penalty')=='1' and gain<s.distance;loss=nd==s.down+1
+                    if nd not in (s.down,s.down+1) and not((auto or gain>=s.distance) and nd==1):raise ValueError('compound down enforcement')
                     a=dict(kind='penalty',elapsed=elapsed,yards=gain,automatic_first=auto,loss_of_down=loss)
-                elif r.get('penalty')=='1':raise ValueError('live ball penalty')
                 elif r.get('touchdown')=='1' and r.get('td_team') and r['td_team']!=r['posteam']:a=dict(kind='defensive_touchdown',elapsed=max(1,elapsed))
                 elif kind in ('run','pass','qb_kneel','qb_spike'):
                     if elapsed<1:raise ValueError('missing snap elapsed')
@@ -85,6 +96,7 @@ def fit(paths):
                 if key not in ids:ids[key]=len(templates);templates.append(a)
                 for ctx in contexts(s):buckets[ctx].append(ids[key])
                 counts['accepted']+=1;counts['kind:'+a['kind']]+=1
+                if r.get('penalty')=='1' and kind!='no_play':counts['normalized_live_ball_penalty']+=1
             except (ValueError,TypeError,KeyError) as e:counts['excluded:'+str(e)]+=1
     if not templates:raise ValueError('No training templates')
     model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),minimum_context=30,limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','No probability calibration or edge approval'])
@@ -92,7 +104,7 @@ def fit(paths):
 
 class Sampler:
     def __init__(self,model,seed,tables=None):
-        if model['model_id']!=MODEL_ID:raise ValueError('unsupported model')
+        if model['model_id']!=MODEL_ID:raise ValueError('unsupported model; use its versioned implementation')
         self.model=model;self.rng=random.Random(seed);self.tables=tables if tables is not None else {};self.fallbacks=Counter()
         if tables is not None:return
         for ctx,entries in model['buckets'].items():
