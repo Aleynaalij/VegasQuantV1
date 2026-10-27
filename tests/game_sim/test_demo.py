@@ -19,6 +19,27 @@ class DemoTests(unittest.TestCase):
         a['possession'] = 'away'
         self.assertEqual(ball_x(a), 25)
 
+    def test_player_identity_and_credit(self):
+        names = {}
+        for e in build_demo()['replay']['events']:
+            for p in e['participants']:
+                self.assertEqual(names.setdefault(p['player_id'], p['name']), p['name'])
+            if e['play_type'] == 'pass_complete':
+                self.assertIn('passer', [p['role'] for p in e['participants']])
+                self.assertEqual(sum(d['value'] for d in e['stat_deltas'] if d['stat'] == 'passing_yards'), e['yards'])
+
+    def test_kicks_and_flags(self):
+        events = build_demo()['replay']['events']
+        kickoff = next(e for e in events if e['play_type'] == 'kickoff')
+        self.assertEqual(kickoff['ball_start_x'], 35)
+        self.assertEqual(kickoff['ball_end_x'], 100)
+        for e in events:
+            if e['play_type'] in ('kickoff', 'extra_point'):
+                self.assertIsNone(e['before']['down'])
+                self.assertIsNone(e['before']['yards_to_go'])
+            else:
+                self.assertIsNone(e['flags']['made'])
+
     def test_corruptions_rejected(self):
         mutations = [
             lambda r: r.update(mode='pregame'),
