@@ -45,3 +45,4 @@ jobs:
           node scripts/ui-smoke/nfl-game.mjs
           node scripts/ui-smoke/parlay-save.mjs
           node scripts/ui-smoke/nba-paused.mjs
+          node scripts/ui-smoke/simulator.mjs
