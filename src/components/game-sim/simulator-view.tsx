@@ -34,6 +34,7 @@ function useReducedMotion() {
 }
 
 export default function SimulatorView({ run }: { run: SimRun }) {
+  const research = run.run_id.startsWith("research:");
   const events = run.events;
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
@@ -252,7 +253,9 @@ export default function SimulatorView({ run }: { run: SimRun }) {
         {tab === "box" && (
           <>
             <p className="sim-fine">
-              Every number below is counted from the plays in this game.
+              {research
+                ? "This league baseline does not provide complete player or team credited-stat boxes. Scores are shown above; yard/turnover totals remain unavailable."
+                : "Every number below is counted from the plays in this game."}
             </p>
             <table className="sim-table">
               <thead>
@@ -267,9 +270,9 @@ export default function SimulatorView({ run }: { run: SimRun }) {
                 {(["away", "home"] as const).map((s) => (
                   <tr key={s}>
                     <th scope="row">{run.game.teams[s].abbr}</th>
-                    <td>{box.team[s].plays}</td>
-                    <td>{box.team[s].yards}</td>
-                    <td>{box.team[s].turnovers}</td>
+                    <td>{research ? "Unavailable" : box.team[s].plays}</td>
+                    <td>{research ? "Unavailable" : box.team[s].yards}</td>
+                    <td>{research ? "Unavailable" : box.team[s].turnovers}</td>
                   </tr>
                 ))}
               </tbody>

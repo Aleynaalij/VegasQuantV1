@@ -22,6 +22,11 @@ export const PLAY_TYPES = [
   "spike",
   "timeout",
   "end_period",
+  "defensive_touchdown",
+  "kick_return_touchdown",
+  "fumble_recovered",
+  "blocked_field_goal",
+  "punt_blocked",
 ] as const;
 
 const side = z.enum(["home", "away"]);
@@ -419,6 +424,16 @@ export function playText(run: SimRun, e: SimEvent) {
   const td = e.touchdown ? " · TOUCHDOWN" : "";
   const fd = e.first_down && !e.touchdown ? " · first down" : "";
   switch (e.play_type) {
+    case "defensive_touchdown":
+      return "Defensive return · TOUCHDOWN";
+    case "kick_return_touchdown":
+      return "Kickoff return · TOUCHDOWN";
+    case "fumble_recovered":
+      return `${offense} recovers the fumble · ball ${gain(e.yards)} (credited stats unavailable)`;
+    case "blocked_field_goal":
+      return `${offense} field goal blocked`;
+    case "punt_blocked":
+      return `${offense} punt blocked`;
     case "run":
       return `${rusher ?? offense} run, ${gain(e.yards)}${td}${fd}`;
     case "pass_complete":

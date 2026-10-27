@@ -1,1 +1,0 @@
-do $$ declare d text; begin select pg_get_functiondef('public.claim_push_deliveries()'::regprocedure) into d; d:=replace(d,'''type'',d.kind,','''type'',d.kind,''event_key'',d.event_key,'); execute d; end $$;
