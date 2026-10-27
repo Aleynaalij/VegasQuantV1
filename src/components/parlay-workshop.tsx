@@ -307,7 +307,7 @@ export default function ParlayWorkshop({
       setChosen([]);
       setOpen(false);
       router.replace(
-        `/feed?view=${mode === "catalog" ? "legs" : "parlays"}&saved=${encodeURIComponent(confirmed.id)}#my-parlay-${confirmed.id}`,
+        `/community?build=1&saved=${encodeURIComponent(confirmed.id)}#my-parlay-${confirmed.id}`,
         { scroll: false },
       );
     } catch {
@@ -402,7 +402,7 @@ export default function ParlayWorkshop({
     if (!id || !(await continueAfterSave())) return;
     if (mode === "catalog")
       router.push(
-        `/feed?view=parlays&saved=${encodeURIComponent(id)}#my-parlay-${id}`,
+        `/community?build=1&saved=${encodeURIComponent(id)}#my-parlay-${id}`,
       );
     else {
       const card = document.getElementById(`my-parlay-${id}`);

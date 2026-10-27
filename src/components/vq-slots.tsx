@@ -12,7 +12,7 @@ export default function VqSlots() {
   const [pull, setPull] = useState(0),
     [copied, setCopied] = useState(false),
     [refresh, setRefresh] = useState(0);
-  const previous = useRef<string | null>(null),
+  const previous = useRef<Set<string>>(new Set()),
     start = useRef<number | null>(null),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lock = useRef(false),
@@ -114,7 +114,7 @@ export default function VqSlots() {
               "A game started during the spin. Refresh the board and try again.",
             );
           } else {
-            previous.current = ticketKey(result);
+            previous.current.add(ticketKey(result));
             setTicket(result);
             dialog.current?.showModal();
           }

@@ -101,7 +101,7 @@ export function Shell({
   const sport = NBA_PAUSED ? "nfl" : requested;
   const home = sport === "nba" ? "/nba" : "/";
   const community = sport === "nba" ? "/community?sport=nba" : "/community";
-  const feed = sport === "nba" ? "/nba/zone" : "/feed";
+  const feed = "/slots";
   const records = sport === "nba" ? "/nba/records" : "/history";
   const sportSection = [
     "game",
@@ -159,14 +159,14 @@ export function Shell({
             Home
           </Link>
           <Link
-            aria-current={
-              ["feed", "game"].includes(active) ? "page" : undefined
-            }
-            className={`feed-nav-link ${["feed", "game"].includes(active) ? "active" : ""}`}
+            aria-current={active === "slots" ? "page" : undefined}
+            className={`feed-nav-link ${active === "slots" ? "active" : ""}`}
             href={feed}
           >
-            <BrandMark />
-            The Zone
+            <span className="vq-slots-nav-icon" aria-hidden="true">
+              ♦<i />
+            </span>
+            VQ Slots
           </Link>
           <Link
             aria-current={active === "community" ? "page" : undefined}
@@ -174,7 +174,7 @@ export function Shell({
             href={community}
           >
             <Users size={19} />
-            Community
+            The Zone
           </Link>
           <AdminOnly>
             <Link
@@ -252,7 +252,8 @@ export function Shell({
                 {
                   home: sport === "nba" ? "NBA desk" : "Sports desk",
                   game: "The Zone",
-                  community: "Community",
+                  community: "The Zone",
+                  slots: "VQ Slots",
                   feed: "The Zone",
                   history: "Records",
                   performance: "Performance",
@@ -343,14 +344,14 @@ export function Shell({
             Home
           </Link>
           <Link
-            aria-current={
-              ["feed", "game"].includes(active) ? "page" : undefined
-            }
-            className={`feed-nav-link ${["feed", "game"].includes(active) ? "active" : ""}`}
+            aria-current={active === "slots" ? "page" : undefined}
+            className={`feed-nav-link ${active === "slots" ? "active" : ""}`}
             href={feed}
           >
-            <BrandMark />
-            The Zone
+            <span className="vq-slots-nav-icon" aria-hidden="true">
+              ♦<i />
+            </span>
+            VQ Slots
           </Link>
           <Link
             aria-current={active === "community" ? "page" : undefined}
@@ -358,7 +359,7 @@ export function Shell({
             href={community}
           >
             <Users size={19} />
-            Community
+            The Zone
           </Link>
           <AdminOnly>
             <Link

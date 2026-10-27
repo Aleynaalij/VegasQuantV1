@@ -44,7 +44,7 @@ const group = (r: SlotLeg) =>
   `${r.game_id}|${/moneyline|spread|\bside\b/i.test(r.market) ? "team-side" : clean(r.name)}`;
 export function spinTicket(
   rows: SlotLeg[],
-  previous: string | null,
+  previous: string | ReadonlySet<string> | null,
   random: () => number = Math.random,
   now = Date.now(),
 ): SlotLeg[] {
@@ -71,7 +71,9 @@ export function spinTicket(
         return true;
       })
       .slice(0, 8);
-    if (ticketKey(selected) !== previous) return selected;
+    const key = ticketKey(selected);
+    if (typeof previous === "string" ? key !== previous : !previous?.has(key))
+      return selected;
   }
   throw new Error(
     "No different ticket could be drawn from this pool. Try again after the board updates.",
