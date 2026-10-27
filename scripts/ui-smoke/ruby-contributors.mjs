@@ -3,6 +3,18 @@ import assert from "node:assert/strict";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
+// Pages poll in the background, so "network idle" can take longer than a navigation. Navigate on
+// load, then give requests a bounded chance to settle; each step still waits for its own content.
+const settle = (page) =>
+  page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
+const go = async (page, url) => {
+  await page.goto(url, { waitUntil: "load", timeout: 30000 });
+  await settle(page);
+};
+const reloadSettled = async (page) => {
+  await page.reload({ waitUntil: "load", timeout: 30000 });
+  await settle(page);
+};
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH,
   headless: true,
@@ -311,7 +323,7 @@ for (const { width, photoOnly } of [
           body: storedSlip,
         }),
   );
-  await page.goto(base + "/", { waitUntil: "networkidle" });
+  await go(page, base + "/");
   await page.getByRole("button", { name: "Submit today’s lay" }).click();
   if (photoOnly) {
     assert.equal(
@@ -385,7 +397,7 @@ for (const { width, photoOnly } of [
   // After the third slip of the day, "View your lay" becomes the gold button; it keeps its dark
   // label under the dark theme's link color.
   full = true;
-  await page.reload({ waitUntil: "networkidle" });
+  await reloadSettled(page);
   const viewLay = page.locator("a.ruby-primary", { hasText: "View your lay" });
   await viewLay.waitFor();
   assert.equal(
@@ -501,7 +513,7 @@ for (const { width, photoOnly } of [
   );
   // The next day, Home asks about each earlier slip one at a time; results feed the standings.
   reviewing = true;
-  await page.goto(base + "/", { waitUntil: "networkidle" });
+  await go(page, base + "/");
   const prompt = page.getByRole("region", { name: "Confirm your slip result" });
   await prompt.getByRole("heading", { name: "Did this slip clear?" }).waitFor();
   assert.ok((await prompt.innerText()).includes("Yesterday’s lay"));
@@ -527,16 +539,14 @@ for (const { width, photoOnly } of [
   reviewing = false;
   reported = null;
   // Only an admin sees "Remove from The Zone"; it records a hide for that card.
-  await page.goto(base + "/feed?view=contributors", {
-    waitUntil: "networkidle",
-  });
+  await go(page, base + "/feed?view=contributors");
   await page.locator(".ruby-contributors").waitFor();
   assert.equal(
     await page.getByRole("button", { name: "Remove from The Zone" }).count(),
     0,
   );
   adminView = true;
-  await page.reload({ waitUntil: "networkidle" });
+  await reloadSettled(page);
   const remove = page
     .locator(".ruby-card.ruby-orbit")
     .getByRole("button", { name: "Remove from The Zone" });
@@ -549,12 +559,12 @@ for (const { width, photoOnly } of [
   adminView = false;
   // The contributor sees contributor lays first on Latest; a general member opens The Zone on
   // research and AI legs, and reaches contributor lays from the Contributors tab.
-  await page.goto(base + "/feed", { waitUntil: "networkidle" });
+  await go(page, base + "/feed");
   await page.locator(".ruby-contributors").waitFor();
   member = true;
   reviewing = true;
   reported = "WIN";
-  await page.goto(base + "/feed", { waitUntil: "networkidle" });
+  await go(page, base + "/feed");
   await page.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
   assert.equal(await page.locator(".ruby-hub").count(), 0);
   assert.deepEqual(
@@ -567,7 +577,7 @@ for (const { width, photoOnly } of [
     .click();
   await page.locator(".ruby-contributors").waitFor();
   // Members don't see the board or records on the row; opening a capper shows their rank.
-  await page.waitForLoadState("networkidle");
+  await settle(page);
   assert.equal(await page.locator(".ruby-board").count(), 0);
   assert.equal(await page.locator(".ruby-person-record").count(), 0);
   await page
@@ -583,7 +593,7 @@ for (const { width, photoOnly } of [
   // Analyst Double Up shares Home’s slot and appears for ordinary members in The Zone.
   analystActive = true;
   member = true;
-  await page.goto(base + "/", { waitUntil: "networkidle" });
+  await go(page, base + "/");
   await page.locator(".analyst-double-up").waitFor();
   assert.equal(await page.locator(".analyst-double-up").count(), 1);
   assert.match(
@@ -622,12 +632,10 @@ for (const { width, photoOnly } of [
     "Sample A 40+ receiving yards\nSample B 40+ receiving yards\nSample C 40+ receiving yards",
   );
   await page.keyboard.press("Escape");
-  await page.goto(base + "/feed?double_up=" + analyst().id, {
-    waitUntil: "networkidle",
-  });
+  await go(page, base + "/feed?double_up=" + analyst().id);
   await page.locator(".analyst-double-up").waitFor();
   analystExpired = true;
-  await page.reload({ waitUntil: "networkidle" });
+  await reloadSettled(page);
   await page
     .getByText("Pregame copying closed. Original ticket retained.")
     .waitFor();
