@@ -755,3 +755,6 @@ html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd !
 .vq-prop-detail small { color: #9aa59f; }
 .vq-prop-note { margin: 10px 2px 0; color: #8f9a94; font-size: .72rem; line-height: 1.45; }
 @media (max-width: 360px) { .vq-prop-head, .vq-prop-row { grid-template-columns: 36px minmax(0, 1fr) 50px 54px 42px; gap: 5px; } .vq-prop-row .player-portrait { width: 36px; height: 36px; } .vq-prop-detail { padding-left: 12px; } }
+.vq-prop-copy { display: flex; align-items: center; gap: 12px; padding: 10px 12px 0; }
+.vq-prop-copy button { min-height: 40px; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: .8rem; }
+.vq-prop-copy span { color: #8ce3bd; font-size: .78rem; }
