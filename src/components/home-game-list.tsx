@@ -7,6 +7,13 @@ import TeamLogo from "./team-logo";
 import PlayerPortrait from "./player-portrait";
 import LegActions from "./leg-actions";
 import GamblyLink from "./gambly-link";
+import { useLegForms } from "./leg-form";
+import {
+  americanPrice,
+  moneylineRead,
+  propLine,
+  type MoneylineRead,
+} from "@/lib/home-props";
 import {
   canBuildWith,
   selectionError,
@@ -32,6 +39,10 @@ export default function HomeGameList({ games }: { games: Game[] }) {
     [retry, setRetry] = useState(0);
   const [chosen, setChosen] = useState<string[]>([]);
   const [draftNotice, setDraftNotice] = useState("");
+  const [openKey, setOpenKey] = useState("");
+  const [statFilter, setStatFilter] = useState<Record<string, string>>({});
+  const [lines, setLines] = useState<Record<string, MoneylineRead>>({});
+  const { forms } = useLegForms(legs.map((l) => l.leg_key));
   async function toggleLeg(key: string) {
     const leg = legs.find((r) => r.leg_key === key);
     const game = games.find((g) => g.id === leg?.game_id);
@@ -150,6 +161,57 @@ export default function HomeGameList({ games }: { games: Game[] }) {
       sub.data.subscription.unsubscribe();
     };
   }, [opened, ids, retry]);
+  // Card faces carry the latest FanDuel moneyline and its no-vig split (members can read it).
+  useEffect(() => {
+    if (!ids) return;
+    let live = true,
+      generation = 0;
+    async function load() {
+      const n = ++generation;
+      const session = await supabase.auth.getSession();
+      if (!live || n !== generation) return;
+      if (!session.data.session) {
+        setLines({});
+        return;
+      }
+      const r = await supabase
+        .from("source_observations")
+        .select("game_id,payload")
+        .in("game_id", ids.split(","))
+        .eq("kind", "odds")
+        .eq("payload->>book", "FanDuel")
+        .eq("payload->>market", "h2h")
+        .order("recorded_at", { ascending: false })
+        .limit(200);
+      if (!live || n !== generation || r.error) return;
+      const next: Record<string, MoneylineRead> = {};
+      for (const row of r.data || []) {
+        if (next[row.game_id]) continue;
+        const game = slate.find((g) => g.id === row.game_id);
+        const read = game
+          ? moneylineRead(
+              row.payload?.outcomes || [],
+              game.home_team,
+              game.away_team,
+            )
+          : null;
+        if (read) next[row.game_id] = read;
+      }
+      setLines(next);
+    }
+    void load();
+    // Prices move: refresh on the same one-minute cadence as the game page's snapshots, and
+    // reload (or clear) when the account signs in or out.
+    const timer = setInterval(load, 60000);
+    const auth = supabase.auth.onAuthStateChange(() => void load());
+    return () => {
+      live = false;
+      clearInterval(timer);
+      auth.data.subscription.unsubscribe();
+    };
+    // slate is derived from ids; the effect keys on the id list only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ids]);
   return (
     <section
       id="home-games"
@@ -174,22 +236,25 @@ export default function HomeGameList({ games }: { games: Game[] }) {
             }}
           >
             <summary>
-              <span className="vq-game-teams">
-                <TeamLogo team={g.away_team} size={26} />
-                <b>{g.away_team.split(" ").at(-1)}</b>
-                <small>@</small>
-                <TeamLogo team={g.home_team} size={26} />
-                <b>{g.home_team.split(" ").at(-1)}</b>
+              <span className="vq-game-head">
+                <span className="vq-game-teams">
+                  <TeamLogo team={g.away_team} size={26} />
+                  <b>{g.away_team.split(" ").at(-1)}</b>
+                  <small>@</small>
+                  <TeamLogo team={g.home_team} size={26} />
+                  <b>{g.home_team.split(" ").at(-1)}</b>
+                </span>
+                <span className="vq-game-time">
+                  {kickoffText(g.kickoff)} ET <span aria-hidden="true">⌄</span>
+                </span>
               </span>
-              <span className="vq-game-time">
-                {new Date(g.kickoff).toLocaleString("en-US", {
-                  timeZone: "America/New_York",
-                  weekday: "short",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}{" "}
-                ET <span aria-hidden="true">⌄</span>
-              </span>
+              {lines[g.id] ? (
+                <MoneylineFace
+                  read={lines[g.id]}
+                  home={g.home_team}
+                  away={g.away_team}
+                />
+              ) : null}
             </summary>
             <div className="vq-game-props">
               {notice ? (
@@ -205,58 +270,240 @@ export default function HomeGameList({ games }: { games: Game[] }) {
               {!notice && !legs.some((r) => r.game_id === g.id) ? (
                 <p>No published props for this game yet.</p>
               ) : null}
-              {legs
-                .filter((r) => r.game_id === g.id)
-                .map((r) => (
-                  <article key={r.leg_key} className="vq-inline-prop">
-                    <div className="vq-inline-prop-title">
-                      <PlayerPortrait name={r.name} />
-                      <div>
-                        <h3>{r.name}</h3>
-                        <p>{r.market}</p>
-                        <small>
-                          {r.quote || "Analyst target · price not verified"}
-                        </small>
-                      </div>
-                    </div>
-                    {canBuildWith(r as unknown as PublishedLeg) ||
-                    chosen.includes(r.leg_key) ? (
-                      <button
-                        type="button"
-                        className="secondary"
-                        aria-pressed={chosen.includes(r.leg_key)}
-                        onClick={() => void toggleLeg(r.leg_key)}
+              {(() => {
+                const rows = legs.filter((r) => r.game_id === g.id);
+                if (!rows.length) return null;
+                const stats = [
+                  ...new Set(
+                    rows.flatMap((r) => propLine(r.market, r.name)?.stat || []),
+                  ),
+                ];
+                const active = statFilter[g.id] || "All";
+                const shown = rows.filter(
+                  (r) =>
+                    active === "All" ||
+                    propLine(r.market, r.name)?.stat === active,
+                );
+                return (
+                  <>
+                    {stats.length > 1 ? (
+                      <div
+                        className="vq-prop-filters"
+                        role="group"
+                        aria-label="Filter by stat"
                       >
-                        {chosen.includes(r.leg_key)
-                          ? "✓ Added to your lay"
-                          : "Add to your lay"}
-                      </button>
+                        {["All", ...stats].map((stat) => (
+                          <button
+                            key={stat}
+                            type="button"
+                            aria-pressed={active === stat}
+                            onClick={() =>
+                              setStatFilter((f) => ({ ...f, [g.id]: stat }))
+                            }
+                          >
+                            {stat}
+                          </button>
+                        ))}
+                      </div>
                     ) : null}
-                    <LegActions
-                      legKey={r.leg_key}
-                      expired={
-                        Date.parse(r.expires_at) <= Date.now() ||
-                        Date.parse(g.kickoff) <= Date.now()
-                      }
-                    />
-                    {r.gambly_url && Date.parse(r.expires_at) > Date.now() ? (
-                      <GamblyLink
-                        url={r.gambly_url}
-                        selection={r.copy_text || `${r.name} ${r.market}`}
-                        kalshiLegKeys={[r.leg_key]}
-                      />
-                    ) : null}
-                    <details>
-                      <summary>Why this prop · risks</summary>
-                      <p>{r.why}</p>
-                      <p>{r.risk}</p>
-                    </details>
-                  </article>
-                ))}
+                    <div className="vq-prop-table">
+                      <div className="vq-prop-head" aria-hidden="true">
+                        <span>Player</span>
+                        <span>Form</span>
+                        <span>Line</span>
+                        <span>Stat</span>
+                      </div>
+                      {shown.map((r) => {
+                        const line = propLine(r.market, r.name);
+                        const form = forms[r.leg_key];
+                        const open = openKey === r.leg_key;
+                        const [first, ...rest] = r.name.trim().split(/\s+/);
+                        return (
+                          <article key={r.leg_key} className="vq-prop">
+                            <button
+                              type="button"
+                              className="vq-prop-row"
+                              aria-expanded={open}
+                              aria-label={`${r.name}, ${line ? `${line.direction} ${line.line} ${line.stat}` : r.market}${form?.sample ? `, cleared ${form.cleared} of last ${form.sample}` : ", no recent form"}. Show details`}
+                              onClick={() => setOpenKey(open ? "" : r.leg_key)}
+                            >
+                              <PlayerPortrait name={r.name} />
+                              <span className="vq-prop-name">
+                                <b>{rest.length ? rest.join(" ") : first}</b>
+                                <small>
+                                  {rest.length ? `${first[0]}. · ` : ""}
+                                  {form?.position || "NFL"} ·{" "}
+                                  {shortDate(g.kickoff)}
+                                </small>
+                              </span>
+                              <FormGauge
+                                cleared={form?.cleared}
+                                sample={form?.sample}
+                              />
+                              <span className="vq-prop-line">
+                                {line ? (
+                                  <>
+                                    <small>{line.direction}</small> {line.line}
+                                  </>
+                                ) : (
+                                  "Target"
+                                )}
+                              </span>
+                              <span className="vq-prop-stat">
+                                {line?.stat || r.market}
+                              </span>
+                            </button>
+                            {open ? (
+                              <div className="vq-prop-detail">
+                                <p>
+                                  {r.name} · {r.market}
+                                  <br />
+                                  <small>
+                                    {r.quote ||
+                                      "Analyst target · price not verified"}
+                                    {form
+                                      ? ` · cleared ${form.cleared} of last ${form.sample}${form.median === null ? "" : `, median ${Math.round(form.median)}`}`
+                                      : ""}
+                                  </small>
+                                </p>
+                                {canBuildWith(r as unknown as PublishedLeg) ||
+                                chosen.includes(r.leg_key) ? (
+                                  <button
+                                    type="button"
+                                    className="secondary"
+                                    aria-pressed={chosen.includes(r.leg_key)}
+                                    onClick={() => void toggleLeg(r.leg_key)}
+                                  >
+                                    {chosen.includes(r.leg_key)
+                                      ? "✓ Added to your lay"
+                                      : "Add to your lay"}
+                                  </button>
+                                ) : null}
+                                <LegActions
+                                  legKey={r.leg_key}
+                                  expired={
+                                    Date.parse(r.expires_at) <= Date.now() ||
+                                    Date.parse(g.kickoff) <= Date.now()
+                                  }
+                                />
+                                {r.gambly_url &&
+                                Date.parse(r.expires_at) > Date.now() ? (
+                                  <GamblyLink
+                                    url={r.gambly_url}
+                                    selection={
+                                      r.copy_text || `${r.name} ${r.market}`
+                                    }
+                                    kalshiLegKeys={[r.leg_key]}
+                                  />
+                                ) : null}
+                                <details>
+                                  <summary>Why this prop · risks</summary>
+                                  <p>{r.why}</p>
+                                  <p>{r.risk}</p>
+                                </details>
+                              </div>
+                            ) : null}
+                          </article>
+                        );
+                      })}
+                    </div>
+                    <p className="vq-prop-note">
+                      Form is how often the player cleared this line in recent
+                      games, not a model probability. Tap a player for the case,
+                      price and actions.
+                    </p>
+                  </>
+                );
+              })()}
             </div>
           </details>
         ))
       )}
     </section>
+  );
+}
+
+const kickoffText = (kickoff: string) =>
+  new Date(kickoff).toLocaleString("en-US", {
+    timeZone: "America/New_York",
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+const shortDate = (kickoff: string) =>
+  new Date(kickoff).toLocaleDateString("en-US", {
+    timeZone: "America/New_York",
+    month: "numeric",
+    day: "numeric",
+  });
+const tone = (pct: number) => (pct >= 70 ? "good" : pct >= 50 ? "mid" : "low");
+
+/** Half-ring gauge of a player's recent clear rate for this exact line. */
+function FormGauge({ cleared, sample }: { cleared?: number; sample?: number }) {
+  if (!sample)
+    return (
+      <span className="vq-gauge is-empty" aria-label="No recent form">
+        <svg viewBox="0 0 64 36" aria-hidden="true">
+          <path d="M6 32a26 26 0 0 1 52 0" />
+        </svg>
+        <b>–</b>
+      </span>
+    );
+  const pct = Math.round(((cleared || 0) / sample) * 100);
+  const length = Math.PI * 26;
+  return (
+    <span
+      className={`vq-gauge is-${tone(pct)}`}
+      aria-label={`Cleared ${cleared} of last ${sample}`}
+    >
+      <svg viewBox="0 0 64 36" aria-hidden="true">
+        <path d="M6 32a26 26 0 0 1 52 0" />
+        <path
+          className="vq-gauge-fill"
+          d="M6 32a26 26 0 0 1 52 0"
+          strokeDasharray={`${(pct / 100) * length} ${length}`}
+        />
+      </svg>
+      <b>{pct}%</b>
+      <small>L{sample}</small>
+    </span>
+  );
+}
+
+/** Card-face moneyline: both prices and the market favorite's no-vig win chance. */
+function MoneylineFace({
+  read,
+  home,
+  away,
+}: {
+  read: MoneylineRead;
+  home: string;
+  away: string;
+}) {
+  const favorite =
+    read.home.probability >= read.away.probability ? "home" : "away";
+  const team = (favorite === "home" ? home : away).split(" ").at(-1);
+  const pct = Math.round(read[favorite].probability * 100);
+  return (
+    <span className="vq-ml-face">
+      <span className="vq-ml-chip">ML</span>
+      <span className="vq-ml-prices">
+        <span>
+          {away.split(" ").at(-1)} {americanPrice(read.away.price)}
+        </span>
+        <span>
+          {home.split(" ").at(-1)} {americanPrice(read.home.price)}
+        </span>
+      </span>
+      <span
+        className={`vq-ml-lean is-${tone(pct)}`}
+        aria-label={`Market lean: ${team}, ${pct}% no-vig win chance at FanDuel`}
+      >
+        <small>Market lean</small>
+        <b>
+          {team} {pct}%
+        </b>
+      </span>
+    </span>
   );
 }
