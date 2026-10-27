@@ -50,6 +50,12 @@ http.createServer((req, res) => {
   if (rpc("community_member")) return json(res, { username: "SampleMember", region: "Sample", avatar: null, visible: true, events: [] });
   if (rpc("challenge_community_count")) return json(res, 3);
   if (rpc("tail_leaderboard")) return json(res, [{ username: "SampleMember", wins: 4, losses: 1, pushes: 0, score: 37.6 }]);
+  // Synthetic shadow scorecard (admin Performance): two weeks plus the all-weeks row.
+  if (rpc("admin_nfl_shadow_scorecard")) return json(res, [
+    { market: "receiving", week: 6, props: 150, games: 12, hit_rate: 0.5, brier_model: 0.25, brier_market: 0.24, brier_diff: 0.01, brier_diff_se: 0.008, logloss_model: 0.69, logloss_market: 0.69, disagree_props: 50, disagree_model_right: 0.5 },
+    { market: "receiving", week: null, props: 150, games: 12, hit_rate: 0.5, brier_model: 0.25, brier_market: 0.24, brier_diff: 0.01, brier_diff_se: 0.008, logloss_model: 0.69, logloss_market: 0.69, disagree_props: 50, disagree_model_right: 0.5 },
+  ]);
+  if (rpc("admin_nfl_shadow_calibration")) return json(res, [{ market: "receiving", bin: 5, props: 80, mean_model: 0.55, mean_market: 0.5, hit_rate: 0.52 }]);
   if (u.startsWith("/rest/v1/rpc/")) return json(res, null);
   if (u.startsWith("/rest/v1/candidate_releases")) {
     if (u.includes("pick_of_day")) return json(res, releases.slice(0, 1));

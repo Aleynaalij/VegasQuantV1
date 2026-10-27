@@ -1,5 +1,6 @@
 "use client";
 import { isCurrentHomeWeek } from "@/lib/home-week";
+import ShadowScorecard from "./shadow-scorecard";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
@@ -448,6 +449,7 @@ export default function DeskApp({
           </nav>
         )}
         {page === "performance" && <Performance desk={d} />}
+        {page === "performance" && <ShadowScorecard />}
         {page === "history" && (
           <>
             <h2 className="records-title">Vegas Quant published record</h2>
