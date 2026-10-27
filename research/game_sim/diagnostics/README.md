@@ -26,3 +26,11 @@ Report also writes a deterministic compressed model beside it (`.model.gz`).
 Earlier model snapshots can be reconstructed from the distinct development code
 changes recorded in the protocol/results; only latest implementation is executable
 here. No old snapshot is overwritten. Do not run older-model IDs with new code.
+
+## 0.1.6 survival censoring + accepted-only penalty routing
+10,000/10,000 completed, zero failures. Total41.1329 vs43.7638 (FAIL),
+TD4.7279 vs4.8524 (PASS), madeFG2.728 vs3.3321 (FAIL), punts8.4309 vs8.1181
+(PASS).142 unsupported censoring samples additionally block the gate. Pooled
+conditional non-TD gains can be missing for long touchdown origins; no short
+support was fabricated. Artifact/model+manifest preserved under artifacts/v0.1.6.
+This replaces no prior artifact and enables no coupling or live forecast.

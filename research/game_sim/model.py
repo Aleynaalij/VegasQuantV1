@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other
 
-MODEL_ID='vq-empirical-game/0.1.5'
+MODEL_ID='vq-empirical-game/0.1.6'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -31,8 +31,29 @@ def source_state(r):
     return State(period=integer(r['qtr']),clock=integer(r['quarter_seconds_remaining']),possession=possession,yardline=integer(r['yardline_100']) if phase=='scrimmage' else 65,down=integer(r['down']) if phase=='scrimmage' else None,distance=integer(r['ydstogo']) if phase=='scrimmage' else None,home_score=home_score,away_score=away_score,phase=phase)
 
 
+def enforced_penalty(row):
+    if row.get('penalty')!='1':return False
+    if row.get('play_type')=='no_play':return True
+    try:value=float(row.get('penalty_yards') or 0)
+    except ValueError:raise ValueError('invalid penalty enforcement yards')
+    if not math.isfinite(value):raise ValueError('invalid penalty enforcement yards')
+    return value!=0
+
+def survival_table(observations):
+    survival=[None]*100;support=[None]*100;ceiling=1.0
+    uncensored=Counter()
+    for origin,gain,td in observations:
+        if not td:uncensored[gain]+=1
+    for g in range(1,100):
+        risk=[gain for origin,gain,td in observations if origin>=g]
+        successes=sum(gain>=g for gain in risk)
+        support[g]=dict(eligible=len(risk),successes=successes)
+        if risk:
+            ceiling=min(ceiling,successes/len(risk));survival[g]=ceiling
+    return dict(survival=survival,support=support,uncensored={str(k):v for k,v in sorted(uncensored.items())})
+
 def fit(paths):
-    counts=Counter();buckets=defaultdict(list);sources=[];templates=[];ids={};seen_sources=set();seen_games=set()
+    observations=defaultdict(list);counts=Counter();buckets=defaultdict(list);sources=[];templates=[];ids={};seen_sources=set();seen_games=set()
     for path in paths:
         data=Path(path).read_bytes();raw=gzip.decompress(data) if data[:2]==b'\x1f\x8b' else data
         rows=list(csv.DictReader(io.StringIO(raw.decode('utf-8-sig'))))
@@ -62,7 +83,7 @@ def fit(paths):
                         if following is None:raise ValueError('kickoff landing missing')
                         a=dict(kind='kickoff',elapsed=elapsed,receiver_yardline=integer(following['yardline_100']))
                         if following['posteam']==r['defteam']:a['receiving_side']='same'
-                elif r.get('penalty')=='1':
+                elif enforced_penalty(r):
                     if nxt['posteam']!=r['posteam'] or nxt['qtr']!=r['qtr']:raise ValueError('compound penalty')
                     if nxt.get('posteam_score')!=r.get('posteam_score') or nxt.get('defteam_score')!=r.get('defteam_score'):raise ValueError('scoring penalty combination')
                     gain=s.yardline-integer(nxt['yardline_100']);nd=integer(nxt['down'])
@@ -92,14 +113,19 @@ def fit(paths):
                     if same:a['receiving_side']='same'
                 elif kind=='field_goal':a=dict(kind='field_goal',elapsed=elapsed,made=r.get('field_goal_result')=='made')
                 else:raise ValueError('unsupported source event')
+                if a['kind'] in ('run','pass_complete'):
+                    td=r.get('touchdown')=='1'
+                    observations[a['kind']].append((s.yardline,a['yards'],td))
+                    if td:a['td_from']=s.yardline
+                if r.get('penalty')=='1' and not enforced_penalty(r):counts['flag_not_enforced_ordinary']+=1
                 key=json.dumps(a,sort_keys=True,separators=(',',':'))
                 if key not in ids:ids[key]=len(templates);templates.append(a)
                 for ctx in contexts(s):buckets[ctx].append(ids[key])
                 counts['accepted']+=1;counts['kind:'+a['kind']]+=1
-                if r.get('penalty')=='1' and kind!='no_play':counts['normalized_live_ball_penalty']+=1
+                if enforced_penalty(r) and kind!='no_play':counts['normalized_live_ball_penalty']+=1
             except (ValueError,TypeError,KeyError) as e:counts['excluded:'+str(e)]+=1
     if not templates:raise ValueError('No training templates')
-    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),minimum_context=30,limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','No probability calibration or edge approval'])
+    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
     return model
 
 class Sampler:
@@ -118,6 +144,21 @@ class Sampler:
         else:raise ValueError('no empirical phase support: '+s.phase)
         self.fallbacks[len(ctx.split('|'))]+=1
         key=self.rng.choices(table[0],weights=table[1],k=1)[0];data=dict(self.model['templates'][int(key)])
+        origin=data.pop('td_from',None)
+        if origin is not None and s.yardline>origin:
+            curve=self.model.get('censoring',{}).get(data['kind'])
+            target=s.yardline
+            start=curve['survival'][origin] if curve and 0<origin<100 else None
+            end=curve['survival'][target] if curve and 0<target<100 else None
+            pool=[(int(g),n) for g,n in curve['uncensored'].items() if origin<=int(g)<target] if curve else []
+            if start is None or start<=0 or end is None or (end<start and not pool):
+                self.fallbacks['unsupported_censoring']+=1
+            elif self.rng.random()<min(1,end/start):
+                data['yards']=target
+                self.fallbacks['censoring_restored_td']+=1
+            else:
+                data['yards']=self.rng.choices([g for g,n in pool],weights=[n for g,n in pool],k=1)[0]
+                self.fallbacks['censoring_non_td']+=1
         data['elapsed']=min(data.get('elapsed',0),s.clock)
         if data.get('receiving_side')=='same':data['receiving_side']=s.possession
         if 'spot' in data:

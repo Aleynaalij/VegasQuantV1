@@ -18,10 +18,11 @@ def check(path,n=10000,seed=1701):
         row['field_goals']+=int(r.get('field_goal_result')=='made')
         row['punts']+=int(r.get('play_type')=='punt')
     model=fit([path]);tables=Sampler(model,seed).tables
-    sim=[];failures=[]
+    sim=[];failures=[];unsupported=0
     for i in range(n):
         try:
             r=game(model,seed+i,both_possessions=False,prepared_tables=tables)
+            unsupported+=r['fallbacks'].get('unsupported_censoring',0)
             sim.append(dict(total=r['home']+r['away'],touchdowns=r['scoring'].get('touchdowns',0),field_goals=r['scoring'].get('field_goals',0),punts=r['kinds'].get('punt',0)+r['kinds'].get('punt_blocked',0)))
         except ValueError as e:failures.append(str(e))
     metrics={}
@@ -30,7 +31,7 @@ def check(path,n=10000,seed=1701):
         tolerance=3*math.sqrt(statistics.variance(actual)/len(actual)+statistics.variance(pred)/len(pred))
         difference=statistics.mean(pred)-statistics.mean(actual)
         metrics[key]=dict(source_mean=statistics.mean(actual),simulated_mean=statistics.mean(pred),difference=difference,tolerance_3se=tolerance,passed=abs(difference)<=tolerance)
-    return model,dict(protocol='baseline-correction-2026-10-27',source_sha256=digest,model_id=model['model_id'],model_sha256=hashlib.sha256(canonical(model)).hexdigest(),source_games=len(source),requested=n,completed=len(sim),failures=failures,seed=seed,metrics=metrics,passed=not failures and all(m['passed'] for m in metrics.values()),scope='IN_SAMPLE_ONLY; not predictive calibration or approval')
+    return model,dict(protocol='baseline-correction-2026-10-27',source_sha256=digest,model_id=model['model_id'],model_sha256=hashlib.sha256(canonical(model)).hexdigest(),source_games=len(source),requested=n,completed=len(sim),failures=failures,unsupported_censoring_samples=unsupported,seed=seed,metrics=metrics,passed=not failures and not unsupported and all(m['passed'] for m in metrics.values()),scope='IN_SAMPLE_ONLY; not predictive calibration or approval')
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--source',required=True);p.add_argument('--output',required=True);a=p.parse_args()

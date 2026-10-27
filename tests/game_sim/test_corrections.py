@@ -19,7 +19,7 @@ class Corrections(unittest.TestCase):
         import csv,tempfile
         from pathlib import Path
         from research.game_sim.model import fit
-        base=dict(season='2022',season_type='REG',game_id='fixture',posteam='H',defteam='A',home_team='H',play_type='no_play',qtr='1',quarter_seconds_remaining='850',posteam_score='0',defteam_score='0',yardline_100='60',down='3',ydstogo='2',yards_gained='0',penalty='1')
+        base=dict(season='2022',season_type='REG',game_id='fixture',posteam='H',defteam='A',home_team='H',play_type='no_play',qtr='1',quarter_seconds_remaining='850',posteam_score='0',defteam_score='0',yardline_100='60',down='3',ydstogo='2',yards_gained='0',penalty='1',penalty_yards='5')
         first=dict(base,**first);following=dict(base,**following)
         fields=sorted(set(first)|set(following))
         with tempfile.TemporaryDirectory() as tmp:
@@ -29,7 +29,7 @@ class Corrections(unittest.TestCase):
             return fit([p])
 
     def test_yardage_first_down_not_automatic_first_foul(self):
-        model=self.fitted_pair(dict(first_down_penalty='1'),dict(yardline_100='55',down='1',quarter_seconds_remaining='845'))
+        model=self.fitted_pair(dict(first_down_penalty='1',penalty_yards='5'),dict(yardline_100='55',down='1',quarter_seconds_remaining='845'))
         action=model['templates'][0]
         self.assertFalse(action['automatic_first'])
         self.assertEqual(action['yards'],5)
@@ -39,5 +39,54 @@ class Corrections(unittest.TestCase):
         self.assertNotIn('receiving_side',model['templates'][0])
 
     def test_live_ball_enforcement_counted(self):
-        model=self.fitted_pair(dict(play_type='pass',first_down_penalty='1'),dict(yardline_100='55',down='1',quarter_seconds_remaining='845'))
+        model=self.fitted_pair(dict(play_type='pass',first_down_penalty='1',penalty_yards='5'),dict(yardline_100='55',down='1',quarter_seconds_remaining='845'))
         self.assertEqual(model['coverage']['normalized_live_ball_penalty'],1)
+
+    def test_declined_flag_retains_run(self):
+        model=self.fitted_pair(dict(play_type='run',penalty_yards='0',yards_gained='3'),dict(yardline_100='57',down='1',quarter_seconds_remaining='845'))
+        self.assertEqual(model['templates'][0]['kind'],'run')
+        self.assertEqual(model['coverage']['flag_not_enforced_ordinary'],1)
+
+    def test_survival_counts_only_eligible_origins(self):
+        from research.game_sim.model import survival_table
+        curve=survival_table([(2,2,True),(10,8,False),(10,1,False)])
+        self.assertEqual(curve['support'][5],dict(eligible=2,successes=1))
+        self.assertNotIn('2',curve['uncensored'])
+        known=[v for v in curve['survival'][1:] if v is not None]
+        self.assertEqual(known,sorted(known,reverse=True))
+
+    def test_censored_replay_samples_tail_without_always_scoring(self):
+        from research.game_sim.model import MODEL_ID,Sampler
+        # Synthetic unit fixture, never a production source or odds input.
+        model=dict(model_id=MODEL_ID,templates=[dict(kind='run',elapsed=5,yards=2,td_from=2)],buckets={'scrimmage':{'0':100}},minimum_context=30,
+            censoring={'run':dict(survival=[None,1,.8,.7,.5,.4]+[None]*94,uncensored={'3':5})})
+        state=State(possession='home',yardline=5,down=1,distance=5)
+        a=Sampler(model,1701);b=Sampler(model,1701)
+        draws=[a.draw(state).yards for _ in range(1000)]
+        self.assertEqual(draws,[b.draw(state).yards for _ in range(1000)])
+        self.assertEqual(set(draws),{3,5})
+        self.assertTrue(400<draws.count(5)<600)
+        self.assertEqual(a.fallbacks.get('unsupported_censoring',0),0)
+        near=State(possession='home',yardline=1,down=1,distance=1)
+        self.assertEqual(Sampler(model,1).draw(near).yards,1)
+
+    def test_missing_survival_support_is_counted_not_invented(self):
+        from research.game_sim.model import MODEL_ID,Sampler
+        model=dict(model_id=MODEL_ID,templates=[dict(kind='run',elapsed=5,yards=2,td_from=2)],buckets={'scrimmage':{'0':100}},minimum_context=30)
+        sampler=Sampler(model,1)
+        self.assertEqual(sampler.draw(State(yardline=5,down=1,distance=5)).yards,2)
+        self.assertEqual(sampler.fallbacks['unsupported_censoring'],1)
+
+    def test_016_artifact_integrity_and_failed_gate(self):
+        import gzip,hashlib,json
+        from pathlib import Path
+        root=Path(__file__).resolve().parents[2]
+        artifact=root/'research/game_sim/artifacts/v0.1.6'
+        b=(artifact/'model.json.gz').read_bytes()
+        manifest=json.loads((artifact/'manifest.json').read_text())
+        self.assertEqual(hashlib.sha256(b).hexdigest(),manifest['compressed_sha256'])
+        self.assertEqual(hashlib.sha256(gzip.decompress(b)).hexdigest(),manifest['artifact_sha256'])
+        gate=json.loads((root/manifest['gate_path']).read_text())
+        self.assertEqual(gate['model_sha256'],manifest['artifact_sha256'])
+        self.assertFalse(gate['passed'])
+        self.assertFalse(manifest['approval'])
