@@ -82,3 +82,28 @@ https://operations.nfl.com/rules-officiating/featured-rules
 Historical kickoff samples are retained rather than silently calling them current
 2025/2026 dynamic-kickoff placement. This normalized kernel is not a claim to
 implement every exception in the NFL rulebook.
+
+## Integrated build v0.2.0
+Run the complete research pipeline once:
+
+```
+python -m research.game_sim.integrated \
+  --source /path/to/play_by_play_2022.csv.gz \
+  --calibration /path/to/play_by_play_2023.csv.gz \
+  --output /path/to/new-artifact-directory
+```
+
+The output directory must not already exist. This fits only2022, runs10,000
+seed1701 games under2022oldOT, computes the unchanged reproduction gate and2023
+retrospective CRPS diagnostics from the SAME batch, verifies its typical replay
+against the kernel, and writes compressed model/batch/gate/calibration/replay plus
+source/implementation/file SHA256 manifests. See INTEGRATED_BUILD_PROTOCOL.md.
+Do not route these research artifacts to the current-matchup renderer or journal
+as approved forecasts. The model still has no fitted current team/player layer.
+
+Actual v0.2.0 checks:10,000complete/0failed/0unsupportedcensoring. Total42.6743
+vs43.7638 andTD5.0241vs4.8524 pass; madeFG2.5561vs3.3321 andpunt8.8385vs8.1181
+fail.1,429samples used thin clock support.2023totalCRPS7.60956vs7.59845historical,
+margin8.14466vs8.06563; neither bootstrap difference demonstrates superiority.
+The entire reproduction gate is FAILED. No model approval/coupling/publication.
+The integrated software build is prepared; independent review remains required.

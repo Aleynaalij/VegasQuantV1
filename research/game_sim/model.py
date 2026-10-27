@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other
 
-MODEL_ID='vq-empirical-game/0.1.7'
+MODEL_ID='vq-empirical-game/0.2.0'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -18,8 +18,27 @@ def bucket(s):
     return (s.phase,s.down or 0,distance_bin,field_bin,('last10' if s.clock<=10 else 'last30' if s.clock<=30 else 'last120' if s.clock<=120 else 'normal') if s.period in (2,4,5) else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
 
 def contexts(s):
-    b=bucket(s)
-    return ['|'.join(map(str,b[:n])) for n in (6,4,3,2,1)]
+    phase,down,distance,field,clock,script=bucket(s)
+    if clock!='normal':
+        margin=getattr(s,s.possession+'_score')-getattr(s,other(s.possession)+'_score')
+        if margin:
+            size=abs(margin)
+            script=('ahead' if margin>0 else 'behind')+('1-3' if size<=3 else '4-8' if size<=8 else '9+')
+    key=(phase,clock,script,str(down),distance,field)
+    lengths=(6,5,4,3,2) if clock!='normal' else (6,5,4,3,2,1)
+    return ['|'.join(key[:n]) for n in lengths]
+
+
+def censored_gain(curve,origin,target,rng):
+    """A latent simulated gain drawn from a source-estimated survival distribution."""
+    if not curve or not 0<origin<target<100:return None
+    values=curve['survival'][origin:target+1]
+    if any(v is None or not math.isfinite(v) or v<0 for v in values) or values[0]<=0:return None
+    mass=[max(0,values[i]-values[i+1]) for i in range(target-origin)]
+    mass.append(values[-1])
+    if not math.isclose(sum(mass),values[0],rel_tol=1e-9,abs_tol=1e-12):return None
+    return rng.choices(list(range(origin,target+1)),weights=mass,k=1)[0]
+
 def source_state(r):
     side='home' if r['posteam']==r['home_team'] else 'away'
     kind=r['play_type']
@@ -146,11 +165,14 @@ class Sampler:
             self.tables[ctx]=(keys,weights,sum(weights))
     def draw(self,s):
         if s.phase=='safety_kick':s=replace(s,phase='kickoff')
-        for ctx in contexts(s):
+        keys=contexts(s)
+        for ctx in keys:
             table=self.tables.get(ctx)
-            if table and (table[2]>=self.model['minimum_context'] or ctx==s.phase):break
+            if table and (table[2]>=self.model['minimum_context'] or ctx==keys[-1]):break
         else:raise ValueError('no empirical phase support: '+s.phase)
         self.fallbacks[len(ctx.split('|'))]+=1
+        if table[2]<self.model['minimum_context']:self.fallbacks['thin_context_support']+=1
+        if bucket(s)[4]!='normal':self.fallbacks['clock_preserved_samples']+=1
         key=self.rng.choices(table[0],weights=table[1],k=1)[0];data=dict(self.model['templates'][int(key)])
         def timeout_caller(template):
             return s.possession if template.get('timeout_side')=='offense' else other(s.possession)
@@ -163,18 +185,11 @@ class Sampler:
         origin=data.pop('td_from',None)
         if origin is not None and s.yardline>origin:
             curve=self.model.get('censoring',{}).get(data['kind'])
-            target=s.yardline
-            start=curve['survival'][origin] if curve and 0<origin<100 else None
-            end=curve['survival'][target] if curve and 0<target<100 else None
-            pool=[(int(g),n) for g,n in curve['uncensored'].items() if origin<=int(g)<target] if curve else []
-            if start is None or start<=0 or end is None or (end<start and not pool):
-                self.fallbacks['unsupported_censoring']+=1
-            elif self.rng.random()<min(1,end/start):
-                data['yards']=target
-                self.fallbacks['censoring_restored_td']+=1
+            gain=censored_gain(curve,origin,s.yardline,self.rng)
+            if gain is None:self.fallbacks['unsupported_censoring']+=1
             else:
-                data['yards']=self.rng.choices([g for g,n in pool],weights=[n for g,n in pool],k=1)[0]
-                self.fallbacks['censoring_non_td']+=1
+                data['yards']=gain
+                self.fallbacks['censoring_restored_td' if gain==s.yardline else 'censoring_non_td']+=1
         data['elapsed']=min(data.get('elapsed',0),s.clock)
         if data.get('receiving_side')=='same':data['receiving_side']=s.possession
         if 'spot' in data:

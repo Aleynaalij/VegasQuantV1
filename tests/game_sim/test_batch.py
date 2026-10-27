@@ -6,7 +6,12 @@ from research.game_sim.model import MODEL_ID,Sampler
 def fixture():
     # Artificial unit-test inputs only. Real artifact is fitted from hashed 2022 PBP.
     templates=[dict(kind='run',elapsed=35,yards=8),dict(kind='pass_complete',elapsed=30,yards=18),dict(kind='pass_incomplete',elapsed=10,yards=0),dict(kind='extra_point',elapsed=0,made=True),dict(kind='kickoff',elapsed=5,receiver_yardline=75)]
-    return dict(model_id=MODEL_ID,sources=[],templates=templates,buckets={'scrimmage':{'0':40,'1':30,'2':30},'try':{'3':100},'kickoff':{'4':100}},minimum_context=30)
+    buckets={'scrimmage':{'0':40,'1':30,'2':30},'try':{'3':100},'kickoff':{'4':100}}
+    # Synthetic support for every clock band, never an actual training artifact.
+    for phase in ('scrimmage','try','kickoff'):
+        for clock in ('last10','last30','last120'):
+            buckets[phase+'|'+clock]=dict(buckets[phase])
+    return dict(model_id=MODEL_ID,sources=[],templates=templates,buckets=buckets,minimum_context=30)
 class BatchTests(unittest.TestCase):
     def test_reproducible_complete_batch_and_replay(self):
         a=run_batch(fixture(),20,42);b=run_batch(fixture(),20,42)

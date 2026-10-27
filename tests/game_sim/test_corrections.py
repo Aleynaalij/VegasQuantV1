@@ -64,7 +64,7 @@ class Corrections(unittest.TestCase):
         a=Sampler(model,1701);b=Sampler(model,1701)
         draws=[a.draw(state).yards for _ in range(1000)]
         self.assertEqual(draws,[b.draw(state).yards for _ in range(1000)])
-        self.assertEqual(set(draws),{3,5})
+        self.assertEqual(set(draws),{2,3,4,5})
         self.assertTrue(400<draws.count(5)<600)
         self.assertEqual(a.fallbacks.get('unsupported_censoring',0),0)
         near=State(possession='home',yardline=1,down=1,distance=1)
