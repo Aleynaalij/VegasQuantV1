@@ -593,12 +593,24 @@ export default function CommunityFeed() {
     );
     if (!r.error) form.reset();
   }
+  const vip = searchParams.get("view") === "vip" || searchParams.has("ruby");
+  if (vip)
+    return (
+      <Shell active="community" sport={sport}>
+        <div className="community-feed">
+          <header className="community-feed-heading">
+            <h1>The Zone</h1>
+          </header>
+          <ZoneNav active="VIP Lays" />
+          <RubyHub zone selectedId={searchParams.get("ruby") || ""} />
+        </div>
+      </Shell>
+    );
   return (
     <Shell active="community" sport={sport}>
       <div className="community-feed">
         <header className="community-feed-heading">
           <h1>The Zone</h1>
-          <a href="#zone-contributors">Contributor lays ↓</a>
         </header>
         {/* Keeps the research board, Pick of the Day, wins and injury watch one tap away. */}
         <ZoneNav active="Latest" />
@@ -611,9 +623,6 @@ export default function CommunityFeed() {
           <summary>Build or open your lay</summary>
           <ParlayWorkshop mode="parlays" />
         </details>
-        <section id="zone-contributors">
-          <RubyHub zone selectedId={searchParams.get("ruby") || ""} />
-        </section>
         {blocked.length ? (
           <details>
             <summary>Blocked members · {blocked.length}</summary>

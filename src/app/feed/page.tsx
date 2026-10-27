@@ -14,8 +14,8 @@ export default async function Page({
     const ruby = typeof query.ruby === "string" ? query.ruby : "";
     redirect(
       ruby
-        ? `/community?ruby=${encodeURIComponent(ruby)}#ruby-${encodeURIComponent(ruby)}`
-        : "/community#zone-contributors",
+        ? `/community?view=vip&ruby=${encodeURIComponent(ruby)}#ruby-${encodeURIComponent(ruby)}`
+        : "/community?view=vip",
     );
   }
   return (

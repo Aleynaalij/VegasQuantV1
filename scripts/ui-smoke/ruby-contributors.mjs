@@ -527,8 +527,8 @@ for (const { width, photoOnly } of [
     .getByRole("region", { name: "Confirm your slip result" })
     .waitFor({ state: "detached" });
   assert.equal(reported, "WIN");
-  // The standings live in The Zone.
-  await go(page, base + "/community");
+  // The standings live only at the bottom of Home for contributors.
+  await go(page, base + "/");
   const board = page.locator(".ruby-board");
   await board.waitFor();
   assert.deepEqual(
@@ -559,23 +559,23 @@ for (const { width, photoOnly } of [
     .waitFor();
   assert.equal(hidden.p_hidden, true);
   adminView = false;
-  // The Zone (/feed redirects there) leads with contributor lays for everyone and keeps the
-  // research views one tap away; a member reaches contributor lays from the Contributors tab too.
+  // Latest contains posts; contributor cards live only on VIP Lays.
   await go(page, base + "/feed");
-  await page.locator(".ruby-contributors").waitFor();
+  assert.equal(await page.locator(".ruby-contributors").count(), 0);
   member = true;
   reviewing = true;
   reported = "WIN";
   await go(page, base + "/feed");
   await page.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
   assert.equal(new URL(page.url()).pathname, "/community");
-  assert.deepEqual(
-    (await page.locator(".zone-views a").allInnerTexts()).slice(0, 4),
-    ["Latest", "Legs", "Parlays", "Contributors"],
-  );
+  assert.deepEqual(await page.locator(".zone-views a").allInnerTexts(), [
+    "Latest",
+    "VIP Lays",
+    "Injuries",
+  ]);
   await page
     .locator(".zone-views")
-    .getByRole("link", { name: "Contributors" })
+    .getByRole("link", { name: "VIP Lays" })
     .click();
   await page.locator(".ruby-contributors").waitFor();
   // Members don't see the board or records on the row; opening a capper shows their rank.
@@ -588,73 +588,29 @@ for (const { width, photoOnly } of [
     .click();
   const record = page.locator(".ruby-profile-record");
   await record.waitFor();
-  assert.match(await record.textContent(), /The GOAT#1 of 13–1/);
+  assert.match(await record.textContent(), /The GOAT3–1/);
+  assert.equal(await record.locator(".ruby-profile-rank").count(), 0);
   member = false;
   reviewing = false;
   reported = null;
-  // The analyst Double Up appears for ordinary members in The Zone.
+  // Neither Zone tab exposes Double Up or the contributor-only leaderboard.
   analystActive = true;
   member = true;
-  await go(page, base + "/community");
-  await page.locator(".analyst-double-up").waitFor();
-  assert.equal(await page.locator(".analyst-double-up").count(), 1);
-  assert.match(
-    await page.locator(".analyst-double-up").textContent(),
-    /ANALYST PICK/,
-  );
-  assert.match(
-    await page.locator(".analyst-double-up").textContent(),
-    /FanDuel \+238/,
-  );
-  assert.match(
-    await page.locator(".analyst-double-up").textContent(),
-    /No validated model edge/,
-  );
-  const destinations = page.locator(".analyst-double-up .ticket-destinations");
-  assert.match(await destinations.locator(":scope > button").nth(0).textContent(), /Gambly/);
-  assert.equal(await destinations.locator(":scope > button").nth(1).textContent(), "Kalshi ↗");
-  await page.locator(".analyst-double-up summary").click();
-  await page
-    .getByRole("heading", { name: "Sample A 40+ receiving yards" })
-    .waitFor();
-  await page
-    .locator(".analyst-double-up")
-    .getByRole("button", { name: /Gambly/ })
-    .click();
-  await page
-    .locator("dialog[open]")
-    .getByLabel("I confirm I am 21 or older.")
-    .check();
-  await page
-    .locator("dialog[open]")
-    .getByRole("button", { name: "Copy pick to clipboard", exact: true })
-    .click();
-  assert.equal(
-    await page.evaluate(() => navigator.clipboard.readText()),
-    "Sample A 40+ receiving yards\nSample B 40+ receiving yards\nSample C 40+ receiving yards",
-  );
-  await page.keyboard.press("Escape");
-  await go(page, base + "/feed?double_up=" + analyst().id);
-  await page.locator(".analyst-double-up").waitFor();
-  analystExpired = true;
-  await reloadSettled(page);
-  await page
-    .getByText("Pregame copying closed. Original ticket retained.")
-    .waitFor();
-  assert.equal(
-    await page
-      .locator(".analyst-double-up")
-      .getByRole("button", { name: /Gambly/ })
-      .isDisabled(),
-    true,
-  );
-  assert.equal(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth > innerWidth + 1,
-    ),
-    false,
-  );
-  assert.equal(await page.locator(".analyst-double-up").getByRole("button", { name: "Kalshi ↗", exact: true }).isDisabled(), true);
+  for (const path of [
+    "/community",
+    "/community?view=vip",
+    "/feed?double_up=" + analyst().id,
+  ]) {
+    await go(page, base + path);
+    assert.equal(
+      await page
+        .locator(".ruby-double-up, .analyst-double-up, .ruby-board")
+        .count(),
+      0,
+    );
+  }
+  await go(page, base + "/");
+  assert.equal(await page.locator(".ruby-board").count(), 0);
   assert.deepEqual(errors, []);
   console.log(
     `PASS Ruby composer, preview, NBA member submission, daily lock, five templates and Zone link @${width} photoOnly=${photoOnly}`,

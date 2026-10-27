@@ -8,7 +8,7 @@ const { chromium } = await import(
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const pages = [
   { path: "/", expect: ["Next kickoff", "21+"] },
-  { path: "/feed", expect: ["The Zone", "Signature contributors", "TODAY’S DOUBLE UP", "Legs", "Injury watch"] },
+  { path: "/feed", expect: ["The Zone", "Latest", "VIP Lays", "Injuries"] },
   { path: "/feed?view=parlays", expect: ["Sample Sunday sleeper parlay", "3-leg parlay"] },
   { path: "/feed?view=wins", expect: ["Five legs. One $218 win."] },
   { path: "/matchups", expect: ["Seahawks"] },
