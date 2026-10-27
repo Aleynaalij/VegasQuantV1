@@ -25,7 +25,6 @@ import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
 import RubyHub from "./ruby-cards";
-import AnalystDoubleUpFeed from "./analyst-double-up";
 import ZoneNav from "./zone-nav";
 import HowItWorks from "./how-it-works";
 import SectionBoundary from "./section-boundary";
@@ -340,23 +339,9 @@ export default function ResearchFeed() {
             Saved legs →
           </Link>
         </header>
-        {access.allowed &&
-          (zoneView === "Latest" ||
-            zoneView === "Parlays" ||
-            searchParams.has("double_up")) && (
-            <AnalystDoubleUpFeed
-              selectedId={searchParams.get("double_up") || ""}
-            />
-          )}
-        {/* Members open The Zone on research and AI legs; contributor lays are one tap away.
-            Contributors and admins still see them first on Latest. */}
-        {(zoneView === "Contributors" || zoneView === "Latest") &&
-          access.allowed && (
-            <RubyHub
-              selectedId={searchParams.get("ruby") || ""}
-              contributorsOnly={zoneView === "Latest"}
-            />
-          )}
+        {zoneView === "Contributors" && access.allowed && (
+          <RubyHub zone selectedId={searchParams.get("ruby") || ""} />
+        )}
         {zoneView !== "Contributors" && <HowItWorks />}
         {zoneView === "Parlays" && <WeekendMoneylineCard />}
         {(zoneView === "Legs" || zoneView === "Parlays") && (

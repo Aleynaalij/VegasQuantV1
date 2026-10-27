@@ -933,6 +933,7 @@ function ResultPrompt({
 export default function RubyHub({
   home = false,
   composerOnly = false,
+  leaderboardOnly = false,
   zone = false,
   selectedId = "",
   contributorsOnly = false,
@@ -940,6 +941,7 @@ export default function RubyHub({
 }: {
   home?: boolean;
   composerOnly?: boolean;
+  leaderboardOnly?: boolean;
   zone?: boolean;
   selectedId?: string;
   /** Home: shown directly under Today's Double Up, before the contributors row. */
@@ -974,6 +976,20 @@ export default function RubyHub({
       setError("");
       return;
     }
+    if (leaderboardOnly) {
+      const homeState = await supabase.rpc("ruby_home");
+      if (version !== epoch.current) return;
+      const next = (homeState.data || {}) as RubyHomeState;
+      setState(next);
+      if (!next.contributor) {
+        setRecords([]);
+        return;
+      }
+      const record = await supabase.rpc("ruby_record_summary");
+      if (version !== epoch.current) return;
+      setRecords(record.error ? [] : record.data || []);
+      return;
+    }
     const [s, r, f] = await Promise.all([
       supabase.rpc("ruby_home"),
       supabase
@@ -1001,8 +1017,8 @@ export default function RubyHub({
     const todayFeature = currentRubyFeature(next.day, f.data || []);
     setFeature(todayFeature);
     setAnalystTicket(null);
-    // Home and The Zone both show the daily feature, analyst ticket included.
-    if ((home || zone) && todayFeature?.analyst_ticket_id) {
+    // Daily features are never rendered in The Zone.
+    if (home && !composerOnly && todayFeature?.analyst_ticket_id) {
       const analyst = await supabase
         .from("nfl_analyst_double_ups")
         .select("*")
@@ -1012,7 +1028,7 @@ export default function RubyHub({
       if (analyst.data) setAnalystTicket(analyst.data);
     }
     setOriginalFeatured(null);
-    if ((home || zone) && todayFeature?.submission_id) {
+    if (home && !composerOnly && todayFeature?.submission_id) {
       const original = await supabase
         .from("ruby_submissions")
         .select("*")
@@ -1053,7 +1069,7 @@ export default function RubyHub({
       clearInterval(interval);
       window.removeEventListener("focus", focus);
     };
-  }, [home, limit, selectedId]); // account epochs reject stale reads
+  }, [home, leaderboardOnly, limit, selectedId]); // account epochs reject stale reads
   useEffect(() => {
     if (selectedId && slips.some((s) => s.id === selectedId))
       document
@@ -1074,6 +1090,62 @@ export default function RubyHub({
   const ranked = rankCappers(records);
   const profile =
     selected === "All" ? null : ranked.find((r) => r.brand === selected);
+  if (leaderboardOnly)
+    return (
+      <div className="ruby-hub">
+        {state.contributor && ranked.length > 0 && (
+          <section className="ruby-board" aria-labelledby="ruby-board-title">
+            <header>
+              <span className="ruby-board-kicker" id="ruby-board-title">
+                <i aria-hidden="true" /> CAPPER BOARD
+              </span>
+              <span className="ruby-board-chip">SELF-REPORTED</span>
+            </header>
+            <table>
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">Capper</th>
+                  <th scope="col">W</th>
+                  <th scope="col">L</th>
+                  <th scope="col">
+                    <abbr title="Void">V</abbr>
+                  </th>
+                  <th scope="col">
+                    <abbr title="Pending">P</abbr>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {ranked.map((r) => (
+                  <tr key={r.brand}>
+                    <td className="ruby-board-rank">{r.rank}</td>
+                    <th scope="row">{r.brand}</th>
+                    <td>
+                      <b>{r.wins}</b>
+                    </td>
+                    <td>
+                      <b>{r.losses}</b>
+                    </td>
+                    <td>
+                      <b>{r.voids}</b>
+                    </td>
+                    <td>
+                      <b>{r.pending}</b>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <p>
+              Results are reported by each capper the day after, not
+              independently verified. Voids and pending slips stay out of wins
+              and losses. Small samples aren’t proof of future performance.
+            </p>
+          </section>
+        )}
+      </div>
+    );
   if (composerOnly)
     return (
       <div className="ruby-hub">
@@ -1098,7 +1170,7 @@ export default function RubyHub({
           onPublished={() => void refresh()}
         />
       )}
-      {(home || zone) && (
+      {home && (
         <section className="ruby-double-up">
           <div>
             <span className="ruby-eyebrow">TODAY’S DOUBLE UP</span>
@@ -1119,10 +1191,7 @@ export default function RubyHub({
               feature={originalFeatured ? feature : undefined}
             />
           ) : (
-            <Link
-              className="ruby-text-link"
-              href="/community#zone-contributors"
-            >
+            <Link className="ruby-text-link" href="/community?view=vip">
               Explore contributor lays <ArrowUpRight size={16} />
             </Link>
           )}
@@ -1132,57 +1201,6 @@ export default function RubyHub({
       {(home || zone) && state.due?.length ? (
         <ResultPrompt state={state} onSaved={() => void refresh()} />
       ) : null}
-      {insider && ranked.length > 0 && (
-        <section className="ruby-board" aria-labelledby="ruby-board-title">
-          <header>
-            <span className="ruby-board-kicker" id="ruby-board-title">
-              <i aria-hidden="true" /> CAPPER BOARD
-            </span>
-            <span className="ruby-board-chip">SELF-REPORTED</span>
-          </header>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">Capper</th>
-                <th scope="col">W</th>
-                <th scope="col">L</th>
-                <th scope="col">
-                  <abbr title="Void">V</abbr>
-                </th>
-                <th scope="col">
-                  <abbr title="Pending">P</abbr>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {ranked.map((r) => (
-                <tr key={r.brand}>
-                  <td className="ruby-board-rank">{r.rank}</td>
-                  <th scope="row">{r.brand}</th>
-                  <td>
-                    <b>{r.wins}</b>
-                  </td>
-                  <td>
-                    <b>{r.losses}</b>
-                  </td>
-                  <td>
-                    <b>{r.voids}</b>
-                  </td>
-                  <td>
-                    <b>{r.pending}</b>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p>
-            Results are reported by each capper the day after, not independently
-            verified. Voids and pending slips stay out of wins and losses. Small
-            samples aren’t proof of future performance.
-          </p>
-        </section>
-      )}
       <section className="ruby-contributors">
         <header>
           <div>
@@ -1190,10 +1208,7 @@ export default function RubyHub({
             <h2>Signature contributors</h2>
           </div>
           {home && (
-            <Link
-              href="/community#zone-contributors"
-              className="ruby-text-link"
-            >
+            <Link href="/community?view=vip" className="ruby-text-link">
               View all <ArrowUpRight size={16} />
             </Link>
           )}
@@ -1241,9 +1256,11 @@ export default function RubyHub({
             <strong>{selected}</strong>
             {profile && profile.wins + profile.losses + profile.voids > 0 ? (
               <>
-                <span className="ruby-profile-rank">
-                  #{profile.rank} of {ranked.length}
-                </span>
+                {insider && (
+                  <span className="ruby-profile-rank">
+                    #{profile.rank} of {ranked.length}
+                  </span>
+                )}
                 <span className="ruby-profile-wl">
                   {profile.wins}–{profile.losses}
                 </span>

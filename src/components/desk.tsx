@@ -688,6 +688,11 @@ export default function DeskApp({
             </details>
           </>
         )}
+        {page === "home" && (
+          <SectionBoundary name="VIP contributor leaderboard">
+            <RubyHub leaderboardOnly />
+          </SectionBoundary>
+        )}
       </Shell>
     </div>
   );
