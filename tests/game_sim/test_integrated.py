@@ -12,7 +12,7 @@ class IntegratedTests(unittest.TestCase):
     def test_late_clock_survives_sparse_backoff(self):
         model=dict(model_id=MODEL_ID,minimum_context=30,
             templates=[dict(kind='field_goal',elapsed=3,made=True),dict(kind='run',elapsed=5,yards=1)],
-            buckets={'scrimmage|last10':{'0':5},'scrimmage':{'1':1000}})
+            buckets={'scrimmage|last10|20':{'0':5},'scrimmage':{'1':1000}})
         s=State(period=2,clock=5,down=1,distance=10,yardline=20)
         sampler=Sampler(model,17)
         self.assertEqual(sampler.draw(s).kind,'field_goal')
@@ -22,16 +22,39 @@ class IntegratedTests(unittest.TestCase):
 
     def test_missing_late_clock_support_does_not_silently_use_normal(self):
         model=fixture()
-        del model['buckets']['scrimmage|last10']
+        del model['buckets']['scrimmage|last10|80']
         with self.assertRaises(ValueError):
             Sampler(model,17).draw(State(period=4,clock=5))
 
-    def test_score_situation_retained_before_down_backoff(self):
-        ahead=contexts(State(period=4,clock=5,home_score=3))[2]
-        far=contexts(State(period=4,clock=5,home_score=10))[2]
+    def test_score_situation_retained_in_full_context(self):
+        ahead=contexts(State(period=4,clock=5,home_score=3))[0]
+        far=contexts(State(period=4,clock=5,home_score=10))[0]
         self.assertIn('ahead1-3',ahead)
         self.assertIn('ahead9+',far)
         self.assertNotEqual(ahead,far)
+
+    def test_field_is_never_dropped_or_borrowed(self):
+        s=State(yardline=75)
+        for clock in (5,20,90,500):
+            state=State(period=2,clock=clock,yardline=75)
+            self.assertTrue(all(key.split('|')[2]=='80' for key in contexts(state)))
+        model=dict(model_id=MODEL_ID,minimum_context=30,
+            templates=[dict(kind='field_goal',elapsed=3,made=True)],
+            buckets={'scrimmage|normal|20':{'0':1000}})
+        with self.assertRaises(ValueError):Sampler(model,17).draw(s)
+
+    def test_goal_floor_stays_in_same_physical_zone(self):
+        state=State(period=2,clock=5,yardline=35,down=1,distance=35)
+        keys=contexts(state)
+        self.assertEqual(keys[-1],'scrimmage|last10|40')
+        self.assertIn('40:goal',keys[0])
+        self.assertEqual(len(keys),len(set(keys)))
+        model=dict(model_id=MODEL_ID,minimum_context=30,
+            templates=[dict(kind='field_goal',elapsed=3,made=True)],
+            buckets={keys[-1]:{'0':2}})
+        sampler=Sampler(model,17)
+        self.assertEqual(sampler.draw(state).kind,'field_goal')
+        self.assertEqual(sampler.fallbacks['thin_context_support'],1)
 
     def test_survival_mass_does_not_require_observed_non_td_pool(self):
         import random
@@ -65,7 +88,7 @@ class IntegratedTests(unittest.TestCase):
         import gzip, hashlib, json
         from pathlib import Path
         root=Path(__file__).resolve().parents[2]
-        folder=root/'research/game_sim/artifacts/v0.2.0'
+        folder=root/'research/game_sim/artifacts/v0.2.2'
         manifest=json.loads((folder/'manifest.json').read_text())
         payloads={}
         for filename, expected in manifest['files'].items():

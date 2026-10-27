@@ -116,7 +116,7 @@ def build(source, calibration, output, *, runs=10000, seed=1701):
         file_manifest[filename] = dict(sha256=hashlib.sha256(compressed).hexdigest(),
                                        canonical_sha256=hashlib.sha256(raw).hexdigest())
     implementation = [Path(__file__), *[Path(__file__).with_name(x) for x in (
-        'model.py','state.py','batch.py','evaluate.py','render.py','INTEGRATED_BUILD_PROTOCOL.md')]]
+        'model.py','state.py','batch.py','evaluate.py','render.py','INTEGRATED_BUILD_PROTOCOL.md','FIELD_CONTEXT_PROTOCOL.md')]]
     manifest = dict(model_id=model['model_id'], status='RESEARCH_REVIEW_REQUIRED',
                     model_sha256=batch['artifact_sha256'], seed=seed, runs=batch['runs'],
                     reproduction_passed=gate['passed'], calibration_adopted=False,

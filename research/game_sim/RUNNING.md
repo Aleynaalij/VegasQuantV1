@@ -107,3 +107,27 @@ fail.1,429samples used thin clock support.2023totalCRPS7.60956vs7.59845historica
 margin8.14466vs8.06563; neither bootstrap difference demonstrates superiority.
 The entire reproduction gate is FAILED. No model approval/coupling/publication.
 The integrated software build is prepared; independent review remains required.
+
+## Field-preserving build 0.2.2
+
+The prior 0.2.0 field-goal/punt failures were traced to backoff dropping field
+position. `FIELD_CONTEXT_PROTOCOL.md` freezes the correction and its same-zone
+goal-status support fallback. `audit_decisions.py` reproduces the source-state
+sampling diagnostic; it is not held-out validation.
+
+Actual 2022REG, 10000 runs, seed1701, old opening-TD OT: **10000complete,
+0failed, 0unsupported censoring**. Original unchanged3combined-SE gate PASS:
+points43.4079vs43.76384;TD4.8218vs4.85240;madeFG3.2637vs3.33210;
+punts8.1626vs8.11808. 4126thin-context draws are counted. 0.2.1 remains
+preserved: all four metrics passed but5missing-goal-context failures blocked it.
+
+Remaining diagnostic: timeouts6.2731vs7.78229 FAIL. FGattempts andlateFGattempts
+now pass their diagnostic bands. 2023 already-inspected calibration272games:
+totalCRPS7.610956vs7.598449historical; margin8.146463vs8.065627. No demonstrated
+superiority, no adoption. Calibration, source hashes, implementation hashes,
+reproduction and replay are immutable under `artifacts/v0.2.2`. The complete
+build can be reproduced with the integrated command above and a NEW output
+folder. Existing directories cannot be overwritten. Model remainsSHADOW_ONLY;
+no team/player coupling, current-matchup forecasts, approval or public release.
+
+Check: `python -m unittest discover -s tests/game_sim` —62testsPASS.

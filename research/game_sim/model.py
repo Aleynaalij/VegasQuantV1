@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other
 
-MODEL_ID='vq-empirical-game/0.2.0'
+MODEL_ID='vq-empirical-game/0.2.2'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -24,9 +24,14 @@ def contexts(s):
         if margin:
             size=abs(margin)
             script=('ahead' if margin>0 else 'behind')+('1-3' if size<=3 else '4-8' if size<=8 else '9+')
-    key=(phase,clock,script,str(down),distance,field)
-    lengths=(6,5,4,3,2) if clock!='normal' else (6,5,4,3,2,1)
-    return ['|'.join(key[:n]) for n in lengths]
+    # Field zone remains in every fallback; sparse states cannot borrow distant kicks.
+    field=field if phase=='scrimmage' else '_'
+    key=(phase,clock,field,str(down),distance,script)
+    lengths=(6,5,4,3)
+    result=['|'.join(key[:n]) for n in lengths]
+    floor='|'.join((phase,clock,field.split(':')[0]))
+    if floor not in result:result.append(floor)
+    return result
 
 
 def censored_gain(curve,origin,target,rng):

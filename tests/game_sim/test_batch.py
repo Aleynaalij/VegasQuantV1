@@ -6,11 +6,11 @@ from research.game_sim.model import MODEL_ID,Sampler
 def fixture():
     # Artificial unit-test inputs only. Real artifact is fitted from hashed 2022 PBP.
     templates=[dict(kind='run',elapsed=35,yards=8),dict(kind='pass_complete',elapsed=30,yards=18),dict(kind='pass_incomplete',elapsed=10,yards=0),dict(kind='extra_point',elapsed=0,made=True),dict(kind='kickoff',elapsed=5,receiver_yardline=75)]
-    buckets={'scrimmage':{'0':40,'1':30,'2':30},'try':{'3':100},'kickoff':{'4':100}}
-    # Synthetic support for every clock band, never an actual training artifact.
-    for phase in ('scrimmage','try','kickoff'):
-        for clock in ('last10','last30','last120'):
-            buckets[phase+'|'+clock]=dict(buckets[phase])
+    buckets={}
+    for phase,entries in [('scrimmage',{'0':40,'1':30,'2':30}),('try',{'3':100}),('kickoff',{'4':100})]:
+        fields=[str(x)+suffix for x in (5,10,20,40,60,80,100) for suffix in ('',':goal')] if phase=='scrimmage' else ['_']
+        for clock in ('normal','last10','last30','last120'):
+            for field in fields:buckets['|'.join((phase,clock,field))]=dict(entries)
     return dict(model_id=MODEL_ID,sources=[],templates=templates,buckets=buckets,minimum_context=30)
 class BatchTests(unittest.TestCase):
     def test_reproducible_complete_batch_and_replay(self):
@@ -23,7 +23,7 @@ class BatchTests(unittest.TestCase):
             q=e[key]['quantiles'];self.assertLessEqual(q['p5'],q['p50']);self.assertLessEqual(q['p50'],q['p95'])
         self.assertEqual(a['replay']['events'][-1]['after']['phase'],'final')
     def test_artifact_reload_preserves_sampling_and_digest(self):
-        model=fixture();model['buckets']['scrimmage']={'2':30,'0':40,'1':30}
+        model=fixture();model['buckets']['scrimmage|normal|80']={'2':30,'0':40,'1':30}
         a=run_batch(model,10,42);b=run_batch(json.loads(canonical(model)),10,42)
         self.assertEqual(a['artifact_sha256'],b['artifact_sha256']);self.assertEqual(a['ensemble'],b['ensemble']);self.assertEqual(a['replay'],b['replay'])
     def test_optional_workload_does_not_change_game_paths(self):

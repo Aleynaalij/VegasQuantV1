@@ -58,7 +58,7 @@ class Corrections(unittest.TestCase):
     def test_censored_replay_samples_tail_without_always_scoring(self):
         from research.game_sim.model import MODEL_ID,Sampler
         # Synthetic unit fixture, never a production source or odds input.
-        model=dict(model_id=MODEL_ID,templates=[dict(kind='run',elapsed=5,yards=2,td_from=2)],buckets={'scrimmage':{'0':100}},minimum_context=30,
+        model=dict(model_id=MODEL_ID,templates=[dict(kind='run',elapsed=5,yards=2,td_from=2)],buckets={'scrimmage|normal|5:goal':{'0':100}},minimum_context=30,
             censoring={'run':dict(survival=[None,1,.8,.7,.5,.4]+[None]*94,uncensored={'3':5})})
         state=State(possession='home',yardline=5,down=1,distance=5)
         a=Sampler(model,1701);b=Sampler(model,1701)
@@ -72,7 +72,7 @@ class Corrections(unittest.TestCase):
 
     def test_missing_survival_support_is_counted_not_invented(self):
         from research.game_sim.model import MODEL_ID,Sampler
-        model=dict(model_id=MODEL_ID,templates=[dict(kind='run',elapsed=5,yards=2,td_from=2)],buckets={'scrimmage':{'0':100}},minimum_context=30)
+        model=dict(model_id=MODEL_ID,templates=[dict(kind='run',elapsed=5,yards=2,td_from=2)],buckets={'scrimmage|normal|5:goal':{'0':100}},minimum_context=30)
         sampler=Sampler(model,1)
         self.assertEqual(sampler.draw(State(yardline=5,down=1,distance=5)).yards,2)
         self.assertEqual(sampler.fallbacks['unsupported_censoring'],1)
@@ -97,7 +97,7 @@ class Corrections(unittest.TestCase):
 
     def test_timeout_budget_respected_by_sampler(self):
         from research.game_sim.model import MODEL_ID,Sampler
-        model=dict(model_id=MODEL_ID,templates=[dict(kind='timeout',elapsed=0,timeout_side='offense'),dict(kind='run',elapsed=5,yards=1)],buckets={'scrimmage':{'0':1000,'1':1}},minimum_context=30)
+        model=dict(model_id=MODEL_ID,templates=[dict(kind='timeout',elapsed=0,timeout_side='offense'),dict(kind='run',elapsed=5,yards=1)],buckets={'scrimmage|normal|60':{'0':1000,'1':1}},minimum_context=30)
         s=State(possession='home',yardline=50,down=1,distance=10,home_timeouts=0)
         sampler=Sampler(model,17)
         self.assertTrue(all(sampler.draw(s).kind=='run' for _ in range(100)))
