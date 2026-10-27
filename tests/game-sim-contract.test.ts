@@ -136,7 +136,7 @@ test("Runs with no plays never reach the renderer, and kneel-downs count as QB c
 });
 
 test("The engine's own fixture format converts to home-relative field positions", async () => {
-  // Snapshot of research/game_sim/demo.json from Codex's #133 (eeb8759).
+  // Snapshot of research/game_sim/demo.json from Codex's #133 (c7b1b98).
   const engine = (
     await import("./fixtures/game-sim-engine-demo.json", {
       with: { type: "json" },
@@ -178,4 +178,33 @@ test("The engine's own fixture format converts to home-relative field positions"
   const b = parseSimRun(broken) as { ok: false; errors: string[] };
   assert.equal(b.ok, false);
   assert.match(b.errors.join(), /replay\.events\.2\.before\.home_defends/);
+  // Real-game engine payloads are refused until their game and provenance map, never shown as
+  // complete runs.
+  for (const mode of ["pregame", "scenario", "historical_replay"]) {
+    const real = JSON.parse(JSON.stringify(engine));
+    real.mode = mode;
+    real.is_demo = false;
+    const rejected = parseSimRun(real) as { ok: false; errors: string[] };
+    assert.equal(rejected.ok, false, mode);
+    assert.match(
+      rejected.errors.join(),
+      new RegExp(`engine ${mode} runs aren't supported`),
+    );
+  }
+  const unlabeled = JSON.parse(JSON.stringify(engine));
+  unlabeled.is_demo = false;
+  assert.equal(
+    parseSimRun(unlabeled).ok,
+    false,
+    "a demo must stay labeled demo",
+  );
+  // The corrected fixture credits passers and has no downs on kicks.
+  const box = boxScore(r.run);
+  const passing = box.players.reduce((a, p) => a + p.passing.yds, 0);
+  const receiving = box.players.reduce((a, p) => a + p.receiving.yds, 0);
+  assert.ok(passing > 0);
+  assert.equal(passing, receiving);
+  const kickoff = r.run.events.find((e) => e.play_type === "kickoff")!;
+  assert.equal(kickoff.down, null);
+  assert.equal(kickoff.ball_start_x, 35);
 });

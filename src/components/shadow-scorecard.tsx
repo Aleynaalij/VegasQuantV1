@@ -54,9 +54,16 @@ export default function ShadowScorecard() {
     >
       <h2 id="shadow-scorecard-title">Research model vs the market</h2>
       <p className="muted">
-        Every settled prop the v0.3 research model priced before kickoff, scored
+        <strong>Exploratory.</strong> Every settled prop the v0.3 research model
+        priced before kickoff, using its last forecast before kickoff, scored
         against FanDuel’s no-vig price. Main lines only, one row per prop. Lower
         error is better. Research only: nothing here is approved or published.
+      </p>
+      <p className="muted">
+        The official test is the frozen qualification protocol
+        (qualification-2026-10-16), which scores each prop’s first capture and
+        alone decides whether the model is eligible for review. This view does
+        not replace it.
       </p>
       {error && <p role="alert">Scorecard unavailable. Please retry.</p>}
       {!rows && !error && <p role="status">Loading scorecard…</p>}

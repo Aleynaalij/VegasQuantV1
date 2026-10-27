@@ -5,6 +5,7 @@
   "run_id": "demo-script-v1",
   "generated_at": "2026-10-27T00:00:00Z",
   "historical_cutoff": null,
+  "inputs_as_of": null,
   "model_id": "synthetic-script-v1",
   "model_version": "demo-1",
   "artifact_hash": null,
@@ -76,7 +77,7 @@
         "participants": [
           {
             "role": "rusher",
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-rusher",
             "name": "Demo Runner"
           }
         ],
@@ -85,7 +86,7 @@
           "touchdown": false,
           "turnover": false,
           "safety": false,
-          "made": false,
+          "made": null,
           "penalty_on": null
         },
         "score_delta": {
@@ -94,9 +95,14 @@
         },
         "stat_deltas": [
           {
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-rusher",
             "stat": "rushing_yards",
             "value": 6
+          },
+          {
+            "player_id": "demo-home-rusher",
+            "stat": "carries",
+            "value": 1
           }
         ]
       },
@@ -136,8 +142,13 @@
         "participants": [
           {
             "role": "target",
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-target",
             "name": "Demo Receiver"
+          },
+          {
+            "role": "passer",
+            "player_id": "demo-home-passer",
+            "name": "Demo Quarterback"
           }
         ],
         "flags": {
@@ -145,7 +156,7 @@
           "touchdown": false,
           "turnover": false,
           "safety": false,
-          "made": false,
+          "made": null,
           "penalty_on": null
         },
         "score_delta": {
@@ -154,9 +165,29 @@
         },
         "stat_deltas": [
           {
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-target",
             "stat": "receiving_yards",
             "value": 19
+          },
+          {
+            "player_id": "demo-home-target",
+            "stat": "receptions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "passing_yards",
+            "value": 19
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "completions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "pass_attempts",
+            "value": 1
           }
         ]
       },
@@ -196,7 +227,7 @@
         "participants": [
           {
             "role": "rusher",
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-rusher",
             "name": "Demo Runner"
           }
         ],
@@ -205,7 +236,7 @@
           "touchdown": false,
           "turnover": false,
           "safety": false,
-          "made": false,
+          "made": null,
           "penalty_on": null
         },
         "score_delta": {
@@ -214,9 +245,14 @@
         },
         "stat_deltas": [
           {
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-rusher",
             "stat": "rushing_yards",
             "value": 8
+          },
+          {
+            "player_id": "demo-home-rusher",
+            "stat": "carries",
+            "value": 1
           }
         ]
       },
@@ -256,8 +292,13 @@
         "participants": [
           {
             "role": "target",
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-target",
             "name": "Demo Receiver"
+          },
+          {
+            "role": "passer",
+            "player_id": "demo-home-passer",
+            "name": "Demo Quarterback"
           }
         ],
         "flags": {
@@ -265,7 +306,7 @@
           "touchdown": false,
           "turnover": false,
           "safety": false,
-          "made": false,
+          "made": null,
           "penalty_on": null
         },
         "score_delta": {
@@ -274,9 +315,29 @@
         },
         "stat_deltas": [
           {
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-target",
             "stat": "receiving_yards",
             "value": 22
+          },
+          {
+            "player_id": "demo-home-target",
+            "stat": "receptions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "passing_yards",
+            "value": 22
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "completions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "pass_attempts",
+            "value": 1
           }
         ]
       },
@@ -307,16 +368,16 @@
           "clock_s": 719,
           "possession": "home",
           "home_defends": "left",
-          "down": 1,
-          "yards_to_go": 0,
-          "yardline_100": 0,
+          "down": null,
+          "yards_to_go": null,
+          "yardline_100": 98,
           "home_score": 6,
           "away_score": 0
         },
         "participants": [
           {
             "role": "rusher",
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-rusher",
             "name": "Demo Runner"
           }
         ],
@@ -325,7 +386,7 @@
           "touchdown": true,
           "turnover": false,
           "safety": false,
-          "made": false,
+          "made": null,
           "penalty_on": null
         },
         "score_delta": {
@@ -334,9 +395,14 @@
         },
         "stat_deltas": [
           {
-            "player_id": "demo-home-01",
+            "player_id": "demo-home-rusher",
             "stat": "rushing_yards",
             "value": 20
+          },
+          {
+            "player_id": "demo-home-rusher",
+            "stat": "carries",
+            "value": 1
           }
         ]
       },
@@ -348,17 +414,17 @@
         "possession": "home",
         "play_type": "extra_point",
         "yards": 0,
-        "yardline_100": 0,
-        "ball_start_x": 100,
-        "ball_end_x": 100,
+        "yardline_100": 98,
+        "ball_start_x": 2,
+        "ball_end_x": 2,
         "before": {
           "period": 1,
           "clock_s": 719,
           "possession": "home",
           "home_defends": "left",
-          "down": 1,
-          "yards_to_go": 0,
-          "yardline_100": 0,
+          "down": null,
+          "yards_to_go": null,
+          "yardline_100": 98,
           "home_score": 6,
           "away_score": 0
         },
@@ -367,9 +433,9 @@
           "clock_s": 719,
           "possession": "home",
           "home_defends": "left",
-          "down": 1,
-          "yards_to_go": 0,
-          "yardline_100": 0,
+          "down": null,
+          "yards_to_go": null,
+          "yardline_100": 65,
           "home_score": 7,
           "away_score": 0
         },
@@ -396,17 +462,17 @@
         "possession": "home",
         "play_type": "kickoff",
         "yards": 0,
-        "yardline_100": 0,
-        "ball_start_x": 100,
+        "yardline_100": 65,
+        "ball_start_x": 35,
         "ball_end_x": 100,
         "before": {
           "period": 1,
           "clock_s": 719,
           "possession": "home",
           "home_defends": "left",
-          "down": 1,
-          "yards_to_go": 0,
-          "yardline_100": 0,
+          "down": null,
+          "yards_to_go": null,
+          "yardline_100": 65,
           "home_score": 7,
           "away_score": 0
         },
@@ -427,7 +493,7 @@
           "touchdown": false,
           "turnover": false,
           "safety": false,
-          "made": false,
+          "made": null,
           "penalty_on": null
         },
         "score_delta": {
@@ -472,7 +538,7 @@
         "participants": [
           {
             "role": "rusher",
-            "player_id": "demo-away-01",
+            "player_id": "demo-away-rusher",
             "name": "Demo Runner"
           }
         ],
@@ -481,7 +547,7 @@
           "touchdown": false,
           "turnover": false,
           "safety": false,
-          "made": false,
+          "made": null,
           "penalty_on": null
         },
         "score_delta": {
@@ -490,9 +556,14 @@
         },
         "stat_deltas": [
           {
-            "player_id": "demo-away-01",
+            "player_id": "demo-away-rusher",
             "stat": "rushing_yards",
             "value": 4
+          },
+          {
+            "player_id": "demo-away-rusher",
+            "stat": "carries",
+            "value": 1
           }
         ]
       },
@@ -532,8 +603,13 @@
         "participants": [
           {
             "role": "target",
-            "player_id": "demo-away-01",
+            "player_id": "demo-away-target",
             "name": "Demo Receiver"
+          },
+          {
+            "role": "passer",
+            "player_id": "demo-away-passer",
+            "name": "Demo Quarterback"
           }
         ],
         "flags": {
@@ -541,7 +617,7 @@
           "touchdown": false,
           "turnover": false,
           "safety": false,
-          "made": false,
+          "made": null,
           "penalty_on": null
         },
         "score_delta": {
@@ -550,9 +626,29 @@
         },
         "stat_deltas": [
           {
-            "player_id": "demo-away-01",
+            "player_id": "demo-away-target",
             "stat": "receiving_yards",
             "value": 12
+          },
+          {
+            "player_id": "demo-away-target",
+            "stat": "receptions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-away-passer",
+            "stat": "passing_yards",
+            "value": 12
+          },
+          {
+            "player_id": "demo-away-passer",
+            "stat": "completions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-away-passer",
+            "stat": "pass_attempts",
+            "value": 1
           }
         ]
       }
@@ -562,5 +658,5 @@
     "home": 7,
     "away": 0
   },
-  "input_hash": "1f7a3bcb00096e5ad085dbf4f49426382f60d2a467b69357ff90f135e0785284"
+  "input_hash": "dd7e901fe8a3319448b04a6f4642419f1118b8741acf9762f970953ff834a65e"
 }
