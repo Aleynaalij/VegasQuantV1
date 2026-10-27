@@ -7,6 +7,11 @@ import TeamLogo from "./team-logo";
 import PlayerPortrait from "./player-portrait";
 import LegActions from "./leg-actions";
 import GamblyLink from "./gambly-link";
+import {
+  canBuildWith,
+  selectionError,
+  type PublishedLeg,
+} from "@/lib/parlay-builder";
 type Leg = {
   leg_key: string;
   name: string;
@@ -52,6 +57,18 @@ export default function HomeGameList({ games }: { games: Game[] }) {
       const keys: string[] = Array.isArray(draft.keys)
         ? draft.keys.filter((k: unknown) => typeof k === "string")
         : [];
+      if (!keys.includes(key)) {
+        // Same rules the lay builder applies when it restores this draft.
+        const current = keys.flatMap((k) => {
+          const row = legs.find((r) => r.leg_key === k);
+          return row ? [row as unknown as PublishedLeg] : [];
+        });
+        const error = selectionError(current, leg as unknown as PublishedLeg);
+        if (error) {
+          setDraftNotice(error);
+          return;
+        }
+      }
       const next = keys.includes(key)
         ? keys.filter((k) => k !== key)
         : [...keys, key];
@@ -202,16 +219,19 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                         </small>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      className="secondary"
-                      aria-pressed={chosen.includes(r.leg_key)}
-                      onClick={() => void toggleLeg(r.leg_key)}
-                    >
-                      {chosen.includes(r.leg_key)
-                        ? "✓ Added to your lay"
-                        : "Add to your lay"}
-                    </button>
+                    {canBuildWith(r as unknown as PublishedLeg) ||
+                    chosen.includes(r.leg_key) ? (
+                      <button
+                        type="button"
+                        className="secondary"
+                        aria-pressed={chosen.includes(r.leg_key)}
+                        onClick={() => void toggleLeg(r.leg_key)}
+                      >
+                        {chosen.includes(r.leg_key)
+                          ? "✓ Added to your lay"
+                          : "Add to your lay"}
+                      </button>
+                    ) : null}
                     <LegActions
                       legKey={r.leg_key}
                       expired={

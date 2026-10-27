@@ -33,7 +33,7 @@ test("typed slips preserve exact selections; missing odds stay unknown", () => {
 test("contributor notifications open the exact Zone card and reject foreign links", () => {
   assert.equal(
     notificationLink(rubyLink("test-card")),
-    "/feed?view=contributors&ruby=test-card#ruby-test-card",
+    "/community?ruby=test-card#ruby-test-card",
   );
   assert.equal(notificationLink("//evil.test/feed"), "/notifications");
   assert.equal(notificationLink("/feed-evil"), "/notifications");

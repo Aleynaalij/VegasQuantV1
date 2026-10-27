@@ -612,7 +612,7 @@ export default function CommunityFeed() {
           <ParlayWorkshop mode="parlays" />
         </details>
         <section id="zone-contributors">
-          <RubyHub zone />
+          <RubyHub zone selectedId={searchParams.get("ruby") || ""} />
         </section>
         {blocked.length ? (
           <details>

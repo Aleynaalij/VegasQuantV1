@@ -1,4 +1,5 @@
 /** Read-only entertainment shuffler. It never computes prices or publishes picks. */
+import { legFamily, parlayCopyLine, type PublishedLeg } from "./parlay-builder";
 export type SlotLeg = {
   leg_key: string;
   name: string;
@@ -40,8 +41,14 @@ export function slotPool(rows: SlotLeg[], now = Date.now()): SlotLeg[] {
 }
 // One selection per player in a game, and one team-side market per game, avoids
 // opposing sides and alternative thresholds for the same player on one ticket.
+// Official picks carry the target in `name` ("Player 80+ receiving yards", market "Player
+// Prop"); research rows use the bare name. The builder's parser yields the same player for both.
+const player = (r: SlotLeg) => {
+  const leg = r as unknown as PublishedLeg;
+  return parlayCopyLine(leg) ? legFamily(leg).split(":")[1] : clean(r.name);
+};
 const group = (r: SlotLeg) =>
-  `${r.game_id}|${/moneyline|spread|\bside\b/i.test(r.market) ? "team-side" : clean(r.name)}`;
+  `${r.game_id}|${/moneyline|spread|\bside\b/i.test(r.market) ? "team-side" : player(r)}`;
 export function spinTicket(
   rows: SlotLeg[],
   previous: string | ReadonlySet<string> | null,

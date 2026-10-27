@@ -9,7 +9,15 @@ export default async function Page({
 }) {
   const query = await searchParams;
   if (!Object.keys(query).length) redirect("/community");
-  if (query.view === "contributors") redirect("/community#zone-contributors");
+  if (query.view === "contributors") {
+    // Shared and older card links keep their target card.
+    const ruby = typeof query.ruby === "string" ? query.ruby : "";
+    redirect(
+      ruby
+        ? `/community?ruby=${encodeURIComponent(ruby)}#ruby-${encodeURIComponent(ruby)}`
+        : "/community#zone-contributors",
+    );
+  }
   return (
     <Suspense fallback={<p role="status">Loading The Zone…</p>}>
       <ResearchFeed />

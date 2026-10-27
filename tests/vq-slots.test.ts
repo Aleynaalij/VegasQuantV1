@@ -70,3 +70,20 @@ test("copy identifies random entertainment without invented odds", () => {
   assert.match(slotCopy(rows.slice(0, 8)), /not an analyst recommendation/);
   assert.match(slotCopy(rows.slice(0, 8)), /No combined odds/);
 });
+test("an official pick and a research target for one player count as one player", () => {
+  // Seven research players plus an official "Player Prop" for Player 0: only seven players.
+  const official: SlotLeg = {
+    ...rows[0],
+    leg_key: "official-0",
+    name: "Player 0 80+ receiving yards",
+    market: "Player Prop",
+    kind: "OFFICIAL",
+  };
+  assert.throws(
+    () => spinTicket([...rows.slice(0, 7), official], null, Math.random, now),
+    /Eight different eligible selections/,
+  );
+  const ticket = spinTicket([...rows, official], null, Math.random, now);
+  const players = ticket.map((r) => r.name.replace(/ \d+\+.*$/, ""));
+  assert.equal(new Set(players).size, 8);
+});
