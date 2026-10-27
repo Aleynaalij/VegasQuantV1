@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   ArrowUpRight,
   Check,
+  ChevronRight,
   ClipboardPaste,
   Copy,
   Gem,
@@ -510,31 +511,51 @@ function Composer({
   }
   const contributor = state.contributor!;
   return (
-    <section className={`ruby-composer-home ruby-${contributor.theme}`}>
-      <div>
-        <span className="ruby-eyebrow">
-          <Gem size={13} /> YOUR {contributorTier(contributor.theme)} DESK
-        </span>
-        <h2>{contributor.brand}</h2>
-        <p>
-          {`${state.submission_count || 0} / 3 slips posted today. Resets at midnight Eastern.`}
+    <section
+      className={`ruby-composer-home ruby-submit-compact ruby-${contributor.theme}`}
+    >
+      <details className="ruby-submit-drawer">
+        <summary aria-label="Submit today’s lay options">
+          <Gem size={16} aria-hidden="true" />
+          <span>Submit today’s lay</span>
+          <small>{state.submission_count || 0} / 3</small>
+          <ChevronRight
+            className="ruby-submit-chevron"
+            size={18}
+            aria-hidden="true"
+          />
+        </summary>
+        <div className="ruby-submit-content">
+          <div>
+            <span className="ruby-eyebrow">
+              <Gem size={13} /> YOUR {contributorTier(contributor.theme)} DESK
+            </span>
+            <h2>{contributor.brand}</h2>
+            <p>
+              {`${state.submission_count || 0} / 3 slips posted today. Resets at midnight Eastern.`}
+            </p>
+          </div>
+          {(state.submission_count || 0) >= 3 && state.submitted ? (
+            <Link className="ruby-primary" href={rubyLink(state.submitted)}>
+              View your lay <ArrowUpRight size={17} />
+            </Link>
+          ) : (
+            <button className="ruby-primary" onClick={() => setOpen(true)}>
+              <Plus size={17} /> Submit today’s lay
+            </button>
+          )}
+          {state.submitted && (state.submission_count || 0) < 3 && (
+            <Link className="ruby-text-link" href={rubyLink(state.submitted)}>
+              View your lay
+            </Link>
+          )}
+        </div>
+      </details>
+      {message && (
+        <p className="ruby-submit-message" role="status">
+          {message}
         </p>
-      </div>
-      {(state.submission_count || 0) >= 3 && state.submitted ? (
-        <Link className="ruby-primary" href={rubyLink(state.submitted)}>
-          View your lay <ArrowUpRight size={17} />
-        </Link>
-      ) : (
-        <button className="ruby-primary" onClick={() => setOpen(true)}>
-          <Plus size={17} /> Submit today’s lay
-        </button>
       )}
-      {state.submitted && (state.submission_count || 0) < 3 && (
-        <Link className="ruby-text-link" href={rubyLink(state.submitted)}>
-          View your lay
-        </Link>
-      )}
-      {message && <p role="status">{message}</p>}
       {open && (
         <div className="ruby-modal-backdrop">
           <section

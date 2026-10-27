@@ -324,7 +324,21 @@ for (const { width, photoOnly } of [
         }),
   );
   await go(page, base + "/");
-  await page.getByRole("button", { name: "Submit today’s lay" }).click();
+  const submissionDrawer = page.locator(".ruby-submit-drawer");
+  await submissionDrawer.waitFor();
+  assert.equal(await submissionDrawer.getAttribute("open"), null);
+  assert.equal(
+    await page
+      .locator(".ruby-submit-content")
+      .getByRole("button", { name: "Submit today’s lay" })
+      .count(),
+    0,
+  );
+  await submissionDrawer.locator("summary").click();
+  await page
+    .locator(".ruby-submit-content")
+    .getByRole("button", { name: "Submit today’s lay" })
+    .click();
   if (photoOnly) {
     assert.equal(
       await page
@@ -391,13 +405,17 @@ for (const { width, photoOnly } of [
     assert.ok(uploadedPhoto.includes(Buffer.from("image/jpeg")));
   }
   assert.equal(
-    await page.getByRole("button", { name: "Submit today’s lay" }).count(),
+    await page
+      .locator(".ruby-submit-content")
+      .getByRole("button", { name: "Submit today’s lay" })
+      .count(),
     1,
   );
   // After the third slip of the day, "View your lay" becomes the gold button; it keeps its dark
   // label under the dark theme's link color.
   full = true;
   await reloadSettled(page);
+  await page.locator(".ruby-submit-drawer > summary").click();
   const viewLay = page.locator("a.ruby-primary", { hasText: "View your lay" });
   await viewLay.waitFor();
   assert.equal(
@@ -405,7 +423,10 @@ for (const { width, photoOnly } of [
     "rgb(32, 25, 13)",
   );
   assert.equal(
-    await page.getByRole("button", { name: "Submit today’s lay" }).count(),
+    await page
+      .locator(".ruby-submit-content")
+      .getByRole("button", { name: "Submit today’s lay" })
+      .count(),
     0,
   );
   full = false;
