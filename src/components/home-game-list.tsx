@@ -164,10 +164,16 @@ export default function HomeGameList({ games }: { games: Game[] }) {
   // Card faces carry the latest FanDuel moneyline and its no-vig split (members can read it).
   useEffect(() => {
     if (!ids) return;
-    let live = true;
+    let live = true,
+      generation = 0;
     async function load() {
+      const n = ++generation;
       const session = await supabase.auth.getSession();
-      if (!session.data.session) return;
+      if (!live || n !== generation) return;
+      if (!session.data.session) {
+        setLines({});
+        return;
+      }
       const r = await supabase
         .from("source_observations")
         .select("game_id,payload")
@@ -177,7 +183,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
         .eq("payload->>market", "h2h")
         .order("recorded_at", { ascending: false })
         .limit(200);
-      if (!live || r.error) return;
+      if (!live || n !== generation || r.error) return;
       const next: Record<string, MoneylineRead> = {};
       for (const row of r.data || []) {
         if (next[row.game_id]) continue;
@@ -194,8 +200,14 @@ export default function HomeGameList({ games }: { games: Game[] }) {
       setLines(next);
     }
     void load();
+    // Prices move: refresh on the same one-minute cadence as the game page's snapshots, and
+    // reload (or clear) when the account signs in or out.
+    const timer = setInterval(load, 60000);
+    const auth = supabase.auth.onAuthStateChange(() => void load());
     return () => {
       live = false;
+      clearInterval(timer);
+      auth.data.subscription.unsubscribe();
     };
     // slate is derived from ids; the effect keys on the id list only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
