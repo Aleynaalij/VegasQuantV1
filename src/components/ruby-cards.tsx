@@ -1,11 +1,5 @@
 "use client";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -24,7 +18,6 @@ import {
   contributorTier,
   contributorSports,
   type ContributorSport,
-  currentRubyFeature,
   rubyLegs,
   rubyLink,
   rubyOdds,
@@ -32,11 +25,8 @@ import {
   rankCappers,
   type CapperRecord,
   type RubySlip,
-  type RubyFeature,
   type RubyHomeState,
 } from "@/lib/ruby";
-import { AnalystDoubleUpCard } from "./analyst-double-up";
-import type { AnalystDoubleUp } from "@/lib/analyst-double-up";
 import CommunityPhoto from "./community-photo";
 import GamblyLink from "./gambly-link";
 import {
@@ -51,21 +41,16 @@ import {
 } from "@/lib/community-photo-client";
 
 export function RubyCard({
-  slip: suppliedSlip,
-  feature: suppliedFeature,
+  slip,
   admin = false,
   onFeatured,
 }: {
   slip: RubySlip;
-  feature?: RubyFeature;
   admin?: boolean;
   onFeatured?: () => void;
 }) {
-  const slip = suppliedSlip;
-  const feature = slip.revision ? undefined : suppliedFeature;
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState("");
-  const [featuring, setFeaturing] = useState(false);
   const brand = rubyBrands.find((b) => b.theme === slip.theme) || rubyBrands[0];
   async function copy() {
     try {
@@ -85,36 +70,6 @@ export function RubyCard({
       setNotice(
         "Copy is unavailable in this browser. Open the card link to share it.",
       );
-    }
-  }
-  async function featureLay(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const f = new FormData(e.currentTarget);
-    setFeaturing(true);
-    setNotice("");
-    try {
-      const observed = new Date(String(f.get("observed")));
-      if (!Number.isFinite(observed.getTime()))
-        throw new Error("Enter the quote observation time.");
-      const { error } = await supabase.rpc("feature_ruby", {
-        p_submission: slip.id,
-        p_odds: rubyOdds(String(f.get("odds"))),
-        p_book: String(f.get("book")).trim(),
-        p_source: String(f.get("source")).trim(),
-        p_observed: observed.toISOString(),
-      });
-      if (error) throw error;
-      setNotice("Featured as today’s Double Up. Original card preserved.");
-      onFeatured?.();
-    } catch (e) {
-      setNotice(
-        e instanceof Error
-          ? e.message
-          : (e as { message?: string }).message ||
-              "Could not feature this lay.",
-      );
-    } finally {
-      setFeaturing(false);
     }
   }
   return (
@@ -137,9 +92,7 @@ export function RubyCard({
         </div>
       </div>
       <div className="ruby-card-label">
-        <span>
-          {feature ? "DOUBLE UP · LAY OF THE DAY" : "CONTRIBUTOR DAILY LAY"}
-        </span>
+        <span>CONTRIBUTOR DAILY LAY</span>
         <span>{slip.sport}</span>
       </div>
       <h4>{slip.title}</h4>
@@ -160,40 +113,15 @@ export function RubyCard({
         />
       )}
       {slip.note && <p className="ruby-note">{slip.note}</p>}
-      {feature ? (
+      {slip.reported_odds !== null && (
         <div className="ruby-price">
-          <strong>{rubyPrice(feature.verified_odds)}</strong>
+          <strong>{rubyPrice(slip.reported_odds)}</strong>
           <span>
-            {feature.sportsbook} · admin-verified quote
+            {slip.sportsbook}
             <br />
-            <a
-              href={feature.source_url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Observed{" "}
-              {new Date(feature.observed_at).toLocaleString("en-US", {
-                timeZone: "America/New_York",
-                month: "short",
-                day: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-              })}{" "}
-              ET ↗
-            </a>
+            Contributor-reported combined odds · unverified
           </span>
         </div>
-      ) : (
-        slip.reported_odds !== null && (
-          <div className="ruby-price">
-            <strong>{rubyPrice(slip.reported_odds)}</strong>
-            <span>
-              {slip.sportsbook}
-              <br />
-              Contributor-reported combined odds · unverified
-            </span>
-          </div>
-        )
       )}
       {slip.reported_result && (
         <p className="ruby-fine">
@@ -272,52 +200,7 @@ export function RubyCard({
         <p className="ruby-fine">
           Edited by admin · revision {slip.revision}. Original retained in
           history.
-          {suppliedFeature
-            ? " Original featured quote does not apply to this revision."
-            : admin
-              ? " Edited cards can’t be featured: Home shows the original slip."
-              : ""}
         </p>
-      )}
-      {/* Featuring records the original submission and Home renders it, so a revised card must
-          not offer a quote verified against its edited legs. */}
-      {admin && !suppliedFeature && !slip.revision && (
-        <details className="ruby-curate">
-          <summary>Feature as Double Up</summary>
-          <form onSubmit={featureLay}>
-            <p>
-              Verify the complete slip and exact combined price. This features a
-              contributor opinion, not an official/model pick. One feature per
-              Eastern day.
-            </p>
-            <input
-              name="odds"
-              placeholder="Verified combined odds, +100 or better"
-              required
-              inputMode="text"
-            />
-            <input
-              name="book"
-              placeholder="Sportsbook"
-              required
-              maxLength={80}
-            />
-            <input
-              name="source"
-              placeholder="Exact HTTPS quote / ticket source"
-              type="url"
-              pattern="https://.*"
-              required
-            />
-            <label>
-              Quote observed at (your local time)
-              <input type="datetime-local" name="observed" required />
-            </label>
-            <button disabled={featuring}>
-              {featuring ? "Featuring…" : "Feature today’s lay"}
-            </button>
-          </form>
-        </details>
       )}
       {notice && <p role="status">{notice}</p>}
     </article>
@@ -937,28 +820,18 @@ export default function RubyHub({
   zone = false,
   selectedId = "",
   contributorsOnly = false,
-  afterDoubleUp,
 }: {
   home?: boolean;
   composerOnly?: boolean;
   leaderboardOnly?: boolean;
   zone?: boolean;
   selectedId?: string;
-  /** Home: shown directly under Today's Double Up, before the contributors row. */
-  afterDoubleUp?: ReactNode;
   /** Show only to contributors and admins; everyone else opens it from the Contributors tab. */
   contributorsOnly?: boolean;
 }) {
   const [state, setState] = useState<RubyHomeState>({});
   const [records, setRecords] = useState<CapperRecord[]>([]);
   const [slips, setSlips] = useState<RubySlip[]>([]);
-  const [originalFeatured, setOriginalFeatured] = useState<RubySlip | null>(
-    null,
-  );
-  const [analystTicket, setAnalystTicket] = useState<AnalystDoubleUp | null>(
-    null,
-  );
-  const [feature, setFeature] = useState<RubyFeature | null>(null);
   const [selected, setSelected] = useState("All");
   const [error, setError] = useState("");
   const [limit, setLimit] = useState(12);
@@ -970,9 +843,6 @@ export default function RubyHub({
     if (!session.data.session) {
       setState({});
       setSlips([]);
-      setOriginalFeatured(null);
-      setFeature(null);
-      setAnalystTicket(null);
       setError("");
       return;
     }
@@ -990,21 +860,16 @@ export default function RubyHub({
       setRecords(record.error ? [] : record.data || []);
       return;
     }
-    const [s, r, f] = await Promise.all([
+    const [s, r] = await Promise.all([
       supabase.rpc("ruby_home"),
       supabase
         .from("ruby_cards")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(home ? 20 : limit),
-      supabase
-        .from("ruby_daily_features")
-        .select("*")
-        .order("day", { ascending: false })
-        .limit(1),
     ]);
     if (version !== epoch.current) return;
-    if (s.error || r.error || f.error) {
+    if (s.error || r.error) {
       setError("Contributor cards could not load. Please retry.");
       return;
     }
@@ -1014,31 +879,8 @@ export default function RubyHub({
     if (version !== epoch.current) return;
     setRecords(record.error ? [] : record.data || []);
     setSlips(r.data || []);
-    const todayFeature = currentRubyFeature(next.day, f.data || []);
-    setFeature(todayFeature);
-    setAnalystTicket(null);
-    // Daily features are never rendered in The Zone.
-    if (home && !composerOnly && todayFeature?.analyst_ticket_id) {
-      const analyst = await supabase
-        .from("nfl_analyst_double_ups")
-        .select("*")
-        .eq("id", todayFeature.analyst_ticket_id)
-        .maybeSingle();
-      if (version !== epoch.current) return;
-      if (analyst.data) setAnalystTicket(analyst.data);
-    }
-    setOriginalFeatured(null);
-    if (home && !composerOnly && todayFeature?.submission_id) {
-      const original = await supabase
-        .from("ruby_submissions")
-        .select("*")
-        .eq("id", todayFeature.submission_id)
-        .maybeSingle();
-      if (version !== epoch.current) return;
-      if (original.data) setOriginalFeatured(original.data);
-    }
     setError("");
-    const neededId = selectedId || todayFeature?.submission_id || "";
+    const neededId = selectedId;
     if (neededId && !r.data?.some((x) => x.id === neededId)) {
       const one = await supabase
         .from("ruby_cards")
@@ -1055,9 +897,6 @@ export default function RubyHub({
       epoch.current++;
       setState({});
       setSlips([]);
-      setOriginalFeatured(null);
-      setFeature(null);
-      setAnalystTicket(null);
       void refresh();
     });
     const interval = setInterval(() => void refresh(), 60000);
@@ -1078,8 +917,6 @@ export default function RubyHub({
         .getElementById(`ruby-${selectedId}`)
         ?.scrollIntoView({ block: "start" });
   }, [selectedId, slips]);
-  const featured =
-    feature && slips.find((s) => s.id === feature.submission_id && !s.hidden);
   const visible = slips.filter(
     (s) =>
       (!home || selected !== "All") &&
@@ -1177,34 +1014,6 @@ export default function RubyHub({
           onPublished={() => void refresh()}
         />
       )}
-      {home && (
-        <section className="ruby-double-up">
-          <div>
-            <span className="ruby-eyebrow">TODAY’S DOUBLE UP</span>
-            <h2>One lay. +100 or better.</h2>
-            <p>
-              {analystTicket
-                ? "Today’s Vegas Quant analyst lay. See the complete slip, sources and risks below."
-                : featured
-                  ? "Today’s featured contributor lay. See the complete slip and quote below."
-                  : "The daily feature appears here after a qualifying slip and its combined price are verified."}
-            </p>
-          </div>
-          {analystTicket ? (
-            <AnalystDoubleUpCard ticket={analystTicket} />
-          ) : featured && feature ? (
-            <RubyCard
-              slip={originalFeatured || featured}
-              feature={originalFeatured ? feature : undefined}
-            />
-          ) : (
-            <Link className="ruby-text-link" href="/community?view=vip">
-              Explore contributor lays <ArrowUpRight size={16} />
-            </Link>
-          )}
-        </section>
-      )}
-      {home && afterDoubleUp}
       {(home || zone) && state.due?.length ? (
         <ResultPrompt
           state={state}
@@ -1296,7 +1105,6 @@ export default function RubyHub({
             <RubyCard
               key={s.id}
               slip={s}
-              feature={feature?.submission_id === s.id ? feature : undefined}
               admin={state.admin}
               onFeatured={() => void refresh()}
             />

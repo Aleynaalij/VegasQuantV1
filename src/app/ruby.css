@@ -1002,19 +1002,5 @@ html[data-theme] body a.ruby-primary {
 
 .ruby-encore.ruby-card { background: linear-gradient(155deg, #49203f, #1d121e 65%); border: 2px solid #d491b0; }
 
-.analyst-double-up {
-  min-width: 0;
-  width: 100%;
-  display: grid;
-  gap: 16px;
-  margin-block: 16px;
-}
-.analyst-double-up > .vqc { width: 100%; max-width: 560px; margin-inline: auto; }
-.analyst-double-up details { padding: 16px; border: 1px solid #b99a4c44; border-radius: 16px; }
-.analyst-double-up details section { margin-block: 18px; }
-.analyst-double-up p { overflow-wrap: anywhere; }
-.analyst-double-up a { color: var(--gold, #e8c46a); }
-.analyst-double-up .ruby-actions { display: flex; flex-wrap: wrap; gap: 12px; }
-
 .ticket-destinations { display: grid; gap: 12px; width: 100%; min-width: 0; }
 .ticket-destinations > button { width: 100%; }

@@ -558,6 +558,9 @@ for (const { width, photoOnly } of [
     .getByText("Removed from The Zone. History and record retained.")
     .waitFor();
   assert.equal(hidden.p_hidden, true);
+  // Double Up is retired: admins get no way to feature a card as one.
+  assert.equal(await page.getByText("Feature as Double Up").count(), 0);
+  assert.equal(await page.getByText(/DOUBLE UP/).count(), 0);
   adminView = false;
   // Latest contains posts; contributor cards live only on VIP Lays.
   await go(page, base + "/feed");
