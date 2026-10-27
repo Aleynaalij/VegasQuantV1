@@ -25,6 +25,142 @@ export const PLAY_TYPES = [
 ] as const;
 
 const side = z.enum(["home", "away"]);
+
+// The engine's own fixture format (research/game_sim, #133). It is converted to the run shape
+// above: x is absolute from the rendered left goal line with home_defends per state, so the
+// adaptor turns it into home-relative x; down and score come from the before/after states.
+export const ENGINE_SCHEMA = "vq-game-sim/0.1";
+const engineState = z.object({
+  period: z.number().int().min(1),
+  clock_s: z.number().int().min(0).max(900),
+  possession: side,
+  home_defends: z.enum(["left", "right"]),
+  down: z.number().int().nullable(),
+  yards_to_go: z.number().nullable(),
+  yardline_100: z.number().nullable(),
+  home_score: z.number().int().min(0),
+  away_score: z.number().int().min(0),
+});
+const engineRun = z.object({
+  schema_version: z.literal(ENGINE_SCHEMA),
+  mode: z.enum(["demo", "historical_replay", "pregame", "scenario"]),
+  is_demo: z.boolean(),
+  run_id: z.string().min(1),
+  generated_at: z.string().min(1),
+  historical_cutoff: z.string().nullable(),
+  model_version: z.string().min(1),
+  artifact_hash: z.string().min(1).nullable(),
+  teams: z.object({
+    home: z.object({ id: z.string(), abbr: z.string(), name: z.string() }),
+    away: z.object({ id: z.string(), abbr: z.string(), name: z.string() }),
+  }),
+  runs: z.object({ requested: z.number(), actual: z.number() }),
+  seed: z.union([z.string(), z.number()]).nullable(),
+  blockers: z.array(z.string()).default([]),
+  ensemble: z.unknown().nullable(),
+  replay: z.object({
+    seed: z.union([z.string(), z.number()]).nullable(),
+    selection: z.object({
+      method: z.string(),
+      description: z.string(),
+      distance: z.number().nullable(),
+    }),
+    events: z.array(
+      z.object({
+        sequence: z.number().int(),
+        period: z.number().int(),
+        clock_before_s: z.number().int(),
+        clock_after_s: z.number().int(),
+        possession: side,
+        play_type: z.enum(PLAY_TYPES),
+        yards: z.number().int(),
+        yardline_100: z.number().nullable(),
+        ball_start_x: z.number().nullable(),
+        ball_end_x: z.number().nullable(),
+        before: engineState,
+        after: engineState,
+        participants: z.array(
+          z.object({
+            role: z.enum(["passer", "rusher", "target", "kicker", "returner"]),
+            player_id: z.string().min(1),
+            name: z.string().min(1),
+          }),
+        ),
+        flags: z.object({
+          first_down: z.boolean(),
+          touchdown: z.boolean(),
+          turnover: z.boolean(),
+          safety: z.boolean(),
+          made: z.boolean().nullable(),
+          penalty_on: side.nullable(),
+        }),
+      }),
+    ),
+  }),
+});
+// Kicks and markers have no down; the engine states carry the last snap's down through them.
+const NO_DOWN = new Set([
+  "kickoff",
+  "extra_point",
+  "two_point",
+  "timeout",
+  "end_period",
+]);
+const KICKS = new Set(["field_goal", "extra_point", "two_point"]);
+
+function fromEngine(r: z.infer<typeof engineRun>) {
+  return {
+    schema_version: r.schema_version,
+    run_id: r.run_id,
+    mode: r.mode,
+    is_demo: r.is_demo,
+    status: "complete",
+    blockers: r.blockers,
+    game: { game_id: r.run_id, kickoff: null, teams: r.teams },
+    model_version: r.model_version,
+    artifact_hash: r.artifact_hash,
+    generation_time: r.generated_at,
+    historical_cutoff: r.historical_cutoff,
+    runs: r.runs,
+    replay: { seed: r.replay.seed ?? r.seed, selection: r.replay.selection },
+    distributions: r.ensemble ?? null,
+    scenario: null,
+    events: r.replay.events.map((e) => {
+      const b = e.before,
+        a = e.after;
+      const homeX = (x: number | null) =>
+        x == null ? null : b.home_defends === "left" ? x : 100 - x;
+      const noDown = NO_DOWN.has(e.play_type);
+      const receiving = e.possession === "home" ? "away" : "home";
+      return {
+        sequence: e.sequence,
+        period: e.period,
+        clock_before_s: e.clock_before_s,
+        clock_after_s: e.clock_after_s,
+        possession: e.possession,
+        down: noDown ? null : b.down,
+        distance: noDown ? null : b.yards_to_go,
+        yardline_100: e.yardline_100,
+        ball_start_x: homeX(e.ball_start_x),
+        ball_end_x: homeX(e.ball_end_x),
+        play_type: e.play_type,
+        yards: e.yards,
+        ...e.flags,
+        made: KICKS.has(e.play_type) ? e.flags.made : null,
+        participants: e.participants.map((p) => ({
+          ...p,
+          team:
+            p.role === "returner" &&
+            (e.play_type === "kickoff" || e.play_type === "punt")
+              ? receiving
+              : e.possession,
+        })),
+        score_before: { home: b.home_score, away: b.away_score },
+        score_after: { home: a.home_score, away: a.away_score },
+      };
+    }),
+  };
+}
 const score = z.object({
   home: z.number().int().min(0),
   away: z.number().int().min(0),
@@ -91,7 +227,7 @@ export const simEvent = z.object({
 });
 
 export const simRun = z.object({
-  schema_version: z.literal("0"),
+  schema_version: z.enum(["0", ENGINE_SCHEMA]),
   run_id: z.string().min(1),
   mode: z.enum(["demo", "historical_replay", "pregame", "scenario"]),
   is_demo: z.boolean(),
@@ -99,11 +235,11 @@ export const simRun = z.object({
   blockers: z.array(z.string()).default([]),
   game: z.object({
     game_id: z.string().min(1),
-    kickoff: z.string().min(1),
+    kickoff: z.string().min(1).nullable(),
     teams: z.object({ home: team, away: team }),
   }),
   model_version: z.string().min(1),
-  artifact_hash: z.string().min(1),
+  artifact_hash: z.string().min(1).nullable(),
   generation_time: z.string().min(1),
   historical_cutoff: z.string().nullable(),
   runs: z.object({
@@ -111,7 +247,7 @@ export const simRun = z.object({
     actual: z.number().int().min(0),
   }),
   replay: z.object({
-    seed: z.union([z.string(), z.number()]),
+    seed: z.union([z.string(), z.number()]).nullable(),
     selection: z.object({
       method: z.string().min(1),
       description: z.string().min(1),
@@ -163,7 +299,21 @@ export type Side = "home" | "away";
 export function parseSimRun(
   input: unknown,
 ): { ok: true; run: SimRun } | { ok: false; errors: string[] } {
-  const parsed = simRun.safeParse(input);
+  let raw = input;
+  if (
+    (input as { schema_version?: unknown })?.schema_version === ENGINE_SCHEMA
+  ) {
+    const engine = engineRun.safeParse(input);
+    if (!engine.success)
+      return {
+        ok: false,
+        errors: engine.error.issues.map(
+          (i) => `${i.path.join(".") || "run"}: ${i.message}`,
+        ),
+      };
+    raw = fromEngine(engine.data);
+  }
+  const parsed = simRun.safeParse(raw);
   if (!parsed.success)
     return {
       ok: false,

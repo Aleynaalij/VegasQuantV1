@@ -391,8 +391,9 @@ export default function SimulatorView({ run }: { run: SimRun }) {
         </p>
         <p>
           Runs {run.runs.actual.toLocaleString()} of{" "}
-          {run.runs.requested.toLocaleString()} · seed {String(run.replay.seed)}{" "}
-          · model {run.model_version} · {run.artifact_hash}
+          {run.runs.requested.toLocaleString()} · seed{" "}
+          {run.replay.seed ?? "none"} · model {run.model_version}
+          {run.artifact_hash && ` · ${run.artifact_hash}`}
           {run.historical_cutoff && ` · data through ${run.historical_cutoff}`}
         </p>
         <p>Research only · not a pick · no EV or edge.</p>
