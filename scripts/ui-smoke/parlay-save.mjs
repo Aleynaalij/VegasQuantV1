@@ -19,8 +19,10 @@ for (const width of [390, 1280]) {
         access_token: "smoke",
         refresh_token: "smoke",
         token_type: "bearer",
-        expires_in: 86400,
-        expires_at: Math.floor(Date.now() / 1000) + 86400,
+        // Outlives the closed-parlay check, which moves the clock two days ahead; an expired
+        // token would sign the fixture user out mid-test.
+        expires_in: 30 * 86400,
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 86400,
         user: {
           id: "00000000-0000-0000-0000-000000000001",
           aud: "authenticated",
@@ -148,9 +150,13 @@ for (const width of [390, 1280]) {
   });
   await page.goto(base + "/feed?view=legs");
   // A fresh member must acknowledge the app refresh before using the workshop.
-  const refresh = page.getByRole("dialog", { name: "Get the new gold Vegas Quant app" });
+  const refresh = page.getByRole("dialog", {
+    name: "Get the new gold Vegas Quant app",
+  });
   await refresh.waitFor();
-  const continueApp = refresh.getByRole("button", { name: "Continue to Vegas Quant" });
+  const continueApp = refresh.getByRole("button", {
+    name: "Continue to Vegas Quant",
+  });
   assert.equal(await continueApp.isEnabled(), false);
   await page.keyboard.press("Escape");
   assert.equal(await refresh.isVisible(), true);
@@ -267,15 +273,11 @@ for (const width of [390, 1280]) {
   await prompt.waitFor();
   await prompt.getByRole("checkbox").check();
   shareFails = true;
-  await prompt
-    .getByRole("button", { name: "Kalshi ↗", exact: true })
-    .click();
+  await prompt.getByRole("button", { name: "Kalshi ↗", exact: true }).click();
   await prompt.getByRole("alert").waitFor();
   assert.equal(kalshiChecks, 0, "failed share keeps destination closed");
   shareFails = false;
-  await prompt
-    .getByRole("button", { name: "Kalshi ↗", exact: true })
-    .click();
+  await prompt.getByRole("button", { name: "Kalshi ↗", exact: true }).click();
   const kalshi = page.getByRole("dialog", {
     name: "Open selections on Kalshi",
     exact: true,
@@ -372,6 +374,17 @@ for (const width of [390, 1280]) {
       .click();
     await prompt.waitFor();
     if (title === "Done sample") {
+      // Coming back to the tab (say, from Gambly) makes Supabase repeat SIGNED_IN; the saved
+      // prompt and the user's place must survive it.
+      await page.evaluate(() =>
+        window.dispatchEvent(new Event("visibilitychange")),
+      );
+      await page.waitForTimeout(1500);
+      assert.equal(
+        await prompt.isVisible(),
+        true,
+        "tab refocus keeps the save prompt open",
+      );
       await prompt.getByRole("checkbox").check();
       await prompt.getByRole("button", { name: "Done", exact: true }).click();
       await prompt.waitFor({ state: "hidden" });

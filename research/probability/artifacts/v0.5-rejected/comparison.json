@@ -1,0 +1,159 @@
+{
+  "plan": "research/probability/rushing-v0.5-plan.md",
+  "market": "rushing",
+  "samples": {
+    "2025": {
+      "weeks": [
+        [
+          2025,
+          1
+        ],
+        [
+          2025,
+          2
+        ],
+        [
+          2025,
+          3
+        ],
+        [
+          2025,
+          4
+        ],
+        [
+          2025,
+          5
+        ],
+        [
+          2025,
+          6
+        ],
+        [
+          2025,
+          7
+        ],
+        [
+          2025,
+          8
+        ],
+        [
+          2025,
+          9
+        ],
+        [
+          2025,
+          10
+        ],
+        [
+          2025,
+          11
+        ],
+        [
+          2025,
+          12
+        ],
+        [
+          2025,
+          13
+        ],
+        [
+          2025,
+          14
+        ],
+        [
+          2025,
+          15
+        ],
+        [
+          2025,
+          16
+        ],
+        [
+          2025,
+          17
+        ],
+        [
+          2025,
+          18
+        ]
+      ],
+      "v0.3": {
+        "threshold_predictions": 3750,
+        "brier": 0.15657451744363074,
+        "log_loss": 0.4803337640535675,
+        "ece": 0.028040738521384653
+      },
+      "v0.5": {
+        "threshold_predictions": 3750,
+        "brier": 0.15708516623699784,
+        "log_loss": 0.481329174739103,
+        "ece": 0.02879718848228175
+      },
+      "paired": {
+        "brier_difference": 0.000510648793367049,
+        "difference_95pct": [
+          -0.0002948180505843604,
+          0.0013458017949295109
+        ],
+        "nfl_games": 269,
+        "player_games": 750
+      }
+    },
+    "2026_from_week_7": {
+      "weeks": [
+        [
+          2026,
+          7
+        ]
+      ],
+      "v0.3": {
+        "threshold_predictions": 195,
+        "brier": 0.19944224034140876,
+        "log_loss": 0.5759480025329293,
+        "ece": 0.1015509292304422
+      },
+      "v0.5": {
+        "threshold_predictions": 195,
+        "brier": 0.19951982319134623,
+        "log_loss": 0.5751842835365136,
+        "ece": 0.10884832144499938
+      },
+      "paired": {
+        "brier_difference": 7.7582849937446e-05,
+        "difference_95pct": [
+          -0.0023216264024660226,
+          0.0026256608989329118
+        ],
+        "nfl_games": 14,
+        "player_games": 39
+      }
+    }
+  },
+  "sources": [
+    {
+      "file": "player_stats_2022.csv",
+      "sha256": "42f3a4da856546bd9606dde29eecf54e8dbbd6627264bbd8e153dd34ecd0e535"
+    },
+    {
+      "file": "player_stats_2023.csv",
+      "sha256": "fc731277c81c7ee25fb6af50cebd29a2adf3f8aadddeec1c485231aa9f98bdcc"
+    },
+    {
+      "file": "player_stats_2024.csv",
+      "sha256": "4f1598c9a6ba396a52e256762a0d9148abd22cdf856f26fc8825fa1d1dc49631"
+    },
+    {
+      "file": "stats_player_week_2025.csv",
+      "sha256": "e5e0615b3d96a3eaebfaee91e55afb4a4e7fe0caf057454177bcd7d6ad4bcfc2"
+    },
+    {
+      "file": "stats_player_week_2026.csv",
+      "sha256": "c5b3b92a9e4258a48f84a78ade8b1d7f69b543367bba6bc0205e9d268ab11174"
+    },
+    {
+      "file": "games.csv",
+      "sha256": "20c569e0c5f891418878fb05beef48ec8f19979fe789e2ded468966af4b257fb"
+    }
+  ],
+  "passes_stage_1": false
+}

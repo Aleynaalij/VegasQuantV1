@@ -1,6 +1,6 @@
 import "./ruby.css";
 import type { Metadata, Viewport } from "next";
-import { Barlow_Condensed, DM_Sans, Manrope } from "next/font/google";
+import localFont from "next/font/local";
 import "./base.css";
 import "./shell.css";
 import "./home.css";
@@ -33,25 +33,30 @@ import AppRefreshNotice from "@/components/app-refresh-notice";
 import BrandOpening from "@/components/brand-opening";
 import AgeAccessBoundary from "@/components/age-access-boundary";
 
-// Self-hosted at build time and preloaded (replaces the render-blocking Google Fonts @import).
-const body = DM_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+// Self-hosted from the repo (latin subset, SIL OFL; licenses in ./fonts) and preloaded, so builds
+// never fetch Google Fonts.
+const body = localFont({
+  src: [{ path: "./fonts/dm-sans-latin.woff2", weight: "400 700" }],
   display: "swap",
   variable: "--font-body",
+  fallback: ["Arial", "sans-serif"],
 });
-const display = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+const display = localFont({
+  src: [{ path: "./fonts/manrope-latin.woff2", weight: "400 800" }],
   display: "swap",
   variable: "--font-display",
+  fallback: ["Arial", "sans-serif"],
 });
 // Sportsbook-board numerals and headings for the lounge theme.
-const board = Barlow_Condensed({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
+const board = localFont({
+  src: [
+    { path: "./fonts/barlow-condensed-600-latin.woff2", weight: "600" },
+    { path: "./fonts/barlow-condensed-700-latin.woff2", weight: "700" },
+    { path: "./fonts/barlow-condensed-800-latin.woff2", weight: "800" },
+  ],
   display: "swap",
   variable: "--font-board",
+  fallback: ["Arial Narrow", "sans-serif"],
 });
 export const metadata: Metadata = {
   applicationName: "Vegas Quant",
