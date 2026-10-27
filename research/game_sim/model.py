@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other
 
-MODEL_ID='vq-empirical-game/0.2.2'
+MODEL_ID='vq-empirical-game/0.2.3'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -18,20 +18,20 @@ def bucket(s):
     return (s.phase,s.down or 0,distance_bin,field_bin,('last10' if s.clock<=10 else 'last30' if s.clock<=30 else 'last120' if s.clock<=120 else 'normal') if s.period in (2,4,5) else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
 
 def contexts(s):
-    phase,down,distance,field,clock,script=bucket(s)
+    phase,down,distance,field,clock,coarse=bucket(s)
+    field=field if phase=='scrimmage' else '_'
     if clock!='normal':
         margin=getattr(s,s.possession+'_score')-getattr(s,other(s.possession)+'_score')
-        if margin:
-            size=abs(margin)
-            script=('ahead' if margin>0 else 'behind')+('1-3' if size<=3 else '4-8' if size<=8 else '9+')
-    # Field zone remains in every fallback; sparse states cannot borrow distant kicks.
-    field=field if phase=='scrimmage' else '_'
-    key=(phase,clock,field,str(down),distance,script)
-    lengths=(6,5,4,3)
-    result=['|'.join(key[:n]) for n in lengths]
-    floor='|'.join((phase,clock,field.split(':')[0]))
-    if floor not in result:result.append(floor)
-    return result
+        size=abs(margin)
+        fine=coarse+('1-3' if size<=3 else '4-8' if size<=8 else '9+') if margin else coarse
+        key=(phase,clock,field,fine,str(down),distance)
+        result=['|'.join(key[:n]) for n in (6,5,4)]
+        result.extend(['|'.join((phase,clock,zone,coarse)) for zone in (field,field.split(':')[0])])
+    else:
+        key=(phase,clock,field,str(down),distance,coarse)
+        result=['|'.join(key[:n]) for n in (6,5,4,3)]
+        result.append('|'.join((phase,clock,field.split(':')[0])))
+    return list(dict.fromkeys(result))
 
 
 def censored_gain(curve,origin,target,rng):

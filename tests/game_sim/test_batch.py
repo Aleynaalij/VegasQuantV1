@@ -10,7 +10,10 @@ def fixture():
     for phase,entries in [('scrimmage',{'0':40,'1':30,'2':30}),('try',{'3':100}),('kickoff',{'4':100})]:
         fields=[str(x)+suffix for x in (5,10,20,40,60,80,100) for suffix in ('',':goal')] if phase=='scrimmage' else ['_']
         for clock in ('normal','last10','last30','last120'):
-            for field in fields:buckets['|'.join((phase,clock,field))]=dict(entries)
+            for field in fields:
+                for score in (('' ,) if clock=='normal' else ('ahead','tied','behind')):
+                    key='|'.join((phase,clock,field)+(tuple() if not score else (score,)))
+                    buckets[key]=dict(entries)
     return dict(model_id=MODEL_ID,sources=[],templates=templates,buckets=buckets,minimum_context=30)
 class BatchTests(unittest.TestCase):
     def test_reproducible_complete_batch_and_replay(self):

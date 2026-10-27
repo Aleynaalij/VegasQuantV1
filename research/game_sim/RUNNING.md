@@ -131,3 +131,30 @@ folder. Existing directories cannot be overwritten. Model remainsSHADOW_ONLY;
 no team/player coupling, current-matchup forecasts, approval or public release.
 
 Check: `python -m unittest discover -s tests/game_sim` —62testsPASS.
+
+## Late-score build 0.2.3 (Claude review6456315074)
+
+Frozen in `LATE_SCORE_PROTOCOL.md` before fitting. Late contexts retain coarse
+lead status in every floor as well as clock and physical field; fine score is
+before down/distance. Source-state kneel diagnostic reproducible with
+`python -m research.game_sim.audit_decisions --model <model.gz> --source <2022.gz>`.
+
+10000seed1701oldOT:10000complete,0failed,0unsupported censoring. Original
+reproduction gatePASS: total43.6432vs43.76384,TD4.8444vs4.85240,
+FG3.2894vs3.33210,punts7.7557vs8.11808. 23211thin-context draws disclosed.
+Timeouts6.1558vs7.78229stillFAIL. LateFGattempts.5417vs.48708pass.
+
+Single-seed source-state diagnostic, never held-out prediction:
+leading Q4<=120s kneel118/692=.17052 vs308/692=.44509 source (0.2.2draw69);
+trailing23/1214=.01895 vs8/1214=.00659 source (0.2.2draw72);
+trailing1–3 Q4<=10s5/33=.15152 vs0/33source (0.2.2draw7).
+Thus score mixing is reduced but game-management behavior is NOT fixed.
+Coarse behind floors still pool narrow deficits with strategic surrender.
+No hard prohibition or tuning added. Margins/win probabilities remain blocked.
+
+2023 already-inspected totalCRPS7.609437vs7.598449historical,
+margin8.137279vs8.065627; no demonstrated superiority/adoption.
+63Python testsPASS including missing-score rejection and leading/trailing floor
+isolation; source/file/implementation hashes and replay verified. No current
+matchup/model approval/team-player coupling/public release. Preserve0.2.3 and
+its remaining diagnostic failures for independent review before next protocol.
