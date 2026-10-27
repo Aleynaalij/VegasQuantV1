@@ -311,6 +311,15 @@ export function parseSimRun(
           (i) => `${i.path.join(".") || "run"}: ${i.message}`,
         ),
       };
+    // Only DEMO engine files map fully today: a real game needs its authoritative game id,
+    // kickoff, scenario and source provenance, which this adaptor doesn't carry yet (#135 review).
+    if (engine.data.mode !== "demo" || !engine.data.is_demo)
+      return {
+        ok: false,
+        errors: [
+          `engine ${engine.data.mode} runs aren't supported yet; only demo runs can be shown`,
+        ],
+      };
     raw = fromEngine(engine.data);
   }
   const parsed = simRun.safeParse(raw);
