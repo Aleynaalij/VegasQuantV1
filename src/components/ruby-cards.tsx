@@ -1063,11 +1063,13 @@ export default function RubyHub({
     const interval = setInterval(() => void refresh(), 60000);
     const focus = () => void refresh();
     window.addEventListener("focus", focus);
+    window.addEventListener("vq:ruby-result-saved", focus);
     return () => {
       epoch.current++;
       stop();
       clearInterval(interval);
       window.removeEventListener("focus", focus);
+      window.removeEventListener("vq:ruby-result-saved", focus);
     };
   }, [home, leaderboardOnly, limit, selectedId]); // account epochs reject stale reads
   useEffect(() => {
@@ -1157,7 +1159,12 @@ export default function RubyHub({
           />
         ) : null}
         {state.due?.length ? (
-          <ResultPrompt state={state} onSaved={() => void refresh()} />
+          <ResultPrompt
+            state={state}
+            onSaved={() =>
+              window.dispatchEvent(new Event("vq:ruby-result-saved"))
+            }
+          />
         ) : null}
       </div>
     );
@@ -1199,7 +1206,12 @@ export default function RubyHub({
       )}
       {home && afterDoubleUp}
       {(home || zone) && state.due?.length ? (
-        <ResultPrompt state={state} onSaved={() => void refresh()} />
+        <ResultPrompt
+          state={state}
+          onSaved={() =>
+            window.dispatchEvent(new Event("vq:ruby-result-saved"))
+          }
+        />
       ) : null}
       <section className="ruby-contributors">
         <header>
