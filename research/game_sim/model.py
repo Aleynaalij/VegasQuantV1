@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other
 
-MODEL_ID='vq-empirical-game/0.1.6'
+MODEL_ID='vq-empirical-game/0.1.7'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -15,7 +15,7 @@ def bucket(s):
     distance_bin=str(distance) if distance<=3 else '4-6' if distance<=6 else '7-10' if distance<=10 else '11+'
     field_bin=next(str(edge) for edge in (5,10,20,40,60,80,100) if s.yardline<=edge)
     if s.phase=='scrimmage' and distance==s.yardline:field_bin+=':goal'
-    return (s.phase,s.down or 0,distance_bin,field_bin,'late' if s.period in (2,4,5) and s.clock<=120 else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
+    return (s.phase,s.down or 0,distance_bin,field_bin,('last10' if s.clock<=10 else 'last30' if s.clock<=30 else 'last120' if s.clock<=120 else 'normal') if s.period in (2,4,5) else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
 
 def contexts(s):
     b=bucket(s)
@@ -67,14 +67,22 @@ def fit(paths):
             counts['rows']+=1
             try:
                 if r.get('season_type')!='REG':raise ValueError('not regular season')
-                s=source_state(r)
+                timeout=r.get('timeout')=='1'
+                if timeout:
+                    context=next((t for t in rows[i+1:i+9] if t['game_id']==r['game_id'] and t['qtr']==r['qtr'] and t.get('posteam') and t.get('down') and t.get('yardline_100')),None)
+                    if context is None or context['quarter_seconds_remaining']!=r['quarter_seconds_remaining']:raise ValueError('ambiguous timeout state')
+                    s=source_state(context)
+                    if r.get('timeout_team') not in (context['posteam'],context['defteam']):raise ValueError('unknown timeout caller')
+                else:s=source_state(r)
                 if s.period>4:raise ValueError('regulation fit only')
                 nxt=rows[i+1]
                 if nxt['game_id']!=r['game_id']:raise ValueError('game boundary')
                 elapsed=s.clock-integer(nxt['quarter_seconds_remaining']) if nxt['qtr']==r['qtr'] else 0
                 if not 0<=elapsed<=60:raise ValueError('clock gap')
                 kind=r['play_type'];a={};y=integer(r.get('yards_gained') or 0)
-                if s.phase=='try':
+                if timeout:
+                    a=dict(kind='timeout',elapsed=0,timeout_side='offense' if r['timeout_team']==context['posteam'] else 'defense')
+                elif s.phase=='try':
                     a=dict(kind='two_point' if r.get('two_point_attempt')=='1' else 'extra_point',elapsed=0,made=(r.get('two_point_conv_result')=='success') if r.get('two_point_attempt')=='1' else r.get('extra_point_result')=='good')
                 elif s.phase=='kickoff':
                     if r.get('touchdown')=='1':a=dict(kind='kick_return_touchdown',elapsed=elapsed)
@@ -144,6 +152,14 @@ class Sampler:
         else:raise ValueError('no empirical phase support: '+s.phase)
         self.fallbacks[len(ctx.split('|'))]+=1
         key=self.rng.choices(table[0],weights=table[1],k=1)[0];data=dict(self.model['templates'][int(key)])
+        def timeout_caller(template):
+            return s.possession if template.get('timeout_side')=='offense' else other(s.possession)
+        if data['kind']=='timeout' and getattr(s,timeout_caller(data)+'_timeouts')==0:
+            eligible=[(k,w) for k,w in zip(table[0],table[1]) if self.model['templates'][int(k)]['kind']!='timeout' or getattr(s,timeout_caller(self.model['templates'][int(k)])+'_timeouts')>0]
+            if not eligible:raise ValueError('no supported action with remaining timeout budgets')
+            key=self.rng.choices([k for k,w in eligible],weights=[w for k,w in eligible],k=1)[0]
+            data=dict(self.model['templates'][int(key)])
+        if data['kind']=='timeout':data['timeout_side']=timeout_caller(data)
         origin=data.pop('td_from',None)
         if origin is not None and s.yardline>origin:
             curve=self.model.get('censoring',{}).get(data['kind'])

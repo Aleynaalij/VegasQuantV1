@@ -34,3 +34,13 @@ TD4.7279 vs4.8524 (PASS), madeFG2.728 vs3.3321 (FAIL), punts8.4309 vs8.1181
 conditional non-TD gains can be missing for long touchdown origins; no short
 support was fabricated. Artifact/model+manifest preserved under artifacts/v0.1.6.
 This replaces no prior artifact and enables no coupling or live forecast.
+
+## 0.1.7 timeouts and finer late-half clock buckets
+Accepted1973 timeout source rows;98 ambiguous timeout contexts excluded. Exhausted
+team budgets cannot be sampled.53tests pass.10000complete/0failed;total40.6925
+vs43.7638 FAIL,TD4.6889vs4.8524 PASS,FG2.6706vs3.3321 FAIL,punts8.4145vs8.1181
+PASS.167unsupportedcensoring samples additionally block. This experiment did not
+improve the FG deficit and is not adopted. The old n6→n4 prefixbackoff still
+removes clock in sparse contexts; inspect its contribution before another change.
+Empirical elapsed times also remain unchanged after timeouts; a complete stopping/
+running-clock policy is not modeled. Preserve model/manifest under0.1.7.

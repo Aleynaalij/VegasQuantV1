@@ -90,3 +90,23 @@ class Corrections(unittest.TestCase):
         self.assertEqual(gate['model_sha256'],manifest['artifact_sha256'])
         self.assertFalse(gate['passed'])
         self.assertFalse(manifest['approval'])
+
+    def test_timeout_source_uses_exact_clock_following_state(self):
+        model=self.fitted_pair(dict(timeout='1',timeout_team='H',posteam='',defteam='',down='',yardline_100='',penalty='0'),dict(quarter_seconds_remaining='850',down='1',yardline_100='75',penalty='0'))
+        self.assertEqual(model['templates'][0],dict(kind='timeout',elapsed=0,timeout_side='offense'))
+
+    def test_timeout_budget_respected_by_sampler(self):
+        from research.game_sim.model import MODEL_ID,Sampler
+        model=dict(model_id=MODEL_ID,templates=[dict(kind='timeout',elapsed=0,timeout_side='offense'),dict(kind='run',elapsed=5,yards=1)],buckets={'scrimmage':{'0':1000,'1':1}},minimum_context=30)
+        s=State(possession='home',yardline=50,down=1,distance=10,home_timeouts=0)
+        sampler=Sampler(model,17)
+        self.assertTrue(all(sampler.draw(s).kind=='run' for _ in range(100)))
+        available=State(possession='home',yardline=50,down=1,distance=10,home_timeouts=1)
+        a=Sampler(model,17).draw(available)
+        self.assertEqual(a.timeout_side,'home')
+        self.assertEqual(transition(available,a).after.home_timeouts,0)
+
+    def test_half_ending_clock_buckets(self):
+        from research.game_sim.model import bucket
+        self.assertEqual([bucket(State(period=2,clock=t))[4] for t in (10,11,30,31,120,121)],['last10','last30','last30','last120','last120','normal'])
+        self.assertEqual(bucket(State(period=1,clock=5))[4],'normal')
