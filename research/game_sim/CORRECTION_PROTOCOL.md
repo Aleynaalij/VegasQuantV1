@@ -34,3 +34,25 @@ fix new distance bins 1,2,3,4–6,7–10,11+; field bins 0–5,6–10,11–20,21
 Keep the same prefix backoff, minimum30, seed, run count and reproduction gate.
 This is disclosed in-sample model development, not an untouched validation or
 permission to select a flattering model. Preserve all earlier failed gate results.
+
+## Development experiment 0.1.6 — frozen before fitting
+Implement Claude's proposed right-censored touchdown correction, run/pass-complete
+separately. For each required gain g=1..99, risk set is accepted ordinary plays
+of that kind starting at least g yards from goal; successes have observed gain
+>=g. Estimate S(g) by success/risk counts, enforce non-increasing S via cumulative
+minimum (no parameter tuning). Preserve numerator/denominator support. A TD from
+y0 replayed at y>y0 scores with probability min(1,S(y)/S(y0)). On non-score,
+sample observed non-TD gains in [y0,y), weighted by source frequency. If denominator
+support or conditional non-score pool is absent, retain observed gain and count
+unsupported corrections; unsupported samples block the reproduction gate.
+TDs replayed nearer the goal score by ordinary clipping. Never add automatic
+points or treat every censored play as a TD. This pooled survival estimator assumes
+comparable gain distributions across field positions; it is a development
+assumption, not validated player/tracking evidence. No latent gain beyond the
+actual simulated goal is fabricated or credited.
+
+Route flags to net-enforced penalty only for no_play or finite non-zero
+penalty_yards. Declined/offset flags on ordinary plays fall through to the
+ordinary outcome. Preserve scoring/compound exclusions and count routing.
+Same source/seed1701/10000 runs/oldOT/gate; no coupling/promotion regardless of
+in-sample pass. Preserve all prior results. Report support gaps explicitly.
