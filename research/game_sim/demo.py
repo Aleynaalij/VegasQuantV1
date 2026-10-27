@@ -36,11 +36,11 @@ def validate(run):
         for state in (a, b):
             require(state['possession'] in ('home', 'away'), 'invalid possession')
             require(state['home_defends'] in ('left', 'right'), 'invalid direction')
-            for key in ('period', 'clock_s', 'down', 'yards_to_go', 'yardline_100', 'home_score', 'away_score'):
+            for key in ('period', 'clock_s', 'yardline_100', 'home_score', 'away_score'):
                 require(type(state[key]) is int, f'integer required: {key}')
             require(1 <= state['period'] <= 4, 'demo only supports regulation')
             require(0 <= state['clock_s'] <= 900, 'invalid clock')
-            require(1 <= state['down'] <= 4 and 0 <= state['yards_to_go'] <= 100, 'invalid down/distance')
+            require((state['down'] is None and state['yards_to_go'] is None) or (type(state['down']) is int and type(state['yards_to_go']) is int and 1 <= state['down'] <= 4 and 0 <= state['yards_to_go'] <= 100), 'invalid down/distance')
             require(0 <= state['yardline_100'] <= 100, 'invalid field position')
             require(min(state['home_score'], state['away_score']) >= 0, 'negative score')
         transition = b['period'] != a['period']
@@ -81,9 +81,21 @@ def build_demo():
             after['down'] = 1 if yards >= before['yards_to_go'] else before['down'] + 1
             after['yards_to_go'] = min(10, after['yardline_100']) if after['down'] == 1 else before['yards_to_go'] - yards
         after[f"{before['possession']}_score"] += points
+        if points == 6:
+            after.update(down=None, yards_to_go=None, yardline_100=98)
+        if kind == 'extra_point':
+            after.update(down=None, yards_to_go=None, yardline_100=65)
         role = 'rusher' if kind == 'run' else 'target'
-        participants = [{'role': role, 'player_id': f'demo-{before["possession"]}-01', 'name': 'Demo Runner' if role == 'rusher' else 'Demo Receiver'}] if kind in ('run', 'pass_complete') else []
-        events.append(dict(sequence=len(events), period=before['period'], clock_before_s=before['clock_s'], clock_after_s=after['clock_s'], possession=before['possession'], play_type=kind, yards=yards, yardline_100=before['yardline_100'], ball_start_x=ball_x(before), ball_end_x=ball_x(before) + (yards if ball_x(before) == 100-before['yardline_100'] else -yards), before=before, after=after, participants=participants, flags=dict(first_down=kind in ('run','pass_complete') and yards >= before['yards_to_go'], touchdown=points == 6, turnover=False, safety=False, made=kind == 'extra_point', penalty_on=None), score_delta={s: after[f'{s}_score']-before[f'{s}_score'] for s in ('home','away')}, stat_deltas=[dict(player_id=participants[0]['player_id'], stat='rushing_yards' if kind == 'run' else 'receiving_yards', value=yards)] if participants else []))
+        participants = [{'role': role, 'player_id': f'demo-{before["possession"]}-{role}', 'name': 'Demo Runner' if role == 'rusher' else 'Demo Receiver'}] if kind in ('run', 'pass_complete') else []
+        if kind == 'pass_complete':
+            participants.append(dict(role='passer', player_id=f'demo-{before["possession"]}-passer', name='Demo Quarterback'))
+        attacks_right = (before['possession'] == 'home') == (before['home_defends'] == 'left')
+        end_x = (100 if attacks_right else 0) if kind == 'kickoff' or points == 6 else ball_x(before) + (yards if attacks_right else -yards)
+        events.append(dict(sequence=len(events), period=before['period'], clock_before_s=before['clock_s'], clock_after_s=after['clock_s'], possession=before['possession'], play_type=kind, yards=yards, yardline_100=before['yardline_100'], ball_start_x=ball_x(before), ball_end_x=end_x, before=before, after=after, participants=participants, flags=dict(first_down=kind in ('run','pass_complete') and yards >= before['yards_to_go'], touchdown=points == 6, turnover=False, safety=False, made=True if kind == 'extra_point' else None, penalty_on=None), score_delta={s: after[f'{s}_score']-before[f'{s}_score'] for s in ('home','away')}, stat_deltas=[dict(player_id=participants[0]['player_id'], stat='rushing_yards' if kind == 'run' else 'receiving_yards', value=yards)] if participants else []))
+        if kind == 'pass_complete':
+            events[-1]['stat_deltas'] += [dict(player_id=participants[0]['player_id'], stat='receptions', value=1), dict(player_id=participants[1]['player_id'], stat='passing_yards', value=yards), dict(player_id=participants[1]['player_id'], stat='completions', value=1), dict(player_id=participants[1]['player_id'], stat='pass_attempts', value=1)]
+        if kind == 'run':
+            events[-1]['stat_deltas'].append(dict(player_id=participants[0]['player_id'], stat='carries', value=1))
         state = after
     add('run', 35, 6)
     add('pass_complete', 38, 19)
@@ -95,7 +107,7 @@ def build_demo():
     add('run', 35, 4)
     add('pass_complete', 38, 12)
     payload = dict(schema_version='vq-game-sim/0.1', mode='demo', is_demo=True,
-        run_id='demo-script-v1', generated_at='2026-10-27T00:00:00Z', historical_cutoff=None,
+        run_id='demo-script-v1', generated_at='2026-10-27T00:00:00Z', historical_cutoff=None, inputs_as_of=None,
         model_id='synthetic-script-v1', model_version='demo-1', artifact_hash=None,
         teams={s: dict(id=f'demo-{s}', abbr='VQA' if s == 'home' else 'VQB', name=f'Vegas Demo {s.title()}') for s in ('home','away')},
         runs=dict(requested=0, actual=0), seed=None, blockers=['SYNTHETIC_DEMO_NOT_A_FORECAST', 'PARTIAL_REPLAY_NOT_A_FULL_GAME'], sources=[], ensemble=None, players=[],
