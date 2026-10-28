@@ -50,3 +50,13 @@ class TwoStageTimeoutTests(unittest.TestCase):
                     tables[timeout_contexts(State(period=q,clock=clock),role)[-1]]=dict(opportunities=100,timeouts=3)
         m['timeout_model']=dict(minimum_context=30,tables=tables)
         self.assertEqual(game(m,17,trace=True),game(copy.deepcopy(m),17,trace=True,prepared_tables=Sampler(m,17).tables))
+
+    def test_competing_call_rates_not_deflated_by_offense_priority(self):
+        s=State(period=4,clock=80);m=fixture();m['timeout_model']=dict(minimum_context=30,tables={timeout_contexts(s,r)[-1]:dict(opportunities=100,timeouts=25) for r in ('offense','defense')})
+        sampler=Sampler(m,1701);counts=dict(home=0,away=0,none=0)
+        for _ in range(10000):
+            a=sampler.timeout_decision(s);counts[a.timeout_side if a else 'none']+=1
+        self.assertTrue(2300<counts['home']<2700)
+        self.assertTrue(2300<counts['away']<2700)
+        m['timeout_model']['tables']={timeout_contexts(s,r)[-1]:dict(opportunities=100,timeouts=60) for r in ('offense','defense')}
+        with self.assertRaisesRegex(ValueError,'inconsistent competing'):Sampler(m,17).timeout_decision(s)

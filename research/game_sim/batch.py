@@ -27,18 +27,28 @@ def game(model,seed,*,both_possessions=True,max_events=1200,trace=False,workload
     sampler=Sampler(model,seed,prepared_tables);receiver=sampler.rng.choice(('home','away'))
     s=State(possession='away' if receiver=='home' else 'home',phase='kickoff',down=None,distance=None,yardline=65,second_half_receiver='away' if receiver=='home' else 'home',ot_both_possessions=both_possessions)
     allocator=Allocator(workload_context,seed ^ 0x51A7) if workload_context else None
+    queued_timeout=None;decision_read_state=None
     events=[];kinds=Counter();rejected=Counter();scoring=Counter();diagnostics=Counter()
     for sequence in range(max_events):
         if s.phase=='final':return dict(seed=seed,home=s.home_score,away=s.away_score,event_count=sequence,scoring=dict(scoring),diagnostics=dict(diagnostics),kinds=dict(kinds),fallbacks=dict(sampler.fallbacks),rejected_templates=dict(rejected),events=events,workload=allocator.result() if allocator else None)
-        if s.phase=='overtime_required':a=Action('start_overtime',receiving_side=sampler.rng.choice(('home','away')))
+        coupling=None
+        if queued_timeout is not None:
+            if decision_read_state!=s:raise ValueError('queued timeout state mismatch')
+            a=queued_timeout;queued_timeout=None;decision_read_state=None
+        elif s.phase=='overtime_required':a=Action('start_overtime',receiving_side=sampler.rng.choice(('home','away')))
         elif s.clock==0 and s.phase!='try':a=Action('end_period')
         else:
             # Invalid source-template/state combinations are retried, never silent repair of scores.
             for _ in range(100):
-                a=sampler.draw(s)
+                a=sampler.draw(s,allow_timeout=decision_read_state!=s)
                 try:transition(s,a);break
                 except ValueError as e:rejected[str(e)]+=1
             else:raise ValueError('no legal empirical transition after 100 attempts')
+        decision_read_state=None
+        if a.kind in ('run','pass_complete'):
+            original=a
+            a,queued_timeout,decision_read_state=sampler.couple_stop(s,a)
+            if decision_read_state is not None:coupling=dict(original_elapsed=original.elapsed,committed_elapsed=a.elapsed,timeout_queued=queued_timeout is not None)
         event=transition(s,a);kinds[a.kind]+=1
         late=s.phase=='scrimmage' and s.period in (2,4) and s.clock<=30 and s.yardline<=35
         if a.kind in ('field_goal','blocked_field_goal'):
@@ -49,7 +59,7 @@ def game(model,seed,*,both_possessions=True,max_events=1200,trace=False,workload
         if delta==6:scoring['touchdowns']+=1
         if a.kind=='field_goal' and delta==3:scoring['field_goals']+=1
         participants=allocator.apply(event) if allocator else []
-        if trace:events.append(dict(sequence=sequence,before=asdict(s),action=asdict(a),after=asdict(event.after),participants=participants))
+        if trace:events.append(dict(sequence=sequence,before=asdict(s),action=asdict(a),after=asdict(event.after),participants=participants,clock_coupling=coupling))
         s=event.after
     raise ValueError('event limit: game incomplete')
 

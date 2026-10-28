@@ -129,9 +129,10 @@ class IntegratedTests(unittest.TestCase):
         from research.game_sim.model import timeout_contexts
         for o,d in ((0,0),(0,1),(1,0),(1,1)):
             s=State(period=4,clock=5,home_timeouts=o,away_timeouts=d)
-            model=fixture();model['timeout_model']=dict(minimum_context=30,tables={timeout_contexts(s,r)[-1]:dict(opportunities=30,timeouts=30) for r in ('offense','defense')})
+            model=fixture();model['timeout_model']=dict(minimum_context=30,tables={timeout_contexts(s,r)[-1]:dict(opportunities=30,timeouts=15 if o and d else 30) for r in ('offense','defense')})
             a=Sampler(model,17).draw(s)
-            if o:self.assertEqual((a.kind,a.timeout_side),('timeout','home'))
+            if o and d:self.assertEqual(a.kind,'timeout');self.assertIn(a.timeout_side,('home','away'))
+            elif o:self.assertEqual((a.kind,a.timeout_side),('timeout','home'))
             elif d:self.assertEqual((a.kind,a.timeout_side),('timeout','away'))
             else:self.assertNotEqual(a.kind,'timeout')
 
@@ -187,7 +188,7 @@ class IntegratedTests(unittest.TestCase):
         import gzip, hashlib, json
         from pathlib import Path
         root=Path(__file__).resolve().parents[2]
-        folder=root/'research/game_sim/artifacts/v0.2.8'
+        folder=root/'research/game_sim/artifacts/v0.2.10'
         manifest=json.loads((folder/'manifest.json').read_text())
         payloads={}
         for filename, expected in manifest['files'].items():

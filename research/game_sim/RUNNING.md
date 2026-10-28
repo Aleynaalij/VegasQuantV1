@@ -284,3 +284,26 @@ role priority and prepared-table path reproducibility. Historical artifacts kept
 Claude was asked for exact tested prototype/counts to resolve measured mismatch;
 no new sampling revision until diagnosed. No coupling/current forecasts/model
 approval/member release/DBwrites/notifications.
+
+
+## Full clock foundation build0.2.9 →0.2.10
+See STOP_CLOCK_PROTOCOL.md and COMPETING_TIMEOUT_PROTOCOL.md; both frozen before
+fit, earlier failures preserved.0.2.9stop-aware lookahead improves late decisions
+but rawtimeout7.3857stillfails.0.2.10fixes sequential caller-rate suppression with
+one categoricaldraw; no rate/seed/threshold tuning. Actual10000seed1701oldOT:
+10000complete/0failed/0unsupported; all4scoring+all4diagnostic checksPASS.
+Total44.1313,TD4.8969,FG3.3235,punt7.8636,TO7.5892,FGattempt3.9105,
+lateFG.458,late_decisions1.8173. This does not establish predictive accuracy.
+94Python tests/330app tests/typecheck/productionbuildPASS. Existing admin-only
+API/parser now consume the exact hashed0.2.10replay and calibration; both
+compressed and canonical hashes and modelidentity checked. Anonymous401,
+nonadmin403,admin200 verified in real-artifact API test. No member deployment.
+Same1000prefix timing traces,3seedkneels,runtimearchives and full uncertainty
+counts retained.2023inspectedCRPS stilldoesnotbeat historicalbaseline. Missing
+stopped-gap support, thin contexts, lookahead-context approximation and OTborrow
+remain explicit in HANDOFF_2026-10-28.md. verify_package CLI separates every
+basecheck from readiness; release_ready remainsfalse. Team/player feature code
+and scenario allocator are not yet validated outcome models. Full product remains
+incomplete until independent audit, actual team/player integration and later
+validation. This package is the completed ENGINE FOUNDATION handoff, not an
+approval or a claim the full simulator/NBA side is finished.

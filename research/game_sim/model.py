@@ -3,9 +3,9 @@ from collections import Counter,defaultdict
 import csv,gzip,hashlib,io,json,math,random
 from dataclasses import asdict, replace
 from pathlib import Path
-from .state import State,Action,other
+from .state import State,Action,other,transition
 
-MODEL_ID='vq-empirical-game/0.2.8'
+MODEL_ID='vq-empirical-game/0.2.10'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -151,8 +151,15 @@ def fit_timeouts(rows,tables,coverage):
         except (ValueError,TypeError,KeyError) as e:coverage['excluded:'+str(e)]+=1
 
 
+def stop_contexts(s,kind):
+    if s.period not in (2,4,5) or s.clock>300 or s.phase!='scrimmage':return []
+    band=('last10' if s.clock<=10 else 'last30' if s.clock<=30 else 'last120' if s.clock<=120 else 'last300')+('@h1' if s.period==2 else '@h2')
+    lead=bucket(s)[-1];field=str(max(0,min(4,(s.yardline-1)//20)))
+    return ['|'.join((band,kind,field)),'|'.join((band,kind,lead)),'|'.join((band,kind))]
+
+
 def fit(paths):
-    observations=defaultdict(list);counts=Counter();buckets=defaultdict(list);sources=[];templates=[];ids={};seen_sources=set();seen_games=set();timeout_tables=defaultdict(Counter);timeout_coverage=Counter()
+    observations=defaultdict(list);counts=Counter();buckets=defaultdict(list);sources=[];templates=[];ids={};seen_sources=set();seen_games=set();timeout_tables=defaultdict(Counter);timeout_coverage=Counter();stop_tables=defaultdict(Counter);stop_coverage=Counter()
     for path in paths:
         data=Path(path).read_bytes();raw=gzip.decompress(data) if data[:2]==b'\x1f\x8b' else data
         rows=list(csv.DictReader(io.StringIO(raw.decode('utf-8-sig'))))
@@ -226,6 +233,14 @@ def fit(paths):
                 elif kind=='field_goal':a=dict(kind='field_goal',elapsed=elapsed,made=r.get('field_goal_result')=='made')
                 else:raise ValueError('unsupported source event')
                 if a['kind'] in ('run','pass_complete'):
+                    followed=r.get('timeout')=='1' or (nxt.get('timeout')=='1' and nxt.get('play_type')=='no_play')
+                    a['source_followed_timeout']=followed
+                    for key in stop_contexts(s,a['kind']) if followed else []:
+                        stop_tables[key][a['elapsed']]+=1
+                    if stop_contexts(s,a['kind']):
+                        stop_coverage['eligible_plays']+=1
+                        if followed:stop_coverage['timeout_followed_plays']+=1
+                if a['kind'] in ('run','pass_complete'):
                     td=r.get('touchdown')=='1'
                     observations[a['kind']].append((s.yardline,a['yards'],td))
                     if td:a['td_from']=s.yardline
@@ -241,7 +256,7 @@ def fit(paths):
                 counts['excluded:'+str(e)]+=1
                 if event!='original':counts['excluded:'+event+':'+str(e)]+=1
     if not templates:raise ValueError('No training templates')
-    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),timeout_model=dict(tables={k:dict(v) for k,v in sorted(timeout_tables.items())},coverage=dict(timeout_coverage),minimum_context=30),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
+    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),stop_clock=dict(tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(stop_tables.items())},coverage=dict(stop_coverage),minimum_context=30),timeout_model=dict(tables={k:dict(v) for k,v in sorted(timeout_tables.items())},coverage=dict(timeout_coverage),minimum_context=30),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
     return model
 
 class Sampler:
@@ -264,15 +279,53 @@ class Sampler:
         self.fallbacks['unsupported_timeout_context']+=1
         raise ValueError('no empirical timeout opportunity context: '+role)
 
-    def draw(self,s):
+    def timeout_decision(self,s):
+        if s.phase!='scrimmage' or s.clock<=0 or not self.model.get('timeout_model'):return None
+        po=self.timeout_probability(s,'offense') if getattr(s,s.possession+'_timeouts') else 0.0
+        pd=self.timeout_probability(s,'defense') if getattr(s,other(s.possession)+'_timeouts') else 0.0
+        if po+pd>1:
+            self.fallbacks['unsupported_competing_timeout_context']+=1
+            raise ValueError('inconsistent competing timeout probabilities')
+        u=self.rng.random()
+        if u<po+pd:
+            role='offense' if u<po else 'defense'
+            self.fallbacks['separate_timeout:'+role]+=1
+            return Action('timeout',elapsed=0,timeout_side=s.possession if role=='offense' else other(s.possession))
+        return None
+
+    def couple_stop(self,s,a):
+        """Returns committed action, queued timeout, state whose decision was read."""
+        model=self.model.get('stop_clock')
+        if not model or a.kind not in ('run','pass_complete') or not stop_contexts(s,a.kind):return a,None,None
+        projected=transition(s,replace(a,elapsed=min(a.elapsed,max(1,s.clock-1)))).after
+        if projected.phase!='scrimmage' or projected.possession!=s.possession or (projected.home_score,projected.away_score)!=(s.home_score,s.away_score):return a,None,None
+        if not (s.home_timeouts or s.away_timeouts):return a,None,None
+        keys=stop_contexts(s,a.kind);chosen=None
+        for key in keys:
+            table=model['tables'].get(key,{})
+            legal=[(int(dt),n) for dt,n in table.items() if 0<int(dt)<=a.elapsed and int(dt)<s.clock]
+            if legal and (sum(table.values())>=model['minimum_context'] or key==keys[-1]):
+                chosen=(key,table,legal);break
+        self.fallbacks['stop_clock_candidates']+=1
+        if chosen is None:
+            self.fallbacks['missing_eligible_stop_duration']+=1
+            return a,None,None
+        key,table,legal=chosen
+        if sum(table.values())<model['minimum_context']:self.fallbacks['thin_stop_duration_context']+=1
+        dt=self.rng.choices([v for v,n in legal],weights=[n for v,n in legal],k=1)[0]
+        stopped=replace(a,elapsed=dt);after=transition(s,stopped).after
+        called=self.timeout_decision(after)
+        if called:
+            self.fallbacks['coupled_stops']+=1
+            self.fallbacks['avoided_runoff_seconds']+=a.elapsed-dt
+            return stopped,called,after
+        return a,None,transition(s,a).after
+
+    def draw(self,s,*,allow_timeout=True):
         if s.phase=='safety_kick':s=replace(s,phase='kickoff')
-        if s.phase=='scrimmage' and self.model.get('timeout_model'):
-            for role,side in (('offense',s.possession),('defense',other(s.possession))):
-                if getattr(s,side+'_timeouts')<=0:continue
-                probability=self.timeout_probability(s,role)
-                if self.rng.random()<probability:
-                    self.fallbacks['separate_timeout:'+role]+=1
-                    return Action('timeout',elapsed=0,timeout_side=side)
+        if allow_timeout:
+            called=self.timeout_decision(s)
+            if called:return called
         primary,floors,pooled=context_options(s)
         def timeout_caller(template):
             return s.possession if template.get('timeout_side')=='offense' else other(s.possession)
@@ -308,6 +361,7 @@ class Sampler:
             self.fallbacks['half_pooled_fallback' if '@h' not in ctx else 'half_preserved_samples']+=1
         key=self.rng.choices(table[0],weights=table[1],k=1)[0];data=dict(self.model['templates'][int(key)])
         if data['kind']=='timeout':data['timeout_side']=timeout_caller(data)
+        self.last_source_followed_timeout=data.pop('source_followed_timeout',None)
         origin=data.pop('td_from',None)
         if origin is not None and s.yardline>origin:
             curve=self.model.get('censoring',{}).get(data['kind'])
