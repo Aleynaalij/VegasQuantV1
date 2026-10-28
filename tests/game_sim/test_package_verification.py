@@ -6,7 +6,7 @@ FOLDER=ROOT/'research/game_sim/artifacts/v0.2.9'
 SOURCE=ROOT.parent/'game-sim-data/play_by_play_2022.csv.gz'
 class PackageVerificationTests(unittest.TestCase):
     def test_scoring_pass_cannot_hide_failed_timeout_or_approve_release(self):
-        r=verify(FOLDER,SOURCE)
+        r=verify(FOLDER)
         self.assertTrue(r['integrity_verified']);self.assertFalse(r['base_checks_passed'])
         self.assertIn('timeouts',r['failed_checks']);self.assertFalse(r['release_ready'])
         self.assertTrue(r['replay']['rules_replay_verified'])
@@ -21,7 +21,13 @@ class PackageVerificationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'training source mismatch'):verify(FOLDER,p)
 
     def test_passing_base_still_cannot_approve_matchup_or_player_forecasts(self):
-        r=verify(ROOT/'research/game_sim/artifacts/v0.2.10',SOURCE)
+        r=verify(ROOT/'research/game_sim/artifacts/v0.2.10')
         self.assertTrue(r['base_checks_passed']);self.assertEqual(r['failed_checks'],[])
         self.assertFalse(r['release_ready'])
         self.assertTrue(any('team/player' in x for x in r['blockers']))
+
+    @unittest.skipUnless(SOURCE.exists(), 'external source data not present')
+    def test_original_source_bytes_verified_when_available(self):
+        self.assertTrue(verify(FOLDER,SOURCE)['source_hash_verified'])
+    def test_source_independent_check_does_not_claim_source_bytes_verified(self):
+        self.assertFalse(verify(FOLDER)['source_hash_verified'])
