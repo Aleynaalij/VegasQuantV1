@@ -12,7 +12,7 @@ def fixture():
         for clock in ('normal','last10','last30','last120','last300'):
             for field in fields:
                 for score in (('' ,) if clock=='normal' else ('ahead','tied','behind')):
-                    flags=('oTO:y','dTO:y') if phase=='scrimmage' and clock!='normal' else ()
+                    flags=()
                     key='|'.join((phase,clock)+flags+(field,)+(tuple() if not score else (score,)))
                     buckets[key]=dict(entries)
     return dict(model_id=MODEL_ID,sources=[],templates=templates,buckets=buckets,minimum_context=30)

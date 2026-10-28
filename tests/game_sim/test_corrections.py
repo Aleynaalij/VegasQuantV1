@@ -129,7 +129,7 @@ class Corrections(unittest.TestCase):
         self.assertEqual(model['coverage']['rows'],1)
         self.assertEqual(model['coverage']['accepted:compound_timeout'],1)
         self.assertEqual(model['coverage']['accepted:play'],1)
-        self.assertTrue(any('last120@h1|oTO:y|dTO:y|60|' in k for k in model['buckets']))
+        self.assertTrue(any('last120@h1|60|' in k for k in model['buckets']))
 
     def test_unrecoverable_compound_timeout_preserves_play(self):
         model=self.fitted_pair(dict(play_type='run',penalty='0',timeout='1',timeout_team='UNKNOWN',yards_gained='3'),dict(quarter_seconds_remaining='845',yardline_100='57'))

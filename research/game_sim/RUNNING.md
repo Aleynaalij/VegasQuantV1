@@ -252,3 +252,35 @@ margin8.140916vs8.065627historical, difference.0752885,95%gamebootstrap
 [-.0436272,.1918812]. No demonstrated superiority.77Python testsPASS.
 No coupling/current forecasts/model approval/member release/notifications.
 Owner-approved public research package is for independent review only.
+
+
+## Separate timeout model0.2.8 — implemented, diagnostic failures preserved
+Frozen TWO_STAGE_TIMEOUT_PROTOCOL.md6d3cf7c before fit. Ordinary-play bucket,
+context_options and contexts functions exactly0.2.4 by AST comparison; timeouts
+removed from play buckets. Budget flags/nested windows/zero-budget pooling gone.
+Source0.2.7compound recovery retained. Timeout model stores separate empirical
+role opportunities/call counts, min30, half/quarter/lead/field20 hierarchy.
+Offense Bernoulli first, then defense conditional on no offense call; no forced
+calls. Raw snap eligibility uses recorded source budgets; timeout eligibility
+reconstructs pre-event balances. Source37059snap+2043timeoutopportunities,
+eligibleoffense37778/defense38043. No missingtimeoutcontext or thin timeoutfit.
+
+Actual10000seed1701oldOT:10000complete/0failed/0unsupported. Four original
+scoring gatesPASS:total43.6712vs43.76384,TD4.8593vs4.85240,
+FG3.254vs3.33210,punt7.8292vs8.11808. Rawtimeouts7.2678vs7.78229
+FAIL tolerance.389564;late_decisions1.7191vs2.09963 FAIL tolerance.374743.
+Do NOT call this all-checks-pass or reproduction of Claude's7.886 prototype.
+Original target/seed/limits unchanged; failed diagnostics preserved, no tuning.
+FGattempt3.8165 andlateFG.4217pass their unchanged checks.46432thin ordinary
+play contexts;timeout depth0/1/2/3 counts2808784/95045/25305/6856.
+2023already-inspected CRPS margin8.160064vs8.065627historical (difference.094437,
+95%CI[-.038028,.223947]);total7.610271vs7.598449. No superiority established.
+Three fixed source-state audits:mean leadingkneels250vs308source,
+trailing6.667vs8,narrowlast10s0vs0;leading4–8mean86.667vs104,
+leading9+124vs155. Source-state diagnostic, not independent validation.
+Same1000seed-prefixtrace and exact runtime archived.83Python testsPASS,
+including source compound opportunity counts, budget exclusion, min30failclosed,
+role priority and prepared-table path reproducibility. Historical artifacts kept.
+Claude was asked for exact tested prototype/counts to resolve measured mismatch;
+no new sampling revision until diagnosed. No coupling/current forecasts/model
+approval/member release/DBwrites/notifications.
