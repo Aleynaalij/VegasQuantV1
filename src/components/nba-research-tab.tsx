@@ -24,6 +24,7 @@ type Game = {
   away_team: string;
   home_team: string;
   tipoff: string;
+  season: number | null;
 };
 type Observation = {
   game_id: string;
@@ -65,7 +66,7 @@ async function loadSlate(member: boolean): Promise<Slate> {
   const now = Date.now();
   const upcoming = await supabase
     .from("nba_games")
-    .select("id,away_team,home_team,tipoff")
+    .select("id,away_team,home_team,tipoff,season")
     .eq("season_type", 2)
     .gte("tipoff", new Date(now - 4 * HOUR).toISOString())
     .lte("tipoff", new Date(now + 36 * HOUR).toISOString())
@@ -87,29 +88,50 @@ async function loadSlate(member: boolean): Promise<Slate> {
       propsAt: null,
     };
   const teams = [...new Set(games.flatMap((g) => [g.away_team, g.home_team]))];
-  const season = await all<{ id: string; tipoff: string }>((from, to) =>
-    supabase
+  // This season's finished games only, so "season" numbers reset at the season boundary.
+  const season = await all<{ id: string; tipoff: string }>((from, to) => {
+    const q = supabase
       .from("nba_games")
       .select("id,tipoff")
       .eq("season_type", 2)
-      .lt("tipoff", new Date(now).toISOString())
+      .lt("tipoff", new Date(now).toISOString());
+    return (first.season == null ? q : q.eq("season", first.season))
       .order("id")
+      .range(from, to);
+  });
+  const played = new Map(season.map((g) => [g.id, g.tipoff]));
+  type Row = Omit<BoxRow, "tipoff"> & { game_id: string };
+  const columns =
+    "game_id,athlete_id,player,team,played,minutes,points,rebounds,assists";
+  // Everyone who has played for tonight's teams, then each of those players' full history (traded
+  // players keep the games they played elsewhere); a player's team is the one in his latest game.
+  const onTeams = await all<{ athlete_id: string | number }>((from, to) =>
+    supabase
+      .from("nba_player_results")
+      .select("athlete_id")
+      .in("team", teams)
+      .eq("played", true)
+      .order("game_id")
+      .order("athlete_id")
       .range(from, to),
   );
-  const played = new Map(season.map((g) => [g.id, g.tipoff]));
-  const box = await all<Omit<BoxRow, "tipoff"> & { game_id: string }>(
-    (from, to) =>
-      supabase
-        .from("nba_player_results")
-        .select(
-          "game_id,athlete_id,player,team,played,minutes,points,rebounds,assists",
-        )
-        .in("team", teams)
-        .eq("played", true)
-        .order("game_id")
-        .order("athlete_id")
-        .range(from, to),
-  );
+  const athletes = [...new Set(onTeams.map((r) => String(r.athlete_id)))];
+  const box: Row[] = [];
+  for (let i = 0; i < athletes.length; i += 150) {
+    const ids = athletes.slice(i, i + 150);
+    box.push(
+      ...(await all<Row>((from, to) =>
+        supabase
+          .from("nba_player_results")
+          .select(columns)
+          .in("athlete_id", ids)
+          .eq("played", true)
+          .order("game_id")
+          .order("athlete_id")
+          .range(from, to),
+      )),
+    );
+  }
   const lines = seasonLines(
     box
       .filter((r) => played.has(r.game_id))
@@ -118,23 +140,32 @@ async function loadSlate(member: boolean): Promise<Slate> {
         athlete_id: String(r.athlete_id),
         tipoff: played.get(r.game_id)!,
       })),
-  );
+  ).filter((l) => teams.includes(l.team));
   const injuries = new Map<string, Injury[]>();
   const trends = new Map<string, PropTrend[]>();
   let propsAt: string | null = null;
   if (member) {
-    const obs = await supabase
-      .from("nba_observations")
-      .select("game_id,kind,recorded_at,observed_at,payload")
-      .in(
-        "game_id",
-        games.map((g) => g.id),
-      )
-      .in("kind", ["injury", "prop"])
-      .order("recorded_at", { ascending: false })
-      .limit(3000);
-    if (obs.error) throw obs.error;
-    const rows = (obs.data || []) as Observation[];
+    // Injury reports and FanDuel props are read separately and in full: other books' quotes would
+    // otherwise crowd them out of a single page.
+    const observations = (kind: "injury" | "prop") =>
+      all<Observation>((from, to) => {
+        const q = supabase
+          .from("nba_observations")
+          .select("game_id,kind,recorded_at,observed_at,payload")
+          .in(
+            "game_id",
+            games.map((g) => g.id),
+          )
+          .eq("kind", kind);
+        return (kind === "prop" ? q.eq("payload->>book", "FanDuel") : q)
+          .order("recorded_at", { ascending: false })
+          .order("id")
+          .range(from, to);
+      });
+    const rows = [
+      ...(await observations("injury")),
+      ...(await observations("prop")),
+    ];
     for (const injury of latestInjuries(
       rows.filter((r) => r.kind === "injury"),
     ))
