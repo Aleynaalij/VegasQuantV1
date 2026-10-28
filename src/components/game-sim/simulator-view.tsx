@@ -162,7 +162,7 @@ export default function SimulatorView({ run }: { run: SimRun }) {
               <span className="sim-card-ini" aria-hidden="true">
                 {initials(p.name)}
               </span>
-              <span>
+              <span className="sim-card-text">
                 <b>{shortName(p.name)}</b>
                 <small>
                   {statLine(statsNow.get(p.player_id), p.role) ||

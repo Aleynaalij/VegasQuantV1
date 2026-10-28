@@ -384,6 +384,8 @@
 }
 .sim-cards {
   display: flex;
+  /* Long stat lines wrap instead of widening the simulator grid. */
+  min-width: 0;
   justify-content: space-between;
   gap: 8px;
   margin: 0 0 8px;
@@ -392,6 +394,7 @@
 }
 .sim-card {
   display: flex;
+  flex: 0 1 50%;
   align-items: center;
   gap: 8px;
   min-width: 0;
@@ -431,9 +434,13 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.sim-card-text {
+  min-width: 0;
+}
 .sim-card small {
   display: block;
   color: #d9cfae;
   font-size: 11px;
-  white-space: nowrap;
+  /* On narrow phones a long line wraps rather than hiding stats. */
+  overflow-wrap: anywhere;
 }
