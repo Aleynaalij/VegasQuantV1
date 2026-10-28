@@ -57,6 +57,17 @@ test("notification text groups likes without exposing private previews in extern
   });
   assert.equal(payload.url, sample.deep_link);
   assert.equal(payload.announcement.includes("Sarah"), false);
+  const post = notificationPushPayload({
+    notification_id: "n",
+    priority: "medium",
+    deep_link: "/community?sport=nfl&post=p#post-p",
+    type: "post",
+  });
+  assert.equal(
+    post.announcement,
+    "New post in The Zone. Open Vegas Quant to read it.",
+  );
+  assert.equal(post.url, "/community?sport=nfl&post=p#post-p");
   for (const href of [
     "https://evil.test",
     "//evil.test",

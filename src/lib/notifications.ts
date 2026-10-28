@@ -74,7 +74,9 @@ export function notificationPushPayload(job: {
     announcement:
       job.priority === "critical"
         ? "You have an important account or message notification. Open Vegas Quant to review."
-        : "New community activity. Open Vegas Quant to see your notifications.",
+        : job.type === "post"
+          ? "New post in The Zone. Open Vegas Quant to read it."
+          : "New community activity. Open Vegas Quant to see your notifications.",
   };
 }
 export const defaultNotificationPreferences = (
