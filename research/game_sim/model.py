@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other
 
-MODEL_ID='vq-empirical-game/0.2.6'
+MODEL_ID='vq-empirical-game/0.2.7'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -114,6 +114,26 @@ def survival_table(observations):
             ceiling=min(ceiling,successes/len(risk));survival[g]=ceiling
     return dict(survival=survival,support=support,uncensored={str(k):v for k,v in sorted(uncensored.items())})
 
+COMPOUND_PLAY_TYPES={'run','pass','punt','kickoff','field_goal','qb_kneel','qb_spike','extra_point'}
+
+def training_events(rows):
+    """Keep source indices: expanding events must not change observed next rows."""
+    for i,row in enumerate(rows[:-1]):
+        compound=row.get('timeout')=='1' and row.get('play_type') in COMPOUND_PLAY_TYPES
+        yield i,row,'play' if compound else 'original'
+        if compound:yield i,row,'compound_timeout'
+
+def pre_timeout_budgets(row):
+    caller_team=row.get('timeout_team')
+    teams={row.get('home_team'),row.get('away_team'),row.get('posteam'),row.get('defteam')}-{None,''}
+    if caller_team not in teams:raise ValueError('unknown timeout caller')
+    caller='home' if caller_team==row['home_team'] else 'away'
+    post={side:integer(row.get(side+'_timeouts_remaining','')) for side in ('home','away')}
+    if any(not 0<=n<=3 for n in post.values()) or post[caller]>=3:raise ValueError('invalid post-timeout source budget')
+    post[caller]+=1
+    return {side+'_timeouts':n for side,n in post.items()}
+
+
 def fit(paths):
     observations=defaultdict(list);counts=Counter();buckets=defaultdict(list);sources=[];templates=[];ids={};seen_sources=set();seen_games=set()
     for path in paths:
@@ -125,26 +145,31 @@ def fit(paths):
         if digest in seen_sources or game_ids & seen_games:raise ValueError('duplicate training source/game')
         seen_sources.add(digest);seen_games.update(game_ids)
         sources.append(dict(file=Path(path).name,sha256=hashlib.sha256(data).hexdigest(),source_url='https://github.com/nflverse/nflverse-data/releases/download/pbp/'+Path(path).name))
-        for i,r in enumerate(rows[:-1]):
-            counts['rows']+=1
+        for i,r,event in training_events(rows):
+            counts['event_attempts']+=1
+            if event!='compound_timeout':counts['rows']+=1
+            if event=='play':counts['compound_source_rows']+=1
             try:
                 if r.get('season_type')!='REG':raise ValueError('not regular season')
-                timeout=r.get('timeout')=='1'
+                timeout=r.get('timeout')=='1' and event!='play'
                 if timeout:
                     context=next((t for t in rows[i+1:i+9] if t['game_id']==r['game_id'] and t['qtr']==r['qtr'] and t.get('posteam') and t.get('down') and t.get('yardline_100')),None)
-                    if context is None or context['quarter_seconds_remaining']!=r['quarter_seconds_remaining']:raise ValueError('ambiguous timeout state')
+                    if context is None:raise ValueError('ambiguous timeout state')
+                    gap=integer(r['quarter_seconds_remaining'])-integer(context['quarter_seconds_remaining'])
+                    if (event=='compound_timeout' and not 0<=gap<=60) or (event!='compound_timeout' and gap!=0):raise ValueError('ambiguous timeout state')
                     s=source_state(context)
                     if r.get('timeout_team') not in (context['posteam'],context['defteam']):raise ValueError('unknown timeout caller')
-                    caller='home' if r['timeout_team']==r['home_team'] else 'away'
-                    post={side:integer(r.get(side+'_timeouts_remaining','')) for side in ('home','away')}
-                    if any(not 0<=n<=3 for n in post.values()) or post[caller]>=3:raise ValueError('invalid post-timeout source budget')
-                    post[caller]+=1
-                    s=replace(s,**{side+'_timeouts':n for side,n in post.items()})
-                else:s=source_state(r)
+                    s=replace(s,**pre_timeout_budgets(r))
+                else:
+                    s=source_state(r)
+                    if event=='play' and s.phase=='scrimmage':
+                        # A malformed timeout attachment must not discard the play.
+                        try:s=replace(s,**pre_timeout_budgets(r))
+                        except (ValueError,TypeError,KeyError):counts['compound_play_budget_unresolved']+=1
                 if s.period>4:raise ValueError('regulation fit only')
                 nxt=rows[i+1]
                 if nxt['game_id']!=r['game_id']:raise ValueError('game boundary')
-                elapsed=s.clock-integer(nxt['quarter_seconds_remaining']) if nxt['qtr']==r['qtr'] else 0
+                elapsed=0 if timeout else s.clock-integer(nxt['quarter_seconds_remaining']) if nxt['qtr']==r['qtr'] else 0
                 if not 0<=elapsed<=60:raise ValueError('clock gap')
                 kind=r['play_type'];a={};y=integer(r.get('yards_gained') or 0)
                 if timeout:
@@ -198,8 +223,11 @@ def fit(paths):
                 fit_contexts=contexts(s)+(zero_timeout_contexts(s) if a['kind']!='timeout' else [])
                 for ctx in dict.fromkeys(fit_contexts):buckets[ctx].append(ids[key])
                 counts['accepted']+=1;counts['kind:'+a['kind']]+=1
+                if event!='original':counts['accepted:'+event]+=1
                 if enforced_penalty(r) and kind!='no_play':counts['normalized_live_ball_penalty']+=1
-            except (ValueError,TypeError,KeyError) as e:counts['excluded:'+str(e)]+=1
+            except (ValueError,TypeError,KeyError) as e:
+                counts['excluded:'+str(e)]+=1
+                if event!='original':counts['excluded:'+event+':'+str(e)]+=1
     if not templates:raise ValueError('No training templates')
     model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
     return model

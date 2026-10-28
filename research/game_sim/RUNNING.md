@@ -231,3 +231,24 @@ No approval/current forecasts/margins/winprobabilities/team-player coupling or
 member release. The owner explicitly authorized uploading this code and model-artifact package
 to the public VegasQuantV1 repository for review. This is not model approval
 or authorization for member-facing forecasts or release.
+
+
+## Source-only0.2.7 — compound play/timeout recovery
+Frozen COMPOUND_TIMEOUT_PROTOCOL.md at c46a313 before fitting. No sampler
+redesign. Original row indices retained; both events fitted independently.
+71 REG ordinary plays recovered,70 attached timeouts accepted. Across all rows
+75compound flags include4non-REG rows, excluded from both branches. Ambiguous
+timeout exclusions95→28. Accepted timeouts1973→2043 (7.28044→7.53875/game).
+No OT fit expansion; raw diagnostic still includes sourceOT. Existing artifacts
+and exact0.2.6runtime archive preserved. No thresholds changed.
+
+10000seed1701oldOT:10000complete/0failed/0unsupported censoring. Four unchanged
+reproduction gatesPASS:total43.0851vs43.76384,TD4.7905vs4.85240,
+FG3.2208vs3.33210,punts7.6772vs8.11808. Rawtimeouts7.244vs7.78229
+STILL FAIL tolerance.389461. Late decisions1.7406vs2.09963 narrowlyPASS
+(.374842 tolerance).111533thin contexts disclosed; this is not readiness.
+2023 already-inspected CRPS:total7.603299vs7.598449historical;
+margin8.140916vs8.065627historical, difference.0752885,95%gamebootstrap
+[-.0436272,.1918812]. No demonstrated superiority.77Python testsPASS.
+No coupling/current forecasts/model approval/member release/notifications.
+Owner-approved public research package is for independent review only.

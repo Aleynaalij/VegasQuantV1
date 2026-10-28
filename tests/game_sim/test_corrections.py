@@ -118,3 +118,34 @@ class Corrections(unittest.TestCase):
         from research.game_sim.model import bucket
         self.assertEqual([bucket(State(period=2,clock=t))[4] for t in (10,11,30,31,120,121)],['last10','last30','last30','last120','last120','normal'])
         self.assertEqual(bucket(State(period=1,clock=5))[4],'normal')
+
+    def test_compound_play_and_timeout_keep_distinct_clocks_and_budgets(self):
+        model=self.fitted_pair(dict(play_type='pass',penalty='0',timeout='1',timeout_team='H',home_timeouts_remaining='1',posteam_timeouts_remaining='1',complete_pass='1',yards_gained='5',qtr='2',quarter_seconds_remaining='110'),dict(play_type='run',penalty='0',qtr='2',quarter_seconds_remaining='90',yardline_100='55',down='1',ydstogo='10'))
+        actions={a['kind']:a for a in model['templates']}
+        self.assertEqual(set(actions),{'pass_complete','timeout'})
+        self.assertEqual(actions['pass_complete']['elapsed'],20)
+        self.assertEqual(actions['timeout']['elapsed'],0)
+        self.assertEqual(actions['timeout']['timeout_side'],'offense')
+        self.assertEqual(model['coverage']['rows'],1)
+        self.assertEqual(model['coverage']['accepted:compound_timeout'],1)
+        self.assertEqual(model['coverage']['accepted:play'],1)
+        self.assertTrue(any('last120@h1|oTO:y|dTO:y|60|' in k for k in model['buckets']))
+
+    def test_unrecoverable_compound_timeout_preserves_play(self):
+        model=self.fitted_pair(dict(play_type='run',penalty='0',timeout='1',timeout_team='UNKNOWN',yards_gained='3'),dict(quarter_seconds_remaining='845',yardline_100='57'))
+        self.assertEqual([a['kind'] for a in model['templates']],['run'])
+        self.assertEqual(model['coverage']['excluded:compound_timeout:unknown timeout caller'],1)
+
+    def test_standalone_timeout_does_not_relax_clock(self):
+        with self.assertRaisesRegex(ValueError,'No training templates'):
+            self.fitted_pair(dict(timeout='1',timeout_team='H',home_timeouts_remaining='2'),dict(quarter_seconds_remaining='845'))
+
+    def test_compound_turnover_maps_caller_to_new_defense(self):
+        model=self.fitted_pair(dict(play_type='pass',penalty='0',timeout='1',timeout_team='H',home_timeouts_remaining='2',interception='1'),dict(posteam='A',defteam='H',quarter_seconds_remaining='845',yardline_100='40',down='1',ydstogo='10'))
+        actions={a['kind']:a for a in model['templates']}
+        self.assertEqual(actions['timeout']['timeout_side'],'defense')
+        self.assertEqual(actions['interception']['spot'],0)
+
+    def test_compound_clock_moving_backward_rejects_both_events(self):
+        with self.assertRaisesRegex(ValueError,'No training templates'):
+            self.fitted_pair(dict(play_type='run',penalty='0',timeout='1',timeout_team='H',home_timeouts_remaining='2'),dict(quarter_seconds_remaining='855'))
