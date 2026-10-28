@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other
 
-MODEL_ID='vq-empirical-game/0.2.3'
+MODEL_ID='vq-empirical-game/0.2.4'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -17,21 +17,27 @@ def bucket(s):
     if s.phase=='scrimmage' and distance==s.yardline:field_bin+=':goal'
     return (s.phase,s.down or 0,distance_bin,field_bin,('last10' if s.clock<=10 else 'last30' if s.clock<=30 else 'last120' if s.clock<=120 else 'normal') if s.period in (2,4,5) else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
 
-def contexts(s):
+def context_options(s):
     phase,down,distance,field,clock,coarse=bucket(s)
     field=field if phase=='scrimmage' else '_'
     if clock!='normal':
         margin=getattr(s,s.possession+'_score')-getattr(s,other(s.possession)+'_score')
         size=abs(margin)
         fine=coarse+('1-3' if size<=3 else '4-8' if size<=8 else '9+') if margin else coarse
-        key=(phase,clock,field,fine,str(down),distance)
-        result=['|'.join(key[:n]) for n in (6,5,4)]
-        result.extend(['|'.join((phase,clock,zone,coarse)) for zone in (field,field.split(':')[0])])
-    else:
-        key=(phase,clock,field,str(down),distance,coarse)
-        result=['|'.join(key[:n]) for n in (6,5,4,3)]
-        result.append('|'.join((phase,clock,field.split(':')[0])))
-    return list(dict.fromkeys(result))
+        half_clock=clock+('@h1' if s.period==2 else '@h2')
+        key=(phase,half_clock,field,fine,str(down),distance)
+        floors=list(dict.fromkeys('|'.join((phase,half_clock,zone,coarse)) for zone in (field,field.split(':')[0])))
+        primary=list(dict.fromkeys(['|'.join(key[:n]) for n in (6,5,4)]+floors))
+        pooled=list(dict.fromkeys('|'.join((phase,clock,zone,coarse)) for zone in (field,field.split(':')[0])))
+        return primary,floors,pooled
+    key=(phase,clock,field,str(down),distance,coarse)
+    primary=list(dict.fromkeys(['|'.join(key[:n]) for n in (6,5,4,3)]+['|'.join((phase,clock,field.split(':')[0]))]))
+    return primary,primary[-1:],[]
+
+
+def contexts(s):
+    primary,_,pooled=context_options(s)
+    return list(dict.fromkeys(primary+pooled))
 
 
 def censored_gain(curve,origin,target,rng):
@@ -170,22 +176,40 @@ class Sampler:
             self.tables[ctx]=(keys,weights,sum(weights))
     def draw(self,s):
         if s.phase=='safety_kick':s=replace(s,phase='kickoff')
-        keys=contexts(s)
-        for ctx in keys:
-            table=self.tables.get(ctx)
-            if table and (table[2]>=self.model['minimum_context'] or ctx==keys[-1]):break
-        else:raise ValueError('no empirical phase support: '+s.phase)
-        self.fallbacks[len(ctx.split('|'))]+=1
-        if table[2]<self.model['minimum_context']:self.fallbacks['thin_context_support']+=1
-        if bucket(s)[4]!='normal':self.fallbacks['clock_preserved_samples']+=1
-        key=self.rng.choices(table[0],weights=table[1],k=1)[0];data=dict(self.model['templates'][int(key)])
+        primary,floors,pooled=context_options(s)
         def timeout_caller(template):
             return s.possession if template.get('timeout_side')=='offense' else other(s.possession)
-        if data['kind']=='timeout' and getattr(s,timeout_caller(data)+'_timeouts')==0:
-            eligible=[(k,w) for k,w in zip(table[0],table[1]) if self.model['templates'][int(k)]['kind']!='timeout' or getattr(s,timeout_caller(self.model['templates'][int(k)])+'_timeouts')>0]
-            if not eligible:raise ValueError('no supported action with remaining timeout budgets')
-            key=self.rng.choices([k for k,w in eligible],weights=[w for k,w in eligible],k=1)[0]
-            data=dict(self.model['templates'][int(key)])
+        def eligible(table):
+            if s.home_timeouts and s.away_timeouts:return table
+            entries=[(k,w) for k,w in zip(table[0],table[1]) if self.model['templates'][int(k)]['kind']!='timeout' or getattr(s,timeout_caller(self.model['templates'][int(k)])+'_timeouts')>0]
+            return ([k for k,w in entries],[w for k,w in entries],sum(w for k,w in entries))
+        chosen=None;attempted={}
+        def supported(ctx):
+            if ctx in attempted:return attempted[ctx]
+            table=self.tables.get(ctx)
+            filtered=eligible(table) if table else None
+            if filtered and not filtered[2]:
+                self.fallbacks['budget_exhausted_contexts']+=1
+                filtered=None
+            attempted[ctx]=filtered
+            return filtered
+        for ctx in primary:
+            table=self.tables.get(ctx)
+            if table and table[2]>=self.model['minimum_context'] and supported(ctx):
+                chosen=(ctx,table,supported(ctx));break
+        if chosen is None:
+            for ctx in floors+pooled:
+                table=self.tables.get(ctx)
+                if table and supported(ctx):
+                    chosen=(ctx,table,supported(ctx));break
+        if chosen is None:raise ValueError('no empirical context with budget-eligible actions: '+s.phase)
+        ctx,source_table,table=chosen
+        self.fallbacks[len(ctx.split('|'))]+=1
+        if source_table[2]<self.model['minimum_context']:self.fallbacks['thin_context_support']+=1
+        if bucket(s)[4]!='normal':
+            self.fallbacks['clock_preserved_samples']+=1
+            self.fallbacks['half_pooled_fallback' if ctx in pooled else 'half_preserved_samples']+=1
+        key=self.rng.choices(table[0],weights=table[1],k=1)[0];data=dict(self.model['templates'][int(key)])
         if data['kind']=='timeout':data['timeout_side']=timeout_caller(data)
         origin=data.pop('td_from',None)
         if origin is not None and s.yardline>origin:

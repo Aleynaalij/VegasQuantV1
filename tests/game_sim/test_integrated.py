@@ -1,7 +1,7 @@
 import copy
 import tempfile
 import unittest
-from research.game_sim.model import MODEL_ID, Sampler, contexts, censored_gain
+from research.game_sim.model import MODEL_ID, Sampler, contexts, context_options, censored_gain
 from research.game_sim.state import State
 from research.game_sim.batch import run_batch
 from research.game_sim.integrated import validate_trace, build
@@ -70,6 +70,39 @@ class IntegratedTests(unittest.TestCase):
         del model['buckets'][contexts(behind)[-1]]
         with self.assertRaises(ValueError):Sampler(model,17).draw(behind)
 
+    def test_thin_second_half_floor_beats_thick_pooled_first_half_mix(self):
+        q2=State(period=2,clock=8,home_score=7,yardline=75)
+        q4=State(period=4,clock=8,home_score=7,yardline=75)
+        first=context_options(q2)[1][-1];second=context_options(q4)[1][-1]
+        pooled=context_options(q4)[2][-1]
+        model=dict(model_id=MODEL_ID,minimum_context=30,
+            templates=[dict(kind='run',elapsed=5,yards=1),dict(kind='kneel',elapsed=5,yards=-1)],
+            buckets={first:{'0':100},second:{'1':2},pooled:{'0':1000}})
+        sampler=Sampler(model,17)
+        self.assertEqual(sampler.draw(q2).kind,'run')
+        self.assertEqual(sampler.draw(q4).kind,'kneel')
+        self.assertEqual(sampler.fallbacks['thin_context_support'],1)
+        self.assertNotEqual(first,second)
+        del model['buckets'][second]
+        self.assertEqual(Sampler(model,17).draw(q4).kind,'run')
+
+    def test_exhausted_timeout_context_continues_to_eligible_floor(self):
+        s=State(period=4,clock=8,home_score=7,yardline=75,home_timeouts=0)
+        primary,floors,pooled=context_options(s)
+        model=dict(model_id=MODEL_ID,minimum_context=30,
+            templates=[dict(kind='timeout',elapsed=0,timeout_side='offense'),dict(kind='kneel',elapsed=5,yards=-1)],
+            buckets={primary[0]:{'0':100},floors[-1]:{'1':2}})
+        sampler=Sampler(model,17)
+        self.assertEqual(sampler.draw(s).kind,'kneel')
+        self.assertGreater(sampler.fallbacks['budget_exhausted_contexts'],0)
+        del model['buckets'][floors[-1]]
+        model['buckets'][pooled[-1]]={'1':100}
+        sampler=Sampler(model,17)
+        self.assertEqual(sampler.draw(s).kind,'kneel')
+        self.assertEqual(sampler.fallbacks['half_pooled_fallback'],1)
+        del model['buckets'][pooled[-1]]
+        with self.assertRaises(ValueError):Sampler(model,17).draw(s)
+
     def test_survival_mass_does_not_require_observed_non_td_pool(self):
         import random
         curve=dict(survival=[None,1,.8,.6,.5,.4]+[None]*94)
@@ -102,7 +135,7 @@ class IntegratedTests(unittest.TestCase):
         import gzip, hashlib, json
         from pathlib import Path
         root=Path(__file__).resolve().parents[2]
-        folder=root/'research/game_sim/artifacts/v0.2.3'
+        folder=root/'research/game_sim/artifacts/v0.2.4'
         manifest=json.loads((folder/'manifest.json').read_text())
         payloads={}
         for filename, expected in manifest['files'].items():

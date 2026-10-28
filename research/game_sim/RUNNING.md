@@ -158,3 +158,31 @@ margin8.137279vs8.065627; no demonstrated superiority/adoption.
 isolation; source/file/implementation hashes and replay verified. No current
 matchup/model approval/team-player coupling/public release. Preserve0.2.3 and
 its remaining diagnostic failures for independent review before next protocol.
+
+## Half-specific late decisions 0.2.4
+
+Claude6456820780 verified0.2.3 and traced kneel dilution to pooling Q2/Q4 even
+in exact contexts. Protocol `HALF_CONTEXT_PROTOCOL.md` frozen before fitting.
+Late contexts/floors separate @h1(Q2) and @h2(Q4/OT); prefer existing thin
+half-specific floors to pooled ones. Timeout-ineligible contexts continue down
+the hierarchy. No action is forced or invented. Normal hierarchy unchanged.
+
+Actual10000seed1701oldOT:10000complete,0failed,0unsupported survival.
+Original unchanged reproduction gatePASS: total43.6212vs43.76384;
+TD4.8700vs4.85240;FG3.2204vs3.33210;punts7.9687vs8.11808.
+41651thin-context draws;222430half-preserved/268half-pooled late draws.
+Timeout6.0829vs7.78229 remains a diagnosticFAIL. LateFGattempt.4518vs.48708pass.
+
+Three fixed-seed training-state kneel diagnostics (1701/1702/1703) are NOT
+held-out validation. Leading Q4<=120s249mean sampled vs308source, up from
+123mean in0.2.3. Trailing8.667vs8source, down from22; trailing1–3last10s0vs0,
+down from4.667. Leading4–8 band75vs104source;9+band126.667vs155source.
+Leading kneels still under-reproduced. Exact rows/denominators/source/model
+hashes retained in diagnostics/half-context-0.2.4.json and baseline0.2.3 file.
+
+2023 already-inspected totalCRPS7.609583vs7.598449historical;
+margin8.145091vs8.065627. No demonstrated superiority/adoption.65Python
+checks pass including half isolation, thin-floor precedence, exhausted-timeout
+context continuation, source/file/implementation hashes and replay.
+No margins/win-probability approval, current-matchup forecast, team/player
+coupling or member release. Timeout diagnosis delegated read-only to Claude.

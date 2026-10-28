@@ -11,7 +11,7 @@ def audit(model_path, source_path, seed=1701):
     model=json.loads(gzip.decompress(model_raw) if model_raw[:2]==b'\x1f\x8b' else model_raw)
     source_raw=Path(source_path).read_bytes()
     source=gzip.decompress(source_raw) if source_raw[:2]==b'\x1f\x8b' else source_raw
-    sampler=Sampler(model,seed);counts=Counter();excluded=Counter();kneels={name:Counter() for name in ('leading_q4_last120','trailing_q4_last120','trailing_1_3_q4_last10')}
+    sampler=Sampler(model,seed);counts=Counter();excluded=Counter();kneels={name:Counter() for name in ('leading_q4_last120','trailing_q4_last120','trailing_1_3_q4_last10','leading_4_8_q4_last120','leading_9plus_q4_last120','tied_q4_last120')}
     for r in csv.DictReader(source.decode('utf-8-sig').splitlines()):
         if r['season_type']!='REG' or r['qtr'] not in ('1','2','3','4'):continue
         try:s=source_state(r)
@@ -30,6 +30,9 @@ def audit(model_path, source_path, seed=1701):
             groups=[]
             if margin>0:groups.append('leading_q4_last120')
             if margin<0:groups.append('trailing_q4_last120')
+            if 4<=margin<=8:groups.append('leading_4_8_q4_last120')
+            if margin>=9:groups.append('leading_9plus_q4_last120')
+            if margin==0:groups.append('tied_q4_last120')
             if -3<=margin<0 and s.clock<=10:groups.append('trailing_1_3_q4_last10')
             for group in groups:
                 item=kneels[group];item['states']+=1
@@ -45,5 +48,5 @@ def audit(model_path, source_path, seed=1701):
         scope='One sampled action at each valid historical state; source-state fit diagnostic, not held-out accuracy or executable recommendations')
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('--model',required=True);p.add_argument('--source',required=True)
-    a=p.parse_args();print(json.dumps(audit(a.model,a.source),indent=2))
+    p=argparse.ArgumentParser();p.add_argument('--model',required=True);p.add_argument('--source',required=True);p.add_argument('--seed',type=int,default=1701)
+    a=p.parse_args();print(json.dumps(audit(a.model,a.source,a.seed),indent=2))
