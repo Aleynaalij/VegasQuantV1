@@ -3,6 +3,13 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { slotCopy, spinTicket, ticketKey, type SlotLeg } from "@/lib/vq-slots";
 
+import {
+  marketSlotPool,
+  slotFreshnessMs,
+  type SlotGame,
+  type SlotObservation,
+} from "@/lib/slot-markets";
+
 export default function VqSlots() {
   const [pool, setPool] = useState<SlotLeg[]>([]),
     [ticket, setTicket] = useState<SlotLeg[]>([]);
@@ -34,50 +41,33 @@ export default function VqSlots() {
       try {
         const { data: session } = await supabase.auth.getSession();
         if (!session.session) throw new Error("Sign in to spin VQ Slots.");
-        const { data, error } = await supabase
-          .from("published_legs")
-          .select(
-            "leg_key,name,market,matchup,game_id,expires_at,kind,result,published_at,copy_text",
-          )
-          .gt("expires_at", new Date().toISOString())
-          .is("result", null)
-          .order("published_at", { ascending: false })
-          .limit(1000);
-        if (error)
-          throw new Error("The selection board could not load. Please retry.");
-        const rows = (data ?? []) as SlotLeg[];
-        const ids = [
-          ...new Set(
-            rows
-              .map((r) => r.game_id)
-              .filter((id): id is string => Boolean(id)),
-          ),
-        ];
-        if (!ids.length) {
-          if (live) setPool([]);
-          return;
-        }
-        const games = await supabase
+        const now = Date.now();
+        const { data: games, error } = await supabase
           .from("games")
-          .select("id,kickoff")
-          .in("id", ids)
-          .gt("kickoff", new Date().toISOString());
-        if (games.error)
-          throw new Error(
-            "Upcoming game times could not be verified. Please retry.",
-          );
-        const kickoffs = new Map(
-          (games.data ?? []).map((g) => [g.id, Date.parse(g.kickoff)]),
+          .select("id,home_team,away_team,kickoff")
+          .gt("kickoff", new Date(now).toISOString())
+          .lte("kickoff", new Date(now + 7 * slotFreshnessMs).toISOString())
+          .order("kickoff");
+        if (error)
+          throw new Error("Upcoming games could not load. Please retry.");
+        const slate = (games || []) as SlotGame[];
+        const snapshots = await Promise.all(
+          slate.map(async (game) => {
+            const response = await supabase
+              .from("source_observations")
+              .select("id,game_id,source,observed_at,recorded_at,payload")
+              .eq("game_id", game.id)
+              .eq("kind", "odds")
+              .eq("payload->>book", "FanDuel")
+              .gte("observed_at", new Date(now - slotFreshnessMs).toISOString())
+              .order("observed_at", { ascending: false })
+              .limit(200);
+            if (response.error)
+              throw new Error("The market board could not load. Please retry.");
+            return (response.data || []) as SlotObservation[];
+          }),
         );
-        const verified = rows
-          .filter((r) => kickoffs.has(r.game_id!))
-          .map((r) => ({
-            ...r,
-            expires_at: new Date(
-              Math.min(Date.parse(r.expires_at), kickoffs.get(r.game_id!)!),
-            ).toISOString(),
-          }));
-        if (live) setPool(verified);
+        if (live) setPool(marketSlotPool(slate, snapshots.flat(), now));
       } catch (e) {
         if (live) {
           setPool([]);
@@ -90,7 +80,9 @@ export default function VqSlots() {
       }
     }
     void load();
+    const poll = setInterval(load, 60000);
     return () => {
+      clearInterval(poll);
       live = false;
     };
   }, [refresh]);
@@ -215,7 +207,8 @@ export default function VqSlots() {
               : "SPIN 8 LEGS"}
         </button>
         <p className="vq-machine-note">
-          No credits. No stakes. Just a random ticket.
+          {new Set(pool.map((r) => r.game_id)).size} games · {pool.length}{" "}
+          sourced selections. No stakes.
         </p>
       </div>
       <p className="vq-slots-disclosure">
@@ -277,9 +270,9 @@ export default function VqSlots() {
             aria-label="Ticket text"
           />
           <p>
-            These are collected analyst targets; a sportsbook may not offer
-            every market. No combined odds, payout or win probability is
-            claimed.
+            These are randomly drawn FanDuel market snapshots, not analyst
+            selections. Markets may have changed since collection. No combined
+            odds, payout or win probability is claimed.
           </p>
         </details>
       </dialog>

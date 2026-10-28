@@ -1,6 +1,11 @@
 /** Read-only entertainment shuffler. It never computes prices or publishes picks. */
 import { legFamily, parlayCopyLine, type PublishedLeg } from "./parlay-builder";
 export type SlotLeg = {
+  selection_group?: string;
+  source_url?: string;
+  book?: string;
+  observed_at?: string;
+  observation_id?: string;
   leg_key: string;
   name: string;
   market: string;
@@ -30,7 +35,7 @@ export function slotPool(rows: SlotLeg[], now = Date.now()): SlotLeg[] {
         r.result ||
         !Number.isFinite(Date.parse(r.expires_at)) ||
         Date.parse(r.expires_at) <= now ||
-        !["RESEARCH", "OFFICIAL"].includes(r.kind)
+        !["RESEARCH", "OFFICIAL", "MARKET"].includes(r.kind)
       )
         return false;
       const key = `${r.game_id}|${clean(r.name)}|${clean(r.market)}`;
@@ -48,7 +53,7 @@ const player = (r: SlotLeg) => {
   return parlayCopyLine(leg) ? legFamily(leg).split(":")[1] : clean(r.name);
 };
 const group = (r: SlotLeg) =>
-  `${r.game_id}|${/moneyline|spread|\bside\b/i.test(r.market) ? "team-side" : player(r)}`;
+  `${r.game_id}|${r.selection_group || (/moneyline|spread|\bside\b/i.test(r.market) ? "team-side" : player(r))}`;
 export function spinTicket(
   rows: SlotLeg[],
   previous: string | ReadonlySet<string> | null,
@@ -69,15 +74,37 @@ export function spinTicket(
       const j = Math.floor(value * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
+    // Draw across games first, so a large prop menu cannot crowd out the slate.
+    const games = new Map<string, SlotLeg[]>();
+    for (const row of shuffled) {
+      const id = row.game_id!;
+      const options = games.get(id);
+      if (options) options.push(row);
+      else games.set(id, [row]);
+    }
+    const gameIds = [...games.keys()];
+    for (let i = gameIds.length - 1; i > 0; i--) {
+      const value = random();
+      if (!Number.isFinite(value) || value < 0 || value >= 1)
+        throw new Error("Invalid random source.");
+      const j = Math.floor(value * (i + 1));
+      [gameIds[i], gameIds[j]] = [gameIds[j], gameIds[i]];
+    }
     const used = new Set<string>();
-    const selected = shuffled
-      .filter((r) => {
-        const k = group(r);
-        if (used.has(k)) return false;
-        used.add(k);
-        return true;
-      })
-      .slice(0, 8);
+    const selected: SlotLeg[] = [];
+    while (selected.length < 8) {
+      let added = false;
+      for (const id of gameIds) {
+        const row = games.get(id)!.find((r) => !used.has(group(r)));
+        if (row) {
+          used.add(group(row));
+          selected.push(row);
+          added = true;
+        }
+        if (selected.length === 8) break;
+      }
+      if (!added) break;
+    }
     const key = ticketKey(selected);
     if (typeof previous === "string" ? key !== previous : !previous?.has(key))
       return selected;
@@ -90,7 +117,10 @@ export function slotCopy(rows: SlotLeg[]) {
   return [
     "VEGAS QUANT · VQ SLOTS",
     "Random 8-leg entertainment ticket · not an analyst recommendation",
-    ...rows.map((r, i) => `${i + 1}. ${r.name} — ${r.market} (${r.matchup})`),
+    ...rows.map(
+      (r, i) =>
+        `${i + 1}. ${r.name} — ${r.market} (${r.matchup})${r.book ? ` · ${r.book} snapshot ${r.observed_at} · ${r.source_url}` : ""}`,
+    ),
     "Market availability and prices must be checked. No combined odds or payout verified.",
   ].join("\n");
 }
