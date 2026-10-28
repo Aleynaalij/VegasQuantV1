@@ -299,6 +299,7 @@ export const simRun = z.object({
 export type SimEvent = z.infer<typeof simEvent>;
 export type SimRun = z.infer<typeof simRun>;
 export type Side = "home" | "away";
+export type Role = SimEvent["participants"][number]["role"];
 
 /** A run the UI can show, or the reasons it can't. Never repairs or invents missing fields. */
 export function parseSimRun(
@@ -478,8 +479,9 @@ export type BoxLine = {
   receiving: { rec: number; yds: number; td: number };
 };
 
-/** Box score derived only from events: every stat traces to a play. */
-export function boxScore(run: SimRun) {
+/** Box score derived only from events: every stat traces to a play. `through` is the last
+ * event counted (inclusive), so a replay can show stats as of the current play. */
+export function boxScore(run: SimRun, through = run.events.length - 1) {
   const lines = new Map<string, BoxLine>();
   const line = (p: { player_id: string; name: string; team: Side }) => {
     let l = lines.get(p.player_id);
@@ -498,7 +500,7 @@ export function boxScore(run: SimRun) {
     home: { plays: 0, yards: 0, turnovers: 0 },
     away: { plays: 0, yards: 0, turnovers: 0 },
   };
-  for (const e of run.events) {
+  for (const e of run.events.slice(0, through + 1)) {
     const passer = e.participants.find((p) => p.role === "passer");
     const rusher = e.participants.find((p) => p.role === "rusher");
     const target = e.participants.find((p) => p.role === "target");
@@ -547,4 +549,37 @@ export function boxScore(run: SimRun) {
     }
   }
   return { team, players: [...lines.values()] };
+}
+
+/** "Dak Prescott" → "D. Prescott", "Amon-Ra St. Brown" → "A. St. Brown"; suffixes such as Jr.
+ * or III are dropped and single names stay as they are. */
+export function shortName(name: string) {
+  const parts = name.trim().split(/\s+/);
+  while (parts.length > 2 && /^(jr|sr|ii|iii|iv|v)\.?$/i.test(parts.at(-1)!))
+    parts.pop();
+  return parts.length < 2
+    ? name
+    : `${parts[0][0]}. ${parts.slice(1).join(" ")}`;
+}
+
+/** "Dak Prescott" → "DP", for the round player chip. */
+export function initials(name: string) {
+  const parts = name.trim().split(/\s+/);
+  return [parts[0], parts.length > 1 ? parts.at(-1) : ""]
+    .map((w) => w?.[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+/** Broadcast-style line for the stat that matches the player's role on this play. */
+export function statLine(line: BoxLine | undefined, role: Role) {
+  if (!line) return "";
+  const td = (n: number) => (n ? ` ${n} TD` : "");
+  const p = line.passing,
+    r = line.rushing,
+    c = line.receiving;
+  if (role === "passer" && p.att)
+    return `${p.comp}/${p.att} ${p.yds} YDS${td(p.td)}${p.int ? ` ${p.int} INT` : ""}`;
+  if (role === "rusher" && r.att) return `${r.att} CAR ${r.yds} YDS${td(r.td)}`;
+  if (role === "target" && c.rec) return `${c.rec} REC ${c.yds} YDS${td(c.td)}`;
+  return "";
 }

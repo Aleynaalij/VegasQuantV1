@@ -5,13 +5,24 @@ import SimField from "./sim-field";
 import {
   boxScore,
   clockText,
+  initials,
   periodText,
   playText,
+  shortName,
   situationText,
+  statLine,
+  type Role,
   type SimRun,
 } from "@/lib/game-sim/contract";
 
 const PLAY_MS = 1400;
+const ROLE_LABEL: Record<Role, string> = {
+  passer: "QB",
+  rusher: "Ball carrier",
+  target: "Target",
+  kicker: "Kicker",
+  returner: "Returner",
+};
 const SPEEDS = [1, 2, 4] as const;
 const MODE_LABEL = {
   demo: "DEMO · synthetic game",
@@ -87,6 +98,18 @@ export default function SimulatorView({ run }: { run: SimRun }) {
   const { home, away } = run.game.teams;
   const situation = situationText(run, event);
   const box = useMemo(() => boxScore(run), [run]);
+  // Stats as of the play on screen: the current play counts once its animation finishes.
+  const statsNow = useMemo(
+    () =>
+      new Map(
+        boxScore(run, done ? index : index - 1).players.map((p) => [
+          p.player_id,
+          p,
+        ]),
+      ),
+    [run, index, done],
+  );
+  const onPlay = event.participants.slice(0, 2);
   const recent = events.slice(Math.max(0, index - 3), index).reverse();
   const quarters = [...new Set(events.map((e) => e.period))];
 
@@ -129,6 +152,27 @@ export default function SimulatorView({ run }: { run: SimRun }) {
         <p className="sim-situation">{situation ?? " "}</p>
       </div>
 
+      {onPlay.length > 0 && (
+        <ul className="sim-cards" aria-label="Players on this play">
+          {onPlay.map((p) => (
+            <li
+              key={`${p.role}-${p.player_id}`}
+              className={`sim-card sim-card-${p.team}`}
+            >
+              <span className="sim-card-ini" aria-hidden="true">
+                {initials(p.name)}
+              </span>
+              <span className="sim-card-text">
+                <b>{shortName(p.name)}</b>
+                <small>
+                  {statLine(statsNow.get(p.player_id), p.role) ||
+                    ROLE_LABEL[p.role]}
+                </small>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
       <SimField run={run} event={event} progress={reduced ? 1 : progress} />
 
       <div className="sim-ticker" aria-live="polite">

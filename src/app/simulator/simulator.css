@@ -357,3 +357,90 @@
     transition: none;
   }
 }
+/* Named participants: chips on the field and broadcast-style cards above it. */
+.sim-chip circle {
+  stroke: #0b1210;
+  stroke-width: 0.35;
+}
+.sim-chip-home circle {
+  fill: #e8ca7d;
+}
+.sim-chip-away circle {
+  fill: #e9eef2;
+}
+.sim-chip-ini {
+  fill: #0b1210;
+  font: 800 2.1px/1 sans-serif;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+.sim-chip-name {
+  fill: #fff;
+  font: 700 2px/1 sans-serif;
+  text-anchor: middle;
+  paint-order: stroke;
+  stroke: #0b1210aa;
+  stroke-width: 0.5;
+}
+.sim-cards {
+  display: flex;
+  /* Long stat lines wrap instead of widening the simulator grid. */
+  min-width: 0;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.sim-card {
+  display: flex;
+  flex: 0 1 50%;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 6px 10px 6px 6px;
+  border: 1px solid #b69b4e44;
+  border-radius: 999px;
+  background: #11161c;
+}
+.sim-card + .sim-card {
+  flex-direction: row-reverse;
+  text-align: right;
+  padding: 6px 6px 6px 10px;
+}
+.sim-card-ini {
+  display: grid;
+  flex: 0 0 30px;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  color: #0b1210;
+  font-weight: 800;
+  font-size: 12px;
+}
+.sim-card-home .sim-card-ini {
+  background: #e8ca7d;
+}
+.sim-card-away .sim-card-ini {
+  background: #e9eef2;
+}
+.sim-card b {
+  display: block;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sim-card-text {
+  min-width: 0;
+}
+.sim-card small {
+  display: block;
+  color: #d9cfae;
+  font-size: 11px;
+  /* On narrow phones a long line wraps rather than hiding stats. */
+  overflow-wrap: anywhere;
+}
