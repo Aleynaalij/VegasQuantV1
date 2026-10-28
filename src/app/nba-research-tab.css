@@ -1,0 +1,128 @@
+/* NBA research tab: tonight's slate, double-double watch and prop trends. */
+.nbar {
+  display: grid;
+  gap: 22px;
+  min-width: 0;
+}
+.nbar section {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.nbar h1 {
+  margin: 6px 0 6px;
+  font-size: 26px;
+}
+.nbar h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.nbar h3 {
+  margin: 8px 0 6px;
+  font-size: 14px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.nbar-head p,
+.nbar-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.nbar-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #e8ca7d22;
+  border: 1px solid #e8ca7d66;
+  color: #f4dc99;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.nbar-games,
+.nbar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.nbar-game,
+.nbar-list li {
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+  min-width: 0;
+}
+.nbar-matchup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  margin: 0;
+}
+.nbar-matchup span {
+  margin-left: auto;
+  color: #ddc080;
+  font-size: 13px;
+}
+.nbar-injuries {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.nbar-injuries > span:first-child {
+  color: var(--text);
+  font-weight: 700;
+}
+.nbar-status-out {
+  color: #ff9b8a;
+}
+.nbar-status-gtd {
+  color: #f4dc99;
+}
+.nbar-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+}
+.nbar-name {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.nbar-name b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nbar-name small,
+.nbar-line {
+  color: var(--muted);
+  font-size: 12px;
+}
+.nbar-line {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+}
+.nbar-rate,
+.nbar-prop {
+  font-weight: 800;
+  color: #8ce3bd;
+  white-space: nowrap;
+}
+.nbar-prop {
+  color: #f4dc99;
+}
+.nbar-foot {
+  border-top: 1px solid var(--line);
+  padding-top: 12px;
+}
