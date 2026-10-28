@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 import demo from "../src/lib/game-sim/demo-run.json";
 import {
   boxScore,
+  initials,
   parseSimRun,
+  shortName,
+  statLine,
   playText,
   situationText,
 } from "../src/lib/game-sim/contract";
@@ -207,4 +210,45 @@ test("The engine's own fixture format converts to home-relative field positions"
   const kickoff = r.run.events.find((e) => e.play_type === "kickoff")!;
   assert.equal(kickoff.down, null);
   assert.equal(kickoff.ball_start_x, 35);
+});
+
+test("Player cards show stats as of the play on screen", () => {
+  const r = parseSimRun(demo);
+  assert.ok(r.ok);
+  if (!r.ok) return;
+  const events = r.run.events;
+  const i = events.findIndex((e) => e.play_type === "pass_complete");
+  assert.ok(i > 0, "the demo has a completed pass");
+  const passer = events[i].participants.find((p) => p.role === "passer")!;
+  const before = boxScore(r.run, i - 1).players.find(
+    (p) => p.player_id === passer.player_id,
+  );
+  const after = boxScore(r.run, i).players.find(
+    (p) => p.player_id === passer.player_id,
+  )!;
+  assert.equal(after.passing.comp, (before?.passing.comp ?? 0) + 1);
+  assert.equal(after.passing.yds, (before?.passing.yds ?? 0) + events[i].yards);
+  assert.deepEqual(boxScore(r.run, events.length - 1), boxScore(r.run));
+  assert.equal(boxScore(r.run, -1).players.length, 0);
+});
+
+test("Stat lines follow the player's role on the play", () => {
+  const line = {
+    player_id: "p",
+    name: "Dak Prescott",
+    team: "home" as const,
+    passing: { comp: 8, att: 9, yds: 93, td: 1, int: 0 },
+    rushing: { att: 2, yds: 7, td: 0 },
+    receiving: { rec: 0, yds: 0, td: 0 },
+  };
+  assert.equal(statLine(line, "passer"), "8/9 93 YDS 1 TD");
+  assert.equal(statLine(line, "rusher"), "2 CAR 7 YDS");
+  assert.equal(statLine(line, "target"), "");
+  assert.equal(statLine(undefined, "passer"), "");
+  assert.equal(shortName("Dak Prescott"), "D. Prescott");
+  assert.equal(shortName("Amon-Ra St. Brown"), "A. St. Brown");
+  assert.equal(shortName("Kenneth Walker III"), "K. Walker");
+  assert.equal(shortName("Prescott"), "Prescott");
+  assert.equal(initials("Dak Prescott"), "DP");
+  assert.equal(initials("Prescott"), "P");
 });

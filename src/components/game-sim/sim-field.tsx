@@ -1,8 +1,15 @@
-import type { SimEvent, SimRun } from "@/lib/game-sim/contract";
+import {
+  initials,
+  shortName,
+  type Role,
+  type SimEvent,
+  type SimRun,
+} from "@/lib/game-sim/contract";
 
 // A 2D field drawn in yards: 10-yard end zones either side of 100 yards, 53.3 yards wide. The home
-// goal line is on the left, matching the contract's home-relative ball_*_x. Only the ball and the
-// lines it implies are drawn: the contract has no player positions, so none are invented.
+// goal line is on the left, matching the contract's home-relative ball_*_x. Only the ball, the
+// lines it implies and the play's named participants are drawn, each at a spot the play itself
+// gives (snap, ball, catch or landing point). The contract has no formations, so none are invented.
 const W = 120,
   H = 53.3;
 const fx = (x: number) => 10 + x;
@@ -44,6 +51,10 @@ export default function SimField({
       ? Math.min(100, Math.max(0, start + dir * event.distance))
       : null;
   const scored = event?.touchdown && t >= 1;
+  const chips =
+    event && x != null && start != null
+      ? playerSpots(event, start, end ?? start, x, dir)
+      : [];
   return (
     <svg
       className="sim-field"
@@ -122,6 +133,22 @@ export default function SimField({
           y2={H / 2 - lift}
         />
       )}
+      {/* A second participant sits on the far side of the ball's line so labels never collide. */}
+      {chips.map((c, i) => (
+        <g
+          key={`${c.role}-${c.player_id}`}
+          className={`sim-chip sim-chip-${c.team}`}
+          transform={`translate(${fx(c.x)} ${i ? H / 2 - 10 : H / 2 + 5})`}
+        >
+          <circle r="2.6" />
+          <text className="sim-chip-ini" y="0.1">
+            {initials(c.name)}
+          </text>
+          <text className="sim-chip-name" y="4.6">
+            {shortName(c.name)}
+          </text>
+        </g>
+      ))}
       {x != null && (
         <g
           className="sim-ball"
@@ -142,4 +169,42 @@ export default function SimField({
       )}
     </svg>
   );
+}
+
+/** Where each named participant stands, using only spots the play provides. */
+function playerSpots(
+  e: SimEvent,
+  start: number,
+  end: number,
+  ball: number,
+  dir: number,
+) {
+  const who = (role: Role) => e.participants.find((p) => p.role === role);
+  const at = (role: Role, x: number) => {
+    const p = who(role);
+    return p ? [{ ...p, x: Math.min(100, Math.max(0, x)) }] : [];
+  };
+  switch (e.play_type) {
+    case "run":
+    case "fumble_lost":
+      return at("rusher", ball);
+    case "kneel":
+    case "spike":
+    case "sack":
+      return at("passer", ball);
+    case "pass_complete":
+    case "pass_incomplete":
+      // The passer sets up a few yards behind the line; the target waits at the catch point.
+      return [...at("passer", start - dir * 4), ...at("target", end)];
+    case "interception":
+      return at("passer", start - dir * 4);
+    case "kickoff":
+    case "punt":
+      return [...at("kicker", start), ...at("returner", end)];
+    case "field_goal":
+    case "extra_point":
+      return at("kicker", start - dir * 7);
+    default:
+      return [];
+  }
 }
