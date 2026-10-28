@@ -1,10 +1,6 @@
-// NBA is paused (owner decision, Oct 22 2026): the NBA pages are closed and the sport switch shows a
-// "coming soon" chip. Data still collects once a day so the season's games are on record when it returns.
+// NBA picks are paused (owner decision, Oct 22 2026): the NBA desk is closed and the NBA chip opens the
+// research tab (owner, Oct 28 2026): season trends, injuries and lines, labelled research, never picks.
 export const NBA_PAUSED = true;
 
-export const NBA_PAUSED_TITLE = "NBA is coming soon";
-export const NBA_PAUSED_MESSAGE =
-  "We're giving the NBA season some time. The platform keeps collecting game data every day until it is a source we can reference: we want to watch a few games play out and see what players are doing this year before we put money into it. NFL has been great, so that's where our focus is for now.";
-
-/** Old NBA links land here, and the coming-soon message opens on arrival. */
-export const NBA_PAUSED_HREF = "/?nba=soon";
+/** Old NBA links land on the research tab. */
+export const NBA_PAUSED_HREF = "/nba-research";

@@ -7,7 +7,6 @@ import AccountLink from "./account-link";
 import SwipeTabs from "./swipe-tabs";
 import TabScrub from "./tab-scrub";
 import CommunityStories from "./community-stories";
-import NbaComingSoon from "./nba-coming-soon";
 import AdminOnly from "./admin-only";
 import { NBA_PAUSED } from "@/lib/nba-paused";
 import {
@@ -261,6 +260,7 @@ export function Shell({
                   admin: "Publishing",
                   intelligence: "Data Intelligence",
                   methodology: "Methodology",
+                  nbaresearch: "NBA research",
                   error: "Something went wrong",
                   missing: "Not found",
                   rules: "Rulebook",
@@ -289,7 +289,14 @@ export function Shell({
             NFL
           </Link>
           {NBA_PAUSED ? (
-            <NbaComingSoon />
+            // NBA picks are paused; the chip opens the research tab.
+            <Link
+              href="/nba-research"
+              aria-current={active === "nbaresearch" ? "page" : undefined}
+              className={`nba-research-chip${active === "nbaresearch" ? " selected" : ""}`}
+            >
+              NBA <span className="nba-soon-sticker">Research</span>
+            </Link>
           ) : (
             <Link
               href={nbaHref}

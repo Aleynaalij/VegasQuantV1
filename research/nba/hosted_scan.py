@@ -250,7 +250,9 @@ def main():
         print(json.dumps({"rejected": e.code, "message": json.loads(e.read().decode() or "{}").get("message")}))
         raise
     counts = {k: v for k, v in scan["summary"].items() if isinstance(v, int)}
-    print(json.dumps({"forecasts": len(scan["forecasts"]), "inserted": result.get("inserted"), **counts}))
+    # Rejection reasons are the database's rule names with counts (no players, prices or probabilities).
+    print(json.dumps({"forecasts": len(scan["forecasts"]), "inserted": result.get("inserted"),
+                      "rejected": result.get("rejected") or {}, **counts}))
 
 
 if __name__ == "__main__":
