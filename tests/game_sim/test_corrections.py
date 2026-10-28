@@ -19,7 +19,7 @@ class Corrections(unittest.TestCase):
         import csv,tempfile
         from pathlib import Path
         from research.game_sim.model import fit
-        base=dict(season='2022',season_type='REG',game_id='fixture',posteam='H',defteam='A',home_team='H',play_type='no_play',qtr='1',quarter_seconds_remaining='850',posteam_score='0',defteam_score='0',yardline_100='60',down='3',ydstogo='2',yards_gained='0',penalty='1',penalty_yards='5')
+        base=dict(season='2022',season_type='REG',game_id='fixture',posteam='H',defteam='A',home_team='H',play_type='no_play',qtr='1',quarter_seconds_remaining='850',posteam_score='0',defteam_score='0',yardline_100='60',down='3',ydstogo='2',posteam_timeouts_remaining='3',defteam_timeouts_remaining='3',home_timeouts_remaining='3',away_timeouts_remaining='3',yards_gained='0',penalty='1',penalty_yards='5')
         first=dict(base,**first);following=dict(base,**following)
         fields=sorted(set(first)|set(following))
         with tempfile.TemporaryDirectory() as tmp:
@@ -92,8 +92,16 @@ class Corrections(unittest.TestCase):
         self.assertFalse(manifest['approval'])
 
     def test_timeout_source_uses_exact_clock_following_state(self):
-        model=self.fitted_pair(dict(timeout='1',timeout_team='H',posteam='',defteam='',down='',yardline_100='',penalty='0'),dict(quarter_seconds_remaining='850',down='1',yardline_100='75',penalty='0'))
+        model=self.fitted_pair(dict(timeout='1',timeout_team='H',home_timeouts_remaining='2',posteam='',defteam='',down='',yardline_100='',penalty='0'),dict(quarter_seconds_remaining='850',down='1',yardline_100='75',penalty='0'))
         self.assertEqual(model['templates'][0],dict(kind='timeout',elapsed=0,timeout_side='offense'))
+
+    def test_last_timeout_is_fitted_with_pre_event_budget(self):
+        model=self.fitted_pair(
+            dict(qtr='4',quarter_seconds_remaining='8',timeout='1',timeout_team='H',
+                 home_timeouts_remaining='0',away_timeouts_remaining='2',posteam='',defteam='',down='',yardline_100='',penalty='0'),
+            dict(qtr='4',quarter_seconds_remaining='8',posteam_timeouts_remaining='0',defteam_timeouts_remaining='2',down='1',yardline_100='75',penalty='0'))
+        self.assertEqual(model['templates'][0]['kind'],'timeout')
+        self.assertTrue(all('oTO:y' in key and 'dTO:y' in key for key in model['buckets']))
 
     def test_timeout_budget_respected_by_sampler(self):
         from research.game_sim.model import MODEL_ID,Sampler

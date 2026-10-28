@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other
 
-MODEL_ID='vq-empirical-game/0.2.4'
+MODEL_ID='vq-empirical-game/0.2.6'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -15,7 +15,14 @@ def bucket(s):
     distance_bin=str(distance) if distance<=3 else '4-6' if distance<=6 else '7-10' if distance<=10 else '11+'
     field_bin=next(str(edge) for edge in (5,10,20,40,60,80,100) if s.yardline<=edge)
     if s.phase=='scrimmage' and distance==s.yardline:field_bin+=':goal'
-    return (s.phase,s.down or 0,distance_bin,field_bin,('last10' if s.clock<=10 else 'last30' if s.clock<=30 else 'last120' if s.clock<=120 else 'normal') if s.period in (2,4,5) else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
+    return (s.phase,s.down or 0,distance_bin,field_bin,('last10' if s.clock<=10 else 'last30' if s.clock<=30 else 'last120' if s.clock<=120 else 'last300' if s.period in (4,5) and s.clock<=300 else 'normal') if s.period in (2,4,5) else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
+
+def zero_timeout_contexts(s):
+    phase,_,_,field,clock,coarse=bucket(s)
+    if phase!='scrimmage' or clock=='normal':return []
+    half_clock=clock+('@h1' if s.period==2 else '@h2')
+    return ['|'.join((phase,c,'non-timeout-only',field.split(':')[0],coarse)) for c in (half_clock,clock)]
+
 
 def context_options(s):
     phase,down,distance,field,clock,coarse=bucket(s)
@@ -25,11 +32,21 @@ def context_options(s):
         size=abs(margin)
         fine=coarse+('1-3' if size<=3 else '4-8' if size<=8 else '9+') if margin else coarse
         half_clock=clock+('@h1' if s.period==2 else '@h2')
-        key=(phase,half_clock,field,fine,str(down),distance)
-        floors=list(dict.fromkeys('|'.join((phase,half_clock,zone,coarse)) for zone in (field,field.split(':')[0])))
-        primary=list(dict.fromkeys(['|'.join(key[:n]) for n in (6,5,4)]+floors))
-        pooled=list(dict.fromkeys('|'.join((phase,clock,zone,coarse)) for zone in (field,field.split(':')[0])))
-        return primary,floors,pooled
+        flags=(('oTO:y' if getattr(s,s.possession+'_timeouts') else 'oTO:n'),('dTO:y' if getattr(s,other(s.possession)+'_timeouts') else 'dTO:n')) if phase=='scrimmage' else ()
+        prefix=(phase,half_clock)+flags
+        key=prefix+(field,fine,str(down),distance)
+        floors=list(dict.fromkeys('|'.join(prefix+(zone,coarse)) for zone in (field,field.split(':')[0])))
+        primary=list(dict.fromkeys(['|'.join(key[:n]) for n in (len(key),len(key)-1,len(key)-2)]+floors))
+        pooled=list(dict.fromkeys('|'.join((phase,clock)+flags+(zone,coarse)) for zone in (field,field.split(':')[0])))
+        windows=[]
+        if phase=='scrimmage':
+            if s.clock<=120:
+                for window in (['last30window','last120window'] if s.clock<=10 else ['last120window']):
+                    windows.append('|'.join((phase,window+('@h1' if s.period==2 else '@h2'))+flags+(field.split(':')[0],coarse)))
+                windows.append('|'.join((phase,'last120window')+flags+(field.split(':')[0],coarse)))
+            windows.append('|'.join((phase,'last300window'+('@h1' if s.period==2 else '@h2'))+flags+(field.split(':')[0],coarse)))
+            windows.append('|'.join((phase,'last300window')+flags+(field.split(':')[0],coarse)))
+        return primary,floors,pooled+windows+(zero_timeout_contexts(s) if not s.home_timeouts and not s.away_timeouts else [])
     key=(phase,clock,field,str(down),distance,coarse)
     primary=list(dict.fromkeys(['|'.join(key[:n]) for n in (6,5,4,3)]+['|'.join((phase,clock,field.split(':')[0]))]))
     return primary,primary[-1:],[]
@@ -37,7 +54,17 @@ def context_options(s):
 
 def contexts(s):
     primary,_,pooled=context_options(s)
-    return list(dict.fromkeys(primary+pooled))
+    result=primary+pooled
+    if s.phase=='scrimmage' and s.period in (2,4,5) and s.clock<=30:
+        _,_,_,field,_,coarse=bucket(s)
+        flags=('oTO:y' if getattr(s,s.possession+'_timeouts') else 'oTO:n','dTO:y' if getattr(s,other(s.possession)+'_timeouts') else 'dTO:n')
+        result.append('|'.join((s.phase,'last30window'+('@h1' if s.period==2 else '@h2'))+flags+(field.split(':')[0],coarse)))
+    if s.phase=='scrimmage' and s.period in (2,4,5) and s.clock<=300:
+        _,_,_,field,_,coarse=bucket(s)
+        flags=('oTO:y' if getattr(s,s.possession+'_timeouts') else 'oTO:n','dTO:y' if getattr(s,other(s.possession)+'_timeouts') else 'dTO:n')
+        for clock in ('last300window'+('@h1' if s.period==2 else '@h2'),'last300window'):
+            result.append('|'.join((s.phase,clock)+flags+(field.split(':')[0],coarse)))
+    return list(dict.fromkeys(result))
 
 
 def censored_gain(curve,origin,target,rng):
@@ -58,7 +85,12 @@ def source_state(r):
     home_score=integer(r['posteam_score'] if side=='home' else r['defteam_score'])
     away_score=integer(r['defteam_score'] if side=='home' else r['posteam_score'])
     possession=other(side) if phase=='kickoff' else side
-    return State(period=integer(r['qtr']),clock=integer(r['quarter_seconds_remaining']),possession=possession,yardline=integer(r['yardline_100']) if phase=='scrimmage' else 65,down=integer(r['down']) if phase=='scrimmage' else None,distance=integer(r['ydstogo']) if phase=='scrimmage' else None,home_score=home_score,away_score=away_score,phase=phase)
+    budgets={}
+    if phase=='scrimmage':
+        offense=integer(r.get('posteam_timeouts_remaining',''));defense=integer(r.get('defteam_timeouts_remaining',''))
+        if not 0<=offense<=3 or not 0<=defense<=3:raise ValueError('invalid source timeout budget')
+        budgets={side+'_timeouts':offense,other(side)+'_timeouts':defense}
+    return State(**budgets,period=integer(r['qtr']),clock=integer(r['quarter_seconds_remaining']),possession=possession,yardline=integer(r['yardline_100']) if phase=='scrimmage' else 65,down=integer(r['down']) if phase=='scrimmage' else None,distance=integer(r['ydstogo']) if phase=='scrimmage' else None,home_score=home_score,away_score=away_score,phase=phase)
 
 
 def enforced_penalty(row):
@@ -103,6 +135,11 @@ def fit(paths):
                     if context is None or context['quarter_seconds_remaining']!=r['quarter_seconds_remaining']:raise ValueError('ambiguous timeout state')
                     s=source_state(context)
                     if r.get('timeout_team') not in (context['posteam'],context['defteam']):raise ValueError('unknown timeout caller')
+                    caller='home' if r['timeout_team']==r['home_team'] else 'away'
+                    post={side:integer(r.get(side+'_timeouts_remaining','')) for side in ('home','away')}
+                    if any(not 0<=n<=3 for n in post.values()) or post[caller]>=3:raise ValueError('invalid post-timeout source budget')
+                    post[caller]+=1
+                    s=replace(s,**{side+'_timeouts':n for side,n in post.items()})
                 else:s=source_state(r)
                 if s.period>4:raise ValueError('regulation fit only')
                 nxt=rows[i+1]
@@ -158,7 +195,8 @@ def fit(paths):
                 if r.get('penalty')=='1' and not enforced_penalty(r):counts['flag_not_enforced_ordinary']+=1
                 key=json.dumps(a,sort_keys=True,separators=(',',':'))
                 if key not in ids:ids[key]=len(templates);templates.append(a)
-                for ctx in contexts(s):buckets[ctx].append(ids[key])
+                fit_contexts=contexts(s)+(zero_timeout_contexts(s) if a['kind']!='timeout' else [])
+                for ctx in dict.fromkeys(fit_contexts):buckets[ctx].append(ids[key])
                 counts['accepted']+=1;counts['kind:'+a['kind']]+=1
                 if enforced_penalty(r) and kind!='no_play':counts['normalized_live_ball_penalty']+=1
             except (ValueError,TypeError,KeyError) as e:counts['excluded:'+str(e)]+=1
@@ -207,8 +245,10 @@ class Sampler:
         self.fallbacks[len(ctx.split('|'))]+=1
         if source_table[2]<self.model['minimum_context']:self.fallbacks['thin_context_support']+=1
         if bucket(s)[4]!='normal':
-            self.fallbacks['clock_preserved_samples']+=1
-            self.fallbacks['half_pooled_fallback' if ctx in pooled else 'half_preserved_samples']+=1
+            self.fallbacks['clock_window_fallback' if 'window' in ctx else 'clock_preserved_samples']+=1
+            if 'last300window' in ctx:self.fallbacks['last300_window_fallback']+=1
+            if 'non-timeout-only' in ctx:self.fallbacks['zero_budget_pooled_action_fallback']+=1
+            self.fallbacks['half_pooled_fallback' if '@h' not in ctx else 'half_preserved_samples']+=1
         key=self.rng.choices(table[0],weights=table[1],k=1)[0];data=dict(self.model['templates'][int(key)])
         if data['kind']=='timeout':data['timeout_side']=timeout_caller(data)
         origin=data.pop('td_from',None)

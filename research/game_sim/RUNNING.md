@@ -186,3 +186,48 @@ checks pass including half isolation, thin-floor precedence, exhausted-timeout
 context continuation, source/file/implementation hashes and replay.
 No margins/win-probability approval, current-matchup forecast, team/player
 coupling or member release. Timeout diagnosis delegated read-only to Claude.
+
+## Timeout correction builds 0.2.5–0.2.6 (research only)
+
+0.2.5 reads actual source snap budgets and reconstructs pre-timeout balances
+from administrative post-event balances. Late scrimmage keys preserve both
+budget flags. 8751/10000 complete:1249missing-context failures; BLOCKED.
+0.2.5.1 adds separately counted nested <=30/<=120 clock-window evidence after
+all exact-clock contexts fail.9922complete/78failed; BLOCKED.
+0.2.5.2 adds final <=300 source-window support without changing normal-clock
+decisions.9993complete/7failed; BLOCKED. Saved support grid isolates tied,
+near-goal, both-budgets-zero cases. Every failed build/runtime is preserved.
+
+0.2.5.3 adds last-resort NON-TIMEOUT-ONLY source action pools only when BOTH
+budgets are zero, where no timeout is legally possible. This is disclosed
+conditional-action pooling across budgets, never a fabricated timeout rate.
+10000complete/0failed; all4original gatesPASS; rawtimeouts7.0889vs7.78229FAIL.
+
+Only after that passing support build,0.2.6 separately introduces Q4/OT121–300s
+last300 decisions; Q2 stays normal and <=120 windows never include later rows.
+Frozen protocols precede each fit.10000seed1701oldOT:10000complete/0failed,
+0unsupported censoring. Original gatesPASS:total43.2011vs43.76384,
+TD4.8008vs4.85240,FG3.2286vs3.33210,punts7.6661vs8.11808.
+
+Rawtimeout7.0997vs7.78229 stillFAIL at unchanged3combined-SE tolerance.38948.
+Accepted-source timeouts are7.28044/game; rawsource additionally counts excluded
+ambiguous-clock/OT events. This explains part, not an excuse to replace the
+original target. Remaining gap requires independent review; no readiness claim.
+Late_decisions1.7445vs2.09963 narrowlyPASS(tolerance.37484), retained visibly.
+
+Same-seed first1000replays:1000complete,0failed. Q4 121–300timeouts1.270/game
+vs1.247source (prior incomplete-prefix .159). Q1.460vs.435;Q3.519vs.391;
+Q2 2.903vs3.280;Q4 3.280vs3.535. Period-band rates, zero-budget shares and
+snap denominators retained in diagnostics/timeouts-0.2.6.json. No extra ensemble.
+3seedsource-state kneels:leading278.667vs308source,trailing8.667vs8,
+narrowdeficitlast10s0vs0;leading4–8band97vs104,9+band128.667vs155.
+
+72Python testsPASS. All source/file/implementation hashes and representative
+replay verified.0.2.6 has110177thin-context draws,3133clock-window fallbacks,
+1466last300-window fallbacks,11zero-budget pooled-action fallbacks and4234
+half-pooled fallbacks, all disclosed.2023inspectedCRPS:total7.604447vs7.598449,
+margin8.178088vs8.065627historical; no demonstrated superiority/adoption.
+No approval/current forecasts/margins/winprobabilities/team-player coupling or
+member release. The owner explicitly authorized uploading this code and model-artifact package
+to the public VegasQuantV1 repository for review. This is not model approval
+or authorization for member-facing forecasts or release.

@@ -1,0 +1,234 @@
+{
+  "scope": "Representative categorical context support, not game outcomes; no synthetic training inputs",
+  "tested_contexts": 504,
+  "unsupported": [
+    {
+      "state": {
+        "period": 2,
+        "clock": 5,
+        "possession": "home",
+        "yardline": 3,
+        "down": 1,
+        "distance": 3,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 0
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 2,
+        "clock": 5,
+        "possession": "home",
+        "yardline": 90,
+        "down": 1,
+        "distance": 10,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 1
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 2,
+        "clock": 20,
+        "possession": "home",
+        "yardline": 3,
+        "down": 1,
+        "distance": 3,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 0
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 2,
+        "clock": 20,
+        "possession": "home",
+        "yardline": 90,
+        "down": 1,
+        "distance": 10,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 1
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 2,
+        "clock": 90,
+        "possession": "home",
+        "yardline": 3,
+        "down": 1,
+        "distance": 3,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 0
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 2,
+        "clock": 90,
+        "possession": "home",
+        "yardline": 90,
+        "down": 1,
+        "distance": 10,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 1
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 4,
+        "clock": 5,
+        "possession": "home",
+        "yardline": 3,
+        "down": 1,
+        "distance": 3,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 0
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 4,
+        "clock": 5,
+        "possession": "home",
+        "yardline": 90,
+        "down": 1,
+        "distance": 10,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 1
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 4,
+        "clock": 20,
+        "possession": "home",
+        "yardline": 3,
+        "down": 1,
+        "distance": 3,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 0
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 4,
+        "clock": 20,
+        "possession": "home",
+        "yardline": 90,
+        "down": 1,
+        "distance": 10,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 1
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 4,
+        "clock": 90,
+        "possession": "home",
+        "yardline": 3,
+        "down": 1,
+        "distance": 3,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 0
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    },
+    {
+      "state": {
+        "period": 4,
+        "clock": 90,
+        "possession": "home",
+        "yardline": 90,
+        "down": 1,
+        "distance": 10,
+        "home_score": 0,
+        "away_score": 0,
+        "phase": "scrimmage",
+        "second_half_receiver": "away",
+        "ot_completed": [],
+        "ot_both_possessions": true,
+        "home_timeouts": 0,
+        "away_timeouts": 1
+      },
+      "error": "no empirical context with budget-eligible actions: scrimmage"
+    }
+  ]
+}

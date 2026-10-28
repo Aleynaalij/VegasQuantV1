@@ -9,10 +9,11 @@ def fixture():
     buckets={}
     for phase,entries in [('scrimmage',{'0':40,'1':30,'2':30}),('try',{'3':100}),('kickoff',{'4':100})]:
         fields=[str(x)+suffix for x in (5,10,20,40,60,80,100) for suffix in ('',':goal')] if phase=='scrimmage' else ['_']
-        for clock in ('normal','last10','last30','last120'):
+        for clock in ('normal','last10','last30','last120','last300'):
             for field in fields:
                 for score in (('' ,) if clock=='normal' else ('ahead','tied','behind')):
-                    key='|'.join((phase,clock,field)+(tuple() if not score else (score,)))
+                    flags=('oTO:y','dTO:y') if phase=='scrimmage' and clock!='normal' else ()
+                    key='|'.join((phase,clock)+flags+(field,)+(tuple() if not score else (score,)))
                     buckets[key]=dict(entries)
     return dict(model_id=MODEL_ID,sources=[],templates=templates,buckets=buckets,minimum_context=30)
 class BatchTests(unittest.TestCase):
