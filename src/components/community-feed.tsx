@@ -22,6 +22,7 @@ import {
 import { time } from "@/lib/domain";
 import { ImagePlus, Heart, MessageCircle, Share2 } from "lucide-react";
 import { NBA_PAUSED } from "@/lib/nba-paused";
+import { threesCardDay } from "@/lib/nba-threes-card";
 type Post = {
   id: string;
   user_id: string;
@@ -38,6 +39,7 @@ type Post = {
   comments: number;
   following: boolean;
   photo_path: string | null;
+  card?: string | null;
 };
 type Comment = {
   parent_id: string | null;
@@ -795,7 +797,28 @@ export default function CommunityFeed() {
                   {p.kind === "result" ? " · UNVERIFIED RESULT" : ""}
                 </span>
                 {p.title !== "Community post" ? <h2>{p.title}</h2> : null}
-                <p>{p.body}</p>
+                {threesCardDay(p.card) ? (
+                  <figure className="zone-card">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/api/nba/threes-card/${threesCardDay(p.card)}`}
+                      alt={p.body}
+                      width={1080}
+                      height={1350}
+                      loading="lazy"
+                    />
+                    <figcaption>
+                      <a
+                        href={`/api/nba/threes-card/${threesCardDay(p.card)}`}
+                        download={`vegas-quant-3-point-volume-${threesCardDay(p.card)}.png`}
+                      >
+                        Download card
+                      </a>
+                    </figcaption>
+                  </figure>
+                ) : (
+                  <p>{p.body}</p>
+                )}
                 {p.photo_path ? (
                   <CommunityPhoto
                     key={`${uid}:${p.id}`}

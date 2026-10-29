@@ -27,6 +27,7 @@ create trigger zone_post_notify after insert on public.community_posts for each 
 insert into auth.users values('${owner}',now()),('${member}',now());insert into private.admin_users values('${owner}');`);
 await db.exec(fs.readFileSync('supabase/migrations/20261029001000_nba_three_point_volume.sql','utf8').replace(/^create extension.*$/gm,''));
 await db.exec(fs.readFileSync('supabase/migrations/20261029010000_nba_threes_post_skip_mismatch.sql','utf8'));
+await db.exec(fs.readFileSync('supabase/migrations/20261029160000_nba_threes_card.sql','utf8'));
 
 // Three finished games for the Knicks before today, one today vs the Bulls; another team's game too.
 const today=(await db.query(`select (now() at time zone 'America/New_York')::date d`)).rows[0].d.toISOString().slice(0,10);
@@ -77,6 +78,15 @@ assert.match(post.body,/Most 3s attempted per game\n1\. Jalen Brunson \(NY\) 8\.
 assert.match(post.body,/Most 3s made per game\n1\. Jalen Brunson \(NY\) 3\.0 made · 8\.3 att · 36%\n2\. Mikal Bridges/);
 assert.doesNotMatch(post.body,/Bench Guy/);
 assert.match(post.body,/Research only, not picks\./);
+// The post carries today's card, and the card data matches the post.
+assert.equal(post.card,`nba-threes:${today}`);
+const card=(await db.query(`select public.nba_threes_card($1::date) c`,[today])).rows[0].c;
+assert.deepEqual(card.games,[{away:'CHI',home:'NY',tipoff:card.games[0].tipoff}]);
+// Unrounded averages, so the card's percentage matches the post (Brunson 9/25 = 36%, not 3.0/8.3).
+assert.deepEqual(card.attempted.map(l=>[l.player,l.team,l.games,Number(l.tpa).toFixed(4),Number(l.tpm)]),[['Jalen Brunson','NY',3,'8.3333',3],['Mikal Bridges','NY',3,'6.6667',3]]);
+assert.equal(Math.round(100*card.attempted[0].tpm/card.attempted[0].tpa),36);
+assert.deepEqual(card.made.map(l=>l.player),['Jalen Brunson','Mikal Bridges']);
+assert.equal((await db.query(`select public.nba_threes_card(current_date+30) c`)).rows[0].c,null);
 // No notifications for the automated post, the impersonation does not leak, and it posts once a day.
 assert.equal((await db.query(`select count(*)::int n from public.sent`)).rows[0].n,0);
 assert.equal((await db.query(`select auth.uid() u`)).rows[0].u,null);
@@ -86,6 +96,9 @@ assert.equal((await db.query(`select private.nba_threes_post() r`)).rows[0].r.st
 await db.exec(`set request.jwt.claim.sub='${member}';insert into public.community_posts(user_id,sport,kind,title,body) values('${member}','nfl','talk','t','NFL post');reset request.jwt.claim.sub;`);
 // A member's own post still notifies (the owner here).
 assert.deepEqual((await db.query(`select recipient from public.sent`)).rows,[{recipient:owner}]);
+// Members cannot attach a card to their own post.
+await assert.rejects(db.exec(`set request.jwt.claim.sub='${member}';insert into public.community_posts(user_id,sport,kind,title,body,card) values('${member}','nfl','talk','t','x','nba-threes:${today}')`),/Cards are attached by Vegas Quant only/);
+await db.exec(`reset request.jwt.claim.sub`);
 const feed=async s=>(await db.query(`select jsonb_array_length(public.community_feed($1,20,false)) n`,[s])).rows[0].n;
 assert.deepEqual([await feed('all'),await feed('nfl'),await feed('nba')],[2,1,1]);
 assert.deepEqual((await db.query(`select jobname from cron.job`)).rows,[{jobname:'nba-threes-post'}]);
