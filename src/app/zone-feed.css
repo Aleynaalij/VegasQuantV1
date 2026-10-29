@@ -1,0 +1,508 @@
+/* The Zone: one social feed (member posts + VIP lays), Instagram/X style in Vegas Quant gold. */
+.zone-feed {
+  --zf-gold: #e8ca7d;
+  --zf-pale: #f4dc99;
+  --zf-deep: #b48a36;
+  --zf-card: linear-gradient(180deg, #11151c 0%, #0b0e13 100%);
+  --zf-line: rgba(232, 202, 125, 0.14);
+  --zf-text: #eef0f2;
+  --zf-muted: #8d96a0;
+  max-width: 640px;
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+}
+.zone-feed .zone-head h1 {
+  margin: 4px 0 2px;
+  font-family: var(--font-display, inherit);
+  font-size: clamp(2rem, 7vw, 2.6rem);
+  letter-spacing: 0.01em;
+  background: linear-gradient(180deg, #fff 0%, var(--zf-pale) 120%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.zone-feed .zone-head p {
+  margin: 0;
+  color: var(--zf-muted);
+  font-size: 0.92rem;
+}
+.zone-feed .zone-status,
+.zone-feed .zone-notice {
+  color: var(--zf-muted);
+  font-size: 0.88rem;
+  margin: 4px 2px;
+}
+
+/* Avatars: gold ring, like a verified story ring. */
+.zone-feed .zone-avatar {
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  padding: 2px;
+  background: linear-gradient(135deg, var(--zf-pale), var(--zf-deep));
+  box-shadow: 0 0 0 2px #0b0e13 inset;
+}
+.zone-feed .zone-avatar-initials {
+  display: inline-grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: 0.82rem;
+  letter-spacing: 0.04em;
+  color: #1b1408;
+}
+
+/* Composer */
+.zone-feed .zone-composer {
+  border: 1px solid var(--zf-line);
+  background: var(--zf-card);
+  border-radius: 20px;
+  padding: 14px 14px 10px;
+}
+.zone-feed .zone-composer fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.zone-feed .zone-composer-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.zone-feed .zone-composer textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  border: 0;
+  background: transparent;
+  color: var(--zf-text);
+  font-size: 1.02rem;
+  line-height: 1.45;
+  padding: 10px 2px;
+  outline: none;
+}
+.zone-feed .zone-composer textarea::placeholder {
+  color: #6f7882;
+}
+.zone-feed .zone-composer-preview {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+}
+.zone-feed .zone-composer-preview img {
+  max-width: 100%;
+  max-height: 340px;
+  border-radius: 14px;
+}
+.zone-feed .zone-composer-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 10px;
+}
+.zone-feed .zone-icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--zf-gold);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  min-height: 40px;
+}
+.zone-feed .zone-icon-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.zone-feed .zone-profile-link {
+  color: var(--zf-muted);
+  font-size: 0.86rem;
+  text-decoration: none;
+}
+.zone-feed .zone-post-button {
+  margin-left: auto;
+  min-height: 40px;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 0;
+  font-weight: 800;
+  color: #1b1408;
+  background: linear-gradient(
+    180deg,
+    var(--zf-pale),
+    var(--zf-gold) 55%,
+    var(--zf-deep)
+  );
+  box-shadow: 0 6px 18px rgba(232, 202, 125, 0.18);
+}
+.zone-feed .zone-post-button:disabled {
+  opacity: 0.4;
+  box-shadow: none;
+}
+.zone-feed .zone-chip {
+  border: 1px solid var(--zf-line);
+  background: transparent;
+  color: var(--zf-muted);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+/* Feed tabs: X-style underline */
+.zone-feed .zone-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  background: color-mix(in srgb, #07090d 88%, transparent);
+  backdrop-filter: blur(12px);
+}
+.zone-feed .zone-tabs button {
+  flex: 1;
+  min-height: 48px;
+  border: 0;
+  background: none;
+  color: var(--zf-muted);
+  font-weight: 700;
+  font-size: 0.95rem;
+  position: relative;
+}
+.zone-feed .zone-tabs button.is-active {
+  color: var(--zf-text);
+}
+.zone-feed .zone-tabs button.is-active::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -1px;
+  width: 44px;
+  height: 3px;
+  border-radius: 3px;
+  transform: translateX(-50%);
+  background: linear-gradient(90deg, var(--zf-deep), var(--zf-pale));
+}
+.zone-feed .zone-tabs .zone-refresh {
+  flex: 0 0 48px;
+  color: var(--zf-gold);
+}
+.zone-feed .is-spinning {
+  animation: zone-spin 0.9s linear infinite;
+}
+@keyframes zone-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Post */
+.zone-feed .zone-post {
+  border: 1px solid var(--zf-line);
+  background: var(--zf-card);
+  border-radius: 22px;
+  padding: 14px 16px 6px;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.zone-feed .zone-post.linked-post {
+  border-color: rgba(232, 202, 125, 0.55);
+}
+.zone-feed .zone-post-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.zone-feed .zone-author {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 0;
+  flex: 1;
+  color: inherit;
+  text-decoration: none;
+}
+.zone-feed .zone-author > span {
+  display: grid;
+  min-width: 0;
+}
+.zone-feed .zone-author b {
+  color: var(--zf-text);
+  font-size: 0.98rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.zone-feed .zone-author small {
+  color: var(--zf-muted);
+  font-size: 0.82rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.zone-feed .zone-follow {
+  flex: none;
+  min-height: 34px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--zf-gold);
+  background: transparent;
+  color: var(--zf-gold);
+  font-weight: 700;
+  font-size: 0.84rem;
+}
+.zone-feed .zone-follow.is-on {
+  border-color: rgba(255, 255, 255, 0.16);
+  color: var(--zf-muted);
+}
+.zone-feed .zone-post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.zone-feed .zone-post-tags span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--zf-gold);
+  border: 1px solid var(--zf-line);
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+.zone-feed .zone-post-tags .is-warn {
+  color: #f0b27a;
+  border-color: rgba(240, 178, 122, 0.3);
+}
+.zone-feed .zone-post-title {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.3;
+  color: var(--zf-text);
+}
+.zone-feed .zone-post-body {
+  margin: 0;
+  color: #d8dce0;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.zone-feed .zone-post ol {
+  margin: 0;
+  padding-left: 22px;
+  color: #d8dce0;
+}
+.zone-feed .zone-stake {
+  color: var(--zf-muted);
+}
+.zone-feed .zone-media {
+  position: relative;
+  margin: 2px -4px 0;
+  border-radius: 16px;
+  overflow: hidden;
+}
+.zone-feed .zone-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.zone-feed .zone-card figcaption {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 4px 0;
+}
+.zone-feed .zone-card figcaption a {
+  color: var(--zf-gold);
+  font-weight: 700;
+  font-size: 0.84rem;
+  text-decoration: none;
+}
+.zone-feed .zone-burst {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  color: #fff;
+  filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.45));
+  transform: translate(-50%, -50%) scale(0.2);
+  animation: zone-burst 0.8s ease-out forwards;
+  pointer-events: none;
+}
+@keyframes zone-burst {
+  20% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}
+
+/* Action bar: icons with counts, like / comment / share / more */
+.zone-feed .zone-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 -8px;
+}
+.zone-feed .zone-actions > button,
+.zone-feed .zone-actions .zone-more > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: #aeb5bd;
+  font-weight: 600;
+  font-size: 0.88rem;
+  list-style: none;
+  cursor: pointer;
+}
+.zone-feed .zone-actions > button:hover,
+.zone-feed .zone-actions .zone-more > summary:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--zf-text);
+}
+.zone-feed .zone-actions > button.is-liked {
+  color: #ff5c7a;
+}
+.zone-feed .zone-actions > button.is-liked svg {
+  animation: zone-pop 0.35s ease-out;
+}
+@keyframes zone-pop {
+  50% {
+    transform: scale(1.3);
+  }
+}
+.zone-feed .zone-actions .zone-more {
+  margin-left: auto;
+  position: relative;
+}
+.zone-feed .zone-actions .zone-more > summary::-webkit-details-marker {
+  display: none;
+}
+.zone-feed .zone-actions .zone-more[open] {
+  flex-basis: 100%;
+  display: grid;
+  gap: 8px;
+  padding: 0 8px 8px;
+}
+.zone-feed .zone-actions:has(.zone-more[open]) {
+  flex-wrap: wrap;
+}
+.zone-feed .zone-actions .zone-more[open] > summary {
+  justify-self: end;
+}
+@media (prefers-reduced-motion: reduce) {
+  .zone-feed .zone-burst,
+  .zone-feed .zone-actions > button.is-liked svg,
+  .zone-feed .is-spinning {
+    animation: none;
+  }
+}
+
+/* VIP lays in the feed */
+.zone-feed .zone-lay {
+  display: grid;
+  gap: 8px;
+}
+.zone-feed .zone-lay-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1b1408;
+  background: linear-gradient(180deg, var(--zf-pale), var(--zf-gold));
+  border-radius: 999px;
+  padding: 4px 11px;
+}
+.zone-feed .zone-lay-tag time {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  opacity: 0.75;
+}
+
+/* Signed-out / empty */
+.zone-feed .zone-join {
+  border: 1px solid var(--zf-line);
+  background: var(--zf-card);
+  border-radius: 22px;
+  padding: 22px;
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  color: var(--zf-muted);
+}
+.zone-feed .zone-join h2 {
+  margin: 0;
+  color: var(--zf-text);
+  font-size: 1.12rem;
+}
+.zone-feed .zone-join p {
+  margin: 0;
+}
+.zone-feed .zone-join svg {
+  color: var(--zf-gold);
+}
+
+/* The app's dark theme paints every pressed button gold and every textarea as a field (with
+   !important); inside the feed, likes, follows and the composer keep their own look. */
+html[data-theme] body .zone-feed .zone-actions > button[aria-pressed] {
+  background: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: #aeb5bd !important;
+}
+html[data-theme] body .zone-feed .zone-actions > button.is-liked,
+html[data-theme]
+  body
+  .zone-feed
+  .zone-actions
+  > button.is-liked
+  :is(svg, span) {
+  color: #ff5c7a !important;
+}
+html[data-theme] body .zone-feed .zone-follow[aria-pressed] {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-color: var(--zf-gold) !important;
+  color: var(--zf-gold) !important;
+}
+html[data-theme] body .zone-feed .zone-follow[aria-pressed="true"] {
+  border-color: rgba(255, 255, 255, 0.16) !important;
+  color: var(--zf-muted) !important;
+}
+html[data-theme] body .zone-feed .zone-composer textarea {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.zone-feed .zone-actions .zone-more {
+  top: auto;
+  right: auto;
+}
+.zone-feed .ruby-hub:empty {
+  display: none;
+}

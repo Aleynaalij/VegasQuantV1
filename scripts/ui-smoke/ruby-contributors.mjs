@@ -583,7 +583,7 @@ for (const { width, photoOnly } of [
   assert.equal(await page.getByText("Feature as Double Up").count(), 0);
   assert.equal(await page.getByText(/DOUBLE UP/).count(), 0);
   adminView = false;
-  // Latest contains posts; contributor cards live only on VIP Lays.
+  // For you mixes posts and lays as cards; the contributor picker lives on the VIP lays view.
   await go(page, base + "/feed");
   assert.equal(await page.locator(".ruby-contributors").count(), 0);
   member = true;
@@ -592,14 +592,14 @@ for (const { width, photoOnly } of [
   await go(page, base + "/feed");
   await page.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
   assert.equal(new URL(page.url()).pathname, "/community");
-  assert.deepEqual(await page.locator(".zone-views a").allInnerTexts(), [
-    "Latest",
-    "VIP Lays",
-    "Injuries",
-  ]);
+  // One feed: For you (posts and VIP lays together), Following, and the VIP lays view.
+  assert.deepEqual(
+    await page.locator(".zone-tabs [role=tab]").allInnerTexts(),
+    ["For you", "Following", "VIP lays"],
+  );
   await page
-    .locator(".zone-views")
-    .getByRole("link", { name: "VIP Lays" })
+    .locator(".zone-tabs")
+    .getByRole("tab", { name: "VIP lays" })
     .click();
   await page.locator(".ruby-contributors").waitFor();
   // Members don't see the board or records on the row; opening a capper shows their rank.
