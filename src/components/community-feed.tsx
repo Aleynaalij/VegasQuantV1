@@ -23,6 +23,8 @@ import { time } from "@/lib/domain";
 import {
   ArrowUpRight,
   BadgeCheck,
+  Check,
+  Copy,
   Gem,
   ImagePlus,
   Heart,
@@ -31,7 +33,7 @@ import {
   RefreshCw,
   Share2,
 } from "lucide-react";
-import { ago, initials, zoneFeed } from "@/lib/zone-feed";
+import { ago, initials, richParts, zoneFeed } from "@/lib/zone-feed";
 import { NBA_PAUSED } from "@/lib/nba-paused";
 import { threesCardDay } from "@/lib/nba-threes-card";
 type Post = {
@@ -87,7 +89,7 @@ function Comments({
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
-  const [faces, setFaces] = useState<Record<string, string | null>>({});
+  const [faces, setFaces] = useState<Record<string, Person>>({});
   const load = useCallback(async () => {
     const r = await supabase.rpc("community_comments", {
       p_post: postId,
@@ -105,9 +107,10 @@ function Comments({
     if (!f.error)
       setFaces(
         Object.fromEntries(
-          ((f.data || []) as { user_id: string; avatar: string | null }[]).map(
-            (x) => [x.user_id, x.avatar],
-          ),
+          ((f.data || []) as (Person & { user_id: string })[]).map((x) => [
+            x.user_id,
+            { avatar: x.avatar, staff: x.staff },
+          ]),
         ),
       );
   }, [postId, targetComment]);
@@ -177,10 +180,24 @@ function Comments({
           id={`comment-${c.id}`}
           className={`zone-comment ${c.parent_id ? "is-reply" : ""} ${c.id === targetComment ? "linked-comment" : ""}`}
         >
-          <Avatar name={c.author_name} avatar={faces[c.user_id]} size={32} />
+          <Avatar
+            name={c.author_name}
+            avatar={faces[c.user_id]?.avatar}
+            size={32}
+          />
           <div className="zone-comment-main">
             <p>
-              <b>{c.author_name}</b> {c.body}
+              <b>
+                {c.author_name}
+                {faces[c.user_id]?.staff ? (
+                  <BadgeCheck
+                    className="zone-verified"
+                    size={14}
+                    aria-label="Vegas Quant"
+                  />
+                ) : null}
+              </b>{" "}
+              <RichText text={c.body} />
             </p>
             <div className="zone-comment-meta">
               <time dateTime={c.created_at} title={time(c.created_at)}>
@@ -292,15 +309,55 @@ function Avatar({
     </span>
   );
 }
+/** Post and comment text with @mentions linked to profiles and #tags in gold. */
+function RichText({ text }: { text: string }) {
+  return (
+    <>
+      {richParts(text).map((part, i) =>
+        part.kind === "mention" ? (
+          <Link
+            key={i}
+            className="zone-mention"
+            href={`/community/${encodeURIComponent(part.value)}`}
+          >
+            @{part.value}
+          </Link>
+        ) : part.kind === "tag" ? (
+          <span key={i} className="zone-tag">
+            #{part.value}
+          </span>
+        ) : (
+          part.value
+        ),
+      )}
+    </>
+  );
+}
 /** A contributor lay as a feed post: who, the legs and the price at a glance; the full card is one tap away. */
 function ZoneLay({ lay }: { lay: RubySlip }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(
+        [lay.brand + " · " + lay.title, ...lay.legs].join("\n"),
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
   const brand =
     rubyBrands.find((b) => b.theme === lay.theme) ||
     rubyBrands.find((b) => b.brand === lay.brand);
   const odds = lay.reported_odds;
   const href = `/community?view=vip&ruby=${lay.id}#ruby-${lay.id}`;
   return (
-    <article className="zone-post zone-lay" id={`lay-${lay.id}`}>
+    <article
+      className="zone-post zone-lay"
+      data-brand={lay.theme}
+      id={`lay-${lay.id}`}
+    >
       <header className="zone-post-head">
         <Link className="zone-author" href={href}>
           <span
@@ -323,7 +380,12 @@ function ZoneLay({ lay }: { lay: RubySlip }) {
           </span>
         </Link>
       </header>
-      <h2 className="zone-post-title">{lay.title}</h2>
+      <h2 className="zone-post-title">
+        {lay.title}
+        <span className="zone-leg-count">
+          {lay.legs.length === 1 ? "Single" : `${lay.legs.length}-leg`}
+        </span>
+      </h2>
       <ol className="zone-legs">
         {lay.legs.slice(0, 5).map((leg, i) => (
           <li key={i}>
@@ -351,9 +413,23 @@ function ZoneLay({ lay }: { lay: RubySlip }) {
             <small>Contributor opinion · no guaranteed return</small>
           </span>
         )}
-        <Link className="zone-open" href={href}>
-          Full card <ArrowUpRight size={16} aria-hidden="true" />
-        </Link>
+        <span className="zone-lay-actions">
+          <button
+            type="button"
+            className="zone-copy"
+            aria-label={copied ? "Copied" : "Copy legs"}
+            onClick={() => void copy()}
+          >
+            {copied ? (
+              <Check size={17} aria-hidden="true" />
+            ) : (
+              <Copy size={17} aria-hidden="true" />
+            )}
+          </button>
+          <Link className="zone-open" href={href}>
+            Full card <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        </span>
       </div>
     </article>
   );
@@ -1092,7 +1168,9 @@ export default function CommunityFeed() {
                           </figcaption>
                         </figure>
                       ) : (
-                        <p className="zone-post-body">{p.body}</p>
+                        <p className="zone-post-body">
+                          <RichText text={p.body} />
+                        </p>
                       )}
                       {p.photo_path ? (
                         <div
@@ -1226,6 +1304,40 @@ export default function CommunityFeed() {
                           </form>
                         </details>
                       </div>
+                      {openComments !== p.id ? (
+                        <div className="zone-comment-peek">
+                          {p.comments > 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => setOpenComments(p.id)}
+                            >
+                              View{" "}
+                              {p.comments === 1
+                                ? "1 comment"
+                                : `all ${p.comments} comments`}
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="zone-comment-start"
+                            onClick={() => {
+                              setOpenComments(p.id);
+                              requestAnimationFrame(() =>
+                                document
+                                  .getElementById(`reply-${p.id}`)
+                                  ?.focus(),
+                              );
+                            }}
+                          >
+                            <Avatar
+                              name={me.username || "You"}
+                              avatar={me.avatar}
+                              size={28}
+                            />
+                            <span>Add a comment…</span>
+                          </button>
+                        </div>
+                      ) : null}
                       {openComments === p.id ? (
                         <Comments
                           targetComment={targetComment}

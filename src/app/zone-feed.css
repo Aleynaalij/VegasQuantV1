@@ -747,3 +747,135 @@ html[data-theme] body .zone-feed .zone-comment-box textarea {
 .zone-feed .zone-post .zone-legs {
   padding-left: 0;
 }
+
+/* @mentions and #tags */
+.zone-feed .zone-mention {
+  color: var(--zf-pale);
+  font-weight: 700;
+  text-decoration: none;
+}
+.zone-feed .zone-tag {
+  color: var(--zf-gold);
+  font-weight: 600;
+}
+
+/* Instagram-style comment shortcuts under a post */
+.zone-feed .zone-comment-peek {
+  display: grid;
+  gap: 6px;
+  padding: 0 0 10px;
+}
+.zone-feed .zone-comment-peek > button {
+  justify-self: start;
+  border: 0;
+  background: none;
+  padding: 0;
+  min-height: 28px;
+  color: var(--zf-muted);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+.zone-feed .zone-comment-peek .zone-comment-start {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: stretch;
+  text-align: left;
+}
+.zone-feed .zone-comment-start .zone-avatar-initials {
+  font-size: 0.62rem;
+}
+
+/* VIP lays: each contributor keeps an accent color */
+.zone-feed .zone-lay {
+  --zf-accent: var(--zf-gold);
+}
+.zone-feed .zone-lay[data-brand="diamond"] {
+  --zf-accent: #cfe6f7;
+}
+.zone-feed .zone-lay[data-brand="orbit"] {
+  --zf-accent: #b79bff;
+}
+.zone-feed .zone-lay[data-brand="diagonal"] {
+  --zf-accent: #ff8a65;
+}
+.zone-feed .zone-lay[data-brand="corner"] {
+  --zf-accent: #6fd9b0;
+}
+.zone-feed .zone-lay[data-brand="skyline"] {
+  --zf-accent: #7cc0ff;
+}
+.zone-feed .zone-lay[data-brand="marquee"] {
+  --zf-accent: #ff6fa8;
+}
+.zone-feed .zone-lay[data-brand="encore"] {
+  --zf-accent: #f4dc99;
+}
+.zone-feed .zone-lay .zone-lay-mark {
+  background: #10141a;
+  color: var(--zf-accent);
+  box-shadow:
+    0 0 0 2px var(--zf-accent),
+    0 0 18px color-mix(in srgb, var(--zf-accent) 35%, transparent);
+}
+.zone-feed .zone-lay .zone-legs li > span {
+  color: var(--zf-accent);
+}
+.zone-feed .zone-leg-count {
+  display: inline-block;
+  margin-left: 8px;
+  vertical-align: middle;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--zf-accent, var(--zf-gold));
+  border: 1px solid
+    color-mix(in srgb, var(--zf-accent, #e8ca7d) 40%, transparent);
+  border-radius: 999px;
+  padding: 3px 8px;
+}
+.zone-feed .zone-lay-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.zone-feed .zone-copy {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: none;
+  color: var(--zf-text);
+}
+
+/* Phones: no big page title (the tab bar says where you are), composer runs edge to edge */
+@media (max-width: 640px) {
+  .zone-feed .zone-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .zone-feed .zone-head h1 {
+    font-size: 1.6rem;
+    margin: 0;
+  }
+  .zone-feed .zone-head p {
+    display: none;
+  }
+  .zone-feed .zone-composer {
+    margin: 0 -16px;
+    border-radius: 0;
+    border-width: 1px 0;
+    border-color: rgba(255, 255, 255, 0.07);
+    background: transparent;
+    padding: 12px 16px 8px;
+  }
+}
+.zone-feed .zone-comment-main .zone-verified {
+  margin: 0 2px 0 3px;
+  vertical-align: -2px;
+}

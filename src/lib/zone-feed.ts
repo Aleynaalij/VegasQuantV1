@@ -55,3 +55,26 @@ export function initials(name: string) {
       : (parts[0] || "?").slice(0, 2);
   return letters.toUpperCase();
 }
+
+export type RichPart =
+  | { kind: "text"; value: string }
+  | { kind: "mention"; value: string }
+  | { kind: "tag"; value: string };
+
+/** Splits post text into plain runs, @mentions (same 3–24 character rule as notifications) and #tags. */
+export function richParts(text: string): RichPart[] {
+  const parts: RichPart[] = [];
+  const re = /(^|[^A-Za-z0-9_])([@#])([A-Za-z0-9_]{2,24})\b/g;
+  let last = 0;
+  for (const m of text.matchAll(re)) {
+    const start = (m.index ?? 0) + m[1].length;
+    const isMention = m[2] === "@";
+    if (isMention && m[3].length < 3) continue;
+    if (start > last)
+      parts.push({ kind: "text", value: text.slice(last, start) });
+    parts.push({ kind: isMention ? "mention" : "tag", value: m[3] });
+    last = start + 1 + m[3].length;
+  }
+  if (last < text.length) parts.push({ kind: "text", value: text.slice(last) });
+  return parts;
+}

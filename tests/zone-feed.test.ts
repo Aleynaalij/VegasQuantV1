@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ago, initials, zoneFeed } from "../src/lib/zone-feed";
+import { ago, initials, richParts, zoneFeed } from "../src/lib/zone-feed";
 
 test("The Zone is one timeline: posts and VIP lays, newest first", () => {
   const posts = [
@@ -32,4 +32,15 @@ test("Avatar initials", () => {
   assert.equal(initials("sharp_sarah"), "SS");
   assert.equal(initials("bob"), "BO");
   assert.equal(initials(""), "?");
+});
+
+test("Post text highlights @mentions and #tags, nothing else", () => {
+  assert.deepEqual(richParts("Tail @MikeQ on #TNF, email me@x.com or @ab"), [
+    { kind: "text", value: "Tail " },
+    { kind: "mention", value: "MikeQ" },
+    { kind: "text", value: " on " },
+    { kind: "tag", value: "TNF" },
+    { kind: "text", value: ", email me@x.com or @ab" },
+  ]);
+  assert.deepEqual(richParts("plain"), [{ kind: "text", value: "plain" }]);
 });
