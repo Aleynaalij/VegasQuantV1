@@ -82,7 +82,9 @@ assert.match(post.body,/Research only, not picks\./);
 assert.equal(post.card,`nba-threes:${today}`);
 const card=(await db.query(`select public.nba_threes_card($1::date) c`,[today])).rows[0].c;
 assert.deepEqual(card.games,[{away:'CHI',home:'NY',tipoff:card.games[0].tipoff}]);
-assert.deepEqual(card.attempted.map(l=>[l.player,l.team,l.games,Number(l.tpa),Number(l.tpm)]),[['Jalen Brunson','NY',3,8.3,3],['Mikal Bridges','NY',3,6.7,3]]);
+// Unrounded averages, so the card's percentage matches the post (Brunson 9/25 = 36%, not 3.0/8.3).
+assert.deepEqual(card.attempted.map(l=>[l.player,l.team,l.games,Number(l.tpa).toFixed(4),Number(l.tpm)]),[['Jalen Brunson','NY',3,'8.3333',3],['Mikal Bridges','NY',3,'6.6667',3]]);
+assert.equal(Math.round(100*card.attempted[0].tpm/card.attempted[0].tpa),36);
 assert.deepEqual(card.made.map(l=>l.player),['Jalen Brunson','Mikal Bridges']);
 assert.equal((await db.query(`select public.nba_threes_card(current_date+30) c`)).rows[0].c,null);
 // No notifications for the automated post, the impersonation does not leak, and it posts once a day.

@@ -21,9 +21,9 @@ language sql stable security definer set search_path='' as $$
   'day', p_day,
   'games', coalesce((select jsonb_agg(jsonb_build_object('away', coalesce(away_abbreviation, away_team), 'home', coalesce(home_abbreviation, home_team), 'tipoff', tipoff) order by tipoff)
     from public.nba_games where season_type = 2 and (tipoff at time zone 'America/New_York')::date = p_day), '[]'),
-  'attempted', coalesce((select jsonb_agg(jsonb_build_object('player', player, 'team', abbr, 'games', games, 'tpa', round(tpa, 1), 'tpm', round(tpm, 1)) order by tpa desc, tpm desc, player)
+  'attempted', coalesce((select jsonb_agg(jsonb_build_object('player', player, 'team', abbr, 'games', games, 'tpa', tpa, 'tpm', tpm) order by tpa desc, tpm desc, player)
     from (select * from private.nba_threes_lines(p_day) order by tpa desc, tpm desc, player limit 8) x), '[]'),
-  'made', coalesce((select jsonb_agg(jsonb_build_object('player', player, 'team', abbr, 'games', games, 'tpa', round(tpa, 1), 'tpm', round(tpm, 1)) order by tpm desc, tpa desc, player)
+  'made', coalesce((select jsonb_agg(jsonb_build_object('player', player, 'team', abbr, 'games', games, 'tpa', tpa, 'tpm', tpm) order by tpm desc, tpa desc, player)
     from (select * from private.nba_threes_lines(p_day) order by tpm desc, tpa desc, player limit 8) x), '[]'))
  where p_day <= (now() at time zone 'America/New_York')::date + 1
 $$;

@@ -22,3 +22,7 @@ test("Card labels read like the post", () => {
   assert.equal(pct({ tpm: 4, tpa: 9.3 }), "43%");
   assert.equal(pct({ tpm: 0, tpa: 0 }), "0%");
 });
+
+test("Percentages use unrounded averages (10 of 24 is 42%, not 3.3/8.0 = 41%)", () => {
+  assert.equal(pct({ tpm: 10 / 3, tpa: 8 }), "42%");
+});
