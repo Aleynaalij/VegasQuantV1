@@ -8,7 +8,7 @@ const KEYS = ["minutes", "points", "fieldGoalsMade-fieldGoalsAttempted", "threeP
   "freeThrowsMade-freeThrowsAttempted", "rebounds", "assists", "turnovers", "steals", "blocks", "offensiveRebounds",
   "defensiveRebounds", "fouls", "plusMinus"];
 const stat = (min: number, pts: number, threes: number, reb: number, ast: number) =>
-  [String(min), String(pts), "5-10", `${threes}-6`, "0-0", String(reb), String(ast), "2", "1", "0", "1", String(reb - 1), "2", "+3"];
+  [String(min), String(pts), "5-10", `${threes}-${Math.max(threes, 6)}`, "0-0", String(reb), String(ast), "2", "1", "0", "1", String(reb - 1), "2", "+3"];
 const athlete = (id: string, name: string, stats: string[], didNotPlay = false) =>
   ({ athlete: { id, displayName: name, position: { abbreviation: "G" } }, stats, didNotPlay, starter: !didNotPlay && id !== "11" });
 const summary = (detail = "Final/OT", completed = true) => ({
@@ -37,12 +37,16 @@ test("ESPN summary becomes a record_nba_result payload: canonical teams, sides, 
   assert.deepEqual(p.home, { team: "Boston Celtics", score: 120, rebounds: 46, assists: 29, threes: 7 });
   assert.equal(p.players.length, 4);
   assert.deepEqual(p.players[0], { athlete_id: "10", player: "James Harden", side: "away", played: true, starter: true, position: "G", minutes: 36, threes: 4,
-    points: 30, rebounds: 6, assists: 9, steals: 1, blocks: 0, turnovers: 2 });
+    three_attempts: 6, points: 30, rebounds: 6, assists: 9, steals: 1, blocks: 0, turnovers: 2 });
   assert.deepEqual(p.players[2], { athlete_id: "12", player: "Bench Player", side: "away", played: false, starter: false, position: "G", minutes: null, threes: 0,
-    points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, turnovers: 0 });
+    three_attempts: 0, points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, turnovers: 0 });
 });
 
 test("unfinished games, foreign teams and unreadable stats are not recorded", () => {
+  assert.match(
+    String(resultPayload(JSON.parse(JSON.stringify(summary()).replace('"4-6"', '"7-6"')) as never, game, "f".repeat(64))),
+    /More threes made than attempted for James Harden/,
+  );
   assert.deepEqual(resultPayload(summary("Q4", false) as never, game, "f".repeat(64)), { provider_id: "401898407", status: "STATUS_IN_PROGRESS", completed: false });
   const regulation = resultPayload({ ...summary("Final"), header: { competitions: [{ ...summary().header.competitions[0],
     status: { type: { name: "STATUS_FINAL", detail: "Final", completed: true } },

@@ -9,6 +9,9 @@ export type BoxRow = {
   points: number | null;
   rebounds: number | null;
   assists: number | null;
+  threes?: number | null;
+  /** Null until the game's 3-point attempts are recorded. */
+  three_attempts?: number | null;
   tipoff: string;
 };
 export type GameStat = { pts: number; reb: number; ast: number; min: number };
@@ -22,6 +25,10 @@ export type PlayerLine = {
   reb: number;
   ast: number;
   dd: number;
+  /** 3s made and attempted per game, over the games with recorded attempts (tpaGames). */
+  tpm: number;
+  tpa: number;
+  tpaGames: number;
   /** Games played, most recent first. */
   games: GameStat[];
 };
@@ -61,6 +68,7 @@ export function seasonLines(rows: BoxRow[]): PlayerLine[] {
       ast: r.assists ?? 0,
       min: r.minutes ?? 0,
     }));
+    const shot = list.filter((r) => r.three_attempts != null);
     return {
       athlete_id: list[0].athlete_id,
       player: list[0].player,
@@ -71,6 +79,9 @@ export function seasonLines(rows: BoxRow[]): PlayerLine[] {
       reb: avg(games.map((g) => g.reb)),
       ast: avg(games.map((g) => g.ast)),
       dd: games.filter(isDoubleDouble).length,
+      tpm: avg(shot.map((r) => r.threes ?? 0)),
+      tpa: avg(shot.map((r) => r.three_attempts!)),
+      tpaGames: shot.length,
       games,
     };
   });
@@ -247,4 +258,24 @@ export function latestInjuries(
         SEVERITY[a.status] - SEVERITY[b.status] ||
         a.player.localeCompare(b.player),
     );
+}
+
+/** Players on tonight's teams with the most 3s attempted (or made) per game; 3+ games with recorded attempts. */
+export function threePointLeaders(
+  lines: PlayerLine[],
+  teams: Set<string>,
+  by: "tpa" | "tpm",
+  minGames = 3,
+  limit = 8,
+) {
+  const other = by === "tpa" ? "tpm" : "tpa";
+  return lines
+    .filter((l) => teams.has(l.team) && l.tpaGames >= minGames)
+    .sort(
+      (a, b) =>
+        b[by] - a[by] ||
+        b[other] - a[other] ||
+        a.player.localeCompare(b.player),
+    )
+    .slice(0, limit);
 }

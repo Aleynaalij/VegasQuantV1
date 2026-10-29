@@ -11,6 +11,7 @@ import {
   propQuotes,
   propTrends,
   seasonLines,
+  threePointLeaders,
   type BoxRow,
   type Injury,
   type PlayerLine,
@@ -102,7 +103,7 @@ async function loadSlate(member: boolean): Promise<Slate> {
   const played = new Map(season.map((g) => [g.id, g.tipoff]));
   type Row = Omit<BoxRow, "tipoff"> & { game_id: string };
   const columns =
-    "game_id,athlete_id,player,team,played,minutes,points,rebounds,assists";
+    "game_id,athlete_id,player,team,played,minutes,points,rebounds,assists,threes";
   // Everyone who has played for tonight's teams, then each of those players' full history (traded
   // players keep the games they played elsewhere); a player's team is the one in his latest game.
   const onTeams = await all<{ athlete_id: string | number }>((from, to) =>
@@ -117,8 +118,23 @@ async function loadSlate(member: boolean): Promise<Slate> {
   );
   const athletes = [...new Set(onTeams.map((r) => String(r.athlete_id)))];
   const box: Row[] = [];
+  const attempts = new Map<string, number>();
   for (let i = 0; i < athletes.length; i += 150) {
     const ids = athletes.slice(i, i + 150);
+    for (const a of await all<{
+      game_id: string;
+      athlete_id: string;
+      attempts: number;
+    }>((from, to) =>
+      supabase
+        .from("nba_player_three_attempts")
+        .select("game_id,athlete_id,attempts")
+        .in("athlete_id", ids)
+        .order("game_id")
+        .order("athlete_id")
+        .range(from, to),
+    ))
+      attempts.set(`${a.game_id}:${a.athlete_id}`, a.attempts);
     box.push(
       ...(await all<Row>((from, to) =>
         supabase
@@ -138,6 +154,8 @@ async function loadSlate(member: boolean): Promise<Slate> {
       .map((r) => ({
         ...r,
         athlete_id: String(r.athlete_id),
+        three_attempts:
+          attempts.get(`${r.game_id}:${String(r.athlete_id)}`) ?? null,
         tipoff: played.get(r.game_id)!,
       })),
   ).filter((l) => teams.includes(l.team));
@@ -236,6 +254,10 @@ export default function NbaResearchTab() {
   if (!slate) return <p className="nbar-note">Loading NBA research…</p>;
   const teams = new Set(slate.games.flatMap((g) => [g.away_team, g.home_team]));
   const watch = doubleDoubleWatch(slate.lines, teams);
+  const attempted = threePointLeaders(slate.lines, teams, "tpa");
+  const made = threePointLeaders(slate.lines, teams, "tpm");
+  const pct = (l: { tpm: number; tpa: number }) =>
+    l.tpa ? `${Math.round((100 * l.tpm) / l.tpa)}%` : "0%";
   return (
     <div className="nbar">
       <header className="nbar-head">
@@ -304,6 +326,46 @@ export default function NbaResearchTab() {
                 </li>
               ))}
             </ul>
+          </section>
+
+          <section aria-labelledby="nbar-threes">
+            <h2 id="nbar-threes">3-point volume</h2>
+            <p className="nbar-note">
+              Players on tonight’s teams with the most 3s attempted and made per
+              game this season (3+ games).
+            </p>
+            {attempted.length ? (
+              <div className="nbar-threes">
+                {(
+                  [
+                    ["Most attempted", attempted, "tpa"],
+                    ["Most made", made, "tpm"],
+                  ] as const
+                ).map(([label, list, key]) => (
+                  <div key={key}>
+                    <h3>{label}</h3>
+                    <ol className="nbar-list">
+                      {list.map((p) => (
+                        <li key={p.athlete_id}>
+                          <span className="nbar-name">
+                            <b>{p.player}</b>
+                            <small>{nbaNickname(p.team)}</small>
+                          </span>
+                          <span className="nbar-rate">{one(p[key])}</span>
+                          <small className="nbar-line">
+                            {one(p.tpm)} made · {one(p.tpa)} att · {pct(p)}
+                          </small>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="nbar-note">
+                3-point attempts for tonight’s teams are still being recorded.
+              </p>
+            )}
           </section>
 
           <section aria-labelledby="nbar-dd">
