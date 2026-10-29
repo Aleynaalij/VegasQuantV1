@@ -493,6 +493,13 @@ export default function CommunityFeed() {
       routePost && /^[0-9a-f-]{36}$/i.test(routePost) ? routePost : null,
     );
   }, [routeSport, routePost]);
+  // Links can change the view while this page stays mounted: a story opens a post, a lay opens VIP lays.
+  useEffect(() => {
+    if (searchParams.get("view") === "vip" || searchParams.has("ruby")) {
+      setVipOnly(true);
+      setFollowingOnly(false);
+    } else if (searchParams.has("post")) setVipOnly(false);
+  }, [searchParams]);
   useEffect(() => {
     if (uid && routePost && targetComment) setOpenComments(routePost);
   }, [uid, routePost, targetComment]);
@@ -1354,7 +1361,9 @@ export default function CommunityFeed() {
                 })()
               ),
             )}
-            {!vipOnly && rows.length >= limit && limit < 100 ? (
+            {!vipOnly &&
+            (rows.length >= limit || lays.length >= limit) &&
+            limit < 100 ? (
               <button
                 className="secondary"
                 onClick={() => setLimit((n) => n + 20)}
