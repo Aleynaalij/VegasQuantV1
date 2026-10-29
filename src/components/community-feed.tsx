@@ -10,8 +10,8 @@ import {
 import Link from "next/link";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
-import RubyHub, { RubyCard } from "./ruby-cards";
-import type { RubySlip } from "@/lib/ruby";
+import RubyHub from "./ruby-cards";
+import { rubyBrands, type RubySlip } from "@/lib/ruby";
 import CommunityPhoto from "./community-photo";
 import CommunityParlayCard from "./community-parlay-card";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
@@ -21,6 +21,8 @@ import {
 } from "@/lib/community-photo-client";
 import { time } from "@/lib/domain";
 import {
+  ArrowUpRight,
+  BadgeCheck,
   Gem,
   ImagePlus,
   Heart,
@@ -85,13 +87,29 @@ function Comments({
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  const [faces, setFaces] = useState<Record<string, string | null>>({});
   const load = useCallback(async () => {
     const r = await supabase.rpc("community_comments", {
       p_post: postId,
       p_target: targetComment || null,
     });
-    if (r.error) setNotice("Comments could not load. Try again.");
-    else setRows(r.data || []);
+    if (r.error) {
+      setNotice("Comments could not load. Try again.");
+      return;
+    }
+    const list: Comment[] = r.data || [];
+    setRows(list);
+    const ids = [...new Set(list.map((c) => c.user_id))].slice(0, 100);
+    if (!ids.length) return;
+    const f = await supabase.rpc("community_avatars", { p_users: ids });
+    if (!f.error)
+      setFaces(
+        Object.fromEntries(
+          ((f.data || []) as { user_id: string; avatar: string | null }[]).map(
+            (x) => [x.user_id, x.avatar],
+          ),
+        ),
+      );
   }, [postId, targetComment]);
   useEffect(() => {
     void load();
@@ -152,84 +170,192 @@ function Comments({
     }
   }
   return (
-    <div className="social-comments">
-      <form onSubmit={submit}>
-        {replyTo && (
-          <p>
-            Replying to @{replyTo.author_name}{" "}
-            <button
-              type="button"
-              className="text-link"
-              onClick={() => setReplyTo(null)}
-            >
-              Cancel reply
-            </button>
-          </p>
-        )}
-        <label htmlFor={`reply-${postId}`}>Join the conversation</label>
-        <textarea
-          id={`reply-${postId}`}
-          required
-          maxLength={1000}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Share your reasoning or ask a question."
-        />
-        <button className="primary" disabled={busy}>
-          {busy ? "Posting…" : "Post comment"}
-        </button>
-      </form>
-      <p role="status">{notice}</p>
+    <div className="social-comments zone-comments">
       {rows.map((c) => (
         <article
           key={c.id}
           id={`comment-${c.id}`}
-          className={c.id === targetComment ? "linked-comment" : undefined}
+          className={`zone-comment ${c.parent_id ? "is-reply" : ""} ${c.id === targetComment ? "linked-comment" : ""}`}
         >
-          <strong>@{c.author_name}</strong>
-          <small> · {time(c.created_at)}</small>
-          {c.parent_id && <small>Reply in this thread</small>}
-          <p>{c.body}</p>
-          <div className="social-actions">
-            <button
-              type="button"
-              className="text-link"
-              onClick={() => {
-                setReplyTo(c);
-                document.getElementById(`reply-${postId}`)?.focus();
-              }}
-            >
-              Reply
-            </button>
-            <button
-              type="button"
-              className="text-link"
-              aria-pressed={c.reacted}
-              disabled={busy}
-              onClick={() => void react(c)}
-            >
-              {c.reacted ? "Liked" : "Like"} comment · {c.reactions || 0}
-            </button>
+          <Avatar name={c.author_name} avatar={faces[c.user_id]} size={32} />
+          <div className="zone-comment-main">
+            <p>
+              <b>{c.author_name}</b> {c.body}
+            </p>
+            <div className="zone-comment-meta">
+              <time dateTime={c.created_at} title={time(c.created_at)}>
+                {ago(c.created_at)}
+              </time>
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyTo(c);
+                  document.getElementById(`reply-${postId}`)?.focus();
+                }}
+              >
+                Reply
+              </button>
+              {uid !== c.user_id ? (
+                <button
+                  type="button"
+                  onClick={() => void onBlock(c.user_id, c.author_name)}
+                >
+                  Block
+                </button>
+              ) : null}
+              {uid === c.user_id || admin ? (
+                <button type="button" onClick={() => void remove(c.id)}>
+                  Remove
+                </button>
+              ) : null}
+            </div>
           </div>
-          {uid !== c.user_id ? (
-            <button
-              className="text-link"
-              onClick={() => void onBlock(c.user_id, c.author_name)}
-            >
-              Block member
-            </button>
-          ) : null}
-          {(uid === c.user_id || admin) && (
-            <button className="text-link" onClick={() => void remove(c.id)}>
-              Remove comment
-            </button>
-          )}
+          <button
+            type="button"
+            className={`zone-comment-like ${c.reacted ? "is-liked" : ""}`}
+            aria-pressed={c.reacted}
+            aria-label={c.reacted ? "Unlike comment" : "Like comment"}
+            disabled={busy}
+            onClick={() => void react(c)}
+          >
+            <Heart
+              size={14}
+              fill={c.reacted ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
+            {c.reactions ? <span>{c.reactions}</span> : null}
+          </button>
         </article>
       ))}
       {rows.length === 50 ? (
         <small>Showing the latest 50 comments.</small>
       ) : null}
+      <form onSubmit={submit} className="zone-comment-form">
+        {replyTo && (
+          <p className="zone-replying">
+            Replying to @{replyTo.author_name}{" "}
+            <button type="button" onClick={() => setReplyTo(null)}>
+              Cancel
+            </button>
+          </p>
+        )}
+        <label className="sr-only" htmlFor={`reply-${postId}`}>
+          Add a comment
+        </label>
+        <div className="zone-comment-box">
+          <textarea
+            id={`reply-${postId}`}
+            required
+            maxLength={1000}
+            rows={1}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Add a comment…"
+          />
+          <button disabled={busy || !body.trim()}>{busy ? "…" : "Post"}</button>
+        </div>
+      </form>
+      {notice ? (
+        <p role="status" className="zone-notice">
+          {notice}
+        </p>
+      ) : null}
     </div>
+  );
+}
+type Person = { avatar: string | null; staff: boolean };
+function Avatar({
+  name,
+  avatar,
+  size = 44,
+}: {
+  name: string;
+  avatar?: string | null;
+  size?: number;
+}) {
+  return avatar ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      className="zone-avatar"
+      src={avatar}
+      alt=""
+      width={size}
+      height={size}
+    />
+  ) : (
+    <span
+      className="zone-avatar zone-avatar-initials"
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    >
+      {initials(name)}
+    </span>
+  );
+}
+/** A contributor lay as a feed post: who, the legs and the price at a glance; the full card is one tap away. */
+function ZoneLay({ lay }: { lay: RubySlip }) {
+  const brand =
+    rubyBrands.find((b) => b.theme === lay.theme) ||
+    rubyBrands.find((b) => b.brand === lay.brand);
+  const odds = lay.reported_odds;
+  const href = `/community?view=vip&ruby=${lay.id}#ruby-${lay.id}`;
+  return (
+    <article className="zone-post zone-lay" id={`lay-${lay.id}`}>
+      <header className="zone-post-head">
+        <Link className="zone-author" href={href}>
+          <span
+            className="zone-avatar zone-avatar-initials zone-lay-mark"
+            aria-hidden="true"
+          >
+            {brand?.monogram || initials(lay.brand)}
+          </span>
+          <span>
+            <b>
+              {lay.brand}
+              <span className="zone-vip">
+                <Gem size={11} aria-hidden="true" /> VIP
+              </span>
+            </b>
+            <small>
+              Contributor lay · {lay.sport.toUpperCase()} ·{" "}
+              <time dateTime={lay.created_at}>{ago(lay.created_at)}</time>
+            </small>
+          </span>
+        </Link>
+      </header>
+      <h2 className="zone-post-title">{lay.title}</h2>
+      <ol className="zone-legs">
+        {lay.legs.slice(0, 5).map((leg, i) => (
+          <li key={i}>
+            <span>{String(i + 1).padStart(2, "0")}</span>
+            {leg}
+          </li>
+        ))}
+        {lay.legs.length > 5 ? (
+          <li className="zone-legs-more">+{lay.legs.length - 5} more legs</li>
+        ) : null}
+      </ol>
+      {lay.note ? (
+        <p className="zone-post-body zone-lay-note">{lay.note}</p>
+      ) : null}
+      <div className="zone-lay-foot">
+        {odds !== null ? (
+          <span className="zone-odds">
+            <b>{odds > 0 ? `+${odds}` : odds}</b>
+            <small>
+              {lay.sportsbook ? `${lay.sportsbook} · ` : ""}reported, unverified
+            </small>
+          </span>
+        ) : (
+          <span className="zone-odds">
+            <small>Contributor opinion · no guaranteed return</small>
+          </span>
+        )}
+        <Link className="zone-open" href={href}>
+          Full card <ArrowUpRight size={16} aria-hidden="true" />
+        </Link>
+      </div>
+    </article>
   );
 }
 export default function CommunityFeed() {
@@ -249,7 +375,7 @@ export default function CommunityFeed() {
       searchParams.get("view") === "vip" || searchParams.has("ruby"),
     ),
     [lays, setLays] = useState<RubySlip[]>([]),
-    [avatars, setAvatars] = useState<Record<string, string>>({}),
+    [avatars, setAvatars] = useState<Record<string, Person>>({}),
     [me, setMe] = useState<{ username: string; avatar: string | null }>({
       username: "",
       avatar: null,
@@ -396,9 +522,10 @@ export default function CommunityFeed() {
       setAvatars((known) => ({
         ...known,
         ...Object.fromEntries(
-          ((faces.data || []) as { user_id: string; avatar: string }[]).map(
-            (f) => [f.user_id, f.avatar],
-          ),
+          ((faces.data || []) as (Person & { user_id: string })[]).map((f) => [
+            f.user_id,
+            { avatar: f.avatar, staff: f.staff },
+          ]),
         ),
       }));
     if (mine.data) setMe(mine.data);
@@ -664,25 +791,9 @@ export default function CommunityFeed() {
     if (!r.error) form.reset();
   }
   const feed = zoneFeed(rows, lays, vipOnly);
-  const face = (name: string, avatar: string | null | undefined, size = 44) =>
-    avatar ? (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
-        className="zone-avatar"
-        src={avatar}
-        alt=""
-        width={size}
-        height={size}
-      />
-    ) : (
-      <span
-        className="zone-avatar zone-avatar-initials"
-        style={{ width: size, height: size }}
-        aria-hidden="true"
-      >
-        {initials(name)}
-      </span>
-    );
+  const face = (name: string, avatar: string | null | undefined) => (
+    <Avatar name={name} avatar={avatar} />
+  );
   return (
     <Shell active="community" sport={sport}>
       <div className="community-feed zone-feed">
@@ -883,17 +994,7 @@ export default function CommunityFeed() {
             ) : null}
             {(vipOnly ? [] : feed).map((item) =>
               item.kind === "lay" ? (
-                <div className="zone-lay" key={`lay-${item.id}`}>
-                  <span className="zone-lay-tag">
-                    <Gem size={13} aria-hidden="true" /> VIP lay
-                    <time dateTime={item.at}>{ago(item.at)}</time>
-                  </span>
-                  <RubyCard
-                    slip={item.lay}
-                    admin={admin}
-                    onFeatured={() => void refresh()}
-                  />
-                </div>
+                <ZoneLay key={`lay-${item.id}`} lay={item.lay} />
               ) : (
                 (() => {
                   const p = item.post;
@@ -908,9 +1009,18 @@ export default function CommunityFeed() {
                           className="zone-author"
                           href={`/community/${encodeURIComponent(p.author_name)}`}
                         >
-                          {face(p.author_name, avatars[p.user_id])}
+                          {face(p.author_name, avatars[p.user_id]?.avatar)}
                           <span>
-                            <b>{p.author_name}</b>
+                            <b>
+                              {p.author_name}
+                              {avatars[p.user_id]?.staff ? (
+                                <BadgeCheck
+                                  className="zone-verified"
+                                  size={17}
+                                  aria-label="Vegas Quant"
+                                />
+                              ) : null}
+                            </b>
                             <small>
                               @{p.author_name} ·{" "}
                               <time

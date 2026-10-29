@@ -156,9 +156,6 @@
 
 /* Feed tabs: X-style underline */
 .zone-feed .zone-tabs {
-  position: sticky;
-  top: 0;
-  z-index: 5;
   display: flex;
   align-items: stretch;
   border-bottom: 1px solid rgba(255, 255, 255, 0.07);
@@ -418,32 +415,6 @@
   }
 }
 
-/* VIP lays in the feed */
-.zone-feed .zone-lay {
-  display: grid;
-  gap: 8px;
-}
-.zone-feed .zone-lay-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  justify-self: start;
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #1b1408;
-  background: linear-gradient(180deg, var(--zf-pale), var(--zf-gold));
-  border-radius: 999px;
-  padding: 4px 11px;
-}
-.zone-feed .zone-lay-tag time {
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: none;
-  opacity: 0.75;
-}
-
 /* Signed-out / empty */
 .zone-feed .zone-join {
   border: 1px solid var(--zf-line);
@@ -505,4 +476,274 @@ html[data-theme] body .zone-feed .zone-composer textarea {
 }
 .zone-feed .ruby-hub:empty {
   display: none;
+}
+
+/* Verified Vegas Quant accounts and VIP contributors */
+.zone-feed .zone-author b {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.zone-feed .zone-verified {
+  flex: none;
+  color: var(--zf-gold);
+  fill: rgba(232, 202, 125, 0.18);
+}
+.zone-feed .zone-vip {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #1b1408;
+  background: linear-gradient(180deg, var(--zf-pale), var(--zf-gold));
+  border-radius: 999px;
+  padding: 2px 7px;
+}
+
+/* A VIP lay as a feed post */
+.zone-feed .zone-lay {
+  border-color: rgba(232, 202, 125, 0.32);
+  background:
+    radial-gradient(
+      120% 60% at 100% 0%,
+      rgba(232, 202, 125, 0.09),
+      transparent 60%
+    ),
+    var(--zf-card);
+}
+.zone-feed .zone-lay-mark {
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 1.05rem;
+}
+.zone-feed .zone-legs {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.zone-feed .zone-legs li {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--zf-text);
+  font-weight: 600;
+}
+.zone-feed .zone-legs li > span {
+  color: var(--zf-gold);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+}
+.zone-feed .zone-legs .zone-legs-more {
+  color: var(--zf-muted);
+  font-weight: 500;
+}
+.zone-feed .zone-lay-note {
+  color: #b9c0c7;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.zone-feed .zone-lay-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 0 10px;
+}
+.zone-feed .zone-odds {
+  display: grid;
+}
+.zone-feed .zone-odds b {
+  font-size: 1.7rem;
+  line-height: 1;
+  color: var(--zf-pale);
+  font-variant-numeric: tabular-nums;
+}
+.zone-feed .zone-odds small {
+  color: var(--zf-muted);
+  font-size: 0.75rem;
+}
+.zone-feed .zone-open {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--zf-gold);
+  color: var(--zf-gold);
+  font-weight: 700;
+  font-size: 0.86rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* Comments: Instagram-style thread, reply box at the bottom */
+.zone-feed .zone-comments {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 12px 0 8px;
+}
+.zone-feed .zone-comment {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.zone-feed .zone-comment.is-reply {
+  padding-left: 40px;
+}
+.zone-feed .zone-comment.linked-comment {
+  background: rgba(232, 202, 125, 0.06);
+  border-radius: 12px;
+}
+.zone-feed .zone-comment-main {
+  flex: 1;
+  min-width: 0;
+}
+.zone-feed .zone-comment-main p {
+  margin: 0;
+  color: #d8dce0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.zone-feed .zone-comment-main b {
+  color: var(--zf-text);
+}
+.zone-feed .zone-comment-meta {
+  display: flex;
+  gap: 14px;
+  margin-top: 3px;
+  color: var(--zf-muted);
+  font-size: 0.76rem;
+}
+.zone-feed .zone-comment-meta button,
+.zone-feed .zone-replying button {
+  border: 0;
+  background: none;
+  padding: 0;
+  min-height: 0;
+  color: var(--zf-muted);
+  font-weight: 700;
+  font-size: 0.76rem;
+}
+.zone-feed .zone-comment-like {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  border: 0;
+  background: none;
+  color: var(--zf-muted);
+  font-size: 0.7rem;
+  min-width: 32px;
+  min-height: 32px;
+}
+html[data-theme] body .zone-feed .zone-comment-like[aria-pressed] {
+  background: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  color: var(--zf-muted) !important;
+}
+html[data-theme] body .zone-feed .zone-comment-like.is-liked,
+html[data-theme] body .zone-feed .zone-comment-like.is-liked :is(svg, span) {
+  color: #ff5c7a !important;
+}
+.zone-feed .zone-replying {
+  margin: 0 0 6px;
+  color: var(--zf-muted);
+  font-size: 0.8rem;
+}
+.zone-feed .zone-comment-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+  padding: 4px 6px 4px 16px;
+}
+html[data-theme] body .zone-feed .zone-comment-box textarea {
+  flex: 1;
+  min-width: 0;
+  resize: none;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: var(--zf-text);
+  padding: 8px 0;
+  font-size: 0.92rem;
+  outline: none;
+}
+.zone-feed .zone-comment-box button {
+  border: 0;
+  background: none;
+  color: var(--zf-gold);
+  font-weight: 800;
+  min-height: 36px;
+  padding: 0 10px;
+}
+.zone-feed .zone-comment-box button:disabled {
+  opacity: 0.4;
+}
+
+/* Phones: posts run edge to edge with hairline dividers, like Instagram and X. */
+@media (max-width: 640px) {
+  .zone-feed {
+    gap: 0;
+  }
+  .zone-feed .zone-head {
+    margin-bottom: 12px;
+  }
+  .zone-feed .zone-composer {
+    margin-bottom: 8px;
+  }
+  .zone-feed .zone-post {
+    margin-inline: -16px;
+    border-radius: 0;
+    border-width: 0 0 1px;
+    border-color: rgba(255, 255, 255, 0.07);
+    box-shadow: none;
+    background: transparent;
+    padding: 14px 16px 4px;
+  }
+  .zone-feed .zone-lay {
+    background: radial-gradient(
+      120% 50% at 100% 0%,
+      rgba(232, 202, 125, 0.08),
+      transparent 60%
+    );
+    border-color: rgba(255, 255, 255, 0.07);
+  }
+  .zone-feed .zone-media {
+    margin-inline: -16px;
+    border-radius: 0;
+  }
+  .zone-feed .zone-tabs {
+    margin-inline: -16px;
+  }
+  .zone-feed .zone-card figcaption {
+    padding-inline: 16px;
+  }
+}
+
+/* The older thread styles draw a rule and indent on every comment; the new thread doesn't. */
+.zone-feed .zone-comments article {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.zone-feed .zone-comments article.is-reply {
+  padding-left: 40px;
+}
+.zone-feed .zone-post .zone-legs {
+  padding-left: 0;
 }
