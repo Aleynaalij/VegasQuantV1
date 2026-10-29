@@ -188,7 +188,7 @@ class IntegratedTests(unittest.TestCase):
         import gzip, hashlib, json
         from pathlib import Path
         root=Path(__file__).resolve().parents[2]
-        folder=root/'research/game_sim/artifacts/v0.2.10'
+        folder=root/'research/game_sim/artifacts/v0.2.11-evidence-correction'
         manifest=json.loads((folder/'manifest.json').read_text())
         payloads={}
         for filename, expected in manifest['files'].items():

@@ -39,12 +39,13 @@ def validate_trace(events):
 def source_metrics(path):
     finals, digest = scores(path)
     values = {g: dict(total=sum(pair), touchdowns=0, field_goals=0, punts=0,
-                      timeouts=0, fg_attempts=0, late_fg_attempts=0, late_decisions=0)
+                      timeouts=0, fg_attempts=0, late_fg_attempts=0, late_decisions=0, late_timeout_followed_plays=0)
               for g, pair in finals.items()}
     raw = Path(path).read_bytes()
     raw = gzip.decompress(raw) if raw[:2] == b'\x1f\x8b' else raw
     missing = 0
-    for row in csv.DictReader(io.StringIO(raw.decode('utf-8-sig'))):
+    rows=list(csv.DictReader(io.StringIO(raw.decode('utf-8-sig'))))
+    for index,row in enumerate(rows):
         if row['game_id'] not in values:
             continue
         item = values[row['game_id']]
@@ -60,6 +61,13 @@ def source_metrics(path):
         except (ValueError, TypeError, KeyError):
             missing += 1
             continue
+        nxt=rows[index+1] if index+1<len(rows) else {}
+        continuation=next((t for t in rows[index+1:index+9] if t['game_id']==row['game_id'] and t['qtr']==row['qtr'] and t.get('posteam') and t.get('down') and t.get('yardline_100')), {})
+        if (s.phase=='scrimmage' and s.period in (2,4) and s.clock<=300
+            and (row.get('play_type')=='run' or (row.get('play_type')=='pass' and row.get('complete_pass')=='1'))
+            and row.get('touchdown')!='1' and continuation.get('posteam')==row['posteam']
+            and (row.get('timeout')=='1' or (nxt.get('timeout')=='1' and nxt.get('play_type')=='no_play'))):
+            item['late_timeout_followed_plays']+=1
         if s.phase == 'scrimmage' and s.period in (2, 4) and s.clock <= 30 and s.yardline <= 35:
             item['late_decisions'] += int(row.get('timeout') != '1')
             item['late_fg_attempts'] += int(fg)
@@ -100,7 +108,7 @@ def build(source, calibration, output, *, runs=10000, seed=1701):
     output = Path(output)
     # mkdir atomically refuses an existing artifact directory; never overwrite evidence.
     output.mkdir(parents=True, exist_ok=False)
-    model = fit([source])
+    model = json.loads(canonical(fit([source])))
     batch = run_batch(model, runs, seed, both_possessions=False)
     gate = reproduction_report(batch, source)
     trace = validate_trace(batch['replay']['events'])
@@ -116,7 +124,7 @@ def build(source, calibration, output, *, runs=10000, seed=1701):
         file_manifest[filename] = dict(sha256=hashlib.sha256(compressed).hexdigest(),
                                        canonical_sha256=hashlib.sha256(raw).hexdigest())
     implementation = [Path(__file__), *[Path(__file__).with_name(x) for x in (
-        'model.py','state.py','batch.py','evaluate.py','render.py','INTEGRATED_BUILD_PROTOCOL.md','FIELD_CONTEXT_PROTOCOL.md','LATE_SCORE_PROTOCOL.md','HALF_CONTEXT_PROTOCOL.md','TIMEOUT_BUDGET_PROTOCOL.md','TIMEOUT_SUPPORT_PROTOCOL.md','LAST300_PROTOCOL.md','COMPOUND_TIMEOUT_PROTOCOL.md','TWO_STAGE_TIMEOUT_PROTOCOL.md','STOP_CLOCK_PROTOCOL.md','COMPETING_TIMEOUT_PROTOCOL.md')]]
+        'model.py','state.py','batch.py','evaluate.py','render.py','INTEGRATED_BUILD_PROTOCOL.md','FIELD_CONTEXT_PROTOCOL.md','LATE_SCORE_PROTOCOL.md','HALF_CONTEXT_PROTOCOL.md','TIMEOUT_BUDGET_PROTOCOL.md','TIMEOUT_SUPPORT_PROTOCOL.md','LAST300_PROTOCOL.md','COMPOUND_TIMEOUT_PROTOCOL.md','TWO_STAGE_TIMEOUT_PROTOCOL.md','STOP_CLOCK_PROTOCOL.md','COMPETING_TIMEOUT_PROTOCOL.md','RELOAD_PROTOCOL.md','PHANTOM_STOP_PROTOCOL.md')]]
     manifest = dict(model_id=model['model_id'], status='RESEARCH_REVIEW_REQUIRED',
                     model_sha256=batch['artifact_sha256'], seed=seed, runs=batch['runs'],
                     reproduction_passed=gate['passed'], calibration_adopted=False,

@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other,transition
 
-MODEL_ID='vq-empirical-game/0.2.10'
+MODEL_ID='vq-empirical-game/0.2.11'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -159,7 +159,7 @@ def stop_contexts(s,kind):
 
 
 def fit(paths):
-    observations=defaultdict(list);counts=Counter();buckets=defaultdict(list);sources=[];templates=[];ids={};seen_sources=set();seen_games=set();timeout_tables=defaultdict(Counter);timeout_coverage=Counter();stop_tables=defaultdict(Counter);stop_coverage=Counter()
+    observations=defaultdict(list);counts=Counter();buckets=defaultdict(list);sources=[];templates=[];ids={};seen_sources=set();seen_games=set();timeout_tables=defaultdict(Counter);timeout_coverage=Counter();stop_tables=defaultdict(Counter);runoff_tables=defaultdict(Counter);stop_coverage=Counter()
     for path in paths:
         data=Path(path).read_bytes();raw=gzip.decompress(data) if data[:2]==b'\x1f\x8b' else data
         rows=list(csv.DictReader(io.StringIO(raw.decode('utf-8-sig'))))
@@ -235,8 +235,8 @@ def fit(paths):
                 if a['kind'] in ('run','pass_complete'):
                     followed=r.get('timeout')=='1' or (nxt.get('timeout')=='1' and nxt.get('play_type')=='no_play')
                     a['source_followed_timeout']=followed
-                    for key in stop_contexts(s,a['kind']) if followed else []:
-                        stop_tables[key][a['elapsed']]+=1
+                    for key in stop_contexts(s,a['kind']):
+                        (stop_tables if followed else runoff_tables)[key][a['elapsed']]+=1
                     if stop_contexts(s,a['kind']):
                         stop_coverage['eligible_plays']+=1
                         if followed:stop_coverage['timeout_followed_plays']+=1
@@ -256,7 +256,7 @@ def fit(paths):
                 counts['excluded:'+str(e)]+=1
                 if event!='original':counts['excluded:'+event+':'+str(e)]+=1
     if not templates:raise ValueError('No training templates')
-    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),stop_clock=dict(tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(stop_tables.items())},coverage=dict(stop_coverage),minimum_context=30),timeout_model=dict(tables={k:dict(v) for k,v in sorted(timeout_tables.items())},coverage=dict(timeout_coverage),minimum_context=30),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
+    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),stop_clock=dict(runoff_tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(runoff_tables.items())},tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(stop_tables.items())},coverage=dict(stop_coverage),minimum_context=30),timeout_model=dict(tables={k:dict(v) for k,v in sorted(timeout_tables.items())},coverage=dict(timeout_coverage),minimum_context=30),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
     return model
 
 class Sampler:
@@ -293,23 +293,37 @@ class Sampler:
             return Action('timeout',elapsed=0,timeout_side=s.possession if role=='offense' else other(s.possession))
         return None
 
+    def no_call_runoff(self,s,a):
+        if not getattr(self,'last_source_followed_timeout',False):return a
+        model=self.model['stop_clock'];keys=stop_contexts(s,a.kind)
+        for key in keys:
+            table=model.get('runoff_tables',{}).get(key,{})
+            legal=sorted((int(dt),n) for dt,n in table.items() if int(dt)>0)
+            if legal and (sum(table.values())>=model['minimum_context'] or key==keys[-1]):
+                if sum(table.values())<model['minimum_context']:self.fallbacks['thin_runoff_context']+=1
+                dt=self.rng.choices([dt for dt,n in legal],weights=[n for dt,n in legal],k=1)[0]
+                self.fallbacks['source_stop_runoff_replaced']+=1
+                return replace(a,elapsed=min(dt,s.clock))
+        self.fallbacks['unsupported_nonfollowed_runoff']+=1
+        raise ValueError('no empirical non-followed runoff support')
+
     def couple_stop(self,s,a):
         """Returns committed action, queued timeout, state whose decision was read."""
         model=self.model.get('stop_clock')
         if not model or a.kind not in ('run','pass_complete') or not stop_contexts(s,a.kind):return a,None,None
         projected=transition(s,replace(a,elapsed=min(a.elapsed,max(1,s.clock-1)))).after
         if projected.phase!='scrimmage' or projected.possession!=s.possession or (projected.home_score,projected.away_score)!=(s.home_score,s.away_score):return a,None,None
-        if not (s.home_timeouts or s.away_timeouts):return a,None,None
+        if not (s.home_timeouts or s.away_timeouts):return self.no_call_runoff(s,a),None,None
         keys=stop_contexts(s,a.kind);chosen=None
         for key in keys:
             table=model['tables'].get(key,{})
-            legal=[(int(dt),n) for dt,n in table.items() if 0<int(dt)<=a.elapsed and int(dt)<s.clock]
+            legal=sorted((int(dt),n) for dt,n in table.items() if 0<int(dt)<=a.elapsed and int(dt)<s.clock)
             if legal and (sum(table.values())>=model['minimum_context'] or key==keys[-1]):
                 chosen=(key,table,legal);break
         self.fallbacks['stop_clock_candidates']+=1
         if chosen is None:
             self.fallbacks['missing_eligible_stop_duration']+=1
-            return a,None,None
+            return self.no_call_runoff(s,a),None,None
         key,table,legal=chosen
         if sum(table.values())<model['minimum_context']:self.fallbacks['thin_stop_duration_context']+=1
         dt=self.rng.choices([v for v,n in legal],weights=[n for v,n in legal],k=1)[0]
@@ -319,7 +333,8 @@ class Sampler:
             self.fallbacks['coupled_stops']+=1
             self.fallbacks['avoided_runoff_seconds']+=a.elapsed-dt
             return stopped,called,after
-        return a,None,transition(s,a).after
+        committed=self.no_call_runoff(s,a)
+        return committed,None,transition(s,committed).after
 
     def draw(self,s,*,allow_timeout=True):
         if s.phase=='safety_kick':s=replace(s,phase='kickoff')

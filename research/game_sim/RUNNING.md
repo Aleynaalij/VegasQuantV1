@@ -307,3 +307,31 @@ and scenario allocator are not yet validated outcome models. Full product remain
 incomplete until independent audit, actual team/player integration and later
 validation. This package is the completed ENGINE FOUNDATION handoff, not an
 approval or a claim the full simulator/NBA side is finished.
+
+## Claude audit corrections:0.2.10.1 /0.2.11
+Claude6483151774 found saved-model duration ordering and phantom source stops.
+0.2.10.1sorts eligible durations numerically and canonical-reloads the model
+BEFORE the certified batch. Exact10000seed1701ensemble+every coverage count
+matches original0.2.10in-memory run. Runtime/source hashes preserved. CI tests
+now verify package integrity without external source data, explicitly reporting
+source_hash_verified=false; actual source-byte test is conditionally skipped
+only when bytes unavailable. Local source verification still mandatory whenpresent.
+
+0.2.11non-followed runoff tables replace source timeout-stopped gaps when no
+simulated timeout occurs, including exhausted-budget states. Source clock tags
+and replacement/cache metadata are traceable.10000complete/0failed/0unsupported;
+4scoringchecksPASS,total43.7932,TD4.8654,FG3.2827,punts7.818. TO7.3488vs7.78229
+FAIL;late_decisions1.731vs2.09963narrowPASS. New diagnostic late stopped
+continuing plays1.995vs4.48339source FAIL. No threshold/seed changes. The original
+0.2.11source counter erroneously required a nonblank next administrative timeout
+row and counted8plays; originalgate/runtime preserved. Separate evidence-only
+correction recomputes the gate from the EXACT saved batch/model, resolving the
+following scrimmage context; no new simulation or erased failure. See erratum.
+
+1000same-seedprefix:2053source-flagged no-call continuing plays, ALLrunoff-replaced,
+zero phantom stops. Source late run/completion gap21.556s vs24.424s simulation;
+source stopped10.986s vs8.753s. Timing/lookahead/exposure remain unresolved.
+2023inspectedCRPS margin8.159768vs8.065627historical,total7.616988vs7.598449;
+no demonstrated advantage.101localPython testsPASS. No app/member rollout or
+modelapproval; admin endpoint remains pinned to prior research artifact pending
+audit, not a new current-matchup engine. Do not say base clock validation complete.

@@ -44,3 +44,35 @@ class StopClockTests(unittest.TestCase):
         s=State(period=4,clock=100);m=self.model(s);sampler=Sampler(m,17)
         self.assertNotEqual(sampler.draw(s,allow_timeout=False).kind,'timeout')
         self.assertEqual(sampler.draw(s).kind,'timeout')
+
+    def test_numeric_duration_order_survives_canonical_json_reload(self):
+        import json
+        from research.game_sim.batch import canonical
+        s=State(period=4,clock=100);a=Action('run',elapsed=35,yards=4)
+        m=self.model(s,durations={'9':40,'10':40,'2':40})
+        loaded=json.loads(canonical(m))
+        for seed in (17,1701,1702,1703,42):
+            self.assertEqual(Sampler(m,seed).couple_stop(s,a),Sampler(loaded,seed).couple_stop(s,a))
+
+    def test_source_stopped_no_call_uses_nonfollowed_gap_and_actual_cache(self):
+        s=State(period=4,clock=100);a=Action('run',elapsed=9,yards=4)
+        m=self.model(s,prob=0,durations={'6':40})
+        m['stop_clock']['runoff_tables']={stop_contexts(s,'run')[-1]:{'35':40}}
+        sampler=Sampler(m,17);sampler.last_source_followed_timeout=True
+        play,queued,cached=sampler.couple_stop(s,a)
+        self.assertEqual(play.elapsed,35);self.assertIsNone(queued)
+        self.assertEqual(cached,transition(s,play).after);self.assertEqual(cached.clock,65)
+        self.assertEqual(sampler.fallbacks['source_stop_runoff_replaced'],1)
+
+    def test_source_stopped_no_budgets_also_replaces_gap(self):
+        s=State(period=4,clock=12,home_timeouts=0,away_timeouts=0);a=Action('run',elapsed=4,yards=1)
+        m=self.model(s);m['stop_clock']['runoff_tables']={stop_contexts(s,'run')[-1]:{'35':40}}
+        sampler=Sampler(m,17);sampler.last_source_followed_timeout=True
+        play,queued,_=sampler.couple_stop(s,a)
+        self.assertEqual(play.elapsed,12);self.assertIsNone(queued)
+        self.assertEqual(transition(s,play).after.clock,0)
+
+    def test_source_stopped_no_call_without_runoff_support_rejects(self):
+        s=State(period=4,clock=100,home_timeouts=0,away_timeouts=0)
+        sampler=Sampler(self.model(s),17);sampler.last_source_followed_timeout=True
+        with self.assertRaisesRegex(ValueError,'non-followed runoff'):sampler.couple_stop(s,Action('run',elapsed=9,yards=1))
