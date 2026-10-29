@@ -315,7 +315,8 @@ export default function CommunityFeed() {
     setLoading(true);
     const [r, a, target] = await Promise.all([
       supabase.rpc("community_feed", {
-        p_sport: sport,
+        // While NBA is paused, NBA research posts show in the one Latest feed.
+        p_sport: NBA_PAUSED ? "all" : sport,
         p_limit: limit,
         p_following: followingOnly,
       }),
@@ -790,6 +791,7 @@ export default function CommunityFeed() {
                 </header>
                 <span className="member-label">
                   MEMBER POST · {kinds[p.kind]}
+                  {p.sport === "nba" ? " · NBA" : ""}
                   {p.kind === "result" ? " · UNVERIFIED RESULT" : ""}
                 </span>
                 {p.title !== "Community post" ? <h2>{p.title}</h2> : null}

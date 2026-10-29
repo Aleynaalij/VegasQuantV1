@@ -30,6 +30,7 @@ export const summaryUrl = (id: string) =>
 
 const count = (v: string | undefined) => (/^\d+$/.test(v ?? "") ? Number(v) : NaN);
 const made = (v: string | undefined) => count((v ?? "").split("-")[0]);
+const attempted = (v: string | undefined) => count((v ?? "").split("-")[1]);
 const STATS = ["points", "rebounds", "assists", "steals", "blocks", "turnovers"] as const;
 const THREES = "threePointFieldGoalsMade-threePointFieldGoalsAttempted";
 
@@ -70,10 +71,12 @@ export function resultPayload(data: Summary, game: Game, sourceHash: string) {
         position: /^[A-Z]{1,3}$/.test(a.athlete?.position?.abbreviation || "") ? a.athlete!.position!.abbreviation! : null,
         minutes: played ? (Number.isFinite(count(st[at("minutes")])) ? count(st[at("minutes")]) : null) : null,
         threes: played ? made(st[at(THREES)]) : 0,
+        three_attempts: played ? attempted(st[at(THREES)]) : 0,
         ...Object.fromEntries(STATS.map((k) => [k, played ? count(st[at(k)]) : 0])),
       };
-      if ([row.threes, ...STATS.map((k) => (row as Record<string, unknown>)[k])].some((v) => !Number.isFinite(v)))
+      if ([row.threes, row.three_attempts, ...STATS.map((k) => (row as Record<string, unknown>)[k])].some((v) => !Number.isFinite(v)))
         return `Unreadable stat line for ${row.player || "a player"}`;
+      if (row.three_attempts < row.threes) return `More threes made than attempted for ${row.player || "a player"}`;
       players.push(row);
     }
   }

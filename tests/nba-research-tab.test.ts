@@ -7,6 +7,7 @@ import {
   propQuotes,
   propTrends,
   seasonLines,
+  threePointLeaders,
   type BoxRow,
 } from "../src/lib/nba-research-tab";
 
@@ -248,5 +249,58 @@ test("Injuries keep each player's latest report, most serious first", () => {
       ["Alperen Sengun", "Out"],
       ["Joel Embiid", "Day-To-Day"],
     ],
+  );
+});
+
+test("3-point leaders average only games with recorded attempts", () => {
+  const shooter = (
+    id: string,
+    player: string,
+    team: string,
+    games: [number, number | null][],
+  ) =>
+    games.map(([made, att], i) =>
+      row(i + 1, 20, 4, 4, {
+        athlete_id: id,
+        player,
+        team,
+        threes: made,
+        three_attempts: att,
+      }),
+    );
+  const lines = seasonLines([
+    ...shooter("1", "Volume Guard", "New York Knicks", [
+      [3, 11],
+      [4, 10],
+      [2, 9],
+      [9, null], // attempts not recorded yet: left out of both averages
+    ]),
+    ...shooter("2", "Efficient Wing", "New York Knicks", [
+      [4, 7],
+      [5, 8],
+      [4, 6],
+    ]),
+    ...shooter("3", "Two Games", "New York Knicks", [
+      [8, 15],
+      [8, 15],
+    ]),
+    ...shooter("4", "Off Tonight", "Boston Celtics", [
+      [6, 14],
+      [6, 14],
+      [6, 14],
+    ]),
+  ]);
+  const teams = new Set(["New York Knicks"]);
+  const attempted = threePointLeaders(lines, teams, "tpa");
+  assert.deepEqual(
+    attempted.map((l) => [l.player, l.tpa, l.tpm, l.tpaGames, l.gp]),
+    [
+      ["Volume Guard", 10, 3, 3, 4],
+      ["Efficient Wing", 7, 13 / 3, 3, 3],
+    ],
+  );
+  assert.deepEqual(
+    threePointLeaders(lines, teams, "tpm").map((l) => l.player),
+    ["Efficient Wing", "Volume Guard"],
   );
 });

@@ -126,3 +126,19 @@
   border-top: 1px solid var(--line);
   padding-top: 12px;
 }
+.nbar-threes {
+  display: grid;
+  gap: 14px;
+}
+.nbar-threes h3 {
+  margin: 0 0 8px;
+  color: #ddc080;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+@media (min-width: 760px) {
+  .nbar-threes {
+    grid-template-columns: 1fr 1fr;
+  }
+}
