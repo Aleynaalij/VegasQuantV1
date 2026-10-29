@@ -831,3 +831,7 @@
 .community-photo-preview button {
   margin-top: 10px;
 }
+.zone-card { margin: 0; display: grid; gap: 8px; }
+.zone-card img { width: 100%; height: auto; border-radius: 14px; display: block; background: #07090d; }
+.zone-card figcaption { display: flex; justify-content: flex-end; font-size: 13px; }
+.zone-card a { color: #e8ca7d; font-weight: 700; text-decoration: none; }
