@@ -26,6 +26,7 @@ create function private.zone_post_notify()returns trigger language plpgsql as $$
 create trigger zone_post_notify after insert on public.community_posts for each row execute function private.zone_post_notify();
 insert into auth.users values('${owner}',now()),('${member}',now());insert into private.admin_users values('${owner}');`);
 await db.exec(fs.readFileSync('supabase/migrations/20261029001000_nba_three_point_volume.sql','utf8').replace(/^create extension.*$/gm,''));
+await db.exec(fs.readFileSync('supabase/migrations/20261029010000_nba_threes_post_skip_mismatch.sql','utf8'));
 
 // Three finished games for the Knicks before today, one today vs the Bulls; another team's game too.
 const today=(await db.query(`select (now() at time zone 'America/New_York')::date d`)).rows[0].d.toISOString().slice(0,10);
@@ -35,12 +36,14 @@ await db.exec(`insert into public.nba_games values
  ('00000000-0000-4000-8000-0000000000a2','2','Miami Heat','New York Knicks','MIA','NY',${at(2)},2027,2),
  ('00000000-0000-4000-8000-0000000000a3','3','New York Knicks','Orlando Magic','NY','ORL',${at(1)},2027,2),
  ('00000000-0000-4000-8000-0000000000a4','4','Chicago Bulls','New York Knicks','CHI','NY',${at(0)},2027,2),
- ('00000000-0000-4000-8000-0000000000a5','5','Utah Jazz','Phoenix Suns','UTA','PHX',${at(1)},2026,2);
-insert into public.nba_game_results values('00000000-0000-4000-8000-0000000000a1'),('00000000-0000-4000-8000-0000000000a2'),('00000000-0000-4000-8000-0000000000a3');
+ ('00000000-0000-4000-8000-0000000000a5','5','Utah Jazz','Phoenix Suns','UTA','PHX',${at(1)},2026,2),
+ ('00000000-0000-4000-8000-0000000000a6','6','Los Angeles Lakers','Sacramento Kings','LAL','SAC',${at(2)},2027,2);
+insert into public.nba_game_results values('00000000-0000-4000-8000-0000000000a1'),('00000000-0000-4000-8000-0000000000a2'),('00000000-0000-4000-8000-0000000000a3'),('00000000-0000-4000-8000-0000000000a6');
 insert into public.nba_player_results values
  ('00000000-0000-4000-8000-0000000000a1','10','Jalen Brunson','New York Knicks',true,3),('00000000-0000-4000-8000-0000000000a1','11','Mikal Bridges','New York Knicks',true,2),('00000000-0000-4000-8000-0000000000a1','12','Bench Guy','New York Knicks',false,0),
  ('00000000-0000-4000-8000-0000000000a2','10','Jalen Brunson','New York Knicks',true,4),('00000000-0000-4000-8000-0000000000a2','11','Mikal Bridges','New York Knicks',true,5),
- ('00000000-0000-4000-8000-0000000000a3','10','Jalen Brunson','New York Knicks',true,2),('00000000-0000-4000-8000-0000000000a3','11','Mikal Bridges','New York Knicks',true,2);`);
+ ('00000000-0000-4000-8000-0000000000a3','10','Jalen Brunson','New York Knicks',true,2),('00000000-0000-4000-8000-0000000000a3','11','Mikal Bridges','New York Knicks',true,2),
+ ('00000000-0000-4000-8000-0000000000a6','30','LeBron James','Los Angeles Lakers',true,2);`);
 const rpc=async p=>(await db.query(`select private.record_nba_three_attempts($1::jsonb) r`,[JSON.stringify(p)])).rows[0].r;
 const line=(id,threes,att)=>({athlete_id:id,threes,three_attempts:att});
 
@@ -51,7 +54,7 @@ assert.deepEqual(await rpc({provider_id:'1',players:[line('10',3,8),line('11',1,
 assert.equal((await rpc({provider_id:'1',players:[line('10',3,8),line('11',2,6),line('12',0,2)]})).status,'MISMATCH');
 assert.equal((await rpc({provider_id:'1',players:[line('10',3,2),line('11',2,6),line('12',0,0)]})).status,'MISMATCH');
 // A game that failed is not offered again for 12 hours; the others are.
-assert.deepEqual((await db.query(`select provider_id from private.nba_three_attempts_missing(30) order by provider_id`)).rows.map(r=>r.provider_id),['2','3']);
+assert.deepEqual((await db.query(`select provider_id from private.nba_three_attempts_missing(30) order by provider_id`)).rows.map(r=>r.provider_id),['2','3','6']);
 // Matching reads record once; a second read is a no-op and rows are immutable.
 assert.deepEqual(await rpc({provider_id:'1',players:[line('10',3,8),line('11',2,6),line('12',0,0)]}),{status:'RECORDED',players:3});
 assert.equal((await rpc({provider_id:'1',players:[line('10',3,9),line('11',2,6),line('12',0,0)]})).status,'RECORDED');
@@ -61,6 +64,8 @@ await assert.rejects(db.query(`update public.nba_player_three_attempts set attem
 assert.equal((await db.query(`select private.nba_threes_post() r`)).rows[0].r.status,'WAITING');
 await rpc({provider_id:'2',players:[line('10',4,10),line('11',5,9)]});
 await rpc({provider_id:'3',players:[line('10',2,7),line('11',2,5)]});
+// Game 6 was corrected by ESPN after it was recorded: it never gets attempts, but no longer holds the post back.
+assert.equal((await rpc({provider_id:'6',players:[line('30',3,6)]})).status,'MISMATCH');
 const r=(await db.query(`select private.nba_threes_post() r`)).rows[0].r;
 assert.equal(r.status,'POSTED');
 const post=(await db.query(`select * from public.community_posts`)).rows[0];
