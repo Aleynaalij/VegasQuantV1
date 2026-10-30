@@ -11,7 +11,7 @@ import Link from "next/link";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
 import RubyHub from "./ruby-cards";
-import ZoneNav from "./zone-nav";
+import { rubyBrands, type RubySlip } from "@/lib/ruby";
 import CommunityPhoto from "./community-photo";
 import CommunityParlayCard from "./community-parlay-card";
 import { COMMUNITY_PHOTO_BUCKET } from "@/lib/community-photo";
@@ -20,7 +20,20 @@ import {
   uploadCommunityPhoto,
 } from "@/lib/community-photo-client";
 import { time } from "@/lib/domain";
-import { ImagePlus, Heart, MessageCircle, Share2 } from "lucide-react";
+import {
+  ArrowUpRight,
+  BadgeCheck,
+  Check,
+  Copy,
+  Gem,
+  ImagePlus,
+  Heart,
+  MessageCircle,
+  MoreHorizontal,
+  RefreshCw,
+  Share2,
+} from "lucide-react";
+import { ago, initials, richParts, zoneFeed } from "@/lib/zone-feed";
 import { NBA_PAUSED } from "@/lib/nba-paused";
 import { threesCardDay } from "@/lib/nba-threes-card";
 type Post = {
@@ -76,13 +89,30 @@ function Comments({
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false);
   const [replyTo, setReplyTo] = useState<Comment | null>(null);
+  const [faces, setFaces] = useState<Record<string, Person>>({});
   const load = useCallback(async () => {
     const r = await supabase.rpc("community_comments", {
       p_post: postId,
       p_target: targetComment || null,
     });
-    if (r.error) setNotice("Comments could not load. Try again.");
-    else setRows(r.data || []);
+    if (r.error) {
+      setNotice("Comments could not load. Try again.");
+      return;
+    }
+    const list: Comment[] = r.data || [];
+    setRows(list);
+    const ids = [...new Set(list.map((c) => c.user_id))].slice(0, 100);
+    if (!ids.length) return;
+    const f = await supabase.rpc("community_avatars", { p_users: ids });
+    if (!f.error)
+      setFaces(
+        Object.fromEntries(
+          ((f.data || []) as (Person & { user_id: string })[]).map((x) => [
+            x.user_id,
+            { avatar: x.avatar, staff: x.staff },
+          ]),
+        ),
+      );
   }, [postId, targetComment]);
   useEffect(() => {
     void load();
@@ -143,84 +173,265 @@ function Comments({
     }
   }
   return (
-    <div className="social-comments">
-      <form onSubmit={submit}>
-        {replyTo && (
-          <p>
-            Replying to @{replyTo.author_name}{" "}
-            <button
-              type="button"
-              className="text-link"
-              onClick={() => setReplyTo(null)}
-            >
-              Cancel reply
-            </button>
-          </p>
-        )}
-        <label htmlFor={`reply-${postId}`}>Join the conversation</label>
-        <textarea
-          id={`reply-${postId}`}
-          required
-          maxLength={1000}
-          value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="Share your reasoning or ask a question."
-        />
-        <button className="primary" disabled={busy}>
-          {busy ? "Posting…" : "Post comment"}
-        </button>
-      </form>
-      <p role="status">{notice}</p>
+    <div className="social-comments zone-comments">
       {rows.map((c) => (
         <article
           key={c.id}
           id={`comment-${c.id}`}
-          className={c.id === targetComment ? "linked-comment" : undefined}
+          className={`zone-comment ${c.parent_id ? "is-reply" : ""} ${c.id === targetComment ? "linked-comment" : ""}`}
         >
-          <strong>@{c.author_name}</strong>
-          <small> · {time(c.created_at)}</small>
-          {c.parent_id && <small>Reply in this thread</small>}
-          <p>{c.body}</p>
-          <div className="social-actions">
-            <button
-              type="button"
-              className="text-link"
-              onClick={() => {
-                setReplyTo(c);
-                document.getElementById(`reply-${postId}`)?.focus();
-              }}
-            >
-              Reply
-            </button>
-            <button
-              type="button"
-              className="text-link"
-              aria-pressed={c.reacted}
-              disabled={busy}
-              onClick={() => void react(c)}
-            >
-              {c.reacted ? "Liked" : "Like"} comment · {c.reactions || 0}
-            </button>
+          <Avatar
+            name={c.author_name}
+            avatar={faces[c.user_id]?.avatar}
+            size={32}
+          />
+          <div className="zone-comment-main">
+            <p>
+              <b>
+                {c.author_name}
+                {faces[c.user_id]?.staff ? (
+                  <BadgeCheck
+                    className="zone-verified"
+                    size={14}
+                    aria-label="Vegas Quant"
+                  />
+                ) : null}
+              </b>{" "}
+              <RichText text={c.body} />
+            </p>
+            <div className="zone-comment-meta">
+              <time dateTime={c.created_at} title={time(c.created_at)}>
+                {ago(c.created_at)}
+              </time>
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyTo(c);
+                  document.getElementById(`reply-${postId}`)?.focus();
+                }}
+              >
+                Reply
+              </button>
+              {uid !== c.user_id ? (
+                <button
+                  type="button"
+                  onClick={() => void onBlock(c.user_id, c.author_name)}
+                >
+                  Block
+                </button>
+              ) : null}
+              {uid === c.user_id || admin ? (
+                <button type="button" onClick={() => void remove(c.id)}>
+                  Remove
+                </button>
+              ) : null}
+            </div>
           </div>
-          {uid !== c.user_id ? (
-            <button
-              className="text-link"
-              onClick={() => void onBlock(c.user_id, c.author_name)}
-            >
-              Block member
-            </button>
-          ) : null}
-          {(uid === c.user_id || admin) && (
-            <button className="text-link" onClick={() => void remove(c.id)}>
-              Remove comment
-            </button>
-          )}
+          <button
+            type="button"
+            className={`zone-comment-like ${c.reacted ? "is-liked" : ""}`}
+            aria-pressed={c.reacted}
+            aria-label={c.reacted ? "Unlike comment" : "Like comment"}
+            disabled={busy}
+            onClick={() => void react(c)}
+          >
+            <Heart
+              size={14}
+              fill={c.reacted ? "currentColor" : "none"}
+              aria-hidden="true"
+            />
+            {c.reactions ? <span>{c.reactions}</span> : null}
+          </button>
         </article>
       ))}
       {rows.length === 50 ? (
         <small>Showing the latest 50 comments.</small>
       ) : null}
+      <form onSubmit={submit} className="zone-comment-form">
+        {replyTo && (
+          <p className="zone-replying">
+            Replying to @{replyTo.author_name}{" "}
+            <button type="button" onClick={() => setReplyTo(null)}>
+              Cancel
+            </button>
+          </p>
+        )}
+        <label className="sr-only" htmlFor={`reply-${postId}`}>
+          Add a comment
+        </label>
+        <div className="zone-comment-box">
+          <textarea
+            id={`reply-${postId}`}
+            required
+            maxLength={1000}
+            rows={1}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Add a comment…"
+          />
+          <button disabled={busy || !body.trim()}>{busy ? "…" : "Post"}</button>
+        </div>
+      </form>
+      {notice ? (
+        <p role="status" className="zone-notice">
+          {notice}
+        </p>
+      ) : null}
     </div>
+  );
+}
+type Person = { avatar: string | null; staff: boolean };
+function Avatar({
+  name,
+  avatar,
+  size = 44,
+}: {
+  name: string;
+  avatar?: string | null;
+  size?: number;
+}) {
+  return avatar ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      className="zone-avatar"
+      src={avatar}
+      alt=""
+      width={size}
+      height={size}
+    />
+  ) : (
+    <span
+      className="zone-avatar zone-avatar-initials"
+      style={{ width: size, height: size }}
+      aria-hidden="true"
+    >
+      {initials(name)}
+    </span>
+  );
+}
+/** Post and comment text with @mentions linked to profiles and #tags in gold. */
+function RichText({ text }: { text: string }) {
+  return (
+    <>
+      {richParts(text).map((part, i) =>
+        part.kind === "mention" ? (
+          <Link
+            key={i}
+            className="zone-mention"
+            href={`/community/${encodeURIComponent(part.value)}`}
+          >
+            @{part.value}
+          </Link>
+        ) : part.kind === "tag" ? (
+          <span key={i} className="zone-tag">
+            #{part.value}
+          </span>
+        ) : (
+          part.value
+        ),
+      )}
+    </>
+  );
+}
+/** A contributor lay as a feed post: who, the legs and the price at a glance; the full card is one tap away. */
+function ZoneLay({ lay }: { lay: RubySlip }) {
+  const [copied, setCopied] = useState(false);
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(
+        [lay.brand + " · " + lay.title, ...lay.legs].join("\n"),
+      );
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      setCopied(false);
+    }
+  }
+  const brand =
+    rubyBrands.find((b) => b.theme === lay.theme) ||
+    rubyBrands.find((b) => b.brand === lay.brand);
+  const odds = lay.reported_odds;
+  const href = `/community?view=vip&ruby=${lay.id}#ruby-${lay.id}`;
+  return (
+    <article
+      className="zone-post zone-lay"
+      data-brand={lay.theme}
+      id={`lay-${lay.id}`}
+    >
+      <header className="zone-post-head">
+        <Link className="zone-author" href={href}>
+          <span
+            className="zone-avatar zone-avatar-initials zone-lay-mark"
+            aria-hidden="true"
+          >
+            {brand?.monogram || initials(lay.brand)}
+          </span>
+          <span>
+            <b>
+              {lay.brand}
+              <span className="zone-vip">
+                <Gem size={11} aria-hidden="true" /> VIP
+              </span>
+            </b>
+            <small>
+              Contributor lay · {lay.sport.toUpperCase()} ·{" "}
+              <time dateTime={lay.created_at}>{ago(lay.created_at)}</time>
+            </small>
+          </span>
+        </Link>
+      </header>
+      <h2 className="zone-post-title">
+        {lay.title}
+        <span className="zone-leg-count">
+          {lay.legs.length === 1 ? "Single" : `${lay.legs.length}-leg`}
+        </span>
+      </h2>
+      <ol className="zone-legs">
+        {lay.legs.slice(0, 5).map((leg, i) => (
+          <li key={i}>
+            <span>{String(i + 1).padStart(2, "0")}</span>
+            {leg}
+          </li>
+        ))}
+        {lay.legs.length > 5 ? (
+          <li className="zone-legs-more">+{lay.legs.length - 5} more legs</li>
+        ) : null}
+      </ol>
+      {lay.note ? (
+        <p className="zone-post-body zone-lay-note">{lay.note}</p>
+      ) : null}
+      <div className="zone-lay-foot">
+        {odds !== null ? (
+          <span className="zone-odds">
+            <b>{odds > 0 ? `+${odds}` : odds}</b>
+            <small>
+              {lay.sportsbook ? `${lay.sportsbook} · ` : ""}reported, unverified
+            </small>
+          </span>
+        ) : (
+          <span className="zone-odds">
+            <small>Contributor opinion · no guaranteed return</small>
+          </span>
+        )}
+        <span className="zone-lay-actions">
+          <button
+            type="button"
+            className="zone-copy"
+            aria-label={copied ? "Copied" : "Copy legs"}
+            onClick={() => void copy()}
+          >
+            {copied ? (
+              <Check size={17} aria-hidden="true" />
+            ) : (
+              <Copy size={17} aria-hidden="true" />
+            )}
+          </button>
+          <Link className="zone-open" href={href}>
+            Full card <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
+        </span>
+      </div>
+    </article>
   );
 }
 export default function CommunityFeed() {
@@ -236,6 +447,16 @@ export default function CommunityFeed() {
     [authReady, setAuthReady] = useState(false),
     [sport, setSport] = useState<"nfl" | "nba">("nfl"),
     [followingOnly, setFollowingOnly] = useState(false),
+    [vipOnly, setVipOnly] = useState(
+      searchParams.get("view") === "vip" || searchParams.has("ruby"),
+    ),
+    [lays, setLays] = useState<RubySlip[]>([]),
+    [avatars, setAvatars] = useState<Record<string, Person>>({}),
+    [me, setMe] = useState<{ username: string; avatar: string | null }>({
+      username: "",
+      avatar: null,
+    }),
+    [burst, setBurst] = useState<string | null>(null),
     [limit, setLimit] = useState(20),
     [rows, setRows] = useState<Post[]>([]),
     [blocked, setBlocked] = useState<
@@ -272,6 +493,13 @@ export default function CommunityFeed() {
       routePost && /^[0-9a-f-]{36}$/i.test(routePost) ? routePost : null,
     );
   }, [routeSport, routePost]);
+  // Links can change the view while this page stays mounted: a story opens a post, a lay opens VIP lays.
+  useEffect(() => {
+    if (searchParams.get("view") === "vip" || searchParams.has("ruby")) {
+      setVipOnly(true);
+      setFollowingOnly(false);
+    } else if (searchParams.has("post")) setVipOnly(false);
+  }, [searchParams]);
   useEffect(() => {
     if (uid && routePost && targetComment) setOpenComments(routePost);
   }, [uid, routePost, targetComment]);
@@ -346,6 +574,44 @@ export default function CommunityFeed() {
     if (target.data && !posts.some((p) => p.id === target.data.id))
       posts.unshift(target.data);
     setRows(posts);
+    // VIP lays share the one feed; "Following" stays member posts only.
+    const rubyId = searchParams.get("ruby");
+    const [cards, one, faces, mine] = await Promise.all([
+      followingOnly
+        ? Promise.resolve({ data: [] as RubySlip[], error: null })
+        : supabase
+            .from("ruby_cards")
+            .select("*")
+            .order("created_at", { ascending: false })
+            .limit(limit),
+      rubyId && /^[0-9a-f-]{36}$/i.test(rubyId)
+        ? supabase.from("ruby_cards").select("*").eq("id", rubyId).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
+      supabase.rpc("community_avatars", {
+        p_users: [...new Set(posts.map((p) => p.user_id))].slice(0, 100),
+      }),
+      supabase
+        .from("community_profiles")
+        .select("username,avatar")
+        .eq("user_id", uid)
+        .maybeSingle(),
+    ]);
+    if (n !== epoch.current) return;
+    const laid: RubySlip[] = cards.data || [];
+    if (one.data && !laid.some((x) => x.id === one.data.id))
+      laid.unshift(one.data);
+    setLays(laid);
+    if (!faces.error)
+      setAvatars((known) => ({
+        ...known,
+        ...Object.fromEntries(
+          ((faces.data || []) as (Person & { user_id: string })[]).map((f) => [
+            f.user_id,
+            { avatar: f.avatar, staff: f.staff },
+          ]),
+        ),
+      }));
+    if (mine.data) setMe(mine.data);
     const blocks = await supabase
       .from("member_blocks")
       .select("target_user_id,label")
@@ -359,7 +625,7 @@ export default function CommunityFeed() {
         .limit(50);
       if (n === epoch.current) setReports(flags.data || []);
     }
-  }, [uid, sport, limit, followingOnly, targetPost]);
+  }, [uid, sport, limit, followingOnly, targetPost, searchParams]);
   useEffect(() => {
     if (
       !targetPost ||
@@ -447,9 +713,21 @@ export default function CommunityFeed() {
       if (generation === mutationEpoch.current) setBusy(false);
     }
   }
-  async function react(p: Post) {
-    if (!uid || busy) return;
+  async function react(p: Post, onlyLike = false) {
+    if (!uid || busy || (onlyLike && p.reacted)) return;
     setBusy(true);
+    // Instant like, Instagram-style; the server read below settles the count.
+    setRows((all) =>
+      all.map((x) =>
+        x.id === p.id
+          ? {
+              ...x,
+              reacted: !p.reacted,
+              reactions: x.reactions + (p.reacted ? -1 : 1),
+            }
+          : x,
+      ),
+    );
     const r = p.reacted
       ? await supabase
           .from("community_reactions")
@@ -595,27 +873,17 @@ export default function CommunityFeed() {
     );
     if (!r.error) form.reset();
   }
-  const vip = searchParams.get("view") === "vip" || searchParams.has("ruby");
-  if (vip)
-    return (
-      <Shell active="community" sport={sport}>
-        <div className="community-feed">
-          <header className="community-feed-heading">
-            <h1>The Zone</h1>
-          </header>
-          <ZoneNav active="VIP Lays" />
-          <RubyHub zone selectedId={searchParams.get("ruby") || ""} />
-        </div>
-      </Shell>
-    );
+  const feed = zoneFeed(rows, lays, vipOnly);
+  const face = (name: string, avatar: string | null | undefined) => (
+    <Avatar name={name} avatar={avatar} />
+  );
   return (
     <Shell active="community" sport={sport}>
-      <div className="community-feed">
-        <header className="community-feed-heading">
+      <div className="community-feed zone-feed">
+        <header className="zone-head">
           <h1>The Zone</h1>
+          <p>Takes, lays and research from the Vegas Quant floor.</p>
         </header>
-        {/* Keeps the research board, Pick of the Day, wins and injury watch one tap away. */}
-        <ZoneNav active="Latest" />
         {blocked.length ? (
           <details>
             <summary>Blocked members · {blocked.length}</summary>
@@ -634,13 +902,14 @@ export default function CommunityFeed() {
           </details>
         ) : null}
         {!authReady ? (
-          <p>Checking your session…</p>
+          <p className="zone-status">Checking your session…</p>
         ) : !uid ? (
-          <section className="community-composer">
+          <section className="zone-join">
+            <Gem size={22} aria-hidden="true" />
             <h2>Join the conversation</h2>
             <p>
-              A free account lets you read member posts. Complete your visible
-              profile to publish and comment.
+              A free account lets you read member posts and VIP lays. Complete
+              your visible profile to publish and comment.
             </p>
             <Link className="primary" href="/membership">
               Sign in or create an account
@@ -648,22 +917,41 @@ export default function CommunityFeed() {
           </section>
         ) : (
           <>
-            <form className="community-composer" onSubmit={post}>
+            <form className="zone-composer" onSubmit={post}>
               <fieldset disabled={busy}>
-                <label className="sr-only" htmlFor="community-message">
-                  Your post
-                </label>
-                <textarea
-                  id="community-message"
-                  maxLength={2000}
-                  value={body}
-                  onChange={(e) => setBody(e.target.value)}
-                  placeholder="What's on your mind?"
-                  rows={3}
-                />
-                <div className="composer-toolbar">
-                  <label className="attach-photo" title="Attach a photo">
-                    <ImagePlus size={22} aria-hidden="true" />{" "}
+                <div className="zone-composer-row">
+                  {face(me.username || "You", me.avatar)}
+                  <label className="sr-only" htmlFor="community-message">
+                    Your post
+                  </label>
+                  <textarea
+                    id="community-message"
+                    maxLength={2000}
+                    value={body}
+                    onChange={(e) => setBody(e.target.value)}
+                    placeholder="Share a take, a lay or a photo…"
+                    rows={body ? 3 : 1}
+                  />
+                </div>
+                {preview ? (
+                  <div className="zone-composer-preview">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={preview} alt="Photo preview before publishing" />
+                    <button
+                      className="zone-chip"
+                      type="button"
+                      onClick={() => {
+                        setPhoto(null);
+                        if (photoInput.current) photoInput.current.value = "";
+                      }}
+                    >
+                      Remove photo
+                    </button>
+                  </div>
+                ) : null}
+                <div className="zone-composer-bar">
+                  <label className="zone-icon-button" title="Attach a photo">
+                    <ImagePlus size={20} aria-hidden="true" />
                     <span>Photo</span>
                     <input
                       ref={photoInput}
@@ -691,75 +979,95 @@ export default function CommunityFeed() {
                       }}
                     />
                   </label>
+                  <Link className="zone-profile-link" href="/membership">
+                    Profile
+                  </Link>
                   <button
-                    className="primary"
+                    className="zone-post-button"
                     disabled={busy || (!body.trim() && !photo)}
                   >
                     {busy ? "Posting…" : "Post"}
                   </button>
                 </div>
                 {notice && (
-                  <p role="status" className="notice">
+                  <p role="status" className="zone-notice">
                     {notice}
                   </p>
                 )}
-                {preview ? (
-                  <div className="community-photo-preview">
-                    <img src={preview} alt="Photo preview before publishing" />
-                    <button
-                      className="secondary"
-                      type="button"
-                      onClick={() => {
-                        setPhoto(null);
-                        if (photoInput.current) photoInput.current.value = "";
-                      }}
-                    >
-                      Remove photo
-                    </button>
-                  </div>
-                ) : null}
               </fieldset>
-              <Link href="/membership">Your profile →</Link>
             </form>
-            <div className="social-actions">
+            {vipOnly ? null : <RubyHub composerOnly />}
+            <div className="zone-tabs" role="tablist" aria-label="Feed">
+              {(
+                [
+                  [
+                    "For you",
+                    !followingOnly && !vipOnly,
+                    () => {
+                      setFollowingOnly(false);
+                      setVipOnly(false);
+                    },
+                  ],
+                  [
+                    "Following",
+                    followingOnly,
+                    () => {
+                      setFollowingOnly(true);
+                      setVipOnly(false);
+                    },
+                  ],
+                  [
+                    "VIP lays",
+                    vipOnly,
+                    () => {
+                      setFollowingOnly(false);
+                      setVipOnly(true);
+                    },
+                  ],
+                ] as const
+              ).map(([label, on, pick]) => (
+                <button
+                  key={label}
+                  role="tab"
+                  aria-selected={on}
+                  className={on ? "is-active" : ""}
+                  onClick={() => {
+                    pick();
+                    setLimit(20);
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
               <button
-                className={followingOnly ? "secondary" : "primary"}
-                aria-pressed={!followingOnly}
-                onClick={() => {
-                  setFollowingOnly(false);
-                  setLimit(20);
-                }}
-              >
-                Everyone
-              </button>
-              <button
-                className={followingOnly ? "primary" : "secondary"}
-                aria-pressed={followingOnly}
-                onClick={() => {
-                  setFollowingOnly(true);
-                  setLimit(20);
-                }}
-              >
-                Following
-              </button>
-              <button
-                className="secondary"
+                className="zone-refresh"
+                aria-label="Refresh"
                 disabled={loading}
                 onClick={() => void refresh()}
               >
-                Refresh
+                <RefreshCw
+                  size={17}
+                  className={loading ? "is-spinning" : ""}
+                  aria-hidden="true"
+                />
               </button>
             </div>
             {targetMissing ? (
-              <p role="status">This post is no longer available.</p>
+              <p role="status" className="zone-status">
+                This post is no longer available.
+              </p>
             ) : null}
-            {loading ? <p>Refreshing Community…</p> : null}
-            {!loading && rows.length === 0 ? (
-              <section className="community-composer">
+            {vipOnly ? (
+              <RubyHub zone selectedId={searchParams.get("ruby") || ""} />
+            ) : null}
+            {!vipOnly && !loading && feed.length === 0 ? (
+              <section className="zone-join">
                 <h2>
                   {followingOnly
                     ? "Follow someone to build your feed."
-                    : "Be the first to start the conversation."}
+                    : vipOnly
+                      ? "No VIP lays yet today."
+                      : "Be the first to start the conversation."}
                 </h2>
                 <p>
                   Which player benefits most from the latest injury news? Bring
@@ -767,178 +1075,295 @@ export default function CommunityFeed() {
                 </p>
               </section>
             ) : null}
-            {rows.map((p) => (
-              <article
-                className={`social-post ${p.id === targetPost ? "linked-post" : ""}`}
-                id={`post-${p.id}`}
-                key={p.id}
-              >
-                <header>
-                  <Link
-                    href={`/community/${encodeURIComponent(p.author_name)}`}
-                  >
-                    @{p.author_name}
-                  </Link>
-                  <small>{time(p.created_at)}</small>
-                  {p.user_id !== uid ? (
-                    <button
-                      className="secondary"
-                      disabled={busy}
-                      aria-pressed={p.following}
-                      onClick={() => void follow(p)}
+            {(vipOnly ? [] : feed).map((item) =>
+              item.kind === "lay" ? (
+                <ZoneLay key={`lay-${item.id}`} lay={item.lay} />
+              ) : (
+                (() => {
+                  const p = item.post;
+                  return (
+                    <article
+                      className={`zone-post ${p.id === targetPost ? "linked-post" : ""}`}
+                      id={`post-${p.id}`}
+                      key={p.id}
                     >
-                      {p.following ? "Following" : "Follow"}
-                    </button>
-                  ) : null}
-                </header>
-                <span className="member-label">
-                  MEMBER POST · {kinds[p.kind]}
-                  {p.sport === "nba" ? " · NBA" : ""}
-                  {p.kind === "result" ? " · UNVERIFIED RESULT" : ""}
-                </span>
-                {p.title !== "Community post" ? <h2>{p.title}</h2> : null}
-                {threesCardDay(p.card) ? (
-                  <figure className="zone-card">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`/api/nba/threes-card/${threesCardDay(p.card)}`}
-                      alt={p.body}
-                      width={1080}
-                      height={1350}
-                      loading="lazy"
-                    />
-                    <figcaption>
-                      <a
-                        href={`/api/nba/threes-card/${threesCardDay(p.card)}`}
-                        download={`vegas-quant-3-point-volume-${threesCardDay(p.card)}.png`}
-                      >
-                        Download card
-                      </a>
-                    </figcaption>
-                  </figure>
-                ) : (
-                  <p>{p.body}</p>
-                )}
-                {p.photo_path ? (
-                  <CommunityPhoto
-                    key={`${uid}:${p.id}`}
-                    path={p.photo_path}
-                    title={p.title}
-                  />
-                ) : null}
-                {p.kind === "slip" && p.legs.length ? (
-                  <CommunityParlayCard
-                    title={p.title}
-                    legs={p.legs}
-                    author={p.author_name}
-                    publishedAt={p.created_at}
-                  />
-                ) : p.legs.length ? (
-                  <ol>
-                    {p.legs.map((leg, i) => (
-                      <li key={i}>{leg}</li>
-                    ))}
-                  </ol>
-                ) : null}
-                {p.stake !== null ? (
-                  <small>
-                    Member-shared stake: ${Number(p.stake).toFixed(2)}
-                  </small>
-                ) : null}
-                <div className="social-actions">
-                  <button
-                    className="secondary"
-                    disabled={busy}
-                    aria-pressed={p.reacted}
-                    onClick={() => void react(p)}
-                  >
-                    <Heart
-                      size={19}
-                      fill={p.reacted ? "currentColor" : "none"}
-                      aria-hidden="true"
-                    />{" "}
-                    Like · {p.reactions}
-                  </button>
-                  <button
-                    className="secondary"
-                    aria-expanded={openComments === p.id}
-                    onClick={() =>
-                      setOpenComments(openComments === p.id ? null : p.id)
-                    }
-                  >
-                    <MessageCircle size={19} aria-hidden="true" /> Comment ·{" "}
-                    {p.comments}
-                  </button>
-                </div>
-                <button
-                  type="button"
-                  className="secondary"
-                  disabled={busy}
-                  onClick={() => void sharePost(p)}
-                >
-                  <Share2 size={17} aria-hidden="true" /> Share
-                </button>
-                <details className="post-options">
-                  <summary aria-label="Post options">•••</summary>
-                  {uid !== p.user_id ? (
-                    <button
-                      className="secondary"
-                      disabled={busy}
-                      onClick={() => void block(p.user_id, p.author_name)}
-                    >
-                      Block member
-                    </button>
-                  ) : null}
-                  {admin && uid !== p.user_id ? (
-                    <>
-                      <button
-                        className="secondary"
-                        disabled={busy}
-                        onClick={() => void restrict(p.user_id, true)}
-                      >
-                        Restrict posting
-                      </button>
-                      <button
-                        className="secondary"
-                        disabled={busy}
-                        onClick={() => void restrict(p.user_id, false)}
-                      >
-                        Restore posting
-                      </button>
-                    </>
-                  ) : null}
-                  {uid === p.user_id || admin ? (
-                    <button
-                      className="text-link"
-                      onClick={() => void remove(p.id)}
-                    >
-                      {admin && uid !== p.user_id
-                        ? "Moderate · Remove post"
-                        : "Remove my post"}
-                    </button>
-                  ) : null}
-                  <form onSubmit={(e) => void report(e, p.id)}>
-                    <label>
-                      Reason
-                      <textarea name="reason" required maxLength={500} />
-                    </label>
-                    <button className="secondary">Submit report</button>
-                  </form>
-                </details>
-                {openComments === p.id ? (
-                  <Comments
-                    targetComment={targetComment}
-                    key={`${uid}:${p.id}`}
-                    onBlock={block}
-                    postId={p.id}
-                    uid={uid}
-                    admin={admin}
-                    onChange={() => void refresh()}
-                  />
-                ) : null}
-              </article>
-            ))}
-            {rows.length >= limit && limit < 100 ? (
+                      <header className="zone-post-head">
+                        <Link
+                          className="zone-author"
+                          href={`/community/${encodeURIComponent(p.author_name)}`}
+                        >
+                          {face(p.author_name, avatars[p.user_id]?.avatar)}
+                          <span>
+                            <b>
+                              {p.author_name}
+                              {avatars[p.user_id]?.staff ? (
+                                <BadgeCheck
+                                  className="zone-verified"
+                                  size={17}
+                                  aria-label="Vegas Quant"
+                                />
+                              ) : null}
+                            </b>
+                            <small>
+                              @{p.author_name} ·{" "}
+                              <time
+                                dateTime={p.created_at}
+                                title={time(p.created_at)}
+                              >
+                                {ago(p.created_at)}
+                              </time>
+                            </small>
+                          </span>
+                        </Link>
+                        {p.user_id !== uid ? (
+                          <button
+                            className={`zone-follow ${p.following ? "is-on" : ""}`}
+                            disabled={busy}
+                            aria-pressed={p.following}
+                            onClick={() => void follow(p)}
+                          >
+                            {p.following ? "Following" : "Follow"}
+                          </button>
+                        ) : null}
+                      </header>
+                      {p.kind !== "talk" || p.sport === "nba" ? (
+                        <div className="zone-post-tags">
+                          {p.kind !== "talk" ? (
+                            <span>{kinds[p.kind]}</span>
+                          ) : null}
+                          {p.sport === "nba" ? <span>NBA</span> : null}
+                          {p.kind === "result" ? (
+                            <span className="is-warn">Unverified result</span>
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {p.title !== "Community post" ? (
+                        <h2 className="zone-post-title">{p.title}</h2>
+                      ) : null}
+                      {threesCardDay(p.card) ? (
+                        <figure
+                          className="zone-card zone-media"
+                          onDoubleClick={() => {
+                            setBurst(p.id);
+                            void react(p, true);
+                          }}
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`/api/nba/threes-card/${threesCardDay(p.card)}`}
+                            alt={p.body}
+                            width={1080}
+                            height={1350}
+                            loading="lazy"
+                          />
+                          {burst === p.id ? (
+                            <Heart
+                              className="zone-burst"
+                              size={96}
+                              fill="currentColor"
+                              aria-hidden="true"
+                              onAnimationEnd={() => setBurst(null)}
+                            />
+                          ) : null}
+                          <figcaption>
+                            <a
+                              href={`/api/nba/threes-card/${threesCardDay(p.card)}`}
+                              download={`vegas-quant-3-point-volume-${threesCardDay(p.card)}.png`}
+                            >
+                              Download card
+                            </a>
+                          </figcaption>
+                        </figure>
+                      ) : (
+                        <p className="zone-post-body">
+                          <RichText text={p.body} />
+                        </p>
+                      )}
+                      {p.photo_path ? (
+                        <div
+                          className="zone-media"
+                          onDoubleClick={() => {
+                            setBurst(p.id);
+                            void react(p, true);
+                          }}
+                        >
+                          <CommunityPhoto
+                            key={`${uid}:${p.id}`}
+                            path={p.photo_path}
+                            title={p.title}
+                          />
+                          {burst === p.id ? (
+                            <Heart
+                              className="zone-burst"
+                              size={96}
+                              fill="currentColor"
+                              aria-hidden="true"
+                              onAnimationEnd={() => setBurst(null)}
+                            />
+                          ) : null}
+                        </div>
+                      ) : null}
+                      {p.kind === "slip" && p.legs.length ? (
+                        <CommunityParlayCard
+                          title={p.title}
+                          legs={p.legs}
+                          author={p.author_name}
+                          publishedAt={p.created_at}
+                        />
+                      ) : p.legs.length ? (
+                        <ol>
+                          {p.legs.map((leg, i) => (
+                            <li key={i}>{leg}</li>
+                          ))}
+                        </ol>
+                      ) : null}
+                      {p.stake !== null ? (
+                        <small className="zone-stake">
+                          Member-shared stake: ${Number(p.stake).toFixed(2)}
+                        </small>
+                      ) : null}
+                      <div className="zone-actions">
+                        <button
+                          className={p.reacted ? "is-liked" : ""}
+                          disabled={busy}
+                          aria-pressed={p.reacted}
+                          aria-label={p.reacted ? "Unlike" : "Like"}
+                          onClick={() => void react(p)}
+                        >
+                          <Heart
+                            size={21}
+                            fill={p.reacted ? "currentColor" : "none"}
+                            aria-hidden="true"
+                          />
+                          <span>{p.reactions || ""}</span>
+                        </button>
+                        <button
+                          aria-expanded={openComments === p.id}
+                          aria-label="Comments"
+                          onClick={() =>
+                            setOpenComments(openComments === p.id ? null : p.id)
+                          }
+                        >
+                          <MessageCircle size={21} aria-hidden="true" />
+                          <span>{p.comments || ""}</span>
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Share"
+                          disabled={busy}
+                          onClick={() => void sharePost(p)}
+                        >
+                          <Share2 size={20} aria-hidden="true" />
+                        </button>
+                        <details className="post-options zone-more">
+                          <summary aria-label="Post options">
+                            <MoreHorizontal size={20} aria-hidden="true" />
+                          </summary>
+                          {uid !== p.user_id ? (
+                            <button
+                              className="secondary"
+                              disabled={busy}
+                              onClick={() =>
+                                void block(p.user_id, p.author_name)
+                              }
+                            >
+                              Block member
+                            </button>
+                          ) : null}
+                          {admin && uid !== p.user_id ? (
+                            <>
+                              <button
+                                className="secondary"
+                                disabled={busy}
+                                onClick={() => void restrict(p.user_id, true)}
+                              >
+                                Restrict posting
+                              </button>
+                              <button
+                                className="secondary"
+                                disabled={busy}
+                                onClick={() => void restrict(p.user_id, false)}
+                              >
+                                Restore posting
+                              </button>
+                            </>
+                          ) : null}
+                          {uid === p.user_id || admin ? (
+                            <button
+                              className="text-link"
+                              onClick={() => void remove(p.id)}
+                            >
+                              {admin && uid !== p.user_id
+                                ? "Moderate · Remove post"
+                                : "Remove my post"}
+                            </button>
+                          ) : null}
+                          <form onSubmit={(e) => void report(e, p.id)}>
+                            <label>
+                              Reason
+                              <textarea
+                                name="reason"
+                                required
+                                maxLength={500}
+                              />
+                            </label>
+                            <button className="secondary">Submit report</button>
+                          </form>
+                        </details>
+                      </div>
+                      {openComments !== p.id ? (
+                        <div className="zone-comment-peek">
+                          {p.comments > 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => setOpenComments(p.id)}
+                            >
+                              View{" "}
+                              {p.comments === 1
+                                ? "1 comment"
+                                : `all ${p.comments} comments`}
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="zone-comment-start"
+                            onClick={() => {
+                              setOpenComments(p.id);
+                              requestAnimationFrame(() =>
+                                document
+                                  .getElementById(`reply-${p.id}`)
+                                  ?.focus(),
+                              );
+                            }}
+                          >
+                            <Avatar
+                              name={me.username || "You"}
+                              avatar={me.avatar}
+                              size={28}
+                            />
+                            <span>Add a comment…</span>
+                          </button>
+                        </div>
+                      ) : null}
+                      {openComments === p.id ? (
+                        <Comments
+                          targetComment={targetComment}
+                          key={`${uid}:${p.id}`}
+                          onBlock={block}
+                          postId={p.id}
+                          uid={uid}
+                          admin={admin}
+                          onChange={() => void refresh()}
+                        />
+                      ) : null}
+                    </article>
+                  );
+                })()
+              ),
+            )}
+            {!vipOnly &&
+            (rows.length >= limit || lays.length >= limit) &&
+            limit < 100 ? (
               <button
                 className="secondary"
                 onClick={() => setLimit((n) => n + 20)}

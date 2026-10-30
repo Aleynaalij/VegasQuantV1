@@ -8,7 +8,8 @@ const { chromium } = await import(
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const pages = [
   { path: "/", expect: ["Next kickoff", "21+"] },
-  { path: "/feed", expect: ["The Zone", "Latest", "VIP Lays", "Injuries"] },
+  { path: "/feed", expect: ["The Zone", "Join the conversation"] },
+  { path: "/feed?view=injury", expect: ["The Zone"] },
   { path: "/feed?view=parlays", expect: ["Sample Sunday sleeper parlay", "3-leg parlay"] },
   { path: "/feed?view=wins", expect: ["Five legs. One $218 win."] },
   { path: "/matchups", expect: ["Seahawks"] },
@@ -24,7 +25,7 @@ const pages = [
 const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
   { path: "/", expect: ["Next kickoff", "Kickoff", "Simulator", "Swipe left for Simulator"] },
-  { path: "/community", expect: ["Community", "SampleMember", "Sample post body."] },
+  { path: "/community", expect: ["The Zone", "For you", "VIP lays", "SampleMember", "Sample post body."] },
   { path: "/history", expect: ["Records are private."] },
 ];
 const admin = [

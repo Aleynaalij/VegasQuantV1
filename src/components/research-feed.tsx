@@ -25,7 +25,6 @@ import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
 import RubyHub from "./ruby-cards";
-import ZoneNav from "./zone-nav";
 import HowItWorks from "./how-it-works";
 import SectionBoundary from "./section-boundary";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
@@ -319,7 +318,6 @@ export default function ResearchFeed() {
     : filteredTimeline;
   return (
     <Shell active="feed">
-      <ZoneNav active={zoneView} />
       <div
         className={`vq-feed ${access.allowed && !access.admin ? "member-watermarked" : ""}`}
         style={

@@ -306,7 +306,7 @@ export function Shell({
               NBA
             </Link>
           )}
-          {active === "home" ? (
+          {active === "home" || active === "community" ? (
             <CommunityStories />
           ) : sport === "nba" ? (
             <span>{active === "feed" ? "Legs we like" : "NBA research"}</span>

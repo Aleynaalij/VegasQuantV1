@@ -16,7 +16,6 @@ import { Shell, Badge, Panel, Empty } from "./ui";
 import SourceObservations from "./source-observations";
 import GameNews from "./game-news";
 import GameThread from "./game-thread";
-import ZoneNav from "./zone-nav";
 import PickCard from "./pick-card";
 import TeamLogo from "./team-logo";
 import ResearchSections from "./research-sections";
@@ -409,7 +408,6 @@ export default function MatchupIntelligence({
       }
     >
       <Shell active="game">
-        <ZoneNav active="Games" />
         <div className="heading">
           <div>
             <span className="eyebrow">VEGAS QUANT INTELLIGENCE</span>

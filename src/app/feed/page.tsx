@@ -8,7 +8,9 @@ export default async function Page({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = await searchParams;
-  if (!Object.keys(query).length) redirect("/community");
+  // The Zone is one feed now; big injury news is posted to it, so the injury view is retired.
+  if (!Object.keys(query).length || query.view === "injury")
+    redirect("/community");
   if (query.view === "contributors") {
     // Shared and older card links keep their target card.
     const ruby = typeof query.ruby === "string" ? query.ruby : "";
