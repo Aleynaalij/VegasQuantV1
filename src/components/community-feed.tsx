@@ -382,21 +382,34 @@ function ZoneLay({ lay }: { lay: RubySlip }) {
       </header>
       <h2 className="zone-post-title">
         {lay.title}
-        <span className="zone-leg-count">
-          {lay.legs.length === 1 ? "Single" : `${lay.legs.length}-leg`}
-        </span>
-      </h2>
-      <ol className="zone-legs">
-        {lay.legs.slice(0, 5).map((leg, i) => (
-          <li key={i}>
-            <span>{String(i + 1).padStart(2, "0")}</span>
-            {leg}
-          </li>
-        ))}
-        {lay.legs.length > 5 ? (
-          <li className="zone-legs-more">+{lay.legs.length - 5} more legs</li>
+        {lay.legs.length ? (
+          <span className="zone-leg-count">
+            {lay.legs.length === 1 ? "Single" : `${lay.legs.length}-leg`}
+          </span>
         ) : null}
-      </ol>
+      </h2>
+      {/* Screenshot-only lays have no typed legs: show the slip itself. */}
+      {!lay.legs.length && lay.photo_path ? (
+        <div className="zone-media">
+          <CommunityPhoto
+            path={lay.photo_path}
+            title={`${lay.brand} original slip`}
+          />
+        </div>
+      ) : null}
+      {lay.legs.length ? (
+        <ol className="zone-legs">
+          {lay.legs.slice(0, 5).map((leg, i) => (
+            <li key={i}>
+              <span>{String(i + 1).padStart(2, "0")}</span>
+              {leg}
+            </li>
+          ))}
+          {lay.legs.length > 5 ? (
+            <li className="zone-legs-more">+{lay.legs.length - 5} more legs</li>
+          ) : null}
+        </ol>
+      ) : null}
       {lay.note ? (
         <p className="zone-post-body zone-lay-note">{lay.note}</p>
       ) : null}
@@ -414,18 +427,20 @@ function ZoneLay({ lay }: { lay: RubySlip }) {
           </span>
         )}
         <span className="zone-lay-actions">
-          <button
-            type="button"
-            className="zone-copy"
-            aria-label={copied ? "Copied" : "Copy legs"}
-            onClick={() => void copy()}
-          >
-            {copied ? (
-              <Check size={17} aria-hidden="true" />
-            ) : (
-              <Copy size={17} aria-hidden="true" />
-            )}
-          </button>
+          {lay.legs.length ? (
+            <button
+              type="button"
+              className="zone-copy"
+              aria-label={copied ? "Copied" : "Copy legs"}
+              onClick={() => void copy()}
+            >
+              {copied ? (
+                <Check size={17} aria-hidden="true" />
+              ) : (
+                <Copy size={17} aria-hidden="true" />
+              )}
+            </button>
+          ) : null}
           <Link className="zone-open" href={href}>
             Full card <ArrowUpRight size={16} aria-hidden="true" />
           </Link>
@@ -518,6 +533,11 @@ export default function CommunityFeed() {
       setBusy(false);
       setUid(id);
       setRows([]);
+      // Nothing from the previous account survives a switch: its lays (an admin also sees hidden
+      // ones), author photos and profile.
+      setLays([]);
+      setAvatars({});
+      setMe({ username: "", avatar: null });
       setOpenComments(null);
       setAdmin(false);
       setReports([]);
@@ -716,6 +736,7 @@ export default function CommunityFeed() {
   async function react(p: Post, onlyLike = false) {
     if (!uid || busy || (onlyLike && p.reacted)) return;
     setBusy(true);
+    const generation = mutationEpoch.current;
     // Instant like, Instagram-style; the server read below settles the count.
     setRows((all) =>
       all.map((x) =>
@@ -737,9 +758,23 @@ export default function CommunityFeed() {
       : await supabase
           .from("community_reactions")
           .insert({ post_id: p.id, user_id: uid });
+    if (generation !== mutationEpoch.current) return;
     setBusy(false);
-    if (r.error) setNotice("Reaction could not save.");
-    else await refresh();
+    if (r.error) {
+      // Undo the instant like so the heart and count match what was saved.
+      setRows((all) =>
+        all.map((x) =>
+          x.id === p.id
+            ? {
+                ...x,
+                reacted: p.reacted,
+                reactions: x.reactions + (p.reacted ? 1 : -1),
+              }
+            : x,
+        ),
+      );
+      setNotice("Reaction could not save.");
+    } else await refresh();
   }
   async function sharePost(p: Post) {
     if (busy || !uid) return;
