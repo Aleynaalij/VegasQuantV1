@@ -761,15 +761,14 @@ export default function CommunityFeed() {
     if (generation !== mutationEpoch.current) return;
     setBusy(false);
     if (r.error) {
-      // Undo the instant like so the heart and count match what was saved.
+      // Undo the instant like so the heart and count match what was saved. A refresh that landed
+      // meanwhile already shows the server's state, so only a still-optimistic row is restored.
       setRows((all) =>
         all.map((x) =>
-          x.id === p.id
-            ? {
-                ...x,
-                reacted: p.reacted,
-                reactions: x.reactions + (p.reacted ? 1 : -1),
-              }
+          x.id === p.id &&
+          x.reacted === !p.reacted &&
+          x.reactions === p.reactions + (p.reacted ? -1 : 1)
+            ? { ...x, reacted: p.reacted, reactions: p.reactions }
             : x,
         ),
       );
