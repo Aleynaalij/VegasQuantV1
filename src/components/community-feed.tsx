@@ -996,7 +996,7 @@ export default function CommunityFeed() {
                 )}
               </fieldset>
             </form>
-            {vipOnly ? null : <RubyHub composerOnly />}
+            {/* Contributors submit lays from Home or the VIP lays view, not above the feed. */}
             <div className="zone-tabs" role="tablist" aria-label="Feed">
               {(
                 [
