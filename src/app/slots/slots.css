@@ -248,3 +248,33 @@
     transform: none;
   }
 }
+/* Pick the sport before the pull (#166); the machine keeps its look. */
+.vq-slot-sports {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.vq-slot-sports button {
+  min-width: 72px;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 2px solid #b18a3688;
+  border-radius: 999px;
+  background: #0f1d1b;
+  color: #d9c58f;
+  font-family: var(--font-board);
+  font-size: 0.95rem;
+  letter-spacing: 0.08em;
+}
+.vq-slot-sports button.is-active {
+  border-color: #f4d688;
+  background: linear-gradient(135deg, #f6df9a, #c7a44c);
+  color: #181b17;
+  box-shadow: 0 0 14px #f4d68855;
+}
+.vq-slot-sports button:focus-visible {
+  outline: 2px solid #f4dc99;
+  outline-offset: 3px;
+}

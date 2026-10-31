@@ -9,6 +9,7 @@ import PlayerPortrait from "./player-portrait";
 import LegActions from "./leg-actions";
 import GamblyLink from "./gambly-link";
 import { useLegForms } from "./leg-form";
+import MoneylineFace, { tone } from "./sport/moneyline-face";
 import {
   americanPrice,
   moneylineRead,
@@ -483,7 +484,6 @@ const shortDate = (kickoff: string) =>
     month: "numeric",
     day: "numeric",
   });
-const tone = (pct: number) => (pct >= 70 ? "good" : pct >= 50 ? "mid" : "low");
 
 /** Half-ring gauge of a player's recent clear rate for this exact line. */
 function FormGauge({ cleared, sample }: { cleared?: number; sample?: number }) {
@@ -513,44 +513,6 @@ function FormGauge({ cleared, sample }: { cleared?: number; sample?: number }) {
       </svg>
       <b>{pct}%</b>
       <small>L{sample}</small>
-    </span>
-  );
-}
-
-/** Card-face moneyline: both prices and the market favorite's no-vig win chance. */
-function MoneylineFace({
-  read,
-  home,
-  away,
-}: {
-  read: MoneylineRead;
-  home: string;
-  away: string;
-}) {
-  const favorite =
-    read.home.probability >= read.away.probability ? "home" : "away";
-  const team = (favorite === "home" ? home : away).split(" ").at(-1);
-  const pct = Math.round(read[favorite].probability * 100);
-  return (
-    <span className="vq-ml-face">
-      <span className="vq-ml-chip">ML</span>
-      <span className="vq-ml-prices">
-        <span>
-          {away.split(" ").at(-1)} {americanPrice(read.away.price)}
-        </span>
-        <span>
-          {home.split(" ").at(-1)} {americanPrice(read.home.price)}
-        </span>
-      </span>
-      <span
-        className={`vq-ml-lean is-${tone(pct)}`}
-        aria-label={`Market lean: ${team}, ${pct}% no-vig win chance at FanDuel`}
-      >
-        <small>Market lean</small>
-        <b>
-          {team} {pct}%
-        </b>
-      </span>
     </span>
   );
 }

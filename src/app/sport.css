@@ -1,0 +1,47 @@
+/* Shared multi-sport Home (#166): NBA, NHL and college basketball reuse NFL's card and rows. */
+.sport-home .home-brief { margin: 0 0 18px; }
+.vq-slate-empty { margin: 4px 2px 12px; color: #a7b0ad; font-size: .9rem; }
+.vq-slate-empty button { margin-left: 6px; }
+.sport-markets { display: grid; gap: 10px; padding-top: 12px; }
+.sport-markets-title { margin: 6px 2px 0; font: 700 .72rem/1.2 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: #e8ca7d; }
+.sport-empty { margin: 0 2px; color: #9aa59f; font-size: .85rem; }
+.sport-selections { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.sport-selections li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; padding: 12px; border: 1px solid #b69b4e33; border-radius: 12px; background: #141b21; }
+.sport-selections li > span:first-child { display: grid; gap: 2px; min-width: 0; }
+.sport-selections b { font-size: .95rem; }
+.sport-selections small { color: #b8b7aa; font-size: .78rem; }
+.sport-price { display: grid; justify-items: end; font: 800 1rem/1.1 var(--font-board); font-variant-numeric: tabular-nums; color: #f4dc99; }
+.sport-price small { font: 600 .65rem/1 var(--font-body); color: #9aa59f; }
+.sport-selections details { grid-column: 1 / -1; color: #b6bfb9; font-size: .82rem; line-height: 1.5; }
+.sport-selections details summary { cursor: pointer; color: #e8ca7d; font-weight: 600; }
+.sport-selections details p { margin: 6px 0 0; }
+.sport-lines { display: flex; flex-wrap: wrap; gap: 8px; }
+.sport-lines span { display: grid; gap: 2px; min-width: 120px; flex: 1 1 120px; padding: 10px 12px; border: 1px solid #b69b4e33; border-radius: 12px; background: #141b21; font-size: .85rem; }
+.sport-lines small { color: #9aa59f; font-size: .65rem; letter-spacing: .1em; text-transform: uppercase; }
+.sport-lines b { font-variant-numeric: tabular-nums; color: #f4dc99; }
+.sport-props summary { cursor: pointer; padding: 10px 2px; color: #e8ca7d; font-weight: 600; font-size: .85rem; }
+.sport-props ul { list-style: none; margin: 0; padding: 0; }
+.sport-props li { display: grid; grid-template-columns: minmax(0, 1fr) 44px 58px 58px; gap: 6px; align-items: center; padding: 8px 2px; border-bottom: 1px solid #b69b4e22; font-size: .82rem; font-variant-numeric: tabular-nums; }
+.sport-props li span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sport-props li small { color: #9aa59f; }
+.sport-open { justify-self: start; min-height: 40px; }
+.sport-research-link { display: block; margin: 14px 2px 0; padding: 14px 16px; border: 1px solid #b69b4e44; border-radius: 16px; background: #11161c; color: #e8ca7d; font-weight: 700; font-size: .9rem; text-decoration: none; }
+.sport-market-group { display: grid; gap: 6px; }
+.sport-market-rows { list-style: none; margin: 0; padding: 0; }
+.sport-market-rows li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid #b69b4e22; font-size: .86rem; }
+.sport-market-rows li span { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.sport-odds { font-variant-numeric: tabular-nums; color: #f4dc99; }
+.sport-settle { margin: 0 2px; color: #8f9a94; font-size: .72rem; }
+.sport-home > .sport-open, .vq-game-props > .sport-open { margin-top: 10px; }
+.sport-game { display: grid; gap: 14px; }
+.sport-back { color: #e8ca7d; font-weight: 600; font-size: .85rem; text-decoration: none; }
+.sport-game-head h1 { margin: 6px 0; }
+.sport-score { font: 800 2rem/1 var(--font-board); font-variant-numeric: tabular-nums; color: #fff; }
+.sport-status { color: #e8ca7d; font-size: .8rem; text-transform: capitalize; }
+.sport-injuries ul { list-style: none; margin: 6px 0 0; padding: 0; }
+.sport-injuries li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 2px; border-bottom: 1px solid #b69b4e22; font-size: .86rem; }
+.sport-injuries small { color: #9aa59f; }
+.sport-record { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin: 0; }
+.sport-record div { padding: 14px; border: 1px solid #b69b4e33; border-radius: 14px; background: #11161c; }
+.sport-record dt { color: #9aa59f; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+.sport-record dd { margin: 4px 0 0; font: 800 1.8rem/1 var(--font-board); color: #f4dc99; }

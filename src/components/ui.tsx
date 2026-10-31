@@ -8,7 +8,7 @@ import SwipeTabs from "./swipe-tabs";
 import TabScrub from "./tab-scrub";
 import CommunityStories from "./community-stories";
 import AdminOnly from "./admin-only";
-import { NBA_PAUSED } from "@/lib/nba-paused";
+import { liveSports, SPORTS, type Sport } from "@/lib/sports";
 import {
   ArrowUpRight,
   BookOpen,
@@ -94,14 +94,16 @@ export function Shell({
 }: {
   children: ReactNode;
   active?: string;
-  sport?: "nfl" | "nba";
+  sport?: Sport;
 }) {
-  // While NBA is paused every page wears the NFL chrome.
-  const sport = NBA_PAUSED ? "nfl" : requested;
-  const home = sport === "nba" ? "/nba" : "/";
-  const community = sport === "nba" ? "/community?sport=nba" : "/community";
+  // A sport that isn't live yet wears the NFL chrome.
+  const sport = SPORTS[requested]?.live ? requested : "nfl";
+  const home = SPORTS[sport].home;
+  const community =
+    sport === "nfl" ? "/community" : `/community?sport=${sport}`;
   const feed = "/slots";
-  const records = sport === "nba" ? "/nba/records" : "/history";
+  const records =
+    sport === "nfl" ? "/history" : `${SPORTS[sport].home}/records`;
   const sportSection = [
     "game",
     "feed",
@@ -131,6 +133,17 @@ export function Shell({
       performance: "/nba/records",
     } as Record<string, string>
   )[sportSection];
+  // Each sport's chip keeps you in the same section where that sport has one.
+  const chipHref = (key: Sport) =>
+    key === "nfl"
+      ? nflHref
+      : key === "nba"
+        ? nbaHref
+        : sportSection === "community"
+          ? `/community?sport=${key}`
+          : ["history", "performance"].includes(sportSection)
+            ? `${SPORTS[key].home}/records`
+            : SPORTS[key].home;
   return (
     <div className={`shell screen-${active}`}>
       <SwipeTabs />
@@ -249,7 +262,10 @@ export function Shell({
             <b>
               {(
                 {
-                  home: sport === "nba" ? "NBA desk" : "Sports desk",
+                  home:
+                    sport === "nfl"
+                      ? "Sports desk"
+                      : `${SPORTS[sport].label} desk`,
                   game: "The Zone",
                   community: "The Zone",
                   slots: "VQ Slots",
@@ -281,31 +297,18 @@ export function Shell({
           aria-label="Sport selection"
           data-swipe-tabs
         >
-          <Link
-            href={nflHref}
-            aria-current={sport === "nfl" ? "page" : undefined}
-            className={sport === "nfl" ? "selected" : ""}
-          >
-            NFL
-          </Link>
-          {NBA_PAUSED ? (
-            // NBA picks are paused; the chip opens the research tab.
+          {liveSports().map((key) => (
             <Link
-              href="/nba-research"
-              aria-current={active === "nbaresearch" ? "page" : undefined}
-              className={`nba-research-chip${active === "nbaresearch" ? " selected" : ""}`}
+              key={key}
+              href={chipHref(key)}
+              aria-current={sport === key ? "page" : undefined}
+              aria-label={SPORTS[key].name}
+              className={sport === key ? "selected" : ""}
+              data-sport={key}
             >
-              NBA <span className="nba-soon-sticker">Research</span>
+              {SPORTS[key].label}
             </Link>
-          ) : (
-            <Link
-              href={nbaHref}
-              aria-current={sport === "nba" ? "page" : undefined}
-              className={sport === "nba" ? "selected" : ""}
-            >
-              NBA
-            </Link>
-          )}
+          ))}
           {active === "home" || active === "community" ? (
             <CommunityStories />
           ) : sport === "nba" ? (
@@ -319,9 +322,12 @@ export function Shell({
               <ShieldCheck size={14} aria-hidden="true" />
               <span>
                 <b>Process over outcome.</b>{" "}
-                {sport === "nba"
-                  ? "Research, not a sportsbook or a guarantee: NBA selections publish only after the data is verified, and a pass is a valid decision."
-                  : "Sports research and community, not a sportsbook. No wager or profit is guaranteed."}{" "}
+                {sport === "nfl"
+                  ? "Sports research and community, not a sportsbook. No wager or profit is guaranteed."
+                  : `Research, not a sportsbook or a guarantee: ${SPORTS[sport].label} selections publish only after the data is verified, and a pass is a valid decision.`}{" "}
+                {sport === "ncaab"
+                  ? "Some states restrict wagering on in-state college teams. "
+                  : ""}
                 21+.
               </span>
             </p>

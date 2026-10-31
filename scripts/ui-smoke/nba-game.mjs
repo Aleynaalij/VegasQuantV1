@@ -8,7 +8,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ["--no-sandbox", "--disable-dev-shm-usage"],
 });
-const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3105";
+const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 for (const width of [390, 1280]) {
   const ctx = await browser.newContext({ viewport: { width, height: 950 } }),
     p = await ctx.newPage();
@@ -127,9 +127,11 @@ for (const width of [390, 1280]) {
     return r.fulfill({ json: data });
   });
   await p.goto(base + "/nba");
-  await p.locator(".nba-skeleton").waitFor();
   releaseSchedule();
-  const ticket = p.locator(".nba-game-ticket a").first();
+  // NBA Home rows (#166) open to the game's markets and a link to its matchup page.
+  await p.locator(".vq-game-row").first().waitFor();
+  await p.locator(".vq-game-row").first().evaluate((d) => (d.open = true));
+  const ticket = p.locator(".vq-game-row .sport-open").first();
   await ticket.waitFor();
   assert.equal(await ticket.getAttribute("href"), "/nba/games/boston-detroit");
   await ticket.click();
@@ -195,5 +197,5 @@ for (const width of [390, 1280]) {
 }
 await browser.close();
 console.log(
-  "NBA game pages: ticket deep links, 6-book exact-line comparison/stale exclusion, lazy form, final grading, member isolation, missing/error states and no overflow pass at 390/1280.",
+  "NBA game pages: Home row deep links, 6-book exact-line comparison/stale exclusion, lazy form, final grading, member isolation, missing/error states and no overflow pass at 390/1280.",
 );

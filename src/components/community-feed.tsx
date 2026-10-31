@@ -1,5 +1,5 @@
 "use client";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -34,7 +34,7 @@ import {
   Share2,
 } from "lucide-react";
 import { ago, initials, richParts, zoneFeed } from "@/lib/zone-feed";
-import { NBA_PAUSED } from "@/lib/nba-paused";
+import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { threesCardDay } from "@/lib/nba-threes-card";
 type Post = {
   id: string;
@@ -451,6 +451,7 @@ function ZoneLay({ lay }: { lay: RubySlip }) {
 }
 export default function CommunityFeed() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const routeSport = searchParams.get("sport");
   const routePost = searchParams.get("post");
   const targetComment = /^[0-9a-f-]{36}$/i.test(
@@ -460,7 +461,9 @@ export default function CommunityFeed() {
     : null;
   const [uid, setUid] = useState<string | null>(null),
     [authReady, setAuthReady] = useState(false),
-    [sport, setSport] = useState<"nfl" | "nba">("nfl"),
+    // One Zone: "all" is the default; a sport chip filters the same feed.
+    [sport, setSport] = useState<"all" | Sport>("all"),
+    [postSport, setPostSport] = useState<Sport>("nfl"),
     [followingOnly, setFollowingOnly] = useState(false),
     [vipOnly, setVipOnly] = useState(
       searchParams.get("view") === "vip" || searchParams.has("ruby"),
@@ -503,7 +506,10 @@ export default function CommunityFeed() {
     return () => URL.revokeObjectURL(url);
   }, [photo]);
   useEffect(() => {
-    setSport(routeSport === "nba" && !NBA_PAUSED ? "nba" : "nfl");
+    const picked =
+      isSport(routeSport) && SPORTS[routeSport].live ? routeSport : "all";
+    setSport(picked);
+    if (picked !== "all") setPostSport(picked);
     setTargetPost(
       routePost && /^[0-9a-f-]{36}$/i.test(routePost) ? routePost : null,
     );
@@ -565,8 +571,7 @@ export default function CommunityFeed() {
     setLoading(true);
     const [r, a, target] = await Promise.all([
       supabase.rpc("community_feed", {
-        // While NBA is paused, NBA research posts show in the one Latest feed.
-        p_sport: NBA_PAUSED ? "all" : sport,
+        p_sport: sport,
         p_limit: limit,
         p_following: followingOnly,
       }),
@@ -599,9 +604,13 @@ export default function CommunityFeed() {
     const [cards, one, faces, mine] = await Promise.all([
       followingOnly
         ? Promise.resolve({ data: [] as RubySlip[], error: null })
-        : supabase
-            .from("ruby_cards")
-            .select("*")
+        : (sport === "all"
+            ? supabase.from("ruby_cards").select("*")
+            : supabase
+                .from("ruby_cards")
+                .select("*")
+                .eq("sport", SPORTS[sport].label)
+          )
             .order("created_at", { ascending: false })
             .limit(limit),
       rubyId && /^[0-9a-f-]{36}$/i.test(rubyId)
@@ -698,7 +707,7 @@ export default function CommunityFeed() {
       const r = await supabase.from("community_posts").insert({
         id: postId,
         user_id: uid,
-        sport,
+        sport: postSport,
         kind: "talk",
         title: "Community post",
         body: body.trim() || "Shared a photo",
@@ -912,7 +921,7 @@ export default function CommunityFeed() {
     <Avatar name={name} avatar={avatar} />
   );
   return (
-    <Shell active="community" sport={sport}>
+    <Shell active="community" sport={sport === "all" ? "nfl" : sport}>
       <div className="community-feed zone-feed">
         <header className="zone-head">
           <h1>The Zone</h1>
@@ -1013,6 +1022,24 @@ export default function CommunityFeed() {
                       }}
                     />
                   </label>
+                  {liveSports().length > 1 ? (
+                    <label className="zone-sport-pick">
+                      <span className="sr-only">Sport</span>
+                      <select
+                        value={postSport}
+                        onChange={(e) =>
+                          isSport(e.target.value) &&
+                          setPostSport(e.target.value)
+                        }
+                      >
+                        {liveSports().map((key) => (
+                          <option key={key} value={key}>
+                            {SPORTS[key].label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  ) : null}
                   <Link className="zone-profile-link" href="/membership">
                     Profile
                   </Link>
@@ -1086,6 +1113,32 @@ export default function CommunityFeed() {
                 />
               </button>
             </div>
+            {liveSports().length > 1 ? (
+              <div className="zone-sports" aria-label="Sport">
+                {(["all", ...liveSports()] as const).map((key) => (
+                  <button
+                    key={key}
+                    type="button"
+                    aria-pressed={sport === key}
+                    className={sport === key ? "is-active" : ""}
+                    onClick={() => {
+                      setSport(key);
+                      if (key !== "all") setPostSport(key);
+                      setLimit(20);
+                      const q = new URLSearchParams(searchParams.toString());
+                      if (key === "all") q.delete("sport");
+                      else q.set("sport", key);
+                      q.delete("post");
+                      router.replace(`/community${q.size ? `?${q}` : ""}`, {
+                        scroll: false,
+                      });
+                    }}
+                  >
+                    {key === "all" ? "All" : SPORTS[key].label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             {targetMissing ? (
               <p role="status" className="zone-status">
                 This post is no longer available.
@@ -1160,12 +1213,14 @@ export default function CommunityFeed() {
                           </button>
                         ) : null}
                       </header>
-                      {p.kind !== "talk" || p.sport === "nba" ? (
+                      {p.kind !== "talk" || p.sport !== "nfl" ? (
                         <div className="zone-post-tags">
                           {p.kind !== "talk" ? (
                             <span>{kinds[p.kind]}</span>
                           ) : null}
-                          {p.sport === "nba" ? <span>NBA</span> : null}
+                          {p.sport !== "nfl" && isSport(p.sport) ? (
+                            <span>{SPORTS[p.sport].label}</span>
+                          ) : null}
                           {p.kind === "result" ? (
                             <span className="is-warn">Unverified result</span>
                           ) : null}

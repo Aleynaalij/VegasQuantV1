@@ -912,3 +912,43 @@ html[data-theme] body .zone-feed .zone-composer textarea:focus::placeholder {
     box-shadow: 0 0 14px 1px rgba(232, 202, 125, 0.12);
   }
 }
+
+/* One Zone, every sport (#166): All plus a chip per live sport filter the same feed. */
+.zone-feed .zone-sports {
+  display: flex;
+  gap: 8px;
+  padding: 10px 2px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.zone-feed .zone-sports::-webkit-scrollbar {
+  display: none;
+}
+html[data-theme] body .zone-feed .zone-sports button[aria-pressed] {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid var(--zf-line) !important;
+  border-radius: 999px;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--zf-muted) !important;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+html[data-theme] body .zone-feed .zone-sports button[aria-pressed="true"] {
+  border-color: var(--zf-gold) !important;
+  background: color-mix(in srgb, var(--zf-gold) 14%, transparent) !important;
+  color: var(--zf-pale) !important;
+}
+.zone-feed .zone-sport-pick select {
+  min-height: 34px;
+  padding: 4px 8px;
+  border: 1px solid var(--zf-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--zf-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}

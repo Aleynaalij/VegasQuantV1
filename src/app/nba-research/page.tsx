@@ -1,14 +1,6 @@
-import NbaResearchTab from "@/components/nba-research-tab";
-import { Shell } from "@/components/ui";
+import { permanentRedirect } from "next/navigation";
 
-export const metadata = {
-  title: "NBA research | Vegas Quant",
-  description: "NBA season trends, injuries and lines. Research, not picks.",
-};
+// NBA is live again (owner, Oct 31 2026, #166): the research tab's old links open the NBA desk.
 export default function Page() {
-  return (
-    <Shell active="nbaresearch">
-      <NbaResearchTab />
-    </Shell>
-  );
+  permanentRedirect("/nba");
 }

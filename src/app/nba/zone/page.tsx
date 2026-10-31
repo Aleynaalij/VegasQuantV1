@@ -1,9 +1,6 @@
-import NbaEditorialFeed from "@/components/nba-editorial-feed";
-export const metadata = {
-  title: "The Zone · NBA | Vegas Quant",
-  description:
-    "Vegas Quant NBA selections, observed prices, sources and matchup research.",
-};
+import { permanentRedirect } from "next/navigation";
+
+// One Zone across every sport (#166): the NBA Zone is the shared feed filtered to NBA.
 export default function Page() {
-  return <NbaEditorialFeed />;
+  permanentRedirect("/community?sport=nba");
 }
