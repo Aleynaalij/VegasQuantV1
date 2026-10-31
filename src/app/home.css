@@ -755,3 +755,19 @@ html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd !
 .vq-prop-copy { display: flex; align-items: center; gap: 12px; padding: 10px 12px 0; }
 .vq-prop-copy button { min-height: 40px; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: .8rem; }
 .vq-prop-copy span { color: #8ce3bd; font-size: .78rem; }
+/* Home leads with the record once it has earned the spot (src/lib/track-record.ts). */
+.home-record { margin: 0 0 16px; padding: 16px; border: 1px solid #b69b4e55; border-radius: 20px; background: radial-gradient(ellipse at top left, #16291f, #0f1418 70%); }
+.home-record-preview { margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; background: #2a2412; color: #f4dc99; font-size: .78rem; }
+.home-record-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.home-record-head h2 { margin: 0; font: 800 1.1rem/1.2 var(--font-board); letter-spacing: .04em; text-transform: uppercase; color: #f4dc99; }
+.home-record-head small { color: #9aa59f; font-size: .75rem; }
+.home-record-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 12px 0 0; }
+.home-record-stats > div { display: grid; gap: 2px; padding: 10px; border-radius: 12px; background: #0b1013aa; }
+.home-record-stats dt { color: #9aa59f; font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; }
+.home-record-stats dd { margin: 0; font: 800 1.35rem/1.1 var(--font-board); color: #fff; font-variant-numeric: tabular-nums; }
+.home-record-stats small { color: #9aa59f; font-size: .66rem; }
+.home-record-stats .is-up dd { color: #8ce3bd; }
+.home-record-stats .is-down dd { color: #ff9a8a; }
+.home-record-note { margin: 10px 2px 0; color: #8f9a94; font-size: .72rem; }
+.home-record-note a { color: #e8ca7d; }
+@media (max-width: 560px) { .home-record-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
