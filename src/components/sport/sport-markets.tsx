@@ -1,0 +1,122 @@
+import { americanPrice } from "@/lib/home-props";
+import type { SportPage } from "@/lib/sport-contract";
+import { gameMarkets, isStale, marketLine } from "@/lib/sport-page";
+import { easternTime } from "@/lib/sport-slate";
+
+/** One game's published selections and open FanDuel markets, each group with how it settles. */
+export default function SportMarkets({
+  page,
+  gameId,
+}: {
+  page: SportPage;
+  gameId: string;
+}) {
+  const now = Date.now();
+  // A selection stays on its game; its price is the exact quote it was published against.
+  const selections = page.selections
+    .filter((s) => s.game_id === gameId)
+    .sort((a, b) => b.published_at.localeCompare(a.published_at));
+  const byId = new Map(page.markets.map((m) => [m.id, m]));
+  const groups = gameMarkets(page, gameId);
+  const rows = groups.flatMap((g) => g.rows);
+  const quoted = rows
+    .map((m) => m.observed_at)
+    .sort()
+    .at(-1);
+  const stale = rows.some((m) => isStale(m, now));
+  return (
+    <div className="sport-markets">
+      <h3 className="sport-markets-title">Vegas Quant selections</h3>
+      {selections.length ? (
+        <ul className="sport-selections">
+          {selections.map((s) => {
+            const m = s.market || byId.get(s.market_id);
+            return (
+              <li key={s.id}>
+                <span>
+                  <b>{s.title}</b>
+                  {m ? (
+                    <small>
+                      {m.player ? `${m.player} · ` : ""}
+                      {marketLine(m)} · {m.settlement_note}
+                    </small>
+                  ) : null}
+                </span>
+                {m ? (
+                  <span className="sport-price">
+                    {americanPrice(m.odds)}
+                    <small>
+                      {m.book} ·{" "}
+                      {easternTime(m.observed_at, {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </small>
+                  </span>
+                ) : null}
+                <details>
+                  <summary>Why and the risk</summary>
+                  <p>{s.why}</p>
+                  <p>
+                    <b>Risk:</b> {s.risk}
+                  </p>
+                </details>
+              </li>
+            );
+          })}
+        </ul>
+      ) : (
+        <p className="sport-empty">
+          No published selections for this game yet.
+        </p>
+      )}
+      {groups.length ? (
+        groups.map((g) => {
+          const rows = (
+            <ul className="sport-market-rows">
+              {g.rows.map((m) => (
+                <li key={m.id}>
+                  <span>
+                    {m.player ? <b>{m.player}</b> : null}
+                    {marketLine(m)}
+                  </span>
+                  <b className="sport-odds">{americanPrice(m.odds)}</b>
+                </li>
+              ))}
+            </ul>
+          );
+          const settle = (
+            <p className="sport-settle">Settles: {g.settlement.join(" · ")}</p>
+          );
+          // Player menus run long (dozens of scorers a game): they open on request, like NBA props.
+          return g.market.startsWith("player_") ? (
+            <details key={g.market} className="sport-props sport-market-group">
+              <summary>
+                FanDuel · {g.label} · {g.rows.length}
+              </summary>
+              {rows}
+              {settle}
+            </details>
+          ) : (
+            <section key={g.market} className="sport-market-group">
+              <h3 className="sport-markets-title">FanDuel · {g.label}</h3>
+              {rows}
+              {settle}
+            </section>
+          );
+        })
+      ) : (
+        <p className="sport-empty">
+          No open FanDuel markets for this game yet.
+        </p>
+      )}
+      <p className="vq-prop-note">
+        {quoted
+          ? `FanDuel quotes as of ${easternTime(quoted, { hour: "numeric", minute: "2-digit" })} ET${stale ? " (more than 30 minutes old; the price may have moved)" : ""}. `
+          : ""}
+        Prices move and are not guaranteed. Market lines are reference, not
+        selections.
+      </p>
+    </div>
+  );
+}

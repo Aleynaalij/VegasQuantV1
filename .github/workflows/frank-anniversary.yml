@@ -1,0 +1,37 @@
+name: Frank anniversary flow
+on:
+  push:
+    branches: [codex/frank-anniversary]
+  pull_request:
+    paths:
+      - "src/components/frank-anniversary.*"
+      - "src/lib/frank-anniversary.ts"
+      - "supabase/migrations/20261031190000_frank_anniversary.sql"
+      - "tests/frank-anniversary.test.ts"
+      - "tests/sql/frank-anniversary.mjs"
+      - "scripts/ui-smoke/frank-anniversary.mjs"
+      - "scripts/ui-smoke/frank-release.mjs"
+      - ".github/workflows/frank-anniversary.yml"
+permissions:
+  contents: read
+jobs:
+  anniversary-flow:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --import tsx --test tests/frank-anniversary.test.ts
+      - name: Prepare browser for isolated synthetic UI checks
+        run: |
+          npm install --no-save playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - run: node scripts/ui-smoke/frank-anniversary.mjs

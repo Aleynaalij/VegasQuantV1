@@ -1,7 +1,6 @@
 import NbaResearchFeed from "./nba-research-feed";
 import NbaGameBoard from "./nba-game-board";
-import NbaHomeBrief from "./nba-home-brief";
-import NbaHomeTickets from "./nba-home-tickets";
+import NbaHome from "./nba-home";
 import { ShieldCheck } from "lucide-react";
 import KickoffCountdown from "./kickoff-countdown";
 import { Empty, Panel, Shell } from "./ui";
@@ -52,12 +51,7 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
   if (view === "home")
     return (
       <Shell active="home" sport="nba">
-        <div className="nba-desk">
-          <NbaHomeBrief compact />
-          <div id="nba-slate">
-            <NbaHomeTickets />
-          </div>
-        </div>
+        <NbaHome />
       </Shell>
     );
   const copy = views[view];
