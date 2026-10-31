@@ -1,17 +1,47 @@
 import { americanPrice } from "@/lib/home-props";
-import type { SportPage } from "@/lib/sport-contract";
+import {
+  beats,
+  BEST_MAX_AGE_MS,
+  bookQuotes,
+  selectionKey,
+  type BookQuote,
+  type QuoteRow,
+} from "@/lib/best-price";
+import type { SportMarket, SportPage } from "@/lib/sport-contract";
 import { gameMarkets, isStale, marketLine } from "@/lib/sport-page";
 import { easternTime } from "@/lib/sport-slate";
+
+/** Another book paying more for the identical line; nothing when FanDuel is already best. */
+const Best = ({ q }: { q: BookQuote | null }) =>
+  q ? (
+    <small className="sport-best">
+      Best {americanPrice(q.price)} · {q.book}
+    </small>
+  ) : null;
+const keyOf = (m: SportMarket) =>
+  selectionKey(
+    m.game_id,
+    m.market,
+    m.player || "",
+    m.side || m.direction || "",
+    m.line,
+  );
 
 /** One game's published selections and open FanDuel markets, each group with how it settles. */
 export default function SportMarkets({
   page,
   gameId,
+  books = [],
 }: {
   page: SportPage;
   gameId: string;
+  books?: QuoteRow[];
 }) {
   const now = Date.now();
+  const compare = bookQuotes(books, now, BEST_MAX_AGE_MS);
+  const best = (m: SportMarket) => (
+    <Best q={beats(compare, keyOf(m), m.odds)} />
+  );
   // A selection stays on its game; its price is the exact quote it was published against.
   const selections = page.selections
     .filter((s) => s.game_id === gameId)
@@ -52,6 +82,7 @@ export default function SportMarkets({
                         minute: "2-digit",
                       })}
                     </small>
+                    {best(m)}
                   </span>
                 ) : null}
                 <details>
@@ -80,7 +111,10 @@ export default function SportMarkets({
                     {m.player ? <b>{m.player}</b> : null}
                     {marketLine(m)}
                   </span>
-                  <b className="sport-odds">{americanPrice(m.odds)}</b>
+                  <b className="sport-odds">
+                    {americanPrice(m.odds)}
+                    {best(m)}
+                  </b>
                 </li>
               ))}
             </ul>
@@ -114,8 +148,10 @@ export default function SportMarkets({
         {quoted
           ? `FanDuel quotes as of ${easternTime(quoted, { hour: "numeric", minute: "2-digit" })} ET${stale ? " (more than 30 minutes old; the price may have moved)" : ""}. `
           : ""}
-        Prices move and are not guaranteed. Market lines are reference, not
-        selections.
+        &ldquo;Best&rdquo; names another book (DraftKings, BetMGM, Caesars,
+        BetRivers or Fanatics) paying more for the identical line in the last
+        hour. Prices move and are not guaranteed. Market lines are reference,
+        not selections.
       </p>
     </div>
   );

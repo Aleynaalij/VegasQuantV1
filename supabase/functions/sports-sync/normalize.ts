@@ -143,12 +143,25 @@ export function gameForEvent(e: any, games: SportGame[]) {
   });
   return candidates.length === 1 ? candidates[0] : null;
 }
+/** The Odds API keys for the books we compare; FanDuel stays the book selections are priced at. */
+export const BOOK_NAMES = {
+  fanduel: "FanDuel",
+  draftkings: "DraftKings",
+  betmgm: "BetMGM",
+  williamhill_us: "Caesars",
+  betrivers: "BetRivers",
+  fanatics: "Fanatics",
+} as const;
+export type BookKey = keyof typeof BOOK_NAMES;
+/** One request covers all six books: up to ten bookmakers cost the same as one region. */
+export const BOOKMAKERS = Object.keys(BOOK_NAMES).join(",");
 export function normalizeMarkets(
   events: unknown,
   sport: NewSport,
   games: SportGame[],
   source: SportSource,
   now = Date.now(),
+  bookKey: BookKey = "fanduel",
 ): Omit<SportMarket, "id">[] {
   const out: Omit<SportMarket, "id">[] = [];
   for (const e of array(Array.isArray(events) ? events : [events])) {
@@ -161,7 +174,7 @@ export function normalizeMarkets(
       g.completed
     )
       continue;
-    for (const b of array(e.bookmakers).filter((b) => b.key === "fanduel"))
+    for (const b of array(e.bookmakers).filter((b) => b.key === bookKey))
       for (const m of array(b.markets)) {
         if (!(allowedMarkets[sport] as readonly string[]).includes(m.key))
           continue;
@@ -223,7 +236,7 @@ export function normalizeMarkets(
           out.push({
             game_id: g.id,
             sport,
-            book: "FanDuel",
+            book: BOOK_NAMES[bookKey] as SportMarket["book"],
             market: m.key,
             period: "full_game",
             selection: isPlayer ? o.description : side ? g[side].name : o.name,
@@ -263,4 +276,89 @@ export function scoreboardUrl(sport: NewSport, day: string) {
 export function summaryUrl(sport: NewSport, id: string) {
   if (!/^\d+$/.test(id)) throw Error("Invalid event id");
   return `https://site.api.espn.com/apis/site/v2/sports/${paths[sport]}/summary?event=${id}`;
+}
+
+export type BookSnapshot = {
+  game_id: string;
+  book: string;
+  market: string;
+  observed_at: string;
+  outcomes: {
+    name: string;
+    description?: string;
+    point?: number;
+    price: number;
+  }[];
+};
+/**
+ * The other five books' quotes, held to exactly FanDuel's matching and validation, as one snapshot
+ * per game, book and market. Outcomes are keyed the way Vegas Quant compares them: the side (home or
+ * away) or direction (Over, Under, Yes), the player and the line.
+ *
+ * Every requested market gets a snapshot for every matched upcoming game and book, empty when the
+ * book left it out, sent it without outcomes, or only offered stale or invalid prices. The newest
+ * snapshot replaces the last one, so a price a book has withdrawn is never shown as "Best".
+ */
+export function bookSnapshots(
+  events: unknown,
+  sport: NewSport,
+  games: SportGame[],
+  source: SportSource,
+  now = Date.now(),
+  requested: readonly string[] = [],
+): BookSnapshot[] {
+  const out = new Map<string, BookSnapshot>();
+  const at = new Date(now).toISOString();
+  const markets = requested.filter((m) =>
+    (allowedMarkets[sport] as readonly string[]).includes(m),
+  );
+  for (const e of array(Array.isArray(events) ? events : [events])) {
+    if (e.sport_key !== oddsKeys[sport]) continue;
+    const g = gameForEvent(e, games);
+    if (
+      !g ||
+      Date.parse(g.start_time) <= now ||
+      g.start_time_tbd ||
+      g.completed
+    )
+      continue;
+    for (const bookKey of Object.keys(BOOK_NAMES) as BookKey[])
+      if (bookKey !== "fanduel")
+        for (const market of markets)
+          out.set(JSON.stringify([g.id, bookKey, market]), {
+            game_id: g.id,
+            book: BOOK_NAMES[bookKey],
+            market,
+            observed_at: at,
+            outcomes: [],
+          });
+  }
+  for (const bookKey of Object.keys(BOOK_NAMES) as BookKey[]) {
+    if (bookKey === "fanduel") continue;
+    for (const m of normalizeMarkets(
+      events,
+      sport,
+      games,
+      source,
+      now,
+      bookKey,
+    )) {
+      const k = JSON.stringify([m.game_id, bookKey, m.market]);
+      const snap = out.get(k) || {
+        game_id: m.game_id,
+        book: BOOK_NAMES[bookKey],
+        market: m.market,
+        observed_at: at,
+        outcomes: [],
+      };
+      snap.outcomes.push({
+        name: (m.side || m.direction)!,
+        ...(m.player ? { description: m.player } : {}),
+        ...(m.line === null ? {} : { point: m.line }),
+        price: m.odds,
+      });
+      out.set(k, snap);
+    }
+  }
+  return [...out.values()];
 }
