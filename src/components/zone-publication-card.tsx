@@ -64,9 +64,11 @@ export default function ZonePublicationCard({
         board = css.getPropertyValue("--font-board").trim(),
         body = css.getPropertyValue("--font-body").trim();
       await Promise.all([
-        document.fonts.load(`800 128px ${board}`),
-        document.fonts.load(`700 48px ${body}`),
-        document.fonts.load(`500 32px ${body}`),
+        // Next's fallback faces reference local system fonts. Loading the entire family list
+        // rejects when Arial Narrow is absent, even though our bundled font loaded correctly.
+        document.fonts.load(`800 128px ${board.split(",")[0]}`),
+        document.fonts.load(`700 48px ${body.split(",")[0]}`),
+        document.fonts.load(`500 32px ${body.split(",")[0]}`),
       ]);
       const canvas = document.createElement("canvas");
       canvas.width = 1080;
