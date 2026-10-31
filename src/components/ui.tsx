@@ -8,6 +8,7 @@ import SwipeTabs from "./swipe-tabs";
 import TabScrub from "./tab-scrub";
 import CommunityStories from "./community-stories";
 import AdminOnly from "./admin-only";
+import FrankAnniversaryGate from "./frank-anniversary-gate";
 import { liveSports, SPORTS, type Sport } from "@/lib/sports";
 import {
   ArrowUpRight,
@@ -147,6 +148,7 @@ export function Shell({
   return (
     <div className={`shell screen-${active}`}>
       <SwipeTabs />
+      <FrankAnniversaryGate />
       <a className="skip-link" href="#main-content">
         Skip to content
       </a>

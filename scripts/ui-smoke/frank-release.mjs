@@ -116,13 +116,8 @@ try {
       errors = [];
     p.setDefaultTimeout(15000);
     p.on("pageerror", (e) => errors.push(e.message));
+    // Owner (Oct 31): the invitation greets Frank as soon as he signs in, before he touches anything.
     await p.goto(base + "/", { waitUntil: "load" });
-    await p.locator(".ruby-submit-drawer").waitFor();
-    // Close unrelated welcome prompts before opening Frank's private desk.
-    await p.evaluate(() =>
-      document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
-    );
-    await p.locator(".ruby-submit-drawer > summary").click();
     const invitation = p.getByRole("dialog", {
       name: "Happy anniversary, Frank!",
     });
@@ -161,7 +156,7 @@ try {
     assert.deepEqual(errors, []);
     await ctx.close();
     console.log(
-      `PASS actual anniversary release flow ${width}px: Corner mount, both Yes choices, real ready NHL mount and no replay`,
+      `PASS actual anniversary release flow ${width}px: sign-in invitation, both Yes choices, real ready NHL mount and no replay`,
     );
   }
 } finally {

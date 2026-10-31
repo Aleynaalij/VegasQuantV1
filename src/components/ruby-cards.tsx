@@ -14,7 +14,6 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
-import { FrankAnniversaryCorner } from "./frank-anniversary";
 import {
   rubyBrands,
   contributorTier,
@@ -346,7 +345,6 @@ function Composer({
   onPublished: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [cornerOpen, setCornerOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [title, setTitle] = useState("");
@@ -516,13 +514,7 @@ function Composer({
     <section
       className={`ruby-composer-home ruby-submit-compact ruby-${contributor.theme}`}
     >
-      {cornerOpen && contributor.brand === "FranksCorner" ? (
-        <FrankAnniversaryCorner />
-      ) : null}
-      <details
-        className="ruby-submit-drawer"
-        onToggle={(event) => setCornerOpen(event.currentTarget.open)}
-      >
+      <details className="ruby-submit-drawer">
         <summary aria-label="Submit today’s lay options">
           <Gem size={16} aria-hidden="true" />
           <span>Submit today’s lay</span>
