@@ -1,6 +1,6 @@
 import { americanPrice } from "@/lib/home-props";
 import type { SportPage } from "@/lib/sport-contract";
-import { gameMarkets, marketLine } from "@/lib/sport-page";
+import { gameMarkets, isStale, marketLine } from "@/lib/sport-page";
 import { easternTime } from "@/lib/sport-slate";
 
 /** One game's published selections and open FanDuel markets, each group with how it settles. */
@@ -12,22 +12,25 @@ export default function SportMarkets({
   gameId: string;
 }) {
   const now = Date.now();
-  const selections = page.selections.filter(
-    (s) => s.game_id === gameId && Date.parse(s.expires_at) > now,
-  );
+  // A selection stays on its game; its price is the exact quote it was published against.
+  const selections = page.selections
+    .filter((s) => s.game_id === gameId)
+    .sort((a, b) => b.published_at.localeCompare(a.published_at));
   const byId = new Map(page.markets.map((m) => [m.id, m]));
-  const groups = gameMarkets(page, gameId, now);
-  const quoted = groups
-    .flatMap((g) => g.rows.map((m) => m.observed_at))
+  const groups = gameMarkets(page, gameId);
+  const rows = groups.flatMap((g) => g.rows);
+  const quoted = rows
+    .map((m) => m.observed_at)
     .sort()
     .at(-1);
+  const stale = rows.some((m) => isStale(m, now));
   return (
     <div className="sport-markets">
       <h3 className="sport-markets-title">Vegas Quant selections</h3>
       {selections.length ? (
         <ul className="sport-selections">
           {selections.map((s) => {
-            const m = byId.get(s.market_id);
+            const m = s.market || byId.get(s.market_id);
             return (
               <li key={s.id}>
                 <span>
@@ -42,7 +45,13 @@ export default function SportMarkets({
                 {m ? (
                   <span className="sport-price">
                     {americanPrice(m.odds)}
-                    <small>{m.book}</small>
+                    <small>
+                      {m.book} ·{" "}
+                      {easternTime(m.observed_at, {
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })}
+                    </small>
                   </span>
                 ) : null}
                 <details>
@@ -103,7 +112,7 @@ export default function SportMarkets({
       )}
       <p className="vq-prop-note">
         {quoted
-          ? `FanDuel quotes as of ${easternTime(quoted, { hour: "numeric", minute: "2-digit" })} ET. `
+          ? `FanDuel quotes as of ${easternTime(quoted, { hour: "numeric", minute: "2-digit" })} ET${stale ? " (more than 30 minutes old; the price may have moved)" : ""}. `
           : ""}
         Prices move and are not guaranteed. Market lines are reference, not
         selections.

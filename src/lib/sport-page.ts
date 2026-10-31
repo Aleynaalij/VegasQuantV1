@@ -31,11 +31,13 @@ export function slateGame(g: SportGame): SlateGame {
   };
 }
 
-/** Markets still open for betting at `now`, newest observation first per exact selection. */
-export function openMarkets(markets: SportMarket[], now = Date.now()) {
+/**
+ * The newest quote per exact selection. Lines refresh every 25 minutes near a game and every three
+ * hours further out, so an older quote still shows (marked by `isStale`) rather than vanishing.
+ */
+export function latestMarkets(markets: SportMarket[]) {
   const seen = new Set<string>();
   return [...markets]
-    .filter((m) => Date.parse(m.expires_at) > now)
     .sort((a, b) => Date.parse(b.observed_at) - Date.parse(a.observed_at))
     .filter((m) => {
       const key = [
@@ -116,9 +118,8 @@ export type MarketGroup = {
 export function gameMarkets(
   page: Pick<SportPage, "sport" | "markets">,
   gameId: string,
-  now = Date.now(),
 ): MarketGroup[] {
-  const rows = openMarkets(page.markets, now).filter(
+  const rows = latestMarkets(page.markets).filter(
     (m) => m.game_id === gameId,
   );
   return SPORT_MARKETS[page.sport]
@@ -183,3 +184,9 @@ export function sportInjuries(facts: SportPage["facts"], gameId: string) {
   }
   return { lines, notes: [...notes] };
 }
+
+/** A quote past its 30-minute freshness window: shown with its time, never as a current price. */
+export const isStale = (
+  m: Pick<SportMarket, "expires_at">,
+  now = Date.now(),
+) => Date.parse(m.expires_at) <= now;

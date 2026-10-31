@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { NewSport, SportPage } from "@/lib/sport-contract";
-import { openMarkets, slateGame, sportFace } from "@/lib/sport-page";
+import { latestMarkets, slateGame, sportFace } from "@/lib/sport-page";
 import type { MoneylineRead } from "@/lib/home-props";
 import { SPORTS } from "@/lib/sports";
 import SportBrief from "./sport-brief";
@@ -44,7 +44,7 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
   if (page)
     for (const g of games) {
       const face = sportFace(
-        openMarkets(page.markets).filter((m) => m.game_id === g.id),
+        latestMarkets(page.markets).filter((m) => m.game_id === g.id),
       );
       if (face) faces[g.id] = face;
     }

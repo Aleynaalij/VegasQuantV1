@@ -3,8 +3,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import {
   gameMarkets,
+  isStale,
+  latestMarkets,
   marketLine,
-  openMarkets,
   slateGame,
   sportFace,
 } from "../src/lib/sport-page";
@@ -37,24 +38,24 @@ test("contract games map to the slate shape with game links per sport", () => {
   );
 });
 
-test("expired quotes drop and only the newest quote per exact selection stays", () => {
-  const rows = openMarkets(
-    [
-      m({ id: "old", odds: -120, observed_at: "2026-11-01T10:00:00Z" }),
-      m({ id: "new", odds: -105, observed_at: "2026-11-01T11:00:00Z" }),
-      m({
-        id: "gone",
-        side: "home",
-        selection: "Sample b",
-        expires_at: "2026-11-01T11:59:00Z",
-      }),
-    ],
-    now,
-  );
+test("the newest quote per exact selection stays; an expired one is kept but marked stale", () => {
+  const rows = latestMarkets([
+    m({ id: "old", odds: -120, observed_at: "2026-11-01T10:00:00Z" }),
+    m({ id: "new", odds: -105, observed_at: "2026-11-01T11:00:00Z" }),
+    m({
+      id: "aged",
+      side: "home",
+      selection: "Sample b",
+      observed_at: "2026-11-01T11:29:00Z",
+      expires_at: "2026-11-01T11:59:00Z",
+    }),
+  ]);
   assert.deepEqual(
     rows.map((r) => r.id),
-    ["new"],
+    ["aged", "new"],
   );
+  assert.equal(isStale(rows[0], now), true);
+  assert.equal(isStale(rows[1], now), false);
 });
 
 test("the moneyline face needs both quoted sides", () => {
@@ -91,7 +92,7 @@ test("each sport shows only its owner-scoped markets, exact lines, with settleme
       }),
     ],
   };
-  const groups = gameMarkets(page, base.game_id, now);
+  const groups = gameMarkets(page, base.game_id);
   assert.deepEqual(
     groups.map((g) => g.market),
     ["spreads"],

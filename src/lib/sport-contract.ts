@@ -76,6 +76,8 @@ export type SportSelection = {
   expires_at: string;
   sources: SportSource[];
   classification: "QUALITATIVE_EDITORIAL";
+  /** The exact quote the selection was published against (sports_display migration). */
+  market?: SportMarket | null;
 };
 export type SportResult = {
   game_id: string;
