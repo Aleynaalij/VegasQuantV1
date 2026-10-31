@@ -40,6 +40,7 @@ jobs:
           node scripts/ui-smoke/stub.mjs &
           npx next start -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
+          node scripts/ui-smoke/zone-publication-cards.mjs
           node scripts/ui-smoke/ruby-contributors.mjs
           npm run ui:smoke
           node scripts/ui-smoke/nfl-game.mjs
@@ -50,6 +51,5 @@ jobs:
           node scripts/ui-smoke/slots-sports.mjs
           node scripts/ui-smoke/frank-release.mjs
           node scripts/ui-smoke/frank-nhl-feedback.mjs
-          node scripts/ui-smoke/zone-publication-cards.mjs
           node scripts/ui-smoke/frank-anniversary.mjs
           node scripts/ui-smoke/simulator.mjs

@@ -128,13 +128,26 @@ try {
         lines.push(
           ...(await card.locator("svg text[font-size='32']").allTextContents()),
         );
-        const bounded = await card.locator("svg text").evaluateAll((es) =>
-          es.every((e) => {
-            const b = e.getBBox();
-            return b.x >= 27 && b.x + b.width <= 1054 && b.y + b.height <= 1322;
-          }),
+        const overflow = await card.locator("svg text").evaluateAll((es) =>
+          es
+            .filter((e) => e.textContent.trim())
+            .flatMap((e) => {
+              const b = e.getBBox();
+              return b.x >= 27 &&
+                b.x + b.width <= 1054 &&
+                b.y + b.height <= 1322
+                ? []
+                : [
+                    {
+                      text: e.textContent,
+                      x: b.x,
+                      right: b.x + b.width,
+                      bottom: b.y + b.height,
+                    },
+                  ];
+            }),
         );
-        assert.ok(bounded, `${sport} text within frame`);
+        assert.deepEqual(overflow, [], `${sport} text within frame`);
         const next = card.getByRole("button", {
           name: "Next card",
           exact: true,
