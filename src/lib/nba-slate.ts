@@ -47,6 +47,8 @@ type Outcome = {
 export type NbaQuoteRow = {
   game_id: string;
   kind: string;
+  /** When the source observed the price (not when we stored it). */
+  observed_at: string | null;
   recorded_at: string;
   payload: {
     book?: string;
@@ -57,21 +59,43 @@ export type NbaQuoteRow = {
 };
 
 /** The newest FanDuel quote per game and market (rows arrive newest first). */
-export function latestQuotes(rows: NbaQuoteRow[]) {
+/**
+ * How old an NBA quote may be and still show. The collector refreshes FanDuel about every six hours
+ * plus pregame passes, so eight hours keeps one refresh of slack; anything older, undated or
+ * stamped in the future is dropped rather than shown as a current price.
+ */
+export const NBA_QUOTE_MAX_AGE_MS = 8 * 3600000;
+const CLOCK_SKEW_MS = 5 * 60000;
+
+/** When the source observed this quote: observed_at, else the provider's update time. Never recorded_at. */
+export function quoteTime(r: NbaQuoteRow) {
+  const t = Date.parse(r.observed_at || r.payload?.provider_updated_at || "");
+  return Number.isFinite(t) ? t : null;
+}
+
+/** The newest current FanDuel quote per game and market. */
+export function latestQuotes(rows: NbaQuoteRow[], now = Date.now()) {
   const out: Record<string, Record<string, NbaQuoteRow>> = {};
   for (const r of rows) {
     const market = r.payload?.market;
-    if (r.payload?.book !== "FanDuel" || !market) continue;
+    const t = quoteTime(r);
+    if (r.payload?.book !== "FanDuel" || !market || t === null) continue;
+    if (t > now + CLOCK_SKEW_MS || now - t > NBA_QUOTE_MAX_AGE_MS) continue;
     const game = (out[r.game_id] ||= {});
-    if (!game[market]) game[market] = r;
+    const held = game[market];
+    if (!held || t > (quoteTime(held) ?? 0)) game[market] = r;
   }
   return out;
 }
 
 /** Card-face moneyline per game from the newest FanDuel h2h quote. */
-export function nbaFaces(rows: NbaQuoteRow[], games: SlateGame[]) {
+export function nbaFaces(
+  rows: NbaQuoteRow[],
+  games: SlateGame[],
+  now = Date.now(),
+) {
   const faces: Record<string, MoneylineRead> = {};
-  const latest = latestQuotes(rows);
+  const latest = latestQuotes(rows, now);
   for (const g of games) {
     const h2h = latest[g.id]?.h2h?.payload?.outcomes;
     const read = h2h ? moneylineRead(h2h, g.home.name, g.away.name) : null;

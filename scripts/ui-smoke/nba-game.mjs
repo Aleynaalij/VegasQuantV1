@@ -8,7 +8,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ["--no-sandbox", "--disable-dev-shm-usage"],
 });
-const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3105";
+const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 for (const width of [390, 1280]) {
   const ctx = await browser.newContext({ viewport: { width, height: 950 } }),
     p = await ctx.newPage();

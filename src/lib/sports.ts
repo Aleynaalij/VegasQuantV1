@@ -68,7 +68,11 @@ export const SPORT_ORDER: Sport[] = ["nfl", "nba", "nhl", "ncaab"];
 export const liveSports = () => SPORT_ORDER.filter((s) => SPORTS[s].live);
 
 export function isSport(value: unknown): value is Sport {
-  return typeof value === "string" && value in SPORTS;
+  // Own keys only: "constructor" or "__proto__" are not sports.
+  return (
+    typeof value === "string" &&
+    Object.prototype.hasOwnProperty.call(SPORTS, value)
+  );
 }
 
 /** Contributor lays store upper-case sport names ("NFL", "NBA", "NCAAB"). */

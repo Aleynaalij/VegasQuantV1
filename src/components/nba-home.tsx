@@ -6,6 +6,7 @@ import { americanPrice, type MoneylineRead } from "@/lib/home-props";
 import {
   gameLines,
   latestQuotes,
+  NBA_QUOTE_MAX_AGE_MS,
   nbaFaces,
   nbaSlateGame,
   currentSelections,
@@ -44,11 +45,10 @@ export default function NbaHome() {
   const [games, setGames] = useState<SlateGame[]>([]),
     [loaded, setLoaded] = useState(false),
     [error, setError] = useState(false),
-    [faces, setFaces] = useState<Record<string, MoneylineRead>>({}),
     [opened, setOpened] = useState(false),
-    [quotes, setQuotes] = useState<Record<string, Record<string, NbaQuoteRow>>>(
-      {},
-    ),
+    // Raw quote rows; what shows is re-derived against the clock, so a stalled feed ages out.
+    [rows, setRows] = useState<NbaQuoteRow[]>([]),
+    [clock, setClock] = useState(() => Date.now()),
     [picks, setPicks] = useState<Pick[]>([]),
     [notice, setNotice] = useState(""),
     [retry, setRetry] = useState(0),
@@ -95,8 +95,7 @@ export default function NbaHome() {
       const session = await supabase.auth.getSession();
       if (!live || n !== generation) return;
       if (!session.data.session) {
-        setFaces({});
-        setQuotes({});
+        setRows([]);
         setPicks([]);
         if (opened) setNotice("Sign in to see game markets.");
         return;
@@ -105,11 +104,15 @@ export default function NbaHome() {
       const [q, p] = await Promise.all([
         supabase
           .from("nba_observations")
-          .select("game_id,kind,recorded_at,payload")
+          .select("game_id,kind,observed_at,recorded_at,payload")
           .in("game_id", list)
           .in("kind", opened ? ["odds", "prop"] : ["odds"])
           .eq("payload->>book", "FanDuel")
-          .order("recorded_at", { ascending: false })
+          .gte(
+            "observed_at",
+            new Date(Date.now() - NBA_QUOTE_MAX_AGE_MS).toISOString(),
+          )
+          .order("observed_at", { ascending: false })
           .limit(opened ? 2000 : 400),
         opened
           ? supabase
@@ -128,9 +131,7 @@ export default function NbaHome() {
         if (opened) setNotice("Markets could not load. Please retry.");
         return;
       }
-      const rows = (q.data || []) as NbaQuoteRow[];
-      setFaces(nbaFaces(rows, games));
-      setQuotes(latestQuotes(rows));
+      setRows((q.data || []) as NbaQuoteRow[]);
       setPicks(currentSelections((p.data || []) as Pick[]));
       setNotice("");
     }
@@ -145,6 +146,12 @@ export default function NbaHome() {
     // games is derived from ids; the effect keys on the id list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ids, opened]);
+  useEffect(() => {
+    const tick = setInterval(() => setClock(Date.now()), 60000);
+    return () => clearInterval(tick);
+  }, []);
+  const faces: Record<string, MoneylineRead> = nbaFaces(rows, games, clock);
+  const quotes = latestQuotes(rows, clock);
   async function copy(gameId: string, rows: Pick[]) {
     const text = rows
       .map((p) => `${p.player} ${selectionLabel(p)} ${americanPrice(p.odds)}`)
