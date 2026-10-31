@@ -57,13 +57,22 @@ export function latestMarkets(markets: SportMarket[]) {
 }
 
 /** Card-face moneyline from the open FanDuel h2h pair; null unless both sides are quoted. */
-export function sportFace(markets: SportMarket[]): MoneylineRead | null {
+export function sportFace(
+  markets: SportMarket[],
+  now = Date.now(),
+): MoneylineRead | null {
   const h2h = markets.filter((m) => m.market === "h2h");
   const home = h2h.find((m) => m.side === "home"),
     away = h2h.find((m) => m.side === "away");
   if (
     !home ||
     !away ||
+    [home, away].some(
+      (m) =>
+        isStale(m, now) ||
+        !Number.isFinite(Date.parse(m.observed_at)) ||
+        Date.parse(m.observed_at) > now,
+    ) ||
     ![home.odds, away.odds].every(
       (p) => Number.isFinite(p) && Math.abs(p) >= 100,
     )
@@ -119,9 +128,7 @@ export function gameMarkets(
   page: Pick<SportPage, "sport" | "markets">,
   gameId: string,
 ): MarketGroup[] {
-  const rows = latestMarkets(page.markets).filter(
-    (m) => m.game_id === gameId,
-  );
+  const rows = latestMarkets(page.markets).filter((m) => m.game_id === gameId);
   return SPORT_MARKETS[page.sport]
     .map((market) => {
       const list = rows
@@ -186,7 +193,5 @@ export function sportInjuries(facts: SportPage["facts"], gameId: string) {
 }
 
 /** A quote past its 30-minute freshness window: shown with its time, never as a current price. */
-export const isStale = (
-  m: Pick<SportMarket, "expires_at">,
-  now = Date.now(),
-) => Date.parse(m.expires_at) <= now;
+export const isStale = (m: Pick<SportMarket, "expires_at">, now = Date.now()) =>
+  !Number.isFinite(Date.parse(m.expires_at)) || Date.parse(m.expires_at) <= now;

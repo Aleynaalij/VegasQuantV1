@@ -59,11 +59,27 @@ test("the newest quote per exact selection stays; an expired one is kept but mar
 });
 
 test("the moneyline face needs both quoted sides", () => {
-  assert.equal(sportFace([m({ side: "away" })]), null);
-  const face = sportFace([
+  assert.equal(sportFace([m({ side: "away" })], now), null);
+  const pair = [
     m({ side: "away", odds: -150 }),
     m({ id: "h", side: "home", selection: "Sample b", odds: 130 }),
-  ]);
+  ];
+  const face = sportFace(pair, now);
+  assert.equal(sportFace(pair, Date.parse("2026-11-02T23:00:00Z")), null);
+  assert.equal(
+    sportFace(
+      pair.map((x) => ({ ...x, expires_at: "bad" })),
+      now,
+    ),
+    null,
+  );
+  assert.equal(
+    sportFace(
+      pair.map((x) => ({ ...x, observed_at: "2026-11-03T00:00:00Z" })),
+      now,
+    ),
+    null,
+  );
   assert.equal(face?.away.price, -150);
   assert.ok(face!.away.probability > 0.5);
 });

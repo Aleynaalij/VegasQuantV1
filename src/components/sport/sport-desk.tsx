@@ -15,11 +15,13 @@ import { FrankAnniversaryFireworks } from "../frank-anniversary";
 export default function SportDesk({ sport }: { sport: NewSport }) {
   const [page, setPage] = useState<SportPage | null>(null),
     [error, setError] = useState(false),
+    [now, setNow] = useState(Date.now),
     [retry, setRetry] = useState(0);
   useEffect(() => {
     let live = true,
       generation = 0;
     async function load() {
+      setNow(Date.now());
       const n = ++generation;
       const r = await supabase.rpc("sports_slate", {
         p_sport: sport,
@@ -46,6 +48,7 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
     for (const g of games) {
       const face = sportFace(
         latestMarkets(page.markets).filter((m) => m.game_id === g.id),
+        now,
       );
       if (face) faces[g.id] = face;
     }

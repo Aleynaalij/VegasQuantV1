@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { sha256, summaryUrl } from "../sports-sync/normalize.ts";
 import { parseResult } from "./parse.ts";
+import { resultBatch } from "./schedule.ts";
 import type { SportGame } from "../../../src/lib/sport-contract.ts";
 const db = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -33,24 +34,35 @@ Deno.serve(async (req: Request) => {
     : { data: [], error: null };
   if (progress.error)
     return Response.json({ error: "Progress read failed" }, { status: 502 });
-  const map = new Map((progress.data || []).map((p: any) => [p.game_id, p]));
-  const due = (res.data || [])
-    .filter((g: any) => {
-      const p: any = map.get(g.id);
-      return (
-        !p ||
-        now - Date.parse(p.checked_at) >=
-          (["FINAL", "CONFLICT", "NO_RESULT"].includes(p.status)
-            ? 6 * 3600000
-            : 15 * 60000)
+  const attempts = ids.length
+    ? await db
+        .from("sports_result_attempts")
+        .select("game_id,attempted_at")
+        .in("game_id", ids)
+    : { data: [], error: null };
+  if (attempts.error)
+    return Response.json({ error: "Attempt read failed" }, { status: 502 });
+  const due = resultBatch(
+    res.data || [],
+    progress.data || [],
+    attempts.data || [],
+    now,
+  );
+  // Persist before any source call: network, parse and save failures all rotate next time.
+  if (due.length) {
+    const attempted = await db.from("sports_result_attempts").upsert(
+      due.map((g: any) => ({
+        game_id: g.id,
+        attempted_at: new Date(now).toISOString(),
+      })),
+      { onConflict: "game_id" },
+    );
+    if (attempted.error)
+      return Response.json(
+        { error: "Attempt scheduling failed" },
+        { status: 502 },
       );
-    })
-    .sort(
-      (a: any, b: any) =>
-        Date.parse((map.get(a.id) as any)?.checked_at || "1970-01-01") -
-        Date.parse((map.get(b.id) as any)?.checked_at || "1970-01-01"),
-    )
-    .slice(0, 24);
+  }
   for (let i = 0; i < due.length; i += 4)
     await Promise.all(
       due.slice(i, i + 4).map(async (row: any) => {
