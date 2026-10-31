@@ -48,7 +48,7 @@ export const SPORTS: Record<Sport, SportInfo> = {
     next: "Next puck drop",
     countdown: "Time to puck drop",
     started: "Puck dropped",
-    live: false,
+    live: true,
   },
   ncaab: {
     key: "ncaab",
@@ -58,7 +58,7 @@ export const SPORTS: Record<Sport, SportInfo> = {
     next: "Next tip-off",
     countdown: "Time to tip-off",
     started: "Tipped off",
-    live: false,
+    live: true,
   },
 };
 

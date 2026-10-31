@@ -26,3 +26,22 @@
 .sport-props li small { color: #9aa59f; }
 .sport-open { justify-self: start; min-height: 40px; }
 .sport-research-link { display: block; margin: 14px 2px 0; padding: 14px 16px; border: 1px solid #b69b4e44; border-radius: 16px; background: #11161c; color: #e8ca7d; font-weight: 700; font-size: .9rem; text-decoration: none; }
+.sport-market-group { display: grid; gap: 6px; }
+.sport-market-rows { list-style: none; margin: 0; padding: 0; }
+.sport-market-rows li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 2px; border-bottom: 1px solid #b69b4e22; font-size: .86rem; }
+.sport-market-rows li span { display: flex; flex-wrap: wrap; gap: 6px; min-width: 0; }
+.sport-odds { font-variant-numeric: tabular-nums; color: #f4dc99; }
+.sport-settle { margin: 0 2px; color: #8f9a94; font-size: .72rem; }
+.sport-home > .sport-open, .vq-game-props > .sport-open { margin-top: 10px; }
+.sport-game { display: grid; gap: 14px; }
+.sport-back { color: #e8ca7d; font-weight: 600; font-size: .85rem; text-decoration: none; }
+.sport-game-head h1 { margin: 6px 0; }
+.sport-score { font: 800 2rem/1 var(--font-board); font-variant-numeric: tabular-nums; color: #fff; }
+.sport-status { color: #e8ca7d; font-size: .8rem; text-transform: capitalize; }
+.sport-injuries ul { list-style: none; margin: 6px 0 0; padding: 0; }
+.sport-injuries li { display: flex; justify-content: space-between; gap: 12px; padding: 8px 2px; border-bottom: 1px solid #b69b4e22; font-size: .86rem; }
+.sport-injuries small { color: #9aa59f; }
+.sport-record { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; margin: 0; }
+.sport-record div { padding: 14px; border: 1px solid #b69b4e33; border-radius: 14px; background: #11161c; }
+.sport-record dt { color: #9aa59f; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
+.sport-record dd { margin: 4px 0 0; font: 800 1.8rem/1 var(--font-board); color: #f4dc99; }

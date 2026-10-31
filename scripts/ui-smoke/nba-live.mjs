@@ -45,7 +45,7 @@ for (const width of [390, 1280]) {
     await p.goto(`${base}/`, { waitUntil: "networkidle" });
     await p.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
     const chips = p.getByRole("navigation", { name: "Sport selection" });
-    assert.deepEqual(await chips.locator("a[data-sport]").evaluateAll((a) => a.map((x) => x.textContent.trim())), ["NFL", "NBA"], `live chips ${label}`);
+    assert.deepEqual(await chips.locator("a[data-sport]").evaluateAll((a) => a.map((x) => x.textContent.trim())), ["NFL", "NBA", "NHL", "NCAAB"], `live chips ${label}`);
     await chips.locator('a[data-sport="nba"]').click();
     await p.waitForURL(`${base}/nba`);
     await p.locator(".home-brief[data-sport=nba] .vq-matchup").waitFor();
@@ -77,7 +77,7 @@ for (const width of [390, 1280]) {
       await p.goto(`${base}/community`, { waitUntil: "networkidle" });
       await p.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
       const sports = p.locator(".zone-sports button");
-      assert.deepEqual(await sports.allInnerTexts(), ["All", "NFL", "NBA"]);
+      assert.deepEqual(await sports.allInnerTexts(), ["All", "NFL", "NBA", "NHL", "NCAAB"]);
       assert.equal(await sports.first().getAttribute("aria-pressed"), "true");
       await sports.nth(2).click();
       await p.waitForURL(/sport=nba/);
