@@ -190,6 +190,22 @@ for (const width of [390, 1280])
         reducedMotion: "reduce",
       });
       if (signedIn) await ctx.addInitScript(session);
+      // A finished profile, so the profile setup dialog never covers the page.
+      await ctx.route("**/rest/v1/community_profiles*", (r) => {
+        const row = {
+          username: "SportsMember",
+          avatar: "a.jpg",
+          region: null,
+          visible: true,
+        };
+        return r.fulfill({
+          json: (r.request().headers().accept || "").includes(
+            "vnd.pgrst.object",
+          )
+            ? row
+            : [row],
+        });
+      });
       const calls = [];
       await ctx.route("**/rest/v1/rpc/sports_*", async (r) => {
         const name = new URL(r.request().url()).pathname.split("/").at(-1);

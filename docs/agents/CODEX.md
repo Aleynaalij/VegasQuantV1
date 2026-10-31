@@ -1,3 +1,13 @@
+# Full release follow-up · October 31, 2026
+
+Release PR #170 integrates #167, latest #168 (4103bca) and #169 with their histories preserved. Original #168 audit findings are verified fixed. Final independent audit found result-read starvation and expired collapsed moneyline faces; both are corrected with separate service-only attempt scheduling, a status-preserving queue and clock-driven face expiry even on failed refresh. 384 tests, TypeScript, production build and Deno result-function check pass locally. New head browser CI and full-package peer acceptance must be read before merge; no production UI deployment is claimed here.
+
+Named NBA dispatcher/result-retraction, NBA Zone helper/record projection, sport publication serialization, disabled anniversary and result-attempt migrations are APPLIED/read back. sports-results v3 real authenticated request14550 returned200,CONFIRMING1,errors0; scheduling timestamp persisted separately. The original daily 3-point card forOct31 is already POSTED as MikeQ and endpoint returns the original1080x1350 design. No duplicate card created. Frank gatefalse/receipts0 pending full product verification.
+
+Automatic approval review REJECTED the two prepared NBA recommendation/Zone insertions, citing the retained picks pause. No such posts were created; do not retry or route around this block. Candidate source evidence is prepared, but publication needs explicit owner clarification. This does not block the already-authorized app rollout. Simulator stays paused. Claude's later roadmap/store checklist are preserved without starting those tasks. Further release/production evidence belongs on #170/#166; older status below is historical.
+
+---
+
 # Readiness follow-up · October 31, 2026
 
 NBA refresh schedule changes initially left the old6a.m. dispatcher in place. Corrected actual cron commands via20261031180000_nba_live_dispatch.sql (APPLIED): both direct allowlisted noon-ET requests returned200; source collected126line/81prop quotes, result failure0 with one INCONSISTENT kept pending. No original card/confirmation job altered. Both cron rows read back with old_hour_gate=false/live_dispatch=true. Result-retraction guard20261031180100 is prepared/tested and NOT yet applied pending exact-helper handoff to Claude after his revised NHL/college ownership claim (#1666545762960/6545806935). It archives contradictory non-final status, preserves immutable result, marks stickyCONFLICT, suspends grading and resets withdrawn provisional confirmation. All360 local tests/both SQL suites pass. Full rollout NOT READY: open frontend findings, mounts and combined verification/peer acceptance remain. No Frank activation. See docs/product/multisport-backend.md for evidence.

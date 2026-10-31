@@ -168,6 +168,20 @@ for (const width of [390, 1280]) {
       }),
     );
     await ctx.route("**/rest/v1/nba_games*", (r) => r.fulfill({ json: games }));
+    // A finished profile, so the profile setup dialog never covers the Zone chips.
+    await ctx.route("**/rest/v1/community_profiles*", (r) => {
+      const row = {
+        username: "NbaMember",
+        avatar: "a.jpg",
+        region: null,
+        visible: true,
+      };
+      return r.fulfill({
+        json: (r.request().headers().accept || "").includes("vnd.pgrst.object")
+          ? row
+          : [row],
+      });
+    });
     await ctx.route("**/rest/v1/nba_observations*", (r) =>
       r.fulfill({ json: obs }),
     );
