@@ -1,6 +1,8 @@
 /** Read-only entertainment shuffler. It never computes prices or publishes picks. */
 import { legFamily, parlayCopyLine, type PublishedLeg } from "./parlay-builder";
 export type SlotLeg = {
+  sport?: "nfl" | "nba" | "nhl" | "ncaab";
+  observed_odds?: number;
   selection_group?: string;
   source_url?: string;
   book?: string;
@@ -123,4 +125,20 @@ export function slotCopy(rows: SlotLeg[]) {
     ),
     "Market availability and prices must be checked. No combined odds or payout verified.",
   ].join("\n");
+}
+
+/** Guard the UI's sport choice at the engine boundary; legacy rows are NFL-only. */
+export function spinSportTicket(
+  sport: import("./sport-contract").Sport,
+  rows: SlotLeg[],
+  previous: string | ReadonlySet<string> | null,
+  random: () => number = Math.random,
+  now = Date.now(),
+) {
+  return spinTicket(
+    rows.filter((r) => (r.sport || "nfl") === sport),
+    previous,
+    random,
+    now,
+  );
 }

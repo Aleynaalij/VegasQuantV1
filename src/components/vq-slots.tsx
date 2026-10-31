@@ -1,16 +1,78 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { slotCopy, spinTicket, ticketKey, type SlotLeg } from "@/lib/vq-slots";
+import {
+  slotCopy,
+  spinSportTicket,
+  ticketKey,
+  type SlotLeg,
+} from "@/lib/vq-slots";
+import { liveSports, SPORTS, type Sport } from "@/lib/sports";
+import type { SportPage } from "@/lib/sport-contract";
 
 import {
   marketSlotPool,
+  sportSlotPool,
   slotFreshnessMs,
   type SlotGame,
   type SlotObservation,
 } from "@/lib/slot-markets";
 
+/** NFL and NBA read their own FanDuel snapshots; NHL and college basketball read sports_slate. */
+async function loadPool(sport: Sport, now: number): Promise<SlotLeg[]> {
+  if (sport === "nhl" || sport === "ncaab") {
+    const r = await supabase.rpc("sports_slate", { p_sport: sport, p_days: 7 });
+    if (r.error || r.data?.version !== 1)
+      throw new Error("The market board could not load. Please retry.");
+    return sportSlotPool(r.data as SportPage, sport, now);
+  }
+  const nba = sport === "nba";
+  const { data: games, error } = nba
+    ? await supabase
+        .from("nba_games")
+        .select("id,home_team,away_team,kickoff:tipoff")
+        .eq("season_type", 2)
+        .gt("tipoff", new Date(now).toISOString())
+        .lte("tipoff", new Date(now + 7 * slotFreshnessMs).toISOString())
+        .order("tipoff")
+    : await supabase
+        .from("games")
+        .select("id,home_team,away_team,kickoff")
+        .gt("kickoff", new Date(now).toISOString())
+        .lte("kickoff", new Date(now + 7 * slotFreshnessMs).toISOString())
+        .order("kickoff");
+  if (error) throw new Error("Upcoming games could not load. Please retry.");
+  const slate = (games || []) as SlotGame[];
+  const snapshots = await Promise.all(
+    slate.map(async (game) => {
+      const response = await (
+        nba
+          ? supabase
+              .from("nba_observations")
+              .select("id,game_id,source,observed_at,recorded_at,payload")
+              .eq("game_id", game.id)
+              .in("kind", ["odds", "prop"])
+          : supabase
+              .from("source_observations")
+              .select("id,game_id,source,observed_at,recorded_at,payload")
+              .eq("game_id", game.id)
+              .eq("kind", "odds")
+      )
+        .eq("payload->>book", "FanDuel")
+        .gte("observed_at", new Date(now - slotFreshnessMs).toISOString())
+        .order("observed_at", { ascending: false })
+        .limit(200);
+      if (response.error)
+        throw new Error("The market board could not load. Please retry.");
+      return (response.data || []) as SlotObservation[];
+    }),
+  );
+  return marketSlotPool(slate, snapshots.flat(), now, nba ? "nba" : "nfl");
+}
+
 export default function VqSlots() {
+  // Pick the sport first; the machine only draws from that sport's current markets.
+  const [sport, setSport] = useState<Sport>("nfl");
   const [pool, setPool] = useState<SlotLeg[]>([]),
     [ticket, setTicket] = useState<SlotLeg[]>([]);
   const [busy, setBusy] = useState(false),
@@ -41,33 +103,8 @@ export default function VqSlots() {
       try {
         const { data: session } = await supabase.auth.getSession();
         if (!session.session) throw new Error("Sign in to spin VQ Slots.");
-        const now = Date.now();
-        const { data: games, error } = await supabase
-          .from("games")
-          .select("id,home_team,away_team,kickoff")
-          .gt("kickoff", new Date(now).toISOString())
-          .lte("kickoff", new Date(now + 7 * slotFreshnessMs).toISOString())
-          .order("kickoff");
-        if (error)
-          throw new Error("Upcoming games could not load. Please retry.");
-        const slate = (games || []) as SlotGame[];
-        const snapshots = await Promise.all(
-          slate.map(async (game) => {
-            const response = await supabase
-              .from("source_observations")
-              .select("id,game_id,source,observed_at,recorded_at,payload")
-              .eq("game_id", game.id)
-              .eq("kind", "odds")
-              .eq("payload->>book", "FanDuel")
-              .gte("observed_at", new Date(now - slotFreshnessMs).toISOString())
-              .order("observed_at", { ascending: false })
-              .limit(200);
-            if (response.error)
-              throw new Error("The market board could not load. Please retry.");
-            return (response.data || []) as SlotObservation[];
-          }),
-        );
-        if (live) setPool(marketSlotPool(slate, snapshots.flat(), now));
+        const rows = await loadPool(sport, Date.now());
+        if (live) setPool(rows);
       } catch (e) {
         if (live) {
           setPool([]);
@@ -85,11 +122,21 @@ export default function VqSlots() {
       clearInterval(poll);
       live = false;
     };
-  }, [refresh]);
+  }, [refresh, sport]);
+  function pick(next: Sport) {
+    if (next === sport || lock.current) return;
+    // A ticket never mixes sports: clear the board, the last ticket and its history.
+    setSport(next);
+    setPool([]);
+    setTicket([]);
+    setCopied(false);
+    previous.current = new Set();
+    dialog.current?.close();
+  }
   function spin() {
     if (lock.current || loading) return;
     try {
-      const result = spinTicket(pool, previous.current);
+      const result = spinSportTicket(sport, pool, previous.current);
       lock.current = true;
       setBusy(true);
       setNotice("");
@@ -139,6 +186,21 @@ export default function VqSlots() {
         <h1 id="slots-title">VQ SLOTS</h1>
         <p>Pull. Reveal. Take a wild shot.</p>
       </header>
+      <div className="vq-slot-sports" role="radiogroup" aria-label="Sport">
+        {liveSports().map((key) => (
+          <button
+            key={key}
+            type="button"
+            role="radio"
+            aria-checked={sport === key}
+            className={sport === key ? "is-active" : ""}
+            disabled={busy}
+            onClick={() => pick(key)}
+          >
+            {SPORTS[key].label}
+          </button>
+        ))}
+      </div>
       <div
         className={`vq-machine ${busy ? "is-spinning" : ""}`}
         aria-busy={busy}
@@ -207,8 +269,8 @@ export default function VqSlots() {
               : "SPIN 8 LEGS"}
         </button>
         <p className="vq-machine-note">
-          {new Set(pool.map((r) => r.game_id)).size} games · {pool.length}{" "}
-          sourced selections. No stakes.
+          {SPORTS[sport].label} · {new Set(pool.map((r) => r.game_id)).size}{" "}
+          games · {pool.length} sourced selections. No stakes.
         </p>
       </div>
       <p className="vq-slots-disclosure">
@@ -238,7 +300,9 @@ export default function VqSlots() {
         >
           ×
         </button>
-        <span className="eyebrow">EIGHT REELS · ONE WILD TICKET</span>
+        <span className="eyebrow">
+          {SPORTS[sport].label} · EIGHT REELS · ONE WILD TICKET
+        </span>
         <h2 id="vq-ticket-title">HAIL MARY UNLOCKED</h2>
         <p>Random draw · not a winning ticket</p>
         <ol>

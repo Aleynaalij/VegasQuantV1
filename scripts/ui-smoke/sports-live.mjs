@@ -28,8 +28,8 @@ function page(sport, access) {
   if (sport === "nhl")
     markets.push(
       { ...m0, id: "m-tot", market: "totals", side: null, selection: "Over", direction: "Over", line: 6.5, odds: -105 },
-      { ...m0, id: "m-pts", market: "player_points", side: null, player: "A Skater", selection: "Over", direction: "Over", line: 0.5, odds: -150, settlement: "skater_stats_excluding_shootout", settlement_note: "Skater stats exclude the shootout" },
-      { ...m0, id: "m-goal", market: "player_goal_scorer_anytime", side: null, player: "A Skater", selection: "Yes", direction: "Yes", line: null, odds: 210, settlement: "skater_stats_excluding_shootout", settlement_note: "Skater stats exclude the shootout" },
+      { ...m0, id: "m-pts", market: "player_points", side: null, player: "A Skater", selection: "A Skater", direction: "Over", line: 0.5, odds: -150, settlement: "skater_stats_excluding_shootout", settlement_note: "Skater stats exclude the shootout" },
+      { ...m0, id: "m-goal", market: "player_goal_scorer_anytime", side: null, player: "A Skater", selection: "A Skater", direction: "Yes", line: null, odds: 210, settlement: "skater_stats_excluding_shootout", settlement_note: "Skater stats exclude the shootout" },
     );
   else
     markets.push(
