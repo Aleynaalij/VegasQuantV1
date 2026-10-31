@@ -694,24 +694,21 @@ html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd !
 @media(prefers-reduced-motion:reduce){.vq-pod-chevron{transition:none;}}
 
 /* Matchup-first Home: keep the existing felt/gold hero; simplify surrounding content. */
-.vq-feature-track{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;align-items:stretch}.vq-feature-track::-webkit-scrollbar{display:none}.vq-feature-slide{flex:0 0 100%;min-width:0;scroll-snap-align:start}.vq-feature-slide .home-brief{margin:0}.vq-feature-controls{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:10px 4px 18px;font-size:.75rem;color:#a7b0ad}.vq-feature-controls button{border:1px solid #a88a4566;border-radius:30px;padding:8px 15px;color:#e8d297;background:#12251d;min-height:44px}.vq-simulator-teaser{box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;padding:28px;border:2px solid #a68a44;border-radius:28px;background:radial-gradient(ellipse at top,#164c3b,#10191a);color:#eee8d7}.vq-simulator-teaser h2{font-size:2rem}.vq-simulator-teaser p{color:#b1c0b8;line-height:1.6}.vq-mini-field{position:relative;height:100px;display:grid;place-items:center;border:1px solid #e4ce8e55;background:repeating-linear-gradient(90deg,transparent 0,transparent 9.5%,#c5dcc333 9.5%,#c5dcc333 10%),#17513e;font-size:2rem;color:#efdaa4}.vq-mini-field span{position:absolute;left:65%;font-size:.8rem}.vq-game-list{display:grid;gap:10px;scroll-margin-top:100px}.vq-game-row{border:1px solid #b69b4e44;border-radius:16px;background:#11161c;overflow:hidden}.vq-game-row>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:16px 12px;list-style:none;cursor:pointer;min-height:66px}.vq-game-row>summary::-webkit-details-marker{display:none}.vq-game-teams{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-family:var(--font-board);font-size:1.1rem;text-transform:uppercase}.vq-game-teams small{color:#b5a26e}.vq-game-time{max-width:110px;text-align:right;font-size:.7rem;color:#ddc080}.vq-game-props{padding:0 12px 12px;border-top:1px solid #b69b4e33}.vq-inline-prop{padding:16px 0;border-bottom:1px solid #b69b4e22}.vq-inline-prop-title{display:flex;align-items:center;gap:12px}.vq-inline-prop-title h3{margin:0}.vq-inline-prop-title p{margin:4px 0}.vq-inline-prop-title small{color:#b8b7aa}.vq-inline-prop details{margin-top:10px;color:#b6bfb9;font-size:.85rem}.vq-inline-prop .player-portrait{flex:0 0 72px}.vq-slots-nav-icon{position:relative;font-size:24px;color:#edcf80;line-height:1}.vq-slots-nav-icon i{position:absolute;right:-5px;top:0;width:6px;height:6px;background:#8be8b8;border-radius:50%;box-shadow:0 0 7px #8be8b8;animation:vq-slot-beacon 2s ease-in-out infinite}@keyframes vq-slot-beacon{50%{opacity:.35}}@media(prefers-reduced-motion:reduce){.vq-slots-nav-icon i{animation:none}.vq-feature-track{scroll-behavior:auto}}
+.vq-game-list{display:grid;gap:10px;scroll-margin-top:100px}.vq-game-row{border:1px solid #b69b4e44;border-radius:16px;background:#11161c;overflow:hidden}.vq-game-row>summary{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:16px 12px;list-style:none;cursor:pointer;min-height:66px}.vq-game-row>summary::-webkit-details-marker{display:none}.vq-game-teams{display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-family:var(--font-board);font-size:1.1rem;text-transform:uppercase}.vq-game-teams small{color:#b5a26e}.vq-game-time{max-width:110px;text-align:right;font-size:.7rem;color:#ddc080}.vq-game-props{padding:0 12px 12px;border-top:1px solid #b69b4e33}.vq-inline-prop{padding:16px 0;border-bottom:1px solid #b69b4e22}.vq-inline-prop-title{display:flex;align-items:center;gap:12px}.vq-inline-prop-title h3{margin:0}.vq-inline-prop-title p{margin:4px 0}.vq-inline-prop-title small{color:#b8b7aa}.vq-inline-prop details{margin-top:10px;color:#b6bfb9;font-size:.85rem}.vq-inline-prop .player-portrait{flex:0 0 72px}.vq-slots-nav-icon{position:relative;font-size:24px;color:#edcf80;line-height:1}.vq-slots-nav-icon i{position:absolute;right:-5px;top:0;width:6px;height:6px;background:#8be8b8;border-radius:50%;box-shadow:0 0 7px #8be8b8;animation:vq-slot-beacon 2s ease-in-out infinite}@keyframes vq-slot-beacon{50%{opacity:.35}}@media(prefers-reduced-motion:reduce){.vq-slots-nav-icon i{animation:none}}
 
 /* Keep the two hero destinations visible before a user discovers swiping. */
-.vq-feature-carousel > .vq-feature-controls { margin: 0 0 10px; display: grid; grid-template-columns: 1fr 1.7fr; gap: 8px; }
-.vq-feature-controls button { display:flex; justify-content:center; align-items:center; gap:7px; font-size:.85rem; font-weight:750; }
-.vq-feature-controls button[aria-pressed="true"] { background:linear-gradient(135deg,#f6df9a,#c7a44c); color:#181b17; border-color:#f4d991; }
-.vq-feature-controls button span { font-size:.65rem; font-weight:600; }
-.vq-feature-swipe-cue { display:flex; justify-content:center; align-items:center; gap:10px; width:100%; min-height:46px; margin:10px 0 0; padding:10px 14px; border:1px solid #c9a95688; border-radius:14px; background:#19291f; color:#f4dc99; font-size:.85rem; font-weight:750; cursor:pointer; }
-.vq-feature-swipe-cue span { font-size:1.2rem; }
-.vq-feature-position { display:flex; justify-content:center; align-items:center; gap:6px; padding:10px 0 18px; color:#c4c9c2; }
-.vq-feature-position > span { width:6px; height:6px; border-radius:50%; background:#5e655e; }
-.vq-feature-position > .is-active { width:18px; border-radius:4px; background:#e8ca7d; }
-.vq-feature-position small { margin-left:5px; font-size:.72rem; }
-.vq-feature-track:focus-visible, .vq-feature-controls button:focus-visible, .vq-feature-swipe-cue:focus-visible { outline:2px solid #f4dc99; outline-offset:3px; }
 
 /* Home game list: card-face moneyline and a scannable prop table (player · form · line · stat). */
 .vq-game-row > summary { flex-direction: column; align-items: stretch; gap: 10px; }
 .vq-game-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.vq-game-head > .vq-game-teams { margin-right: auto; }
+/* A chevron says a game opens, like a feed row; it turns when the game is open. */
+.vq-game-when { flex: 0 0 auto; display: flex; align-items: center; gap: 8px; }
+.vq-expand-chevron { flex: 0 0 auto; color: #e8ca7d; transition: transform .2s ease; }
+/* Phones stack the chevron under the time so both team names keep their line. */
+@media (max-width: 480px) { .vq-game-when { flex-direction: column; align-items: flex-end; gap: 2px; } }
+.vq-game-row[open] .vq-expand-chevron { transform: rotate(180deg); color: #a7b0ad; }
+@media (prefers-reduced-motion: reduce) { .vq-expand-chevron { transition: none; } }
 .vq-ml-face { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid #b69b4e22; }
 .vq-ml-chip { padding: 4px 8px; border-radius: 6px; background: #1d2630; color: #e8d297; font: 700 .7rem/1 var(--font-board); letter-spacing: .06em; }
 .vq-ml-prices { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: .8rem; color: #c9cfc8; font-variant-numeric: tabular-nums; }
@@ -758,11 +755,3 @@ html[data-theme="dark"] :is(.sports-ticker .ticker-label) { background:#8ce3bd !
 .vq-prop-copy { display: flex; align-items: center; gap: 12px; padding: 10px 12px 0; }
 .vq-prop-copy button { min-height: 40px; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: .8rem; }
 .vq-prop-copy span { color: #8ce3bd; font-size: .78rem; }
-/* A softly glowing "Tap to expand" tells members a game opens; it settles once the game is open. */
-.vq-expand-cue { display: block; text-align: center; font-size: .68rem; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: #e8ca7d; padding-top: 2px; animation: vq-expand-glow 2.4s ease-in-out infinite; }
-.vq-expand-open { display: none; }
-.vq-game-row[open] .vq-expand-cue { animation: none; color: #a7b0ad; text-shadow: none; opacity: 1; }
-.vq-game-row[open] .vq-expand-closed { display: none; }
-.vq-game-row[open] .vq-expand-open { display: inline; }
-@keyframes vq-expand-glow { 0%, 100% { opacity: .7; text-shadow: none; } 50% { opacity: 1; text-shadow: 0 0 8px #e8ca7d88; } }
-@media (prefers-reduced-motion: reduce) { .vq-expand-cue { animation: none; opacity: 1; text-shadow: 0 0 6px #e8ca7d55; } }

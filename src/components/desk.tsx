@@ -37,7 +37,6 @@ import BeatTheClose from "./beat-the-close";
 import MyTailRecord from "./my-tail-record";
 import RubyHub from "./ruby-cards";
 import HomeBrief from "./home-brief";
-import HomeFeatureCarousel from "./home-feature-carousel";
 import HomeGameList from "./home-game-list";
 import GamePicksShortcut from "./game-picks-shortcut";
 import DecisionBoard from "./decision-board";
@@ -390,7 +389,8 @@ export default function DeskApp({
               <RubyHub home composerOnly />
             </SectionBoundary>
             <SectionBoundary name="Next kickoff">
-              <HomeFeatureCarousel games={d.games} />
+              {/* The simulator returns here when it ships; until then the kickoff card leads Home. */}
+              <HomeBrief games={d.games} />
             </SectionBoundary>
             <SectionBoundary name="Game props">
               <HomeGameList games={d.games} />

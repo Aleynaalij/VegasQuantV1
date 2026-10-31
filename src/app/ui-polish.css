@@ -1,9 +1,4 @@
 /* Small-screen polish only: retain Home's felt hero, prop table and Zone layout. */
-.vq-feature-controls button { min-height:48px; line-height:1.3; }
-.vq-feature-controls button span { font-size:11px; }
-.vq-feature-swipe-cue { min-height:44px; font-size:13px; line-height:1.4; }
-.vq-feature-position { padding:10px 0 14px; }
-.vq-feature-position small { font-size:12px; }
 .vq-game-list { gap:12px; }
 .vq-game-row > summary { padding:16px; }
 .vq-game-head { gap:12px; align-items:flex-start; }
