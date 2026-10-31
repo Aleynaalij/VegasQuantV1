@@ -71,8 +71,14 @@ export default function HomeRecordCard() {
       </dl>
       <p className="home-record-note">
         Every published pick counts, at the price it was published. 1 unit per
-        pick. Past results don’t guarantee future ones.{" "}
-        <Link href="/history">Full record →</Link>
+        pick. Past results don’t guarantee future ones.
+        {/* The pick-by-pick Records page is admin-only; members and visitors get the totals. */}
+        {admin ? (
+          <>
+            {" "}
+            <Link href="/history">Full record →</Link>
+          </>
+        ) : null}
       </p>
     </section>
   );

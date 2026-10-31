@@ -53,6 +53,7 @@ for (const width of [390, 1280])
       // Wins never appear without units, ROI and closing-line value.
       for (const t of ["Record", "Units", "Beat the close", "needed"]) assert.ok(new RegExp(t, "i").test(text), `${t} ${label}`);
       assert.equal(await card.locator(".home-record-preview").count(), visible ? 0 : 1, label);
+      assert.equal(await card.locator("a[href=\"/history\"]").count(), admin ? 1 : 0, `records link only for admins ${label}`);
       if (!visible) assert.match(text, /−3\.1u/);
       // It leads Home: above the next-kickoff card.
       const order = await p.evaluate(() => {
