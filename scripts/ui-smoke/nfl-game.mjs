@@ -102,7 +102,28 @@ for (const width of [390, 1280]) {
         },
       ];
     }
+    // Every book's game lines for "Best": DraftKings pays more on the home side only.
     if (
+      path.endsWith("source_observations") &&
+      (url.searchParams.get("payload->>book") || "").startsWith("in.")
+    ) {
+      assert.equal(url.searchParams.get("game_id"), `eq.${game.id}`);
+      const at = new Date(Date.now() - 10 * 60000).toISOString();
+      data = [
+        {
+          game_id: game.id,
+          observed_at: at,
+          payload: {
+            book: "DraftKings",
+            market: "h2h",
+            outcomes: [
+              { name: "Sample Away", price: 120 },
+              { name: "Sample Home", price: -140 },
+            ],
+          },
+        },
+      ];
+    } else if (
       path.endsWith("source_observations") &&
       url.searchParams.get("payload->>book") === "eq.FanDuel"
     ) {
@@ -303,6 +324,12 @@ for (const width of [390, 1280]) {
   assert.match(
     await p.locator(".game-quote-card").innerText(),
     /Sample Home.*-152/s,
+  );
+  await p.locator(".game-quote-card .sport-best").first().waitFor();
+  assert.deepEqual(
+    await p.locator(".game-quote-card .sport-best").allInnerTexts(),
+    ["Best -140 · DraftKings"],
+    "only the side another book beats names it",
   );
   assert.equal(
     await p.getByText("View supplied data", { exact: true }).count(),
