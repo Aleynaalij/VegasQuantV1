@@ -1,0 +1,18 @@
+import {PGlite} from '@electric-sql/pglite';import {readFileSync} from 'node:fs';import assert from 'node:assert/strict';
+const db=new PGlite();await db.exec(`create role anon;create role authenticated;create role service_role;create schema private;create schema cron;
+create table cron.job(jobid bigint,jobname text);insert into cron.job values(1,'nba-source-refresh'),(2,'nba-results-refresh');
+create function cron.alter_job(bigint,schedule text)returns void language sql as $$select$$;
+create table public.nba_games(id uuid primary key,season_type int,tipoff timestamptz,status text);
+create table public.nba_result_progress(game_id uuid,status text);
+create table public.nba_game_results(game_id uuid);
+create table private.nba_threes_posts(day date primary key,status text,detail text,updated_at timestamptz default now());
+create function private.nba_threes_post()returns jsonb language plpgsql as $$begin return '{"status":"POSTED"}'::jsonb;end$$;`);
+await db.exec("insert into public.nba_games values('00000000-0000-4000-8000-000000000002',2,now()+interval '1 hour','STATUS_SCHEDULED')");
+await db.exec(readFileSync('supabase/migrations/20261031150209_nba_live_readiness.sql','utf8'));
+const call=async()=>(await db.query('select private.nba_threes_post() r')).rows[0].r;
+assert.equal((await call()).status,'POSTED');
+await db.exec(`insert into public.nba_games values('00000000-0000-4000-8000-000000000001',2,((now() at time zone 'America/New_York')::date-1+time '20:00') at time zone 'America/New_York','STATUS_FINAL');insert into public.nba_result_progress values('00000000-0000-4000-8000-000000000001','CONFIRMING');`);
+assert.equal((await call()).status,'WAITING');
+await db.exec("insert into public.nba_game_results values('00000000-0000-4000-8000-000000000001')");assert.equal((await call()).status,'POSTED');
+await db.exec("update private.nba_threes_posts set status='POSTED'");assert.equal((await call()).status,'ALREADY_POSTED');
+console.log('PASS NBA card waits for unrecorded prior-day finals; original renderer/poster untouched');await db.close();

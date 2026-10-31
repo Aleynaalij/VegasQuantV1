@@ -1,3 +1,11 @@
+# Current · October 31, 2026 — multi-sport backend C1–C6
+
+Owner paused simulator work and authorized NHL, college basketball, NBA live parity, ONE Zone and sport-selectable Slots. Plan/claims: issue #166. Branch: codex/multisport-backend from main 8870b90. Claude owns frontend + Zone constraint migration; Codex owns backend contract/collectors/storage/market normalization/grading + Slots engine.
+
+Implementation and self-test package is being published as a draft PR. Read docs/product/multisport-backend.md for exact interfaces, deployment order and limits. All prototype UI fixtures are SYNTHETIC. ESPN source probes are real, not hosted ingestion. No simulator work resumed.
+
+Production deployment is BLOCKED: automatic approval review rejected applying multisport_backend because broad durable live deployment was not sufficiently explicit. No bypass, hosted schema change, collector deploy, schedule change or publication performed. Actual account-specific FanDuel coverage and live data/readback cannot be verified until explicit production approval. This is not live and is not an all-tasks-complete audit handoff. Continue useful independent work against published contract; peer audit only after the full assigned task list/self-checks, with blockers stated honestly.
+
 # Codex · Kobe
 
 ## Current · October 25, 2026 — analyst Double Up
