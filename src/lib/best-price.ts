@@ -67,11 +67,13 @@ export function selectionKey(
 }
 
 /**
- * Every book's newest current quote per exact selection. `maxAgeMs` is the sport's freshness policy;
- * undated, future-stamped or older quotes are left out, never shown as current.
+ * Every book's current quote per exact selection. A collector row is one book's complete snapshot of
+ * one market, so only the newest snapshot per game, book and market counts: a line the book has
+ * since moved or pulled is gone, never revived from an older snapshot. `maxAgeMs` is the freshness
+ * policy; undated, future-stamped or older snapshots are left out.
  */
 export function bookQuotes(rows: QuoteRow[], now: number, maxAgeMs: number) {
-  const out = new Map<string, Map<string, BookQuote>>();
+  const latest = new Map<string, { r: QuoteRow; t: number; at: string }>();
   for (const r of rows) {
     const book = r.payload?.book || "";
     const market = r.payload?.market || "";
@@ -80,6 +82,13 @@ export function bookQuotes(rows: QuoteRow[], now: number, maxAgeMs: number) {
     const t = Date.parse(at);
     if (!Number.isFinite(t) || t > now + CLOCK_SKEW_MS || now - t > maxAgeMs)
       continue;
+    const snap = JSON.stringify([r.game_id, book, market]);
+    const held = latest.get(snap);
+    if (!held || held.t < t) latest.set(snap, { r, t, at });
+  }
+  const out = new Map<string, Map<string, BookQuote>>();
+  for (const { r, t, at } of latest.values()) {
+    const book = r.payload!.book!;
     for (const o of r.payload?.outcomes || []) {
       if (!o?.name || !validPrice(o.price)) continue;
       const point =
@@ -88,12 +97,13 @@ export function bookQuotes(rows: QuoteRow[], now: number, maxAgeMs: number) {
           : null;
       const key = selectionKey(
         r.game_id,
-        market,
+        r.payload!.market!,
         o.description || "",
         o.name,
         point,
       );
       const books = out.get(key) || new Map<string, BookQuote>();
+      // A main and an alternate snapshot can both quote the line: the newer one stands.
       const held = books.get(book);
       if (!held || Date.parse(held.observedAt) < t)
         books.set(book, { book, price: o.price, observedAt: at });

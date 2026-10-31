@@ -129,3 +129,65 @@ test("beats only names a book that pays more than the price shown", () => {
   assert.equal(beats(q, key, -105), null);
   assert.equal(beats(q, key, null), null);
 });
+
+test("a line the book has since moved or pulled is not revived from an older snapshot", () => {
+  const q = bookQuotes(
+    [
+      row(
+        "FanDuel",
+        "totals",
+        [{ name: "Over", point: 220.5, price: -110 }],
+        5,
+      ),
+      row(
+        "DraftKings",
+        "totals",
+        [{ name: "Over", point: 220.5, price: 100 }],
+        20,
+      ),
+      row(
+        "DraftKings",
+        "totals",
+        [{ name: "Over", point: 221.5, price: -110 }],
+        5,
+      ),
+      row(
+        "BetMGM",
+        "player_points",
+        [{ name: "Over", point: 23.5, price: 120, description: "Deni Avdija" }],
+        30,
+      ),
+      row(
+        "BetMGM",
+        "player_points",
+        [
+          {
+            name: "Over",
+            point: 19.5,
+            price: -115,
+            description: "Shaedon Sharpe",
+          },
+        ],
+        10,
+      ),
+    ],
+    NOW,
+    2 * HOUR,
+  );
+  assert.equal(
+    beats(q, selectionKey("g1", "totals", "", "Over", 220.5), -110),
+    null,
+  );
+  assert.equal(
+    bestPrice(q, selectionKey("g1", "totals", "", "Over", 221.5), 1)?.best.book,
+    "DraftKings",
+  );
+  assert.equal(
+    beats(
+      q,
+      selectionKey("g1", "player_points", "Deni Avdija", "Over", 23.5),
+      -110,
+    ),
+    null,
+  );
+});
