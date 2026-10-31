@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "sport": "nhl",
+  "games": [
+    {
+      "id": "00000000-0000-4000-8000-000000000001",
+      "sport": "nhl",
+      "provider_id": "12345",
+      "slug": "sample-a-sample-b",
+      "away": {
+        "id": "nhl:fixture:a",
+        "provider_id": "a",
+        "name": "Sample a",
+        "short_name": "Sample a",
+        "abbreviation": "A"
+      },
+      "home": {
+        "id": "nhl:fixture:b",
+        "provider_id": "b",
+        "name": "Sample b",
+        "short_name": "Sample b",
+        "abbreviation": "B"
+      },
+      "start_time": "2026-11-02T23:00:00Z",
+      "start_time_tbd": false,
+      "season": 2027,
+      "season_type": 2,
+      "venue": "Sample Arena",
+      "neutral_site": false,
+      "status": "STATUS_SCHEDULED",
+      "completed": false,
+      "away_score": null,
+      "home_score": null,
+      "source": {
+        "url": "https://example.invalid/synthetic-fixture",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "retrieved_at": "2026-10-31T12:00:00Z"
+      },
+      "updated_at": "2026-10-31T12:00:00Z"
+    }
+  ],
+  "markets": [
+    {
+      "id": "00000000-0000-4000-8000-000000000002",
+      "game_id": "00000000-0000-4000-8000-000000000001",
+      "sport": "nhl",
+      "book": "FanDuel",
+      "market": "h2h",
+      "period": "full_game",
+      "selection": "Sample a",
+      "player": null,
+      "athlete_id": null,
+      "side": "away",
+      "direction": null,
+      "line": null,
+      "odds": -110,
+      "observed_at": "2026-10-31T12:00:00Z",
+      "expires_at": "2026-10-31T12:30:00Z",
+      "settlement": "including_overtime_shootout",
+      "settlement_note": "Full game including OT/SO",
+      "source": {
+        "url": "https://example.invalid/synthetic-fixture",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "retrieved_at": "2026-10-31T12:00:00Z"
+      }
+    }
+  ],
+  "facts": [],
+  "selections": [],
+  "results": [],
+  "access": true,
+  "generated_at": "2026-10-31T12:00:00Z"
+}
