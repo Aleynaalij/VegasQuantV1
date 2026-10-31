@@ -234,6 +234,8 @@ export function sportSlotPool(
         g.id,
         m.market,
         m.selection,
+        m.player,
+        m.athlete_id,
         m.direction,
         m.line,
       ]);

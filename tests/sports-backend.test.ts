@@ -183,6 +183,36 @@ test("Final grading handles pushes, DNP, missing identity and conflict", () => {
     "VOID",
   );
 });
+test("Slots keeps different skaters at the same threshold when selection is a direction", () => {
+  const prop: SportMarket = {
+    ...page.markets[0],
+    market: "player_points",
+    selection: "Over",
+    side: null,
+    direction: "Over",
+    line: 0.5,
+    player: "First skater",
+    athlete_id: "1",
+  };
+  const rows = sportSlotPool(
+    {
+      ...page,
+      markets: [
+        prop,
+        {
+          ...prop,
+          id: "another-quote",
+          player: "Second skater",
+          athlete_id: "2",
+        },
+      ],
+    },
+    "nhl",
+    now,
+  );
+  assert.equal(rows.length, 2);
+  assert.notEqual(rows[0].selection_group, rows[1].selection_group);
+});
 test("Sport-filtered Slots never mixes sports or adds college props", () => {
   const rows = sportSlotPool(page, "nhl", now);
   assert.equal(rows.length, 1);
