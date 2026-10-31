@@ -45,6 +45,7 @@ http.createServer((req, res) => {
   if (rpc("public_research_status")) return json(res, { updated_at: NOW, games: [], results: [{ id: "r1", game: "BUF @ LAR", published_at: pick.created_at, selection: pick.selection, odds: -110, result: "WIN", profit_cents: 1818, stake_cents: 2000, closing_recorded: false }] });
   if (rpc("membership_status")) return json(res, { allowed: true, admin: false, member_code: "SAMPLE" });
   if (rpc("age_verification_status")) return json(res, { required: true, verified: true, state: "verified", version: 1, retry_after: null });
+  if (rpc("nba_editorial_records") || rpc("sports_records")) return json(res, { selections: 0, win: 0, loss: 0, push: 0, void: 0, pending: 0, review: 0 });
   if (rpc("is_admin")) return json(res, false);
   if (rpc("community_feed")) return json(res, [{ id: "c1", user_id: "u2", author_name: "SampleMember", title: "Sample slip", body: "Sample post body.", sport: "nfl", kind: "talk", legs: [], stake: null, created_at: NOW, reactions: 0, reacted: false, comments: 0, following: false }]);
   if (rpc("community_member")) return json(res, { username: "SampleMember", region: "Sample", avatar: null, visible: true, events: [] });

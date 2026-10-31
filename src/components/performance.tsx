@@ -199,15 +199,20 @@ export default function Performance({ desk: d }: { desk: Desk }) {
           <table>
             <thead>
               <tr>
-                {["Sport", "Settled", "Record", "Units", "ROI", "Price CLV"].map(
-                  (x) => (
-                    <th key={x}>{x}</th>
-                  ),
-                )}
+                {[
+                  "Sport",
+                  "Settled",
+                  "Record",
+                  "Units",
+                  "ROI",
+                  "Price CLV",
+                ].map((x) => (
+                  <th key={x}>{x}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
-              {(["nfl", "nba"] as const).map((v) => {
+              {(["nfl"] as const).map((v) => {
                 const group = sportPicks(d, picks, v),
                   s = performance(d, group);
                 return (
@@ -235,8 +240,8 @@ export default function Performance({ desk: d }: { desk: Desk }) {
           </table>
         </div>
         <p className="muted">
-          NHL and college basketball selections are editorial, without stakes, so
-          units, ROI and CLV are not computed for them.
+          NBA, NHL and college basketball selections are editorial, without
+          stakes, so units, ROI and CLV are not computed for them.
         </p>
       </Panel>
       <Panel title="Decision quality">

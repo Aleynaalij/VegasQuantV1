@@ -1,8 +1,8 @@
-import NbaDesk from "@/components/nba-desk";
+import SportRecords from "@/components/sport/sport-records";
 export const metadata = {
-  title: "NBA | Vegas Quant",
-  description: "Vegas Quant basketball research preparation.",
+  title: "NBA record | Vegas Quant",
+  description: "Published NBA selections graded from confirmed results.",
 };
 export default function Page() {
-  return <NbaDesk view="history" />;
+  return <SportRecords sport="nba" />;
 }

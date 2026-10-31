@@ -13,17 +13,21 @@ type Counts = {
 };
 
 /**
- * NHL and college basketball rows for Performance's "By sport" table, from sports_records. Their
+ * NBA, NHL and college basketball rows for Performance's "By sport" table, from the sport record RPCs. Their
  * selections are qualitative editorial without stakes, so units, ROI and CLV stay blank.
  */
 export default function SportRecordRows() {
   const [rows, setRows] = useState<
-    Partial<Record<"nhl" | "ncaab", Counts | null>>
+    Partial<Record<"nba" | "nhl" | "ncaab", Counts | null>>
   >({});
   useEffect(() => {
     let live = true;
-    for (const sport of ["nhl", "ncaab"] as const)
-      void supabase.rpc("sports_records", { p_sport: sport }).then((r) => {
+    for (const sport of ["nba", "nhl", "ncaab"] as const)
+      void (
+        sport === "nba"
+          ? supabase.rpc("nba_editorial_records")
+          : supabase.rpc("sports_records", { p_sport: sport })
+      ).then((r) => {
         if (live)
           setRows((all) => ({
             ...all,
@@ -34,7 +38,7 @@ export default function SportRecordRows() {
       live = false;
     };
   }, []);
-  return (["nhl", "ncaab"] as const).map((sport) => {
+  return (["nba", "nhl", "ncaab"] as const).map((sport) => {
     const c = rows[sport];
     return (
       <tr key={sport}>
