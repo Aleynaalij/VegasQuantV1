@@ -98,6 +98,25 @@ export function FrankAnniversaryCorner() {
       aria-labelledby="frank-anniversary-title"
       aria-describedby="frank-anniversary-invitation"
       onCancel={() => setDismissed(true)}
+      onKeyDown={(event) => {
+        if (event.key !== "Tab") return;
+        const buttons = dialog.current?.querySelectorAll<HTMLButtonElement>(
+          "button:not(:disabled)",
+        );
+        const first = buttons?.[0],
+          last = buttons?.[buttons.length - 1];
+        if (!first || !last) {
+          event.preventDefault();
+          return;
+        }
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }}
     >
       <span className="frank-anniversary-mark" aria-hidden="true">
         VQ
