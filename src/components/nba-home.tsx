@@ -15,6 +15,15 @@ import {
   type NbaQuoteRow,
   type NbaSlateRow,
 } from "@/lib/nba-slate";
+import {
+  beats,
+  BEST_MAX_AGE_MS,
+  bookQuotes,
+  BOOKS,
+  selectionKey,
+  type BookQuote,
+  type QuoteRow,
+} from "@/lib/best-price";
 import { easternTime, type SlateGame } from "@/lib/sport-slate";
 import SportBrief from "./sport/sport-brief";
 import SportSlate from "./sport/sport-slate";
@@ -39,10 +48,18 @@ const price = (p: number | null | undefined) =>
   p === null || p === undefined ? "–" : americanPrice(p);
 const signed = (n: number | undefined) =>
   n === undefined ? "" : n > 0 ? `+${n}` : `${n}`;
+/** Another book paying more for the identical line; nothing when FanDuel is already best. */
+const Best = ({ q }: { q: BookQuote | null }) =>
+  q ? (
+    <small className="sport-best">
+      Best {americanPrice(q.price)} · {q.book}
+    </small>
+  ) : null;
 
 /** NBA Home in the NFL layout: the next tip-off, then the week's games with their markets inside. */
 export default function NbaHome() {
   const [games, setGames] = useState<SlateGame[]>([]),
+    [books, setBooks] = useState<QuoteRow[]>([]),
     [loaded, setLoaded] = useState(false),
     [error, setError] = useState(false),
     [opened, setOpened] = useState(false),
@@ -97,11 +114,12 @@ export default function NbaHome() {
       if (!session.data.session) {
         setRows([]);
         setPicks([]);
+        setBooks([]);
         if (opened) setNotice("Sign in to see game markets.");
         return;
       }
       const list = ids.split(",");
-      const [q, p] = await Promise.all([
+      const [q, p, b] = await Promise.all([
         supabase
           .from("nba_observations")
           .select("game_id,kind,observed_at,recorded_at,payload")
@@ -125,6 +143,21 @@ export default function NbaHome() {
               .order("published_at", { ascending: false })
               .limit(200)
           : Promise.resolve({ data: [] as Pick[], error: null }),
+        // Every book's quotes, read only once a game opens, to name the best price for each line.
+        opened
+          ? supabase
+              .from("nba_observations")
+              .select("game_id,observed_at,payload")
+              .in("game_id", list)
+              .in("kind", ["odds", "prop"])
+              .in("payload->>book", [...BOOKS])
+              .gte(
+                "observed_at",
+                new Date(Date.now() - BEST_MAX_AGE_MS).toISOString(),
+              )
+              .order("observed_at", { ascending: false })
+              .limit(8000)
+          : Promise.resolve({ data: [] as QuoteRow[], error: null }),
       ]);
       if (!live || n !== generation) return;
       if (q.error || p.error) {
@@ -133,6 +166,8 @@ export default function NbaHome() {
       }
       setRows((q.data || []) as NbaQuoteRow[]);
       setPicks(currentSelections((p.data || []) as Pick[]));
+      // A failed comparison read only hides "Best"; FanDuel prices still show.
+      setBooks(b.error ? [] : ((b.data || []) as QuoteRow[]));
       setNotice("");
     }
     void load();
@@ -152,6 +187,7 @@ export default function NbaHome() {
   }, []);
   const faces: Record<string, MoneylineRead> = nbaFaces(rows, games, clock);
   const quotes = latestQuotes(rows, clock);
+  const compare = bookQuotes(books, clock, BEST_MAX_AGE_MS);
   async function copy(gameId: string, rows: Pick[]) {
     const text = rows
       .map((p) => `${p.player} ${selectionLabel(p)} ${americanPrice(p.odds)}`)
@@ -222,6 +258,19 @@ export default function NbaHome() {
                         <span className="sport-price">
                           {americanPrice(p.odds)}
                           <small>{p.book}</small>
+                          <Best
+                            q={beats(
+                              compare,
+                              selectionKey(
+                                p.game_id,
+                                p.market,
+                                p.player,
+                                p.direction,
+                                p.line,
+                              ),
+                              p.odds,
+                            )}
+                          />
                         </span>
                         <details>
                           <summary>Why and the risk</summary>
@@ -257,12 +306,38 @@ export default function NbaHome() {
                     <span key={`s-${l.label}`}>
                       <small>Spread</small>
                       {l.label} {signed(l.point)} <b>{price(l.price)}</b>
+                      <Best
+                        q={beats(
+                          compare,
+                          selectionKey(
+                            g.id,
+                            "spreads",
+                            "",
+                            l.name,
+                            l.point ?? null,
+                          ),
+                          l.price,
+                        )}
+                      />
                     </span>
                   ))}
                   {lines.total.map((l) => (
                     <span key={`t-${l.label}`}>
                       <small>Total</small>
                       {l.label} {l.point} <b>{price(l.price)}</b>
+                      <Best
+                        q={beats(
+                          compare,
+                          selectionKey(
+                            g.id,
+                            "totals",
+                            "",
+                            l.name,
+                            l.point ?? null,
+                          ),
+                          l.price,
+                        )}
+                      />
                     </span>
                   ))}
                 </div>
@@ -281,8 +356,31 @@ export default function NbaHome() {
                           {l.player} <small>{l.stat}</small>
                         </span>
                         <span>{l.point}</span>
-                        <span>O {price(l.over)}</span>
-                        <span>U {price(l.under)}</span>
+                        {(["Over", "Under"] as const).map((side) => {
+                          const shown = side === "Over" ? l.over : l.under;
+                          const market =
+                            l.stat === "PTS"
+                              ? "player_points"
+                              : "player_rebounds";
+                          return (
+                            <span key={side}>
+                              {side[0]} {price(shown)}
+                              <Best
+                                q={beats(
+                                  compare,
+                                  selectionKey(
+                                    g.id,
+                                    market,
+                                    l.player,
+                                    side,
+                                    l.point,
+                                  ),
+                                  shown,
+                                )}
+                              />
+                            </span>
+                          );
+                        })}
                       </li>
                     ))}
                   </ul>
@@ -292,8 +390,10 @@ export default function NbaHome() {
                 {lines.quotedAt
                   ? `FanDuel quotes as of ${easternTime(lines.quotedAt, { hour: "numeric", minute: "2-digit" })} ET. `
                   : ""}
-                Prices move and are not guaranteed. Market lines are reference,
-                not selections.
+                &ldquo;Best&rdquo; is the highest price for the identical line
+                across FanDuel, DraftKings, BetMGM, Caesars, BetRivers and
+                Fanatics in the last hour. Prices move and are not guaranteed.
+                Market lines are reference, not selections.
               </p>
               {open}
             </div>

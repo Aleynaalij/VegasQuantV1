@@ -102,8 +102,13 @@ test("spread and total keep the quoted points and prices", () => {
   );
   const lines = gameLines(latest.g1, game);
   assert.deepEqual(lines.spread, [
-    { label: "Trail Blazers", point: -6.5, price: -108 },
-    { label: "Jazz", point: 6.5, price: -112 },
+    {
+      label: "Trail Blazers",
+      name: "Portland Trail Blazers",
+      point: -6.5,
+      price: -108,
+    },
+    { label: "Jazz", name: "Utah Jazz", point: 6.5, price: -112 },
   ]);
   assert.equal(lines.total[0].point, 231.5);
   assert.equal(lines.quotedAt, "2026-10-31T10:00:06Z");

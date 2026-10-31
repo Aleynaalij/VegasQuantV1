@@ -45,3 +45,5 @@
 .sport-record div { padding: 14px; border: 1px solid #b69b4e33; border-radius: 14px; background: #11161c; }
 .sport-record dt { color: #9aa59f; font-size: .72rem; letter-spacing: .1em; text-transform: uppercase; }
 .sport-record dd { margin: 4px 0 0; font: 800 1.8rem/1 var(--font-board); color: #f4dc99; }
+/* Best price across books: shown only when another book pays more for the identical line. */
+.sport-best, .sport-lines small.sport-best, .sport-price small.sport-best { display: block; margin-top: 2px; color: #7fd6a4; font: 700 .62rem/1.2 var(--font-body); letter-spacing: .02em; text-transform: none; }
