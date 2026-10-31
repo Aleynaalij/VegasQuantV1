@@ -23,6 +23,7 @@ export function slateGame(g: SportGame): SlateGame {
     away: team(g.away),
     home: team(g.home),
     start: g.start_time,
+    tbd: g.start_time_tbd === true,
     venue: g.venue,
     neutral: g.neutral_site === true,
     status: g.completed ? "STATUS_FINAL" : g.status,

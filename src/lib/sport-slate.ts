@@ -17,6 +17,8 @@ export type SlateGame = {
   away: SlateTeam;
   home: SlateTeam;
   start: string;
+  /** The source hasn't set a start time; `start` is only a placeholder date. */
+  tbd?: boolean;
   venue: string | null;
   /** College games at a neutral site have no home court. */
   neutral?: boolean;
@@ -27,12 +29,17 @@ export type SlateGame = {
 
 const CLOSED = /FINAL|CANCEL|POSTPON|SUSPEND/i;
 
-/** Games that haven't started, inside the next week, soonest first. */
+/**
+ * Games that haven't started, inside the next week, soonest first. A TBD game's placeholder time
+ * says nothing about when it starts, so it stays listed through its placeholder day.
+ */
 export function upcomingSlate(games: SlateGame[], now = Date.now()) {
   return games
     .filter(
       (g) =>
-        Date.parse(g.start) > now &&
+        (g.tbd
+          ? Date.parse(g.start) > now - 86400000
+          : Date.parse(g.start) > now) &&
         Date.parse(g.start) <= now + 7 * 86400000 &&
         !CLOSED.test(g.status || ""),
     )

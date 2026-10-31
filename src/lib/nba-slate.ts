@@ -31,6 +31,7 @@ export function nbaSlateGame(g: NbaSlateRow): SlateGame {
       abbreviation: g.home_abbreviation,
     },
     start: g.tipoff,
+    tbd: g.tipoff_tbd === true,
     venue: g.venue,
     status: g.status,
     href: g.slug ? `/nba/games/${encodeURIComponent(g.slug)}` : null,
@@ -176,4 +177,15 @@ export function selectionLabel(p: {
         ? "REB"
         : p.market.replace(/_/g, " ").toUpperCase();
   return `${p.direction} ${p.line} ${stat}`;
+}
+
+/**
+ * Selections still current: a revised publication names the one it replaces in supersedes_id, so
+ * the replaced row never shows (or copies) beside its successor.
+ */
+export function currentSelections<
+  T extends { id: string; supersedes_id?: string | null },
+>(rows: T[]) {
+  const replaced = new Set(rows.map((r) => r.supersedes_id).filter(Boolean));
+  return rows.filter((r) => !replaced.has(r.id));
 }

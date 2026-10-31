@@ -143,3 +143,42 @@ test("selection labels read like the slip", () => {
     "Under 8.5 REB",
   );
 });
+
+test("a revised selection replaces the one it supersedes", async () => {
+  const { currentSelections } = await import("../src/lib/nba-slate");
+  const rows = [
+    { id: "v2", supersedes_id: "v1", direction: "Under" },
+    { id: "v1", supersedes_id: null, direction: "Over" },
+    { id: "other", supersedes_id: null, direction: "Over" },
+  ];
+  assert.deepEqual(
+    currentSelections(rows).map((r) => r.id),
+    ["v2", "other"],
+  );
+});
+
+test("TBD tip-offs keep their flag and stay listed through the placeholder day", async () => {
+  const { upcomingSlate } = await import("../src/lib/sport-slate");
+  const tbd = nbaSlateGame({
+    id: "t",
+    away_team: "Boston Celtics",
+    home_team: "New York Knicks",
+    away_abbreviation: "BOS",
+    home_abbreviation: "NY",
+    tipoff: "2026-10-31T04:00:00Z",
+    tipoff_tbd: true,
+    venue: null,
+    status: "STATUS_SCHEDULED",
+  });
+  assert.equal(tbd.tbd, true);
+  const now = Date.parse("2026-10-31T15:00:00Z");
+  assert.deepEqual(
+    upcomingSlate([tbd], now).map((g) => g.id),
+    ["t"],
+  );
+  assert.deepEqual(upcomingSlate([{ ...tbd, tbd: false }], now), []);
+  assert.deepEqual(
+    upcomingSlate([tbd], Date.parse("2026-11-01T05:00:00Z")),
+    [],
+  );
+});

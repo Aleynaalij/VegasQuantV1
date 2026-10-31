@@ -64,12 +64,13 @@ export default function SportSlate({
               </span>
               <span className="vq-game-when">
                 <span className="vq-game-time">
-                  {easternTime(g.start, {
-                    weekday: "short",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}{" "}
-                  ET
+                  {g.tbd
+                    ? `${easternTime(g.start, { weekday: "short" })} · TBD`
+                    : `${easternTime(g.start, {
+                        weekday: "short",
+                        hour: "numeric",
+                        minute: "2-digit",
+                      })} ET`}
                 </span>
                 <ChevronDown
                   className="vq-expand-chevron"

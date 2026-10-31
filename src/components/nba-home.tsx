@@ -8,6 +8,7 @@ import {
   latestQuotes,
   nbaFaces,
   nbaSlateGame,
+  currentSelections,
   playerLines,
   selectionLabel,
   type NbaQuoteRow,
@@ -30,6 +31,7 @@ type Pick = {
   risk: string;
   quote_observed_at: string | null;
   expires_at: string;
+  supersedes_id: string | null;
 };
 
 const price = (p: number | null | undefined) =>
@@ -113,7 +115,7 @@ export default function NbaHome() {
           ? supabase
               .from("nba_editorial_picks")
               .select(
-                "id,game_id,player,market,direction,line,odds,book,rationale,risk,quote_observed_at,expires_at",
+                "id,game_id,player,market,direction,line,odds,book,rationale,risk,quote_observed_at,expires_at,supersedes_id",
               )
               .in("game_id", list)
               .gt("expires_at", new Date().toISOString())
@@ -129,7 +131,7 @@ export default function NbaHome() {
       const rows = (q.data || []) as NbaQuoteRow[];
       setFaces(nbaFaces(rows, games));
       setQuotes(latestQuotes(rows));
-      setPicks((p.data || []) as Pick[]);
+      setPicks(currentSelections((p.data || []) as Pick[]));
       setNotice("");
     }
     void load();

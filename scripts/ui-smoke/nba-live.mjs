@@ -14,6 +14,8 @@ const iso = (h) => new Date(Date.now() + h * 3600000).toISOString();
 const games = [
   { id: "g1", slug: "por-uta", away_team: "Portland Trail Blazers", home_team: "Utah Jazz", away_abbreviation: "POR", home_abbreviation: "UTAH", tipoff: iso(5), tipoff_tbd: false, venue: "Delta Center", status: "STATUS_SCHEDULED" },
   { id: "g2", slug: "okc-hou", away_team: "Oklahoma City Thunder", home_team: "Houston Rockets", away_abbreviation: "OKC", home_abbreviation: "HOU", tipoff: iso(9), tipoff_tbd: false, venue: "Toyota Center", status: "STATUS_SCHEDULED" },
+  // Start time not set yet: its placeholder has passed, but it still lists, as TBD.
+  { id: "g3", slug: "tbd", away_team: "Miami Heat", home_team: "Orlando Magic", away_abbreviation: "MIA", home_abbreviation: "ORL", tipoff: iso(-1), tipoff_tbd: true, venue: null, status: "STATUS_SCHEDULED" },
   { id: "g0", slug: "done", away_team: "Boston Celtics", home_team: "New York Knicks", away_abbreviation: "BOS", home_abbreviation: "NY", tipoff: iso(-2), tipoff_tbd: false, venue: null, status: "STATUS_FINAL" },
 ];
 const quote = (game_id, market, outcomes, kind = "odds") => ({ game_id, kind, recorded_at: iso(-1), payload: { book: "FanDuel", market, outcomes, provider_updated_at: iso(-1) } });
@@ -23,7 +25,11 @@ const obs = [
   quote("g1", "totals", [{ name: "Over", point: 231.5, price: -110 }, { name: "Under", point: 231.5, price: -110 }]),
   quote("g1", "player_points", [{ name: "Over", point: 23.5, price: -102, description: "Deni Avdija" }, { name: "Under", point: 23.5, price: -130, description: "Deni Avdija" }], "prop"),
 ];
-const picks = [{ id: "p1", game_id: "g1", player: "Deni Avdija", market: "player_points", direction: "Over", line: 23.5, odds: -102, book: "FanDuel", rationale: "Usage climbed with the starting role.", risk: "Blowout minutes.", quote_observed_at: iso(-1), expires_at: iso(5) }];
+const picks = [
+  // p0 was revised by p1; only the revision shows.
+  { id: "p0", game_id: "g1", player: "Deni Avdija", market: "player_points", direction: "Under", line: 24.5, odds: -110, book: "FanDuel", rationale: "Old.", risk: "Old.", quote_observed_at: iso(-2), expires_at: iso(5), supersedes_id: null },
+  { supersedes_id: "p0", id: "p1", game_id: "g1", player: "Deni Avdija", market: "player_points", direction: "Over", line: 23.5, odds: -102, book: "FanDuel", rationale: "Usage climbed with the starting role.", risk: "Blowout minutes.", quote_observed_at: iso(-1), expires_at: iso(5) },
+];
 const session = () =>
   localStorage.setItem("sb-127-auth-token", JSON.stringify({ access_token: "smoke", token_type: "bearer", expires_in: 86400, expires_at: Math.floor(Date.now() / 1000) + 86400 * 400, refresh_token: "smoke", user: { id: "00000000-0000-0000-0000-000000000001", aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: {}, created_at: "2026-10-01T00:00:00Z" } }));
 for (const width of [390, 1280]) {
@@ -52,14 +58,17 @@ for (const width of [390, 1280]) {
     assert.match(await p.locator(".home-brief").innerText(), /NEXT TIP-OFF/i);
     assert.match(await p.locator(".home-brief").innerText(), /Trail Blazers/);
     // Finished games never show; the rest are rows with chevrons.
-    assert.equal(await p.locator(".vq-game-row").count(), 2, label);
-    assert.equal(await p.locator(".vq-game-row .vq-expand-chevron").count(), 2);
+    assert.equal(await p.locator(".vq-game-row").count(), 3, label);
+    assert.equal(await p.locator(".vq-game-row .vq-expand-chevron").count(), 3);
+    assert.match(await p.locator(".vq-game-row[data-game=g3]").innerText(), /TBD/);
     assert.equal(await chips.locator('a[data-sport="nba"]').getAttribute("aria-current"), "page");
     if (signedIn) {
       await p.locator(".vq-game-row .vq-ml-face").first().waitFor();
-      await p.locator(".vq-game-row").first().evaluate((d) => (d.open = true));
+      await p.locator(".vq-game-row[data-game=g1]").evaluate((d) => (d.open = true));
       await p.locator(".sport-selections li").first().waitFor();
-      const open = await p.locator(".vq-game-row").first().innerText();
+      const open = await p.locator(".vq-game-row[data-game=g1]").innerText();
+      assert.equal(await p.locator(".vq-game-row[data-game=g1]").locator(".sport-selections li").count(), 1, "superseded hidden");
+      assert.ok(!(await p.locator(".vq-game-row[data-game=g1]").innerText()).includes("Under 24.5 PTS"));
       for (const text of ["Deni Avdija", "Over 23.5 PTS", "Trail Blazers -6.5", "Over 231.5", "Open the matchup"]) assert.ok(open.includes(text), `${text} ${label}`);
     } else {
       await p.locator(".vq-game-row").first().evaluate((d) => (d.open = true));

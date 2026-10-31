@@ -20,7 +20,8 @@ export default function SportBrief({
 }) {
   const info = SPORTS[sport];
   const upcoming = upcomingSlate(games);
-  const next = upcoming[0];
+  // A game with a set start leads; a TBD placeholder time can't count down.
+  const next = upcoming.find((g) => !g.tbd) || upcoming[0];
   const team = (side: "away" | "home") => (
     <span className="vq-team">
       <SportLogo
@@ -58,21 +59,25 @@ export default function SportBrief({
             </Link>
             <div className="vq-hero-meta">
               <span>
-                {easternTime(next.start, {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}{" "}
-                ET{next.venue ? ` · ${next.venue}` : ""}
+                {next.tbd
+                  ? `${easternTime(next.start, { weekday: "short", month: "short", day: "numeric" })} · Time TBD`
+                  : `${easternTime(next.start, {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })} ET`}
+                {next.venue ? ` · ${next.venue}` : ""}
                 {next.neutral ? " · Neutral site" : ""}
               </span>
-              <KickoffCountdown
-                kickoff={next.start}
-                label={info.countdown}
-                liveLabel={info.started}
-              />
+              {next.tbd ? null : (
+                <KickoffCountdown
+                  kickoff={next.start}
+                  label={info.countdown}
+                  liveLabel={info.started}
+                />
+              )}
             </div>
             <div className="vq-hero-actions">
               <Link className="vq-btn" href="#sport-games">
