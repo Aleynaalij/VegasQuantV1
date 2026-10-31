@@ -1,4 +1,4 @@
-// NHL and college basketball (#166): Home in NFL's layout from sports_slate, game pages from sports_game,
+// NHL and college basketball (#166): Home in NFL's layout from sports_home, game pages from sports_game,
 // records from sports_records. Codex's synthetic contract fixtures, moved into the future, stand in for
 // the backend; nothing here is real data. Runs against the app on :3100 with the stub.
 import assert from "node:assert/strict";
@@ -331,7 +331,7 @@ for (const width of [390, 1280])
       assert.deepEqual(errors, [], label);
       await ctx.close();
     }
-// A quote must disappear from collapsed faces when its clock expires, even during a feed outage.
+// An aging quote stays visibly labelled as an older snapshot, including during a feed outage.
 for (const width of [390, 1280])
   for (const sport of ["nhl", "ncaab"]) {
     const ctx = await browser.newContext({
@@ -341,7 +341,7 @@ for (const width of [390, 1280])
     await ctx.addInitScript(session);
     let unavailable = false;
     const fixedNow = Date.now();
-    await ctx.route("**/rest/v1/rpc/sports_slate", async (r) => {
+    await ctx.route("**/rest/v1/rpc/sports_home", async (r) => {
       if (unavailable)
         return r.fulfill({ status: 503, json: { message: "Fixture outage" } });
       const data = page(sport, true);
@@ -361,7 +361,8 @@ for (const width of [390, 1280])
     await p.locator(".vq-ml-face").waitFor();
     unavailable = true;
     await p.clock.fastForward(120001);
-    await p.waitForFunction(() => !document.querySelector(".vq-ml-face"));
+    await p.getByText(/Older quote; price may have moved/).waitFor();
+    assert.equal(await p.locator(".vq-ml-face").count(), 1);
     await p
       .getByText(
         `The ${sport === "nhl" ? "NHL" : "College basketball"} schedule could not load.`,
@@ -370,6 +371,51 @@ for (const width of [390, 1280])
       .waitFor();
     await ctx.close();
   }
+// Large real-world slate: bounded initial DOM, lazy panels, and every remaining game reachable.
+for (const width of [390, 1280]) {
+  const ctx = await browser.newContext({
+    viewport: { width, height: 900 },
+    reducedMotion: "reduce",
+  });
+  await ctx.addInitScript(session);
+  let calls = 0;
+  await ctx.route("**/rest/v1/rpc/sports_home", (r) => {
+    calls++;
+    const data = page("ncaab", true),
+      g = data.games[0];
+    data.games = Array.from({ length: 380 }, (_, i) => ({
+      ...g,
+      id: i === 0 ? g.id : "perf-" + i,
+      slug: "perf-" + i,
+      home: { ...g.home, short_name: "Home " + i },
+    }));
+    data.facts = [];
+    data.results = [];
+    return r.fulfill({ json: data });
+  });
+  const p = await ctx.newPage();
+  await p.goto(base + "/ncaab", { waitUntil: "networkidle" });
+  await p.evaluate(() =>
+    document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
+  );
+  assert.equal(await p.locator(".vq-game-row").count(), 32);
+  assert.equal(await p.locator(".sport-market-group").count(), 0);
+  assert.equal(calls, 1, "no duplicate INITIAL_SESSION load");
+  await p.locator(".vq-game-row summary").first().click();
+  await p.locator(".sport-market-group").first().waitFor();
+  await p.locator(".vq-game-row summary").first().click();
+  await p.waitForFunction(() => !document.querySelector(".sport-market-group"));
+  for (let i = 0; i < 11; i++)
+    await p.getByRole("button", { name: /Show more games/ }).click();
+  assert.equal(await p.locator(".vq-game-row").count(), 380);
+  await p.getByText("Home 379", { exact: true }).waitFor();
+  assert.ok(
+    await p.evaluate(
+      () => document.documentElement.scrollWidth - innerWidth <= 1,
+    ),
+  );
+  await ctx.close();
+}
 await browser.close();
 console.log(
   "NHL/NCAAB: Home, rows, exact markets with settlement notes, NCAAB scope, game pages, injuries, records and member gating passed at phone and desktop width.",

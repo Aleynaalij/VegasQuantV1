@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { NewSport, SportPage } from "@/lib/sport-contract";
-import { latestMarkets, slateGame, sportFace } from "@/lib/sport-page";
-import type { MoneylineRead } from "@/lib/home-props";
+import { homeMoneylines, slateGame } from "@/lib/sport-page";
+import { onUserChange } from "@/lib/auth-user";
 import { SPORTS } from "@/lib/sports";
 import SportBrief from "./sport-brief";
 import SportSlate from "./sport-slate";
@@ -23,7 +23,7 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
     async function load() {
       setNow(Date.now());
       const n = ++generation;
-      const r = await supabase.rpc("sports_slate", {
+      const r = await supabase.rpc("sports_home", {
         p_sport: sport,
         p_days: 7,
       });
@@ -35,23 +35,24 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
     void load();
     const timer = setInterval(load, 60000);
     // Markets are member reads: reload (or clear) when the account signs in or out.
-    const auth = supabase.auth.onAuthStateChange(() => void load());
+    const stop = onUserChange(() => {
+      setPage(null);
+      void load();
+    });
     return () => {
       live = false;
       clearInterval(timer);
-      auth.data.subscription.unsubscribe();
+      stop();
     };
   }, [sport, retry]);
-  const games = (page?.games || []).map(slateGame);
-  const faces: Record<string, MoneylineRead> = {};
-  if (page)
-    for (const g of games) {
-      const face = sportFace(
-        latestMarkets(page.markets).filter((m) => m.game_id === g.id),
-        now,
-      );
-      if (face) faces[g.id] = face;
-    }
+  const games = useMemo(
+    () => (page?.games || []).map(slateGame),
+    [page?.games],
+  );
+  const { faces, quoteTimes } = useMemo(
+    () => homeMoneylines(page?.markets || [], now),
+    [page?.markets, now],
+  );
   const info = SPORTS[sport];
   return (
     <div className="sport-home" data-sport={sport}>
@@ -72,9 +73,26 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
           </button>
         </p>
       ) : null}
+      {page?.access ? (
+        <p className="vq-prop-note">
+          FanDuel moneylines for {Object.keys(faces).length} of{" "}
+          {
+            games.filter(
+              (g) =>
+                !g.status || !/FINAL|CANCEL|POSTPON|SUSPEND/i.test(g.status),
+            ).length
+          }{" "}
+          games.{" "}
+          {Object.values(quoteTimes).some((q) => q.stale)
+            ? "Older quotes are labelled with their observation time. "
+            : ""}
+          Market lean comes from sportsbook prices, not a model edge.
+        </p>
+      ) : null}
       <SportSlate
         games={games}
         faces={faces}
+        quoteTimes={quoteTimes}
         empty={
           page ? `No ${info.name} games scheduled this week.` : "Loading games…"
         }
@@ -89,7 +107,11 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
               </div>
             )}
             {g.href ? (
-              <Link className="vq-btn ghost sport-open" href={g.href}>
+              <Link
+                prefetch={false}
+                className="vq-btn ghost sport-open"
+                href={g.href}
+              >
                 Open the matchup →
               </Link>
             ) : null}

@@ -22,7 +22,7 @@ import {
 /** NFL and NBA read their own FanDuel snapshots; NHL and college basketball read sports_slate. */
 async function loadPool(sport: Sport, now: number): Promise<SlotLeg[]> {
   if (sport === "nhl" || sport === "ncaab") {
-    const r = await supabase.rpc("sports_slate", { p_sport: sport, p_days: 7 });
+    const r = await supabase.rpc("sports_home", { p_sport: sport, p_days: 7 });
     if (r.error || r.data?.version !== 1)
       throw new Error("The market board could not load. Please retry.");
     return sportSlotPool(r.data as SportPage, sport, now);

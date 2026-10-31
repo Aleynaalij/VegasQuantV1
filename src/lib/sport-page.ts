@@ -57,10 +57,10 @@ export function latestMarkets(markets: SportMarket[]) {
 }
 
 /** Card-face moneyline from the open FanDuel h2h pair; null unless both sides are quoted. */
-export function sportFace(
+export function sportFaceSnapshot(
   markets: SportMarket[],
   now = Date.now(),
-): MoneylineRead | null {
+): { read: MoneylineRead; observedAt: string; stale: boolean } | null {
   const h2h = markets.filter((m) => m.market === "h2h");
   const home = h2h.find((m) => m.side === "home"),
     away = h2h.find((m) => m.side === "away");
@@ -69,7 +69,7 @@ export function sportFace(
     !away ||
     [home, away].some(
       (m) =>
-        isStale(m, now) ||
+        !Number.isFinite(Date.parse(m.expires_at)) ||
         !Number.isFinite(Date.parse(m.observed_at)) ||
         Date.parse(m.observed_at) > now,
     ) ||
@@ -81,9 +81,50 @@ export function sportFace(
   const h = implied(home.odds),
     a = implied(away.odds);
   return {
-    home: { price: home.odds, probability: h / (h + a) },
-    away: { price: away.odds, probability: a / (h + a) },
+    read: {
+      home: { price: home.odds, probability: h / (h + a) },
+      away: { price: away.odds, probability: a / (h + a) },
+    },
+    observedAt:
+      Date.parse(home.observed_at) < Date.parse(away.observed_at)
+        ? home.observed_at
+        : away.observed_at,
+    stale: [home, away].some((m) => isStale(m, now)),
   };
+}
+
+/** Current faces remain strict; an older display must carry the snapshot's age metadata. */
+export function sportFace(
+  markets: SportMarket[],
+  now = Date.now(),
+): MoneylineRead | null {
+  const snapshot = sportFaceSnapshot(markets, now);
+  return snapshot && !snapshot.stale ? snapshot.read : null;
+}
+
+/** Sort the slate's markets once, then derive each game's face from its own small group. */
+export function homeMoneylines(markets: SportMarket[], now = Date.now()) {
+  const groups = new Map<string, SportMarket[]>();
+  for (const m of latestMarkets(markets))
+    if (m.market === "h2h") {
+      const group = groups.get(m.game_id) || [];
+      group.push(m);
+      groups.set(m.game_id, group);
+    }
+  const faces: Record<string, MoneylineRead> = {},
+    quoteTimes: Record<string, { observedAt: string; stale: boolean }> = {};
+  for (const [id, rows] of groups) {
+    const latest = Math.max(...rows.map((m) => Date.parse(m.observed_at)));
+    const q = sportFaceSnapshot(
+      rows.filter((m) => Date.parse(m.observed_at) === latest),
+      now,
+    );
+    if (q) {
+      faces[id] = q.read;
+      quoteTimes[id] = { observedAt: q.observedAt, stale: q.stale };
+    }
+  }
+  return { faces, quoteTimes };
 }
 
 export const MARKET_LABEL: Record<SportMarket["market"], string> = {
