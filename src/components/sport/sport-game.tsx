@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { NewSport, SportPage } from "@/lib/sport-contract";
+import { BEST_MAX_AGE_MS, type QuoteRow } from "@/lib/best-price";
 import { slateGame, sportInjuries } from "@/lib/sport-page";
 import { easternTime } from "@/lib/sport-slate";
 import { SPORTS } from "@/lib/sports";
@@ -28,7 +29,8 @@ export default function SportGame({
 }) {
   const [page, setPage] = useState<SportPage | null>(null),
     [state, setState] = useState<"loading" | "ready" | "error">("loading"),
-    [retry, setRetry] = useState(0);
+    [retry, setRetry] = useState(0),
+    [books, setBooks] = useState<QuoteRow[]>([]);
   useEffect(() => {
     let live = true,
       generation = 0;
@@ -45,6 +47,23 @@ export default function SportGame({
       }
       setPage(r.data as SportPage);
       setState("ready");
+      // Other books' last-hour quotes name a better price (members only, by RLS). A failed read
+      // only hides "Best"; FanDuel's markets still show.
+      const id = (r.data as SportPage).games[0]?.id;
+      const b = id
+        ? await supabase
+            .from("sports_book_quotes")
+            .select("game_id,observed_at,payload")
+            .eq("game_id", id)
+            .gte(
+              "observed_at",
+              new Date(Date.now() - BEST_MAX_AGE_MS).toISOString(),
+            )
+            .order("observed_at", { ascending: false })
+            .limit(500)
+        : null;
+      if (!live || n !== generation) return;
+      setBooks(b && !b.error ? ((b.data || []) as QuoteRow[]) : []);
     }
     void load();
     const timer = setInterval(load, 60000);
@@ -150,7 +169,7 @@ export default function SportGame({
               </div>
             </section>
             {page!.access ? (
-              <SportMarkets page={page!} gameId={raw.id} />
+              <SportMarkets page={page!} gameId={raw.id} books={books} />
             ) : (
               <p role="status" className="sport-empty">
                 Sign in with research access to see this game’s markets and

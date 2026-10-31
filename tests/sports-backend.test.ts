@@ -5,7 +5,15 @@ import {
   scoreboardGames,
   normalizeMarkets,
   scoreboardUrl,
+  bookSnapshots,
+  BOOKMAKERS,
 } from "../supabase/functions/sports-sync/normalize";
+import {
+  beats,
+  bookQuotes,
+  BEST_MAX_AGE_MS,
+  selectionKey,
+} from "../src/lib/best-price";
 import { parseResult } from "../supabase/functions/sports-results/parse";
 import { gradeSportMarket } from "../src/lib/sport-grading";
 import { sportSlotPool, marketSlotPool } from "../src/lib/slot-markets";
@@ -304,5 +312,74 @@ test("Neutral-site reversed provider orientation binds the exact team, never the
   assert.equal(
     normalizeMarkets([swapped], "nhl", [game], source, now).length,
     0,
+  );
+});
+
+test("Other books are snapshots for Best only; FanDuel markets never include them", () => {
+  assert.equal(
+    BOOKMAKERS,
+    "fanduel,draftkings,betmgm,williamhill_us,betrivers,fanatics",
+  );
+  const many = structuredClone(e) as typeof e;
+  many.bookmakers.push(
+    {
+      key: "draftkings",
+      last_update: source.retrieved_at,
+      markets: [
+        {
+          key: "h2h",
+          outcomes: [
+            { name: game.home.name, price: 105 },
+            { name: game.away.name, price: -125 },
+          ],
+        },
+      ],
+    },
+    {
+      key: "williamhill_us",
+      last_update: source.retrieved_at,
+      markets: [
+        {
+          key: "h2h",
+          outcomes: [
+            { name: game.home.name, price: -115 },
+            { name: game.away.name, price: 50 },
+          ],
+        },
+      ],
+    },
+    { key: "bovada", last_update: source.retrieved_at, markets: [] },
+  );
+  const fanduel = normalizeMarkets([many], "nhl", [game], source, now);
+  assert.equal(fanduel.length, 2);
+  assert.ok(fanduel.every((m) => m.book === "FanDuel"));
+  const snaps = bookSnapshots([many], "nhl", [game], source, now);
+  assert.deepEqual(
+    snaps.map((s) => [s.book, s.market, s.outcomes.length]),
+    [
+      ["DraftKings", "h2h", 2],
+      // An invalid price is dropped exactly as it would be for FanDuel.
+      ["Caesars", "h2h", 1],
+    ],
+  );
+  assert.deepEqual(snaps[0].outcomes[0], { name: "home", price: 105 });
+  // Keyed like the page compares a FanDuel market: side, line, player.
+  const q = bookQuotes(
+    snaps.map((s) => ({
+      game_id: s.game_id,
+      observed_at: s.observed_at,
+      payload: { book: s.book, market: s.market, outcomes: s.outcomes },
+    })),
+    now,
+    BEST_MAX_AGE_MS,
+  );
+  const home = fanduel.find((m) => m.side === "home")!;
+  assert.equal(
+    beats(
+      q,
+      selectionKey(home.game_id, home.market, "", "home", home.line),
+      home.odds,
+    )?.book,
+    "DraftKings",
   );
 });

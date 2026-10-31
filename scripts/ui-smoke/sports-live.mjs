@@ -206,6 +206,28 @@ for (const width of [390, 1280])
             : [row],
         });
       });
+      // DraftKings pays more on the away moneyline (-130 vs FanDuel -140), less on the home side.
+      const bookReads = [];
+      await ctx.route("**/rest/v1/sports_book_quotes*", (r) => {
+        const game = page(sport, true).games[0];
+        bookReads.push(new URL(r.request().url()).searchParams.get("game_id"));
+        return r.fulfill({
+          json: [
+            {
+              game_id: game.id,
+              observed_at: new Date(Date.now() - 5 * 60000).toISOString(),
+              payload: {
+                book: "DraftKings",
+                market: "h2h",
+                outcomes: [
+                  { name: "away", price: -130 },
+                  { name: "home", price: 110 },
+                ],
+              },
+            },
+          ],
+        });
+      });
       const calls = [];
       await ctx.route("**/rest/v1/rpc/sports_*", async (r) => {
         const name = new URL(r.request().url()).pathname.split("/").at(-1);
@@ -311,6 +333,14 @@ for (const width of [390, 1280])
       await p.locator(".sport-game-head .vq-matchup").waitFor();
       if (signedIn) {
         await p.getByText("Fixture Player").waitFor();
+        await p.locator(".sport-best").first().waitFor();
+        // The away side shows it on the published selection and on its market row; home never.
+        assert.deepEqual(
+          [...new Set(await p.locator(".sport-best").allInnerTexts())],
+          ["Best -130 · DraftKings"],
+          `only the beaten side names a book ${label}`,
+        );
+        assert.equal(bookReads.at(-1), `eq.${page(sport, true).games[0].id}`);
         assert.ok(
           (await p.locator("body").innerText()).includes(
             "omissions do not confirm availability",
