@@ -182,6 +182,9 @@ export function sportSlotPool(
         (g) =>
           g.sport === sport &&
           !g.completed &&
+          !/FINAL|CANCEL|POSTPON|SUSPEND|IN_PROGRESS|HALFTIME|END_PERIOD/i.test(
+            g.status,
+          ) &&
           !g.start_time_tbd &&
           Date.parse(g.start_time) > now,
       )

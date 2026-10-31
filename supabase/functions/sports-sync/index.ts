@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { contextBatch } from "./context-schedule.ts";
 import {
   allowedMarkets,
   dates,
@@ -135,11 +136,31 @@ Deno.serve(async (req: Request) => {
             .filter(([, ids]) => ids.size >= 2)
             .map(([id]) => id),
         );
-        for (const g of games
-          .filter((g) => !covered.has(g.id))
-          .filter((g) => Date.parse(g.start_time) <= now + 36 * 3600000)
-          .slice(0, 4)) {
+        const attempts = games.length
+          ? await db
+              .from("sports_context_attempts")
+              .select("game_id,attempted_at,next_attempt_at")
+              .in(
+                "game_id",
+                games.map((g) => g.id),
+              )
+          : { data: [], error: null };
+        if (attempts.error) throw attempts.error;
+        const due = contextBatch(games, covered, attempts.data || [], now);
+        if (due.length) {
+          const saved = await db.from("sports_context_attempts").upsert(
+            due.map((g) => ({
+              game_id: g.id,
+              attempted_at: new Date(now).toISOString(),
+              next_attempt_at: new Date(now + 15 * 60000).toISOString(),
+            })),
+            { onConflict: "game_id" },
+          );
+          if (saved.error) throw saved.error;
+        }
+        for (const g of due) {
           try {
+            let complete = true;
             const r = await read(summaryUrl(sport, g.provider_id));
             const payload = {
               injuries: r.data.injuries || null,
@@ -209,11 +230,21 @@ Deno.serve(async (req: Request) => {
                       },
                     });
                   } catch (e) {
+                    complete = false;
                     errors.push(`${endpoint}: ${String(e).slice(0, 80)}`);
                   }
                 }),
               ),
             );
+            if (complete) {
+              const saved = await db
+                .from("sports_context_attempts")
+                .update({
+                  next_attempt_at: new Date(now + 6 * 3600000).toISOString(),
+                })
+                .eq("game_id", g.id);
+              if (saved.error) throw saved.error;
+            }
           } catch (e) {
             errors.push("context: " + String(e).slice(0, 100));
           }

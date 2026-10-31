@@ -224,6 +224,39 @@ test("Sport-filtered Slots never mixes sports or adds college props", () => {
   );
   assert.equal(rows[0].sport, "nhl");
 });
+test("Slots refuses future fixtures with closed or live source status despite unexpired quotes", () => {
+  for (const sport of ["nhl", "ncaab"] as const) {
+    const p = {
+      ...page,
+      sport,
+      games: page.games.map((g) => ({ ...g, sport })),
+      markets: page.markets.map((m) => ({ ...m, sport })),
+    };
+    assert.ok(sportSlotPool(p, sport, now).length > 0);
+    for (const status of [
+      "STATUS_POSTPONED",
+      "STATUS_CANCELED",
+      "STATUS_SUSPENDED",
+      "STATUS_FINAL",
+      "STATUS_IN_PROGRESS",
+      "STATUS_HALFTIME",
+      "STATUS_END_PERIOD",
+    ]) {
+      assert.equal(
+        sportSlotPool(
+          {
+            ...p,
+            games: p.games.map((g) => ({ ...g, status, completed: false })),
+          },
+          sport,
+          now,
+        ).length,
+        0,
+        status,
+      );
+    }
+  }
+});
 test("Final parser rejects foreign teams and missing rows rather than inventing zero", () => {
   assert.throws(
     () => parseResult({ header: { id: "x" } }, game, source),
