@@ -1,0 +1,55 @@
+.zone-publication {
+  margin: 16px 0;
+  min-width: 0;
+}
+.zone-publication-face {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  font-family: var(--font-body), sans-serif;
+  font-weight: 500;
+}
+.zone-publication-face .publication-brand {
+  fill: #f4dc99;
+  font-size: 22px;
+  font-weight: 700;
+}
+.zone-publication-face .publication-headline {
+  font:
+    800 128px var(--font-board),
+    sans-serif;
+}
+.publication-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.publication-controls button {
+  min-height: 44px;
+  white-space: normal;
+}
+.publication-controls .ticket-destinations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.publication-analysis {
+  margin-top: 16px;
+}
+.publication-analysis summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 10px 0;
+}
+.publication-analysis p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.zone-publication > textarea {
+  width: 100%;
+  min-height: 100px;
+  font-size: 16px;
+}
