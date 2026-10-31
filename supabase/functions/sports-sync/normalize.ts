@@ -294,6 +294,10 @@ export type BookSnapshot = {
  * The other five books' quotes, held to exactly FanDuel's matching and validation, as one snapshot
  * per game, book and market. Outcomes are keyed the way Vegas Quant compares them: the side (home or
  * away) or direction (Over, Under, Yes), the player and the line.
+ *
+ * Every requested market gets a snapshot for every matched upcoming game and book, empty when the
+ * book left it out, sent it without outcomes, or only offered stale or invalid prices. The newest
+ * snapshot replaces the last one, so a price a book has withdrawn is never shown as "Best".
  */
 export function bookSnapshots(
   events: unknown,
@@ -301,8 +305,34 @@ export function bookSnapshots(
   games: SportGame[],
   source: SportSource,
   now = Date.now(),
+  requested: readonly string[] = [],
 ): BookSnapshot[] {
   const out = new Map<string, BookSnapshot>();
+  const at = new Date(now).toISOString();
+  const markets = requested.filter((m) =>
+    (allowedMarkets[sport] as readonly string[]).includes(m),
+  );
+  for (const e of array(Array.isArray(events) ? events : [events])) {
+    if (e.sport_key !== oddsKeys[sport]) continue;
+    const g = gameForEvent(e, games);
+    if (
+      !g ||
+      Date.parse(g.start_time) <= now ||
+      g.start_time_tbd ||
+      g.completed
+    )
+      continue;
+    for (const bookKey of Object.keys(BOOK_NAMES) as BookKey[])
+      if (bookKey !== "fanduel")
+        for (const market of markets)
+          out.set(JSON.stringify([g.id, bookKey, market]), {
+            game_id: g.id,
+            book: BOOK_NAMES[bookKey],
+            market,
+            observed_at: at,
+            outcomes: [],
+          });
+  }
   for (const bookKey of Object.keys(BOOK_NAMES) as BookKey[]) {
     if (bookKey === "fanduel") continue;
     for (const m of normalizeMarkets(
@@ -318,10 +348,9 @@ export function bookSnapshots(
         game_id: m.game_id,
         book: BOOK_NAMES[bookKey],
         market: m.market,
-        observed_at: m.observed_at,
+        observed_at: at,
         outcomes: [],
       };
-      if (m.observed_at > snap.observed_at) snap.observed_at = m.observed_at;
       snap.outcomes.push({
         name: (m.side || m.direction)!,
         ...(m.player ? { description: m.player } : {}),

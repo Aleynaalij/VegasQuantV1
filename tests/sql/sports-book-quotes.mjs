@@ -25,6 +25,9 @@ const snap={game_id:id,book:'DraftKings',market:'totals',observed_at:at,outcomes
 assert.equal((await rpc('ingest_sports_books',{sport:'nhl',snapshots:[snap,snap]})).book_quotes_inserted,1,'identical snapshot stored once');
 const row=(await db.query('select book,market,payload from public.sports_book_quotes')).rows[0];
 assert.equal(row.payload.book,'DraftKings');assert.equal(row.payload.market,'totals');assert.equal(row.payload.outcomes.length,2);
+// A withdrawn market is stored as an empty snapshot so it replaces the last prices.
+assert.equal((await rpc('ingest_sports_books',{sport:'nhl',snapshots:[{...snap,observed_at:new Date(now-60000).toISOString(),outcomes:[]}]})).book_quotes_inserted,1);
+await db.exec("delete from public.sports_book_quotes where jsonb_array_length(payload->'outcomes')=0");
 // Validation: unknown or FanDuel book, wrong sport market, stale or future time, bad price, unknown game.
 for(const [bad,re] of [
  [{...snap,book:'FanDuel'},/Invalid or stale/],[{...snap,book:'Bovada'},/Invalid or stale/],

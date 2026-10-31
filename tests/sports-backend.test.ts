@@ -383,3 +383,73 @@ test("Other books are snapshots for Best only; FanDuel markets never include the
     "DraftKings",
   );
 });
+
+test("A book that withdraws a market gets an empty snapshot, so its old price stops counting", () => {
+  const withDk = structuredClone(e) as typeof e;
+  withDk.bookmakers.push({
+    key: "draftkings",
+    last_update: source.retrieved_at,
+    markets: [
+      {
+        key: "h2h",
+        outcomes: [
+          { name: game.home.name, price: 105 },
+          { name: game.away.name, price: -125 },
+        ],
+      },
+    ],
+  });
+  const first = bookSnapshots([withDk], "nhl", [game], source, now, ["h2h"]);
+  // Every other book gets a snapshot for the requested market; only DraftKings has prices.
+  assert.deepEqual(first.map((s) => [s.book, s.outcomes.length]).sort(), [
+    ["BetMGM", 0],
+    ["BetRivers", 0],
+    ["Caesars", 0],
+    ["DraftKings", 2],
+    ["Fanatics", 0],
+  ]);
+  const asRows = (snaps: typeof first) =>
+    snaps.map((s) => ({
+      game_id: s.game_id,
+      observed_at: s.observed_at,
+      payload: { book: s.book, market: s.market, outcomes: s.outcomes },
+    }));
+  assert.equal(
+    beats(
+      bookQuotes(asRows(first), now, BEST_MAX_AGE_MS),
+      selectionKey(game.id, "h2h", "", "home", null),
+      -110,
+    )?.book,
+    "DraftKings",
+    "before the withdrawal DraftKings is best",
+  );
+  // Ten minutes later DraftKings sends the market empty (or drops it): an empty snapshot replaces it.
+  const pulled = structuredClone(withDk);
+  pulled.bookmakers[1].markets[0].outcomes = [];
+  const dropped = structuredClone(e);
+  for (const later of [pulled, dropped]) {
+    const second = bookSnapshots(
+      [later],
+      "nhl",
+      [game],
+      source,
+      now + 10 * 60000,
+      ["h2h"],
+    );
+    const rows = [...first, ...second].map((s) => ({
+      game_id: s.game_id,
+      observed_at: s.observed_at,
+      payload: { book: s.book, market: s.market, outcomes: s.outcomes },
+    }));
+    const q = bookQuotes(rows, now + 10 * 60000, BEST_MAX_AGE_MS);
+    assert.equal(
+      beats(q, selectionKey(game.id, "h2h", "", "home", null), -110),
+      null,
+    );
+  }
+  // Markets outside the sport's scope are never requested snapshots.
+  assert.equal(
+    bookSnapshots([e], "ncaab", [game], source, now, ["totals"]).length,
+    0,
+  );
+});

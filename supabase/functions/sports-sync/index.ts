@@ -34,10 +34,18 @@ async function books(
   data: unknown,
   games: SportGame[],
   source: Parameters<typeof bookSnapshots>[3],
+  requested: string,
   errors: string[],
 ) {
   try {
-    const snapshots = bookSnapshots(data, sport, games, source, Date.now());
+    const snapshots = bookSnapshots(
+      data,
+      sport,
+      games,
+      source,
+      Date.now(),
+      requested.split(","),
+    );
     if (snapshots.length)
       await rpc("ingest_sports_books", { p: { sport, snapshots } });
   } catch (e) {
@@ -328,7 +336,7 @@ Deno.serve(async (req: Request) => {
             },
           },
         });
-        await books(sport, r.data, games, r.source, errors);
+        await books(sport, r.data, games, r.source, mk, errors);
         await rpc("sports_feed_checkpoint", {
           p_sport: sport,
           p: {
@@ -389,7 +397,7 @@ Deno.serve(async (req: Request) => {
                 details: { prop_event: e.id, credits_remaining: r.remaining },
               },
             });
-            await books(sport, r.data, games, r.source, errors);
+            await books(sport, r.data, games, r.source, markets, errors);
             cache[e.id] = new Date(now).toISOString();
             await rpc("sports_feed_checkpoint", {
               p_sport: sport,
