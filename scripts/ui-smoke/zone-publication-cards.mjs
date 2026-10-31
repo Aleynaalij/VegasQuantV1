@@ -100,6 +100,9 @@ try {
     );
     const p = await ctx.newPage(),
       errors = [];
+    p.on("console", (m) => {
+      if (m.text().includes("card export failed")) console.log(m.text());
+    });
     p.on("pageerror", (e) => errors.push(e.message));
     await p.goto(base + "/community", { waitUntil: "networkidle" });
     await p.locator(".zone-publication").first().waitFor();
@@ -161,8 +164,11 @@ try {
       );
     }
     const first = p.locator(".zone-publication[data-sport=nfl]");
-    const dl = p.waitForEvent("download");
     await first.getByRole("button", { name: /Download card/ }).click();
+    const save = first.getByRole("link", { name: /Save image/ });
+    await save.waitFor();
+    const dl = p.waitForEvent("download");
+    await save.click();
     const file = await (await dl).path(),
       bytes = readFileSync(file);
     assert.equal(bytes.readUInt32BE(16), 1080);

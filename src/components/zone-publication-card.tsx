@@ -1,5 +1,5 @@
 "use client";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { MARK_PATHS } from "./brand-mark";
 import GamblyLink from "./gambly-link";
 import {
@@ -23,9 +23,18 @@ export default function ZonePublicationCard({
     [copied, setCopied] = useState(false),
     [error, setError] = useState(""),
     [manual, setManual] = useState(false),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [exported, setExported] = useState<{ url: string; page: number } | null>(
+      null,
+    );
   const id = useId().replace(/[^a-zA-Z0-9]/g, ""),
     pages = useMemo(() => publicationPages(p), [p]);
+  useEffect(
+    () => () => {
+      if (exported) URL.revokeObjectURL(exported.url);
+    },
+    [exported],
+  );
   if (!isSport(p.sport)) return null;
   const theme = PUBLICATION_COLORS[p.sport],
     index = Math.min(page, pages.length - 1),
@@ -34,7 +43,7 @@ export default function ZonePublicationCard({
   const stamp = publicationStamp(p.created_at),
     copyText = publicationCopy(p);
   const footer = p.legs.length
-    ? "Qualitative editorial · verify current line and availability"
+    ? "Published picks · verify current line and availability"
     : "Vegas Quant publication · original analysis and sources";
   async function copy() {
     setError("");
@@ -130,13 +139,9 @@ export default function ZonePublicationCard({
           "image/png",
         ),
       );
-      const url = URL.createObjectURL(blob),
-        link = document.createElement("a");
-      link.href = url;
-      link.download = `vegas-quant-${p.sport}-${p.id}-${index + 1}.png`;
-      link.click();
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-    } catch {
+      setExported({ url: URL.createObjectURL(blob), page: index });
+    } catch (cause) {
+      console.error("Vegas Quant card export failed", cause);
       setError("The card could not download. Please retry.");
     } finally {
       setBusy(false);
@@ -309,6 +314,24 @@ export default function ZonePublicationCard({
           </>
         )}
       </div>
+      {exported && (
+        <div className="publication-controls">
+          <a
+            className="primary"
+            href={exported.url}
+            download={`vegas-quant-${p.sport}-${p.id}-${exported.page + 1}.png`}
+          >
+            Save image · Card {exported.page + 1}
+          </a>
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => setExported(null)}
+          >
+            Close download
+          </button>
+        </div>
+      )}
       {error && <p role="alert">{error}</p>}
       {manual && (
         <textarea
