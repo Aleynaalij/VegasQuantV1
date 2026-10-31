@@ -5,7 +5,23 @@ export type SlotGame = {
   home_team: string;
   away_team: string;
   kickoff: string;
+  status?: string | null;
+  tipoff_tbd?: boolean | null;
 };
+export function eligibleSlotGames(
+  games: SlotGame[],
+  now: number,
+  sport: "nfl" | "nba",
+) {
+  return games.filter(
+    (g) =>
+      Date.parse(g.kickoff) > now &&
+      !/FINAL|CANCEL|POSTPON|SUSPEND|IN_PROGRESS|HALFTIME|END_PERIOD/i.test(
+        g.status || "",
+      ) &&
+      (sport !== "nba" || (g.tipoff_tbd === false && !!g.status)),
+  );
+}
 export type SlotObservation = {
   id: string;
   game_id: string;
@@ -44,7 +60,7 @@ export function marketSlotPool(
   sport: "nfl" | "nba" = "nfl",
 ): SlotLeg[] {
   const slate = new Map(
-    games
+    eligibleSlotGames(games, now, sport)
       .filter(
         (g) =>
           Date.parse(g.kickoff) > now &&

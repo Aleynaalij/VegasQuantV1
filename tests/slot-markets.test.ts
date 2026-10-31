@@ -43,6 +43,46 @@ test("sourced full slate works without any published selections", () => {
   }
   assert.match(slotCopy(pool.slice(0, 8)), /FanDuel snapshot/);
 });
+test("NBA Slots requires known scheduled time and excludes closed/live games at the engine boundary", () => {
+  const schedule = games.map((g) => ({
+    ...g,
+    status: "STATUS_SCHEDULED",
+    tipoff_tbd: false,
+  }));
+  assert.equal(
+    marketSlotPool(schedule, [observation(0)], now, "nba").length,
+    2,
+  );
+  for (const status of [
+    "STATUS_POSTPONED",
+    "STATUS_CANCELED",
+    "STATUS_SUSPENDED",
+    "STATUS_FINAL",
+    "STATUS_IN_PROGRESS",
+    "STATUS_HALFTIME",
+    "STATUS_END_PERIOD",
+    null,
+  ])
+    assert.equal(
+      marketSlotPool(
+        schedule.map((g) => ({ ...g, status })),
+        [observation(0)],
+        now,
+        "nba",
+      ).length,
+      0,
+    );
+  for (const tipoff_tbd of [true, null, undefined])
+    assert.equal(
+      marketSlotPool(
+        schedule.map((g) => ({ ...g, tipoff_tbd })),
+        [observation(0)],
+        now,
+        "nba",
+      ).length,
+      0,
+    );
+});
 test("expired, future, wrong book, unknown team and unsupported markets stay excluded", () => {
   const o = observation(0);
   for (const invalid of [

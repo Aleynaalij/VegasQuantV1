@@ -42,6 +42,16 @@ test("failed context reads back off and covered or closed games stay out", () =>
     contextBatch(games, new Set(), attempts, now + 15 * 60000).length,
     4,
   );
+  // Saved team statistics must not hide a failed roster's now-due retry.
+  assert.equal(
+    contextBatch(
+      games,
+      new Set(games.map((g) => g.id)),
+      attempts,
+      now + 15 * 60000,
+    ).length,
+    4,
+  );
   assert.equal(
     contextBatch(games, new Set(games.map((g) => g.id)), [], now).length,
     0,

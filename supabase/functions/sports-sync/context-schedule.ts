@@ -20,7 +20,7 @@ export function contextBatch(
       (g) =>
         !g.completed &&
         !/FINAL|CANCEL|POSTPON|SUSPEND/i.test(g.status) &&
-        !covered.has(g.id) &&
+        (tried.has(g.id) || !covered.has(g.id)) &&
         Date.parse(g.start_time) > now &&
         Date.parse(g.start_time) <= now + 36 * 3600000 &&
         stamp(tried.get(g.id)?.next_attempt_at) <= now,

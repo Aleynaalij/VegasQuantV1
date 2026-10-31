@@ -12,6 +12,7 @@ import type { SportPage } from "@/lib/sport-contract";
 
 import {
   marketSlotPool,
+  eligibleSlotGames,
   sportSlotPool,
   slotFreshnessMs,
   type SlotGame,
@@ -30,7 +31,7 @@ async function loadPool(sport: Sport, now: number): Promise<SlotLeg[]> {
   const { data: games, error } = nba
     ? await supabase
         .from("nba_games")
-        .select("id,home_team,away_team,kickoff:tipoff")
+        .select("id,home_team,away_team,kickoff:tipoff,status,tipoff_tbd")
         .eq("season_type", 2)
         .gt("tipoff", new Date(now).toISOString())
         .lte("tipoff", new Date(now + 7 * slotFreshnessMs).toISOString())
@@ -42,7 +43,11 @@ async function loadPool(sport: Sport, now: number): Promise<SlotLeg[]> {
         .lte("kickoff", new Date(now + 7 * slotFreshnessMs).toISOString())
         .order("kickoff");
   if (error) throw new Error("Upcoming games could not load. Please retry.");
-  const slate = (games || []) as SlotGame[];
+  const slate = eligibleSlotGames(
+    (games || []) as SlotGame[],
+    now,
+    nba ? "nba" : "nfl",
+  );
   const snapshots = await Promise.all(
     slate.map(async (game) => {
       const response = await (
