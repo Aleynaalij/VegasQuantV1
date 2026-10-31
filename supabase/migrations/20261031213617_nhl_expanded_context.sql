@@ -49,7 +49,6 @@ begin
  insert into private.nhl_context_progress(game_id,attempted_at,next_attempt_at,status)
  select (g->>'id')::uuid,now(),now()+interval '10 minutes','collecting' from jsonb_array_elements(jobs) g
  on conflict(game_id) do update set attempted_at=excluded.attempted_at,next_attempt_at=excluded.next_attempt_at,status=excluded.status,last_error=null;
- delete from private.nhl_context_sources where expires_at<now()-interval '14 days';
  return jsonb_build_object('now',now(),'games',jobs);
 end $$;
 create function public.nhl_context_work() returns jsonb language sql security invoker set search_path='' as $$select private.nhl_context_work()$$;
