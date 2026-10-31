@@ -44,5 +44,6 @@ jobs:
           npm run ui:smoke
           node scripts/ui-smoke/nfl-game.mjs
           node scripts/ui-smoke/parlay-save.mjs
-          node scripts/ui-smoke/nba-paused.mjs
+          node scripts/ui-smoke/nba-live.mjs
+          node scripts/ui-smoke/nba-game.mjs
           node scripts/ui-smoke/simulator.mjs

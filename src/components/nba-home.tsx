@@ -183,7 +183,18 @@ export default function NbaHome() {
         empty={loaded ? "No NBA games scheduled this week." : "Loading games…"}
       >
         {(g) => {
-          if (notice) return <p role="status">{notice}</p>;
+          const open = g.href ? (
+            <Link className="vq-btn ghost sport-open" href={g.href}>
+              Open the matchup →
+            </Link>
+          ) : null;
+          if (notice)
+            return (
+              <div className="sport-markets">
+                <p role="status">{notice}</p>
+                {open}
+              </div>
+            );
           const selections = picks.filter((p) => p.game_id === g.id);
           const lines = gameLines(quotes[g.id], g);
           const props = playerLines(quotes[g.id]);
@@ -275,11 +286,7 @@ export default function NbaHome() {
                 Prices move and are not guaranteed. Market lines are reference,
                 not selections.
               </p>
-              {g.href ? (
-                <Link className="vq-btn ghost sport-open" href={g.href}>
-                  Open the matchup →
-                </Link>
-              ) : null}
+              {open}
             </div>
           );
         }}
