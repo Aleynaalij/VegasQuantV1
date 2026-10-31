@@ -68,7 +68,29 @@ const quote = (game_id, market, outcomes, kind = "odds") => ({
   recorded_at: iso(-1),
   payload: { book: "FanDuel", market, outcomes, provider_updated_at: iso(-1) },
 });
+const other = (book, row) => ({
+  ...row,
+  payload: { ...row.payload, book, provider_updated_at: iso(-0.25) },
+});
 const obs = [
+  // DraftKings pays more on the Over total and the Avdija Over: "Best" names it; FanDuel's -110
+  // Under stays unlabelled because no book beats it.
+  other(
+    "DraftKings",
+    quote("g1", "totals", [
+      { name: "Over", point: 231.5, price: -105 },
+      { name: "Under", point: 231.5, price: -115 },
+    ]),
+  ),
+  other(
+    "DraftKings",
+    quote(
+      "g1",
+      "player_points",
+      [{ name: "Over", point: 23.5, price: 100, description: "Deni Avdija" }],
+      "prop",
+    ),
+  ),
   quote("g1", "h2h", [
     { name: "Portland Trail Blazers", price: -270 },
     { name: "Utah Jazz", price: 220 },
@@ -252,8 +274,17 @@ for (const width of [390, 1280]) {
         "Trail Blazers -6.5",
         "Over 231.5",
         "Open the matchup",
+        "Best -105 · DraftKings",
+        "Best +100 · DraftKings",
       ])
         assert.ok(open.includes(text), `${text} ${label}`);
+      assert.equal(
+        await p
+          .locator(".vq-game-row[data-game=g1] .sport-lines .sport-best")
+          .count(),
+        1,
+        "only the beaten line names a book",
+      );
     } else {
       await p
         .locator(".vq-game-row")

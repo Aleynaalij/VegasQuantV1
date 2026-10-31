@@ -104,7 +104,12 @@ export function nbaFaces(
   return faces;
 }
 
-export type GameLine = { label: string; price: number; point?: number };
+export type GameLine = {
+  label: string;
+  name: string;
+  price: number;
+  point?: number;
+};
 
 /** FanDuel spread and total sides for one game, exactly as quoted. */
 export function gameLines(
@@ -124,6 +129,7 @@ export function gameLines(
       .map(
         (o): GameLine => ({
           label: team(o.name),
+          name: o.name,
           point: o.point,
           price: o.price,
         }),
@@ -131,7 +137,12 @@ export function gameLines(
     total: sides("totals")
       .filter((o) => Number.isFinite(o.point) && Number.isFinite(o.price))
       .map(
-        (o): GameLine => ({ label: o.name, point: o.point, price: o.price }),
+        (o): GameLine => ({
+          label: o.name,
+          name: o.name,
+          point: o.point,
+          price: o.price,
+        }),
       ),
     quotedAt:
       markets?.spreads?.payload?.provider_updated_at ||
