@@ -735,6 +735,7 @@ export default function Admin() {
             <a href="/admin/matchups">Publish Matchup Intelligence →</a>
             <a href="/admin/accounts">Accounts & friends passes →</a>
             <a href="/admin/intelligence">Private Data Intelligence →</a>
+            <a href="/admin/nhl-feedback">Frank’s NHL feedback →</a>
             <a href="/" target="_blank" rel="noreferrer">
               Open public site ↗
             </a>
