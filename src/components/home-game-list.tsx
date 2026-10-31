@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Game } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
@@ -269,8 +270,15 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                   <TeamLogo team={g.home_team} size={26} />
                   <b>{g.home_team.split(" ").at(-1)}</b>
                 </span>
-                <span className="vq-game-time">
-                  {kickoffText(g.kickoff)} ET
+                <span className="vq-game-when">
+                  <span className="vq-game-time">
+                    {kickoffText(g.kickoff)} ET
+                  </span>
+                  <ChevronDown
+                    className="vq-expand-chevron"
+                    size={20}
+                    aria-hidden="true"
+                  />
                 </span>
               </span>
               {lines[g.id] ? (
@@ -280,10 +288,6 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                   away={g.away_team}
                 />
               ) : null}
-              <span className="vq-expand-cue">
-                <span className="vq-expand-closed">Tap to expand</span>
-                <span className="vq-expand-open">Tap to close</span>
-              </span>
             </summary>
             <div className="vq-game-props">
               {notice ? (

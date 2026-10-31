@@ -24,7 +24,7 @@ const pages = [
 ];
 const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
-  { path: "/", expect: ["Next kickoff", "Kickoff", "Simulator", "Swipe left for Simulator"] },
+  { path: "/", expect: ["Next kickoff"] },
   { path: "/community", expect: ["The Zone", "For you", "VIP lays", "SampleMember", "Sample post body."] },
   { path: "/history", expect: ["Records are private."] },
 ];
@@ -114,12 +114,17 @@ for (const [list, auth, isAdmin] of [
       if (errors.length)
         failures.push(`${label}: page error · ${errors[0].slice(0, 200)}`);
       if (path === "/") {
-        // The next-kickoff card leads Home's carousel, open and visible.
+        // The next-kickoff card leads Home, open and visible; the simulator stays off Home until it ships.
         const kickoff = await page.evaluate(() => {
-          const card = document.querySelector(".vq-feature-carousel .home-brief");
+          const card = document.querySelector(".home-brief");
           return !!card && !card.closest("details") && card.getBoundingClientRect().height > 0;
         });
-        if (!kickoff) failures.push(`${label}: next-kickoff card not shown in Home's carousel`);
+        if (!kickoff) failures.push(`${label}: next-kickoff card not shown on Home`);
+        const teaser = await page.evaluate(() => /Swipe left for Simulator|Simulator\s*Coming soon/.test(document.body.innerText));
+        if (teaser) failures.push(`${label}: Home still shows the simulator teaser`);
+        // Game rows open with a chevron, not a "Tap to expand" label.
+        const rows = await page.evaluate(() => [...document.querySelectorAll(".vq-game-row > summary")].map((s) => ({ chevron: !!s.querySelector(".vq-expand-chevron"), label: /tap to expand/i.test(s.innerText) })));
+        if (rows.some((r) => !r.chevron || r.label)) failures.push(`${label}: game rows lack the chevron or still say "Tap to expand"`);
         await page.locator(".ruby-home-details").evaluateAll(nodes => nodes.forEach(node => node.open = true));
       }
       const state = await page.evaluate(() => ({
