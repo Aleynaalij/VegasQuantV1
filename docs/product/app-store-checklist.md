@@ -24,11 +24,27 @@ the app. Keep every listing, screenshot and review note consistent with that.
 - [ ] VQ Slots: label clearly as free entertainment with no stakes, no purchase and no prizes, so it isn't
       reviewed as simulated casino gambling with paid currency.
 
+## Pricing (Claude's recommendation, Oct 31, 2026; owner to confirm)
+| Tier | Monthly | Annual | Includes |
+|---|---|---|---|
+| Free | $0 | — | The Zone, VQ Slots, schedules, daily cards, public record summary |
+| Member | $19.99 | $149 | All picks with why/risk (NFL, NBA, NHL, college), research, matchup pages, pick history |
+| Pro | $49 | $399 | Member + best price across books, live game-day alerts, early picks, contributor VIP lays |
+
+- [ ] Owner confirms tiers and prices (or changes them).
+- [ ] Launch pricing grandfathered for early members; plan to raise after a full public season
+      (target later: Member $29.99, Pro $79–$99) once the record holds up.
+- [ ] Store fee: 15% under the App Store / Google Play small-business programs (first $1M/yr), else 30%.
+      Enroll in both small-business programs. A $19.99 subscription nets about $17.
+- [ ] Push annual plans (paid up front, stays through off-season months).
+- [ ] Same prices on web and in-app, or decide on a deliberate difference.
+
 ## Payments
 - [ ] Membership: digital subscriptions sold inside the iOS app must use **Apple In-App Purchase**; on Android,
       **Google Play Billing**. Decide: in-app subscriptions, or a reader-style app where members sign in to an
       existing web subscription (no purchase links inside the app).
-- [ ] If using IAP: create subscription products, prices and free-trial terms in both consoles; restore-purchases
+- [ ] If using IAP: create the Member and Pro subscription products (monthly and annual for each, four
+      products per store), prices and free-trial terms in both consoles; restore-purchases
       button; server-side receipt validation tied to existing membership status.
 
 ## Building the app (Claude)
