@@ -1,3 +1,7 @@
+# Readiness follow-up · October 31, 2026
+
+NBA refresh schedule changes initially left the old6a.m. dispatcher in place. Corrected actual cron commands via20261031180000_nba_live_dispatch.sql (APPLIED): both direct allowlisted noon-ET requests returned200; source collected126line/81prop quotes, result failure0 with one INCONSISTENT kept pending. No original card/confirmation job altered. Both cron rows read back with old_hour_gate=false/live_dispatch=true. Result-retraction guard20261031180100 is prepared/tested and NOT yet applied pending exact-helper handoff to Claude after his revised NHL/college ownership claim (#1666545762960/6545806935). It archives contradictory non-final status, preserves immutable result, marks stickyCONFLICT, suspends grading and resets withdrawn provisional confirmation. All360 local tests/both SQL suites pass. Full rollout NOT READY: open frontend findings, mounts and combined verification/peer acceptance remain. No Frank activation. See docs/product/multisport-backend.md for evidence.
+
 # Current · October 31, 2026 — multi-sport backend C1–C6
 
 Owner paused simulator work and authorized NHL, college basketball, NBA live parity, ONE Zone and sport-selectable Slots. Plan/claims: issue #166. Branch: codex/multisport-backend from main 8870b90. Claude owns frontend + Zone constraint migration; Codex owns backend contract/collectors/storage/market normalization/grading + Slots engine.
