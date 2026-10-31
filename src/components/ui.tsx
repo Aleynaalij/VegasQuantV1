@@ -9,6 +9,7 @@ import TabScrub from "./tab-scrub";
 import CommunityStories from "./community-stories";
 import AdminOnly from "./admin-only";
 import FrankAnniversaryGate, { NhlChipHold } from "./frank-anniversary-gate";
+import FrankNhlFeedback from "./frank-nhl-feedback";
 import { liveSports, SPORTS, type Sport } from "@/lib/sports";
 import {
   ArrowUpRight,
@@ -326,6 +327,7 @@ export function Shell({
           ) : null}
         </nav>
         <main id="main-content" tabIndex={-1}>
+          {active === "home" ? <FrankNhlFeedback /> : null}
           {children}
           <footer className="vq-footer">
             <p>

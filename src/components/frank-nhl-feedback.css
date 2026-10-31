@@ -1,0 +1,59 @@
+.frank-nhl-feedback {
+  margin: 0 0 24px;
+  padding: 22px;
+  border: 1px solid var(--line, #475047);
+  border-radius: 18px;
+  background: var(--panel, #101820);
+  color: var(--text, inherit);
+}
+.frank-nhl-feedback h2 {
+  margin: 8px 0;
+  font-size: clamp(1.2rem, 4vw, 1.65rem);
+}
+.frank-nhl-feedback p {
+  line-height: 1.6;
+}
+.frank-nhl-feedback form {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+}
+.frank-nhl-feedback label {
+  display: grid;
+  gap: 7px;
+}
+.frank-nhl-feedback label span,
+.frank-feedback-note {
+  font-size: 13px;
+  color: var(--muted, #a8b3ad);
+}
+.frank-nhl-feedback textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+  min-height: 90px;
+  font: inherit;
+  font-size: 16px;
+  padding: 12px;
+  border: 1px solid var(--line, #475047);
+  border-radius: 9px;
+  background: var(--bg, #0c1218);
+  color: inherit;
+}
+.frank-feedback-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.frank-nhl-feedback button {
+  min-height: 44px;
+  white-space: normal;
+}
+.frank-feedback-entry {
+  border-top: 1px solid var(--line, #475047);
+  padding: 18px 0;
+}
+.frank-feedback-entry p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
