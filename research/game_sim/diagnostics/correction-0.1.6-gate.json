@@ -1,0 +1,44 @@
+{
+  "protocol": "baseline-correction-2026-10-27",
+  "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "model_id": "vq-empirical-game/0.1.6",
+  "model_sha256": "adcc4a0b7a486649b7dc67e00972fbad779093167ed54fbc0808f6da673c63bd",
+  "source_games": 271,
+  "requested": 10000,
+  "completed": 10000,
+  "failures": [],
+  "unsupported_censoring_samples": 142,
+  "seed": 1701,
+  "metrics": {
+    "total": {
+      "source_mean": 43.76383763837639,
+      "simulated_mean": 41.1329,
+      "difference": -2.6309376383763876,
+      "tolerance_3se": 2.5445125117841565,
+      "passed": false
+    },
+    "touchdowns": {
+      "source_mean": 4.85239852398524,
+      "simulated_mean": 4.7279,
+      "difference": -0.12449852398524008,
+      "tolerance_3se": 0.3939026381974886,
+      "passed": true
+    },
+    "field_goals": {
+      "source_mean": 3.3321033210332103,
+      "simulated_mean": 2.728,
+      "difference": -0.6041033210332101,
+      "tolerance_3se": 0.30170219931622716,
+      "passed": false
+    },
+    "punts": {
+      "source_mean": 8.118081180811808,
+      "simulated_mean": 8.4309,
+      "difference": 0.3128188191881911,
+      "tolerance_3se": 0.5839664117814858,
+      "passed": true
+    }
+  },
+  "passed": false,
+  "scope": "IN_SAMPLE_ONLY; not predictive calibration or approval"
+}

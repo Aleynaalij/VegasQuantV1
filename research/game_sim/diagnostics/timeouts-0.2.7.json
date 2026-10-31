@@ -1,0 +1,618 @@
+{
+  "model_id": "vq-empirical-game/0.2.7",
+  "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "model_compressed_sha256": "1f331da8e8f65c6b00a85e6d3db21a191329d149150cde5f3116dab49ccfa6cc",
+  "source_games": 271,
+  "trace_prefix_runs": 1000,
+  "completed_prefix_runs": 1000,
+  "failed_prefix_runs": 0,
+  "failures": {},
+  "seed": 1701,
+  "accepted_fit_timeouts_per_game": 7.538745387453875,
+  "fit_exclusions": {
+    "excluded:ambiguous timeout state": 28,
+    "excluded:clock gap": 11,
+    "excluded:compound down enforcement": 7,
+    "excluded:compound penalty": 247,
+    "excluded:compound_timeout:ambiguous timeout state": 1,
+    "excluded:compound_timeout:not regular season": 4,
+    "excluded:could not convert string to float: ''": 1452,
+    "excluded:fumble spot missing": 46,
+    "excluded:kick spot missing": 18,
+    "excluded:kickoff landing missing": 3,
+    "excluded:missing snap elapsed": 1,
+    "excluded:not regular season": 2280,
+    "excluded:play:not regular season": 4,
+    "excluded:regulation fit only": 418,
+    "excluded:scoring penalty combination": 21,
+    "excluded:turnover spot missing": 23,
+    "excluded:unsupported source event": 52
+  },
+  "missing": {},
+  "source": {
+    "Q1:121-300": {
+      "snaps": 1632,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 26,
+      "timeouts_per_game": 0.0959409594095941,
+      "timeouts_per_100_snaps": 1.5931372549019607,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q1:301-600": {
+      "timeouts": 47,
+      "snaps": 2728,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts_per_game": 0.17343173431734318,
+      "timeouts_per_100_snaps": 1.7228739002932552,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q1:601-900": {
+      "snaps": 2837,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 26,
+      "timeouts_per_game": 0.0959409594095941,
+      "timeouts_per_100_snaps": 0.9164610504053577,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q1:last10": {
+      "snaps": 61,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 2,
+      "timeouts_per_game": 0.007380073800738007,
+      "timeouts_per_100_snaps": 3.278688524590164,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q1:last120": {
+      "snaps": 791,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 14,
+      "timeouts_per_game": 0.05166051660516605,
+      "timeouts_per_100_snaps": 1.7699115044247788,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q1:last30": {
+      "snaps": 168,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 3,
+      "timeouts_per_game": 0.01107011070110701,
+      "timeouts_per_100_snaps": 1.7857142857142858,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q2:121-300": {
+      "snaps": 1656,
+      "offense_zero": 16,
+      "defense_zero": 7,
+      "timeouts": 57,
+      "timeouts_per_game": 0.21033210332103322,
+      "timeouts_per_100_snaps": 3.4420289855072466,
+      "offense_zero_share": 0.00966183574879227,
+      "defense_zero_share": 0.004227053140096618
+    },
+    "Q2:301-600": {
+      "snaps": 2668,
+      "offense_zero": 11,
+      "defense_zero": 6,
+      "timeouts": 67,
+      "timeouts_per_game": 0.24723247232472326,
+      "timeouts_per_100_snaps": 2.5112443778110944,
+      "offense_zero_share": 0.004122938530734633,
+      "defense_zero_share": 0.0022488755622188904
+    },
+    "Q2:601-900": {
+      "snaps": 2886,
+      "offense_zero": 2,
+      "defense_zero": 7,
+      "timeouts": 42,
+      "timeouts_per_game": 0.15498154981549817,
+      "timeouts_per_100_snaps": 1.4553014553014554,
+      "offense_zero_share": 0.000693000693000693,
+      "defense_zero_share": 0.0024255024255024253
+    },
+    "Q2:last10": {
+      "timeouts": 102,
+      "snaps": 280,
+      "offense_zero": 147,
+      "defense_zero": 65,
+      "timeouts_per_game": 0.3763837638376384,
+      "timeouts_per_100_snaps": 36.42857142857143,
+      "offense_zero_share": 0.525,
+      "defense_zero_share": 0.23214285714285715
+    },
+    "Q2:last120": {
+      "snaps": 1907,
+      "offense_zero": 69,
+      "defense_zero": 86,
+      "timeouts": 389,
+      "timeouts_per_game": 1.4354243542435425,
+      "timeouts_per_100_snaps": 20.398531725222863,
+      "offense_zero_share": 0.03618248557944415,
+      "defense_zero_share": 0.04509701101206083
+    },
+    "Q2:last30": {
+      "timeouts": 232,
+      "snaps": 626,
+      "offense_zero": 185,
+      "defense_zero": 52,
+      "timeouts_per_game": 0.8560885608856088,
+      "timeouts_per_100_snaps": 37.06070287539936,
+      "offense_zero_share": 0.2955271565495208,
+      "defense_zero_share": 0.08306709265175719
+    },
+    "Q3:121-300": {
+      "snaps": 1619,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 22,
+      "timeouts_per_game": 0.08118081180811808,
+      "timeouts_per_100_snaps": 1.358863495985176,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q3:301-600": {
+      "snaps": 2716,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 45,
+      "timeouts_per_game": 0.16605166051660517,
+      "timeouts_per_100_snaps": 1.6568483063328425,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q3:601-900": {
+      "snaps": 2790,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 20,
+      "timeouts_per_game": 0.07380073800738007,
+      "timeouts_per_100_snaps": 0.7168458781362007,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q3:last10": {
+      "snaps": 67,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 2,
+      "timeouts_per_game": 0.007380073800738007,
+      "timeouts_per_100_snaps": 2.985074626865672,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q3:last120": {
+      "snaps": 830,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 12,
+      "timeouts_per_game": 0.04428044280442804,
+      "timeouts_per_100_snaps": 1.4457831325301205,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q3:last30": {
+      "snaps": 162,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 5,
+      "timeouts_per_game": 0.01845018450184502,
+      "timeouts_per_100_snaps": 3.0864197530864197,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q4:121-300": {
+      "snaps": 2277,
+      "offense_zero": 133,
+      "defense_zero": 168,
+      "timeouts": 338,
+      "timeouts_per_game": 1.2472324723247232,
+      "timeouts_per_100_snaps": 14.84409310496267,
+      "offense_zero_share": 0.058410188844971456,
+      "defense_zero_share": 0.07378129117259552
+    },
+    "Q4:301-600": {
+      "snaps": 2904,
+      "offense_zero": 18,
+      "defense_zero": 3,
+      "timeouts": 93,
+      "timeouts_per_game": 0.34317343173431736,
+      "timeouts_per_100_snaps": 3.2024793388429753,
+      "offense_zero_share": 0.006198347107438017,
+      "defense_zero_share": 0.0010330578512396695
+    },
+    "Q4:601-900": {
+      "snaps": 2939,
+      "offense_zero": 1,
+      "defense_zero": 2,
+      "timeouts": 60,
+      "timeouts_per_game": 0.22140221402214022,
+      "timeouts_per_100_snaps": 2.0415107179312693,
+      "offense_zero_share": 0.0003402517863218782,
+      "defense_zero_share": 0.0006805035726437564
+    },
+    "Q4:last10": {
+      "snaps": 127,
+      "offense_zero": 86,
+      "defense_zero": 51,
+      "timeouts": 47,
+      "timeouts_per_game": 0.17343173431734318,
+      "timeouts_per_100_snaps": 37.00787401574803,
+      "offense_zero_share": 0.6771653543307087,
+      "defense_zero_share": 0.4015748031496063
+    },
+    "Q4:last120": {
+      "snaps": 1574,
+      "offense_zero": 366,
+      "defense_zero": 385,
+      "timeouts": 343,
+      "timeouts_per_game": 1.2656826568265682,
+      "timeouts_per_100_snaps": 21.79161372299873,
+      "offense_zero_share": 0.23252858958068615,
+      "defense_zero_share": 0.2445997458703939
+    },
+    "Q4:last30": {
+      "snaps": 313,
+      "offense_zero": 157,
+      "defense_zero": 102,
+      "timeouts": 77,
+      "timeouts_per_game": 0.28413284132841327,
+      "timeouts_per_100_snaps": 24.600638977635782,
+      "offense_zero_share": 0.5015974440894568,
+      "defense_zero_share": 0.3258785942492013
+    },
+    "Q5:121-300": {
+      "snaps": 79,
+      "offense_zero": 6,
+      "defense_zero": 4,
+      "timeouts": 9,
+      "timeouts_per_game": 0.033210332103321034,
+      "timeouts_per_100_snaps": 11.39240506329114,
+      "offense_zero_share": 0.0759493670886076,
+      "defense_zero_share": 0.05063291139240506
+    },
+    "Q5:301-600": {
+      "snaps": 199,
+      "offense_zero": 2,
+      "defense_zero": 1,
+      "timeouts": 12,
+      "timeouts_per_game": 0.04428044280442804,
+      "timeouts_per_100_snaps": 6.030150753768845,
+      "offense_zero_share": 0.010050251256281407,
+      "defense_zero_share": 0.005025125628140704
+    },
+    "Q5:last10": {
+      "timeouts": 4,
+      "snaps": 8,
+      "offense_zero": 8,
+      "defense_zero": 6,
+      "timeouts_per_game": 0.014760147601476014,
+      "timeouts_per_100_snaps": 50.0,
+      "offense_zero_share": 1.0,
+      "defense_zero_share": 0.75
+    },
+    "Q5:last120": {
+      "snaps": 38,
+      "offense_zero": 10,
+      "defense_zero": 8,
+      "timeouts": 10,
+      "timeouts_per_game": 0.03690036900369004,
+      "timeouts_per_100_snaps": 26.31578947368421,
+      "offense_zero_share": 0.2631578947368421,
+      "defense_zero_share": 0.21052631578947367
+    },
+    "Q5:last30": {
+      "timeouts": 3,
+      "snaps": 10,
+      "offense_zero": 5,
+      "defense_zero": 5,
+      "timeouts_per_game": 0.01107011070110701,
+      "timeouts_per_100_snaps": 30.0,
+      "offense_zero_share": 0.5,
+      "defense_zero_share": 0.5
+    }
+  },
+  "simulation": {
+    "Q1:121-300": {
+      "snaps": 6187,
+      "offense_zero": 2,
+      "defense_zero": 1,
+      "timeouts": 118,
+      "timeouts_per_game": 0.118,
+      "timeouts_per_100_snaps": 1.9072248262485858,
+      "offense_zero_share": 0.0003232584451268789,
+      "defense_zero_share": 0.00016162922256343946
+    },
+    "Q1:301-600": {
+      "snaps": 10383,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 175,
+      "timeouts_per_game": 0.175,
+      "timeouts_per_100_snaps": 1.6854473658865454,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q1:601-900": {
+      "snaps": 10475,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 143,
+      "timeouts_per_game": 0.143,
+      "timeouts_per_100_snaps": 1.3651551312649164,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q1:last10": {
+      "snaps": 346,
+      "offense_zero": 1,
+      "defense_zero": 0,
+      "timeouts": 8,
+      "timeouts_per_game": 0.008,
+      "timeouts_per_100_snaps": 2.3121387283236996,
+      "offense_zero_share": 0.002890173410404624,
+      "defense_zero_share": 0.0
+    },
+    "Q1:last120": {
+      "snaps": 3112,
+      "offense_zero": 5,
+      "defense_zero": 3,
+      "timeouts": 66,
+      "timeouts_per_game": 0.066,
+      "timeouts_per_100_snaps": 2.120822622107969,
+      "offense_zero_share": 0.0016066838046272494,
+      "defense_zero_share": 0.0009640102827763496
+    },
+    "Q1:last30": {
+      "snaps": 652,
+      "offense_zero": 0,
+      "defense_zero": 0,
+      "timeouts": 10,
+      "timeouts_per_game": 0.01,
+      "timeouts_per_100_snaps": 1.5337423312883436,
+      "offense_zero_share": 0.0,
+      "defense_zero_share": 0.0
+    },
+    "Q2:121-300": {
+      "snaps": 6214,
+      "offense_zero": 119,
+      "defense_zero": 100,
+      "timeouts": 118,
+      "timeouts_per_game": 0.118,
+      "timeouts_per_100_snaps": 1.8989378822014806,
+      "offense_zero_share": 0.019150305761184424,
+      "defense_zero_share": 0.0160926939169617
+    },
+    "Q2:301-600": {
+      "snaps": 10297,
+      "offense_zero": 85,
+      "defense_zero": 108,
+      "timeouts": 184,
+      "timeouts_per_game": 0.184,
+      "timeouts_per_100_snaps": 1.7869282315237447,
+      "offense_zero_share": 0.008254831504321648,
+      "defense_zero_share": 0.010488491793726329
+    },
+    "Q2:601-900": {
+      "snaps": 10901,
+      "offense_zero": 40,
+      "defense_zero": 45,
+      "timeouts": 196,
+      "timeouts_per_game": 0.196,
+      "timeouts_per_100_snaps": 1.7980001834694064,
+      "offense_zero_share": 0.003669388129529401,
+      "defense_zero_share": 0.004128061645720576
+    },
+    "Q2:last10": {
+      "snaps": 1422,
+      "offense_zero": 515,
+      "defense_zero": 466,
+      "timeouts": 585,
+      "timeouts_per_game": 0.585,
+      "timeouts_per_100_snaps": 41.139240506329116,
+      "offense_zero_share": 0.3621659634317862,
+      "defense_zero_share": 0.32770745428973275
+    },
+    "Q2:last120": {
+      "snaps": 5965,
+      "offense_zero": 518,
+      "defense_zero": 368,
+      "timeouts": 1144,
+      "timeouts_per_game": 1.144,
+      "timeouts_per_100_snaps": 19.17854149203688,
+      "offense_zero_share": 0.08683989941324392,
+      "defense_zero_share": 0.0616932103939648
+    },
+    "Q2:last30": {
+      "snaps": 1701,
+      "offense_zero": 475,
+      "defense_zero": 249,
+      "timeouts": 561,
+      "timeouts_per_game": 0.561,
+      "timeouts_per_100_snaps": 32.98059964726632,
+      "offense_zero_share": 0.2792475014697237,
+      "defense_zero_share": 0.14638447971781304
+    },
+    "Q3:121-300": {
+      "snaps": 6135,
+      "offense_zero": 7,
+      "defense_zero": 24,
+      "timeouts": 106,
+      "timeouts_per_game": 0.106,
+      "timeouts_per_100_snaps": 1.7277913610431948,
+      "offense_zero_share": 0.0011409942950285248,
+      "defense_zero_share": 0.003911980440097799
+    },
+    "Q3:301-600": {
+      "snaps": 10339,
+      "offense_zero": 23,
+      "defense_zero": 15,
+      "timeouts": 198,
+      "timeouts_per_game": 0.198,
+      "timeouts_per_100_snaps": 1.9150788277396267,
+      "offense_zero_share": 0.0022245865170712835,
+      "defense_zero_share": 0.0014508172937421414
+    },
+    "Q3:601-900": {
+      "snaps": 10495,
+      "offense_zero": 2,
+      "defense_zero": 2,
+      "timeouts": 143,
+      "timeouts_per_game": 0.143,
+      "timeouts_per_100_snaps": 1.362553596950929,
+      "offense_zero_share": 0.00019056693663649358,
+      "defense_zero_share": 0.00019056693663649358
+    },
+    "Q3:last10": {
+      "snaps": 348,
+      "offense_zero": 3,
+      "defense_zero": 1,
+      "timeouts": 7,
+      "timeouts_per_game": 0.007,
+      "timeouts_per_100_snaps": 2.0114942528735633,
+      "offense_zero_share": 0.008620689655172414,
+      "defense_zero_share": 0.0028735632183908046
+    },
+    "Q3:last120": {
+      "snaps": 3093,
+      "offense_zero": 12,
+      "defense_zero": 8,
+      "timeouts": 63,
+      "timeouts_per_game": 0.063,
+      "timeouts_per_100_snaps": 2.0368574199806013,
+      "offense_zero_share": 0.0038797284190106693,
+      "defense_zero_share": 0.0025864856126737797
+    },
+    "Q3:last30": {
+      "snaps": 715,
+      "offense_zero": 3,
+      "defense_zero": 2,
+      "timeouts": 11,
+      "timeouts_per_game": 0.011,
+      "timeouts_per_100_snaps": 1.5384615384615385,
+      "offense_zero_share": 0.004195804195804196,
+      "defense_zero_share": 0.002797202797202797
+    },
+    "Q4:121-300": {
+      "snaps": 9199,
+      "offense_zero": 994,
+      "defense_zero": 999,
+      "timeouts": 1268,
+      "timeouts_per_game": 1.268,
+      "timeouts_per_100_snaps": 13.784106968148711,
+      "offense_zero_share": 0.10805522339384716,
+      "defense_zero_share": 0.10859876073486248
+    },
+    "Q4:301-600": {
+      "timeouts": 213,
+      "snaps": 10433,
+      "offense_zero": 130,
+      "defense_zero": 95,
+      "timeouts_per_game": 0.213,
+      "timeouts_per_100_snaps": 2.041598773123742,
+      "offense_zero_share": 0.012460461995590913,
+      "defense_zero_share": 0.009105722227547205
+    },
+    "Q4:601-900": {
+      "snaps": 10970,
+      "offense_zero": 59,
+      "defense_zero": 88,
+      "timeouts": 223,
+      "timeouts_per_game": 0.223,
+      "timeouts_per_100_snaps": 2.03281677301732,
+      "offense_zero_share": 0.005378304466727438,
+      "defense_zero_share": 0.008021877848678213
+    },
+    "Q4:last10": {
+      "snaps": 991,
+      "offense_zero": 546,
+      "defense_zero": 481,
+      "timeouts": 299,
+      "timeouts_per_game": 0.299,
+      "timeouts_per_100_snaps": 30.1715438950555,
+      "offense_zero_share": 0.5509586276488395,
+      "defense_zero_share": 0.4853683148335015
+    },
+    "Q4:last120": {
+      "snaps": 4891,
+      "offense_zero": 1303,
+      "defense_zero": 1169,
+      "timeouts": 981,
+      "timeouts_per_game": 0.981,
+      "timeouts_per_100_snaps": 20.05724800654263,
+      "offense_zero_share": 0.26640768758945,
+      "defense_zero_share": 0.23901042731547742
+    },
+    "Q4:last30": {
+      "snaps": 1251,
+      "offense_zero": 603,
+      "defense_zero": 450,
+      "timeouts": 278,
+      "timeouts_per_game": 0.278,
+      "timeouts_per_100_snaps": 22.22222222222222,
+      "offense_zero_share": 0.48201438848920863,
+      "defense_zero_share": 0.3597122302158273
+    },
+    "Q5:121-300": {
+      "snaps": 194,
+      "offense_zero": 23,
+      "defense_zero": 18,
+      "timeouts": 18,
+      "timeouts_per_game": 0.018,
+      "timeouts_per_100_snaps": 9.278350515463918,
+      "offense_zero_share": 0.11855670103092783,
+      "defense_zero_share": 0.09278350515463918
+    },
+    "Q5:301-600": {
+      "snaps": 432,
+      "offense_zero": 2,
+      "defense_zero": 0,
+      "timeouts": 9,
+      "timeouts_per_game": 0.009,
+      "timeouts_per_100_snaps": 2.0833333333333335,
+      "offense_zero_share": 0.004629629629629629,
+      "defense_zero_share": 0.0
+    },
+    "Q5:last10": {
+      "snaps": 11,
+      "offense_zero": 4,
+      "defense_zero": 10,
+      "timeouts": 4,
+      "timeouts_per_game": 0.004,
+      "timeouts_per_100_snaps": 36.36363636363637,
+      "offense_zero_share": 0.36363636363636365,
+      "defense_zero_share": 0.9090909090909091
+    },
+    "Q5:last120": {
+      "snaps": 93,
+      "offense_zero": 9,
+      "defense_zero": 22,
+      "timeouts": 24,
+      "timeouts_per_game": 0.024,
+      "timeouts_per_100_snaps": 25.806451612903224,
+      "offense_zero_share": 0.0967741935483871,
+      "defense_zero_share": 0.23655913978494625
+    },
+    "Q5:last30": {
+      "timeouts": 8,
+      "snaps": 24,
+      "offense_zero": 10,
+      "defense_zero": 13,
+      "timeouts_per_game": 0.008,
+      "timeouts_per_100_snaps": 33.333333333333336,
+      "offense_zero_share": 0.4166666666666667,
+      "defense_zero_share": 0.5416666666666666
+    }
+  },
+  "diagnostic_sha256": "579d9532e6d87553ad86b171fdab230e8486577e70ee2f1d4ea990b91a4f21aa",
+  "scope": "Same seeded prefix replays, not a new ensemble; diagnostic only. Simulation rates condition on successful replays; ANY failures mean biased incomplete coverage, not qualification. Source raw timeouts include excluded events/OT. Snap denominator excludes enforced-penalty rows/actions; unsupported source contexts are counted missing. Q5 is shown separately."
+}

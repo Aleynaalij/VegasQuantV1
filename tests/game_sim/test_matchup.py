@@ -8,7 +8,7 @@ SOURCE = dict(source_url='https://example.org/source.csv', sha256='a'*64,
 
 
 def rows():
-    return [dict(game_start_utc='2022-10-01T17:00:00Z', season_type='REG',
+    return [dict(game_start_utc='2022-10-01T17:00:00Z', game_end_utc='2022-10-01T20:00:00Z', season_type='REG',
                  qtr='1', play_type=kind, epa=str(value), posteam=attack,
                  defteam=defense, passer_player_id='qb', receiver_player_id='wr',
                  rusher_player_id='rb')
@@ -48,7 +48,7 @@ class MatchupTests(unittest.TestCase):
         data[1]['sack'] = '1'
         model = fit(data, CUTOFF, [SOURCE])
         target = next(x for x in model['opportunities'] if x['team']=='A' and x['role']=='target')
-        self.assertEqual(target['counts']['wr'], 39)
+        self.assertEqual(target['raw_counts']['wr'], 39)
 
     def test_unknown_availability_and_post_cutoff_evidence_block(self):
         model = fit(rows(), CUTOFF, [SOURCE])
@@ -66,3 +66,25 @@ class MatchupTests(unittest.TestCase):
         self.assertAlmostEqual(sum(result['shares'].values())+result['unallocated_share'], 1)
         self.assertGreater(result['unallocated_share'], 0)
         self.assertFalse(result['forecast_supported'])
+
+    def test_game_in_progress_excluded(self):
+        data = rows()
+        extra = copy.deepcopy(data)
+        for r in extra:
+            r['game_end_utc'] = CUTOFF
+            r['epa'] = '999'
+        self.assertEqual(fit(data, CUTOFF, [SOURCE])['effects'], fit(data+extra, CUTOFF, [SOURCE])['effects'])
+
+    def test_recent_opportunities_outweigh_old_and_scrambles_count(self):
+        data = rows()
+        for r in data:
+            r['qb_scramble'] = '1' if r['play_type']=='run' else '0'
+        old = copy.deepcopy(data)
+        for r in old:
+            r['game_start_utc']='2022-01-01T17:00:00Z'
+            r['game_end_utc']='2022-01-01T20:00:00Z'
+            r['receiver_player_id']='old'
+        model = fit(data+old, CUTOFF, [SOURCE])
+        target = next(x for x in model['opportunities'] if x['team']=='A' and x['role']=='target')
+        self.assertGreater(target['counts']['wr'],target['counts']['old'])
+        self.assertEqual(model['coverage']['qb_scramble:rush_epa_and_carry'],160)

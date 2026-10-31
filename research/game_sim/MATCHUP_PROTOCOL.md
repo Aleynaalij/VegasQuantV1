@@ -33,3 +33,12 @@ Required next validation: rolling-origin team EPA comparison against league-only
 player share log loss against last-game and trailing-share baselines, then end-to-end
 margin/total/player distribution calibration on a separately frozen later period.
 A future holdout result cannot be claimed before actual execution.
+
+## Superseding correction rule (v0.1.1 features)
+See CORRECTION_PROTOCOL.md, frozen before corrected fitting. Require verified
+`game_end_utc < cutoff` as well as kickoff before cutoff; a game in progress is
+excluded in full. Reject completion before kickoff. Restrict to 730 preceding
+days, apply fixed 120-day exponential half-life to EPA fitting and player
+opportunities. Output raw counts separately from weighted opportunity counts.
+QB scrambles use rushing EPA and QB carries and have an explicit coverage count.
+These changes do not enable team coupling or forecasts.

@@ -1,0 +1,72 @@
+# Baseline correction development gate — 2026-10-27
+
+Freeze before first corrected fit. v0.1.1 artifacts are immutable, superseded
+research evidence: kickoff possession mapping is wrong. No forecasts/coupling.
+
+Order: kickoff normalization + penalty line-to-gain correctness; measure once;
+then separately evaluate normalized enforced live-ball penalties if still needed.
+Do not force scoring by adding points or tuning touchdowns to a desired mean.
+2022 is in-sample reproduction only, 2023 already inspected diagnostics.
+
+Gate: 10,000 games, seed 1701, 2022 regular-season old opening-TD overtime.
+Compare mean total points, touchdowns, made field goals and punts per game to
+all complete 2022 REG source games (exclude incomplete BUF-CIN consistently).
+For each metric the absolute mean difference must be <= 3 * sqrt(source sample
+variance / source n + simulation sample variance / simulation n). All metrics
+must pass and no simulated games may fail. This is a necessary reproduction
+check, not evidence of out-of-sample skill. Preserve failing runs and exact source
+hash, counts, model ID and seed. No repeated seed shopping or threshold changes.
+
+Follow-up matchup rule (freeze before any new fit): only previous 730 days of
+completed games; exponential half-life 120 days, weight=2**(-age_days/120).
+Use completion timestamp for cutoff eligibility, kickoff for recency age. Both
+team EPA effects and player historical opportunities use the same weights;
+retain raw counts and weighted support separately. Priors unchanged. QB scrambles
+remain in rushing EPA and QB carry volume (not standard dropback EPA); count
+qb_scramble explicitly. No coupling until baseline gate passes.
+
+## Development experiment 0.1.5 — frozen after 0.1.4 gate failed
+0.1.4 corrects enforcement and brings punts into range, but TD/points still fail.
+Next hypothesis is overly broad state pooling: 4–10 yards to gain and the entire
+red zone share outcomes even when goal-to-go geometry differs. Before fitting,
+fix new distance bins 1,2,3,4–6,7–10,11+; field bins 0–5,6–10,11–20,21–40,
+41–60,61–80,81–100, each marked goal-to-go when distance equals yardline.
+Keep the same prefix backoff, minimum30, seed, run count and reproduction gate.
+This is disclosed in-sample model development, not an untouched validation or
+permission to select a flattering model. Preserve all earlier failed gate results.
+
+## Development experiment 0.1.6 — frozen before fitting
+Implement Claude's proposed right-censored touchdown correction, run/pass-complete
+separately. For each required gain g=1..99, risk set is accepted ordinary plays
+of that kind starting at least g yards from goal; successes have observed gain
+>=g. Estimate S(g) by success/risk counts, enforce non-increasing S via cumulative
+minimum (no parameter tuning). Preserve numerator/denominator support. A TD from
+y0 replayed at y>y0 scores with probability min(1,S(y)/S(y0)). On non-score,
+sample observed non-TD gains in [y0,y), weighted by source frequency. If denominator
+support or conditional non-score pool is absent, retain observed gain and count
+unsupported corrections; unsupported samples block the reproduction gate.
+TDs replayed nearer the goal score by ordinary clipping. Never add automatic
+points or treat every censored play as a TD. This pooled survival estimator assumes
+comparable gain distributions across field positions; it is a development
+assumption, not validated player/tracking evidence. No latent gain beyond the
+actual simulated goal is fabricated or credited.
+
+Route flags to net-enforced penalty only for no_play or finite non-zero
+penalty_yards. Declined/offset flags on ordinary plays fall through to the
+ordinary outcome. Preserve scoring/compound exclusions and count routing.
+Same source/seed1701/10000 runs/oldOT/gate; no coupling/promotion regardless of
+in-sample pass. Preserve all prior results. Report support gaps explicitly.
+
+## Development experiment 0.1.7 — frozen before fitting
+Accept Claude's timeout/late-clock diagnosis. Template source timeout rows only
+when an immediately following same-game/same-quarter scrimmage state is available
+within eight rows with exactly the same clock; ambiguous contexts stay excluded.
+Use the source timeout_team mapped relative to that state's possession (offense or
+defense), elapsed0. At simulation time never sample a timeout for an exhausted
+team; condition the existing chosen context on legal remaining timeout actions.
+No synthetic timeout strategy, clock refund or automatic field-goal rule.
+For Q2/Q4/OT clock buckets use <=10s,11–30s,31–120s,normal. Retain exact existing
+prefix backoff/min30. All other0.1.6 settings/source/seed1701/10000oldOT/gate
+unchanged, including unsupported-censoring blocker. Any improvement is in-sample
+only; preserve old artifacts/results. Sources' play gaps are still empirical;
+adding timeout rows alone does not establish a complete clock-control policy.
