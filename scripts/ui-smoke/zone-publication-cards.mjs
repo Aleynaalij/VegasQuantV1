@@ -191,7 +191,7 @@ try {
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     assert.equal(await p.locator("#post-manual .zone-publication").count(), 0);
     assert.equal(
-      await p.locator("#post-threes img").getAttribute("src"),
+      await p.locator("#post-threes .zone-card img").getAttribute("src"),
       "/api/nba/threes-card/2026-10-31",
     );
     assert.ok(
