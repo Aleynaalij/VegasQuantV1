@@ -53,6 +53,7 @@ export const contributorSports = [
   "NFL",
   "NHL",
   "NBA",
+  "NCAAB",
   "Baseball",
   "WNBA",
 ] as const;
