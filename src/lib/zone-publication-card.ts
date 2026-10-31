@@ -85,4 +85,5 @@ export function publicationStamp(at: string) {
     }) + " ET"
   );
 }
-export const publicationCopy = (p: PublicationPost) => p.legs.join("\n");
+export const publicationCopy = (p: PublicationPost) =>
+  p.legs.length ? [p.title, ...p.legs].join("\n") : "";

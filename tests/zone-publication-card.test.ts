@@ -34,7 +34,7 @@ test("automated cards keep all content across bounded pages and copy only explic
     [...post.legs, post.body].join("").replace(/\s/g, ""),
   );
   assert.ok(pages.every((p) => p.start + (p.lines.length - 1) * 42 < 1180));
-  assert.equal(publicationCopy(post), post.legs[0]);
+  assert.equal(publicationCopy(post), post.title + "\n" + post.legs[0]);
   assert.equal(publicationCopy({ ...post, legs: [] }), "");
   assert.ok(wrapCardText("W".repeat(100), 32).every((l) => l.length <= 29));
   assert.equal(

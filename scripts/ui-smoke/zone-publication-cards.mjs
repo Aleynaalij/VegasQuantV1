@@ -121,7 +121,7 @@ try {
         .click();
       assert.equal(
         await p.evaluate(() => window.fixtureCopies.at(-1)),
-        posts[0].legs[0],
+        `${sport.toUpperCase()} stored selection\n${posts[0].legs[0]}`,
       );
       const lines = [];
       for (;;) {
