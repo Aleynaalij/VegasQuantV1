@@ -10,6 +10,7 @@ import { SPORTS } from "@/lib/sports";
 import { Shell } from "../ui";
 import SportLogo from "./sport-logo";
 import SportMarkets from "./sport-markets";
+import NhlGameReport from "./nhl-game-report";
 
 const RESULT: Record<string, string> = {
   AWAITING_FINAL: "Awaiting the final",
@@ -176,6 +177,7 @@ export default function SportGame({
                 selections.
               </p>
             )}
+            {sport === "nhl" && page!.access ? <NhlGameReport gameId={raw.id} /> : null}
             {page!.access && injuries ? (
               <section className="sport-injuries">
                 <h2 className="sport-markets-title">Reported injuries</h2>

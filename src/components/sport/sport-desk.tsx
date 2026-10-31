@@ -9,6 +9,7 @@ import { SPORTS } from "@/lib/sports";
 import SportBrief from "./sport-brief";
 import SportSlate from "./sport-slate";
 import SportMarkets from "./sport-markets";
+import NhlGameReport from "./nhl-game-report";
 import { FrankAnniversaryFireworks } from "../frank-anniversary";
 
 /** NHL and college basketball Home: NFL's layout over the shared sports_slate contract. */
@@ -106,6 +107,7 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
                 <p role="status">Sign in to see game markets.</p>
               </div>
             )}
+            {sport === "nhl" && page?.access ? <NhlGameReport gameId={g.id} /> : null}
             {g.href ? (
               <Link
                 prefetch={false}
