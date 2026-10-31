@@ -7,6 +7,8 @@ import type {
 } from "../../../src/lib/nhl-context.ts";
 import {
   goalieForm,
+  goalieCandidates,
+  finalGoalieLog,
   recentGames,
   resolveGoalie,
   rosterPlayers,
@@ -205,7 +207,33 @@ Deno.serve(async (req: Request) => {
               );
               if (log.seasonId !== season || log.gameTypeId !== 2)
                 throw Error("Goalie season/type mismatch");
-              stats = goalieForm(log, target.gameDate);
+              const goalieBoxes = new Map<number, any>();
+              await batches(
+                goalieCandidates(log, target.gameDate),
+                async (row: any) => {
+                  try {
+                    goalieBoxes.set(
+                      row.gameId,
+                      await json(
+                        `https://api-web.nhle.com/v1/gamecenter/${row.gameId}/boxscore`,
+                        21600,
+                      ),
+                    );
+                  } catch {
+                    /* Missing required entries fail verification below. */
+                  }
+                },
+              );
+              stats = goalieForm(
+                finalGoalieLog(
+                  log,
+                  target.gameDate,
+                  season,
+                  person.id,
+                  goalieBoxes,
+                ),
+                target.gameDate,
+              );
             } catch {
               teamNotes.push(
                 "Selected goalie's NHL appearance log is unavailable.",

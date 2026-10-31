@@ -203,6 +203,53 @@ export function skaterForm(
         : null,
   };
 }
+export function goalieCandidates(d: any, cutoff: string) {
+  return (Array.isArray(d?.gameLog) ? d.gameLog : [])
+    .filter(
+      (g: any) =>
+        typeof g.gameDate === "string" &&
+        g.gameDate < cutoff.slice(0, 10) &&
+        seconds(g.toi) !== 0,
+    )
+    .sort(
+      (a: any, b: any) =>
+        b.gameDate.localeCompare(a.gameDate) ||
+        (b.gameId || 0) - (a.gameId || 0),
+    )
+    .slice(0, 6);
+}
+/** Official appearance logs can contain a live game. Verify finals and the named goalie in boxes. */
+export function finalGoalieLog(
+  d: any,
+  cutoff: string,
+  season: number,
+  playerId: number,
+  boxes: Map<number, any>,
+) {
+  const final: any[] = [];
+  for (const g of goalieCandidates(d, cutoff)) {
+    const b = boxes.get(g.gameId);
+    if (!b || b.id !== g.gameId || b.season !== season || b.gameType !== 2)
+      throw Error("Goalie box-score binding unavailable");
+    if (!["FINAL", "OFF"].includes(b.gameState)) continue;
+    const all = [
+      ...(b.playerByGameStats?.homeTeam?.goalies || []),
+      ...(b.playerByGameStats?.awayTeam?.goalies || []),
+    ];
+    const matched = all.filter((p) => p.playerId === playerId);
+    if (
+      matched.length !== 1 ||
+      !integer(matched[0].goalsAgainst) ||
+      matched[0].goalsAgainst !== g.goalsAgainst ||
+      !seconds(g.toi) ||
+      seconds(matched[0].toi) !== seconds(g.toi)
+    )
+      throw Error("Goalie log and final box score disagree");
+    final.push(g);
+    if (final.length === 5) break;
+  }
+  return { ...d, gameLog: final };
+}
 export function goalieForm(d: any, cutoff: string) {
   const rows = (Array.isArray(d?.gameLog) ? d.gameLog : [])
     .filter(

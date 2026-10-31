@@ -4,6 +4,7 @@ import { spawnSync } from "node:child_process";
 import {
   gameLine,
   goalieForm,
+  finalGoalieLog,
   recentGames,
   resolveGoalie,
   rotowireLineup,
@@ -165,6 +166,51 @@ test("Rotowire parsing binds date/pair, separates goalie confirmation from proje
   assert.equal(parsed[0]?.powerPlay?.status, "projected");
   assert.equal(rotowireLineup(html, "2026-11-01", "PIT", "MTL", source), null);
   assert.equal(rotowireLineup(html, "2026-10-31", "MTL", "PIT", source), null);
+});
+test("Goalie windows exclude verified live games and refuse missing or conflicting final appearances", () => {
+  const rows = [
+    { gameId: 1, gameDate: "2026-10-30", toi: "60:00", goalsAgainst: 9 },
+    { gameId: 2, gameDate: "2026-10-29", toi: "60:00", goalsAgainst: 2 },
+  ];
+  const box = (id: number, state: string, against: number) => ({
+    id,
+    season: 20262027,
+    gameType: 2,
+    gameState: state,
+    playerByGameStats: {
+      homeTeam: {
+        goalies: [{ playerId: 100, toi: "60:00", goalsAgainst: against }],
+      },
+      awayTeam: { goalies: [] },
+    },
+  });
+  const boxes = new Map([
+    [1, box(1, "LIVE", 9)],
+    [2, box(2, "FINAL", 2)],
+  ]);
+  assert.equal(
+    goalieForm(
+      finalGoalieLog({ gameLog: rows }, "2026-10-31", 20262027, 100, boxes),
+      "2026-10-31",
+    ).gaa,
+    2,
+  );
+  assert.throws(
+    () =>
+      finalGoalieLog(
+        { gameLog: rows },
+        "2026-10-31",
+        20262027,
+        100,
+        new Map([[1, box(1, "FINAL", 9)]]),
+      ),
+    /unavailable/,
+  );
+  boxes.set(2, box(2, "FINAL", 3));
+  assert.throws(
+    () => finalGoalieLog({ gameLog: rows }, "2026-10-31", 20262027, 100, boxes),
+    /disagree/,
+  );
 });
 test("Private favorite matching resolves unique identities but refuses surname ambiguity", () => {
   const roster = [
