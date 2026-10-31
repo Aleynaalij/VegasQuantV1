@@ -40,6 +40,7 @@ import {
   MAX_SELECTED_PHOTO_BYTES,
   uploadCommunityPhoto,
 } from "@/lib/community-photo-client";
+import { FrankAnniversaryCorner } from "./frank-anniversary";
 
 export function RubyCard({
   slip,
@@ -514,6 +515,8 @@ function Composer({
     <section
       className={`ruby-composer-home ruby-submit-compact ruby-${contributor.theme}`}
     >
+      {/* Owner's one-time surprise (#169): renders only for its server-verified recipient. */}
+      <FrankAnniversaryCorner />
       <details className="ruby-submit-drawer">
         <summary aria-label="Submit today’s lay options">
           <Gem size={16} aria-hidden="true" />

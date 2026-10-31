@@ -1,0 +1,180 @@
+.frank-anniversary-dialog {
+  width: min(28rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 3rem);
+  overflow: auto;
+  margin: auto;
+  padding: clamp(1.5rem, 6vw, 2.8rem);
+  border: 1px solid #a68b4e;
+  border-radius: 1.5rem;
+  background: radial-gradient(ellipse at top, #302916, #101317 65%);
+  color: #f8f5eb;
+  box-shadow: 0 24px 90px #000b;
+  text-align: center;
+  font-family: var(--font-body), sans-serif;
+}
+.frank-anniversary-dialog::backdrop {
+  background: #080b10b8;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+.frank-anniversary-mark {
+  display: block;
+  color: #f1d488;
+  font:
+    3rem Georgia,
+    serif;
+}
+.frank-anniversary-eyebrow {
+  color: #d8be7c;
+  font-size: 0.65rem;
+  letter-spacing: 0.16em;
+  margin: 1.2rem 0;
+}
+.frank-anniversary-dialog h2 {
+  font:
+    800 clamp(1.9rem, 6vw, 2.6rem) / 1.1 var(--font-display),
+    sans-serif;
+  margin: 0.6rem 0 1.3rem;
+}
+.frank-anniversary-dialog p {
+  line-height: 1.6;
+}
+.frank-anniversary-choices {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.8rem;
+}
+.frank-anniversary-choices button {
+  flex: 1;
+  border: 1px solid #f1d488;
+  border-radius: 0.8rem;
+  min-height: 3.25rem;
+  background: #f1d488;
+  color: #16150f;
+  font:
+    800 1.2rem var(--font-body),
+    sans-serif;
+  cursor: pointer;
+}
+.frank-anniversary-choices button:last-child {
+  background: #172b28;
+  color: #f1d488;
+}
+.frank-anniversary-choices button:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+.frank-anniversary-choices button:focus-visible,
+.frank-anniversary-welcome button:focus-visible {
+  outline: 3px solid #76e0ca;
+  outline-offset: 4px;
+}
+.frank-anniversary-dialog [role="alert"] {
+  color: #f1d488;
+  font-size: 0.85rem;
+}
+.frank-anniversary-celebration {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1500;
+}
+.frank-anniversary-sparks {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.frank-anniversary-burst {
+  position: absolute;
+  left: var(--burst-x);
+  top: var(--burst-y);
+}
+.frank-anniversary-burst i {
+  display: block;
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--spark-color);
+  box-shadow: 0 0 10px var(--spark-color);
+  opacity: 0;
+  animation: frank-anniversary-bloom 1.7s ease-out var(--delay) 1 both;
+}
+@keyframes frank-anniversary-bloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.1);
+  }
+  12% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 0.85;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--spark-x), var(--spark-y)) scale(0.25);
+  }
+}
+.frank-anniversary-welcome {
+  position: absolute;
+  top: max(5rem, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  padding: 1.1rem;
+  border: 1px solid #a68b4e;
+  border-radius: 1rem;
+  color: #f1d488;
+  background: #10171aee;
+  box-shadow: 0 8px 40px #0008;
+  font-family: var(--font-body), sans-serif;
+}
+.frank-anniversary-welcome > span {
+  font-size: 2rem;
+}
+.frank-anniversary-welcome strong {
+  display: block;
+  font-size: 1rem;
+}
+.frank-anniversary-welcome p {
+  margin: 0.25rem 0 0;
+  color: #f8f5eb;
+  font-size: 0.85rem;
+}
+.frank-anniversary-welcome button {
+  pointer-events: auto;
+  flex: none;
+  border: 0;
+  background: transparent;
+  color: #f1d488;
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 1.7rem;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  .frank-anniversary-burst i {
+    animation: none;
+  }
+  .frank-anniversary-burst i:first-child {
+    opacity: 0.8;
+    width: 12px;
+    height: 12px;
+    clip-path: polygon(
+      50% 0,
+      60% 40%,
+      100% 50%,
+      60% 60%,
+      50% 100%,
+      40% 60%,
+      0 50%,
+      40% 40%
+    );
+  }
+}

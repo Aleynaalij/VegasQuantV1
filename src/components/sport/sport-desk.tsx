@@ -9,6 +9,7 @@ import { SPORTS } from "@/lib/sports";
 import SportBrief from "./sport-brief";
 import SportSlate from "./sport-slate";
 import SportMarkets from "./sport-markets";
+import { FrankAnniversaryFireworks } from "../frank-anniversary";
 
 /** NHL and college basketball Home: NFL's layout over the shared sports_slate contract. */
 export default function SportDesk({ sport }: { sport: NewSport }) {
@@ -51,6 +52,8 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
   const info = SPORTS[sport];
   return (
     <div className="sport-home" data-sport={sport}>
+      {/* The owner's one-time surprise lands on the real NHL desk, once the slate has loaded. */}
+      {sport === "nhl" && page ? <FrankAnniversaryFireworks /> : null}
       <SportBrief
         sport={sport}
         games={games}
