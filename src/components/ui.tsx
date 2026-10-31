@@ -8,7 +8,7 @@ import SwipeTabs from "./swipe-tabs";
 import TabScrub from "./tab-scrub";
 import CommunityStories from "./community-stories";
 import AdminOnly from "./admin-only";
-import FrankAnniversaryGate from "./frank-anniversary-gate";
+import FrankAnniversaryGate, { NhlChipHold } from "./frank-anniversary-gate";
 import { liveSports, SPORTS, type Sport } from "@/lib/sports";
 import {
   ArrowUpRight,
@@ -299,18 +299,26 @@ export function Shell({
           aria-label="Sport selection"
           data-swipe-tabs
         >
-          {liveSports().map((key) => (
-            <Link
-              key={key}
-              href={chipHref(key)}
-              aria-current={sport === key ? "page" : undefined}
-              aria-label={SPORTS[key].name}
-              className={sport === key ? "selected" : ""}
-              data-sport={key}
-            >
-              {SPORTS[key].label}
-            </Link>
-          ))}
+          {liveSports().map((key) => {
+            const chip = (
+              <Link
+                key={key}
+                href={chipHref(key)}
+                aria-current={sport === key ? "page" : undefined}
+                aria-label={SPORTS[key].name}
+                className={sport === key ? "selected" : ""}
+                data-sport={key}
+              >
+                {SPORTS[key].label}
+              </Link>
+            );
+            // Frank's surprise is NHL itself: its chip waits for his invitation status.
+            return key === "nhl" && sport !== "nhl" ? (
+              <NhlChipHold key={key}>{chip}</NhlChipHold>
+            ) : (
+              chip
+            );
+          })}
           {active === "home" || active === "community" ? (
             <CommunityStories />
           ) : sport === "nba" ? (

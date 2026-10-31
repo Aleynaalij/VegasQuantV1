@@ -201,6 +201,8 @@ for (const width of [390, 1280]) {
       document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
     );
     const chips = p.getByRole("navigation", { name: "Sport selection" });
+    // The NHL chip appears once the member's anniversary status is known (Frank's surprise).
+    await chips.locator('a[data-sport="nhl"]').waitFor();
     assert.deepEqual(
       await chips
         .locator("a[data-sport]")

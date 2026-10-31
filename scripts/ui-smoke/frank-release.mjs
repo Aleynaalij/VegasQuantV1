@@ -71,7 +71,7 @@ try {
     await ctx.route("**/rest/v1/rpc/ruby_record_summary", (r) =>
       r.fulfill({ json: [] }),
     );
-    await ctx.route("**/rest/v1/rpc/frank_anniversary", (r) => {
+    await ctx.route("**/rest/v1/rpc/frank_anniversary", async (r) => {
       const p = JSON.parse(r.request().postData() || "{}");
       let state = { state: "hidden" };
       if (p.p_action === "status")
@@ -96,6 +96,9 @@ try {
           state = { state: "celebrate" };
         } else state = { state: "done" };
       }
+      // A slow status read: NHL must stay out of sight until Frank's invitation is up.
+      if (p.p_action === "status" && !revealed)
+        await new Promise((done) => setTimeout(done, 1500));
       return r.fulfill({ json: state });
     });
     await ctx.route("**/rest/v1/rpc/sports_slate", async (r) => {
@@ -118,10 +121,16 @@ try {
     p.on("pageerror", (e) => errors.push(e.message));
     // Owner (Oct 31): the invitation greets Frank as soon as he signs in, before he touches anything.
     await p.goto(base + "/", { waitUntil: "load" });
+    const nhlChip = p
+      .getByRole("navigation", { name: "Sport selection" })
+      .locator('a[data-sport="nhl"]');
+    await p.locator('a[data-sport="nba"]').first().waitFor();
+    assert.equal(await nhlChip.count(), 0, "NHL hidden while the status is pending");
     const invitation = p.getByRole("dialog", {
       name: "Happy anniversary, Frank!",
     });
     await invitation.waitFor();
+    assert.equal(await nhlChip.count(), 0, "NHL hidden while the surprise is on offer");
     assert.equal(
       await invitation
         .getByRole("button", { name: "Yes", exact: true })
