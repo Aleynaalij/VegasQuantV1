@@ -15,7 +15,9 @@ insert into public.nba_editorial_picks values('fixture-nba','2026-10-31T15:00:00
 insert into public.community_posts(id,user_id,sport,title,body,created_at) values(md5('nba-editorial-zone:fixture-nba')::uuid,'${owner}','nba','Stored NBA selection',E'Skater Over 6.5 rebounds (+124)\n\nOriginal analysis.\n\nRisk: uncertainty.\n\nUnknowns: missing reports.', '2026-10-31T15:00:00Z');
 insert into public.sports_games values('${other}','nhl');
 insert into public.sports_selections values('${owner}','Stored NHL selection','2026-10-31T15:01:00Z','Original NHL analysis.','Original NHL risk.','${other}');
-insert into public.community_posts(user_id,sport,title,body,created_at) values('${owner}','nhl','Stored NHL selection',E'Penguins moneyline (+100)\n\nOriginal NHL analysis.\n\nRisk: Original NHL risk.', '2026-10-31T15:01:00Z');
+insert into public.community_posts(user_id,sport,title,body,created_at) values('${owner}','nhl','Stored NHL selection',E'Penguins moneyline (+100)\n\nOriginal NHL analysis.\n\nRisk: Original NHL risk.\n\nVegas Quant editorial read, not a guaranteed result. Prices move; check the current line.', '2026-10-31T15:01:00Z');
+insert into public.sports_selections values('${owner}','Manual NHL selection','2026-10-31T15:02:00Z','Manual NHL analysis.','Manual NHL risk.','${other}');
+insert into public.community_posts(user_id,sport,title,body,created_at) values('${owner}','nhl','Manual NHL selection',E'Manual NHL analysis.\n\nRisk: Manual NHL risk.\n\nQualitative editorial. FanDuel quote observed 2026-10-31\nhttps://example.com', '2026-10-31T15:02:00Z');
 insert into public.community_posts(user_id,sport,title,body) values('${owner}','nfl','Community post','Cash it'),('${other}','nba','Member','My own notes');
 insert into public.community_posts(user_id,sport,title,body,card) values('${owner}','nba','3-point volume','Research only','nba-threes:2026-10-31');
 grant select,insert on public.community_posts to authenticated,service_role;
@@ -31,6 +33,12 @@ const migration = readFileSync(
   "utf8",
 );
 await db.exec(migration);
+await db.exec(
+  readFileSync(
+    "supabase/migrations/20261031191226_zone_card_editorial_provenance.sql",
+    "utf8",
+  ),
+);
 assert.deepEqual(
   (
     await db.query(
@@ -41,10 +49,12 @@ assert.deepEqual(
 );
 const rows = (await db.query("select * from public.community_posts")).rows;
 assert.equal(rows.filter((x) => x.card === "vq-publication:v1").length, 2);
-assert.deepEqual(rows.find((x) => x.sport === "nhl").legs, [
+assert.deepEqual(rows.find((x) => x.title === "Stored NHL selection").legs, [
   "Penguins moneyline (+100)",
 ]);
 assert.equal(rows.find((x) => x.body === "Cash it").card, null);
+assert.equal(rows.find((x) => x.title === "Manual NHL selection").card, null);
+assert.deepEqual(rows.find((x) => x.title === "Manual NHL selection").legs, []);
 assert.equal(
   rows.find((x) => x.title === "3-point volume").card,
   "nba-threes:2026-10-31",
@@ -82,7 +92,7 @@ assert.deepEqual(nfl.legs, ["Runner Over 55.5 yards (-110)"]);
 // A future journaled selection automatically gains its exact line; no new publishing API is exposed.
 await db.exec(`begin;insert into public.sports_games values('00000000-0000-4000-8000-000000000003','ncaab');
  insert into public.sports_selections values('${owner}','College selection',now(),'College analysis.','College risk.','00000000-0000-4000-8000-000000000003');
- insert into public.community_posts(user_id,sport,title,body) values('${owner}','ncaab','College selection',E'College team +3.5 (-110)\n\nCollege analysis.\n\nRisk: College risk.');commit;`);
+ insert into public.community_posts(user_id,sport,title,body) values('${owner}','ncaab','College selection',E'College team +3.5 (-110)\n\nCollege analysis.\n\nRisk: College risk.\n\nVegas Quant editorial read, not a guaranteed result. Prices move; check the current line.');commit;`);
 assert.deepEqual(
   (
     await db.query(

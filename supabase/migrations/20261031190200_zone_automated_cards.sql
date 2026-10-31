@@ -21,7 +21,8 @@ returns text language sql stable security invoker set search_path='' as $$
    and position(n.rationale in p_body)>0 and position(n.risk in p_body)>0 and position(n.unknowns in p_body)>0))
  or (p_sport in ('nhl','ncaab') and (select count(*) from public.sports_selections s join public.sports_games g on g.id=s.game_id
   where s.author_id=p_user and g.sport=p_sport and s.title=p_title and s.published_at=p_at
-   and position(s.why in p_body)>0 and position(s.risk in p_body)>0)=1)
+   and p_body=split_part(p_body,E'\n\n',1)||E'\n\n'||trim(s.why)||E'\n\nRisk: '||trim(s.risk)||
+    E'\n\nVegas Quant editorial read, not a guaranteed result. Prices move; check the current line.')=1)
 $$;
 revoke all on function private.zone_editorial_leg(uuid,uuid,text,text,text,timestamptz) from public,anon,authenticated,service_role;
 
