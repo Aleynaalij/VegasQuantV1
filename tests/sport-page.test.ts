@@ -8,6 +8,7 @@ import {
   marketLine,
   slateGame,
   sportFace,
+  homeMoneylines,
 } from "../src/lib/sport-page";
 import type { SportMarket, SportPage } from "../src/lib/sport-contract";
 
@@ -82,6 +83,54 @@ test("the moneyline face needs both quoted sides", () => {
   );
   assert.equal(face?.away.price, -150);
   assert.ok(face!.away.probability > 0.5);
+});
+test("Home keeps sourced older ML snapshots with mandatory age metadata, never revives an older opposing side", () => {
+  const rows = [
+    m({
+      side: "away",
+      odds: -150,
+      observed_at: "2026-11-01T10:00:00Z",
+      expires_at: "2026-11-01T10:30:00Z",
+    }),
+    m({
+      id: "h",
+      side: "home",
+      selection: "Sample b",
+      odds: 130,
+      observed_at: "2026-11-01T10:00:00Z",
+      expires_at: "2026-11-01T10:30:00Z",
+    }),
+  ];
+  const q = homeMoneylines(rows, now);
+  assert.equal(q.faces[base.game_id].away.price, -150);
+  assert.equal(q.quoteTimes[base.game_id].stale, true);
+  assert.equal(q.quoteTimes[base.game_id].observedAt, rows[0].observed_at);
+  assert.equal(
+    Object.keys(
+      homeMoneylines(
+        [
+          ...rows,
+          {
+            ...rows[0],
+            id: "new",
+            observed_at: "2026-11-01T11:50:00Z",
+            expires_at: "2026-11-01T12:20:00Z",
+          },
+        ],
+        now,
+      ).faces,
+    ).length,
+    0,
+  );
+  assert.equal(
+    Object.keys(
+      homeMoneylines(
+        rows.map((r) => ({ ...r, observed_at: "bad" })),
+        now,
+      ).faces,
+    ).length,
+    0,
+  );
 });
 
 test("each sport shows only its owner-scoped markets, exact lines, with settlement notes", () => {

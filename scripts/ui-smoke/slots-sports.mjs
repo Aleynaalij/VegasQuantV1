@@ -32,7 +32,7 @@ for (const width of [390, 1280]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
   await ctx.addInitScript(session);
   const asked = [];
-  await ctx.route("**/rest/v1/rpc/sports_slate", (r) => {
+  await ctx.route("**/rest/v1/rpc/sports_home", (r) => {
     const sport = JSON.parse(r.request().postData() || "{}").p_sport;
     asked.push(sport);
     return r.fulfill({ json: page(sport) });

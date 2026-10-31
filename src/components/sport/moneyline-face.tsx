@@ -13,6 +13,7 @@ export default function MoneylineFace({
   book = "FanDuel",
   homeLabel = nick(home),
   awayLabel = nick(away),
+  quoteTime,
 }: {
   read: MoneylineRead;
   home: string;
@@ -20,6 +21,7 @@ export default function MoneylineFace({
   book?: string;
   homeLabel?: string;
   awayLabel?: string;
+  quoteTime?: { observedAt: string; stale: boolean };
 }) {
   const favorite =
     read.home.probability >= read.away.probability ? "home" : "away";
@@ -38,13 +40,32 @@ export default function MoneylineFace({
       </span>
       <span
         className={`vq-ml-lean is-${tone(pct)}`}
-        aria-label={`Market lean: ${team}, ${pct}% no-vig win chance at ${book}`}
+        aria-label={`Market lean${quoteTime?.stale ? " from older snapshot" : ""}: ${team}, ${pct}% no-vig win chance at ${book}`}
       >
-        <small>Market lean</small>
+        <small>Market lean{quoteTime?.stale ? " · snapshot" : ""}</small>
         <b>
           {team} {pct}%
         </b>
       </span>
+      {quoteTime ? (
+        <small
+          className="vq-ml-stamp"
+          style={{ gridColumn: "1 / -1", color: "var(--muted)", fontSize: 11 }}
+        >
+          {book} ·{" "}
+          {new Date(quoteTime.observedAt).toLocaleString("en-US", {
+            timeZone: "America/New_York",
+            month: "short",
+            day: "numeric",
+            hour: "numeric",
+            minute: "2-digit",
+          })}{" "}
+          ET
+          {quoteTime.stale
+            ? " · Older quote; price may have moved"
+            : " · Observed price"}
+        </small>
+      ) : null}
     </span>
   );
 }

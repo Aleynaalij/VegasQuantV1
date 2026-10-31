@@ -5,6 +5,7 @@ for (const script of [
   "sports-backend",
   "sports-nba-live",
   "sports-display",
+  "sports-home",
   "sports-automated-publication",
   "zone-all-sports",
 ])

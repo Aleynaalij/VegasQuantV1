@@ -101,7 +101,7 @@ try {
         await new Promise((done) => setTimeout(done, 1500));
       return r.fulfill({ json: state });
     });
-    await ctx.route("**/rest/v1/rpc/sports_slate", async (r) => {
+    await ctx.route("**/rest/v1/rpc/sports_home", async (r) => {
       const fixture = JSON.parse(
         readFileSync("tests/fixtures/sports/nhl/page.json", "utf8"),
       );
