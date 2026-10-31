@@ -62,9 +62,8 @@ export default function SportMarkets({
         </p>
       )}
       {groups.length ? (
-        groups.map((g) => (
-          <section key={g.market} className="sport-market-group">
-            <h3 className="sport-markets-title">FanDuel · {g.label}</h3>
+        groups.map((g) => {
+          const rows = (
             <ul className="sport-market-rows">
               {g.rows.map((m) => (
                 <li key={m.id}>
@@ -76,9 +75,27 @@ export default function SportMarkets({
                 </li>
               ))}
             </ul>
+          );
+          const settle = (
             <p className="sport-settle">Settles: {g.settlement.join(" · ")}</p>
-          </section>
-        ))
+          );
+          // Player menus run long (dozens of scorers a game): they open on request, like NBA props.
+          return g.market.startsWith("player_") ? (
+            <details key={g.market} className="sport-props sport-market-group">
+              <summary>
+                FanDuel · {g.label} · {g.rows.length}
+              </summary>
+              {rows}
+              {settle}
+            </details>
+          ) : (
+            <section key={g.market} className="sport-market-group">
+              <h3 className="sport-markets-title">FanDuel · {g.label}</h3>
+              {rows}
+              {settle}
+            </section>
+          );
+        })
       ) : (
         <p className="sport-empty">
           No open FanDuel markets for this game yet.

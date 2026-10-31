@@ -74,6 +74,8 @@ for (const width of [390, 1280])
       const row = p.locator(".vq-game-row").first();
       if (signedIn) {
         await row.locator(".sport-market-group").first().waitFor();
+        // Player menus start closed; open them to read every exact line.
+        await row.locator("details.sport-props").evaluateAll((ds) => ds.forEach((d) => (d.open = true)));
         const text = await row.innerText();
         assert.ok(!text.includes("-999"), `expired quote hidden ${label}`);
         assert.ok(text.includes("to win"), `selection ${label}`);

@@ -12,7 +12,7 @@ import { nickname, type SlateGame } from "./sport-slate";
 export function slateGame(g: SportGame): SlateGame {
   const team = (t: SportGame["away"]) => ({
     name: t.name,
-    short: g.sport === "nhl" ? nickname(t.name) : t.short_name || t.name,
+    short: t.short_name?.trim() || nickname(t.name),
     abbreviation: t.abbreviation || null,
     espnId:
       g.sport === "ncaab" && /^\d+$/.test(t.provider_id) ? t.provider_id : null,
