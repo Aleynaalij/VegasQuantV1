@@ -37,6 +37,7 @@ import BeatTheClose from "./beat-the-close";
 import MyTailRecord from "./my-tail-record";
 import RubyHub from "./ruby-cards";
 import HomeBrief from "./home-brief";
+import HomeRecordCard from "./home-record";
 import HomeGameList from "./home-game-list";
 import GamePicksShortcut from "./game-picks-shortcut";
 import DecisionBoard from "./decision-board";
@@ -385,6 +386,9 @@ export default function DeskApp({
         )}
         {page === "home" && (
           <>
+            <SectionBoundary name="Track record">
+              <HomeRecordCard />
+            </SectionBoundary>
             <SectionBoundary name="Contributor submission">
               <RubyHub home composerOnly />
             </SectionBoundary>
