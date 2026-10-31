@@ -15,5 +15,5 @@ Review actual answers in the private admin page before making NHL tasks. Feedbac
 - `npm test` includes parser tests and PGlite role, identity, age, anniversary ordering, validation, idempotency, private-table denial, and MFA review checks.
 - `npm run typecheck` and `npm run build` cover the full app.
 - CI runs `scripts/ui-smoke/frank-nhl-feedback.mjs` at mobile and desktop widths using synthetic sessions only. It covers all four fields, save/lost-response retry, reload, member/anonymous exclusion, and admin plain-text review.
-- Apply only `20261031183133_frank_nhl_feedback.sql` after verifying the live pinned identity. Do not run unrelated pending migrations or submit synthetic feedback as the real recipient.
+- Apply only `20261031190100_frank_nhl_feedback.sql` after verifying the live pinned identity. Do not run unrelated pending migrations or submit synthetic feedback as the real recipient.
 - Production verification must confirm recipient matching, original celebration receipt, private table/EXEC grants, successful deployment, and anonymous exclusion. A synthetic browser test is not evidence that Frank has answered.

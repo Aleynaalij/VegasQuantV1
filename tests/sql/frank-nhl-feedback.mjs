@@ -1,6 +1,10 @@
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import assert from "node:assert/strict";
+const feedbackMigration = "supabase/migrations/20261031190100_frank_nhl_feedback.sql";
+const anniversaryMigration = "supabase/migrations/20261031190000_frank_anniversary.sql";
+assert.ok(feedbackMigration > anniversaryMigration, "Feedback must migrate after its anniversary dependency");
+assert.match(readFileSync(anniversaryMigration, "utf8"), /create table private\.frank_anniversary_config/i);
 const db = new PGlite(),
   frank = "00000000-0000-4000-8000-000000000001",
   other = "00000000-0000-4000-8000-000000000002",
@@ -16,7 +20,7 @@ create table public.ruby_contributors(user_id uuid,brand text,active boolean);in
 create table private.frank_anniversary_config(singleton boolean primary key,target_user_id uuid,enabled boolean);insert into private.frank_anniversary_config values(true,'${other}',true);
 create table private.frank_anniversary_receipts(user_id uuid primary key,celebrated_at timestamptz);`);
 const sql = readFileSync(
-  "supabase/migrations/20261031183133_frank_nhl_feedback.sql",
+  feedbackMigration,
   "utf8",
 );
 await assert.rejects(db.exec(sql), /Verified FranksCorner identity/);
