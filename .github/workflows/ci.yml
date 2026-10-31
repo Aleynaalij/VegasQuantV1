@@ -50,5 +50,6 @@ jobs:
           node scripts/ui-smoke/slots-sports.mjs
           node scripts/ui-smoke/frank-release.mjs
           node scripts/ui-smoke/frank-nhl-feedback.mjs
+          node scripts/ui-smoke/zone-publication-cards.mjs
           node scripts/ui-smoke/frank-anniversary.mjs
           node scripts/ui-smoke/simulator.mjs

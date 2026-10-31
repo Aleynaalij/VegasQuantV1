@@ -36,6 +36,8 @@ import {
 import { ago, initials, richParts, zoneFeed } from "@/lib/zone-feed";
 import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { threesCardDay } from "@/lib/nba-threes-card";
+import { isPublicationCard } from "@/lib/zone-publication-card";
+import ZonePublicationCard from "./zone-publication-card";
 type Post = {
   id: string;
   user_id: string;
@@ -1263,6 +1265,8 @@ export default function CommunityFeed() {
                             </a>
                           </figcaption>
                         </figure>
+                      ) : isPublicationCard(p) ? (
+                        <ZonePublicationCard post={p} />
                       ) : (
                         <p className="zone-post-body">
                           <RichText text={p.body} />
@@ -1292,7 +1296,7 @@ export default function CommunityFeed() {
                           ) : null}
                         </div>
                       ) : null}
-                      {p.kind === "slip" && p.legs.length ? (
+                      {isPublicationCard(p) ? null : p.kind === "slip" && p.legs.length ? (
                         <CommunityParlayCard
                           title={p.title}
                           legs={p.legs}
