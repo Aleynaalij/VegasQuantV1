@@ -57,7 +57,13 @@ Deno.serve(async (req: Request) => {
         const game: SportGame = { ...row.payload, id: row.id };
         try {
           const url = summaryUrl(game.sport, game.provider_id);
-          const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+          const r = await fetch(url, {
+            signal: AbortSignal.timeout(15000),
+            headers: {
+              "User-Agent": "VegasQuant/1.0 (sports research; vegasquant.app)",
+              Accept: "application/json",
+            },
+          });
           if (!r.ok) throw Error(`Source ${r.status}`);
           const body = await r.text();
           const p = parseResult(JSON.parse(body), game, {

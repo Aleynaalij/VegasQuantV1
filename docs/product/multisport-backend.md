@@ -48,22 +48,39 @@ Game grading uses confirmed final score including applicable OT/SO. College exac
 
 Existing `marketSlotPool(games, observations, now?, sport='nfl')` preserves NFL and supports NBA's exact h2h/spread/total/points/rebounds/assists/threes snapshots. New `sportSlotPool(SportPage, 'nhl'|'ncaab', now?)` adapts the new stores. `spinSportTicket(sport, rows, previous, random?, now?)` enforces sport at the draw boundary; legacy rows without a sport are NFL-only. `SlotLeg` adds optional sport and observed_odds. Existing machine needs eight distinct eligible conflict groups; insufficient pool returns an explicit error, never fabricated legs. Opposing team sides and alternative thresholds for one player cannot occupy the same ticket.
 
-## Deployment order and current limitation
+## Production deployment — October 31, 2026
 
-Automatic approval review rejected the attempted production `multisport_backend` migration: building was authorized, but broad durable live deployment was not sufficiently explicit. No workaround was attempted. These are prepared source artifacts; do not describe the schema, collectors, schedules, quote coverage or UI as live.
+Mike explicitly approved the concrete backend deployment request with “I Approve”; approval is recorded in issue #166 comment 6545279698. PR #167 contains source; it remains unmerged pending the full-package peer handoff. Hosted backend deployment is complete, not a claim that Claude's frontend is live.
 
-After explicit production approval and peer package review:
-1. Apply `20261031145407_multisport_backend.sql`.
-2. Deploy `sports-sync` and `sports-results`, including relative normalize/parser/type files and pinned deno import maps. Set verify_jwt=false only because BOTH handlers authenticate the existing source-sync token themselves. Reuse the existing global source token and ODDS_API_KEY; do not expose/recreate credentials.
-3. Confirm unauthenticated calls return 401 and wrong methods 405. Invoke with the vault token through the existing secure dispatcher; never print its value. Read back actual games, sources, market counts and provider errors before claiming coverage. Check sport separation, credits and freshness.
-4. Apply `20261031150619_multisport_schedule.sql` only after functions are active. It adds two authenticated refresh jobs; NFL and existing daily card schedules are untouched.
-5. Apply `20261031150209_nba_live_readiness.sql`. It changes only NBA source/result job cadence and wraps the old poster. Check WAITING/NO_GAMES/ALREADY_POSTED and original rendering; do not bypass final confirmation.
-6. Integrate Claude's Zone/UI migrations and app PR. Verify phone/desktop routes and real member/age/admin read behavior. Then allow actual supported editorial publication, never synthetic fixtures.
+Applied migrations: `20261031145407_multisport_backend.sql`, `20261031150209_nba_live_readiness.sql`, `20261031150619_multisport_schedule.sql`, and `20261031152818_multisport_publishing_access.sql`. The last moves privileged editorial code into private and exposes an authenticated-only invoker wrapper, retaining admin/age/exact-quote checks. Anonymous publication and ingestion EXECUTE are false.
+
+Active collectors: sports-sync v4 (bundle SHA256 `9c4d72fa9291379fe122551c244bdc697a29e93c7341784753d277afaa55a6d3`); sports-results v2 (`a18222cd06975cd609a975838632d1c6aff6faaee46ebb18ed0a818ea9ba6167`). Both authenticate the existing source token inside the handler. Actual unauthenticated POST returns 401; GET returns 405. Vault dispatch never prints credentials.
+
+Active UTC schedules: source at minutes 8/23/38/53; results at 11/26/41/56. NBA source restored to 2/17/32/47 and results to 5/20/35/50. NFL and the existing NBA 3-point posting job are unchanged. Oct 31's original card was already POSTED (post c68adf08-90d0-4ae8-a520-a599f7cf9154); idempotent invocation returned ALREADY_POSTED.
+
+Actual hosted readback at 15:33 UTC:
+
+| Evidence | NHL | College basketball |
+|---|---:|---:|
+| Stored fixtures (includes past day) | 63 | 438 |
+| Public upcoming slate fixtures | 48 | 377 |
+| Immutable moneyline quote rows | 30 | 8 |
+| Immutable game-total quote rows | 30 | excluded |
+| Immutable spread quote rows | excluded | 8 |
+| Skater goals O/U quote rows | 98 | excluded |
+| Anytime-goal quote rows | 203 | excluded |
+| Player-points quote rows | 0 (provider coverage gap) | excluded |
+
+These are collected snapshots, not a promise every quote remains fresh or every fixture has odds. Quote expiry remains enforced. Both anonymous slate/detail RPCs returned schedule data, access=false and zero protected quotes. Three actual NHL finals are CONFIRMING; the three-hour second-read gate remains intact. No fake publications or settlements were created.
+
+Live fixes included identifying ESPN request headers (initial anonymous fetches returned 403); no paid props for empty/unmatched slates; exact pair/time matching for provider-reversed home/away ONLY on confirmed neutral courts; quote outcomes bound to canonical game teams; and an explicitly labelled prior-season statistics fallback for pre-season college 404s. Two real college prior-season team-stat records were read back. Context completion requires both teams' stats so a partial summary cannot suppress missing-team retry.
+
+Remaining integration: Claude's `20261031160000_zone_all_sports.sql` and app/UI package are separate and were not applied here. New-sport editorial publication depends on that migration. NHL player-points markets remain unavailable until the actual provider supplies them. Starting-goalie/line-combination confirmation and opponent-adjusted ratings are not asserted from missing provider facts. Membership/browser/phone/desktop integration belongs to the full frontend package review. NBA has supported editorial APIs but no automatic editorial-selection publisher; an empty published-picks list is honest and is not filled using an unvalidated model. Simulator stays paused.
 
 ## Self-validation
 
-Commands: `npm test`, `npm run typecheck`, `npm run build`, `node tests/sql/sports-backend.mjs`, `node tests/sql/sports-nba-live.mjs`. Deno check performed with the same pinned npm dependencies and local node_modules resolution because this executor's direct Deno registry request was refused; deployed-runtime check remains required.
+Validation: all 359 repository tests, TypeScript and the production webpack build pass, including both SQL suites and a neutral-court outcome-identity regression. Commands: `npm test`, `npm run typecheck`, `npm run build`, `node tests/sql/sports-backend.mjs`, `node tests/sql/sports-nba-live.mjs`. Deno check performed with the same pinned npm dependencies and local node_modules resolution because this executor's direct Deno registry request was refused; both deployed handlers also passed actual authenticated execution and 401/405 rejection checks.
 
-Actual source probe: ESPN NHL Oct29 scoreboard normalized 11 games; one real final summary parsed 36 skaters, score 4–6, with scoring consistency. NHL Oct30 scoreboard returned 3 games; college Nov2 D-I scoreboard returned 182 games. These are probe results, not hosted ingestion or universal availability. Actual account-specific FanDuel NHL/NCAAB coverage cannot be verified before the approved collector deployment.
+Actual source probe: ESPN NHL Oct29 scoreboard normalized 11 games; one real final summary parsed 36 skaters, score 4–6, with scoring consistency. NHL Oct30 scoreboard returned 3 games; college Nov2 D-I scoreboard returned 182 games. These are probe results, not hosted ingestion or universal availability. Account-specific hosted FanDuel coverage was then verified as recorded above.
 
 Primary references: https://the-odds-api.com/sports/nhl-odds.html ; https://the-odds-api.com/sports/ncaab-odds.html ; https://the-odds-api.com/sports-odds-data/betting-markets.html ; FanDuel MD terms https://policies.fanduel.com/SB/MD/2026-10-29T12-02-28.html . Provider entitlement and source-use terms still apply; this package imports no proprietary tracking or newly licensed service.

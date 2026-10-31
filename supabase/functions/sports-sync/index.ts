@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import {
   allowedMarkets,
   dates,
+  gameForEvent,
   normalizeMarkets,
   oddsKeys,
   paths,
@@ -22,7 +23,13 @@ async function rpc(name: string, args: Record<string, unknown>) {
   return r.data;
 }
 async function read(url: string) {
-  const res = await fetch(url, { signal: AbortSignal.timeout(15000) });
+  const res = await fetch(url, {
+    signal: AbortSignal.timeout(15000),
+    headers: {
+      "User-Agent": "VegasQuant/1.0 (sports research; vegasquant.app)",
+      Accept: "application/json",
+    },
+  });
   if (!res.ok) throw Error(`Source HTTP ${res.status}`);
   const body = await res.text();
   if (body.length > 10000000) throw Error("Source too large");
@@ -111,12 +118,23 @@ Deno.serve(async (req: Request) => {
       {
         const recent = await db
           .from("sports_facts")
-          .select("game_id")
+          .select("game_id,payload")
           .eq("kind", "team_context")
-          .is("payload->team_id", null)
           .gte("recorded_at", new Date(now - 6 * 3600000).toISOString());
         if (recent.error) throw recent.error;
-        const covered = new Set((recent.data || []).map((f: any) => f.game_id));
+        const coveredTeams = new Map<string, Set<string>>();
+        for (const f of recent.data || []) {
+          if (f.payload?.team_id) {
+            const ids = coveredTeams.get(f.game_id) || new Set<string>();
+            ids.add(f.payload.team_id);
+            coveredTeams.set(f.game_id, ids);
+          }
+        }
+        const covered = new Set(
+          [...coveredTeams.entries()]
+            .filter(([, ids]) => ids.size >= 2)
+            .map(([id]) => id),
+        );
         for (const g of games
           .filter((g) => !covered.has(g.id))
           .filter((g) => Date.parse(g.start_time) <= now + 36 * 3600000)
@@ -149,9 +167,24 @@ Deno.serve(async (req: Request) => {
               [g.away, g.home].flatMap((team) =>
                 ["roster", "statistics"].map(async (endpoint) => {
                   try {
-                    const t = await read(
-                      `https://site.api.espn.com/apis/site/v2/sports/${paths[sport]}/teams/${team.provider_id}/${endpoint}?season=${g.season}`,
-                    );
+                    let statsSeason = g.season;
+                    const get = () =>
+                      read(
+                        `https://site.api.espn.com/apis/site/v2/sports/${paths[sport]}/teams/${team.provider_id}/${endpoint}?season=${statsSeason}`,
+                      );
+                    let t;
+                    try {
+                      t = await get();
+                    } catch (e) {
+                      if (
+                        endpoint !== "statistics" ||
+                        sport !== "ncaab" ||
+                        !String(e).includes("404")
+                      )
+                        throw e;
+                      statsSeason = g.season - 1;
+                      t = await get();
+                    }
                     await rpc("ingest_sports", {
                       p: {
                         sport,
@@ -163,9 +196,12 @@ Deno.serve(async (req: Request) => {
                               endpoint === "roster" ? "roster" : "team_context",
                             payload: {
                               team_id: team.id,
-                              season: g.season,
+                              season: statsSeason,
+                              prior_season: statsSeason !== g.season,
                               scope:
-                                "Provider season context; not a confirmed lineup or opponent-adjusted forecast",
+                                statsSeason !== g.season
+                                  ? "PRIOR SEASON provider statistics; not current-season form or a roster projection"
+                                  : "Provider season context; not a confirmed lineup or opponent-adjusted forecast",
                               data: t.data,
                             },
                           },
@@ -248,7 +284,12 @@ Deno.serve(async (req: Request) => {
           },
         });
       }
-      if (sport === "nhl" && settings.props_enabled && budget) {
+      if (
+        sport === "nhl" &&
+        games.length > 0 &&
+        settings.props_enabled &&
+        budget
+      ) {
         const cache = { ...settings.prop_fetched };
         const list = await read(
           `https://api.the-odds-api.com/v4/sports/${oddsKeys[sport]}/events?apiKey=${encodeURIComponent(key)}`,
@@ -257,6 +298,7 @@ Deno.serve(async (req: Request) => {
         for (const e of Array.isArray(list.data) ? list.data : []) {
           const start = Date.parse(e.commence_time);
           if (
+            !gameForEvent(e, games) ||
             !(start > now && start < now + 6 * 3600000) ||
             !/^[a-zA-Z0-9_-]+$/.test(e.id) ||
             now - Date.parse(cache[e.id] || "1970-01-01") <

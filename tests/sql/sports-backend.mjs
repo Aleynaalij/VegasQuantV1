@@ -13,6 +13,8 @@ create function private.immutable()returns trigger language plpgsql as $$begin r
 create table public.feed_runs(provider text,status text,details jsonb,created_at timestamptz default now());
 create table public.community_posts(user_id uuid,sport text,kind text,title text,body text,legs text[]);`);
 await db.exec(readFileSync('supabase/migrations/20261031145407_multisport_backend.sql','utf8'));
+await db.exec(readFileSync('supabase/migrations/20261031152818_multisport_publishing_access.sql','utf8'));
+assert.equal((await db.query("select has_function_privilege('anon','public.sports_publish_selection(uuid,text,text,text)','execute') p")).rows[0].p,false);
 const now=Date.now(),at=new Date(now).toISOString();
 const body='{"fixture":true}',source={url:'https://example.invalid/fixture',body,sha256:createHash('sha256').update(body).digest('hex'),retrieved_at:at};
 const game={sport:'nhl',provider_id:'123',slug:'sample',start_time:new Date(now+3600000).toISOString(),start_time_tbd:false,completed:false,away:{id:'a',provider_id:'1',name:'A'},home:{id:'b',provider_id:'2',name:'B'},source:{...source,body:undefined}};

@@ -232,3 +232,14 @@ test("Public contract excludes archived raw provider response body", () => {
   const rows = normalizeMarkets([e], "nhl", [game], withBody, now);
   assert.ok(!("body" in rows[0].source));
 });
+test("Neutral-site reversed provider orientation binds the exact team, never the other side", () => {
+  const g = { ...game, neutral_site: true };
+  const swapped = { ...e, home_team: e.away_team, away_team: e.home_team };
+  const rows = normalizeMarkets([swapped], "nhl", [g], source, now);
+  assert.equal(rows.length, 2);
+  assert.equal(rows.find((m) => m.selection === g.home.name)?.side, "home");
+  assert.equal(
+    normalizeMarkets([swapped], "nhl", [game], source, now).length,
+    0,
+  );
+});

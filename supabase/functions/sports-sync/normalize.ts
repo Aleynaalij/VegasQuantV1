@@ -127,17 +127,20 @@ const key = (s: string) =>
     .replace(/[^a-z0-9]/g, "");
 /** Match names to the SAME pair and start, never fuzzy text. Short/team abbreviations are aliases. */
 export function gameForEvent(e: any, games: SportGame[]) {
-  const candidates = games.filter(
-    (g) =>
-      [g.home.name, g.home.short_name].some(
-        (n) => key(n) === key(e.home_team || ""),
-      ) &&
-      [g.away.name, g.away.short_name].some(
-        (n) => key(n) === key(e.away_team || ""),
-      ) &&
+  const matches = (t: SportGame["home"], name: string) =>
+    [t.name, t.short_name].some((n) => key(n) === key(name || ""));
+  const candidates = games.filter((g) => {
+    const same = matches(g.home, e.home_team) && matches(g.away, e.away_team);
+    const neutralSwap =
+      g.neutral_site === true &&
+      matches(g.home, e.away_team) &&
+      matches(g.away, e.home_team);
+    return (
+      (same || neutralSwap) &&
       Math.abs(Date.parse(g.start_time) - Date.parse(e.commence_time)) <=
-        15 * 60000,
-  );
+        15 * 60000
+    );
+  });
   return candidates.length === 1 ? candidates[0] : null;
 }
 export function normalizeMarkets(
@@ -180,12 +183,15 @@ export function normalizeMarkets(
           )
             continue;
           const isPlayer = m.key.startsWith("player_"),
-            side =
-              o.name === e.home_team
-                ? "home"
-                : o.name === e.away_team
-                  ? "away"
-                  : null;
+            side = [g.home.name, g.home.short_name].some(
+              (n) => key(n) === key(o.name || ""),
+            )
+              ? "home"
+              : [g.away.name, g.away.short_name].some(
+                    (n) => key(n) === key(o.name || ""),
+                  )
+                ? "away"
+                : null;
           const dir = ["Over", "Under", "Yes"].includes(o.name) ? o.name : null;
           if ((m.key === "h2h" || m.key === "spreads") && !side) continue;
           if (isPlayer && (!String(o.description || "").trim() || !dir))
