@@ -108,7 +108,11 @@ export function watcherRows(p: PublicationPost) {
     const [name, ...rest] = part.split("\n");
     const concern = rest.join(" ");
     const matches = p.legs.filter(
-      (leg) => leg === name || leg.endsWith(" " + name),
+      (leg) =>
+        leg === name ||
+        leg.endsWith(" " + name) ||
+        (leg.startsWith(name.split(" ")[0] + " ") &&
+          leg.endsWith(name.slice(name.indexOf(" ")))),
     );
     if (
       matches.length !== 1 ||
