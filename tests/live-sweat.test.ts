@@ -259,3 +259,52 @@ test("NHL live box uses the grader's participation rule: no scratched or zero-ti
     "miss",
   );
 });
+
+test("player names match across accents on either side (Jokić / Jokic)", () => {
+  const box = parseLiveBox("nba", {
+    boxscore: {
+      players: [
+        {
+          statistics: [
+            {
+              keys: ["points", "rebounds"],
+              athletes: [
+                {
+                  athlete: { displayName: "Nikola Jokić" },
+                  stats: ["31", "12"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  })!;
+  const p = pick({
+    market: "player_points",
+    player: "Nikola Jokic",
+    direction: "Over",
+    line: 27.5,
+  });
+  assert.equal(sweat(p, game(90, 95), box, teams)!.state, "hit");
+  const other = parseLiveBox("nba", {
+    boxscore: {
+      players: [
+        {
+          statistics: [
+            {
+              keys: ["points", "rebounds"],
+              athletes: [
+                { athlete: { displayName: "Luka Doncic" }, stats: ["20", "5"] },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  })!;
+  assert.equal(
+    sweat({ ...p, player: "Luka Dončić" }, game(90, 95), other, teams)!.detail,
+    "20 PTS, needs 8",
+  );
+});
