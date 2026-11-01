@@ -259,3 +259,15 @@ export function parseLiveBox(
   }
   return out;
 }
+
+/** Whether ESPN's own summary says the game is over: only then can its box score be a final read. */
+export function boxIsFinal(data: unknown) {
+  const type = (
+    data as {
+      header?: {
+        competitions?: { status?: { type?: { completed?: boolean } } }[];
+      };
+    }
+  )?.header?.competitions?.[0]?.status?.type;
+  return type?.completed === true;
+}

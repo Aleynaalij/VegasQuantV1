@@ -44,7 +44,9 @@ for (const width of [390, 1280])
       const u = new URL(r.request().url());
       lookups.push(u.searchParams.get("provider_id"));
       assert.equal(u.searchParams.get("sport"), "eq.nhl");
-      const m = (market, side, direction, line, player) => ({ market, side, direction, line, player });
+      // The real row shape: sports_markets keeps the quote's fields inside its payload JSON.
+      assert.match(u.searchParams.get("select"), /sports_markets\(payload\)/);
+      const m = (market, side, direction, line, player) => ({ payload: { market, side, direction, line, player, odds: -110, book: "FanDuel" } });
       return r.fulfill({
         json: [
           {
@@ -117,12 +119,16 @@ for (const width of [390, 1280])
 for (const width of [390, 1280]) {
   const label = `nba @${width}`;
   const ctx = await browser.newContext({ viewport: { width, height: 900 }, reducedMotion: "reduce" });
-  await ctx.route("**/api/live*", (r) =>
+  // Six older picked finals (off the strip) come first in the feed; today's live prop game last.
+  const old = Array.from({ length: 6 }, (_, i) => ({ id: `60${i}`, start: iso(-30), state: "post", detail: "Final", away: { name: `Old ${i}`, abbreviation: `O${i}`, score: 100 }, home: { name: `Home ${i}`, abbreviation: `H${i}`, score: 99 } }));
+  let phase = "live";
+  await ctx.route("**/api/live?*", (r) =>
     r.fulfill({
       json: {
         sport: "nba",
         games: [
-          { id: "501", start: iso(-1), state: "in", detail: "Q3 4:12", away: { name: "Utah Jazz", abbreviation: "UTA", score: 70 }, home: { name: "Portland Trail Blazers", abbreviation: "POR", score: 74 } },
+          ...old,
+          { id: "501", start: iso(-1), state: phase === "live" ? "in" : "post", detail: phase === "live" ? "Q3 4:12" : "Final", away: { name: "Utah Jazz", abbreviation: "UTA", score: 70 }, home: { name: "Portland Trail Blazers", abbreviation: "POR", score: 74 } },
           { id: "502", start: iso(-1), state: "in", detail: "Q2 1:00", away: { name: "Miami Heat", abbreviation: "MIA", score: 40 }, home: { name: "Orlando Magic", abbreviation: "ORL", score: 41 } },
         ],
       },
@@ -137,12 +143,18 @@ for (const width of [390, 1280]) {
       json: [
         { provider_id: "501", slug: "uta-por-501", picks: [pk("p0", 24.5, null), pk("p1", 23.5, "p0")] },
         { provider_id: "502", slug: "mia-orl-502", picks: [] },
+        ...old.map((g) => ({ provider_id: g.id, slug: `old-${g.id}`, picks: [pk(`q${g.id}`, 10.5, null)] })),
       ],
     });
   });
-  await ctx.route("**/api/live/box*", (r) =>
-    r.fulfill({ json: { players: { "deni avdija": { points: 18, rebounds: 7 } } } }),
-  );
+  const boxReads = [];
+  await ctx.route("**/api/live/box*", (r) => {
+    boxReads.push(new URL(r.request().url()).searchParams.get("id"));
+    // After the final, the box refresh fails: the last live count must not be shown as a result.
+    return phase === "live"
+      ? r.fulfill({ json: { players: { "deni avdija": { points: 18, rebounds: 7 } }, final: false } })
+      : r.fulfill({ status: 503, json: { players: null, unavailable: true } });
+  });
   const p = await ctx.newPage();
   const errors = [];
   p.on("pageerror", (e) => errors.push(e.message));
@@ -155,6 +167,13 @@ for (const width of [390, 1280]) {
   assert.equal(await cards.first().locator("a").getAttribute("href"), "/nba/games/uta-por-501");
   assert.equal(await cards.nth(1).locator("a").getAttribute("href"), "/nba/games/mia-orl-502");
   assert.equal(await strip.locator(".live-now-picks li").count(), 1, `superseded pick hidden ${label}`);
+  assert.ok(boxReads.length && boxReads.every((id) => id === "501"), `box budget goes to the game on screen, not older finals ${label}: ${boxReads}`);
+  // The game goes final but the final box can't be read: no "Missed" from a stale count.
+  phase = "final";
+  await p.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await strip.locator(".live-now-picks .is-pending").waitFor();
+  const line = (await strip.locator(".live-now-picks li").first().innerText()).replace(/\s+/g, " ");
+  assert.ok(!/Missed|final/.test(line), `stale count not shown as final ${label}: ${line}`);
   assert.deepEqual(errors, [], label);
   await ctx.close();
 }

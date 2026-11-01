@@ -29,14 +29,17 @@ type Ours = {
 };
 const NONE: Ours = { picks: new Map(), hrefs: new Map() };
 type NbaPick = SweatPick & { supersedes_id?: string | null };
+/** sports_markets keeps a quote's fields in its `payload` JSON, not as columns. */
 type SportPick = {
   id: string;
   market?: {
-    market: SweatPick["market"];
-    side: SweatPick["side"];
-    direction: SweatPick["direction"];
-    line: number | null;
-    player: string | null;
+    payload?: {
+      market?: SweatPick["market"];
+      side?: SweatPick["side"];
+      direction?: SweatPick["direction"];
+      line?: number | null;
+      player?: string | null;
+    } | null;
   } | null;
 };
 
@@ -62,7 +65,7 @@ async function lookup(sport: LiveSport, ids: string[]): Promise<Ours> {
         : await supabase
             .from("sports_games")
             .select(
-              "provider_id,picks:sports_selections(id,market:sports_markets(market,side,direction,line,player))",
+              "provider_id,picks:sports_selections(id,market:sports_markets(payload))",
             )
             .eq("sport", sport)
             .in("provider_id", part);
@@ -88,9 +91,21 @@ async function lookup(sport: LiveSport, ids: string[]): Promise<Ours> {
                 line: p.line,
                 player: p.player,
               }))
-          : (raw as SportPick[]).flatMap((p) =>
-              p.market ? [{ id: p.id, ...p.market }] : [],
-            );
+          : (raw as SportPick[]).flatMap((p) => {
+              const q = p.market?.payload;
+              return q?.market
+                ? [
+                    {
+                      id: p.id,
+                      market: q.market,
+                      side: q.side ?? null,
+                      direction: q.direction ?? null,
+                      line: typeof q.line === "number" ? q.line : null,
+                      player: q.player ?? null,
+                    },
+                  ]
+                : [];
+            });
       if (picks.length) out.picks.set(row.provider_id, picks);
       if (row.slug)
         out.hrefs.set(
@@ -160,23 +175,23 @@ export default function LiveNow({
     };
   }, [sport, shown]);
   const isPicked = (g: LiveGame) => known.picks.has(g.id);
-  // Player props need the live box score: read it for picked NBA/NHL games on the strip, on the
-  // same 30-second rhythm as the scores.
+  const { live, finals, more } = liveStrip(games, clock, 12, isPicked);
+  // Player props need the live box score: read it for the picked NBA/NHL games the strip shows,
+  // live games first, on the same 30-second rhythm as the scores.
   const boxIds =
     sport === "nba" || sport === "nhl"
-      ? games
-          .filter(
-            (g) =>
-              g.state !== "pre" &&
-              known.picks
-                .get(g.id)
-                ?.some((p) => p.market.startsWith("player_")),
+      ? [...new Set([...live, ...finals].map((g) => g.id))]
+          .filter((id) =>
+            known.picks.get(id)?.some((p) => p.market.startsWith("player_")),
           )
-          .map((g) => g.id)
           .slice(0, 6)
           .join(",")
       : "";
-  const [boxes, setBoxes] = useState<Record<string, LiveBox>>({});
+  // A box score counts only while fresh: a failed refresh drops it ("live stats loading"), and a
+  // final game uses only a box ESPN itself marks final, so an old count is never shown as a result.
+  const [boxes, setBoxes] = useState<
+    Record<string, { players: LiveBox; final: boolean }>
+  >({});
   useEffect(() => {
     if (!boxIds) return;
     let live = true;
@@ -186,17 +201,23 @@ export default function LiveNow({
           const r = await fetch(`/api/live/box?sport=${sport}&id=${id}`);
           const d = await r.json();
           return r.ok && d.players
-            ? ([id, d.players as LiveBox] as const)
-            : null;
+            ? ([
+                id,
+                { players: d.players as LiveBox, final: d.final === true },
+              ] as const)
+            : ([id, null] as const);
         } catch {
-          return null;
+          return [id, null] as const;
         }
       }),
     ).then((rows) => {
       if (!live) return;
       setBoxes((b) => {
         const next = { ...b };
-        for (const row of rows) if (row) next[row[0]] = row[1];
+        for (const [id, box] of rows) {
+          if (box) next[id] = box;
+          else delete next[id];
+        }
         return next;
       });
     });
@@ -204,15 +225,18 @@ export default function LiveNow({
       live = false;
     };
   }, [sport, boxIds, clock]);
+  const boxFor = (g: LiveGame) => {
+    const b = boxes[g.id];
+    return b && (g.state !== "post" || b.final) ? b.players : null;
+  };
   const sweats = (g: LiveGame) =>
     (known.picks.get(g.id) || []).map((p) => ({
       id: p.id,
-      s: sweat(p, g, boxes[g.id] || null, {
+      s: sweat(p, g, boxFor(g), {
         away: g.away.abbreviation,
         home: g.home.abbreviation,
       }),
     }));
-  const { live, finals, more } = liveStrip(games, clock, 12, isPicked);
   if (!live.length && !finals.length) return null;
   const href = (g: LiveGame) =>
     sport === "nhl" || sport === "ncaab"

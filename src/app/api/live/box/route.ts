@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { LIVE_PATHS } from "@/lib/live-scores";
-import { parseLiveBox } from "@/lib/live-sweat";
+import { boxIsFinal, parseLiveBox } from "@/lib/live-sweat";
 
 export const runtime = "nodejs";
 
@@ -23,10 +23,16 @@ export async function GET(req: Request) {
       { next: { revalidate: 20 }, signal: AbortSignal.timeout(8000) },
     );
     if (!r.ok) throw Error(`Box ${r.status}`);
-    const players = parseLiveBox(sport, await r.json());
+    const data = await r.json();
+    const players = parseLiveBox(sport, data);
     if (!players) throw Error("Unreadable box score");
     return NextResponse.json(
-      { players, retrievedAt: new Date().toISOString(), source: "ESPN" },
+      {
+        players,
+        final: boxIsFinal(data),
+        retrievedAt: new Date().toISOString(),
+        source: "ESPN",
+      },
       {
         headers: {
           "Cache-Control": "public, s-maxage=20, stale-while-revalidate=40",

@@ -190,3 +190,21 @@ test("NHL box: skaters only, points are goals plus assists, anytime scorer", () 
   assert.equal(sweat(any, game(2, 1), nhl, teams)!.state, "hit");
   assert.equal(parseLiveBox("nhl", { nope: 1 }), null);
 });
+
+test("a box score counts as final only when ESPN's own summary says so", async () => {
+  const { boxIsFinal } = await import("../src/lib/live-sweat");
+  assert.equal(
+    boxIsFinal({
+      header: { competitions: [{ status: { type: { completed: true } } }] },
+    }),
+    true,
+  );
+  assert.equal(
+    boxIsFinal({
+      header: { competitions: [{ status: { type: { completed: false } } }] },
+    }),
+    false,
+  );
+  assert.equal(boxIsFinal({}), false);
+  assert.equal(boxIsFinal(null), false);
+});
