@@ -214,22 +214,7 @@ export default function NbaHome() {
         action="Choose player props"
         emptyTitle={loaded ? "No NBA games this week." : "Loading the slate."}
       />
-      <LiveNow
-        sport="nba"
-        ours={games.map((g) => ({
-          away: g.away.name,
-          home: g.home.name,
-          start: g.start,
-          href: g.href,
-        }))}
-        picked={games
-          .filter((g) => picks.some((p) => p.game_id === g.id))
-          .map((g) => ({
-            away: g.away.name,
-            home: g.home.name,
-            start: g.start,
-          }))}
-      />
+      <LiveNow sport="nba" />
       {error ? (
         <p role="status" className="vq-slate-empty">
           The NBA schedule could not load.{" "}

@@ -67,16 +67,7 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
           page ? `No ${info.name} games this week.` : "Loading the slate."
         }
       />
-      <LiveNow
-        sport={sport}
-        picked={(page?.games || [])
-          .filter((g) => page?.selections.some((x) => x.game_id === g.id))
-          .map((g) => ({
-            away: g.away.name,
-            home: g.home.name,
-            start: g.start_time,
-          }))}
-      />
+      <LiveNow sport={sport} />
       {error ? (
         <p role="status" className="vq-slate-empty">
           The {info.name} schedule could not load.{" "}
