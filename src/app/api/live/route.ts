@@ -16,6 +16,9 @@ export async function GET(req: Request) {
   const sport = new URL(req.url).searchParams.get("sport");
   if (!isLiveSport(sport))
     return NextResponse.json({ error: "Unknown sport" }, { status: 400 });
+  // UI checks run against synthetic data; real live games would make them depend on the clock.
+  if (process.env.LIVE_SCORES_DISABLED === "1")
+    return NextResponse.json({ sport, games: [], disabled: true });
   try {
     const boards = await Promise.all(
       scoreboardDays().map(async (day) => {
