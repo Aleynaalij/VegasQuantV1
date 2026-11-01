@@ -51,7 +51,7 @@ export function notificationLink(value: string) {
   try {
     const u = new URL(value, "https://vegasquant.app");
     return u.origin === "https://vegasquant.app" &&
-      /^\/(community|notifications|membership|account|messages|feed)(\/|$)/.test(
+      /^\/(community|notifications|membership|account|messages|feed|nba|nhl|ncaab)(\/|$)/.test(
         u.pathname,
       )
       ? u.pathname + u.search + u.hash
@@ -76,7 +76,9 @@ export function notificationPushPayload(job: {
         ? "You have an important account or message notification. Open Vegas Quant to review."
         : job.type === "post"
           ? "New post in The Zone. Open Vegas Quant to read it."
-          : "New community activity. Open Vegas Quant to see your notifications.",
+          : job.type === "pick"
+            ? "One of our picks on a live game was just decided. Open Vegas Quant to see it."
+            : "New community activity. Open Vegas Quant to see your notifications.",
   };
 }
 export const defaultNotificationPreferences = (

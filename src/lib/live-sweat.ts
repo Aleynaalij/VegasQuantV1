@@ -287,3 +287,29 @@ export function boxIsFinal(data: unknown) {
   )?.header?.competitions?.[0]?.status?.type;
   return type?.completed === true;
 }
+
+/**
+ * The one alert a pick gets: when it is decided. An Over that clears (or a scorer who scores) is
+ * decided mid-game; everything else at the final. Returns the message, or null while undecided.
+ * Wording says "final" or "cleared", not "won": the record is settled by the graders afterwards.
+ */
+export function pickAlert(
+  pick: SweatPick,
+  g: LiveGame,
+  box: LiveBox | null,
+): string | null {
+  const s = sweat(pick, g, box, {
+    away: g.away.abbreviation,
+    home: g.home.abbreviation,
+  });
+  if (!s) return null;
+  const score = `${g.away.abbreviation} ${g.away.score}, ${g.home.abbreviation} ${g.home.score}`;
+  if (g.state === "post") {
+    const word =
+      s.state === "hit" ? "hit" : s.state === "miss" ? "missed" : "pushed";
+    return `Final (${score}): our ${s.label} ${word}, ${s.detail}. Official result after grading.`;
+  }
+  if (s.state === "hit")
+    return `${s.label} cleared (${score}, ${g.detail}): ${s.detail}.`;
+  return null;
+}

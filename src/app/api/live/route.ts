@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
-import {
-  isLiveSport,
-  LIVE_PATHS,
-  parseScoreboard,
-  scoreboardDays,
-} from "@/lib/live-scores";
+import { isLiveSport } from "@/lib/live-scores";
+import { fetchLiveGames } from "@/lib/live-fetch";
 
 export const runtime = "nodejs";
 
@@ -20,20 +16,11 @@ export async function GET(req: Request) {
   if (process.env.LIVE_SCORES_DISABLED === "1")
     return NextResponse.json({ sport, games: [], disabled: true });
   try {
-    const boards = await Promise.all(
-      scoreboardDays().map(async (day) => {
-        const r = await fetch(
-          `https://site.api.espn.com/apis/site/v2/sports/${LIVE_PATHS[sport]}/scoreboard?dates=${day}&limit=500${sport === "ncaab" ? "&groups=50" : ""}`,
-          { next: { revalidate: 20 }, signal: AbortSignal.timeout(8000) },
-        );
-        if (!r.ok) throw Error(`Scores ${r.status}`);
-        return parseScoreboard(await r.json());
-      }),
-    );
+    const games = await fetchLiveGames(sport);
     return NextResponse.json(
       {
         sport,
-        games: boards.flat(),
+        games,
         retrievedAt: new Date().toISOString(),
         source: "ESPN",
       },
