@@ -7,6 +7,7 @@ import {
   publicationCopy,
   publicationPages,
   publicationStamp,
+  watcherRows,
   type PublicationPost,
 } from "@/lib/zone-publication-card";
 import { isSport } from "@/lib/sports";
@@ -28,7 +29,14 @@ export default function ZonePublicationCard({
       null,
     );
   const id = useId().replace(/[^a-zA-Z0-9]/g, ""),
-    pages = useMemo(() => publicationPages(p), [p]);
+    watchers = useMemo(() => watcherRows(p), [p]),
+    pages = useMemo(
+      () =>
+        watchers
+          ? [{ title: [p.title], lines: [], start: 454 }]
+          : publicationPages(p),
+      [p, watchers],
+    );
   useEffect(
     () => () => {
       if (exported) URL.revokeObjectURL(exported.url);
@@ -39,12 +47,14 @@ export default function ZonePublicationCard({
   const theme = PUBLICATION_COLORS[p.sport],
     index = Math.min(page, pages.length - 1),
     current = pages[index];
-  const headline = `${theme.label} ${p.legs.length ? "PICKS" : "UPDATE"}`;
+  const headline = `${theme.label} ${watchers ? "WATCHERS" : p.legs.length ? "PICKS" : "UPDATE"}`;
   const stamp = publicationStamp(p.created_at),
     copyText = publicationCopy(p);
-  const footer = p.legs.length
-    ? "Published picks · verify current line and availability"
-    : "Vegas Quant publication · original analysis and sources";
+  const footer = watchers
+    ? "Watchlist only · not official picks · check lines and inactives"
+    : p.legs.length
+      ? "Published picks · verify current line and availability"
+      : "Vegas Quant publication · original analysis and sources";
   async function copy() {
     setError("");
     try {
@@ -114,7 +124,7 @@ export default function ZonePublicationCard({
       c.roundRect(800, 76, 206, 40, 20);
       c.stroke();
       text(theme.label, 828, 103, 20, theme.accent, 700);
-      text(headline, 74, 260, 128, theme.accent, 800, board);
+      text(headline, 74, 260, watchers ? 100 : 128, theme.accent, 800, board);
       current.title.forEach((line, n) =>
         text(line, 74, 324 + n * 58, 48, "#f2f4f5", 700),
       );
@@ -130,6 +140,18 @@ export default function ZonePublicationCard({
       c.moveTo(74, current.start - 25);
       c.lineTo(1006, current.start - 25);
       c.stroke();
+      if (watchers) {
+        text("LINE", 74, 464, 22, theme.accent, 700);
+        text("CONCERN", 540, 464, 22, theme.accent, 700);
+        for (const row of watchers) {
+          row.line.forEach((line, n) =>
+            text(line, 74, row.y + n * 34, 26, "#f2f4f5", 700),
+          );
+          row.risk.forEach((line, n) =>
+            text(line, 540, row.y + n * 34, 26, "#d9dee2"),
+          );
+        }
+      }
       current.lines.forEach((line, n) =>
         text(line, 74, current.start + n * 42, 32, "#d9dee2"),
       );
@@ -159,7 +181,7 @@ export default function ZonePublicationCard({
         className="zone-publication-face"
         viewBox="0 0 1080 1350"
         role="img"
-        aria-label={`${p.title}. ${stamp}. Page ${index + 1} of ${pages.length}. ${current.lines.join(" ")}`}
+        aria-label={`${p.title}. ${stamp}. Page ${index + 1} of ${pages.length}. ${watchers ? p.body : current.lines.join(" ")}`}
       >
         <defs>
           <radialGradient
@@ -215,6 +237,7 @@ export default function ZonePublicationCard({
           x="74"
           y="260"
           className="publication-headline"
+          style={watchers ? { fontSize: 100 } : undefined}
           fill={theme.accent}
         >
           {headline}
@@ -238,6 +261,55 @@ export default function ZonePublicationCard({
           d={`M74 ${current.start - 25} H1006`}
           stroke={theme.accent + "55"}
         />
+        {watchers && (
+          <g>
+            <text
+              x="74"
+              y="464"
+              fontSize="22"
+              fontWeight="700"
+              fill={theme.accent}
+            >
+              LINE
+            </text>
+            <text
+              x="540"
+              y="464"
+              fontSize="22"
+              fontWeight="700"
+              fill={theme.accent}
+            >
+              CONCERN
+            </text>
+            {watchers.map((row, i) => (
+              <g key={i}>
+                {row.line.map((line, n) => (
+                  <text
+                    key={n}
+                    x="74"
+                    y={row.y + n * 34}
+                    fontSize="26"
+                    fontWeight="700"
+                    fill="#f2f4f5"
+                  >
+                    {line}
+                  </text>
+                ))}
+                {row.risk.map((line, n) => (
+                  <text
+                    key={n}
+                    x="540"
+                    y={row.y + n * 34}
+                    fontSize="26"
+                    fill="#d9dee2"
+                  >
+                    {line}
+                  </text>
+                ))}
+              </g>
+            ))}
+          </g>
+        )}
         {current.lines.map((line, n) => (
           <text
             key={n}

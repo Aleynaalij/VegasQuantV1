@@ -50,3 +50,44 @@ test("automation markers and legs are attached only by verified server paths", (
   );
   assert.equal(r.status, 0, r.error?.message || r.stderr || r.stdout);
 });
+
+test("early watchers pair five stored lines with concerns on one two-column face", async () => {
+  const { watcherRows } = await import("../src/lib/zone-publication-card");
+  const legs = [
+    "Jahmyr Gibbs 15+ receiving yards",
+    "Puka Nacua 60+ receiving yards",
+    "Zay Flowers 50+ receiving yards",
+    "Jaylen Warren 2+ receptions",
+    "Brock Bowers 4+ receptions",
+  ];
+  const headings = [
+    "Gibbs 15+ receiving yards",
+    "Puka 60+ receiving yards",
+    "Flowers 50+ receiving yards",
+    "Warren 2+ receptions",
+    "Bowers 4+ receptions",
+  ];
+  const body =
+    headings
+      .map((h) => `${h}\nConcern: Shared work; verify current availability.`)
+      .join("\n\n") + "\n\nWatchlist only — not official picks.";
+  const p = { ...post, sport: "nfl", title: "VQ early watchers", legs, body };
+  const rows = watcherRows(p)!;
+  assert.equal(rows.length, 5);
+  assert.deepEqual(
+    rows.map((r) => r.line.join(" ")),
+    legs,
+  );
+  assert.ok(
+    rows.every(
+      (r) => r.risk.join(" ") === "Shared work; verify current availability.",
+    ),
+  );
+  assert.ok(rows.at(-1)!.y < 1180);
+  assert.equal(publicationCopy(p), [p.title, ...legs].join("\n"));
+  assert.equal(
+    watcherRows({ ...p, body: body.replace("Puka 60+", "Unknown 60+") }),
+    null,
+  );
+  assert.equal(watcherRows(post), null);
+});

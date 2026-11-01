@@ -87,3 +87,46 @@ export function publicationStamp(at: string) {
 }
 export const publicationCopy = (p: PublicationPost) =>
   p.legs.length ? [p.title, ...p.legs].join("\n") : "";
+
+/** Existing early watchers: pair each explicitly stored leg with its concern, without repeating it. */
+export function watcherRows(p: PublicationPost) {
+  if (
+    p.sport !== "nfl" ||
+    p.title.toLowerCase() !== "vq early watchers" ||
+    !p.legs.length
+  )
+    return null;
+  const parts = p.body.split("\n\n");
+  if (
+    parts.length !== p.legs.length + 1 ||
+    !parts.at(-1)?.startsWith("Watchlist only")
+  )
+    return null;
+  let y = 510;
+  const used = new Set<string>();
+  const rows = parts.slice(0, -1).map((part) => {
+    const [name, ...rest] = part.split("\n");
+    const concern = rest.join(" ");
+    const matches = p.legs.filter(
+      (leg) =>
+        leg === name ||
+        leg.endsWith(" " + name) ||
+        (leg.startsWith(name.split(" ")[0] + " ") &&
+          leg.endsWith(name.slice(name.indexOf(" ")))),
+    );
+    if (
+      matches.length !== 1 ||
+      used.has(matches[0]) ||
+      !concern.startsWith("Concern: ")
+    )
+      return null;
+    used.add(matches[0]);
+    const line = wrapCardText(matches[0], 26, 410);
+    const risk = wrapCardText(concern.slice(9), 26, 450);
+    const row = { line, risk, y };
+    y += Math.max(line.length, risk.length) * 34 + 22;
+    return row;
+  });
+  if (rows.some((row) => !row) || y > 1180) return null;
+  return rows as { line: string[]; risk: string[]; y: number }[];
+}
