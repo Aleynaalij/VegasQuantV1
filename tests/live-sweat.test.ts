@@ -308,3 +308,47 @@ test("player names match across accents on either side (Jokić / Jokic)", () => 
     "20 PTS, needs 8",
   );
 });
+
+test("one alert per pick, when it is decided: an Over mid-game, everything else at the final", async () => {
+  const { pickAlert } = await import("../src/lib/live-sweat");
+  const live = { ...game(4, 3), detail: "3rd 5:12" };
+  const over = pick({
+    id: "o",
+    market: "totals",
+    direction: "Over",
+    line: 6.5,
+  });
+  assert.equal(
+    pickAlert(over, live, null),
+    "Over 6.5 cleared (BOS 4, TOR 3, 3rd 5:12): 7 total, cleared.",
+  );
+  assert.equal(
+    pickAlert(over, { ...game(2, 2), detail: "2nd" }, null),
+    null,
+    "undecided: no alert",
+  );
+  const ml = pick({ id: "m", side: "home" });
+  assert.equal(pickAlert(ml, live, null), null, "a lead decides nothing");
+  assert.equal(
+    pickAlert(ml, game(4, 3, "post"), null),
+    "Final (BOS 4, TOR 3): our TOR to win missed, lost. Official result after grading.",
+  );
+  const under = pick({
+    id: "u",
+    market: "totals",
+    direction: "Under",
+    line: 6,
+  });
+  assert.match(
+    pickAlert(under, game(3, 3, "post"), null)!,
+    /pushed, 6 total, push/,
+  );
+  assert.equal(
+    pickAlert(
+      over,
+      { ...game(0, 0, "pre"), away: { ...game(0, 0).away, score: null } },
+      null,
+    ),
+    null,
+  );
+});

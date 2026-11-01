@@ -112,7 +112,9 @@ const safeTarget = (value) => {
         "/notifications",
         "/membership",
       ].includes(url.pathname) ||
-      /^\/(community|account|messages|feed)(\/|$)/.test(url.pathname)
+      /^\/(community|account|messages|feed)(\/|$)/.test(url.pathname) ||
+      // Live pick alerts open the game's matchup page.
+      /^\/(nba|nhl|ncaab)\/games\/[a-z0-9-]{1,120}$/.test(url.pathname)
     )
       return url.pathname + url.search + url.hash;
   } catch {}

@@ -77,6 +77,17 @@ test("notification text groups likes without exposing private previews in extern
   ])
     assert.equal(notificationLink(href), "/notifications");
   assert.equal(notificationLink("/community/MikeQ"), "/community/MikeQ");
+  // Live pick alerts open the game's matchup; the lock screen never shows the pick itself.
+  const pick = notificationPushPayload({
+    notification_id: "n",
+    priority: "high",
+    deep_link: "/nhl/games/bos-tor-401",
+    type: "pick",
+  });
+  assert.equal(pick.url, "/nhl/games/bos-tor-401");
+  assert.equal(pick.announcement.includes("Over"), false);
+  assert.equal(notificationLink("/nba/games/uta-por-1"), "/nba/games/uta-por-1");
+  assert.equal(notificationLink("/nflx/games/x"), "/notifications");
 });
 test("transactional notification integration and RLS isolation", () => {
   execFileSync(process.execPath, ["tests/sql/social-notifications.mjs"], {
