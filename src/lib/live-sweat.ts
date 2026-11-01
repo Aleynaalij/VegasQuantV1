@@ -199,6 +199,11 @@ export function sweat(
   );
 }
 
+/** "14:02" → 842 seconds; anything else is unknown. */
+const iceSeconds = (v: unknown) =>
+  typeof v === "string" && /^\d+:[0-5]\d$/.test(v)
+    ? Number(v.split(":")[0]) * 60 + Number(v.split(":")[1])
+    : NaN;
 const count = (v: unknown) =>
   typeof v === "string" && /^\d+$/.test(v) ? Number(v) : null;
 
@@ -219,7 +224,7 @@ export function parseLiveBox(
       name?: string;
       keys?: string[];
       athletes?: {
-        athlete?: { displayName?: string };
+        athlete?: { displayName?: string; scratched?: boolean };
         stats?: string[];
         didNotPlay?: boolean;
       }[];
@@ -228,13 +233,24 @@ export function parseLiveBox(
     for (const s of t.statistics || []) {
       if (sport === "nhl" && s.name === "goalies") continue;
       const at = (k: string) => s.keys?.indexOf(k) ?? -1;
+      // NHL needs ice time too: the grader only counts a skater with time on ice as having played.
       const need =
-        sport === "nba" ? ["points", "rebounds"] : ["goals", "assists"];
+        sport === "nba"
+          ? ["points", "rebounds"]
+          : ["goals", "assists", "timeOnIce"];
       if (need.some((k) => at(k) < 0)) continue;
       for (const a of s.athletes || []) {
         const name = a.athlete?.displayName;
         if (!name || a.didNotPlay || !a.stats?.length) continue;
         const st = a.stats;
+        // Same participation rule as the NHL grader: a scratched skater or a zero-time row has not
+        // shown he played, so his zeros are unknown, not results (left out: "live stats loading").
+        if (
+          sport === "nhl" &&
+          (a.athlete?.scratched === true ||
+            !(iceSeconds(st[at("timeOnIce")]) > 0))
+        )
+          continue;
         const line =
           sport === "nba"
             ? {

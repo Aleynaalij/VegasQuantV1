@@ -208,3 +208,54 @@ test("a box score counts as final only when ESPN's own summary says so", async (
   assert.equal(boxIsFinal({}), false);
   assert.equal(boxIsFinal(null), false);
 });
+
+test("NHL live box uses the grader's participation rule: no scratched or zero-time skaters", () => {
+  const nhl = parseLiveBox("nhl", {
+    boxscore: {
+      players: [
+        {
+          statistics: [
+            {
+              name: "forwards",
+              keys: ["goals", "assists", "timeOnIce"],
+              athletes: [
+                {
+                  athlete: { displayName: "Played Guy" },
+                  stats: ["0", "0", "12:30"],
+                },
+                {
+                  athlete: { displayName: "Scratched Guy", scratched: true },
+                  stats: ["0", "0", "0:00"],
+                },
+                {
+                  athlete: { displayName: "Zero Time" },
+                  stats: ["0", "0", "0:00"],
+                },
+                {
+                  athlete: { displayName: "No Clock" },
+                  stats: ["0", "0", "--"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  })!;
+  assert.deepEqual(Object.keys(nhl), ["played guy"]);
+  const any = pick({
+    market: "player_goal_scorer_anytime",
+    player: "Zero Time",
+    direction: "Yes",
+  });
+  assert.equal(
+    sweat(any, game(2, 3, "post"), nhl, teams),
+    null,
+    "no Missed for a skater who never played",
+  );
+  assert.equal(
+    sweat({ ...any, player: "Played Guy" }, game(2, 3, "post"), nhl, teams)!
+      .state,
+    "miss",
+  );
+});
