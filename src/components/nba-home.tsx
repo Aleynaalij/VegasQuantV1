@@ -27,6 +27,7 @@ import {
 import { easternTime, type SlateGame } from "@/lib/sport-slate";
 import SportBrief from "./sport/sport-brief";
 import SportSlate from "./sport/sport-slate";
+import LiveNow from "./sport/live-now";
 
 type Pick = {
   id: string;
@@ -213,6 +214,7 @@ export default function NbaHome() {
         action="Choose player props"
         emptyTitle={loaded ? "No NBA games this week." : "Loading the slate."}
       />
+      <LiveNow sport="nba" />
       {error ? (
         <p role="status" className="vq-slate-empty">
           The NBA schedule could not load.{" "}

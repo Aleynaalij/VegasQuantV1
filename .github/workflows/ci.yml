@@ -38,7 +38,7 @@ jobs:
       - name: Run UI smoke test against a synthetic data stub
         run: |
           node scripts/ui-smoke/stub.mjs &
-          npx next start -p 3100 &
+          LIVE_SCORES_DISABLED=1 npx next start -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
           node scripts/ui-smoke/zone-publication-cards.mjs
           node scripts/ui-smoke/nhl-context.mjs
@@ -54,4 +54,5 @@ jobs:
           node scripts/ui-smoke/frank-nhl-feedback.mjs
           node scripts/ui-smoke/frank-anniversary.mjs
           node scripts/ui-smoke/home-record.mjs
+          node scripts/ui-smoke/live-now.mjs
           node scripts/ui-smoke/simulator.mjs

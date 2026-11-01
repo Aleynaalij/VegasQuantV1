@@ -39,6 +39,7 @@ import RubyHub from "./ruby-cards";
 import HomeBrief from "./home-brief";
 import HomeRecordCard from "./home-record";
 import HomeGameList from "./home-game-list";
+import LiveNow from "./sport/live-now";
 import GamePicksShortcut from "./game-picks-shortcut";
 import DecisionBoard from "./decision-board";
 import PickCard from "./pick-card";
@@ -395,6 +396,17 @@ export default function DeskApp({
             <SectionBoundary name="Next kickoff">
               {/* The simulator returns here when it ships; until then the kickoff card leads Home. */}
               <HomeBrief games={d.games} />
+            </SectionBoundary>
+            <SectionBoundary name="Live scores">
+              <LiveNow
+                sport="nfl"
+                ours={d.games.map((g) => ({
+                  away: g.away_team,
+                  home: g.home_team,
+                  start: g.kickoff,
+                  href: `/matchups/${g.slug}`,
+                }))}
+              />
             </SectionBoundary>
             <SectionBoundary name="Game props">
               <HomeGameList games={d.games} />

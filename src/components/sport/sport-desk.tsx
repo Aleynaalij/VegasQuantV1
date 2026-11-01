@@ -9,6 +9,7 @@ import { SPORTS } from "@/lib/sports";
 import SportBrief from "./sport-brief";
 import SportSlate from "./sport-slate";
 import SportMarkets from "./sport-markets";
+import LiveNow from "./live-now";
 import NhlGameReport from "./nhl-game-report";
 import { FrankAnniversaryFireworks } from "../frank-anniversary";
 
@@ -66,6 +67,7 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
           page ? `No ${info.name} games this week.` : "Loading the slate."
         }
       />
+      <LiveNow sport={sport} />
       {error ? (
         <p role="status" className="vq-slate-empty">
           The {info.name} schedule could not load.{" "}
@@ -107,7 +109,9 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
                 <p role="status">Sign in to see game markets.</p>
               </div>
             )}
-            {sport === "nhl" && page?.access ? <NhlGameReport gameId={g.id} /> : null}
+            {sport === "nhl" && page?.access ? (
+              <NhlGameReport gameId={g.id} />
+            ) : null}
             {g.href ? (
               <Link
                 prefetch={false}
