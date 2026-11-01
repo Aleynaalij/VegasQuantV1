@@ -56,9 +56,18 @@
 .live-now-game.is-in > a, .live-now-game.is-in > div { border-color: #7fd6a466; }
 .live-now-status { display: flex; align-items: center; gap: 6px; min-height: 16px; font: 600 .66rem/1.2 var(--font-body); color: #9aa59f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .live-now-dot { color: #7fd6a4; letter-spacing: .08em; }
-.live-now-pick { font: 700 .62rem/1.2 var(--font-body); font-style: normal; color: #f4dc99; }
 .live-now-team { display: flex; justify-content: space-between; font-size: .9rem; color: #c9d1cc; }
 .live-now-team strong { font-variant-numeric: tabular-nums; }
 .live-now-team.is-leading { color: #fff; font-weight: 700; }
 .live-now-note { margin: 4px 0 0; font-size: .68rem; color: #9aa59f; }
 @media (prefers-reduced-motion: reduce) { .live-now-list { scroll-behavior: auto; } }
+/* Your pick is sweating: where each of our picks on a live game stands. */
+.live-now-game.is-picked { flex-basis: 212px; }
+.live-now-picks { display: grid; gap: 4px; margin: 4px 0 0; padding: 6px 0 0; list-style: none; border-top: 1px solid #b69b4e33; }
+.live-now-picks li { display: grid; gap: 1px; font-size: .64rem; line-height: 1.25; color: #c9d1cc; }
+.live-now-picks b { color: #f4dc99; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live-now-picks span { color: #9aa59f; }
+.live-now-picks .is-hit span, .live-now-picks .is-ahead span { color: #7fd6a4; }
+.live-now-picks .is-behind span { color: #e8c170; }
+.live-now-picks .is-miss span { color: #e08a8a; }
+.live-now-picks .is-more, .live-now-picks .is-pending span { color: #9aa59f; }
