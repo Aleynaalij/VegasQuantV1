@@ -145,10 +145,10 @@ export default function ZonePublicationCard({
         text("CONCERN", 540, 464, 22, theme.accent, 700);
         for (const row of watchers) {
           row.line.forEach((line, n) =>
-            text(line, 74, row.y + n * 34, 28, "#f2f4f5", 700),
+            text(line, 74, row.y + n * 34, 26, "#f2f4f5", 700),
           );
           row.risk.forEach((line, n) =>
-            text(line, 540, row.y + n * 34, 28, "#d9dee2"),
+            text(line, 540, row.y + n * 34, 26, "#d9dee2"),
           );
         }
       }
