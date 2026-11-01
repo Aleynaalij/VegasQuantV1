@@ -20,6 +20,15 @@ const db = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   { auth: { persistSession: false } },
 );
+/** Supabase errors are plain objects: log their message, never "[object Object]". */
+const msg = (e: unknown) =>
+  e instanceof Error
+    ? String(e)
+    : e && typeof e === "object" && "message" in e
+      ? `Error: ${String((e as { message: unknown }).message)}`
+      : typeof e === "object"
+        ? JSON.stringify(e)
+        : String(e);
 async function rpc(name: string, args: Record<string, unknown>) {
   const r = await db.rpc(name, args);
   if (r.error) throw Error(r.error.message);
@@ -49,7 +58,7 @@ async function books(
     if (snapshots.length)
       await rpc("ingest_sports_books", { p: { sport, snapshots } });
   } catch (e) {
-    errors.push("books: " + String(e).slice(0, 100));
+    errors.push("books: " + msg(e).slice(0, 100));
   }
 }
 async function read(url: string) {
@@ -123,7 +132,7 @@ Deno.serve(async (req: Request) => {
           );
           for (const b of batches) {
             if (b.status === "fulfilled") inserted += b.value;
-            else errors.push("schedule: " + String(b.reason).slice(0, 100));
+            else errors.push("schedule: " + msg(b.reason).slice(0, 100));
           }
         }
         if (!errors.length)
@@ -165,17 +174,25 @@ Deno.serve(async (req: Request) => {
             .filter(([, ids]) => ids.size >= 2)
             .map(([id]) => id),
         );
-        const attempts = games.length
-          ? await db
-              .from("sports_context_attempts")
-              .select("game_id,attempted_at,next_attempt_at")
-              .in(
-                "game_id",
-                games.map((g) => g.id),
-              )
-          : { data: [], error: null };
-        if (attempts.error) throw attempts.error;
-        const due = contextBatch(games, covered, attempts.data || [], now);
+        // College lists ~500 games a week: one `in` filter with every id overflows the request URL,
+        // so attempts are read in chunks.
+        const attempts: {
+          game_id: string;
+          attempted_at: string;
+          next_attempt_at: string;
+        }[] = [];
+        for (let i = 0; i < games.length; i += 100) {
+          const part = await db
+            .from("sports_context_attempts")
+            .select("game_id,attempted_at,next_attempt_at")
+            .in(
+              "game_id",
+              games.slice(i, i + 100).map((g) => g.id),
+            );
+          if (part.error) throw part.error;
+          attempts.push(...(part.data || []));
+        }
+        const due = contextBatch(games, covered, attempts, now);
         if (due.length) {
           const saved = await db.from("sports_context_attempts").upsert(
             due.map((g) => ({
@@ -260,7 +277,7 @@ Deno.serve(async (req: Request) => {
                     });
                   } catch (e) {
                     complete = false;
-                    errors.push(`${endpoint}: ${String(e).slice(0, 80)}`);
+                    errors.push(`${endpoint}: ${msg(e).slice(0, 80)}`);
                   }
                 }),
               ),
@@ -275,7 +292,7 @@ Deno.serve(async (req: Request) => {
               if (saved.error) throw saved.error;
             }
           } catch (e) {
-            errors.push("context: " + String(e).slice(0, 100));
+            errors.push("context: " + msg(e).slice(0, 100));
           }
         }
         if (!errors.length)
@@ -405,13 +422,13 @@ Deno.serve(async (req: Request) => {
             });
             if (r.remaining !== null && r.remaining <= 1000) break;
           } catch (e) {
-            errors.push("props: " + String(e).slice(0, 100));
+            errors.push("props: " + msg(e).slice(0, 100));
           }
         }
       }
       result[sport] = { scheduled: inserted, games: games.length, errors };
     } catch (e) {
-      errors.push(String(e).slice(0, 150));
+      errors.push(msg(e).slice(0, 150));
       result[sport] = { status: "ERROR", errors };
     }
     await rpc("sports_refresh_lease", { p_sport: sport, p_release: true });
