@@ -352,6 +352,11 @@ export function Shell({
               <Link href="/terms">Terms</Link>
               <Link href="/responsible-play">Responsible play</Link>
             </nav>
+            <p>
+              Vegas Quant is an independent sports analytics platform and is not
+              affiliated with, sponsored by, or endorsed by any league, team, or
+              player. Third-party trademarks belong to their respective owners.
+            </p>
             <small>
               © {new Date().getFullYear()} JourneyBuilt, LLC. Vegas Quant is a
               product of JourneyBuilt, LLC.
