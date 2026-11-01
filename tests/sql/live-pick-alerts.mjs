@@ -12,7 +12,9 @@ create table private.memberships(user_id uuid,revoked_at timestamptz,starts_at t
 create table private.billing_subscriptions(user_id uuid,blocked boolean,paid_until timestamptz);
 create table private.age_ok(user_id uuid);
 create function private.age_eligible(p uuid) returns boolean language sql as $$select exists(select 1 from private.age_ok where user_id=p)$$;
-create table public.notifications(id uuid primary key default gen_random_uuid(),recipient_id uuid,type text,message text,deep_link text,constraint notifications_type_check check(type in ('post')));
+-- Production's link rule, verbatim: the migration must widen it for game pages.
+create table public.notifications(id uuid primary key default gen_random_uuid(),recipient_id uuid,type text,message text,deep_link text,constraint notifications_type_check check(type in ('post')),
+ constraint notifications_deep_link_check check(((deep_link ~ '^/(community|notifications|membership|account|messages|feed)([/?#]|$)'::text) AND (deep_link !~ '^//'::text))));
 create table public.notification_preferences(user_id uuid primary key,disabled_types text[] default '{}',constraint notification_preferences_types_check check(disabled_types <@ array['post']));
 create table private.emitted(recipient uuid,type text,key text,importance text,unique(recipient,key));
 -- Stand-in emitter with the production importance line; the migration must patch it.
@@ -71,6 +73,18 @@ await assert.rejects(alert(sel, "nhl", "x", "/community"), /Invalid live alert/)
 await assert.rejects(alert(sel, "nhl", " "), /Invalid live alert/);
 await assert.rejects(alert(sel, "nhl", "x".repeat(201)), /Invalid live alert/);
 await assert.rejects(alert(sel, "nfl"), /Invalid live alert/);
+// The widened link rule still keeps everything else out.
+for (const bad of ["/nba/games/../admin", "//evil.example", "/admin", "/nhl/records"])
+  await assert.rejects(db.query("insert into public.notifications(recipient_id,type,message,deep_link) values($1,'pick','x',$2)", [u(1), bad]), /deep_link_check/, bad);
+await db.query("insert into public.notifications(recipient_id,type,message,deep_link) values($1,'post','x','/community?post=1')", [u(1)]);
+// A revised NBA pick: only the revision is a candidate, before and after it alerts; the original never alerts.
+await db.query("update public.nba_games set tipoff=now()-interval '30 minutes' where id=$1", [nbaGame]);
+const revised = (await db.query("insert into public.nba_editorial_picks(game_id,player,market,direction,line,supersedes_id) values($1,'Deni Avdija','player_points','Over',22.5,$2) returning id", [nbaGame, future])).rows[0].id;
+const nbaIds = async () => (await db.query("select public.live_pick_candidates() c")).rows[0].c.filter((c) => c.sport === "nba").map((c) => c.id);
+assert.deepEqual(await nbaIds(), [revised]);
+assert.equal(await alert(revised, "nba", "Avdija O 22.5 PTS cleared.", "/nba/games/uta-por-501"), 3);
+assert.deepEqual(await nbaIds(), [], "the replaced pick never resurfaces");
+await assert.rejects(alert(future, "nba", "Avdija O 23.5 PTS final.", "/nba/games/uta-por-501"), /Unknown pick/);
 // Clients can neither send alerts nor read candidates.
 for (const role of ["anon", "authenticated"])
   for (const f of ["public.live_pick_alert(text,uuid,text,text)", "public.live_pick_candidates()"])

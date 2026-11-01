@@ -6,6 +6,9 @@ alter table public.notifications drop constraint notifications_type_check;
 alter table public.notifications add constraint notifications_type_check check(type in ('like','comment','reply','mention','follow','share','comment_reaction','message','group_message','message_request','message_reminder','welcome','profile_reminder','security','password_change','account','feature','suggestion','contributor','post','pick'));
 alter table public.notification_preferences drop constraint notification_preferences_types_check;
 alter table public.notification_preferences add constraint notification_preferences_types_check check(disabled_types <@ array['like','comment','reply','mention','follow','share','comment_reaction','message','group_message','message_request','message_reminder','welcome','profile_reminder','security','password_change','account','feature','suggestion','contributor','post','pick']);
+-- Pick alerts open the game's matchup: allow exactly those paths besides the existing ones.
+alter table public.notifications drop constraint notifications_deep_link_check;
+alter table public.notifications add constraint notifications_deep_link_check check((deep_link ~ '^/(community|notifications|membership|account|messages|feed)([/?#]|$)' or deep_link ~ '^/(nba|nhl|ncaab)/games/[a-z0-9-]{1,120}$') and deep_link !~ '^//');
 -- A decided pick is time-sensitive: high priority pushes within seconds, not after the batch window.
 do $$declare definition text;begin
  select pg_get_functiondef('private.emit_notification(uuid,uuid,text,text,uuid,uuid,uuid,text,text)'::regprocedure) into definition;
@@ -35,7 +38,8 @@ begin
   or p_link !~ '^/(nba|nhl|ncaab)/games/[a-z0-9-]{1,120}$' then raise exception 'Invalid live alert';end if;
  -- The pick must be one we published, on a game of that sport that has started.
  if p_sport='nba' then
-  if not exists(select 1 from public.nba_editorial_picks p join public.nba_games g on g.id=p.game_id where p.id=p_pick and g.tipoff<=now()) then raise exception 'Unknown pick';end if;
+  if not exists(select 1 from public.nba_editorial_picks p join public.nba_games g on g.id=p.game_id where p.id=p_pick and g.tipoff<=now()
+   and not exists(select 1 from public.nba_editorial_picks n where n.supersedes_id=p.id)) then raise exception 'Unknown pick';end if;
  elsif not exists(select 1 from public.sports_selections s join public.sports_games g on g.id=s.game_id where s.id=p_pick and g.sport=p_sport and g.start_time<=now()) then raise exception 'Unknown pick';end if;
  insert into private.live_pick_alerts(pick_id,sport,message) values(p_pick,p_sport,p_message) on conflict do nothing;
  if not found then return 0;end if;
@@ -62,6 +66,8 @@ create function public.live_pick_candidates() returns jsonb language sql stable 
   select 'nba' sport,p.id,g.provider_id,g.slug,p.market,null::text side,p.direction,p.line,p.player,p.supersedes_id
   from public.nba_editorial_picks p join public.nba_games g on g.id=p.game_id
   where g.tipoff between now()-interval '6 hours' and now() and not exists(select 1 from private.live_pick_alerts a where a.pick_id=p.id)
+   -- A revised pick is withdrawn: only its latest revision can alert, alerted already or not.
+   and not exists(select 1 from public.nba_editorial_picks n where n.supersedes_id=p.id)
   union all
   select g.sport,s.id,g.provider_id,g.slug,m.payload->>'market',m.payload->>'side',m.payload->>'direction',(m.payload->>'line')::numeric,m.payload->>'player',null::uuid
   from public.sports_selections s join public.sports_games g on g.id=s.game_id join public.sports_markets m on m.id=s.market_id
