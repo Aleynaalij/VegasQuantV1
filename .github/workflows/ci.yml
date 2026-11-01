@@ -54,4 +54,5 @@ jobs:
           node scripts/ui-smoke/frank-nhl-feedback.mjs
           node scripts/ui-smoke/frank-anniversary.mjs
           node scripts/ui-smoke/home-record.mjs
+          node scripts/ui-smoke/live-now.mjs
           node scripts/ui-smoke/simulator.mjs

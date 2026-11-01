@@ -27,6 +27,7 @@ import {
 import { easternTime, type SlateGame } from "@/lib/sport-slate";
 import SportBrief from "./sport/sport-brief";
 import SportSlate from "./sport/sport-slate";
+import LiveNow from "./sport/live-now";
 
 type Pick = {
   id: string;
@@ -212,6 +213,22 @@ export default function NbaHome() {
         games={games}
         action="Choose player props"
         emptyTitle={loaded ? "No NBA games this week." : "Loading the slate."}
+      />
+      <LiveNow
+        sport="nba"
+        ours={games.map((g) => ({
+          away: g.away.name,
+          home: g.home.name,
+          start: g.start,
+          href: g.href,
+        }))}
+        picked={games
+          .filter((g) => picks.some((p) => p.game_id === g.id))
+          .map((g) => ({
+            away: g.away.name,
+            home: g.home.name,
+            start: g.start,
+          }))}
       />
       {error ? (
         <p role="status" className="vq-slate-empty">

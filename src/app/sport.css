@@ -47,3 +47,18 @@
 .sport-record dd { margin: 4px 0 0; font: 800 1.8rem/1 var(--font-board); color: #f4dc99; }
 /* Best price across books: shown only when another book pays more for the identical line. */
 .sport-best, .sport-lines small.sport-best, .sport-price small.sport-best { display: block; margin-top: 2px; color: #7fd6a4; font: 700 .62rem/1.2 var(--font-body); letter-spacing: .02em; text-transform: none; }
+/* Live game day: in-progress scores and today's finals, scrolling sideways on phones. */
+.live-now { margin: 0 0 14px; }
+.live-now-title { margin: 0 0 8px; font: 800 .72rem/1 var(--font-body); letter-spacing: .12em; text-transform: uppercase; color: #8ce3bd; }
+.live-now-list { display: flex; gap: 8px; margin: 0; padding: 0 0 4px; list-style: none; overflow-x: auto; scroll-snap-type: x proximity; }
+.live-now-game { flex: 0 0 148px; scroll-snap-align: start; }
+.live-now-game > a, .live-now-game > div { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid #b69b4e33; border-radius: 12px; background: #141b21; color: inherit; text-decoration: none; }
+.live-now-game.is-in > a, .live-now-game.is-in > div { border-color: #7fd6a466; }
+.live-now-status { display: flex; align-items: center; gap: 6px; min-height: 16px; font: 600 .66rem/1.2 var(--font-body); color: #9aa59f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.live-now-dot { color: #7fd6a4; letter-spacing: .08em; }
+.live-now-pick { font: 700 .62rem/1.2 var(--font-body); font-style: normal; color: #f4dc99; }
+.live-now-team { display: flex; justify-content: space-between; font-size: .9rem; color: #c9d1cc; }
+.live-now-team strong { font-variant-numeric: tabular-nums; }
+.live-now-team.is-leading { color: #fff; font-weight: 700; }
+.live-now-note { margin: 4px 0 0; font-size: .68rem; color: #9aa59f; }
+@media (prefers-reduced-motion: reduce) { .live-now-list { scroll-behavior: auto; } }
