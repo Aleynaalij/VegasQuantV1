@@ -288,7 +288,7 @@ export function Shell({
             </b>
           </div>
           <div className="top-actions">
-            {sport === "nfl" && <LetsSweat />}
+            {sport === "nfl" && active !== "community" && <LetsSweat />}
             <InstallApp />
             <UpdateInbox />
             <span className="desktop">Research desk</span>
