@@ -41,9 +41,14 @@ export const decimalOdds = (price: number) =>
 export const validPrice = (n: unknown): n is number =>
   typeof n === "number" && Number.isFinite(n) && Math.abs(n) >= 100;
 
-/** "Kevin Durant", "kevin durant", "Kevin Durant Jr." are one player; anything else is not. */
+/**
+ * "Kevin Durant", "kevin durant", "Kevin Durant Jr." are one player, and so are "Nikola Jokić" and
+ * "Nikola Jokic" (accents folded, as the NBA grader does); anything else is not.
+ */
 export const playerKey = (name: string) =>
   name
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[.'’]/g, "")
     .replace(/\s+(jr|sr|ii|iii|iv)$/, "")

@@ -9,6 +9,12 @@ import {
   type LiveGame,
   type LiveSport,
 } from "@/lib/live-scores";
+import {
+  sweat,
+  type LiveBox,
+  type Sweat,
+  type SweatPick,
+} from "@/lib/live-sweat";
 
 export type OurGame = {
   away: string;
@@ -17,38 +23,90 @@ export type OurGame = {
   href?: string | null;
 };
 
-type Ours = { picked: Set<string>; hrefs: Map<string, string> };
-const NONE: Ours = { picked: new Set(), hrefs: new Map() };
+type Ours = {
+  picks: Map<string, SweatPick[]>;
+  hrefs: Map<string, string>;
+};
+const NONE: Ours = { picks: new Map(), hrefs: new Map() };
+type NbaPick = SweatPick & { supersedes_id?: string | null };
+/** sports_markets keeps a quote's fields in its `payload` JSON, not as columns. */
+type SportPick = {
+  id: string;
+  market?: {
+    payload?: {
+      market?: SweatPick["market"];
+      side?: SweatPick["side"];
+      direction?: SweatPick["direction"];
+      line?: number | null;
+      player?: string | null;
+    } | null;
+  } | null;
+};
 
 /**
  * Our record of the games on the strip, by ESPN id (the provider id NBA, NHL and college games are
- * stored under): which ones carry a published pick, and the NBA matchup link. Home only loads
- * upcoming games and unexpired picks, and picks expire at the start, so live games are looked up
- * here. Picks are member reads: others simply see no flag.
+ * stored under): the picks published on each, and the NBA matchup link. Home only loads upcoming
+ * games and unexpired picks, and picks expire at the start, so live games are looked up here. Picks
+ * are member reads: others simply see none.
  */
 async function lookup(sport: LiveSport, ids: string[]): Promise<Ours> {
   if (sport === "nfl" || !ids.length) return NONE;
-  const out: Ours = { picked: new Set(), hrefs: new Map() };
+  const out: Ours = { picks: new Map(), hrefs: new Map() };
   for (let i = 0; i < ids.length; i += 100) {
     const part = ids.slice(i, i + 100);
     const r =
       sport === "nba"
         ? await supabase
             .from("nba_games")
-            .select("provider_id,slug,picks:nba_editorial_picks(id)")
+            .select(
+              "provider_id,slug,picks:nba_editorial_picks(id,player,market,direction,line,supersedes_id)",
+            )
             .in("provider_id", part)
         : await supabase
             .from("sports_games")
-            .select("provider_id,picks:sports_selections(id)")
+            .select(
+              "provider_id,picks:sports_selections(id,market:sports_markets(payload))",
+            )
             .eq("sport", sport)
             .in("provider_id", part);
     if (r.error) return out;
     for (const row of (r.data || []) as {
       provider_id: string;
       slug?: string | null;
-      picks?: unknown[] | null;
+      picks?: (NbaPick | SportPick)[] | null;
     }[]) {
-      if (row.picks?.length) out.picked.add(row.provider_id);
+      const raw = row.picks || [];
+      // NBA revisions replace the pick they supersede: only the latest counts.
+      const replaced = new Set(
+        raw.map((p) => (p as NbaPick).supersedes_id).filter(Boolean),
+      );
+      const picks: SweatPick[] =
+        sport === "nba"
+          ? (raw as NbaPick[])
+              .filter((p) => !replaced.has(p.id))
+              .map((p) => ({
+                id: p.id,
+                market: p.market,
+                direction: p.direction,
+                line: p.line,
+                player: p.player,
+              }))
+          : (raw as SportPick[]).flatMap((p) => {
+              const q = p.market?.payload;
+              return q?.market
+                ? [
+                    {
+                      id: p.id,
+                      market: q.market,
+                      side: q.side ?? null,
+                      direction: q.direction ?? null,
+                      line: typeof q.line === "number" ? q.line : null,
+                      player: q.player ?? null,
+                    },
+                  ]
+                : [];
+            });
+      if (picks.length) out.picks.set(row.provider_id, picks);
       if (row.slug)
         out.hrefs.set(
           row.provider_id,
@@ -116,8 +174,69 @@ export default function LiveNow({
       live = false;
     };
   }, [sport, shown]);
-  const isPicked = (g: LiveGame) => known.picked.has(g.id);
+  const isPicked = (g: LiveGame) => known.picks.has(g.id);
   const { live, finals, more } = liveStrip(games, clock, 12, isPicked);
+  // Player props need the live box score: read it for the picked NBA/NHL games the strip shows,
+  // live games first, on the same 30-second rhythm as the scores.
+  const boxIds =
+    sport === "nba" || sport === "nhl"
+      ? [...new Set([...live, ...finals].map((g) => g.id))]
+          .filter((id) =>
+            known.picks.get(id)?.some((p) => p.market.startsWith("player_")),
+          )
+          .slice(0, 6)
+          .join(",")
+      : "";
+  // A box score counts only while fresh: a failed refresh drops it ("live stats loading"), and a
+  // final game uses only a box ESPN itself marks final, so an old count is never shown as a result.
+  const [boxes, setBoxes] = useState<
+    Record<string, { players: LiveBox; final: boolean }>
+  >({});
+  useEffect(() => {
+    if (!boxIds) return;
+    let live = true;
+    void Promise.all(
+      boxIds.split(",").map(async (id) => {
+        try {
+          const r = await fetch(`/api/live/box?sport=${sport}&id=${id}`);
+          const d = await r.json();
+          return r.ok && d.players
+            ? ([
+                id,
+                { players: d.players as LiveBox, final: d.final === true },
+              ] as const)
+            : ([id, null] as const);
+        } catch {
+          return [id, null] as const;
+        }
+      }),
+    ).then((rows) => {
+      if (!live) return;
+      setBoxes((b) => {
+        const next = { ...b };
+        for (const [id, box] of rows) {
+          if (box) next[id] = box;
+          else delete next[id];
+        }
+        return next;
+      });
+    });
+    return () => {
+      live = false;
+    };
+  }, [sport, boxIds, clock]);
+  const boxFor = (g: LiveGame) => {
+    const b = boxes[g.id];
+    return b && (g.state !== "post" || b.final) ? b.players : null;
+  };
+  const sweats = (g: LiveGame) =>
+    (known.picks.get(g.id) || []).map((p) => ({
+      id: p.id,
+      s: sweat(p, g, boxFor(g), {
+        away: g.away.abbreviation,
+        home: g.home.abbreviation,
+      }),
+    }));
   if (!live.length && !finals.length) return null;
   const href = (g: LiveGame) =>
     sport === "nhl" || sport === "ncaab"
@@ -150,13 +269,14 @@ export default function LiveNow({
             <strong>{g[side].score ?? "–"}</strong>
           </span>
         ))}
-        {isPicked(g) ? (
-          <i className="live-now-pick">Our pick on this game</i>
-        ) : null}
+        {isPicked(g) ? <PickLines lines={sweats(g)} /> : null}
       </>
     );
     return (
-      <li key={g.id} className={`live-now-game is-${g.state}`}>
+      <li
+        key={g.id}
+        className={`live-now-game is-${g.state}${isPicked(g) ? " is-picked" : ""}`}
+      >
         {to ? (
           <Link
             href={to}
@@ -185,5 +305,40 @@ export default function LiveNow({
         {stale ? "; the last refresh failed, so scores may be behind" : ""}.
       </p>
     </section>
+  );
+}
+
+const MARK: Record<Sweat["state"], string> = {
+  ahead: "On track",
+  behind: "Needs more",
+  even: "Level",
+  hit: "Hit",
+  miss: "Missed",
+};
+
+/** Where each of our picks on this game stands right now; a pick that can't be read yet says so. */
+function PickLines({ lines }: { lines: { id: string; s: Sweat | null }[] }) {
+  const shown = lines.slice(0, 3);
+  return (
+    <ul className="live-now-picks" aria-label="Our picks on this game">
+      {shown.map(({ id, s }) =>
+        s ? (
+          <li key={id} className={`is-${s.state}`}>
+            <b>{s.label}</b>
+            <span>
+              {s.detail} · {MARK[s.state]}
+            </span>
+          </li>
+        ) : (
+          <li key={id} className="is-pending">
+            <b>Our pick</b>
+            <span>live stats loading</span>
+          </li>
+        ),
+      )}
+      {lines.length > shown.length ? (
+        <li className="is-more">+{lines.length - shown.length} more</li>
+      ) : null}
+    </ul>
   );
 }
