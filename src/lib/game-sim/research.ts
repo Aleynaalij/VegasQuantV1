@@ -48,7 +48,7 @@ const envelope = z.object({
   is_current_matchup: z.literal(false),
   title: z.string(),
   generated_at: z.string().datetime({ offset: true }),
-  model_id: z.literal("vq-empirical-game/0.1.1"),
+  model_id: z.enum(["vq-empirical-game/0.1.1", "vq-empirical-game/0.2.10"]),
   artifact_sha256: z.string().regex(/^[0-9a-f]{64}$/),
   input_hash: z.string().regex(/^[0-9a-f]{64}$/),
   runs: z.object({

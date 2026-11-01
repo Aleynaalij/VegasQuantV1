@@ -1,0 +1,69 @@
+{
+  "model_id": "vq-empirical-game/0.2.4",
+  "status": "RESEARCH_REVIEW_REQUIRED",
+  "model_sha256": "a743f2641182eb5531712c1884df5a72fb2454efa17f0f9293eee6c0f92ace1a",
+  "seed": 1701,
+  "runs": {
+    "requested": 10000,
+    "actual": 10000,
+    "failed": 0
+  },
+  "reproduction_passed": true,
+  "calibration_adopted": false,
+  "trace": {
+    "events": 167,
+    "rules_replay_verified": true
+  },
+  "files": {
+    "model.json.gz": {
+      "sha256": "f7392b0e9bf4f6f8b76f521bcfb4dd6b72e48f8f17b526878569f6686870a669",
+      "canonical_sha256": "a743f2641182eb5531712c1884df5a72fb2454efa17f0f9293eee6c0f92ace1a"
+    },
+    "batch.json.gz": {
+      "sha256": "503fc4340c80ef8141ee3f0e30440622a51d33e51c8284a2d781d786289d0a5c",
+      "canonical_sha256": "25883df6175b8817f231729860ef480d02b512f113cdf0a98f11440b8efdfe4e"
+    },
+    "gate.json.gz": {
+      "sha256": "8d60070051878c102040d7262c3612b66ea4309e569986ede64ee3257b320ccd",
+      "canonical_sha256": "65f43e3757f1bfae01ea2c34d55a3c1bddcea927ce3f25b63713cf753b9ca3c0"
+    },
+    "calibration.json.gz": {
+      "sha256": "3b5bfaea5bce43cb6e285a33426c7a39c33366028a280019f28cc9ec1dc1d5a3",
+      "canonical_sha256": "65236cd88eec7c5dc7c5463d7fef568458e4fe4fda78449cf656816125e37dad"
+    },
+    "replay.json.gz": {
+      "sha256": "2fd3d24da68b543d43aace53bdb5e61e7c6e52e19f033dd5ca838d590300ceac",
+      "canonical_sha256": "3a73da40c4f1eb9cf721810174de6f7dd94639e6a1065510a1f36c2f2417f720"
+    }
+  },
+  "implementation_sha256": {
+    "integrated.py": "67a552ed7854b9baf5afc300fea2f22301740bcf9e89dc8a38870afdb1bfab1c",
+    "model.py": "f00d56b20acac3855f7c5c0bc72343373c0d6ebfab6e56915ca82a6a35e6d12b",
+    "state.py": "5b3147c3e8e3fdd71c2e9838fe2a02fd5071ba3aa2dec6298a6ced91accb6c3e",
+    "batch.py": "1a0e7c0a20018f5b83cc84de410b43de0fb738701e669af8a2a64327e6574d53",
+    "evaluate.py": "529a0e5c4d869049cd736045d9720208b8c93c6af5c007bcc0454e91742bf0d1",
+    "render.py": "f3fb9d395e8d069c4733cbbc0da0427b6031c66804669b714c9c4a995a007450",
+    "INTEGRATED_BUILD_PROTOCOL.md": "9f6b36fdfb1a76b2b1e28e2a8294ecf589c4ba4bf4c5c053379164eca95b9a1f",
+    "FIELD_CONTEXT_PROTOCOL.md": "450b171ca212c7bf462bf87e98f5f14deff4bb9fd91204131405fdec29aa5632",
+    "LATE_SCORE_PROTOCOL.md": "a6b6b3a8709c54b5001a5a8168574bbabd6031f9d633d10698361e8c9b86095d",
+    "HALF_CONTEXT_PROTOCOL.md": "6619c3aa81b35b7f57ef3503f79bfa6d1963be0e7223d90379bf1f13adadec72"
+  },
+  "blockers": [
+    "UNCALIBRATED_LEAGUE_BASELINE",
+    "NOT_A_CURRENT_MATCHUP_FORECAST",
+    "NO_CURRENT_ROSTER_OR_AVAILABILITY",
+    "PLAYER_WORKLOAD_NOT_YET_SUPPORTED",
+    "HISTORICAL_KICKOFF_DISTRIBUTION",
+    "COMPOUND_LIVE_BALL_PENALTIES_EXCLUDED"
+  ],
+  "sources": [
+    {
+      "file": "play_by_play_2022.csv.gz",
+      "sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+      "source_url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2022.csv.gz"
+    }
+  ],
+  "approval": false,
+  "current_matchup_supported": false,
+  "team_player_coupling_enabled": false
+}

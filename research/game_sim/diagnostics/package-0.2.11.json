@@ -1,0 +1,116 @@
+{
+  "model_id": "vq-empirical-game/0.2.11",
+  "integrity_verified": true,
+  "files_verified": 6,
+  "implementation_hashes": 20,
+  "source_hash": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "source_hash_verified": true,
+  "runs": {
+    "actual": 10000,
+    "failed": 0,
+    "requested": 10000
+  },
+  "replay": {
+    "events": 203,
+    "rules_replay_verified": true
+  },
+  "base_checks_passed": false,
+  "failed_checks": [
+    "late_timeout_followed_plays",
+    "timeouts"
+  ],
+  "diagnostics": {
+    "fg_attempts": {
+      "difference": -0.06391918819188191,
+      "passed": true,
+      "simulated_mean": 3.8549,
+      "source_mean": 3.918819188191882,
+      "tolerance_3se": 0.3220786201810979
+    },
+    "late_decisions": {
+      "difference": -0.3686309963099632,
+      "passed": true,
+      "simulated_mean": 1.731,
+      "source_mean": 2.0996309963099633,
+      "tolerance_3se": 0.37470815206753394
+    },
+    "late_fg_attempts": {
+      "difference": -0.05148487084870851,
+      "passed": true,
+      "simulated_mean": 0.4356,
+      "source_mean": 0.4870848708487085,
+      "tolerance_3se": 0.10989042515504477
+    },
+    "late_timeout_followed_plays": {
+      "difference": -2.4883948339483393,
+      "passed": false,
+      "simulated_mean": 1.995,
+      "source_mean": 4.483394833948339,
+      "tolerance_3se": 0.3249964262716877
+    },
+    "timeouts": {
+      "difference": -0.43348782287822907,
+      "passed": false,
+      "simulated_mean": 7.3488,
+      "source_mean": 7.782287822878229,
+      "tolerance_3se": 0.38962482802976967
+    }
+  },
+  "support": {
+    "avoided_runoff_seconds": 283233,
+    "censoring_non_td": 5150,
+    "censoring_restored_td": 11216,
+    "clock_preserved_samples": 190885,
+    "coupled_stops": 20044,
+    "half_pooled_fallback": 240,
+    "half_preserved_samples": 190645,
+    "missing_eligible_stop_duration": 1793,
+    "separate_timeout:defense": 34146,
+    "separate_timeout:offense": 39342,
+    "source_stop_runoff_replaced": 21924,
+    "stop_clock_candidates": 160108,
+    "thin_context_support": 46222,
+    "thin_runoff_context": 1261,
+    "thin_stop_duration_context": 47651,
+    "timeout_context_depth:0": 2847430,
+    "timeout_context_depth:1": 97170,
+    "timeout_context_depth:2": 25538,
+    "timeout_context_depth:3": 7382
+  },
+  "calibration": {
+    "margin": {
+      "baseline_mean_crps": 8.065627410398262,
+      "coverage80": 0.7757352941176471,
+      "difference": 0.09414029313114912,
+      "game_bootstrap95": [
+        -0.036115461698458,
+        0.22580314042873972
+      ],
+      "mean_crps": 8.159767703529411,
+      "n_games": 272,
+      "width80": 34.0
+    },
+    "total": {
+      "baseline_mean_crps": 7.598448874927213,
+      "coverage80": 0.7757352941176471,
+      "difference": 0.018539189778669873,
+      "game_bootstrap95": [
+        -0.026807198869040223,
+        0.06542435908624512
+      ],
+      "mean_crps": 7.6169880647058825,
+      "n_games": 272,
+      "width80": 32.0
+    }
+  },
+  "release_ready": false,
+  "blockers": [
+    "No validated team/player outcome coupling",
+    "No untouched later-season end-to-end validation",
+    "No sourced current roster/role scenario supplied",
+    "No model approval; member publication remains disabled",
+    "Failed base diagnostics: late_timeout_followed_plays,timeouts",
+    "2023 inspected calibration does not establish superiority over historical baseline"
+  ],
+  "scope": "Research integrity and adequacy summary only; never approves a model or changes platform state"
+}
