@@ -76,6 +76,7 @@ export function quoteTime(r: NbaQuoteRow) {
 /** The newest current FanDuel quote per game and market. */
 export function latestQuotes(rows: NbaQuoteRow[], now = Date.now()) {
   const out: Record<string, Record<string, NbaQuoteRow>> = {};
+  if (!Number.isFinite(now)) return out;
   for (const r of rows) {
     const market = r.payload?.market;
     const t = quoteTime(r);
