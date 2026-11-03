@@ -5,8 +5,10 @@
 // Needs the app on :3100 built with NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 and
 // scripts/ui-smoke/stub.mjs running (see check.mjs).
 // Usage: node scripts/ui-smoke/journey-walkthrough.mjs [outDir]  → <outDir>/journey.json + screenshots
-// Exits 1 when any step finds friction. Negative control: UI_SMOKE_NEGATIVE=drop-game disables the
-// URL write that remembers the opened game, so Back from research must be reported as losing it.
+// Exits 1 when any step finds friction, a step scrolls sideways, or the save/reopen proof is missing.
+// Negative controls (each must fail): UI_SMOKE_NEGATIVE=drop-game disables the URL write that
+// remembers the opened game; =no-save-id makes the save return no ID; =overflow adds a too-wide
+// element to every page.
 import fs from "node:fs";
 import path from "node:path";
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
@@ -14,8 +16,11 @@ const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright")
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const OUT = process.argv[2] || "journey-evidence";
 const UID = "00000000-0000-0000-0000-000000000001";
+const UID_B = "00000000-0000-0000-0000-000000000002";
+const NEG = process.env.UI_SMOKE_NEGATIVE || "";
 const NOW = "2026-10-14T02:00:00Z"; // the stub's pinned clock
 const SLUG = "sample-sea-den-2026-10-15";
+const SLUG_B = "sample-hou-jax-2026-10-18";
 fs.mkdirSync(OUT, { recursive: true });
 
 const tnf = "Seattle Seahawks @ Denver Broncos";
@@ -47,14 +52,16 @@ async function session(width, signedIn) {
         user: { id: uid, aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } },
       }));
     }, UID);
-  let mine = [];
+  let mine = [], shares = 0;
   await ctx.route("**/rest/v1/**", async (route) => {
     const u = new URL(route.request().url()), p = u.pathname;
     if (p.endsWith("/published_legs") || p.endsWith("/published_leg_catalog"))
       return route.fulfill({ json: signedIn ? legs : [] });
     if (p.endsWith("/member_parlays"))
       return route.fulfill({ json: u.searchParams.has("id") ? mine.find((x) => `eq.${x.id}` === u.searchParams.get("id")) || null : mine });
+    if (p.endsWith("/rpc/share_member_parlay")) shares++;
     if (p.endsWith("/rpc/create_member_parlay")) {
+      if (NEG === "no-save-id") return route.fulfill({ json: null });
       const body = route.request().postDataJSON();
       const id = `33333333-3333-4333-8333-${String(mine.length + 1).padStart(12, "0")}`;
       mine = [...mine, { id, title: body.p_title, legs: legs.filter((l) => body.p_leg_keys.includes(l.leg_key)), created_at: NOW, expires_at: "2026-10-16T00:15:00Z", community_post_id: null }];
@@ -63,7 +70,13 @@ async function session(width, signedIn) {
     if (p.endsWith("/rpc/notification_inbox")) return route.fulfill({ json: { items: [], snapshot_at: NOW } });
     return route.fallback();
   });
-  if (process.env.UI_SMOKE_NEGATIVE === "drop-game")
+  if (NEG === "overflow")
+    await ctx.addInitScript(() => addEventListener("load", () => {
+      const wide = document.createElement("div");
+      wide.style.cssText = "width:2400px;height:1px";
+      document.body.append(wide);
+    }));
+  if (NEG === "drop-game")
     await ctx.addInitScript(() => {
       const replace = history.replaceState.bind(history);
       history.replaceState = (state, title, url) =>
@@ -74,7 +87,7 @@ async function session(width, signedIn) {
   await page.clock.setFixedTime(new Date(NOW));
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message.slice(0, 160)));
-  return { ctx, page, errors, saved: () => mine };
+  return { ctx, page, errors, saved: () => mine, shares: () => shares };
 }
 
 /** What the person can see and act on: visible headings, actions and their targets inside <main>. */
@@ -99,6 +112,7 @@ async function step(log, page, name, note) {
   await page.screenshot({ path: path.join(OUT, file), fullPage: false });
   const inv = await inventory(page);
   log.steps.push({ name, note, screenshot: file, ...inv });
+  if (inv.overflowX) log.findings.push(`Sideways scroll at step "${name}" (${inv.url}).`);
   return inv;
 }
 const closeDialogs = (page) => page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
@@ -107,7 +121,7 @@ for (const width of [360, 390, 1280]) {
   // ---------- Signed in: the full journey ----------
   {
     const log = { id: `in-${width}`, width, signedIn: true, steps: [], findings: [] };
-    const { ctx, page, errors, saved } = await session(width, true);
+    const { ctx, page, errors, saved, shares } = await session(width, true);
     try {
       await page.goto(BASE + "/", { waitUntil: "networkidle" });
       await closeDialogs(page);
@@ -143,6 +157,26 @@ for (const width of [360, 390, 1280]) {
       const back = await step(log, page, "home-after-back", "Browser Back from research");
       if (!(await page.locator(`#home-game-${SLUG}[open], details.vq-game-row[open]`).count())) log.findings.push("Back from research returns Home with the game row collapsed; the opened game is lost.");
       if (!back.actions.some((a) => /Build your lay · 1 selected/.test(a))) log.findings.push("Back from research hides the lay in progress until a game is reopened.");
+
+      // Two games open: Back returns to the game actually entered, not the last one opened.
+      await page.goto(BASE + "/", { waitUntil: "networkidle" });
+      const rowA = page.locator(`#home-game-${SLUG}`), rowB = page.locator(`#home-game-${SLUG_B}`);
+      if (!(await rowA.evaluate((d) => d.open))) await rowA.locator("summary").click();
+      await rowB.locator("summary").click();
+      await rowA.locator(`a[href="/matchups/${SLUG}"]`).click();
+      await page.waitForURL(new RegExp(`/matchups/${SLUG}$`));
+      await page.goBack({ waitUntil: "networkidle" });
+      await page.waitForTimeout(500);
+      const backUrl = new URL(page.url());
+      if (backUrl.searchParams.get("game") !== SLUG) log.findings.push(`With two games open, Back from game A's research remembers "${backUrl.searchParams.get("game")}" instead of game A.`);
+      if (!(await rowA.evaluate((d) => d.open).catch(() => false))) log.findings.push("With two games open, Back from game A's research does not reopen game A.");
+      // Close B while A stays open: the remembered game falls back to A, not nothing.
+      if (!(await rowB.evaluate((d) => d.open))) await rowB.locator("summary").click();
+      await page.waitForTimeout(200);
+      await rowB.locator("summary").click();
+      await page.waitForTimeout(300);
+      const afterClose = new URL(page.url()).searchParams.get("game");
+      if (afterClose !== SLUG) log.findings.push(`Closing game B while game A stays open leaves the remembered game as "${afterClose}" instead of A.`);
 
       // Research → "Props & your lay" → Home with this game open.
       await page.goto(BASE + `/matchups/${SLUG}`, { waitUntil: "networkidle" });
@@ -186,17 +220,65 @@ for (const width of [360, 390, 1280]) {
         const done = await step(log, page, "saved", "Saved the lay");
         log.savedCompletion = done.status;
       } else log.findings.push("No save action available in the builder.");
-      const id = saved()[0]?.id;
-      if (id) {
+      // The save must produce exactly one saved lay with an ID, and reopening must show that exact
+      // private lay, unshared. A missing ID is a failure, never a skipped check.
+      const savedRows = saved();
+      const id = savedRows[0]?.id;
+      if (savedRows.length !== 1 || !id) log.findings.push(`Saving produced ${savedRows.length} saved lay(s) and no usable ID; the reopen proof cannot run.`);
+      else {
         await page.goto(BASE + `/community?saved=${id}`, { waitUntil: "networkidle" });
         const reopened = await step(log, page, "reopen-saved", "Reopened the saved lay via its saved link");
         log.reopenUrl = reopened.url;
-        const target = await page.locator(`#my-parlay-${id}`).count();
-        if (!target) log.findings.push("Saved deep link does not land on the saved lay.");
+        if (new URL(page.url()).searchParams.get("saved") !== id) log.findings.push("Saved link did not keep the exact saved ID through the redirect.");
+        const card = page.locator(`#my-parlay-${id}`);
+        if (!(await card.count())) log.findings.push("Saved deep link does not land on the saved lay.");
+        else {
+          const cardText = await card.innerText();
+          for (const leg of savedRows[0].legs) if (!cardText.includes(leg.name)) log.findings.push(`Reopened lay is missing its saved leg "${leg.name}".`);
+          if (!(await card.getByRole("button", { name: /Post to Community/ }).count())) log.findings.push("Reopened lay does not show it as unshared (no Post to Community action).");
+        }
+        if (shares()) log.findings.push(`Saving or reopening shared the lay (${shares()} share call(s)) without the member choosing to.`);
+        if (savedRows[0].community_post_id) log.findings.push("Saved lay is marked as posted to the community.");
       }
     } catch (e) {
       log.findings.push(`walkthrough stopped: ${String(e).split("\n")[0].slice(0, 200)}`);
       await step(log, page, "stopped", "Where the walkthrough stopped").catch(() => {});
+    }
+    log.errors = errors;
+    report.push(log);
+    await ctx.close();
+  }
+  // ---------- Account switch: the Home lay badge follows the account, no game opened ----------
+  {
+    const log = { id: `switch-${width}`, width, signedIn: true, steps: [], findings: [] };
+    const { ctx, page, errors } = await session(width, true);
+    try {
+      await page.addInitScript(({ a, b }) => {
+        sessionStorage.setItem(`vq-parlay-draft:${a}`, JSON.stringify({ title: "A", keys: ["journey:0"] }));
+        sessionStorage.setItem(`vq-parlay-draft:${b}`, JSON.stringify({ title: "B", keys: ["journey:1", "journey:3"] }));
+      }, { a: UID, b: UID_B });
+      await page.goto(BASE + "/", { waitUntil: "networkidle" });
+      await closeDialogs(page);
+      const lay = (n) => page.getByRole("link", { name: new RegExp(`Build your lay · ${n} selected`) });
+      if (!(await lay(1).count())) log.findings.push("Account A's lay in progress is not shown before any game is opened.");
+      const broadcast = (event, user) => page.evaluate(({ event, user }) => {
+        const session = user ? { access_token: "smoke", refresh_token: "smoke", token_type: "bearer", expires_in: 86400, expires_at: Math.floor(Date.now() / 1000) + 86400, user: { id: user, aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } } } : null;
+        if (session) localStorage.setItem("sb-127-auth-token", JSON.stringify(session));
+        else localStorage.removeItem("sb-127-auth-token");
+        new BroadcastChannel("sb-127-auth-token").postMessage({ event, session });
+      }, { event, user });
+      await broadcast("SIGNED_OUT", null);
+      await page.waitForTimeout(800);
+      await step(log, page, "signed-out", "Account A signed out in another tab");
+      if (await page.getByRole("link", { name: /Build your lay · \d+ selected/ }).count()) log.findings.push("After sign-out, account A's lay in progress is still shown.");
+      await broadcast("SIGNED_IN", UID_B);
+      await page.waitForTimeout(800);
+      await step(log, page, "account-b", "Account B signed in");
+      if (await lay(1).count()) log.findings.push("Account B sees account A's lay in progress.");
+      if (!(await lay(2).count())) log.findings.push("Account B's own lay in progress is not shown.");
+      if (await page.locator("details.vq-game-row[open]").count()) log.findings.push("A game row opened during the account switch.");
+    } catch (e) {
+      log.findings.push(`walkthrough stopped: ${String(e).split("\n")[0].slice(0, 200)}`);
     }
     log.errors = errors;
     report.push(log);
