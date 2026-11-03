@@ -16,9 +16,12 @@ const sign = async (path: string) => {
 export default function CommunityPhoto({
   path,
   title,
+  onLoaded,
 }: {
   path: string;
   title: string;
+  /** Called once the image has actually loaded (the story viewer counts a photo as seen only then). */
+  onLoaded?: () => void;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -63,7 +66,13 @@ export default function CommunityPhoto({
       rel="noopener noreferrer"
       aria-label={`Open photo: ${title}`}
     >
-      <img src={url} alt={`Member-uploaded photo: ${title}`} loading="lazy" decoding="async" />
+      <img src={url} alt={`Member-uploaded photo: ${title}`} loading="lazy" decoding="async" onLoad={onLoaded}
+        onError={() => {
+          // A signed link that cannot load (expired, removed) shows as unavailable, not a broken image.
+          setUrl(null);
+          setFailed(true);
+        }}
+      />
       <small>Tap to open full photo</small>
     </a>
   ) : (

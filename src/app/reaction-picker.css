@@ -1,0 +1,59 @@
+/* Emoji reactions next to Like: a small panel of four choices with canonical counts. */
+.zone-feed .reaction-picker {
+  position: relative;
+  display: inline-flex;
+}
+.zone-feed .reaction-panel {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: -8px;
+  z-index: 5;
+  display: grid;
+  gap: 6px;
+  width: max-content;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 10px;
+  border: 1px solid var(--zf-line, #ffffff22);
+  border-radius: 14px;
+  background: var(--zf-card, #11161c);
+  box-shadow: 0 8px 24px #0008;
+  color: var(--zf-muted, #b7c2bb);
+  font-size: .8rem;
+}
+.zone-feed .reaction-panel p { margin: 0; }
+.zone-feed .reaction-choices { display: flex; gap: 6px; }
+html[data-theme] body .zone-feed .reaction-choices > button {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-width: 52px;
+  min-height: 52px;
+  padding: 6px;
+  border: 1px solid transparent !important;
+  border-radius: 12px;
+  background: #ffffff0d !important;
+  color: inherit !important;
+  font-size: 1.25rem;
+}
+html[data-theme] body .zone-feed .reaction-choices > button[aria-pressed="true"] {
+  border-color: #e8ca7d !important;
+  background: #e8ca7d26 !important;
+}
+.zone-feed .reaction-choices small { font-size: .7rem; color: var(--zf-muted, #b7c2bb); }
+.zone-feed .reaction-note { color: #8f9a94; }
+/* Same look as the other action-row icons (the theme fills nested buttons otherwise). */
+html[data-theme] body .zone-feed .reaction-picker > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+html[data-theme] body .zone-feed .reaction-picker > button[aria-expanded="true"] {
+  color: #f4dc99 !important;
+}

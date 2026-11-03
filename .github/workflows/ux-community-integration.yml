@@ -1,0 +1,79 @@
+name: UX community integration
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/ui-smoke/**'
+      - 'tests/**'
+      - 'supabase/migrations/**'
+      - '.github/workflows/ux-community-integration.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  integrated-journeys:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - name: Prepare browser for UI checks
+        run: |
+          npm install --no-save playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "CHROMIUM_PATH=$browser_path" >> "$GITHUB_ENV"
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Start synthetic app
+        run: |
+          node scripts/ui-smoke/stub.mjs &
+          LIVE_SCORES_DISABLED=1 npx next start -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
+          curl -fsS -o /dev/null http://127.0.0.1:3100/
+      - name: Execute all integrated acceptance scripts
+        run: |
+          node scripts/ui-smoke/journey-contracts.mjs
+          node scripts/ui-smoke/journey-walkthrough.mjs /tmp/ux-evidence/positive
+          node scripts/ui-smoke/story-viewer.mjs
+          node scripts/ui-smoke/zone-entry.mjs
+          node scripts/ui-smoke/vq-tonight.mjs
+          node scripts/ui-smoke/reactions.mjs
+      - name: Reject intended negative controls
+        run: |
+          negative() {
+            label="$1"
+            script="$2"
+            expected="$3"
+            log="/tmp/ux-evidence/negative-$label.log"
+            if UI_SMOKE_NEGATIVE="$label" node "scripts/ui-smoke/$script.mjs" "/tmp/ux-evidence/$label" > "$log" 2>&1; then
+              cat "$log"
+              echo "ERROR: negative control $label passed unexpectedly"
+              exit 1
+            fi
+            cat "$log"
+            grep -E -q "$expected" "$log"
+            echo "Verified intended rejection: $label"
+          }
+          negative drop-game journey-walkthrough 'With two games open, Back from game A|remembered game'
+          negative no-save-id journey-walkthrough 'no usable ID'
+          negative overflow journey-walkthrough 'Sideways scroll'
+          negative read-on-tap story-viewer 'could not be shown was marked read|failed to load was marked read'
+          negative visitor-fetch zone-entry 'visitor page requested member data'
+          negative day-ahead vq-tonight 'day label is not Oct 13 ET|game is not listed for today'
+          negative wrong-post reactions 'Celebrate not shown as selected after saving'
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synthetic-ux-evidence
+          path: /tmp/ux-evidence
+          if-no-files-found: ignore
