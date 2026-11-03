@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
@@ -56,19 +57,40 @@ export default function StoryViewer({
   onRead: (seen: string[]) => void;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const router = useRouter();
   const [state, setState] = useState<State>({ kind: "loading" });
   const [cursor, setCursor] = useState<StoryCursor | null>(null);
   const [photoLoaded, setPhotoLoaded] = useState(false);
+  // Each post is re-checked with community_post before it is shown (deleted, blocked or newly
+  // restricted posts drop out), and again when the window regains focus.
+  const [checked, setChecked] = useState<Record<string, "ok" | "gone" | "error">>({});
   const session = useRef<{ viewerId: string | null; generation: number }>({ viewerId: null, generation: 0 });
   const seen = useRef<string[]>([]);
   const closed = useRef(false);
 
-  const close = useCallback(() => {
+  const pushed = useRef(false);
+  const close = useCallback((fromBack = false) => {
     if (closed.current) return;
     closed.current = true;
     dialog.current?.close();
+    // Closing by button/Escape removes the history entry the viewer added, so Back is not wasted.
+    if (!fromBack && pushed.current && window.location.hash === "#story") window.history.back();
     onClose();
   }, [onClose]);
+
+  // Browser Back closes the viewer: it adds one history entry (#story) on open, through the native
+  // pushState the app router integrates with, and closes when that entry is popped.
+  useEffect(() => {
+    if (window.location.hash !== "#story") {
+      window.history.pushState(window.history.state, "", window.location.pathname + window.location.search + "#story");
+      pushed.current = true;
+    }
+    const onPop = () => {
+      if (window.location.hash !== "#story") close(true);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [close]);
 
   // Open as a modal (focus stays inside; Escape is handled below so it closes exactly once).
   useEffect(() => {
@@ -119,7 +141,12 @@ export default function StoryViewer({
       // A post seen twice must be the same post: storyGroups drops conflicting duplicates.
       const groups = storyGroups([...posts.values()].map(({ id, user_id, author_name, sport, created_at }) => ({ id, user_id, author_name, sport, created_at })));
       setState({ kind: "ready", groups, posts });
-      setCursor({ authorId: start.user_id, postId: start.id });
+      setChecked({ [start.id]: "ok" });
+      // Enter this member's posts in order: their oldest post not yet read (or their first post
+      // when all are read), so Next plays through every post of theirs before the next member.
+      const own = groups.find((g) => g.authorId === start.user_id)?.posts ?? [];
+      const entry = own.find((p) => !seen.current.includes(p.id)) ?? own[0] ?? start;
+      setCursor({ authorId: start.user_id, postId: entry.id });
     })();
     // A different account (or signing out) must never see this account's posts.
     const stop = onUserChange(() => {
@@ -135,7 +162,41 @@ export default function StoryViewer({
     };
   }, [startPostId, close]);
 
-  const post = state.kind === "ready" && cursor ? state.posts.get(cursor.postId) ?? null : null;
+  const [focusTick, setFocusTick] = useState(0);
+  useEffect(() => {
+    const onFocus = () => setFocusTick((n) => n + 1);
+    window.addEventListener("focus", onFocus);
+    return () => window.removeEventListener("focus", onFocus);
+  }, []);
+  const currentId = cursor?.postId;
+  useEffect(() => {
+    if (state.kind !== "ready" || !currentId) return;
+    let live = true;
+    const generation = session.current.generation;
+    void (async () => {
+      const r = await supabase.rpc("community_post", { p_id: currentId });
+      if (!live || generation !== session.current.generation) return;
+      const viewerId = session.current.viewerId || "";
+      const fresh = r.error ? null : storyDetail(r.data, { viewerId, generation, postId: currentId }, session.current);
+      if (fresh) {
+        const row = r.data as Record<string, unknown>;
+        setState((st) => {
+          if (st.kind !== "ready") return st;
+          const posts = new Map(st.posts);
+          posts.set(fresh.id, { ...fresh, ...content(row) });
+          return { ...st, posts };
+        });
+      }
+      setChecked((c) => ({ ...c, [currentId]: fresh ? "ok" : r.error ? "error" : "gone" }));
+    })();
+    return () => {
+      live = false;
+    };
+    // focusTick re-checks the post on screen when the window regains focus.
+  }, [state.kind, currentId, focusTick]);
+
+  const status = currentId ? checked[currentId] : undefined;
+  const post = state.kind === "ready" && cursor && status === "ok" ? state.posts.get(cursor.postId) ?? null : null;
   const group = state.kind === "ready" && cursor ? state.groups.find((g) => g.authorId === cursor.authorId) : undefined;
   const index = group && cursor ? group.posts.findIndex((p) => p.id === cursor.postId) : -1;
   const prev = state.kind === "ready" && cursor ? stepStory(state.groups, cursor, -1) : null;
@@ -158,7 +219,9 @@ export default function StoryViewer({
       const current = session.current;
       const request = { viewerId: current.viewerId || "", generation: current.generation, postId: post.id };
       const nextSeen = displayedStoryRead(seen.current, post, request, current, true);
-      if (nextSeen.length !== seen.current.length) {
+      // Compare by ID, not length: at the 2,000-ID cap the length stays the same while the oldest
+      // ID is evicted for this one.
+      if (!seen.current.includes(post.id) && nextSeen.includes(post.id)) {
         seen.current = nextSeen;
         onRead(nextSeen);
       }
@@ -230,7 +293,7 @@ export default function StoryViewer({
             ) : (
               <b>Recent posts</b>
             )}
-            <button type="button" className="story-close" onClick={close} aria-label="Close recent posts">
+            <button type="button" className="story-close" onClick={() => close()} aria-label="Close recent posts">
               <X size={22} aria-hidden="true" />
             </button>
           </div>
@@ -246,7 +309,7 @@ export default function StoryViewer({
                   ? "This post could not load. Check your connection and try again."
                   : "This post is no longer available."}
               </p>
-              <button type="button" className="secondary" onClick={close}>
+              <button type="button" className="secondary" onClick={() => close()}>
                 Close
               </button>
             </div>
@@ -266,7 +329,20 @@ export default function StoryViewer({
                 <CommunityPhoto path={post.photo_path} title={post.title || `${post.author_name}'s post`} onLoaded={() => setPhotoLoaded(true)} />
               ) : null}
               <div className="story-actions">
-                <Link className="story-discussion" href={storyDiscussion(post)} onClick={close}>
+                <Link
+                  className="story-discussion"
+                  href={storyDiscussion(post)}
+                  onClick={(e) => {
+                    // Leave the viewer's history entry first, then open the discussion, so Back
+                    // from the discussion returns to the page rather than to a closed viewer.
+                    e.preventDefault();
+                    const href = storyDiscussion(post);
+                    if (pushed.current && window.location.hash === "#story")
+                      window.addEventListener("popstate", () => router.push(href), { once: true });
+                    else setTimeout(() => router.push(href), 0);
+                    close();
+                  }}
+                >
                   View discussion →
                 </Link>
                 <p className="story-gambly">
@@ -277,7 +353,13 @@ export default function StoryViewer({
               </div>
             </article>
           ) : (
-            <p role="alert">This post is no longer available.</p>
+            status === "gone" ? (
+              <p role="alert">This post is no longer available.</p>
+            ) : status === "error" ? (
+              <p role="alert">This post could not load. Check your connection, then move on or try again.</p>
+            ) : (
+              <p role="status">Checking this post…</p>
+            )
           )}
         </div>
 
