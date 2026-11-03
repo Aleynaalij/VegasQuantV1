@@ -501,7 +501,7 @@ export default function ParlayWorkshop({
           aria-label="Your parlay draft"
         >
           <div className="workshop-head">
-            <h3>Your parlay · {chosen.length} legs</h3>
+            <h3>Your parlay · {chosen.length} leg{chosen.length === 1 ? "" : "s"}</h3>
             <button
               className="secondary"
               disabled={busy}
@@ -555,7 +555,7 @@ export default function ParlayWorkshop({
       {open && (
         <aside className="workshop-save-tray" aria-label="Save your parlay">
           <div>
-            <strong>{chosen.length} legs selected</strong>
+            <strong>{chosen.length} leg{chosen.length === 1 ? "" : "s"} selected</strong>
             <small>{title.trim() || "Name your parlay above"}</small>
           </div>
           <button
@@ -856,7 +856,9 @@ export default function ParlayWorkshop({
                       href={
                         r.leg_key.startsWith("candidate:")
                           ? `/feed#release-${r.leg_key.split(":")[1]}`
-                          : "/records"
+                          : r.game_id
+                            ? `/matchups/game/${encodeURIComponent(r.game_id)}`
+                            : "/matchups"
                       }
                     >
                       Original publication →

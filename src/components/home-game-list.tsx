@@ -1,7 +1,8 @@
 "use client";
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { Game } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
 import TeamLogo from "./team-logo";
@@ -22,6 +23,7 @@ import {
   selectionError,
   type PublishedLeg,
 } from "@/lib/parlay-builder";
+import { homeGameFrom } from "@/lib/journey";
 type Leg = {
   leg_key: string;
   name: string;
@@ -43,6 +45,11 @@ export default function HomeGameList({ games }: { games: Game[] }) {
   const [chosen, setChosen] = useState<string[]>([]);
   const [draftNotice, setDraftNotice] = useState("");
   const [openKey, setOpenKey] = useState("");
+  // Open game rows by slug. The latest one opened is kept in the URL (?game=<slug>), so browser
+  // Back from a game's research page, and research's "Props & your lay", return to the same game.
+  const [openGames, setOpenGames] = useState<string[]>([]);
+  const wrote = useRef<string | null>(null);
+  const params = useSearchParams();
   const [copied, setCopied] = useState<Record<string, string>>({});
   // Same player + stat lines the Gambly copy uses, one per line, for the props on screen.
   async function copyAll(gameId: string, rows: Leg[]) {
@@ -121,7 +128,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
       setDraftNotice("");
     } catch {
       setDraftNotice(
-        "Draft storage is unavailable. Open the lay builder in The Zone.",
+        "Draft storage is unavailable. Open Your lay to build it there.",
       );
     }
   }
@@ -137,6 +144,48 @@ export default function HomeGameList({ games }: { games: Game[] }) {
     .map((g) => g.id)
     .sort()
     .join(",");
+  const slugs = slate.map((g) => g.slug).join(",");
+  // Arriving with ?game=<slug> (Back, research, or the hero) opens that game and brings it into view.
+  useEffect(() => {
+    const want = homeGameFrom(`?${params.toString()}`, slugs.split(","));
+    if (!want) return;
+    setOpenGames((open) => (open.includes(want) ? open : [...open, want]));
+    setOpened(true);
+    if (wrote.current === want) return; // our own URL update while toggling: do not scroll
+    wrote.current = want;
+    requestAnimationFrame(() =>
+      document.getElementById(`home-game-${want}`)?.scrollIntoView({ block: "start" }),
+    );
+  }, [params, slugs]);
+  // The lay in progress stays visible without opening a game first.
+  useEffect(() => {
+    let live = true;
+    void supabase.auth.getSession().then((session) => {
+      const uid = session.data.session?.user.id;
+      if (!live || !uid) return;
+      try {
+        const draft = JSON.parse(sessionStorage.getItem(`vq-parlay-draft:${uid}`) || "null");
+        if (Array.isArray(draft?.keys))
+          setChosen((now) => (now.length ? now : draft.keys.filter((k: unknown) => typeof k === "string")));
+      } catch {}
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
+  function toggleGame(slug: string, open: boolean) {
+    setOpenGames((now) =>
+      open ? (now.includes(slug) ? now : [...now, slug]) : now.filter((s) => s !== slug),
+    );
+    if (open) setOpened(true);
+    const url = new URL(window.location.href);
+    const current = url.searchParams.get("game");
+    if (open) url.searchParams.set("game", slug);
+    else if (current === slug) url.searchParams.delete("game");
+    else return;
+    wrote.current = open ? slug : null;
+    window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+  }
   useEffect(() => {
     if (!opened || !ids) return;
     let live = true;
@@ -245,7 +294,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
       className="vq-game-list"
       aria-label="This week's games"
     >
-      {draftNotice ? <p role="status">{draftNotice}</p> : null}
+      {draftNotice && !openKey ? <p role="status">{draftNotice}</p> : null}
       {chosen.length ? (
         <Link className="vq-btn" href="/parlays">
           Build your lay · {chosen.length} selected →
@@ -257,9 +306,12 @@ export default function HomeGameList({ games }: { games: Game[] }) {
         slate.map((g) => (
           <details
             key={g.id}
+            id={`home-game-${g.slug}`}
             className="vq-game-row"
+            open={openGames.includes(g.slug)}
             onToggle={(e) => {
-              if (e.currentTarget.open) setOpened(true);
+              const open = e.currentTarget.open;
+              if (open !== openGames.includes(g.slug)) toggleGame(g.slug, open);
             }}
           >
             <summary>
@@ -291,6 +343,9 @@ export default function HomeGameList({ games }: { games: Game[] }) {
               ) : null}
             </summary>
             <div className="vq-game-props">
+              <Link className="vq-game-research" href={`/matchups/${g.slug}`}>
+                Game research &amp; game room →
+              </Link>
               {notice ? (
                 <p role="status">
                   {notice}
@@ -298,6 +353,12 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                     <button onClick={() => setRetry((n) => n + 1)}>
                       Retry
                     </button>
+                  ) : null}
+                  {notice.startsWith("Sign in") ? (
+                    <>
+                      {" "}
+                      <Link href="/membership">Sign in →</Link>
+                    </>
                   ) : null}
                 </p>
               ) : null}
@@ -426,6 +487,13 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                                       ? "✓ Added to your lay"
                                       : "Add to your lay"}
                                   </button>
+                                ) : null}
+                                {draftNotice ? (
+                                  <p role="status">{draftNotice}</p>
+                                ) : chosen.includes(r.leg_key) ? (
+                                  <Link className="vq-prop-next" href="/parlays">
+                                    Build your lay · {chosen.length} selected →
+                                  </Link>
                                 ) : null}
                                 <LegActions
                                   legKey={r.leg_key}

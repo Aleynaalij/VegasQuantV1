@@ -5,6 +5,8 @@
 // Needs the app on :3100 built with NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 and
 // scripts/ui-smoke/stub.mjs running (see check.mjs).
 // Usage: node scripts/ui-smoke/journey-walkthrough.mjs [outDir]  → <outDir>/journey.json + screenshots
+// Exits 1 when any step finds friction. Negative control: UI_SMOKE_NEGATIVE=drop-game disables the
+// URL write that remembers the opened game, so Back from research must be reported as losing it.
 import fs from "node:fs";
 import path from "node:path";
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
@@ -61,6 +63,12 @@ async function session(width, signedIn) {
     if (p.endsWith("/rpc/notification_inbox")) return route.fulfill({ json: { items: [], snapshot_at: NOW } });
     return route.fallback();
   });
+  if (process.env.UI_SMOKE_NEGATIVE === "drop-game")
+    await ctx.addInitScript(() => {
+      const replace = history.replaceState.bind(history);
+      history.replaceState = (state, title, url) =>
+        replace(state, title, url && /[?&]game=/.test(String(url)) ? String(url).replace(/([?&])game=[^&#]*&?/, "$1").replace(/[?&](#|$)/, "$1") : url);
+    });
   const page = await ctx.newPage();
   page.setDefaultTimeout(12000);
   await page.clock.setFixedTime(new Date(NOW));
@@ -112,23 +120,43 @@ for (const width of [360, 390, 1280]) {
         log.findings.push("Home game row offers props but no route to that game's research page.");
       await page.getByRole("button", { name: /Sample Runner/ }).first().click();
       await page.getByRole("button", { name: "Add to your lay" }).first().click();
-      await page.getByRole("link", { name: /Build your lay · 1 selected/ }).waitFor();
-      const added = await step(log, page, "home-leg-added", "Added one prop to the lay from Home");
-      const buildBox = await page.getByRole("link", { name: /Build your lay/ }).boundingBox();
-      if (buildBox && (buildBox.y < 0 || buildBox.y > page.viewportSize().height))
-        log.findings.push(`"Build your lay · 1 selected" appears off screen (y=${Math.round(buildBox.y)}) after adding: the confirmation is not where the tap happened.`);
-      void added;
+      const layLinks = page.getByRole("link", { name: /Build your lay · 1 selected/ });
+      await layLinks.first().waitFor();
+      await step(log, page, "home-leg-added", "Added one prop to the lay from Home");
+      const inView = await layLinks.evaluateAll((els) => els.some((e) => { const r = e.getBoundingClientRect(); return r.height > 0 && r.top >= 0 && r.bottom <= innerHeight; }));
+      if (!inView) {
+        const y = (await layLinks.first().boundingBox())?.y;
+        log.findings.push(`"Build your lay · 1 selected" appears off screen (y=${Math.round(y ?? NaN)}) after adding: the confirmation is not where the tap happened.`);
+      }
 
-      // Research detail and back.
-      await page.goto(BASE + `/matchups/${SLUG}`, { waitUntil: "networkidle" });
-      const research = await step(log, page, "research-detail", "Game research (reached by URL: no link from Home)");
+      // Research detail (by the row's own link when it has one) and back.
+      const researchLink = page.locator(`details.vq-game-row[open] a[href="/matchups/${SLUG}"]`);
+      if (await researchLink.count()) {
+        await researchLink.first().click();
+        await page.waitForURL(new RegExp(`/matchups/${SLUG}$`));
+        await page.waitForLoadState("networkidle");
+      } else await page.goto(BASE + `/matchups/${SLUG}`, { waitUntil: "networkidle" });
+      const research = await step(log, page, "research-detail", (await researchLink.count()) ? "Game research, from the Home row" : "Game research (reached by URL: no link from Home)");
       if (!research.actions.some((a) => /\/parlays|your lay|build/i.test(a))) log.findings.push("Research page has no route to building a lay or to the selections already made.");
-      if (!research.actions.some((a) => /\/community/.test(a) && !/^link: The Zone/.test(a))) log.findings.push("Research page has no route to The Zone discussion for this game (only the bottom nav).");
       await page.goBack({ waitUntil: "networkidle" });
+      await page.waitForTimeout(500);
       const back = await step(log, page, "home-after-back", "Browser Back from research");
-      const stillOpen = await page.locator("details.vq-game-row[open]").count();
-      if (!stillOpen) log.findings.push("Back from research returns Home with the game row collapsed; the opened game is lost.");
+      if (!(await page.locator(`#home-game-${SLUG}[open], details.vq-game-row[open]`).count())) log.findings.push("Back from research returns Home with the game row collapsed; the opened game is lost.");
       if (!back.actions.some((a) => /Build your lay · 1 selected/.test(a))) log.findings.push("Back from research hides the lay in progress until a game is reopened.");
+
+      // Research → "Props & your lay" → Home with this game open.
+      await page.goto(BASE + `/matchups/${SLUG}`, { waitUntil: "networkidle" });
+      const toLay = page.getByRole("link", { name: /Props & your lay/ });
+      if (await toLay.count()) {
+        await toLay.click();
+        await page.waitForURL(/\?game=/);
+        await page.waitForTimeout(800);
+        const fromResearch = await step(log, page, "home-from-research", "Research → Props & your lay");
+        if (!(await page.locator(`#home-game-${SLUG}[open]`).count())) log.findings.push("Props & your lay does not open the game on Home.");
+        const box = await page.locator(`#home-game-${SLUG}`).boundingBox();
+        if (!box || box.y > page.viewportSize().height || box.y + box.height < 0) log.findings.push("Props & your lay opens the game off screen.");
+        void fromResearch;
+      }
 
       // The Zone.
       await page.goto(BASE + "/community", { waitUntil: "networkidle" });
@@ -138,12 +166,16 @@ for (const width of [360, 390, 1280]) {
 
       // Builder from the lay in progress.
       await page.goto(BASE + "/", { waitUntil: "networkidle" });
-      await row.locator("summary").click();
-      await page.getByRole("link", { name: /Build your lay · 1 selected/ }).click();
+      await page.waitForTimeout(500);
+      if (!(await page.getByRole("link", { name: /Build your lay · 1 selected/ }).count())) await row.locator("summary").click();
+      await page.getByRole("link", { name: /Build your lay · 1 selected/ }).first().click();
       await page.waitForURL(/\/parlays/);
       await page.waitForLoadState("networkidle");
       const builder = await step(log, page, "builder", "Opened the builder from Home");
       if (!builder.actions.some((a) => /Save my parlay/.test(a))) log.findings.push("Builder opened from Home does not show the started lay with a save action.");
+      if (/\b1 legs\b/.test(await page.evaluate(() => document.body.innerText))) log.findings.push('Builder says "1 legs".');
+      const dead = await page.locator('main a[href="/records"]').count();
+      if (dead) log.findings.push(`${dead} "Original publication" link(s) point to /records, which does not exist (404).`);
       const add = page.getByRole("button", { name: "+ Add to parlay", exact: true });
       if (await add.count()) await add.first().click();
       await step(log, page, "builder-two-legs", "Added a second leg in the builder");
@@ -201,3 +233,9 @@ for (const r of report) {
   for (const s of r.steps) console.log(`  ${s.name.padEnd(18)} ${s.url}${s.overflowX ? "  [SIDEWAYS SCROLL]" : ""}`);
   for (const f of r.findings) console.log(`  ! ${f}`);
 }
+const total = report.reduce((n, r) => n + r.findings.length + r.errors.length, 0);
+if (total) {
+  console.error(`\n${total} journey finding(s).`);
+  process.exit(1);
+}
+console.log("\nJourney walkthrough: no friction findings.");

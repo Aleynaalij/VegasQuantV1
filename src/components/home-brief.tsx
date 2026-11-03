@@ -4,6 +4,7 @@ import type { Game } from "@/lib/domain";
 import TeamLogo from "./team-logo";
 import KickoffCountdown from "./kickoff-countdown";
 import AdminOnly from "./admin-only";
+import { homeGamePath } from "@/lib/journey";
 const nick = (team: string) => team.split(" ").at(-1) || team;
 const when = (iso: string, opts: Intl.DateTimeFormatOptions) =>
   new Date(iso).toLocaleString("en-US", {
@@ -34,7 +35,11 @@ export default function HomeBrief({ games }: { games: Game[] }) {
             <h1 id="vq-hero-title" className="vq-sr">
               Next kickoff: {next.away_team} at {next.home_team}
             </h1>
-            <Link className="vq-matchup" href="#home-games">
+            <Link
+              className="vq-matchup"
+              href={`/matchups/${next.slug}`}
+              aria-label={`Game research: ${next.away_team} at ${next.home_team}`}
+            >
               <span className="vq-team">
                 <TeamLogo team={next.away_team} size={64} />
                 <b>{nick(next.away_team)}</b>
@@ -61,7 +66,7 @@ export default function HomeBrief({ games }: { games: Game[] }) {
               <KickoffCountdown kickoff={next.kickoff} />
             </div>
             <div className="vq-hero-actions">
-              <Link className="vq-btn" href="#home-games">
+              <Link className="vq-btn" href={homeGamePath(next.slug)}>
                 Choose player props <ArrowRight size={16} aria-hidden="true" />
               </Link>
               <Link className="vq-btn ghost" href="#home-games">

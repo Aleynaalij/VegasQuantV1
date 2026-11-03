@@ -1059,6 +1059,12 @@ export default function CommunityFeed() {
                 )}
               </fieldset>
             </form>
+            {/* The member's saved lays and lay in progress live on /parlays. */}
+            <p style={{ margin: "4px 0 8px" }}>
+              <Link className="zone-profile-link" href="/parlays">
+                My lays · saved and in progress →
+              </Link>
+            </p>
             {/* Contributors submit lays from Home or the VIP lays view, not above the feed. */}
             <div className="zone-tabs" role="tablist" aria-label="Feed">
               {(
