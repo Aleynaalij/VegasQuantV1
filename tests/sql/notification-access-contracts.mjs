@@ -82,6 +82,9 @@ await t.test('queue claim and final dispatch recheck current protected-content e
  assert.equal(jobs.some(x=>x.notification_id===id),false);
  await valid();jobs=(await db.query('select claim_social_notification_deliveries() jobs')).rows[0].jobs;const job=jobs.find(x=>x.notification_id===id);assert.ok(job);
  assert.equal((await db.query('select social_notification_delivery_allowed($1,$2) ok',[job.id,job.lease])).rows[0].ok,true);
+ await db.exec(`update public.notification_preferences set push_enabled=false where user_id='${a}';`);
+ assert.equal((await db.query('select social_notification_delivery_allowed($1,$2) ok',[job.id,job.lease])).rows[0].ok,false);
+ await db.exec(`update public.notification_preferences set push_enabled=true where user_id='${a}';`);
  await db.exec(`delete from private.age_checks where user_id='${a}';`);
  assert.equal((await db.query('select social_notification_delivery_allowed($1,$2) ok',[job.id,job.lease])).rows[0].ok,false);await valid();
 });
