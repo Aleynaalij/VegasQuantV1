@@ -119,6 +119,12 @@ async function draft(page, title) {
   };
 }
 const alertText = (page) => page.getByRole("alert").allInnerTexts().then((t) => t.join(" "));
+// Alerts can render before their final wording (e.g. an earlier message is replaced): wait up to 15 s for
+// the expected text, then return whatever is shown so a failure reports one consistent reading.
+async function alertMatching(page, re) {
+  await page.waitForFunction((src) => [...document.querySelectorAll('[role="alert"]')].some((a) => new RegExp(src, "i").test(a.innerText)), re.source, { timeout: 15000 }).catch(() => {});
+  return alertText(page);
+}
 
 async function failThenRetry({ page, f, fail }, mode) {
   const d = await draft(page, `Retry after ${mode}`);
@@ -126,7 +132,7 @@ async function failThenRetry({ page, f, fail }, mode) {
   await d.save.click();
   await page.getByRole("alert").first().waitFor();
   if (await d.saved.isVisible()) fail("success dialog shown although the save failed");
-  const msg = await alertText(page);
+  const msg = await alertMatching(page, /save|retry/);
   if (!/save|retry/i.test(msg) || /TypeError|Failed to fetch/.test(msg)) fail(`save error is not a plain retry message: "${msg}"`);
   if ((await d.draftLegs()) !== 2) fail(`draft lost after a failed save (${await d.draftLegs()} legs left)`);
   if (f.mine.length) fail("a parlay was stored although the save failed");
@@ -146,7 +152,8 @@ await scenario("saved but confirmation cannot load: honest message, no duplicate
   await d.save.click();
   await page.getByRole("alert").first().waitFor();
   if (await d.saved.isVisible()) fail("success dialog shown although the save could not be confirmed");
-  if (!/confirmation could not load/i.test(await alertText(page))) fail(`message does not say the confirmation failed: "${await alertText(page)}"`);
+  const shown = await alertMatching(page, /confirmation could not load/);
+  if (!/confirmation could not load/i.test(shown)) fail(`message does not say the confirmation failed: "${shown}"`);
   f.confirmFails = false;
   await page.reload({ waitUntil: "networkidle" });
   await page.goto(BASE + "/parlays", { waitUntil: "networkidle" });
