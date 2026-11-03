@@ -50,13 +50,16 @@ export function matchupSides(matchup: string) {
   return sides.length === 2 ? sides.map(normal) : null;
 }
 /** The game's full team name for "LAC", "Detroit", "Rams" or "Buffalo Bills"; undefined otherwise. */
-const teamIn = (g: Game, team: string) =>
-  [
+const teamIn = (g: Game, team: string) => {
+  const matches = [
     [g.away_team, g.away_abbreviation],
     [g.home_team, g.home_abbreviation],
-  ].find(([full, abbreviation]) =>
+  ].filter(([full, abbreviation]) =>
     sideNames(full, abbreviation).includes(normal(team)),
-  )?.[0];
+  );
+  return matches.length === 1 ? matches[0][0] : undefined;
+};
+
 export function contractFor(
   c: any,
   key: string,
@@ -247,6 +250,7 @@ export function espnStat(
     athlete_id: string;
     team: string;
   }[] = [];
+  let matchingIdentities = 0;
   const sides = c.team ? [c.team] : [g.away_team, g.home_team];
   for (const team of data.boxscore?.players || []) {
     const side = sides.find(
@@ -263,6 +267,7 @@ export function espnStat(
           playerName(c.player)
         )
           continue;
+        matchingIdentities++;
         const raw = athlete.stats?.[i];
         const parsed = statNumber(raw, c.metric);
         if (parsed === null) continue;
@@ -277,7 +282,7 @@ export function espnStat(
       }
     }
   }
-  return found.length === 1
+  return matchingIdentities === 1 && found.length === 1
     ? found[0]
     : "Player stat unavailable or ambiguous; no zero assumed";
 }
