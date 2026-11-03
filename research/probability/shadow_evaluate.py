@@ -23,6 +23,7 @@ import random
 import sys
 import tempfile
 import urllib.request
+import urllib.error
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -74,13 +75,29 @@ COVERAGE_PAGE = 25
 
 def paged(db: Supabase, rpc: str, body: dict, key: str, size: int = PAGE) -> list:
     """Every row of a keyset-paged RPC (ordered by `key`, at most `size` rows a call)."""
-    rows, after = [], None
+    if not isinstance(size, int) or isinstance(size, bool) or not 1 <= size <= PAGE:
+        raise ValueError("Page size must be between 1 and 1000")
+    rows, after, page_number = [], None, 1
     while True:
-        page = db.request(f"/rest/v1/rpc/{rpc}", {**body, "p_after": after, "p_limit": size}) or []
-        rows += page
+        try:
+            page = db.request(f"/rest/v1/rpc/{rpc}", {**body, "p_after": after, "p_limit": size})
+        except urllib.error.HTTPError as error:
+            # Never include response bodies, URLs, cursor IDs or authorization in public logs.
+            raise RuntimeError(f"Shadow page read failed: page={page_number}, size={size}, "
+                               f"cursor={'initial' if after is None else 'later'}, HTTP={error.code}") from None
+        if not isinstance(page, list) or len(page) > size:
+            raise RuntimeError(f"Invalid shadow page response: page={page_number}")
+        previous = after
+        for row in page:
+            value = row.get(key) if isinstance(row, dict) else None
+            if not isinstance(value, str) or not value or (previous is not None and value <= previous):
+                raise RuntimeError(f"Invalid shadow keyset order: page={page_number}")
+            previous = value
+        rows.extend(page)
         if len(page) < size:
             return rows
-        after = page[-1][key]
+        after = previous
+        page_number += 1
 
 
 def load(seasons, fetch=download):
