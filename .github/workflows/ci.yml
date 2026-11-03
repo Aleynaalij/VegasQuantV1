@@ -58,3 +58,5 @@ jobs:
           node scripts/ui-smoke/simulator.mjs
           node scripts/ui-smoke/mobile-nav.mjs
           node scripts/ui-smoke/auth-flows.mjs
+          node scripts/ui-smoke/save-share-recovery.mjs
+          node scripts/ui-smoke/records-membership.mjs

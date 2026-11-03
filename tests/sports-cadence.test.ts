@@ -6,6 +6,7 @@ import {
   etDayEnd,
   latestPriced,
   linesInterval,
+  pricedForPacing,
   MAX_INTERVAL,
   MIN_INTERVAL,
   reservedToday,
@@ -110,4 +111,100 @@ test("latest priced game: none priced today gives an empty set (discovery cadenc
   const hit = await latestPriced(games, async () => null);
   assert.equal(hit.size, 0);
   assert.equal(linesInterval({ now: at("2026-11-02T15:00:00Z"), games, priced: hit, cap: 50, reserved: 0 }), MAX_INTERVAL);
+});
+
+// ---- C-B acceptance cases ----
+
+test("caps mirror sports_reserve_credits exactly (150 NHL, 50 college)", () => {
+  const sql = readFileSync("supabase/migrations/20261031145407_multisport_backend.sql", "utf8");
+  const m = /p_sport='nhl' then (\d+) else (\d+) end/.exec(sql);
+  assert.ok(m, "reservation cap expression found");
+  assert.deepEqual({ nhl: Number(m![1]), ncaab: Number(m![2]) }, DAILY_CAP);
+});
+
+test("empty or stale market reads give discovery cadence, never a fast one", async () => {
+  const now = at("2026-11-02T15:00:00Z");
+  const games = [game("a", now + 4 * H), game("b", now + 8 * H)];
+  // Empty read (no markets at all) and stale read (the probe's 36 h window excludes old rows) both return null.
+  const { priced, error } = await pricedForPacing(games, async () => null);
+  assert.equal(error, null);
+  assert.equal(linesInterval({ now, games, priced, cap: 50, reserved: 0 }), MAX_INTERVAL);
+});
+
+test("a failed market read never blocks lines: pacing falls back to every game today, inside the budget", async () => {
+  const now = at("2026-11-02T15:00:00Z");
+  const games = [game("a", now + 2 * H), game("b", now + 12 * H)];
+  const { priced, error } = await pricedForPacing(games, async () => { throw new Error("statement timeout"); });
+  assert.match(error!, /statement timeout/);
+  assert.equal(priced.size, 2);
+  // 50 credits, 24 usable refreshes over 12 h = 30 min: paced, not 25-min burn, not blocked.
+  assert.equal(linesInterval({ now, games, priced, cap: 50, reserved: 0 }), 30 * 60000);
+});
+
+test("zero or one refresh left: slow to the ceiling rather than spend the last credits early", () => {
+  const now = at("2026-11-02T15:00:00Z");
+  const games = [game("x", now + 10 * H)];
+  const priced = new Set(["x"]);
+  // 4 credits left -> 2 refreshes -> 1 after the one kept in hand: 10 h / 1, clamped to 3 h.
+  assert.equal(linesInterval({ now, games, priced, cap: 50, reserved: 46 }), MAX_INTERVAL);
+  // 2 credits left -> 1 refresh -> 0 usable (kept in hand) -> ceiling.
+  assert.equal(linesInterval({ now, games, priced, cap: 50, reserved: 48 }), MAX_INTERVAL);
+  // Over-reserved (failed paid requests still consume reservations) never goes negative.
+  assert.equal(linesInterval({ now, games, priced, cap: 50, reserved: 60 }), MAX_INTERVAL);
+});
+
+test("ET reset and DST: day end and reservation day follow New York on both switch days", () => {
+  // DST ends Sun 2026-11-01 (25-hour day); begins Sun 2026-03-08 (23-hour day).
+  assert.equal(new Date(etDayEnd(at("2026-11-01T12:00:00Z"))).toISOString(), "2026-11-02T05:00:00.000Z");
+  assert.equal(new Date(etDayEnd(at("2026-03-08T12:00:00Z"))).toISOString(), "2026-03-09T04:00:00.000Z");
+  // 11:30 PM ET on Nov 2 is still Nov 2's budget; 12:30 AM ET Nov 3 starts fresh.
+  assert.equal(reservedToday({ credit_day: "2026-11-02", daily_reserved: 40 }, at("2026-11-03T04:30:00Z")), 40);
+  assert.equal(reservedToday({ credit_day: "2026-11-02", daily_reserved: 40 }, at("2026-11-03T05:30:00Z")), 0);
+});
+
+test("a game priced later in the day pulls the pace in as soon as it is seen", async () => {
+  const now = at("2026-11-02T15:00:00Z");
+  const games = [game("early", now + 2 * H), game("late", now + 12 * H)];
+  let marketed = new Set(["early"]);
+  const probe = async (ids: string[]) => ids.find((id) => marketed.has(id)) ?? null;
+  const before = linesInterval({ now, games, priced: (await pricedForPacing(games, probe)).priced, cap: 50, reserved: 0 });
+  assert.equal(before, MIN_INTERVAL); // only a near game priced: 2 h / 24 -> floor
+  marketed = new Set(["early", "late"]);
+  const after = linesInterval({ now, games, priced: (await pricedForPacing(games, probe)).priced, cap: 50, reserved: 0 });
+  assert.equal(after, 30 * 60000); // now paced to the 12 h horizon
+});
+
+test("refreshes never exceed the cap however the clock runs", () => {
+  const start = at("2026-11-02T05:00:00Z");
+  const games = Array.from({ length: 40 }, (_, i) => game(String(i), start + (i + 1) * 0.5 * H));
+  const priced = new Set(games.map((g) => g.id));
+  let reserved = 0, last: number | null = null, refreshes = 0;
+  for (let now = start; now < start + 24 * H; now += 60000) {
+    const iv = linesInterval({ now, games, priced, cap: 50, reserved });
+    if (last !== null && now - last < iv) continue;
+    if (reserved + 2 > 50) continue;
+    reserved += 2; last = now; refreshes++;
+  }
+  assert.ok(refreshes <= 25 && reserved <= 50);
+});
+
+test("next ET midnight before a DST switch uses the offset at that midnight (Elo/Codex regressions)", () => {
+  // Before spring-forward: 1:30 AM EST on Mar 8; the next midnight is in EDT.
+  assert.equal(new Date(etDayEnd(at("2026-03-08T06:30:00Z"))).toISOString(), "2026-03-09T04:00:00.000Z");
+  // Before fall-back: 12:30 AM EDT on Nov 1; the next midnight is in EST.
+  assert.equal(new Date(etDayEnd(at("2026-11-01T04:30:00Z"))).toISOString(), "2026-11-02T05:00:00.000Z");
+});
+
+test("every half hour of 2026: the result is 00:00 New York time on the next ET date", () => {
+  const et = (t: number) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(t));
+  const nextDate = (t: number) => {
+    const [y, m, d] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date(t)).split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+  };
+  for (let t = at("2026-01-01T00:00:00Z"); t < at("2027-01-01T00:00:00Z"); t += 30 * 60000) {
+    const end = etDayEnd(t);
+    assert.ok(end > t && end - t <= 25 * H, `range at ${new Date(t).toISOString()}`);
+    assert.equal(et(end), `${nextDate(t)}, 00:00`, `midnight at ${new Date(t).toISOString()}`);
+  }
 });

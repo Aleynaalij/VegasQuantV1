@@ -26,6 +26,8 @@ export default function Membership() {
   const [age, setAge] = useState<AgeStatus | null>(null);
   const [session, setSession] = useState<Session | null>(null),
     [access, setAccess] = useState<Access>(noAccess),
+    // The status check failed: access stays closed, but the page must not say the member is on Free.
+    [accessError, setAccessError] = useState(false),
     [signup, setSignup] = useState(false),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
@@ -59,6 +61,7 @@ export default function Membership() {
     } else setAge(null);
     const r = await supabase.rpc("membership_status");
     if (current !== refreshGeneration.current) return noAccess;
+    setAccessError(!!r.error);
     setAccess(r.error ? noAccess : r.data);
     return r.error ? noAccess : (r.data as Access);
   }
@@ -336,22 +339,32 @@ export default function Membership() {
         >
           <div className="notebook">
             <p>{session.user.email}</p>
-            <p>
-              {access.admin_account
-                ? access.admin
-                  ? "Administrator · Full access"
-                  : "Administrator · Complete verification to open your board. No paid pass needed."
-                : access.allowed
-                  ? access.complimentary_premium
-                    ? "Complimentary Premium active · Existing member"
-                    : access.trial_active
-                      ? "Premium research active · 14-day signup trial included"
-                      : "Premium research active"
-                  : "Free Community · Published picks and personal tracking included"}
-              {access.expires_at
-                ? ` · Expires ${new Date(access.expires_at).toLocaleString("en-US", { timeZone: "America/New_York" })} ET`
-                : ""}
-            </p>
+            {accessError ? (
+              <p role="alert">
+                We couldn&rsquo;t check your membership right now. Your access
+                hasn&rsquo;t changed.{" "}
+                <button className="text-link" onClick={() => void refresh()}>
+                  Retry
+                </button>
+              </p>
+            ) : (
+              <p>
+                {access.admin_account
+                  ? access.admin
+                    ? "Administrator · Full access"
+                    : "Administrator · Complete verification to open your board. No paid pass needed."
+                  : access.allowed
+                    ? access.complimentary_premium
+                      ? "Complimentary Premium active · Existing member"
+                      : access.trial_active
+                        ? "Premium research active · 14-day signup trial included"
+                        : "Premium research active"
+                    : "Free Community · Published picks and personal tracking included"}
+                {access.expires_at
+                  ? ` · Expires ${new Date(access.expires_at).toLocaleString("en-US", { timeZone: "America/New_York" })} ET`
+                  : ""}
+              </p>
+            )}
             {access.admin && (
               <nav className="account-tools">
                 <Link href="/admin">Publishing desk →</Link>

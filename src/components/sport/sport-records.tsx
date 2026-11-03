@@ -13,6 +13,8 @@ type Counts = {
   push: number;
   void: number;
   pending: number;
+  /** NBA only: pending selections held for a result conflict or manual review (a subset of pending). */
+  review?: number;
 };
 
 /** Each sport's published selections, derived from its confirmed-result grader. */
@@ -78,7 +80,12 @@ export default function SportRecords({ sport }: { sport: NewSport | "nba" }) {
                       ? "Lost"
                       : k[0].toUpperCase() + k.slice(1)}
                 </dt>
-                <dd>{counts[k]}</dd>
+                <dd>
+                  {counts[k]}
+                  {k === "pending" && counts.review ? (
+                    <small> · {counts.review} in review</small>
+                  ) : null}
+                </dd>
               </div>
             ))}
           </dl>

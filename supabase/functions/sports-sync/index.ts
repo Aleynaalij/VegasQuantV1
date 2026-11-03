@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { contextBatch } from "./context-schedule.ts";
-import { DAILY_CAP, etDayEnd, latestPriced, linesInterval, reservedToday } from "./cadence.ts";
+import { DAILY_CAP, etDayEnd, linesInterval, pricedForPacing, reservedToday } from "./cadence.ts";
 import {
   allowedMarkets,
   dates,
@@ -319,7 +319,7 @@ Deno.serve(async (req: Request) => {
       // latest priced tip matters, so walk today's tip times from the last one back and stop at the
       // first time slot with any market: one row per probe, so no result-size limit can hide a game.
       const todays = games.filter((g) => Date.parse(g.start_time) <= etDayEnd(now));
-      const priced = await latestPriced(todays, async (ids) => {
+      const { priced, error: pacingError } = await pricedForPacing(todays, async (ids) => {
         const q = await db
           .from("sports_markets")
           .select("game_id")
@@ -329,6 +329,7 @@ Deno.serve(async (req: Request) => {
         if (q.error) throw q.error;
         return q.data?.[0]?.game_id ?? null;
       });
+      if (pacingError) errors.push("cadence: " + pacingError);
       const interval = linesInterval({
         now,
         games: todays,
