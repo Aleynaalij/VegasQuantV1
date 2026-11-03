@@ -230,9 +230,22 @@ Deno.serve(async (req: Request) => {
     const propsLast = propsEnabled
       ? await lastFetch("The Odds API props")
       : null;
+    // Legacy event_fetched_at mixed successes and failed attempts. Preserve its throttling
+    // evidence, but do not present unproven legacy timestamps as successful ingestions.
+    if (propsLast && propsLast.details?.event_fetch_state_version !== 2) {
+      propsLast.details = {
+        ...propsLast.details,
+        event_attempted_at: propFetchCache(propsLast.details, now),
+        event_fetched_at: {},
+        event_fetch_state_version: 2,
+      };
+    }
     if (
       propsEnabled &&
       propsLast &&
+      // Discovery errors previously retried on the next scheduled run. Retaining their
+      // event caches must not turn that retry into another full distance-based delay.
+      propsLast.status !== "error" &&
       propsLast.details?.market_set_version === PROP_MARKET_SET_VERSION &&
       !propsDue(kickoffs, propsLast.at, now)
     ) {
@@ -251,7 +264,12 @@ Deno.serve(async (req: Request) => {
         );
         // Rate limit per event: a near kickoff must not repeatedly refresh next week's games.
         const previousEventFetches = propFetchCache(propsLast?.details, now);
+        const previousEventAttempts = propFetchCache({
+          ...propsLast?.details,
+          event_fetched_at: propsLast?.details?.event_attempted_at,
+        }, now);
         const eventFetches: Record<string, string> = {};
+        const eventAttempts: Record<string, string> = {};
         for (const event of selection.events) {
           const previous = previousEventFetches[event.id];
           if (
@@ -259,12 +277,19 @@ Deno.serve(async (req: Request) => {
             Number.isFinite(Date.parse(previous))
           )
             eventFetches[event.id] = previous;
+          const attempted = previousEventAttempts[event.id];
+          if (attempted) eventAttempts[event.id] = attempted;
         }
         const dueEvents = selection.events.filter((event) => {
-          const previous = Date.parse(eventFetches[event.id] || "");
+          // Keep the existing distance-based attempt cadence, including on errors. This
+          // separates success evidence without creating faster retries or extra paid calls.
+          const previous = Math.max(
+            Date.parse(eventAttempts[event.id] || "") || 0,
+            Date.parse(eventFetches[event.id] || "") || 0,
+          );
           return propEventDue(
             Date.parse(event.commence_time),
-            Number.isFinite(previous) ? previous : null,
+            previous || null,
             now,
           );
         });
@@ -280,7 +305,7 @@ Deno.serve(async (req: Request) => {
         for (let i = 0; i < dueEvents.length; i += 3) {
           const results = await Promise.allSettled(
             dueEvents.slice(i, i + 3).map(async (event) => {
-              eventFetches[event.id] = new Date(now).toISOString();
+              eventAttempts[event.id] = new Date(now).toISOString();
               const markets = pickGames.has(
                 gameForEvent(event, upcoming || [])?.id || "",
               )
@@ -302,6 +327,7 @@ Deno.serve(async (req: Request) => {
                 p: { provider: "The Odds API props", observations },
               });
               if (r.error) throw r.error;
+              eventFetches[event.id] = new Date(now).toISOString();
               return {
                 inserted: r.data.inserted,
                 empty: observations.length === 0,
@@ -333,6 +359,10 @@ Deno.serve(async (req: Request) => {
               market_set_version: PROP_MARKET_SET_VERSION,
               research_markets: BASE_PROP_MARKETS,
               event_fetched_at: eventFetches,
+              event_attempted_at: eventAttempts,
+              event_fetch_state_version: 2,
+              attempted_events: dueEvents.length,
+              fetched_events: dueEvents.length - failed,
               failed,
               empty,
               skipped: selection.skipped,
@@ -340,6 +370,11 @@ Deno.serve(async (req: Request) => {
               markets: PICK_PROP_MARKETS,
               pick_games: pickGames.size,
               books: BOOK_TITLES,
+              // fetched_at remains the legacy batch-attempt clock used by lastFetch.
+              // Successful event evidence lives only in event_fetched_at.
+              attempted_at: dueEvents.length
+                ? new Date(now).toISOString()
+                : propsLast?.details?.attempted_at ?? propsLast?.details?.fetched_at ?? null,
               fetched_at: dueEvents.length
                 ? new Date(now).toISOString()
                 : new Date(propsLast?.at || now).toISOString(),
@@ -352,7 +387,9 @@ Deno.serve(async (req: Request) => {
             provider: "The Odds API props",
             status: "error",
             details: {
+              ...propsLast?.details,
               message: "Prop provider unavailable; prior observations retained",
+              attempted_at: new Date(now).toISOString(),
               fetched_at: new Date(now).toISOString(),
             },
           },
