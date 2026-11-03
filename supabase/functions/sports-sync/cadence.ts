@@ -8,17 +8,33 @@ export const MAX_INTERVAL = 3 * 3600000;
 
 type Game = { id: string; start_time: string };
 
-/** UTC milliseconds of the next midnight in America/New_York after `now`. */
-export function etDayEnd(now: number) {
-  const parts = Object.fromEntries(
+/** New York wall-clock parts for an instant. */
+function etParts(t: number) {
+  const p = Object.fromEntries(
     new Intl.DateTimeFormat("en-US", {
       timeZone: "America/New_York", hourCycle: "h23", year: "numeric", month: "2-digit",
       day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit",
-    }).formatToParts(new Date(now)).map((p) => [p.type, p.value]),
+    }).formatToParts(new Date(t)).map((x) => [x.type, x.value]),
   );
-  const local = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
-  const offset = local - Math.floor(now / 1000) * 1000; // ET minus UTC (negative)
-  return Date.UTC(+parts.year, +parts.month - 1, +parts.day + 1) - offset;
+  return { y: +p.year, m: +p.month, d: +p.day, h: +p.hour, min: +p.minute, s: +p.second };
+}
+/** New York's offset from UTC at instant `t`, in ms (negative: EST -5 h, EDT -4 h). */
+function etOffset(t: number) {
+  const p = etParts(t);
+  return Date.UTC(p.y, p.m - 1, p.d, p.h, p.min, p.s) - Math.floor(t / 1000) * 1000;
+}
+
+/**
+ * UTC milliseconds of the next midnight in America/New_York after `now`. The target is the next ET
+ * calendar date, resolved with the offset in force *at that midnight*: on DST switch days the offset
+ * at `now` differs from the one at the following midnight.
+ */
+export function etDayEnd(now: number) {
+  const today = etParts(now);
+  const wall = Date.UTC(today.y, today.m - 1, today.d + 1); // next ET date, 00:00, as if it were UTC
+  let t = wall - etOffset(now);
+  for (let i = 0; i < 2; i++) t = wall - etOffset(t); // settle on the offset at the target instant
+  return t;
 }
 
 /** Credits already reserved today (the reservation counter resets at ET midnight). */

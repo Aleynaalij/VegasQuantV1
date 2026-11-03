@@ -187,3 +187,24 @@ test("refreshes never exceed the cap however the clock runs", () => {
   }
   assert.ok(refreshes <= 25 && reserved <= 50);
 });
+
+test("next ET midnight before a DST switch uses the offset at that midnight (Elo/Codex regressions)", () => {
+  // Before spring-forward: 1:30 AM EST on Mar 8; the next midnight is in EDT.
+  assert.equal(new Date(etDayEnd(at("2026-03-08T06:30:00Z"))).toISOString(), "2026-03-09T04:00:00.000Z");
+  // Before fall-back: 12:30 AM EDT on Nov 1; the next midnight is in EST.
+  assert.equal(new Date(etDayEnd(at("2026-11-01T04:30:00Z"))).toISOString(), "2026-11-02T05:00:00.000Z");
+});
+
+test("every half hour of 2026: the result is 00:00 New York time on the next ET date", () => {
+  const et = (t: number) =>
+    new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).format(new Date(t));
+  const nextDate = (t: number) => {
+    const [y, m, d] = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date(t)).split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d + 1)).toISOString().slice(0, 10);
+  };
+  for (let t = at("2026-01-01T00:00:00Z"); t < at("2027-01-01T00:00:00Z"); t += 30 * 60000) {
+    const end = etDayEnd(t);
+    assert.ok(end > t && end - t <= 25 * H, `range at ${new Date(t).toISOString()}`);
+    assert.equal(et(end), `${nextDate(t)}, 00:00`, `midnight at ${new Date(t).toISOString()}`);
+  }
+});
