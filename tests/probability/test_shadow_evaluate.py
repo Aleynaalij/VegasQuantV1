@@ -225,6 +225,39 @@ class Paging(unittest.TestCase):
         self.assertEqual(len(rows), 2500)
         self.assertEqual([b["p_after"] for _, b in db.calls], [None, "00999", "01999"])
 
+    def test_empty_and_exact_multiple_terminate_without_duplicates(self):
+        for n in (0, 1000, 2000, 2501):
+            db = self.Db(n)
+            rows = e.paged(db, "nfl_shadow_pending_outcomes", {"scope": "synthetic"}, "forecast_id")
+            self.assertEqual([r["forecast_id"] for r in rows], db.ids)
+            self.assertTrue(all(b["p_limit"] == 1000 and b["scope"] == "synthetic" for _, b in db.calls))
+
+    def test_invalid_pages_fail_closed(self):
+        for page in (None, {}, [{"forecast_id": "b"}, {"forecast_id": "a"}],
+                     [{"forecast_id": "a"}, {"forecast_id": "a"}], [{}]):
+            db = unittest.mock.Mock()
+            db.request.return_value = page
+            with self.assertRaises(RuntimeError):
+                e.paged(db, "nfl_shadow_pending_outcomes", {}, "forecast_id")
+
+    def test_initial_and_later_http_failures_are_sanitized_and_never_write(self):
+        for later in (False, True):
+            db = self.Db(1000)
+            request = db.request
+            def fail(path, body):
+                if not later or body["p_after"] is not None:
+                    raise e.urllib.error.HTTPError("https://secret.test", 500, "private token", {}, None)
+                return request(path, body)
+            db.request = fail
+            with self.assertRaises(RuntimeError) as caught:
+                e.grade(db)
+            message = str(caught.exception)
+            self.assertIn("cursor=later" if later else "cursor=initial", message)
+            self.assertIn("HTTP=500", message)
+            self.assertNotIn("secret", message)
+            self.assertNotIn("private", message)
+            self.assertFalse(any(p.endswith("record_nfl_shadow_outcomes") for p, _ in db.calls))
+
     def test_grade_writes_outcomes_in_chunks(self):
         db = self.Db(2500)
         frame = pd.DataFrame([dict(player_id="p1", season=2026, week=7, recent_team="SEA", season_type="REG", rushing_yards=50.0, receiving_yards=0.0)])
