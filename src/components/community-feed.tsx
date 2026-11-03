@@ -38,6 +38,8 @@ import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { isPublicationCard } from "@/lib/zone-publication-card";
 import ZonePublicationCard from "./zone-publication-card";
+import ReactionPicker from "./reaction-picker";
+import "@/app/reaction-picker.css";
 type Post = {
   id: string;
   user_id: string;
@@ -1336,6 +1338,16 @@ export default function CommunityFeed() {
                           />
                           <span>{p.reactions || ""}</span>
                         </button>
+                        <ReactionPicker
+                          postId={p.id}
+                          onCommitted={(total, reacted) =>
+                            setRows((all) =>
+                              all.map((x) =>
+                                x.id === p.id ? { ...x, reactions: total, reacted } : x,
+                              ),
+                            )
+                          }
+                        />
                         <button
                           aria-expanded={openComments === p.id}
                           aria-label="Comments"
