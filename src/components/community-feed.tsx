@@ -38,7 +38,8 @@ import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { isPublicationCard } from "@/lib/zone-publication-card";
 import ZonePublicationCard from "./zone-publication-card";
-import ReactionPicker from "./reaction-picker";
+import ReactionPicker, { useTypedReactions } from "./reaction-picker";
+import { nextReaction } from "@/lib/community-reaction-contracts";
 import "@/app/reaction-picker.css";
 type Post = {
   id: string;
@@ -746,6 +747,44 @@ export default function CommunityFeed() {
       if (generation === mutationEpoch.current) setBusy(false);
     }
   }
+  // Typed reactions (#206): one authoritative state per post shared by Like and the emoji picker.
+  const typed = useTypedReactions((id, st) =>
+    setRows((all) => all.map((x) => (x.id === id ? { ...x, reactions: st.total, reacted: st.mine !== null } : x))),
+  );
+  const [liking, setLiking] = useState<string | null>(null);
+  /** The heart: Like through the typed API when it exists (Like replaces another emoji, never
+   *  deletes it); the old insert/delete Like only when the typed API is not deployed. */
+  async function like(p: Post) {
+    if (!uid || liking) return;
+    if (typed.api === "unavailable") return react(p);
+    setLiking(p.id);
+    try {
+      const current = p.id in typed.states ? typed.states[p.id] : await typed.load(p.id);
+      if (current === "unavailable") return void (await react(p));
+      if (!current) return setNotice("Your like didn’t save; nothing changed. Please retry.");
+      const saved = await typed.set(p.id, nextReaction(current.mine, "heart"));
+      if (!saved) setNotice("Your like didn’t save; nothing changed. Please retry.");
+    } finally {
+      setLiking(null);
+    }
+  }
+  // Load the typed state for posts that already show a reaction, so the heart lights only for Like.
+  useEffect(() => {
+    if (!uid || typed.api === "unavailable") return;
+    const pending = rows.filter((x) => x.reacted && !typed.states[x.id]).slice(0, 30);
+    let live = true;
+    void (async () => {
+      for (const x of pending) {
+        if (!live) return;
+        if ((await typed.load(x.id)) === "unavailable") return;
+      }
+    })();
+    return () => {
+      live = false;
+    };
+    // typed.states is read for filtering only; re-running on every state change would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows.map((x) => `${x.id}:${x.reacted}`).join(","), uid, typed.api]);
   async function react(p: Post, onlyLike = false) {
     if (!uid || busy || (onlyLike && p.reacted)) return;
     setBusy(true);
@@ -1324,30 +1363,24 @@ export default function CommunityFeed() {
                         </small>
                       ) : null}
                       <div className="zone-actions">
-                        <button
-                          className={p.reacted ? "is-liked" : ""}
-                          disabled={busy}
-                          aria-pressed={p.reacted}
-                          aria-label={p.reacted ? "Unlike" : "Like"}
-                          onClick={() => void react(p)}
-                        >
-                          <Heart
-                            size={21}
-                            fill={p.reacted ? "currentColor" : "none"}
-                            aria-hidden="true"
-                          />
-                          <span>{p.reactions || ""}</span>
-                        </button>
-                        <ReactionPicker
-                          postId={p.id}
-                          onCommitted={(total, reacted) =>
-                            setRows((all) =>
-                              all.map((x) =>
-                                x.id === p.id ? { ...x, reactions: total, reacted } : x,
-                              ),
-                            )
-                          }
-                        />
+                        {(() => {
+                          // Lit only for a confirmed Like: with typed reactions, another emoji is
+                          // not a Like; without them (API not deployed), the old any-reaction flag.
+                          const liked = typed.api === "unavailable" ? p.reacted : p.id in typed.states && typed.states[p.id].mine === "heart";
+                          return (
+                            <button
+                              className={liked ? "is-liked" : ""}
+                              disabled={busy || liking === p.id}
+                              aria-pressed={liked}
+                              aria-label={liked ? "Unlike" : "Like"}
+                              onClick={() => void like(p)}
+                            >
+                              <Heart size={21} fill={liked ? "currentColor" : "none"} aria-hidden="true" />
+                              <span>{p.reactions || ""}</span>
+                            </button>
+                          );
+                        })()}
+                        <ReactionPicker postId={p.id} typed={typed} />
                         <button
                           aria-expanded={openComments === p.id}
                           aria-label="Comments"
