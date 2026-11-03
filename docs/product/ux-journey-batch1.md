@@ -78,3 +78,19 @@ The game URL contract is `/?game=<slug>#home-games` (`src/lib/journey.ts`, unit-
 - **Walkthrough:** `journey-walkthrough.mjs` reports zero findings and zero page errors at 360, 390 and 1280 px, signed in and out. It exits 1 on any finding.
 - **Negative control:** `UI_SMOKE_NEGATIVE=drop-game` keeps `?game=` out of the URL, and the run must report the lost game on Back.
 - **Overflow:** none at 320, 360 or 390 px on `/`, `/community`, `/parlays` or `/matchups/<slug>`. The Zone composer row keeps its original widths (an earlier placement of "My lays" inside that row squeezed the sport selector to 18 px at 320 px and was moved out).
+- **Existing smoke suite on this head** (synthetic stub, local Chromium): `check.mjs` and 18 of the 19 CI `ui-smoke` scripts pass, including `mobile-nav`, `auth-flows`, `save-share-recovery`, `records-membership` and `parlay-save`. The exception is `sports-live.mjs`, which fails locally at line 439: the app-refresh dialog reopens over "Show more games" on `/ncaab`. **The same script fails identically on `origin/main` `4140a05`** in this environment, so it predates this change and isn't caused by it. CI is the authority.
+- **Unit tests and typecheck:** 493/493 tests pass, including the new `tests/journey.test.ts` (4 cases), and `tsc --noEmit` is clean.
+- **Not wired into CI:** `journey-walkthrough.mjs`. `ci.yml` is a shared file, so wiring it needs agreement. Codex's dedicated workflow in #203 is the natural home.
+
+### Screenshots (390 px, signed in unless noted)
+
+| | Before | After |
+|---|---|---|
+| Add a prop on Home | ![](ux-journey-batch1/before-03-home-leg-added.png) | ![](ux-journey-batch1/after-03-home-leg-added.png) |
+| Research page actions | ![](ux-journey-batch1/before-04-research-detail.png) | ![](ux-journey-batch1/after-04-research-detail.png) |
+| Back from research | ![](ux-journey-batch1/before-05-home-after-back.png) | ![](ux-journey-batch1/after-05-home-after-back.png) |
+| Research → "Props & your lay" | (no route) | ![](ux-journey-batch1/after-06-home-from-research.png) |
+| Zone "My lays" (360 px) | (no route) | ![](ux-journey-batch1/after-zone-my-lays-360.png) |
+| Signed-out prop prompt | (no action) | ![](ux-journey-batch1/after-signed-out-sign-in.png) |
+
+**Real devices and real auth were not tested.** Everything here is synthetic; a member on a real phone remains the final check.
