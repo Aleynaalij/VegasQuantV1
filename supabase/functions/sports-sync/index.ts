@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { contextBatch } from "./context-schedule.ts";
+import { DAILY_CAP, etDayEnd, latestPriced, linesInterval, reservedToday } from "./cadence.ts";
 import {
   allowedMarkets,
   dates,
@@ -314,15 +315,32 @@ Deno.serve(async (req: Request) => {
         };
         continue;
       }
-      const near = games.some(
-        (g) => Date.parse(g.start_time) <= now + 6 * 3600000,
-      );
+      // Pace line refreshes across the day's budget, counting only games a book has priced. Only the
+      // latest priced tip matters, so walk today's tip times from the last one back and stop at the
+      // first time slot with any market: one row per probe, so no result-size limit can hide a game.
+      const todays = games.filter((g) => Date.parse(g.start_time) <= etDayEnd(now));
+      const priced = await latestPriced(todays, async (ids) => {
+        const q = await db
+          .from("sports_markets")
+          .select("game_id")
+          .in("game_id", ids)
+          .gte("observed_at", new Date(now - 36 * 3600000).toISOString())
+          .limit(1);
+        if (q.error) throw q.error;
+        return q.data?.[0]?.game_id ?? null;
+      });
+      const interval = linesInterval({
+        now,
+        games: todays,
+        priced,
+        cap: DAILY_CAP[sport],
+        reserved: reservedToday(settings, now),
+      });
       if (
         settings.lines_enabled &&
         games.length &&
         (!settings.last_lines_at ||
-          now - Date.parse(settings.last_lines_at) >=
-            (near ? 25 * 60000 : 3 * 3600000))
+          now - Date.parse(settings.last_lines_at) >= interval)
       ) {
         const mk = sport === "nhl" ? "h2h,totals" : "h2h,spreads";
         if (
