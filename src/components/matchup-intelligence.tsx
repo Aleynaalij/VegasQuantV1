@@ -23,6 +23,7 @@ import { researchFacts } from "@/lib/research-facts";
 import ResearchNotebook from "./research-notebook";
 import SourceStatus from "./source-status";
 import { gamePicksPath } from "@/lib/game-picks";
+import { homeGamePath } from "@/lib/journey";
 import NgsContext from "./ngs-context";
 function Fields({ value }: { value: unknown }) {
   if (value == null) return <p className="muted">Not supplied.</p>;
@@ -421,7 +422,12 @@ export default function MatchupIntelligence({
                 ? `${time(row.game.kickoff)} · ${row.game.venue}`
                 : "Choose your game for the case, injury updates, sources and discussion."}
             </p>
-            {row && <Link className="vq-btn" href={gamePicksPath(row.game.slug)}>View all game picks →</Link>}
+            {row && (
+              <div className="matchup-next" style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <Link className="vq-btn" href={gamePicksPath(row.game.slug)}>View all game picks →</Link>
+                <Link className="vq-btn ghost" href={homeGamePath(row.game.slug)}>Props &amp; your lay →</Link>
+              </div>
+            )}
             {row && (
               <div className="follow-row" aria-label="Follow these teams">
                 <FollowButton
