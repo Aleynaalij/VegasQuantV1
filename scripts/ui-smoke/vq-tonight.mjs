@@ -25,7 +25,7 @@ const nba = [
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
 const homeLegs = [{ leg_key: "tonight:0", name: "Sample Runner", market: "Full game · 60+ rushing yards", game_id: "g1", quote: null, expires_at: "2026-10-16T00:15:00Z", result: null, copy_text: "Sample Runner 60+ rushing yards", gambly_url: null, why: "w", risk: "r" }];
-async function open(name, { width = 390, signedIn = false, draft = null, empty = false, collegeFailsOnce = false, refresh = null } = {}, run) {
+async function open(name, { width = 390, signedIn = false, draft = null, empty = false, collegeFailsOnce = false, refresh = null, clockAt = null, nbaCalls = null } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript(({ uid, signedIn, draft }) => {
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -40,8 +40,10 @@ async function open(name, { width = 390, signedIn = false, draft = null, empty =
       }));
   }, { uid: UID, signedIn, draft });
   let collegeCalls = 0, nhlCalls = 0;
-  await ctx.route("**/rest/v1/rpc/sports_home*", (r) => {
-    const sport = r.request().postDataJSON()?.p_sport;
+  await ctx.route("**/rest/v1/rpc/sports_home*", (route) => {
+    const sport = route.request().postDataJSON()?.p_sport;
+    // The real reader labels every response with its version and sport.
+    const r = { fulfill: (o) => route.fulfill(o.json && !o.status ? { json: { ...o.json, sport } } : o) };
     if (sport === "ncaab" && collegeFailsOnce && collegeCalls++ === 0) return r.fulfill({ status: 500, json: { message: "synthetic failure" } });
     if (refresh && sport === "ncaab" && collegeCalls++ > 0) return r.fulfill({ status: 500, json: { message: "synthetic refresh failure" } });
     if (refresh && sport === "nhl" && nhlCalls++ > 0)
@@ -49,11 +51,23 @@ async function open(name, { width = 390, signedIn = false, draft = null, empty =
     return r.fulfill({ json: empty ? { version: 1, games: [] } : schedules[sport] ?? { version: 1, games: [] } });
   });
   await ctx.route("**/rest/v1/published_legs*", (r) => r.fulfill({ json: signedIn ? homeLegs : [] }));
-  await ctx.route("**/rest/v1/nba_games*", (r) => r.fulfill({ json: empty ? [] : nba }));
+  let nbaN = 0;
+  await ctx.route("**/rest/v1/nba_games*", async (r) => {
+    // nbaCalls: per-call [delay ms, status, rows] to deliver answers out of order.
+    // Only Tonight's own schedule read follows the plan (Live now also reads nba_games on Home).
+    const tonightRead = new URL(r.request().url()).searchParams.get("select") === "id,slug,away_team,home_team,tipoff,tipoff_tbd,status";
+    const plan = tonightRead ? nbaCalls?.[nbaN++] : null;
+    if (!plan) return r.fulfill({ json: empty ? [] : nba });
+    await new Promise((res) => setTimeout(res, plan[0]));
+    return plan[1] === 200 ? r.fulfill({ json: plan[2] }) : r.fulfill({ status: plan[1], json: { message: "synthetic failure" } }).catch(() => {});
+  });
   await ctx.route("**/rest/v1/rpc/notification_inbox*", (r) => r.fulfill({ json: { items: [], snapshot_at: NOW.toISOString() } }));
   const page = await ctx.newPage();
   page.setDefaultTimeout(12000);
-  if (refresh) {
+  if (clockAt) {
+    await page.clock.install({ time: clockAt });
+    await page.clock.resume();
+  } else if (refresh) {
     await page.clock.install({ time: NOW });
     await page.clock.resume();
   } else await page.clock.setFixedTime(NOW);
@@ -62,7 +76,9 @@ async function open(name, { width = 390, signedIn = false, draft = null, empty =
   const before = failures.length;
   const fail = (m) => failures.push(`${name}: ${m}`);
   try {
-    await page.goto(BASE + "/", { waitUntil: "networkidle" });
+    // A deliberately delayed request would hold "networkidle" until it lands, defeating the
+    // out-of-order test, so those cases only wait for the page itself.
+    await page.goto(BASE + "/", { waitUntil: nbaCalls ? "load" : "networkidle" });
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
     await page.locator(".vq-tonight").waitFor();
     await run({ page, fail });
@@ -158,6 +174,21 @@ await open("in-day refresh: a status change appears, a failed refresh keeps the 
   const checked2 = /Schedules checked ([0-9:]+ [AP]M) ET/.exec(t2)?.[1];
   if (checked2 !== checked1) fail(`checked time moved to ${checked2} although college's refresh failed (it should show the oldest successful check)`);
 });
+
+// Midnight: the previous day's NBA answer arrives late, after the new day has loaded.
+const beforeMidnight = new Date("2026-10-14T03:59:50Z"); // 11:59:50 PM ET, Oct 13
+const oldDayGame = [{ id: "b-old", slug: "sample-nba-old-day", away_team: "Sample Old Away", home_team: "Sample Old Home", tipoff: "2026-10-13T23:30:00Z", tipoff_tbd: false, status: "STATUS_FINAL" }];
+const newDayGame = [{ id: "b-new", slug: "sample-nba-new-day", away_team: "Sample New Away", home_team: "Sample New Home", tipoff: "2026-10-14T23:30:00Z", tipoff_tbd: false, status: "STATUS_SCHEDULED" }];
+for (const [label, late] of [["success", [6000, 200, oldDayGame]], ["failure", [6000, 500, null]]])
+  await open(`a late ${label} from the previous day does not overwrite the new day`, { clockAt: beforeMidnight, nbaCalls: [late, [0, 200, newDayGame]] }, async ({ page, fail }) => {
+    await page.clock.fastForward("00:15"); // cross ET midnight while the first NBA request is still pending
+    const rolled = await page.waitForFunction(() => /Wed, Oct 14/.test(document.querySelector(".vq-tonight-head")?.textContent || ""), null, { timeout: 8000 }).then(() => true, () => false);
+    if (!rolled) fail("day label did not roll over to Oct 14");
+    await tonight(page).getByRole("link", { name: /Sample New Away at Sample New Home/ }).waitFor({ timeout: 8000 }).catch(() => fail("new day's NBA game not shown"));
+    await page.waitForTimeout(7000); // let the previous day's answer arrive
+    if (!(await tonight(page).getByRole("link", { name: /Sample New Away at Sample New Home/ }).count())) fail(`the previous day's late ${label} overwrote the new day's games`);
+    if (await tonight(page).getByRole("alert").filter({ hasText: /NBA/ }).count()) fail(`the previous day's late ${label} shows as a current NBA error`);
+  });
 
 await open("no games today", { empty: true }, async ({ page, fail }) => {
   await tonight(page).getByText("No games are scheduled today.").waitFor().catch(() => fail("no honest empty state"));

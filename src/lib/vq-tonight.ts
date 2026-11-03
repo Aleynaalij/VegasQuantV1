@@ -84,11 +84,15 @@ export function startLabel(g: TonightGame) {
 const slugOk = (s: unknown): s is string => typeof s === "string" && /^[a-z0-9][a-z0-9-]{0,119}$/.test(s);
 const str = (v: unknown) => (typeof v === "string" ? v : "");
 
-/** NHL / college games from `sports_home` (version 1). Rows without a usable identity are dropped. */
-export function fromSportsHome(sport: "nhl" | "ncaab", data: unknown): TonightGame[] {
-  const games = data && typeof data === "object" && Array.isArray((data as { games?: unknown }).games)
-    ? ((data as { games: Record<string, unknown>[] }).games)
-    : [];
+/**
+ * NHL / college games from `sports_home`. Only a version-1 response for the requested sport is
+ * accepted (null otherwise, which the caller treats as an error, never as an empty or wrong-sport
+ * slate); rows without a usable identity are dropped.
+ */
+export function fromSportsHome(sport: "nhl" | "ncaab", data: unknown): TonightGame[] | null {
+  const env = data && typeof data === "object" ? (data as { version?: unknown; sport?: unknown; games?: unknown }) : null;
+  if (!env || env.version !== 1 || env.sport !== sport || !Array.isArray(env.games)) return null;
+  const games = env.games as Record<string, unknown>[];
   return games.flatMap((g) => {
     const away = g.away as Record<string, unknown> | undefined, home = g.home as Record<string, unknown> | undefined;
     if (!slugOk(g.slug) || !str(g.id) || !str(g.start_time) || !away || !home) return [];
@@ -109,9 +113,10 @@ export function fromNbaGames(rows: unknown): TonightGame[] {
 }
 
 /** NFL games from the desk Home already has. */
-export function fromDeskGames(rows: { id: string; slug: string; away_team: string; home_team: string; kickoff: string; sport?: string | null }[]): TonightGame[] {
+export function fromDeskGames(rows: { id: string; slug: string; away_team: string; home_team: string; kickoff: string; sport?: string | null; kickoff_tbd?: boolean | null }[]): TonightGame[] {
   return rows.flatMap((g) =>
     (!g.sport || g.sport === "nfl") && slugOk(g.slug)
-      ? [{ sport: "nfl" as const, id: g.id, away: g.away_team, home: g.home_team, start: g.kickoff, tbd: false, status: null, href: `/matchups/${g.slug}` }]
+      // desk_data returns whole games rows, including the stored kickoff_tbd flag.
+      ? [{ sport: "nfl" as const, id: g.id, away: g.away_team, home: g.home_team, start: g.kickoff, tbd: g.kickoff_tbd === true, status: null, href: `/matchups/${g.slug}` }]
       : []);
 }

@@ -11,7 +11,15 @@ Status: changes requested; integration candidate is DRAFT ONLY. No merge/deploy/
 | #210 reactions + #206 | `19dd948c906364f6d638698cd5086ca685af0218` |
 | #203 regression foundation | `0115907811ad95c3e11c498f2e1960b0c9b3c468` |
 
-## Prioritized correction packet
+## Current-main re-review (November 3 follow-through)
+
+Reviewed released main `4962c711cf34ffdb2145cfa432c478225af30c87` and incorporated its Tonight component/helper/unit tests/browser script verbatim. Those four files supersede the old #209 copies; other main changes merged automatically. Main was released separately by Claude under his recorded owner approval; this review performs no production action.
+
+Resolved at this main source: schedule success/error request-generation and ET-day guards; latest-account draft-read generation; version-1/requested-sport envelope validation; NFL unconfirmed kickoff preservation. Focused helper suite now **23/23 PASS**, TypeScript PASS. The previous integrated run at `263e991` actually executed 511 app tests, six browser scripts and seven intended negative controls successfully; that result belongs to the previous tree. Updated current-main integration execution is pending until its new-head logs are read.
+
+Still open: #207 remains `5ade0f3` and #210 remains `19dd948` after fetching; no correction commits for story re-entry/focus/history-cycle or typed Like/close behavior are available yet. Candidate original-publication query link remains outstanding in #205. Do not infer those missing regressions passed from the current green baseline cases. Next dependency is Claude's corrected source and acceptance scripts, followed by refresh of this integration candidate and actual new-case execution.
+
+## Original prioritized correction packet (at the heads above)
 
 1. **Story access revalidation (blocking privacy acceptance).** Elo's 6614116342 remains applicable: per-ID prior success survives re-entry/focus while the new check is pending. Gate display by the current request/entry validation, not historical `checked[id]`. Test delayed success/denial and stale responses; cover Back→Forward→reopen. Source-derived, not a production incident claim.
 2. **Tonight stale request/day/account isolation.** Current schedule load resolves without generation/day guards; an old response/error may replace current-day results. Apply per-sport generation/day checks to success AND error. Also generation-bind the account/draft reader: its async getSession currently has only a live/unmount flag, so overlapping old-account reads can update the new account state. Test delayed previous-day success/error, overlapping retry/refresh and delayed old-account hydration.
@@ -36,4 +44,4 @@ Composed the exact heads above with their histories. The only manual conflict re
 
 New dedicated `UX community integration` workflow builds with locked dependencies, uses localhost synthetic stub/app, runs journey-contracts, journey-walkthrough, story-viewer, zone-entry, vq-tonight and reactions, then requires seven intended negative rejections: drop-game, no-save-id, overflow, read-on-tap, visitor-fetch, day-ahead and wrong-post. Each negative must produce its scenario-specific assertion text; setup/crash failure alone is not accepted. Screenshot/journey artifacts are synthetic. Actual execution logs/results remain pending, and new correction cases must arrive in Claude-owned scripts before they are claimed covered.
 
-No integrated release acceptance until the correction packet, exact corrected heads, actual workflow executions/negative controls and combined compatibility checks are complete. Tonight still needs Mike's explicit full-context visual approval; source or CI review cannot supply it. Real devices/auth and production verification remain separately not run.
+No integrated release acceptance until the correction packet, exact corrected heads, actual workflow executions/negative controls and combined compatibility checks are complete. Tonight was subsequently released separately under Claude's recorded owner approval; that does not release the remaining community drafts. Real devices/auth and production verification remain separately not run.

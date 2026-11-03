@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { SPORTS, type Sport } from "@/lib/sports";
 import type { Game } from "@/lib/domain";
@@ -46,7 +46,14 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [draft, setDraft] = useState(0);
 
+  // Each sport's newest request wins: a late answer from an earlier request (or an earlier ET day)
+  // is ignored, whether it succeeded or failed.
+  const latest = useRef<Record<Exclude<Sport, "nfl">, number>>({ nba: 0, nhl: 0, ncaab: 0 });
+  const dayStart = useRef(day.start);
+  dayStart.current = day.start;
   const load = useCallback(async (sport: Exclude<Sport, "nfl">, w = day) => {
+    const n = ++latest.current[sport];
+    const current = () => n === latest.current[sport] && w.start === dayStart.current;
     // Keep showing what we have while refreshing; only a first load shows "loading".
     setLoads((l) => (l[sport].state === "ok" ? l : { ...l, [sport]: { state: "loading" } }));
     try {
@@ -64,10 +71,14 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
       } else {
         const r = await supabase.rpc("sports_home", { p_sport: sport, p_days: 1 });
         if (r.error) throw r.error;
-        games = fromSportsHome(sport, r.data);
+        const parsed = fromSportsHome(sport, r.data);
+        if (!parsed) throw Error("Unexpected schedule response");
+        games = parsed;
       }
+      if (!current()) return;
       setLoads((l) => ({ ...l, [sport]: { state: "ok", games, checkedAt: Date.now(), stale: false } }));
     } catch {
+      if (!current()) return;
       // A failed refresh keeps the earlier games, marked stale; a failed first load is an error.
       setLoads((l) => {
         const prev = l[sport];
@@ -77,6 +88,8 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
   }, [day]);
 
   useEffect(() => {
+    // A new ET day starts clean: the previous day's games are never shown as today's.
+    setLoads({ nba: { state: "loading" }, nhl: { state: "loading" }, ncaab: { state: "loading" } });
     const all = () => (["nba", "nhl", "ncaab"] as const).forEach((s) => void load(s));
     all();
     // Same-day status changes (final, postponed) appear without a reload.
@@ -102,9 +115,11 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
   // Signed-in state and the lay in progress (this account's draft only).
   useEffect(() => {
     let live = true;
+    let reads = 0;
     const read = async () => {
+      const n = ++reads;
       const s = await supabase.auth.getSession();
-      if (!live) return;
+      if (!live || n !== reads) return; // a newer read (e.g. after an account change) won
       const uid = s.data.session?.user.id;
       setSignedIn(Boolean(uid));
       try {
