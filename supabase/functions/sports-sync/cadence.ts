@@ -65,3 +65,16 @@ export async function latestPriced(games: Game[], probe: (ids: string[]) => Prom
     }
   return new Set<string>();
 }
+
+/**
+ * Priced games for pacing, never blocking a refresh: if the market lookup fails, pace against every
+ * game today instead. That still spreads the remaining budget (the cap and reservations are untouched)
+ * and only spaces refreshes out to the day's last listed tip. The error is returned for logging.
+ */
+export async function pricedForPacing(games: Game[], probe: (ids: string[]) => Promise<string | null>) {
+  try {
+    return { priced: await latestPriced(games, probe), error: null as string | null };
+  } catch (e) {
+    return { priced: new Set(games.map((g) => g.id)), error: String(e instanceof Error ? e.message : e).slice(0, 100) };
+  }
+}
