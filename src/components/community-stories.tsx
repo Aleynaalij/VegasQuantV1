@@ -80,6 +80,17 @@ export default function CommunityStories() {
       /* Keep this visit responsive if storage is disabled. */
     }
   }, []);
+  // Browser Forward can land on a closed viewer's old #story entry: tidy it away (replace, not a
+  // new entry) so the URL matches what is on screen and the next open adds a fresh entry.
+  useEffect(() => {
+    const tidy = () => {
+      if (!open && window.location.hash === "#story")
+        window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+    };
+    tidy();
+    window.addEventListener("popstate", tidy);
+    return () => window.removeEventListener("popstate", tidy);
+  }, [open]);
   const closeViewer = useCallback(() => {
     setOpen(null);
     // Return focus to the ring that opened the viewer, or the rail if that ring is now read.

@@ -169,13 +169,23 @@ export default function StoryViewer({
     return () => window.removeEventListener("focus", onFocus);
   }, []);
   const currentId = cursor?.postId;
+  // Every arrival (entry, re-entry, Previous/Next) and every focus is its own check: the post is
+  // hidden ("Checking this post…") until *this* check answers, and only the newest check counts,
+  // so an earlier success can never show content while a newer check is pending or denied.
+  const checkSeq = useRef(0);
   useEffect(() => {
     if (state.kind !== "ready" || !currentId) return;
     let live = true;
+    const n = ++checkSeq.current;
     const generation = session.current.generation;
+    setChecked((c) => {
+      const next = { ...c };
+      delete next[currentId];
+      return next;
+    });
     void (async () => {
       const r = await supabase.rpc("community_post", { p_id: currentId });
-      if (!live || generation !== session.current.generation) return;
+      if (!live || n !== checkSeq.current || generation !== session.current.generation) return;
       const viewerId = session.current.viewerId || "";
       const fresh = r.error ? null : storyDetail(r.data, { viewerId, generation, postId: currentId }, session.current);
       if (fresh) {

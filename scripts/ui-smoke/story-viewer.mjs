@@ -27,7 +27,7 @@ const activity = [
 
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
-async function open(name, { width = 390, detail = (pid) => posts.find((p) => p.id === pid) ?? null, detailStatus = 200, readIds = null } = {}, run) {
+async function open(name, { width = 390, detail = (pid) => posts.find((p) => p.id === pid) ?? null, detailStatus = 200, readIds = null, plan = null } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   if (readIds) await ctx.addInitScript(({ uid, ids }) => { if (!sessionStorage.getItem("vq-smoke-read-set")) { localStorage.setItem(`vq-community-read:${uid}`, JSON.stringify(ids)); sessionStorage.setItem("vq-smoke-read-set", "1"); } }, { uid: UID, ids: readIds });
   await ctx.addInitScript((uid) => {
@@ -51,8 +51,16 @@ async function open(name, { width = 390, detail = (pid) => posts.find((p) => p.i
     }, UID);
   await ctx.route("**/rest/v1/rpc/community_activity*", (r) => r.fulfill({ json: activity }));
   await ctx.route("**/rest/v1/rpc/community_feed*", (r) => r.fulfill({ json: posts }));
-  await ctx.route("**/rest/v1/rpc/community_post*", (r) => {
+  const calls = {};
+  await ctx.route("**/rest/v1/rpc/community_post*", async (r) => {
     const pid = r.request().postDataJSON()?.p_id;
+    calls[pid] = (calls[pid] || 0) + 1;
+    // plan(pid, nth call) → [delay ms, body] to deliver a later check slowly or differently.
+    const step = plan?.(pid, calls[pid]);
+    if (step) {
+      await new Promise((res) => setTimeout(res, step[0]));
+      return r.fulfill({ json: step[1] }).catch(() => {});
+    }
     return detailStatus === 200 ? r.fulfill({ json: detail(pid) }) : r.fulfill({ status: detailStatus, json: { message: "synthetic failure" } });
   });
   await ctx.route("**/rest/v1/rpc/notification_inbox*", (r) => r.fulfill({ json: { items: [], snapshot_at: new Date().toISOString() } }));
@@ -175,6 +183,50 @@ await open("a post removed while the viewer is open shows unavailable, is never 
   if ((await read(page)).includes(id(3))) fail("removed post was marked read");
   await viewer(page).getByRole("button", { name: /Next post/ }).click();
   await viewer(page).getByText("SampleBravo post 4").waitFor().catch(() => fail("could not move past the removed post"));
+});
+
+// A later check of a post already shown: it stays hidden until that check answers.
+const p1 = () => posts[0];
+for (const [label, body, after] of [["denied", null, "This post is no longer available."], ["allowed", "post", "SampleAlpha post 1"]])
+  await open(`re-entering a post waits for its new check (${label})`, { plan: (pid, n) => (pid === id(1) && n === 2 ? [1500, body === "post" ? p1() : null] : null) }, async ({ page, fail }) => {
+    await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
+    await viewer(page).getByText("SampleAlpha post 1").waitFor();
+    await viewer(page).getByRole("button", { name: /Next post/ }).click();
+    await viewer(page).getByText("SampleAlpha post 2").waitFor();
+    await viewer(page).getByRole("button", { name: "Previous post" }).click();
+    await page.waitForTimeout(400); // the second check is still pending
+    if (await viewer(page).locator(".story-post").count()) fail("re-entered post shown from an earlier check while its new check was pending");
+    if (!(await viewer(page).getByText("Checking this post…").count())) fail("no checking state while the new check was pending");
+    await viewer(page).getByText(after).waitFor({ timeout: 5000 }).catch(() => fail(`after the check (${label}) expected "${after}"`));
+  });
+
+await open("regaining focus re-checks the post on screen and hides it until answered", { plan: (pid, n) => (pid === id(1) && n === 2 ? [1500, null] : null) }, async ({ page, fail }) => {
+  await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
+  await viewer(page).getByText("SampleAlpha post 1").waitFor();
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.waitForTimeout(400);
+  if (await viewer(page).locator(".story-post").count()) fail("post stayed visible while its focus re-check was pending");
+  await viewer(page).getByText("This post is no longer available.").waitFor({ timeout: 5000 }).catch(() => fail("focus re-check denial not shown"));
+});
+
+await open("Back, then Forward, then reopen: exact URL and focus each time", {}, async ({ page, fail }) => {
+  const base = page.url();
+  await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
+  await viewer(page).getByText("SampleAlpha post 1").waitFor();
+  await page.goBack();
+  await page.waitForFunction(() => !document.querySelector("dialog.story-viewer[open]"), null, { timeout: 8000 }).catch(() => fail("Back did not close the viewer"));
+  if (page.url() !== base) fail(`after Back the URL is ${page.url()}, not ${base}`);
+  await page.goForward();
+  await page.waitForTimeout(800);
+  if (await viewer(page).count()) fail("Forward reopened the viewer");
+  if (page.url() !== base) fail(`after Forward the URL is ${page.url()}, not ${base} (stale #story left)`);
+  await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
+  await viewer(page).getByText(/SampleAlpha post/).first().waitFor().catch(() => fail("reopen after Forward failed"));
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(400);
+  if (await viewer(page).count()) fail("Escape after reopen did not close");
+  if (page.url() !== base) fail(`after reopen and close the URL is ${page.url()}, not ${base}`);
+  if (!(await page.evaluate(() => document.activeElement?.closest(".community-stories") !== null))) fail("focus did not return to the story rail");
 });
 
 await open("deleted post: unavailable, never read", { detail: () => null }, async ({ page, fail }) => {
