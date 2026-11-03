@@ -24,6 +24,7 @@ import {
   type PublishedLeg,
 } from "@/lib/parlay-builder";
 import { homeGameFrom } from "@/lib/journey";
+import { onUserChange } from "@/lib/auth-user";
 type Leg = {
   leg_key: string;
   name: string;
@@ -157,34 +158,55 @@ export default function HomeGameList({ games }: { games: Game[] }) {
       document.getElementById(`home-game-${want}`)?.scrollIntoView({ block: "start" }),
     );
   }, [params, slugs]);
-  // The lay in progress stays visible without opening a game first.
+  // The lay in progress stays visible without opening a game first, and follows the account:
+  // an account change clears the badge at once, then shows only the new account's own draft.
+  const draftGeneration = useRef(0);
   useEffect(() => {
     let live = true;
-    void supabase.auth.getSession().then((session) => {
+    const load = async () => {
+      const n = ++draftGeneration.current;
+      const session = await supabase.auth.getSession();
+      if (!live || n !== draftGeneration.current) return; // a newer account change won
       const uid = session.data.session?.user.id;
-      if (!live || !uid) return;
+      if (!uid) return setChosen([]);
       try {
         const draft = JSON.parse(sessionStorage.getItem(`vq-parlay-draft:${uid}`) || "null");
-        if (Array.isArray(draft?.keys))
-          setChosen((now) => (now.length ? now : draft.keys.filter((k: unknown) => typeof k === "string")));
-      } catch {}
+        setChosen(Array.isArray(draft?.keys) ? draft.keys.filter((k: unknown) => typeof k === "string") : []);
+      } catch {
+        setChosen([]);
+      }
+    };
+    void load();
+    const stop = onUserChange(() => {
+      draftGeneration.current++;
+      setChosen([]);
+      void load();
     });
     return () => {
       live = false;
+      draftGeneration.current++;
+      stop();
     };
   }, []);
-  function toggleGame(slug: string, open: boolean) {
-    setOpenGames((now) =>
-      open ? (now.includes(slug) ? now : [...now, slug]) : now.filter((s) => s !== slug),
-    );
-    if (open) setOpened(true);
+  /** Keep the game the member is in (or null) in the URL, so Back returns to exactly that game. */
+  function rememberGame(slug: string | null) {
     const url = new URL(window.location.href);
-    const current = url.searchParams.get("game");
-    if (open) url.searchParams.set("game", slug);
-    else if (current === slug) url.searchParams.delete("game");
-    else return;
-    wrote.current = open ? slug : null;
+    if ((url.searchParams.get("game") || null) === slug) return;
+    if (slug) url.searchParams.set("game", slug);
+    else url.searchParams.delete("game");
+    wrote.current = slug;
     window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+  }
+  function toggleGame(slug: string, open: boolean) {
+    const remaining = openGames.filter((s) => s !== slug);
+    setOpenGames(open ? [...remaining, slug] : remaining);
+    if (open) {
+      setOpened(true);
+      rememberGame(slug);
+    } else if (new URL(window.location.href).searchParams.get("game") === slug) {
+      // Closing the remembered game: fall back to the most recently opened game still open.
+      rememberGame(remaining.at(-1) ?? null);
+    }
   }
   useEffect(() => {
     if (!opened || !ids) return;
@@ -343,7 +365,12 @@ export default function HomeGameList({ games }: { games: Game[] }) {
               ) : null}
             </summary>
             <div className="vq-game-props">
-              <Link className="vq-game-research" href={`/matchups/${g.slug}`}>
+              <Link
+                className="vq-game-research"
+                href={`/matchups/${g.slug}`}
+                // Back from research must return to this game, whichever row was opened last.
+                onClick={() => rememberGame(g.slug)}
+              >
                 Game research &amp; game room →
               </Link>
               {notice ? (
