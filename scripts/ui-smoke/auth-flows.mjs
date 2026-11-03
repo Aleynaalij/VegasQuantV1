@@ -162,19 +162,41 @@ await scenario("expired session, refresh refused", {
   if (await has(MEMBER_POST)) fail("feed shows member research after the session ended");
 });
 
+
+// Retry cases: switch off the feed's background refreshes (window focus, visibility and its 30 s timer),
+// so any recovery can only come from the Retry click. Long timers are swallowed; short ones (supabase-js
+// retry backoff, UI timers) run normally.
+const isolateRefresh = (ctx) => ctx.addInitScript(() => {
+  for (const type of ["focus", "visibilitychange"])
+    for (const target of [window, document])
+      target.addEventListener(type, (e) => e.stopImmediatePropagation(), true);
+  const realInterval = window.setInterval;
+  window.setInterval = (fn, ms, ...args) => (ms >= 10000 ? 0 : realInterval(fn, ms, ...args));
+});
 await scenario("access check fails, then retry", {
   // Every access check fails until Retry is pressed (several components ask; all must fail closed).
-  setup: (ctx, state) => membership(ctx, () => state.recovered
-    ? { json: allowed }
-    : { status: 500, json: { message: "synthetic failure" } }),
+  setup: async (ctx, state) => {
+    await isolateRefresh(ctx);
+    await membership(ctx, () => {
+      state.checks = (state.checks || 0) + 1;
+      return state.recovered ? { json: allowed } : { status: 500, json: { message: "synthetic failure" } };
+    });
+  },
 }, async ({ page, go, has, fail, state }) => {
   await go(FEED);
   if (!(await has("Research access could not be checked"))) fail("no message when the access check fails");
+  // Attribution: with background refresh off, nothing asks again until Retry is clicked.
+  const idle = state.checks;
+  await page.waitForTimeout(3000);
+  if (state.checks !== idle) fail(`access was re-checked ${state.checks - idle} time(s) without Retry; background refresh not isolated`);
   if (await has(MEMBER_POST)) fail("member research shown although access could not be checked (must fail closed)");
   const retry = page.getByRole("button", { name: /retry/i }).first();
   if (!(await retry.count())) return fail("no Retry control");
   state.recovered = true;
   await retry.click();
+  // Probe: fire the feed's background triggers too. With Retry disabled (UI_SMOKE_NEGATIVE=retry) this
+  // case must still fail, which shows recovery is attributable to the click alone.
+  await page.evaluate(() => { window.dispatchEvent(new Event("focus")); document.dispatchEvent(new Event("visibilitychange")); });
   await page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.toLowerCase().includes(t.toLowerCase()); }, MEMBER_POST, { timeout: 15000 }).catch(() => fail("Retry did not recover"));
   if (await has("Research access could not be checked")) fail("error message stays after a successful retry");
 });
@@ -183,10 +205,13 @@ await scenario("access check fails, then retry", {
 const SELECTION = "Sample Runner";
 await scenario("dropped request, then retry", {
   // Selections fail at the network level until the connection "comes back"; the stub serves them after.
-  setup: (ctx, state) => ctx.route("**/rest/v1/candidate_releases**", (r) => {
-    state.requests = (state.requests || 0) + 1;
-    return state.online ? r.fallback() : r.abort("failed");
-  }),
+  setup: async (ctx, state) => {
+    await isolateRefresh(ctx);
+    await ctx.route("**/rest/v1/candidate_releases**", (r) => {
+      state.requests = (state.requests || 0) + 1;
+      return state.online ? r.fallback() : r.abort("failed");
+    });
+  },
 }, async ({ page, go, has, fail, state }) => {
   await go(FEED);
   // supabase-js retries network failures with backoff (~7 s here) before reporting the error.
@@ -196,9 +221,16 @@ await scenario("dropped request, then retry", {
   if (!(await has("The Zone"))) fail("page shell missing after a dropped request");
   const retry = page.getByRole("button", { name: /retry/i }).first();
   if (!(await retry.count())) return fail("no Retry control after a dropped request");
+  // Attribution: with background refresh off, no new selections request happens until Retry.
+  const idle = state.requests;
+  await page.waitForTimeout(3000);
+  if (state.requests !== idle) fail(`selections were re-requested ${state.requests - idle} time(s) without Retry; background refresh not isolated`);
   state.online = true;
   const before = state.requests;
   await retry.click();
+  // Probe: fire the feed's background triggers too. With Retry disabled (UI_SMOKE_NEGATIVE=retry) this
+  // case must still fail, which shows recovery is attributable to the click alone.
+  await page.evaluate(() => { window.dispatchEvent(new Event("focus")); document.dispatchEvent(new Event("visibilitychange")); });
   await page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.includes(t); }, SELECTION, { timeout: 15000 })
     .catch(() => fail("Retry did not bring the selections back"));
   if (!(state.requests > before)) fail("Retry did not request the selections again");
