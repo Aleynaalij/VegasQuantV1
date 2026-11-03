@@ -1,0 +1,197 @@
+/* Story rings are buttons now (they open the viewer); same look as the former links. */
+html body .sport-switch .community-stories button.community-story {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex: 0 0 54px;
+  width: 54px;
+  min-width: 54px;
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--text) !important;
+  font: 500 10px/1.2 var(--font-body), sans-serif;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+html body .sport-switch .community-stories button.community-story:focus-visible {
+  outline: 2px solid #f4dc99;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Full-screen viewer. */
+dialog.story-viewer {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: #07090c;
+  color: #f2efe6;
+}
+dialog.story-viewer::backdrop {
+  background: #000c;
+}
+.story-viewer-frame {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  width: min(100%, 560px);
+  height: 100%;
+  margin: 0 auto;
+  padding: max(12px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
+}
+.story-segments {
+  display: flex;
+  gap: 4px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+.story-segments li {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: #ffffff33;
+}
+.story-segments li.done,
+.story-segments li.current {
+  background: #e8ca7d;
+}
+.story-viewer-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.story-viewer-meta b {
+  font-size: 1rem;
+}
+.story-viewer-meta small {
+  color: #b7c2bb;
+  font-size: .8rem;
+}
+.story-viewer-meta .story-close {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid #ffffff33;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+.story-viewer-body {
+  overflow-y: auto;
+  padding: 16px 0;
+  overscroll-behavior: contain;
+}
+.story-label {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 4px 8px;
+  border: 1px solid #b69b4e55;
+  border-radius: 6px;
+  color: #d9c58f;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.story-post h2 {
+  margin: 0 0 8px;
+  font-size: 1.35rem;
+  overflow-wrap: anywhere;
+}
+.story-text {
+  margin: 0 0 12px;
+  white-space: pre-wrap;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.story-legs {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  line-height: 1.6;
+}
+.story-post .community-photo img {
+  max-width: 100%;
+  max-height: 50dvh;
+  border-radius: 10px;
+}
+.story-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+.story-gambly {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed #ffffff33;
+  border-radius: 10px;
+  color: #b7c2bb;
+  font-size: .85rem;
+  line-height: 1.5;
+}
+.story-gambly b {
+  display: block;
+  color: #e6e1d3;
+}
+.story-unavailable {
+  display: grid;
+  gap: 12px;
+}
+.story-nav {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.story-nav button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 48px;
+  padding: 0 12px;
+  border: 1px solid #b69b4e55;
+  border-radius: 12px;
+  background: #11161c;
+  color: #f4dc99;
+  font-weight: 700;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.story-nav button:disabled {
+  color: #6f7772;
+  border-color: #ffffff1a;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .story-segments li { transition: background .2s; }
+}
+dialog.story-viewer .story-actions a.story-discussion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: auto;
+  min-height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  background: linear-gradient(#f3dc9a, #e8c46a 50%, #b48a36);
+  color: #17120a !important;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+dialog.story-viewer .story-actions a.story-discussion:focus-visible {
+  outline: 2px solid #f4dc99;
+  outline-offset: 2px;
+}
