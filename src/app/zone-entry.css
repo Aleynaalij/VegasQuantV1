@@ -1,0 +1,29 @@
+/* Signed-out Zone introduction: what the Zone is, an honestly empty preview, and the way in. */
+.zone-feed .zone-entry .zone-entry-list {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  line-height: 1.5;
+}
+.zone-feed .zone-entry .zone-entry-list b {
+  color: var(--zf-text);
+}
+.zone-feed .zone-entry .zone-entry-preview {
+  width: 100%;
+  padding: 14px;
+  border: 1px dashed var(--zf-line);
+  border-radius: 14px;
+  text-align: center;
+  font-size: .9rem;
+}
+.zone-feed .zone-entry .zone-entry-more {
+  font-size: .85rem;
+}
+.zone-feed .zone-entry a.zone-entry-research {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--zf-gold) !important;
+  font-weight: 700;
+}

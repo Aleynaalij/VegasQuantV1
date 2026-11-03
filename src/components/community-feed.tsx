@@ -38,6 +38,7 @@ import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { isPublicationCard } from "@/lib/zone-publication-card";
 import ZonePublicationCard from "./zone-publication-card";
+import "@/app/zone-entry.css";
 type Post = {
   id: string;
   user_id: string;
@@ -949,15 +950,42 @@ export default function CommunityFeed() {
         {!authReady ? (
           <p className="zone-status">Checking your session…</p>
         ) : !uid ? (
-          <section className="zone-join">
+          <section className="zone-join zone-entry" aria-labelledby="zone-entry-title">
             <Gem size={22} aria-hidden="true" />
-            <h2>Join the conversation</h2>
+            <h2 id="zone-entry-title">Join the conversation</h2>
             <p>
-              A free account lets you read member posts and VIP lays. Complete
-              your visible profile to publish and comment.
+              The Zone is where members share slips, talk through games and
+              post VIP lays. It’s member opinion, kept separate from Vegas
+              Quant’s published research.
             </p>
+            <ul className="zone-entry-list">
+              <li>
+                <b>Member slips and game talk</b> · read and comment once
+                you’re signed in
+              </li>
+              <li>
+                <b>VIP lays</b> · from contributors, labelled as theirs
+              </li>
+              <li>
+                <b>Recent posts</b> · tap through each member’s latest
+                posts, then the next member’s
+              </li>
+            </ul>
+            {/* Member posts are never sent to visitors, so the preview is honestly empty. */}
+            <div className="zone-entry-preview" role="note">
+              Member posts are only visible to signed-in members, so there’s
+              nothing to preview here.
+            </div>
             <Link className="primary" href="/membership">
               Sign in or create an account
+            </Link>
+            <p className="zone-entry-more">
+              A free account lets you read posts and VIP lays; complete your
+              visible profile to publish and comment. Posting is always
+              optional.
+            </p>
+            <Link className="zone-entry-research" href="/matchups">
+              Browse game research, open to everyone →
             </Link>
           </section>
         ) : (
