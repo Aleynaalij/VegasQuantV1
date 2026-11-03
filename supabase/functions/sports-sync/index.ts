@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { contextBatch } from "./context-schedule.ts";
+import { DAILY_CAP, etDayEnd, linesInterval, reservedToday } from "./cadence.ts";
 import {
   allowedMarkets,
   dates,
@@ -314,15 +315,30 @@ Deno.serve(async (req: Request) => {
         };
         continue;
       }
-      const near = games.some(
-        (g) => Date.parse(g.start_time) <= now + 6 * 3600000,
-      );
+      // Pace line refreshes across the day's budget, counting only games a book has priced.
+      const todays = games.filter((g) => Date.parse(g.start_time) <= etDayEnd(now));
+      const priced = new Set<string>();
+      for (let i = 0; i < todays.length; i += 100) {
+        const q = await db
+          .from("sports_markets")
+          .select("game_id")
+          .in("game_id", todays.slice(i, i + 100).map((g) => g.id))
+          .gte("observed_at", new Date(now - 36 * 3600000).toISOString());
+        if (q.error) throw q.error;
+        for (const r of q.data || []) priced.add(r.game_id);
+      }
+      const interval = linesInterval({
+        now,
+        games: todays,
+        priced,
+        cap: DAILY_CAP[sport],
+        reserved: reservedToday(settings, now),
+      });
       if (
         settings.lines_enabled &&
         games.length &&
         (!settings.last_lines_at ||
-          now - Date.parse(settings.last_lines_at) >=
-            (near ? 25 * 60000 : 3 * 3600000))
+          now - Date.parse(settings.last_lines_at) >= interval)
       ) {
         const mk = sport === "nhl" ? "h2h,totals" : "h2h,spreads";
         if (
