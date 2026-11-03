@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { contextBatch } from "./context-schedule.ts";
-import { DAILY_CAP, etDayEnd, linesInterval, reservedToday } from "./cadence.ts";
+import { DAILY_CAP, etDayEnd, latestPriced, linesInterval, reservedToday } from "./cadence.ts";
 import {
   allowedMarkets,
   dates,
@@ -315,18 +315,20 @@ Deno.serve(async (req: Request) => {
         };
         continue;
       }
-      // Pace line refreshes across the day's budget, counting only games a book has priced.
+      // Pace line refreshes across the day's budget, counting only games a book has priced. Only the
+      // latest priced tip matters, so walk today's tip times from the last one back and stop at the
+      // first time slot with any market: one row per probe, so no result-size limit can hide a game.
       const todays = games.filter((g) => Date.parse(g.start_time) <= etDayEnd(now));
-      const priced = new Set<string>();
-      for (let i = 0; i < todays.length; i += 100) {
+      const priced = await latestPriced(todays, async (ids) => {
         const q = await db
           .from("sports_markets")
           .select("game_id")
-          .in("game_id", todays.slice(i, i + 100).map((g) => g.id))
-          .gte("observed_at", new Date(now - 36 * 3600000).toISOString());
+          .in("game_id", ids)
+          .gte("observed_at", new Date(now - 36 * 3600000).toISOString())
+          .limit(1);
         if (q.error) throw q.error;
-        for (const r of q.data || []) priced.add(r.game_id);
-      }
+        return q.data?.[0]?.game_id ?? null;
+      });
       const interval = linesInterval({
         now,
         games: todays,

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import {
   DAILY_CAP,
   etDayEnd,
+  latestPriced,
   linesInterval,
   MAX_INTERVAL,
   MIN_INTERVAL,
@@ -88,4 +89,25 @@ test("Nov 2 replay: the old rule ran dry by early afternoon; the new one prices 
   assert.ok(fresh.refreshes.some((t) => t >= at("2026-11-03T02:00:00Z") && t < at("2026-11-03T03:00:00Z")), "refresh in the hour before 10 PM ET");
   // No refresh is ever closer than 25 minutes to the previous one.
   for (let i = 1; i < fresh.refreshes.length; i++) assert.ok(fresh.refreshes[i] - fresh.refreshes[i - 1] >= MIN_INTERVAL);
+});
+
+test("latest priced game: probes tip slots from the last one back, one row each, and stops at the first hit", async () => {
+  const t = (h: number) => new Date(at("2026-11-02T20:00:00Z") + h * H).toISOString();
+  // 250 unpriced games at the latest slot (split into 3 probes), then one priced game, then earlier ones.
+  const late = Array.from({ length: 250 }, (_, i) => ({ id: `late-${i}`, start_time: t(4) }));
+  const games = [{ id: "early", start_time: t(0) }, { id: "mid-priced", start_time: t(2) }, ...late, { id: "mid-other", start_time: t(2) }];
+  const marketed = new Set(["early", "mid-priced"]);
+  const calls: string[][] = [];
+  const probe = async (ids: string[]) => { calls.push(ids); return ids.find((id) => marketed.has(id)) ?? null; };
+  const hit = await latestPriced(games, probe);
+  assert.deepEqual([...hit], ["mid-priced"]);
+  assert.deepEqual(calls.map((c) => c.length), [100, 100, 50, 2]); // latest slot in chunks, then the 2-game slot; never the early slot
+  assert.ok(calls.every((c) => c.length <= 100));
+});
+
+test("latest priced game: none priced today gives an empty set (discovery cadence)", async () => {
+  const games = [game("a", at("2026-11-02T20:00:00Z")), game("b", at("2026-11-02T22:00:00Z"))];
+  const hit = await latestPriced(games, async () => null);
+  assert.equal(hit.size, 0);
+  assert.equal(linesInterval({ now: at("2026-11-02T15:00:00Z"), games, priced: hit, cap: 50, reserved: 0 }), MAX_INTERVAL);
 });

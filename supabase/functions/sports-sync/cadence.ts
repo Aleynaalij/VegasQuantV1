@@ -48,3 +48,20 @@ export function linesInterval(o: {
   const span = Math.max(...tips) - o.now;
   return Math.min(MAX_INTERVAL, Math.max(MIN_INTERVAL, span / left));
 }
+
+/**
+ * The latest-starting priced game today, as a one-element set (empty when none is priced).
+ * Walks tip times from the last one back and stops at the first slot with any market. `probe` asks
+ * for one market row among up to 100 game ids, so no result-size limit can hide a priced game.
+ */
+export async function latestPriced(games: Game[], probe: (ids: string[]) => Promise<string | null>) {
+  const slots = new Map<string, string[]>();
+  for (const g of games) slots.set(g.start_time, [...(slots.get(g.start_time) || []), g.id]);
+  const order = [...slots].sort((a, b) => Date.parse(b[0]) - Date.parse(a[0]));
+  for (const [, ids] of order)
+    for (let i = 0; i < ids.length; i += 100) {
+      const hit = await probe(ids.slice(i, i + 100));
+      if (hit) return new Set([hit]);
+    }
+  return new Set<string>();
+}
