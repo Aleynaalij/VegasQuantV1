@@ -1,6 +1,6 @@
 export function freshness(at: string | null | undefined, now = Date.now()) {
   const timestamp = at ? Date.parse(at) : NaN;
-  if (!Number.isFinite(timestamp))
+  if (!Number.isFinite(timestamp) || !Number.isFinite(now))
     return { label: "Time not supplied", tone: "muted", minutes: null };
   const minutes = Math.floor((now - timestamp) / 60000);
   if (minutes < -5)
