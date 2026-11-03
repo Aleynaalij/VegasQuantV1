@@ -5,6 +5,8 @@ export type Game = {
   away_team: string;
   home_team: string;
   kickoff: string;
+  /** Stored by schedule ingestion when the kickoff time is not yet confirmed. */
+  kickoff_tbd?: boolean;
   venue: string;
   slot: string;
   created_at: string;

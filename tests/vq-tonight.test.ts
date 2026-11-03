@@ -61,17 +61,31 @@ test("an unconfirmed time is labelled, never given a clock time", () => {
 });
 
 test("readers map to existing game pages and drop rows without identity", () => {
-  const home = { games: [
+  const home = { version: 1, sport: "nhl", games: [
     { id: "n1", slug: "vgk-pit-1", start_time: "2026-11-04T00:00:00Z", status: "STATUS_SCHEDULED", away: { name: "Vegas Golden Knights", short_name: "Golden Knights" }, home: { name: "Pittsburgh Penguins" } },
     { id: "n2", slug: "../bad", start_time: "2026-11-04T00:00:00Z", away: { name: "X" }, home: { name: "Y" } },
   ] };
-  const nhl = fromSportsHome("nhl", home);
+  const nhl = fromSportsHome("nhl", home)!;
   assert.equal(nhl.length, 1);
   assert.equal(nhl[0].href, "/nhl/games/vgk-pit-1");
   assert.equal(nhl[0].away, "Golden Knights");
-  assert.equal(fromSportsHome("ncaab", null).length, 0);
+  assert.equal(fromSportsHome("ncaab", null), null);
   const nba = fromNbaGames([{ id: "b1", slug: "bos-nyk-1", away_team: "Celtics", home_team: "Knicks", tipoff: "2026-11-04T00:30:00Z" }, { id: "b2", tipoff: "x" }]);
   assert.deepEqual(nba.map((x) => x.href), ["/nba/games/bos-nyk-1"]);
   const nfl = fromDeskGames([{ id: "f1", slug: "sea-den-1", away_team: "Seahawks", home_team: "Broncos", kickoff: "2026-11-04T01:15:00Z" }, { id: "f2", slug: "x-y", away_team: "A", home_team: "B", kickoff: "2026-11-04T01:15:00Z", sport: "nba" }]);
   assert.deepEqual(nfl.map((x) => x.href), ["/matchups/sea-den-1"]);
+});
+
+test("a schedule for another sport or version is an error, never a slate with wrong links", () => {
+  const games = [{ id: "c1", slug: "duke-unc-1", start_time: "2026-11-04T00:00:00Z", away: { name: "Duke" }, home: { name: "UNC" } }];
+  assert.equal(fromSportsHome("nhl", { version: 1, sport: "ncaab", games }), null);
+  assert.equal(fromSportsHome("ncaab", { version: 2, sport: "ncaab", games }), null);
+  assert.equal(fromSportsHome("ncaab", { version: 1, sport: "ncaab" }), null);
+  assert.equal(fromSportsHome("ncaab", { version: 1, sport: "ncaab", games })![0].href, "/ncaab/games/duke-unc-1");
+});
+
+test("an NFL kickoff marked unconfirmed is labelled, not given a clock time", () => {
+  const [g] = fromDeskGames([{ id: "f1", slug: "sea-den-1", away_team: "Seahawks", home_team: "Broncos", kickoff: "2026-11-04T01:15:00Z", kickoff_tbd: true }]);
+  assert.equal(g.tbd, true);
+  assert.equal(startLabel(g), "Time not confirmed");
 });
