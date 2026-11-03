@@ -110,3 +110,8 @@ html body .vq-tonight a.vq-tonight-card {
 @media (max-width: 359px) {
   .vq-tonight-next { grid-template-columns: 1fr; }
 }
+.vq-tonight-head p.vq-tonight-checked {
+  margin-top: 4px;
+  font-size: .75rem;
+  color: #9aa59f;
+}

@@ -16,9 +16,20 @@ import {
 } from "@/lib/vq-tonight";
 import "@/app/vq-tonight.css";
 
-type Load = { state: "loading" } | { state: "error" } | { state: "ok"; games: TonightGame[] };
+/**
+ * A sport's schedule as last read. `checkedAt` is when Vegas Quant last read it, not when the
+ * provider last changed it; `stale` means a later refresh failed and these are the earlier games.
+ */
+type Load =
+  | { state: "loading" }
+  | { state: "error" }
+  | { state: "ok"; games: TonightGame[]; checkedAt: number; stale: boolean };
 const ORDER: Sport[] = ["nfl", "nba", "nhl", "ncaab"];
 const SHOWN = 8;
+/** Re-read schedules every 5 minutes while the page is visible: 3 small reads, no provider credits. */
+const REFRESH = 5 * 60000;
+const clock = (t: number) =>
+  `${new Date(t).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET`;
 
 /**
  * Home's daily view: today's games (Eastern time) across sports with a route into each game's
@@ -36,7 +47,8 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
   const [draft, setDraft] = useState(0);
 
   const load = useCallback(async (sport: Exclude<Sport, "nfl">, w = day) => {
-    setLoads((l) => ({ ...l, [sport]: { state: "loading" } }));
+    // Keep showing what we have while refreshing; only a first load shows "loading".
+    setLoads((l) => (l[sport].state === "ok" ? l : { ...l, [sport]: { state: "loading" } }));
     try {
       let games: TonightGame[];
       if (sport === "nba") {
@@ -54,16 +66,24 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
         if (r.error) throw r.error;
         games = fromSportsHome(sport, r.data);
       }
-      setLoads((l) => ({ ...l, [sport]: { state: "ok", games } }));
+      setLoads((l) => ({ ...l, [sport]: { state: "ok", games, checkedAt: Date.now(), stale: false } }));
     } catch {
-      setLoads((l) => ({ ...l, [sport]: { state: "error" } }));
+      // A failed refresh keeps the earlier games, marked stale; a failed first load is an error.
+      setLoads((l) => {
+        const prev = l[sport];
+        return { ...l, [sport]: prev.state === "ok" ? { ...prev, stale: true } : { state: "error" } };
+      });
     }
   }, [day]);
 
   useEffect(() => {
-    void load("nba");
-    void load("nhl");
-    void load("ncaab");
+    const all = () => (["nba", "nhl", "ncaab"] as const).forEach((s) => void load(s));
+    all();
+    // Same-day status changes (final, postponed) appear without a reload.
+    const timer = setInterval(() => {
+      if (document.visibilityState === "visible") all();
+    }, REFRESH);
+    return () => clearInterval(timer);
   }, [load]);
 
   // Roll over at ET midnight, and catch up when the tab wakes.
@@ -96,9 +116,17 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
     };
     void read();
     const sub = supabase.auth.onAuthStateChange(() => void read());
+    // Selections added or removed on Home in this visit, or in another tab.
+    const changed = () => void read();
+    window.addEventListener("vq-parlay-draft-changed", changed);
+    window.addEventListener("storage", changed);
+    window.addEventListener("focus", changed);
     return () => {
       live = false;
       sub.data.subscription.unsubscribe();
+      window.removeEventListener("vq-parlay-draft-changed", changed);
+      window.removeEventListener("storage", changed);
+      window.removeEventListener("focus", changed);
     };
   }, []);
 
@@ -110,6 +138,15 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
     return tonightGames([...fromDeskGames(nflGames), ...loaded], now);
   }, [loads, nflGames, now]);
   const failed = (["nba", "nhl", "ncaab"] as const).filter((s) => loads[s].state === "error");
+  const stale = (["nba", "nhl", "ncaab"] as const).filter((s) => {
+    const l = loads[s];
+    return l.state === "ok" && l.stale;
+  });
+  const checked = (["nba", "nhl", "ncaab"] as const).flatMap((s) => {
+    const l = loads[s];
+    return l.state === "ok" ? [l.checkedAt] : [];
+  });
+  const lastChecked = checked.length ? Math.min(...checked) : null;
   const loading = (["nba", "nhl", "ncaab"] as const).some((s) => loads[s].state === "loading");
   const shown = all ? rows : rows.slice(0, SHOWN);
   const bySport = ORDER.map((s) => [s, shown.filter((g) => g.sport === s)] as const).filter(([, g]) => g.length);
@@ -119,7 +156,23 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
       <header className="vq-tonight-head">
         <h2 id="vq-tonight-title">VQ Tonight</h2>
         <p>Today · {day.label} · Eastern time</p>
+        {lastChecked ? (
+          <p className="vq-tonight-checked">
+            Schedules checked {clock(lastChecked)}. Times and statuses are as the league data
+            reported them then.
+          </p>
+        ) : null}
       </header>
+
+      {stale.length ? (
+        <p className="vq-tonight-alert" role="alert">
+          Couldn’t refresh {stale.map((s) => SPORTS[s].label).join(", ")}: showing games as last
+          checked, which may be out of date.{" "}
+          <button type="button" onClick={() => stale.forEach((s) => void load(s))}>
+            Retry
+          </button>
+        </p>
+      ) : null}
 
       {failed.length ? (
         <p className="vq-tonight-alert" role="alert">

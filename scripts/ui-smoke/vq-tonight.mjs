@@ -24,7 +24,8 @@ const nba = [
 
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
-async function open(name, { width = 390, signedIn = false, draft = null, empty = false, collegeFailsOnce = false } = {}, run) {
+const homeLegs = [{ leg_key: "tonight:0", name: "Sample Runner", market: "Full game · 60+ rushing yards", game_id: "g1", quote: null, expires_at: "2026-10-16T00:15:00Z", result: null, copy_text: "Sample Runner 60+ rushing yards", gambly_url: null, why: "w", risk: "r" }];
+async function open(name, { width = 390, signedIn = false, draft = null, empty = false, collegeFailsOnce = false, refresh = null } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript(({ uid, signedIn, draft }) => {
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -38,17 +39,24 @@ async function open(name, { width = 390, signedIn = false, draft = null, empty =
         user: { id: uid, aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } },
       }));
   }, { uid: UID, signedIn, draft });
-  let collegeCalls = 0;
+  let collegeCalls = 0, nhlCalls = 0;
   await ctx.route("**/rest/v1/rpc/sports_home*", (r) => {
     const sport = r.request().postDataJSON()?.p_sport;
     if (sport === "ncaab" && collegeFailsOnce && collegeCalls++ === 0) return r.fulfill({ status: 500, json: { message: "synthetic failure" } });
+    if (refresh && sport === "ncaab" && collegeCalls++ > 0) return r.fulfill({ status: 500, json: { message: "synthetic refresh failure" } });
+    if (refresh && sport === "nhl" && nhlCalls++ > 0)
+      return r.fulfill({ json: { version: 1, games: schedules.nhl.games.map((g) => (g.id === "n1" ? { ...g, status: "STATUS_FINAL" } : g)) } });
     return r.fulfill({ json: empty ? { version: 1, games: [] } : schedules[sport] ?? { version: 1, games: [] } });
   });
+  await ctx.route("**/rest/v1/published_legs*", (r) => r.fulfill({ json: signedIn ? homeLegs : [] }));
   await ctx.route("**/rest/v1/nba_games*", (r) => r.fulfill({ json: empty ? [] : nba }));
   await ctx.route("**/rest/v1/rpc/notification_inbox*", (r) => r.fulfill({ json: { items: [], snapshot_at: NOW.toISOString() } }));
   const page = await ctx.newPage();
   page.setDefaultTimeout(12000);
-  await page.clock.setFixedTime(NOW);
+  if (refresh) {
+    await page.clock.install({ time: NOW });
+    await page.clock.resume();
+  } else await page.clock.setFixedTime(NOW);
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   const before = failures.length;
@@ -102,6 +110,53 @@ await open("signed in with a lay in progress", { signedIn: true, draft: ["k1", "
   else if ((await lay.getAttribute("href")) !== "/parlays") fail("lay link does not go to /parlays");
   const zone = tonight(page).getByRole("link", { name: /^The Zone/ });
   if ((await zone.getAttribute("href")) !== "/community") fail("signed-in Zone card does not go to /community");
+});
+
+await open("lay card follows selections on Home without a reload", { signedIn: true }, async ({ page, fail }) => {
+  const card = () => tonight(page).locator(".vq-tonight-next a").first();
+  if (!/Your lays/.test(await card().innerText())) fail("lay card does not start as Your lays with no draft");
+  await page.locator("details.vq-game-row").first().locator("summary").click();
+  await page.getByRole("button", { name: /Sample Runner/ }).first().click();
+  await page.getByRole("button", { name: "Add to your lay" }).click();
+  const added = await page.waitForFunction(() => /Continue your lay · 1 selected/.test(document.querySelector(".vq-tonight-next a")?.textContent || ""), null, { timeout: 5000 }).then(() => true, () => false);
+  if (!added) fail("lay card did not update after adding a pick on Home");
+  await page.getByRole("button", { name: /Added to your lay/ }).click();
+  const removed = await page.waitForFunction(() => /Your lays/.test(document.querySelector(".vq-tonight-next a")?.textContent || ""), null, { timeout: 5000 }).then(() => true, () => false);
+  if (!removed) fail("lay card did not update after removing the pick");
+});
+
+await open("lay card follows an account switch without a reload", { signedIn: true, draft: ["k1"] }, async ({ page, fail }) => {
+  await page.addInitScript(() => {});
+  await page.evaluate((b) => sessionStorage.setItem(`vq-parlay-draft:${b}`, JSON.stringify({ title: "B", keys: ["k2", "k3"] })), "00000000-0000-0000-0000-000000000002");
+  const text = () => tonight(page).locator(".vq-tonight-next").innerText();
+  if (!/1 selected/.test(await text())) fail("account A's lay is not shown");
+  const broadcast = (event, user) => page.evaluate(({ event, user }) => {
+    const session = user ? { access_token: "smoke", refresh_token: "smoke", token_type: "bearer", expires_in: 86400, expires_at: Math.floor(Date.now() / 1000) + 86400, user: { id: user, aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } } } : null;
+    if (session) localStorage.setItem("sb-127-auth-token", JSON.stringify(session)); else localStorage.removeItem("sb-127-auth-token");
+    new BroadcastChannel("sb-127-auth-token").postMessage({ event, session });
+  }, { event, user });
+  await broadcast("SIGNED_OUT", null);
+  await page.waitForTimeout(800);
+  if (/selected/.test(await text())) fail("signed-out Home still shows account A's lay");
+  if (!/The Zone · sign in/.test(await text())) fail("signed-out Zone card does not ask to sign in");
+  await broadcast("SIGNED_IN", "00000000-0000-0000-0000-000000000002");
+  await page.waitForTimeout(800);
+  if (!/2 selected/.test(await text())) fail("account B's own lay is not shown");
+});
+
+await open("in-day refresh: a status change appears, a failed refresh keeps the games marked stale", { refresh: true }, async ({ page, fail }) => {
+  const t1 = await text(page);
+  const checked1 = /Schedules checked ([0-9:]+ [AP]M) ET/.exec(t1)?.[1];
+  if (!checked1) fail("no 'Schedules checked' time shown");
+  if (/updated|live/i.test(t1)) fail("fetch time is presented as source freshness");
+  await page.clock.fastForward("05:05");
+  const final = await tonight(page).getByRole("link", { name: /AwayN1 at HomeN1, Final/i }).waitFor({ timeout: 8000 }).then(() => true, () => false);
+  if (!final) fail("in-day status change (Final) did not appear after the scheduled refresh");
+  const t2 = await text(page);
+  if (!/Couldn’t refresh NCAAB: showing games as last checked/.test(t2)) fail("failed refresh is not reported as stale");
+  if (!(await tonight(page).getByRole("link", { name: /AwayC1 at HomeC1/i }).count())) fail("failed refresh dropped the games it had");
+  const checked2 = /Schedules checked ([0-9:]+ [AP]M) ET/.exec(t2)?.[1];
+  if (checked2 !== checked1) fail(`checked time moved to ${checked2} although college's refresh failed (it should show the oldest successful check)`);
 });
 
 await open("no games today", { empty: true }, async ({ page, fail }) => {

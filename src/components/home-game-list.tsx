@@ -127,6 +127,8 @@ export default function HomeGameList({ games }: { games: Game[] }) {
       );
       setChosen(next);
       setDraftNotice("");
+      // Same-tab listeners (VQ Tonight's lay card) cannot see sessionStorage writes otherwise.
+      window.dispatchEvent(new Event("vq-parlay-draft-changed"));
     } catch {
       setDraftNotice(
         "Draft storage is unavailable. Open Your lay to build it there.",
