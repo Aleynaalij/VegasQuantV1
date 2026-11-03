@@ -6,6 +6,9 @@
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
+// Negative control for reviewers: UI_SMOKE_NEGATIVE=false-success makes a failing save answer, and
+// confirm, as if it succeeded while storing nothing. A correct run of this script must then FAIL.
+const NEGATIVE = process.env.UI_SMOKE_NEGATIVE || "";
 const UID = "00000000-0000-0000-0000-000000000001";
 const failures = [];
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
@@ -18,7 +21,7 @@ function fixture() {
     quote_observed_at: null, published_at: new Date().toISOString(), expires_at: expires, result: null,
     why: "Sample workload", risk: "Sample rotation", copy_text: `Sample Player ${i} 20+ rushing yards`,
   }));
-  return { legs, expires, mine: [], creates: 0, mode: "ok", confirmFails: false, createDelay: 0, shareMode: "ok", shares: 0 };
+  return { legs, expires, mine: [], creates: 0, mode: "ok", confirmFails: false, createDelay: 0, shareMode: "ok", shares: 0, phantom: null };
 }
 
 async function setup(ctx, f) {
@@ -44,12 +47,18 @@ async function setup(ctx, f) {
     if (path.endsWith("member_parlays")) {
       if (u.searchParams.has("id")) {
         if (f.confirmFails) return route.fulfill({ status: 500, json: { message: "synthetic confirmation failure" } });
-        data = f.mine.find((p) => `eq.${p.id}` === u.searchParams.get("id")) || null;
+        data = f.mine.find((p) => `eq.${p.id}` === u.searchParams.get("id")) || (f.phantom && `eq.${f.phantom.id}` === u.searchParams.get("id") ? f.phantom : null);
       } else data = f.mine;
     }
     if (path.endsWith("create_member_parlay")) {
       f.creates++;
       if (f.createDelay) await new Promise((r) => setTimeout(r, f.createDelay));
+      if (NEGATIVE === "false-success" && f.mode !== "ok") {
+        // A phantom parlay the confirmation read can find, though nothing was stored.
+        const body = req.postDataJSON();
+        f.phantom = { id: "44444444-4444-4444-8444-000000000001", title: body.p_title, legs: f.legs.filter((l) => body.p_leg_keys.includes(l.leg_key)), created_at: new Date().toISOString(), expires_at: f.expires, community_post_id: null };
+        return route.fulfill({ json: f.phantom.id });
+      }
       if (f.mode === "server-error") return route.fulfill({ status: 500, json: { message: "Sample save failed. Please retry." } });
       if (f.mode === "network") return route.abort("failed");
       const body = req.postDataJSON();
