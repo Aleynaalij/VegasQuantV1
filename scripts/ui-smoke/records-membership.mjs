@@ -108,14 +108,28 @@ for (const [name, access, want, never] of states)
     for (const n of never) if (n.test(t)) fail(`must not show ${n}`);
   });
 
-await open("/membership: a failed status check never says the member is on Free", {
-  signedIn: true, routes: { "**/rest/v1/rpc/membership_status": json({ message: "synthetic failure" }, 500) },
+await open("/membership: a failed status check never says the member is on Free, and Retry recovers", {
+  signedIn: true, routes: { "**/rest/v1/rpc/membership_status": async (r) => {
+    // Fails until the member presses Retry (several components ask; all of them fail until then).
+    return globalThis.__statusOk
+      ? r.fulfill({ json: { allowed: true, admin: false, member_code: "S", expires_at: future } })
+      : r.fulfill({ status: 500, json: { message: "synthetic failure" } });
+  } },
 }, async ({ page, fail }) => {
+  globalThis.__statusOk = false;
   await page.goto(BASE + "/membership", { waitUntil: "networkidle" });
   await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
   const t = await text(page);
   if (/Free Community · Published picks/.test(t)) fail('shows "Free Community" as the member\'s status although the status check failed');
   if (/Premium research active|Complimentary Premium active/.test(t)) fail("claims Premium although the status check failed");
+  if (!/couldn.t check your membership/i.test(t)) fail("no message that the membership check failed");
+  const retry = page.getByRole("button", { name: /retry/i }).first();
+  if (!(await retry.count())) return fail("no Retry after the status check failed");
+  globalThis.__statusOk = true;
+  await retry.click();
+  const recovered = await page.waitForFunction(() => /Premium research active/.test(document.body.innerText), null, { timeout: 15000 }).then(() => true, () => false);
+  if (!recovered) fail("Retry did not load the member's real status");
+  if (/couldn.t check your membership/i.test(await text(page))) fail("failure message stays after a successful retry");
 });
 
 // ---------- Controls: named and keyboard-reachable ----------
