@@ -104,7 +104,12 @@ class BacktestTest(unittest.TestCase):
                     source_sha256='a'*64,retrieved_at='2026-10-22T00:00:00Z') for f in families])
                 script="import mod from './scripts/research-board/ngs.ts'; const {ngsContext}=mod; let s=''; for await(const c of process.stdin)s+=c; const p=JSON.parse(s); console.log(JSON.stringify(ngsContext(p.leg,p.snapshots)));"
                 result=subprocess.run(['node','--import','tsx','--input-type=module','-e',script],cwd=ROOT,
-                    input=json.dumps(payload),text=True,capture_output=True,check=True)
+                    input=json.dumps(payload),text=True,capture_output=True)
+                if result.returncode:
+                    # node's error lines only (no environment or stack), e.g. a missing `tsx` install.
+                    lines=result.stderr.strip().splitlines()
+                    errors=[l for l in lines if 'Error' in l][:4] or lines[-6:]
+                    self.fail(f'TypeScript reference exited {result.returncode} (run `npm ci` first?):\n'+'\n'.join(errors))
                 ts=json.loads(result.stdout)
                 self.assertEqual(sorted(f for f,v in flags.items() if v),sorted(ts['flags']))
                 self.assertTrue(all(v==1 for v in flags.values()))
