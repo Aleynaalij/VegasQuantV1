@@ -855,7 +855,8 @@ export default function ParlayWorkshop({
                     <Link
                       href={
                         r.leg_key.startsWith("candidate:")
-                          ? `/feed#release-${r.leg_key.split(":")[1]}`
+                          ? // A bare /feed redirects to the Zone; the Latest view keeps every release.
+                            `/feed?view=latest&release=${encodeURIComponent(r.leg_key.split(":")[1])}#release-${encodeURIComponent(r.leg_key.split(":")[1])}`
                           : r.game_id
                             ? `/matchups/game/${encodeURIComponent(r.game_id)}`
                             : "/matchups"

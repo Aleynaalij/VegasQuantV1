@@ -21,6 +21,7 @@ const NEG = process.env.UI_SMOKE_NEGATIVE || "";
 const NOW = "2026-10-14T02:00:00Z"; // the stub's pinned clock
 const SLUG = "sample-sea-den-2026-10-15";
 const SLUG_B = "sample-hou-jax-2026-10-18";
+const RELEASE = "00000000-0000-4000-8000-000000000005";
 fs.mkdirSync(OUT, { recursive: true });
 
 const tnf = "Seattle Seahawks @ Denver Broncos";
@@ -29,8 +30,10 @@ const legs = [
   ["g1", "Sample Receiver", "Full game · 50+ receiving yards", tnf],
   ["g1", "Sample Passer", "Full game · 190+ passing yards", tnf],
   ["g2", "Sample Back", "Full game · 50+ rushing yards", "Houston Texans @ Jacksonville Jaguars"],
+  ["g2", "Sample Board Receiver", "Full game · 40+ receiving yards", "Houston Texans @ Jacksonville Jaguars"],
 ].map(([game_id, name, market, matchup], i) => ({
-  leg_key: `journey:${i}`, name, market, matchup, game_id, kind: "RESEARCH", quote: null,
+  // The last leg comes from a published research-board release (candidate key).
+  leg_key: i === 4 ? `candidate:${RELEASE}:1` : `journey:${i}`, name, market, matchup, game_id, kind: "RESEARCH", quote: null,
   quote_observed_at: null, published_at: NOW, expires_at: "2026-10-16T00:15:00Z", result: null,
   why: "Sample case.", risk: "Sample risk.", copy_text: `${name} ${market.replace("Full game · ", "")}`,
   gambly_url: null,
@@ -210,6 +213,11 @@ for (const width of [360, 390, 1280]) {
       if (/\b1 legs\b/.test(await page.evaluate(() => document.body.innerText))) log.findings.push('Builder says "1 legs".');
       const dead = await page.locator('main a[href="/records"]').count();
       if (dead) log.findings.push(`${dead} "Original publication" link(s) point to /records, which does not exist (404).`);
+      // A research-board leg's publication link must keep its release through /feed's redirect rule.
+      const bare = await page.locator('main a[href^="/feed#"]').count();
+      if (bare) log.findings.push(`${bare} "Original publication" link(s) use a bare /feed#…, which redirects to the Zone and loses the release.`);
+      const want = `/feed?view=latest&release=${RELEASE}#release-${RELEASE}`;
+      if (!(await page.locator(`main a[href="${want}"]`).count())) log.findings.push(`Research-board leg has no "Original publication" link to ${want}.`);
       const add = page.getByRole("button", { name: "+ Add to parlay", exact: true });
       if (await add.count()) await add.first().click();
       await step(log, page, "builder-two-legs", "Added a second leg in the builder");
@@ -300,6 +308,12 @@ for (const width of [360, 390, 1280]) {
       await step(log, page, "research-detail", "Research, signed out");
       await page.goto(BASE + "/parlays", { waitUntil: "networkidle" });
       await step(log, page, "builder", "Your lay, signed out");
+      // The research-board publication link lands on that release in the research feed.
+      await page.goto(BASE + `/feed?view=latest&release=${RELEASE}#release-${RELEASE}`, { waitUntil: "networkidle" });
+      await page.locator(`#release-${RELEASE}`).first().waitFor({ timeout: 8000 }).catch(() => {});
+      const pub = await step(log, page, "publication", "Original publication of a research-board leg");
+      if (!pub.url.startsWith("/feed")) log.findings.push(`Original publication link redirected to ${pub.url} instead of the research feed.`);
+      if (!(await page.locator(`#release-${RELEASE}`).count())) log.findings.push("Original publication link does not show the linked release.");
     } catch (e) {
       log.findings.push(`walkthrough stopped: ${String(e).split("\n")[0].slice(0, 200)}`);
     }
