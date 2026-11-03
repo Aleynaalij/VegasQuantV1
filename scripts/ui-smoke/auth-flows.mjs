@@ -7,6 +7,22 @@
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
+// Negative controls for reviewers (UI_SMOKE_NEGATIVE): "nav-tab" hides the VQ Slots tab in both navs;
+// "retry" makes every Retry button do nothing. A correct run of this script must then FAIL.
+const NEGATIVE = process.env.UI_SMOKE_NEGATIVE || "";
+const sabotage = (ctx) => NEGATIVE && ctx.addInitScript((mode) => {
+  // Hidden with CSS rather than removed, so React hydration is untouched.
+  if (mode === "nav-tab") document.addEventListener("DOMContentLoaded", () => {
+    const s = document.createElement("style");
+    s.textContent = '.mobile-nav a[href="/slots"], .sidebar a[href="/slots"] { display: none !important; }';
+    document.head.append(s);
+  });
+  if (mode === "retry") window.addEventListener("click", (e) => {
+    const b = e.target.closest?.("button");
+    if (b && /retry/i.test(b.innerText)) { e.stopImmediatePropagation(); e.preventDefault(); }
+  }, true);
+}, NEGATIVE);
+
 const MEMBER_POST = "Sample Seahawks–Broncos injury update"; // stub research_feed_posts row (members only)
 // The research feed proper; bare /feed redirects to The Zone, and the "Latest" view shows every post.
 const FEED = "/feed?view=latest";
@@ -25,6 +41,7 @@ const results = [];
 // (negative = already expired); null = signed out.
 async function scenario(name, { expiresIn = 86400 * 400, setup } = {}, body) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
+  await sabotage(ctx);
   if (expiresIn !== null)
     await ctx.addInitScript(([u, e]) => localStorage.setItem("sb-127-auth-token", JSON.stringify({
       access_token: "smoke", refresh_token: "smoke-refresh", token_type: "bearer", expires_in: 3600,
@@ -162,30 +179,57 @@ await scenario("access check fails, then retry", {
   if (await has("Research access could not be checked")) fail("error message stays after a successful retry");
 });
 
-await scenario("dropped request", {
-  setup: (ctx) => ctx.route("**/rest/v1/candidate_releases**", (r) => r.abort("failed")),
-}, async ({ page, go, has, fail }) => {
+// A release title shown only once candidate_releases loads (stub data).
+const SELECTION = "Sample Runner";
+await scenario("dropped request, then retry", {
+  // Selections fail at the network level until the connection "comes back"; the stub serves them after.
+  setup: (ctx, state) => ctx.route("**/rest/v1/candidate_releases**", (r) => {
+    state.requests = (state.requests || 0) + 1;
+    return state.online ? r.fallback() : r.abort("failed");
+  }),
+}, async ({ page, go, has, fail, state }) => {
   await go(FEED);
   // supabase-js retries network failures with backoff (~7 s here) before reporting the error.
-  await page.waitForFunction(() => document.body.innerText.includes("could not refresh"), null, { timeout: 30000 })
-    .catch(() => fail("no message when selections fail to load (waited 30 s)"));
-  if (await has(MEMBER_POST) && !(await has("could not refresh"))) fail("stale content with no error after a dropped request");
-  if (!(await page.getByRole("button", { name: /retry/i }).count())) fail("no Retry control after a dropped request");
+  const shown = await page.waitForFunction(() => document.body.innerText.includes("could not refresh"), null, { timeout: 30000 }).then(() => true, () => false);
+  if (!shown) return fail("no message when selections fail to load (waited 30 s)");
+  if (await has(SELECTION)) fail("selections shown although their request failed");
   if (!(await has("The Zone"))) fail("page shell missing after a dropped request");
+  const retry = page.getByRole("button", { name: /retry/i }).first();
+  if (!(await retry.count())) return fail("no Retry control after a dropped request");
+  state.online = true;
+  const before = state.requests;
+  await retry.click();
+  await page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.includes(t); }, SELECTION, { timeout: 15000 })
+    .catch(() => fail("Retry did not bring the selections back"));
+  if (!(state.requests > before)) fail("Retry did not request the selections again");
+  // The feed clears its error when the whole refresh (selections, access, posts) has finished.
+  const cleared = await page.waitForFunction(() => !document.body.innerText.includes("could not refresh"), null, { timeout: 15000 }).then(() => true, () => false);
+  if (!cleared) fail("error message stays after a successful retry (waited 15 s)");
 });
 
-await scenario("navigation into Zone, research and account", {}, async ({ page, go, fail }) => {
+const shows = (page, t) => page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.toLowerCase().includes(t.toLowerCase()); }, t, { timeout: 15000 }).then(() => true, () => false);
+
+// Signed-in navigation through the phone nav's required tabs. A missing tab fails; it is never
+// replaced by loading the route directly.
+await scenario("signed-in navigation: Zone, Slots, Account, Home", {}, async ({ page, go, fail }) => {
   await go("/");
-  for (const [href, expect] of [["/community", "The Zone"], ["/matchups", "Seahawks"], ["/membership", "Your account."]]) {
-    // The phone nav's own link (the desktop sidebar's copy is hidden at this width).
-    const link = page.locator(`.mobile-nav a[href="${href}"]`).first();
-    // One-time prompts (welcome, notifications) open after load; a member dismisses them first.
-    await page.waitForTimeout(2500);
+  for (const [href, name, expect] of [["/community", "The Zone", "The Zone"], ["/slots", "VQ Slots", "Slots"], ["/membership", "Account", "Your account."], ["/", "Home", "Next kickoff"]]) {
+    // One-time prompts open after load and are excluded by the fixture member's saved choices; close any left.
+    await page.waitForTimeout(1000);
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
-    if (!(await link.count())) { await go(href); }
-    else { await link.click(); await page.waitForURL((u) => u.pathname === href, { timeout: 15000 }).catch(() => fail(`could not reach ${href}`)); }
-    await page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.toLowerCase().includes(t.toLowerCase()); }, expect, { timeout: 15000 }).catch(() => fail(`${href} missing "${expect}"`));
+    const tab = page.locator(`.mobile-nav a[href="${href}"]`).filter({ hasText: name }).first();
+    // A route's loading screen (e.g. "Loading Community…") briefly replaces the shell; wait for the tab.
+    if (!(await tab.waitFor({ state: "visible", timeout: 15000 }).then(() => true, () => false))) { fail(`required tab "${name}" (${href}) missing from the phone nav`); continue; }
+    await tab.click();
+    if (!(await page.waitForURL((u) => u.pathname === href, { timeout: 15000 }).then(() => true, () => false))) { fail(`tab "${name}" did not navigate to ${href}`); continue; }
+    if (!(await shows(page, expect))) fail(`${href} missing "${expect}"`);
   }
+});
+
+// Research is not a nav tab; check its direct route separately.
+await scenario("research route (direct, not a nav tab)", {}, async ({ page, go, fail }) => {
+  await go("/matchups");
+  if (!(await shows(page, "Seahawks"))) fail('/matchups missing "Seahawks"');
 });
 
 await browser.close();

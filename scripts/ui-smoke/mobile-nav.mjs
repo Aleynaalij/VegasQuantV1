@@ -6,6 +6,22 @@
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
+// Negative controls for reviewers (UI_SMOKE_NEGATIVE): "nav-tab" hides the VQ Slots tab in both navs;
+// "retry" makes every Retry button do nothing. A correct run of this script must then FAIL.
+const NEGATIVE = process.env.UI_SMOKE_NEGATIVE || "";
+const sabotage = (ctx) => NEGATIVE && ctx.addInitScript((mode) => {
+  // Hidden with CSS rather than removed, so React hydration is untouched.
+  if (mode === "nav-tab") document.addEventListener("DOMContentLoaded", () => {
+    const s = document.createElement("style");
+    s.textContent = '.mobile-nav a[href="/slots"], .sidebar a[href="/slots"] { display: none !important; }';
+    document.head.append(s);
+  });
+  if (mode === "retry") window.addEventListener("click", (e) => {
+    const b = e.target.closest?.("button");
+    if (b && /retry/i.test(b.innerText)) { e.stopImmediatePropagation(); e.preventDefault(); }
+  }, true);
+}, NEGATIVE);
+
 const SHOTS = process.env.UI_SMOKE_SHOTS || "";
 const routes = [
   "/", "/feed", "/feed?view=parlays", "/matchups", "/matchups/sample-sea-den-2026-10-15",
@@ -116,19 +132,27 @@ for (const signedIn of [false, true])
     await ctx.close();
   }
 
-// Tab and back navigation through the phone nav and the desktop sidebar.
+// Tab and back navigation through the phone nav and the desktop sidebar. The required tabs are a fixed
+// contract: each must be present and visible, and must navigate when tapped. A missing tab fails; it is
+// never replaced by loading the route directly.
+const REQUIRED_TABS = [["/slots", "VQ Slots"], ["/community", "The Zone"], ["/membership", "Account"], ["/", "Home"]];
 for (const [width, height, sel] of [[390, 844, ".mobile-nav"], [1280, 900, ".sidebar"]]) {
   const label = `navigation @${width}`;
   const before = failures.length;
   const ctx = await browser.newContext({ viewport: { width, height }, reducedMotion: "reduce" });
+  await sabotage(ctx);
   const { page, errors } = await open(ctx, "/", label);
-  const hrefs = await page.locator(`${sel} a[href^="/"]`).evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute("href")))].slice(0, 5));
-  if (hrefs.length < 2) note(label, `only ${hrefs.length} nav link(s) found`);
+  // open() freezes timers for layout snapshots; real navigation needs them running.
+  await page.clock.resume();
   const visited = ["/"];
-  for (const href of hrefs.filter((h) => h !== "/")) {
+  for (const [href, name] of REQUIRED_TABS) {
     await page.waitForLoadState("networkidle").catch(() => {});
-    await page.locator(`${sel} a[href="${href}"]`).first().click();
-    await page.waitForURL((u) => u.pathname + u.search === href, { timeout: 15000 }).catch(() => note(label, `tab ${href} did not navigate (at ${page.url()})`));
+    const tab = page.locator(`${sel} a[href="${href}"]`).filter({ hasText: name }).first();
+    // A route's loading screen (e.g. "Loading Community…") briefly replaces the shell; wait for the tab.
+    if (!(await tab.waitFor({ state: "visible", timeout: 15000 }).then(() => true, () => false))) { note(label, `required tab "${name}" (${href}) missing from ${sel}`); continue; }
+    await tab.click();
+    const ok = await page.waitForURL((u) => u.pathname + u.search === href, { timeout: 15000 }).then(() => true, () => false);
+    if (!ok) { note(label, `tab "${name}" did not navigate to ${href} (at ${page.url()})`); continue; }
     visited.push(href);
   }
   for (let i = visited.length - 2; i >= 0; i--) {
@@ -140,7 +164,7 @@ for (const [width, height, sel] of [[390, 844, ".mobile-nav"], [1280, 900, ".sid
   }
   if (errors.length) note(label, `page error · ${errors[0].slice(0, 160)}`);
   await ctx.close();
-  console.log(`${failures.length > before ? "FAIL" : "ok  "} ${label} (${hrefs.join(" ")})`);
+  console.log(`${failures.length > before ? "FAIL" : "ok  "} ${label} (${visited.join(" → ")}, then back)`);
 }
 
 // Empty and failing data. Empty: every table read returns [] (RPCs keep their documented object
