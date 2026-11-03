@@ -56,3 +56,5 @@ jobs:
           node scripts/ui-smoke/home-record.mjs
           node scripts/ui-smoke/live-now.mjs
           node scripts/ui-smoke/simulator.mjs
+          node scripts/ui-smoke/mobile-nav.mjs
+          node scripts/ui-smoke/auth-flows.mjs
