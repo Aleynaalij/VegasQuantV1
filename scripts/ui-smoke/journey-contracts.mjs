@@ -128,7 +128,9 @@ for (const width of [360, 390, 1280]) {
   f.mode = "ok";
   f.createDelay = 300;
   const before = f.creates;
-  await save.evaluate((button) => { button.click(); button.click(); });
+  // Exercise actual browser input, allowing React to commit the disabled state between events.
+  // Same-stack programmatic dispatch bypasses the user interaction boundary.
+  await save.dblclick();
   const dialog = page.getByRole("dialog", { name: "Parlay saved", exact: true });
   await dialog.waitFor();
   assert.equal(f.creates - before, 1, "duplicate click sent a second create request");
