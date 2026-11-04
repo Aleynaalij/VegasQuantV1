@@ -63,7 +63,10 @@ export default function StoryViewer({
   const [photoLoaded, setPhotoLoaded] = useState(false);
   // Each post is re-checked with community_post before it is shown (deleted, blocked or newly
   // restricted posts drop out), and again when the window regains focus.
-  const [checked, setChecked] = useState<Record<string, "ok" | "gone" | "error">>({});
+  // The answer of the latest check, tagged with the arrival/focus it belongs to. Content is shown
+  // only when that tag matches the *current* arrival, computed during render (not in an effect),
+  // so an approval from an earlier arrival or focus can never show the post, even for one frame.
+  const [check, setCheck] = useState<{ key: string; status: "ok" | "gone" | "error" } | null>(null);
   const session = useRef<{ viewerId: string | null; generation: number }>({ viewerId: null, generation: 0 });
   const seen = useRef<string[]>([]);
   const closed = useRef(false);
@@ -141,7 +144,6 @@ export default function StoryViewer({
       // A post seen twice must be the same post: storyGroups drops conflicting duplicates.
       const groups = storyGroups([...posts.values()].map(({ id, user_id, author_name, sport, created_at }) => ({ id, user_id, author_name, sport, created_at })));
       setState({ kind: "ready", groups, posts });
-      setChecked({ [start.id]: "ok" });
       // Enter this member's posts in order: their oldest post not yet read (or their first post
       // when all are read), so Next plays through every post of theirs before the next member.
       const own = groups.find((g) => g.authorId === start.user_id)?.posts ?? [];
@@ -163,19 +165,27 @@ export default function StoryViewer({
   }, [startPostId, close]);
 
   const [focusTick, setFocusTick] = useState(0);
+  // Each move (Previous/Next) is a new arrival, even back onto a post checked before.
+  const [arrival, setArrival] = useState(0);
   useEffect(() => {
     const onFocus = () => setFocusTick((n) => n + 1);
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, []);
   const currentId = cursor?.postId;
+  // Every arrival (entry, re-entry, Previous/Next) and every focus is its own check: the post is
+  // hidden ("Checking this post…") until *this* check answers, and only the newest check counts,
+  // so an earlier success can never show content while a newer check is pending or denied.
+  const checkSeq = useRef(0);
   useEffect(() => {
     if (state.kind !== "ready" || !currentId) return;
     let live = true;
+    const n = ++checkSeq.current;
     const generation = session.current.generation;
+    const key = `${currentId}|${focusTick}|${arrival}`;
     void (async () => {
       const r = await supabase.rpc("community_post", { p_id: currentId });
-      if (!live || generation !== session.current.generation) return;
+      if (!live || n !== checkSeq.current || generation !== session.current.generation) return;
       const viewerId = session.current.viewerId || "";
       const fresh = r.error ? null : storyDetail(r.data, { viewerId, generation, postId: currentId }, session.current);
       if (fresh) {
@@ -187,15 +197,15 @@ export default function StoryViewer({
           return { ...st, posts };
         });
       }
-      setChecked((c) => ({ ...c, [currentId]: fresh ? "ok" : r.error ? "error" : "gone" }));
+      setCheck({ key, status: fresh ? "ok" : r.error ? "error" : "gone" });
     })();
     return () => {
       live = false;
     };
     // focusTick re-checks the post on screen when the window regains focus.
-  }, [state.kind, currentId, focusTick]);
+  }, [state.kind, currentId, focusTick, arrival]);
 
-  const status = currentId ? checked[currentId] : undefined;
+  const status = currentId && check?.key === `${currentId}|${focusTick}|${arrival}` ? check.status : undefined;
   const post = state.kind === "ready" && cursor && status === "ok" ? state.posts.get(cursor.postId) ?? null : null;
   const group = state.kind === "ready" && cursor ? state.groups.find((g) => g.authorId === cursor.authorId) : undefined;
   const index = group && cursor ? group.posts.findIndex((p) => p.id === cursor.postId) : -1;
@@ -230,7 +240,9 @@ export default function StoryViewer({
   }, [post, cursor, textShown, photoLoaded, onRead]);
 
   const go = useCallback((to: StoryCursor | null) => {
-    if (to) setCursor(to);
+    if (!to) return;
+    setArrival((n) => n + 1);
+    setCursor(to);
   }, []);
   // Arrow keys work wherever focus sits while the viewer is open (a nav button that becomes
   // disabled at either end drops focus to the page), except inside a control that uses them.

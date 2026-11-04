@@ -21,7 +21,8 @@ const OTHERS = { heart: 1, fire: 1 }; // two other members' reactions
 
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
-async function open(name, { available = true, failWrites = 0, malformed = false, slow = 0 } = {}, run) {
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
+async function open(name, { available = true, failWrites = 0, malformed = false, slow = 0, slowRead = 0, openPicker = true, readDelays = null, readMissing = null, photo = false, initialMine = null } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript((uid) => {
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -32,9 +33,26 @@ async function open(name, { available = true, failWrites = 0, malformed = false,
       user: { id: uid, aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } },
     }));
   }, UID);
-  let mine = null, writes = [], failLeft = failWrites;
-  await ctx.route("**/rest/v1/rpc/community_reaction_state*", (r) =>
-    available ? r.fulfill({ json: stateOf(mine, OTHERS) }) : r.fulfill({ status: 404, json: { code: "PGRST202", message: "Could not find the function" } }));
+  let mine = initialMine, writes = [], failLeft = failWrites, legacy = [];
+  let reads = 0;
+  await ctx.route("**/rest/v1/rpc/community_reaction_state*", async (r) => {
+    // The answer reflects the state when the read was *sent*, however late it arrives.
+    const snap = mine, n = ++reads;
+    const wait = readDelays?.[n - 1] ?? slowRead;
+    if (wait) await new Promise((res) => setTimeout(res, wait));
+    // readMissing: the nth read answers "function not found" (as if the typed API were gone).
+    if (readMissing?.includes(n)) return r.fulfill({ status: 404, json: { code: "PGRST202", message: "Could not find the function" } }).catch(() => {});
+    return (available ? r.fulfill({ json: stateOf(snap, OTHERS) }) : r.fulfill({ status: 404, json: { code: "PGRST202", message: "Could not find the function" } })).catch(() => {});
+  });
+  if (photo) {
+    await ctx.route("**/rest/v1/rpc/community_feed*", (r) => r.fulfill({ json: [{ id: POST, user_id: "u2", author_name: "SampleMember", title: "Sample photo", body: "", sport: "nfl", kind: "talk", legs: [], stake: null, created_at: new Date().toISOString(), reactions: 2, reacted: false, comments: 0, following: false, photo_path: "sample/p.png" }] }));
+    await ctx.route("**/storage/v1/object/sign/**", (r) => (r.request().method() === "POST" ? r.fulfill({ json: { signedURL: "/object/sign/community-photos/sample/p.png?token=smoke" } }) : r.fulfill({ contentType: "image/png", body: PNG })));
+  }
+  // The old binary Like path (direct table insert/delete); used only when the typed API is missing.
+  await ctx.route("**/rest/v1/community_reactions*", (r) => {
+    legacy.push(r.request().method());
+    return r.fulfill({ status: 201, json: [] });
+  });
   await ctx.route("**/rest/v1/rpc/set_community_reaction*", async (r) => {
     const want = r.request().postDataJSON().p_reaction;
     writes.push(want);
@@ -55,8 +73,8 @@ async function open(name, { available = true, failWrites = 0, malformed = false,
   try {
     await page.goto(BASE + "/community", { waitUntil: "networkidle" });
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
-    await page.getByRole("button", { name: "React with an emoji" }).first().click();
-    await run({ page, fail, writes: () => writes });
+    if (openPicker) await page.getByRole("button", { name: "React with an emoji" }).first().click();
+    await run({ page, fail, writes: () => writes, legacy: () => legacy });
   } catch (e) {
     fail(`threw · ${String(e).split("\n")[0].slice(0, 200)}`);
   }
@@ -111,6 +129,101 @@ await open("a malformed server reply is refused, not shown as saved", { malforme
   await page.getByText("Your reaction didn’t save; it’s unchanged.").waitFor().catch(() => fail("malformed reply accepted"));
   if ((await pressed(page, "Celebrate")) !== "false") fail("malformed reply shown as a saved reaction");
 });
+
+const heart = (page) => page.locator(".zone-actions").first().getByRole("button", { name: /^(Like|Unlike)$/ });
+
+await open("an emoji is not a Like: the heart stays unlit, and tapping it switches to Like", {}, async ({ page, fail, writes }) => {
+  await choice(page, "Fire").click();
+  await page.waitForFunction(() => document.querySelector('[aria-label^="Fire,"]')?.getAttribute("aria-pressed") === "true", null, { timeout: 5000 });
+  if ((await heart(page).getAttribute("aria-pressed")) !== "false") fail("heart lit up for a Fire reaction");
+  await page.keyboard.press("Escape");
+  await heart(page).click();
+  await page.waitForFunction(() => [...document.querySelectorAll(".zone-actions button")].some((b) => b.getAttribute("aria-label") === "Unlike"), null, { timeout: 5000 }).catch(() => fail("heart not lit after choosing Like"));
+  if (JSON.stringify(writes()) !== JSON.stringify(["fire", "heart"])) fail(`writes were ${JSON.stringify(writes())}; the heart must set Like, not delete Fire`);
+  await page.getByRole("button", { name: "React with an emoji" }).first().click();
+  await choice(page, "Like").waitFor();
+  if ((await pressed(page, "Like")) !== "true" || (await pressed(page, "Fire")) !== "false") fail("picker disagrees with the heart after a Like");
+  await page.keyboard.press("Escape");
+  await heart(page).click(); // unlike
+  await page.waitForTimeout(800);
+  if (writes().at(-1) !== null) fail(`unlike sent ${JSON.stringify(writes().at(-1))}, expected null`);
+});
+
+await open("without the typed API, the heart uses the old Like", { available: false, openPicker: false }, async ({ page, fail, writes, legacy }) => {
+  await heart(page).click();
+  await page.waitForTimeout(1000);
+  if (!legacy().includes("POST")) fail("old Like insert not used when the typed API is unavailable");
+  if (writes().length) fail("typed write attempted although the API is unavailable");
+});
+
+await open("closing while reactions load keeps it closed and leaves focus alone", { slowRead: 1500, openPicker: false }, async ({ page, fail }) => {
+  const btn = page.getByRole("button", { name: "React with an emoji" }).first();
+  await btn.click();
+  await btn.click(); // close while the read is pending
+  await page.waitForTimeout(2200);
+  if (await page.getByRole("group", { name: "Reactions" }).count()) fail("late read reopened the picker");
+  if (await page.evaluate(() => !!document.activeElement?.closest(".reaction-panel"))) fail("late read moved focus into the picker");
+});
+
+await open("closing while a reaction saves keeps it closed; the saved count still updates", { slow: 1500 }, async ({ page, fail }) => {
+  await choice(page, "Celebrate").click();
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(2200);
+  if (await page.getByRole("group", { name: "Reactions" }).count()) fail("late write reopened the picker");
+  if (!/3/.test(await likeCount(page))) fail("committed reaction did not update the post total");
+});
+
+await open("a read sent before a Like cannot undo it when it arrives late", { readDelays: [0, 2500] }, async ({ page, fail, writes }) => {
+  await choice(page, "Celebrate").waitFor(); // read 1 (fast): nothing chosen
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "React with an emoji" }).first().click(); // read 2 (slow), sent now
+  await heart(page).click(); // Like confirmed while read 2 is still on its way
+  await page.waitForFunction(() => [...document.querySelectorAll(".zone-actions button")].some((b) => b.getAttribute("aria-label") === "Unlike"), null, { timeout: 5000 }).catch(() => fail("Like not confirmed"));
+  await page.waitForTimeout(3000); // read 2 arrives with the pre-Like state
+  if ((await heart(page).getAttribute("aria-pressed")) !== "true") fail("a late pre-Like read undid the confirmed Like");
+  if (JSON.stringify(writes()) !== JSON.stringify(["heart"])) fail(`writes were ${JSON.stringify(writes())}`);
+});
+
+await open("competing controls: the heart waits while an emoji change is saving", { slow: 1500 }, async ({ page, fail, writes }) => {
+  await choice(page, "Fire").click();
+  await heart(page).click({ force: true, timeout: 1000 }).catch(() => {});
+  await page.waitForTimeout(2200);
+  if (JSON.stringify(writes()) !== JSON.stringify(["fire"])) fail(`competing taps sent ${JSON.stringify(writes())}; expected only fire`);
+  if ((await pressed(page, "Fire")) !== "true") fail("Fire is not the final reaction");
+  if ((await heart(page).getAttribute("aria-pressed")) !== "false") fail("heart lit although the final reaction is Fire");
+});
+
+await open("rapid double-tap on a photo adds one Like, never a toggle", { photo: true, openPicker: false, slow: 600 }, async ({ page, fail, writes }) => {
+  const media = page.locator(".zone-media").first();
+  await media.waitFor();
+  // Dispatch the double-tap on the photo's container: a real click on the photo itself opens it
+  // in a new tab, which would swallow a synthetic double-click.
+  await media.dispatchEvent("dblclick", { bubbles: true });
+  await media.dispatchEvent("dblclick", { bubbles: true });
+  await page.waitForTimeout(1800);
+  if (JSON.stringify(writes()) !== JSON.stringify(["heart"])) fail(`double-taps sent ${JSON.stringify(writes())}; expected exactly one heart`);
+  if ((await heart(page).getAttribute("aria-pressed")) !== "true") fail("double-tap did not leave the post Liked");
+});
+
+// Schedule from Elo/Codex: a read is sent while a write is in flight, the write confirms, then the
+// older read resolves. The confirmed choice must stand.
+// The member starts on Like, so a stale read (Like) winning over the confirmed Fire is visible.
+for (const [label, opts] of [["stale success", { readDelays: [0, 2800] }], ["stale \"API missing\" error", { readDelays: [0, 2800], readMissing: [2] }]])
+  await open(`a read sent during a save, landing after it, cannot undo it (${label})`, { slow: 1200, initialMine: "heart", ...opts }, async ({ page, fail, writes }) => {
+    await choice(page, "Fire").click(); // write in flight for 1.2 s
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "React with an emoji" }).first().click(); // read 2 sent during the write
+    await page.keyboard.press("Escape"); // and closed: its late answer must not reopen it or take focus
+    await page.waitForTimeout(3600); // write confirms at ~1.2 s, read 2 lands at ~2.8 s
+    if (await page.getByRole("group", { name: "Reactions" }).count()) fail("late read reopened the picker");
+    if (await page.evaluate(() => !!document.activeElement?.closest(".reaction-panel"))) fail("late read moved focus");
+    if ((await heart(page).getAttribute("aria-pressed")) !== "false") fail("heart lit after a confirmed Fire");
+    if (!/3/.test(await likeCount(page))) fail(`post total is not the confirmed 3 ("${await likeCount(page)}")`);
+    await page.getByRole("button", { name: "React with an emoji" }).first().click(); // read 3: confirmed state
+    await choice(page, "Fire").waitFor({ timeout: 5000 }).catch(() => fail("typed reactions shown as unavailable after a confirmed typed write"));
+    if ((await pressed(page, "Fire")) !== "true") fail("confirmed Fire was replaced by the stale read");
+    if (JSON.stringify(writes()) !== JSON.stringify(["fire"])) fail(`writes were ${JSON.stringify(writes())}`);
+  });
 
 await browser.close();
 if (failures.length) {
