@@ -80,17 +80,29 @@ export default function CommunityStories() {
       /* Keep this visit responsive if storage is disabled. */
     }
   }, []);
-  // Browser Forward can land on a closed viewer's old #story entry: tidy it away (replace, not a
-  // new entry) so the URL matches what is on screen and the next open adds a fresh entry.
+  const origin = useRef<string | null>(null);
   useEffect(() => {
+    // Remember the exact page URL (including its own #hash) before the viewer adds #story.
+    if (open && window.location.hash !== "#story")
+      origin.current = window.location.pathname + window.location.search + window.location.hash;
+    // Browser Forward onto a closed viewer's #story entry: a closed viewer cannot be restored from
+    // the URL, so step straight back to the page's own entry (exact URL, #hash included). Reopening
+    // then reuses that forward slot, so open/Back/Forward cycles never accumulate entries.
     const tidy = () => {
-      if (!open && window.location.hash === "#story")
-        window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+      if (open || window.location.hash !== "#story") return;
+      if (origin.current) window.history.back();
+      else window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
     };
-    tidy();
+    // Only on real Back/Forward navigation: right after a close, the viewer's own history.back()
+    // is still in flight and the URL still ends in #story, so acting here would step back twice.
     window.addEventListener("popstate", tidy);
     return () => window.removeEventListener("popstate", tidy);
   }, [open]);
+  // A page loaded (or reloaded) with a leftover #story shows no viewer: drop the hash in place.
+  useEffect(() => {
+    if (window.location.hash === "#story")
+      window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+  }, []);
   const closeViewer = useCallback(() => {
     setOpen(null);
     // Return focus to the ring that opened the viewer, or the rail if that ring is now read.
@@ -112,6 +124,8 @@ export default function CommunityStories() {
             key={member.post_id}
             onClick={(e) => {
               opener.current = e.currentTarget;
+              if (window.location.hash !== "#story")
+                origin.current = window.location.pathname + window.location.search + window.location.hash;
               setOpen(member.post_id);
             }}
             aria-haspopup="dialog"

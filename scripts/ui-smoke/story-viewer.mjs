@@ -87,6 +87,15 @@ async function open(name, { width = 390, detail = (pid) => posts.find((p) => p.i
   console.log(`${failures.length > before ? "FAIL" : "ok  "} ${name}`);
   await ctx.close();
 }
+/** Record whether a post's content ever renders, even for one frame, from now on. */
+const watchFor = (page, title) => page.evaluate((t) => {
+  window.__saw = false;
+  const seen = () => [...document.querySelectorAll("dialog.story-viewer .story-post h2")].some((h) => h.textContent === t);
+  window.__obs?.disconnect();
+  window.__obs = new MutationObserver(() => { if (seen()) window.__saw = true; });
+  window.__obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+}, title);
+const sawIt = (page) => page.evaluate(() => window.__saw === true);
 const read = (page) => page.evaluate((uid) => JSON.parse(localStorage.getItem(`vq-community-read:${uid}`) || "[]"), UID);
 const viewer = (page) => page.locator("dialog.story-viewer[open]");
 const heading = (page) => viewer(page).locator(".story-viewer-meta b").innerText();
@@ -193,20 +202,56 @@ for (const [label, body, after] of [["denied", null, "This post is no longer ava
     await viewer(page).getByText("SampleAlpha post 1").waitFor();
     await viewer(page).getByRole("button", { name: /Next post/ }).click();
     await viewer(page).getByText("SampleAlpha post 2").waitFor();
+    await watchFor(page, "SampleAlpha post 1");
     await viewer(page).getByRole("button", { name: "Previous post" }).click();
     await page.waitForTimeout(400); // the second check is still pending
     if (await viewer(page).locator(".story-post").count()) fail("re-entered post shown from an earlier check while its new check was pending");
     if (!(await viewer(page).getByText("Checking this post…").count())) fail("no checking state while the new check was pending");
     await viewer(page).getByText(after).waitFor({ timeout: 5000 }).catch(() => fail(`after the check (${label}) expected "${after}"`));
+    if (label === "denied" && (await sawIt(page))) fail("re-entered post rendered at some point while its new check was pending (denied)");
   });
 
 await open("regaining focus re-checks the post on screen and hides it until answered", { plan: (pid, n) => (pid === id(1) && n === 2 ? [1500, null] : null) }, async ({ page, fail }) => {
   await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
   await viewer(page).getByText("SampleAlpha post 1").waitFor();
-  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await page.evaluate(() => { window.__saw = false; });
+  await page.evaluate(() => {
+    window.__obs?.disconnect();
+    // From the focus event on, any render of the post before the denial counts.
+    window.__obs = new MutationObserver(() => {
+      if ([...document.querySelectorAll("dialog.story-viewer .story-post h2")].some((h) => h.textContent === "SampleAlpha post 1") && window.__afterFocus) window.__saw = true;
+    });
+    window.__obs.observe(document.body, { childList: true, subtree: true, characterData: true });
+    window.__afterFocus = true;
+    window.dispatchEvent(new Event("focus"));
+  });
   await page.waitForTimeout(400);
   if (await viewer(page).locator(".story-post").count()) fail("post stayed visible while its focus re-check was pending");
   await viewer(page).getByText("This post is no longer available.").waitFor({ timeout: 5000 }).catch(() => fail("focus re-check denial not shown"));
+  if (await sawIt(page)) fail("post re-rendered after focus while its re-check was pending");
+});
+
+await open("original #hash survives open, Back, Forward and reopen; no stale entries", {}, async ({ page, fail }) => {
+  await page.goto(BASE + "/community#zone-top", { waitUntil: "networkidle" });
+  await page.evaluate(() => document.querySelectorAll("dialog[open]:not(.story-viewer)").forEach((d) => d.close()));
+  const original = page.url();
+  const startLen = await page.evaluate(() => history.length);
+  await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
+  await viewer(page).getByText(/SampleAlpha post/).first().waitFor();
+  await page.goBack();
+  await page.waitForFunction(() => !document.querySelector("dialog.story-viewer[open]"), null, { timeout: 8000 }).catch(() => fail("Back did not close"));
+  if (page.url() !== original) fail(`after Back: ${page.url()} (expected ${original})`);
+  await page.goForward();
+  await page.waitForTimeout(800);
+  if (page.url() !== original) fail(`after Forward: ${page.url()} (expected ${original})`);
+  if (await viewer(page).count()) fail("Forward reopened the viewer");
+  await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
+  await viewer(page).getByText(/SampleAlpha post/).first().waitFor();
+  await page.getByRole("button", { name: "Close recent posts" }).click();
+  await page.waitForTimeout(500);
+  if (page.url() !== original) fail(`after reopen and close: ${page.url()} (expected ${original})`);
+  if ((await page.evaluate(() => history.length)) > startLen + 1) fail("story history entries accumulated");
+  if (!(await page.evaluate(() => document.activeElement?.closest(".community-stories") !== null))) fail("focus did not return to the rail");
 });
 
 await open("Back, then Forward, then reopen: exact URL and focus each time", {}, async ({ page, fail }) => {
