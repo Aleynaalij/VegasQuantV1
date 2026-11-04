@@ -22,9 +22,12 @@ export type TypedReactions = {
   /** "unknown" until the first read; "unavailable" when the typed API is not deployed (#206). */
   api: "unknown" | "ok" | "unavailable";
   states: Record<string, ReactionState>;
+  /** Posts with a reaction change in flight: every control for that post waits. */
+  pending: Record<string, boolean>;
   /** The post's state; "unavailable" when the typed API is not deployed; null on any other failure. */
   load: (postId: string) => Promise<ReactionState | "unavailable" | null>;
-  set: (postId: string, desired: ReactionType | null) => Promise<ReactionState | null>;
+  /** null on failure; "busy" when another change for this post is still in flight (ignored). */
+  set: (postId: string, desired: ReactionType | null) => Promise<ReactionState | "busy" | null>;
 };
 
 /**
@@ -35,22 +38,38 @@ export type TypedReactions = {
 export function useTypedReactions(onCommitted: (postId: string, s: ReactionState) => void): TypedReactions {
   const [api, setApi] = useState<TypedReactions["api"]>("unknown");
   const [states, setStates] = useState<Record<string, ReactionState>>({});
+  const [pending, setPending] = useState<Record<string, boolean>>({});
+  // statesRef mirrors states for reads that must return the newest confirmed state.
   const account = useRef(0);
+  // Per post: one change at a time across every control, and a count of changes started, so a
+  // read that was sent before a change (or while one was in flight) can never overwrite it.
+  const inFlight = useRef<Set<string>>(new Set());
+  const changes = useRef<Record<string, number>>({});
+  const statesRef = useRef<Record<string, ReactionState>>({});
   const committed = useRef(onCommitted);
   committed.current = onCommitted;
   useEffect(
     () =>
       onUserChange(() => {
         account.current++;
+        inFlight.current = new Set();
+        changes.current = {};
+        statesRef.current = {};
         setStates({});
+        setPending({});
         setApi("unknown");
       }),
     [],
   );
   const load = useCallback(async (postId: string): Promise<ReactionState | "unavailable" | null> => {
     const a = account.current;
+    const before = changes.current[postId] ?? 0;
     const r = await supabase.rpc("community_reaction_state", { p_post: postId });
     if (a !== account.current) return null;
+    // A change started after this read was sent (or is still in flight): the read is older than
+    // the newest confirmed state, so keep that state instead.
+    if ((changes.current[postId] ?? 0) !== before || inFlight.current.has(postId))
+      return statesRef.current[postId] ?? null;
     const s = r.error ? null : reactionState(r.data, postId);
     if (!s) {
       // A missing function means the typed API is not deployed; any other failure stays "unknown".
@@ -61,21 +80,35 @@ export function useTypedReactions(onCommitted: (postId: string, s: ReactionState
       return null;
     }
     setApi("ok");
-    setStates((m) => ({ ...m, [postId]: s }));
+    statesRef.current = { ...statesRef.current, [postId]: s };
+    setStates(statesRef.current);
     return s;
   }, []);
-  const set = useCallback(async (postId: string, desired: ReactionType | null) => {
+  const set = useCallback(async (postId: string, desired: ReactionType | null): Promise<ReactionState | "busy" | null> => {
+    if (inFlight.current.has(postId)) return "busy";
+    inFlight.current.add(postId);
+    changes.current[postId] = (changes.current[postId] ?? 0) + 1;
+    setPending((m) => ({ ...m, [postId]: true }));
     const a = account.current;
-    const r = await supabase.rpc("set_community_reaction", { p_post: postId, p_reaction: desired });
+    let r;
+    try {
+      r = await supabase.rpc("set_community_reaction", { p_post: postId, p_reaction: desired });
+    } finally {
+      if (a === account.current) {
+        inFlight.current.delete(postId);
+        setPending((m) => ({ ...m, [postId]: false }));
+      }
+    }
     if (a !== account.current) return null;
     const s = r.error ? null : reactionState(r.data, postId);
     if (!s) return null;
     setApi("ok");
-    setStates((m) => ({ ...m, [postId]: s }));
+    statesRef.current = { ...statesRef.current, [postId]: s };
+    setStates(statesRef.current);
     committed.current(postId, s);
     return s;
   }, []);
-  return { api, states, load, set };
+  return { api, states, pending, load, set };
 }
 
 type Panel =
@@ -127,11 +160,12 @@ export default function ReactionPicker({ postId, typed }: { postId: string; type
   }
 
   async function choose(desired: ReactionType | null) {
-    if (panel.kind !== "ready" || panel.saving !== undefined) return; // one change at a time
+    if (panel.kind !== "ready" || panel.saving !== undefined || typed.pending[postId]) return; // one change at a time
     const n = session.current;
     setPanel({ kind: "ready", saving: desired, failed: undefined });
     const s = await typed.set(postId, desired);
     if (n !== session.current) return; // closed meanwhile: no panel update, no focus move
+    if (s === "busy") return setPanel({ kind: "ready", saving: undefined, failed: undefined });
     setPanel({ kind: "ready", saving: undefined, failed: s ? undefined : desired });
   }
 
@@ -160,7 +194,7 @@ export default function ReactionPicker({ postId, typed }: { postId: string; type
                       key={type}
                       type="button"
                       aria-pressed={selected}
-                      disabled={panel.saving !== undefined}
+                      disabled={panel.saving !== undefined || !!typed.pending[postId]}
                       aria-label={`${LABEL[type].name}, ${state.counts[type]} ${state.counts[type] === 1 ? "person" : "people"}${selected ? ", your reaction (tap to remove)" : ""}`}
                       onClick={() => void choose(nextReaction(state.mine, type))}
                     >

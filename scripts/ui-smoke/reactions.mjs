@@ -21,7 +21,8 @@ const OTHERS = { heart: 1, fire: 1 }; // two other members' reactions
 
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
-async function open(name, { available = true, failWrites = 0, malformed = false, slow = 0, slowRead = 0, openPicker = true } = {}, run) {
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
+async function open(name, { available = true, failWrites = 0, malformed = false, slow = 0, slowRead = 0, openPicker = true, readDelays = null, photo = false } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript((uid) => {
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -33,10 +34,18 @@ async function open(name, { available = true, failWrites = 0, malformed = false,
     }));
   }, UID);
   let mine = null, writes = [], failLeft = failWrites, legacy = [];
+  let reads = 0;
   await ctx.route("**/rest/v1/rpc/community_reaction_state*", async (r) => {
-    if (slowRead) await new Promise((res) => setTimeout(res, slowRead));
-    return (available ? r.fulfill({ json: stateOf(mine, OTHERS) }) : r.fulfill({ status: 404, json: { code: "PGRST202", message: "Could not find the function" } })).catch(() => {});
+    // The answer reflects the state when the read was *sent*, however late it arrives.
+    const snap = mine, n = ++reads;
+    const wait = readDelays?.[n - 1] ?? slowRead;
+    if (wait) await new Promise((res) => setTimeout(res, wait));
+    return (available ? r.fulfill({ json: stateOf(snap, OTHERS) }) : r.fulfill({ status: 404, json: { code: "PGRST202", message: "Could not find the function" } })).catch(() => {});
   });
+  if (photo) {
+    await ctx.route("**/rest/v1/rpc/community_feed*", (r) => r.fulfill({ json: [{ id: POST, user_id: "u2", author_name: "SampleMember", title: "Sample photo", body: "", sport: "nfl", kind: "talk", legs: [], stake: null, created_at: new Date().toISOString(), reactions: 2, reacted: false, comments: 0, following: false, photo_path: "sample/p.png" }] }));
+    await ctx.route("**/storage/v1/object/sign/**", (r) => (r.request().method() === "POST" ? r.fulfill({ json: { signedURL: "/object/sign/community-photos/sample/p.png?token=smoke" } }) : r.fulfill({ contentType: "image/png", body: PNG })));
+  }
   // The old binary Like path (direct table insert/delete); used only when the typed API is missing.
   await ctx.route("**/rest/v1/community_reactions*", (r) => {
     legacy.push(r.request().method());
@@ -160,6 +169,38 @@ await open("closing while a reaction saves keeps it closed; the saved count stil
   await page.waitForTimeout(2200);
   if (await page.getByRole("group", { name: "Reactions" }).count()) fail("late write reopened the picker");
   if (!/3/.test(await likeCount(page))) fail("committed reaction did not update the post total");
+});
+
+await open("a read sent before a Like cannot undo it when it arrives late", { readDelays: [0, 2500] }, async ({ page, fail, writes }) => {
+  await choice(page, "Celebrate").waitFor(); // read 1 (fast): nothing chosen
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "React with an emoji" }).first().click(); // read 2 (slow), sent now
+  await heart(page).click(); // Like confirmed while read 2 is still on its way
+  await page.waitForFunction(() => [...document.querySelectorAll(".zone-actions button")].some((b) => b.getAttribute("aria-label") === "Unlike"), null, { timeout: 5000 }).catch(() => fail("Like not confirmed"));
+  await page.waitForTimeout(3000); // read 2 arrives with the pre-Like state
+  if ((await heart(page).getAttribute("aria-pressed")) !== "true") fail("a late pre-Like read undid the confirmed Like");
+  if (JSON.stringify(writes()) !== JSON.stringify(["heart"])) fail(`writes were ${JSON.stringify(writes())}`);
+});
+
+await open("competing controls: the heart waits while an emoji change is saving", { slow: 1500 }, async ({ page, fail, writes }) => {
+  await choice(page, "Fire").click();
+  await heart(page).click({ force: true, timeout: 1000 }).catch(() => {});
+  await page.waitForTimeout(2200);
+  if (JSON.stringify(writes()) !== JSON.stringify(["fire"])) fail(`competing taps sent ${JSON.stringify(writes())}; expected only fire`);
+  if ((await pressed(page, "Fire")) !== "true") fail("Fire is not the final reaction");
+  if ((await heart(page).getAttribute("aria-pressed")) !== "false") fail("heart lit although the final reaction is Fire");
+});
+
+await open("rapid double-tap on a photo adds one Like, never a toggle", { photo: true, openPicker: false, slow: 600 }, async ({ page, fail, writes }) => {
+  const media = page.locator(".zone-media").first();
+  await media.waitFor();
+  // Dispatch the double-tap on the photo's container: a real click on the photo itself opens it
+  // in a new tab, which would swallow a synthetic double-click.
+  await media.dispatchEvent("dblclick", { bubbles: true });
+  await media.dispatchEvent("dblclick", { bubbles: true });
+  await page.waitForTimeout(1800);
+  if (JSON.stringify(writes()) !== JSON.stringify(["heart"])) fail(`double-taps sent ${JSON.stringify(writes())}; expected exactly one heart`);
+  if ((await heart(page).getAttribute("aria-pressed")) !== "true") fail("double-tap did not leave the post Liked");
 });
 
 await browser.close();

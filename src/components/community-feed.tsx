@@ -754,16 +754,18 @@ export default function CommunityFeed() {
   const [liking, setLiking] = useState<string | null>(null);
   /** The heart: Like through the typed API when it exists (Like replaces another emoji, never
    *  deletes it); the old insert/delete Like only when the typed API is not deployed. */
-  async function like(p: Post) {
-    if (!uid || liking) return;
-    if (typed.api === "unavailable") return react(p);
+  async function like(p: Post, onlyAdd = false) {
+    if (!uid || liking || typed.pending[p.id]) return;
+    if (typed.api === "unavailable") return react(p, onlyAdd);
     setLiking(p.id);
     try {
       const current = p.id in typed.states ? typed.states[p.id] : await typed.load(p.id);
-      if (current === "unavailable") return void (await react(p));
+      if (current === "unavailable") return void (await react(p, onlyAdd));
       if (!current) return setNotice("Your like didn’t save; nothing changed. Please retry.");
-      const saved = await typed.set(p.id, nextReaction(current.mine, "heart"));
-      if (!saved) setNotice("Your like didn’t save; nothing changed. Please retry.");
+      // Double-tap only ever adds a Like (never removes or replaces into nothing).
+      if (onlyAdd && current.mine === "heart") return;
+      const saved = await typed.set(p.id, onlyAdd ? "heart" : nextReaction(current.mine, "heart"));
+      if (saved === null) setNotice("Your like didn’t save; nothing changed. Please retry.");
     } finally {
       setLiking(null);
     }
@@ -1283,7 +1285,7 @@ export default function CommunityFeed() {
                           className="zone-card zone-media"
                           onDoubleClick={() => {
                             setBurst(p.id);
-                            void react(p, true);
+                            void like(p, true);
                           }}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1324,7 +1326,7 @@ export default function CommunityFeed() {
                           className="zone-media"
                           onDoubleClick={() => {
                             setBurst(p.id);
-                            void react(p, true);
+                            void like(p, true);
                           }}
                         >
                           <CommunityPhoto
@@ -1370,7 +1372,7 @@ export default function CommunityFeed() {
                           return (
                             <button
                               className={liked ? "is-liked" : ""}
-                              disabled={busy || liking === p.id}
+                              disabled={busy || liking === p.id || !!typed.pending[p.id]}
                               aria-pressed={liked}
                               aria-label={liked ? "Unlike" : "Like"}
                               onClick={() => void like(p)}
