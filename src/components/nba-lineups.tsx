@@ -198,11 +198,13 @@ export function NbaAvailabilitySummary({ game }: { game: LineupGameIdentity }) {
           ? "Availability report incomplete"
           : "No players listed Out in this report"}
       <small>
-        {confirmed === 2
-          ? "Both starting lineups confirmed"
-          : confirmed === 1
-            ? "One starting lineup confirmed"
-            : "Starters not yet confirmed"}
+        {[g.away, g.home].some((t) => t.status === "unavailable")
+          ? "Lineup report incomplete · verify at source"
+          : confirmed === 2
+            ? "Both starting lineups confirmed"
+            : confirmed === 1
+              ? "One starting lineup confirmed"
+              : "Starters not yet confirmed"}
       </small>
     </span>
   );

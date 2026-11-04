@@ -55,14 +55,12 @@ export function createLineupLoader(
       const fetched = clock(),
         providerAt = Date.parse(response.headers.get("date") || "");
       if (
-        Number.isFinite(providerAt) &&
-        (providerAt > fetched + 30000 || fetched - providerAt > 180000)
+        !Number.isFinite(providerAt) ||
+        providerAt > fetched + 30000 ||
+        fetched - providerAt > 180000
       )
         throw Error("Lineup source stale");
-      const checkedAt = Math.min(
-        now,
-        Number.isFinite(providerAt) ? providerAt : now,
-      );
+      const checkedAt = Math.min(now, providerAt);
       const report = parseNbaLineups(html, checkedAt);
       // An ET midnight crossed during the fetch needs a new page, not yesterday's lineup.
       if (easternLineupDay(checkedAt) !== easternLineupDay(fetched))

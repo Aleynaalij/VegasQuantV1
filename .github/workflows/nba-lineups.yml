@@ -47,7 +47,7 @@ jobs:
       - name: Game lineup UI and intended negative rejection
         run: |
           node scripts/ui-smoke/nba-lineups.mjs
-          if UI_SMOKE_NEGATIVE=missing-out node scripts/ui-smoke/nba-lineups.mjs > /tmp/nba-lineups-negative.log 2>&1; then
+          if UI_SMOKE_NEGATIVE=missing-out node scripts/ui-smoke/nba-lineups.mjs /tmp/nba-lineups-negative-evidence > /tmp/nba-lineups-negative.log 2>&1; then
             cat /tmp/nba-lineups-negative.log
             exit 1
           fi
@@ -60,3 +60,4 @@ jobs:
           path: |
             /tmp/nba-lineups-evidence
             /tmp/nba-lineups-negative.log
+            /tmp/nba-lineups-negative-evidence

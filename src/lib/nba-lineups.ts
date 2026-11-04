@@ -211,6 +211,26 @@ function side(block: Node, which: "is-visit" | "is-home"): TeamLineup | null {
     status &&
     has(status, "is-expected") &&
     /^Expected Lineup$/i.test(text(status));
+  // Never let a later uncertain row erase an explicit Out for the same provider player ID.
+  // Conflicts make the team's lineup incomplete even when the disputed player is a nonstarter.
+  const byPlayer = new Map<string, LineupPlayer>();
+  for (const p of availability) {
+    const previous = byPlayer.get(p.id);
+    if (
+      previous &&
+      (previous.name !== p.name || previous.status !== p.status)
+    ) {
+      malformed = true;
+      byPlayer.set(
+        p.id,
+        out(previous)
+          ? previous
+          : out(p)
+            ? p
+            : { ...previous, status: "Conflicting report" },
+      );
+    } else byPlayer.set(p.id, p);
+  }
   const contradictory = starters.some((p) =>
     availability.some((a) => a.id === p.id && out(a)),
   );
@@ -225,7 +245,7 @@ function side(block: Node, which: "is-visit" | "is-home"): TeamLineup | null {
             : "unavailable"
         : "unavailable",
     starters: five && !malformed && !contradictory ? starters : [],
-    availability: [...new Map(availability.map((p) => [p.id, p])).values()],
+    availability: [...byPlayer.values()],
   };
 }
 export function easternLineupDay(now: number): string {

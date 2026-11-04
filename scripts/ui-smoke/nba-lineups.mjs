@@ -103,13 +103,18 @@ async function run(name, width, fn) {
     sessionStorage.setItem("vq-prompt-shown", "fixture");
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
   }, UID);
-  await ctx.route("**/rest/v1/nba_games*", (r) =>
-    r.fulfill({
-      json: r.request().headers()["accept"]?.includes("vnd.pgrst.object")
+  await ctx.route("**/rest/v1/nba_games*", (r) => {
+    const fields = new URL(r.request().url()).searchParams.get("select");
+    const projected =
+      !fields || fields === "*"
         ? game
-        : [game],
-    }),
-  );
+        : Object.fromEntries(fields.split(",").map((key) => [key, game[key]]));
+    return r.fulfill({
+      json: r.request().headers()["accept"]?.includes("vnd.pgrst.object")
+        ? projected
+        : [projected],
+    });
+  });
   await ctx.route("**/rest/v1/nba_observations*", (r) =>
     r.fulfill({ json: [] }),
   );
@@ -215,6 +220,38 @@ for (const width of [360, 390, 1280])
           .count()
       )
         fail("withdrawn confirmation remains visible");
+    },
+  );
+for (const width of [390, 1280])
+  await run(
+    `Analysis uses schedule identity and shows Out/confirmed starters; ${width}px`,
+    width,
+    async ({ page, fail, setMode }) => {
+      await page.goto(`${BASE}/nba/analysis`, { waitUntil: "networkidle" });
+      const panel = page.getByRole("region", {
+        name: "Starting lineups and availability",
+      });
+      await panel.waitFor();
+      if (!(await panel.innerText()).includes("Sample BOS Out Forward"))
+        fail("Analysis Out status missing for exact schedule identity");
+      setMode("confirmed");
+      await panel.getByRole("button", { name: "Refresh lineups" }).click();
+      await panel
+        .locator("li")
+        .filter({ hasText: "Sample BOS Starter 1" })
+        .waitFor();
+      if (
+        (await panel
+          .getByText("Confirmed starters", { exact: true })
+          .count()) !== 2
+      )
+        fail("Analysis confirmed lineups missing");
+      if (
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth + 1,
+        )
+      )
+        fail("Analysis horizontal overflow");
     },
   );
 for (const mode of ["wrong-game", "stale", "invalid", "failure"])

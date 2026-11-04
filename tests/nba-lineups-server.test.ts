@@ -141,3 +141,19 @@ test("route checks confirmed session, membership and age before any provider cal
   assert.equal((await route(error, loader)).status, 503);
   assert.equal(calls, 2);
 });
+
+test("missing, malformed and future HTTP Date cannot be stamped with a new local receipt time", async () => {
+  for (const date of [
+    null,
+    "not a timestamp",
+    new Date(NOW + 31000).toUTCString(),
+  ]) {
+    const headers: Record<string, string> = { "content-type": "text/html" };
+    if (date !== null) headers.date = date;
+    const loader = createLineupLoader(
+      (async () => new Response(html, { headers })) as typeof fetch,
+      () => NOW,
+    );
+    await assert.rejects(loader(), /stale/);
+  }
+});

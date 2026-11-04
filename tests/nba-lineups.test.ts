@@ -112,3 +112,23 @@ test("HTML is plain data, full provider names decode entities, and script conten
   assert.equal(r.games[0].home.starters[0].name, "Sample & Home");
   assert.equal(r.games[0].home.status, "expected");
 });
+
+test("same-ID nonstarter conflicts preserve explicit Out in either order and cannot leave the lineup confirmed", () => {
+  const base = page(block(true));
+  const duplicate = (status: string) =>
+    `<li class="lineup__player"><div class="lineup__pos">F</div><a title="Sample Inactive Forward" href="/basketball/player/sample-out-51">S. Forward</a><span class="lineup__inj">${status}</span></li>`;
+  for (const html of [
+    base.replace("</ul>", duplicate("Ques") + "</ul>"),
+    base
+      .replace(">Out</span>", ">Ques</span>")
+      .replace("</ul>", duplicate("Out") + "</ul>"),
+  ]) {
+    const r = parseNbaLineups(html, NOW),
+      g = r.games[0];
+    assert.equal(g.away.status, "unavailable");
+    assert.deepEqual(g.away.starters, []);
+    assert.equal(g.away.availability.filter((p) => p.id === "51").length, 1);
+    assert.equal(g.away.availability.find((p) => p.id === "51")?.status, "Out");
+    assert(lineupOuts(g).includes("Sample Inactive Forward (MIL)"));
+  }
+});
