@@ -5,6 +5,7 @@ const db = new PGlite();
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const [a,b,c,p,q] = [1,2,3,4,5].map(id);
 const sql = path => fs.readFileSync(`supabase/migrations/${path}`,'utf8');
+const RUBY_VISIBLE = "create function private.ruby_visible(p_user uuid) returns boolean language sql stable security definer set search_path='' as $$select private.age_member_allowed() and private.community_member_allowed(p_user) and not exists(select 1 from private.community_restrictions where user_id=p_user)$$;";
 const VIEW = "create or replace view public.ruby_cards with(security_invoker=true) as\nselect s.id,s.user_id,s.brand,s.theme,s.submission_day,coalesce(r.sport,s.sport) sport,coalesce(r.title,s.title) title,coalesce(r.legs,s.legs) legs,coalesce(r.note,s.note) note,case when r.id is null then s.photo_path else r.photo_path end photo_path,case when r.id is null then s.sportsbook else r.sportsbook end sportsbook,case when r.id is null then s.reported_odds else r.reported_odds end reported_odds,s.created_at,coalesce(r.revision,0) revision,r.created_at edited_at,\ncoalesce(v.hidden,false) hidden,case when rr.revision=coalesce(r.revision,0) then rr.outcome else null end reported_result\nfrom public.ruby_submissions s left join lateral(select * from public.ruby_card_revisions where submission_id=s.id order by revision desc limit 1) r on true\nleft join lateral(select * from public.ruby_visibility_events where submission_id=s.id order by created_at desc,id desc limit 1) v on true\nleft join lateral(select * from public.ruby_result_reports where submission_id=s.id order by reported_at desc,id desc limit 1) rr on true\nwhere not coalesce(v.hidden,false) or (select public.is_admin());";
 try {
 await db.exec(`create role anon; create role authenticated; create role service_role;
@@ -41,6 +42,7 @@ await db.exec(`reset role;
  insert into public.ruby_submissions(id,user_id,brand,theme,sport,title) values('${k}','${a}','OmaticsZone','orbit','NFL','Sample lay'),('${h}','${a}','OmaticsZone','orbit','NFL','Sample hidden lay');
  insert into public.ruby_visibility_events(submission_id,hidden) values('${h}',true);`);
 await db.exec(VIEW);
+await db.exec(RUBY_VISIBLE);
 await db.exec(process.env.VQ_CARD_MIGRATION ? fs.readFileSync(process.env.VQ_CARD_MIGRATION,'utf8') : sql('20261104015613_ruby_card_reactions.sql'));
 const as = async user => db.exec(`reset role;set role authenticated;select set_config('test.uid','${user}',false);`);
 const owner = async statement => { await db.exec('reset role'); return db.exec(statement); };
@@ -78,6 +80,17 @@ await owner('drop trigger z_test_card_failure on public.ruby_card_reactions');
 await owner(`insert into private.notification_action_rates values('${b}',date_trunc('minute',now()),61) on conflict(user_id,window_at) do update set attempts=61;`);
 await as(b);await assert.rejects(set('heart'),/Please wait/);assert.equal((await states([k]))[0].mine,'fire');
 await owner(`delete from private.notification_action_rates where user_id='${b}';`);
+// Card visibility follows the ruby_submissions read policy: blocks either way, restricted contributor.
+for (const [blocker,blocked] of [[a,b],[b,a]]) {
+ await owner(`insert into public.member_blocks(user_id,target_user_id) values('${blocker}','${blocked}');`);
+ await as(b);assert.deepEqual(await states([k]),[],'blocked card state must not be returned');
+ await assert.rejects(set('heart'),/Card unavailable/);
+ await owner('delete from public.member_blocks');
+}
+await owner(`insert into private.community_restrictions(user_id,reason) values('${a}','Sample restriction');`);
+await as(c);assert.deepEqual(await states([k]),[]);await assert.rejects(set('heart'),/Card unavailable/);
+await owner('delete from private.community_restrictions');
+await as(b);assert.equal((await states([k]))[0].mine,'fire');
 // Same member gate as post reactions.
 await owner(`insert into private.community_restrictions(user_id,reason) values('${b}','Sample restriction');`);
 await as(b);await assert.rejects(set('heart'),/unavailable/);

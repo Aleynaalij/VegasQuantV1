@@ -794,14 +794,15 @@ export default function CommunityFeed() {
   );
   // VIP lays (ruby cards) keep their own reaction states; counts come from those states.
   const layReactions = useTypedReactions(() => {}, "card");
-  const layKey = lays.map((x) => x.id).join(",");
+  // Runs on every feed load or refresh (each sets a new lays array), so a failed read is retried
+  // with the next refresh instead of leaving the lays without reactions until a remount.
   useEffect(() => {
-    if (!uid || !layKey || layReactions.api === "unavailable") return;
-    const missing = layKey.split(",").filter((id) => !(id in layReactions.states));
+    if (!uid || !lays.length || layReactions.api === "unavailable") return;
+    const missing = lays.map((x) => x.id).filter((id) => !(id in layReactions.states));
     if (missing.length) void layReactions.loadMany(missing);
     // layReactions.states is read for filtering only; re-running on every state change would loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [layKey, uid, layReactions.api]);
+  }, [lays, uid, layReactions.api]);
   const [liking, setLiking] = useState<string | null>(null);
   /** The heart: Like through the typed API when it exists (Like replaces another emoji, never
    *  deletes it); the old insert/delete Like only when the typed API is not deployed. */

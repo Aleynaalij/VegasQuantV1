@@ -17,7 +17,8 @@ create trigger ruby_card_reaction_rate before insert on public.ruby_card_reactio
  for each row execute function private.notification_interaction_guard();
 
 -- Canonical state for up to 50 cards: counts are aggregates (no reactor identities), plus the
--- caller's own choice. Hidden or missing cards return no entry. Signed-in, age-eligible only.
+-- caller's own choice. Hidden, missing or not-visible cards (the same ruby_visible check as the
+-- ruby_submissions read policy: blocks either way, restricted contributor) return no entry. Signed-in, age-eligible only.
 create function public.ruby_card_reaction_states(p_cards uuid[]) returns jsonb
 language plpgsql stable security definer set search_path='' as $$
 begin
@@ -32,7 +33,7 @@ begin
    'mine',max(r.reaction_type) filter (where r.user_id=auth.uid())) state
   from public.ruby_cards c
   left join public.ruby_card_reactions r on r.card_id=c.id
-  where c.id = any(p_cards) and not c.hidden
+  where c.id = any(p_cards) and not c.hidden and private.ruby_visible(c.user_id)
   group by c.id) x), '[]'::jsonb);
 end $$;
 revoke all on function public.ruby_card_reaction_states(uuid[]) from public, anon, authenticated;
@@ -42,15 +43,17 @@ grant execute on function public.ruby_card_reaction_states(uuid[]) to authentica
 -- desired state, atomic replace under a per-member/card lock; returns the canonical state.
 create function public.set_ruby_card_reaction(p_card uuid, p_reaction text default 'heart') returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare actor uuid := auth.uid(); previous text;
+declare actor uuid := auth.uid(); author uuid; previous text;
 begin
  if not private.community_reaction_actor_allowed() then raise exception 'Reaction unavailable'; end if;
  if p_reaction is not null and p_reaction not in ('heart','celebrate','fire','thinking') then
   raise exception 'Unsupported reaction'; end if;
  perform pg_advisory_xact_lock(hashtextextended('ruby-card-reaction:'||actor::text||':'||p_card::text, 0));
- -- Lock the underlying lay (ruby_cards is a view) and refuse missing or hidden cards.
- perform 1 from public.ruby_submissions where id=p_card for key share;
- if not found or not exists (select 1 from public.ruby_cards where id=p_card and not hidden) then
+ -- Lock the underlying lay (ruby_cards is a view) and refuse missing, hidden or not-visible cards
+ -- (this definer bypasses the ruby_submissions read policy, so its ruby_visible check is repeated).
+ select user_id into author from public.ruby_submissions where id=p_card for key share;
+ if author is null or not coalesce(private.ruby_visible(author),false)
+  or not exists (select 1 from public.ruby_cards where id=p_card and not hidden) then
   raise exception 'Card unavailable'; end if;
  select reaction_type into previous from public.ruby_card_reactions where card_id=p_card and user_id=actor for update;
  if previous is distinct from p_reaction then

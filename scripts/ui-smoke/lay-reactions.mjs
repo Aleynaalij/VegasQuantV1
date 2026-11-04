@@ -23,7 +23,7 @@ const lay = (id, title) => ({ id, user_id: "u9", brand: "OmaticsZone", theme: "o
 
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
-async function open(name, { available = true, failWrites = 0, signedIn = true } = {}, run) {
+async function open(name, { available = true, failWrites = 0, failReads = 0, signedIn = true } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript(({ uid, signedIn }) => {
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -36,11 +36,12 @@ async function open(name, { available = true, failWrites = 0, signedIn = true } 
   }, { uid: UID, signedIn });
   const mine = { [L1]: null, [L2]: null };
   const reads = [], writes = [], postWrites = [];
-  let failLeft = failWrites;
+  let failLeft = failWrites, readFailLeft = failReads;
   await ctx.route("**/rest/v1/ruby_cards*", (r) => r.fulfill({ json: r.request().url().includes("id=eq.") ? null : [lay(L1, "Sample lay one"), lay(L2, "Sample lay two")] }));
   await ctx.route("**/rest/v1/rpc/ruby_card_reaction_states*", (r) => {
     const ids = r.request().postDataJSON().p_cards;
     reads.push(ids);
+    if (readFailLeft-- > 0) return r.fulfill({ status: 503, json: { message: "synthetic outage" } });
     if (!available) return r.fulfill({ status: 404, json: { code: "PGRST202", message: "Could not find the function" } });
     return r.fulfill({ json: ids.filter((id) => id in mine).map((id) => stateOf(id, mine[id])) });
   });
@@ -116,6 +117,13 @@ await open("a failed Like says so and stays unliked", { failWrites: 1 }, async (
   await layCard(page, L1).getByRole("alert").filter({ hasText: "Your like didn’t save" }).waitFor().catch(() => fail("failure not reported"));
   if ((await likeBtn(page, L1).getAttribute("aria-pressed")) !== "false") fail("failed Like shown as saved");
   if ((await likeBtn(page, L1).innerText()).trim() !== "2") fail("count changed although the save failed");
+});
+
+await open("a failed first read is retried on the next feed refresh", { failReads: 1 }, async ({ page, fail, reads }) => {
+  await page.waitForTimeout(500);
+  if (await layCard(page, L1).locator(".zone-actions").count()) fail("controls shown without a loaded state");
+  await page.evaluate(() => window.dispatchEvent(new Event("focus")));
+  await likeBtn(page, L1).waitFor({ timeout: 5000 }).catch(() => fail(`lay reactions never recovered after the outage (reads ${reads.length})`));
 });
 
 await open("before lay reactions are live: no dead buttons on lays", { available: false }, async ({ page, fail }) => {
