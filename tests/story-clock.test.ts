@@ -62,3 +62,11 @@ test("delayed detail and read callbacks re-evaluate expiry; identity/account gua
  assert.deepEqual(displayedStoryRead([],p,request,current,true,epoch),[p.id]);
  assert.deepEqual(displayedStoryRead([],p,request,current,false,epoch),[]);
 });
+test("expiry is 24 elapsed hours across DST and timestamp offsets, not next local midnight", () => {
+ for (const created of ["2026-03-08T01:30:00-05:00", "2026-11-01T01:30:00-04:00"]) {
+  const expires=Date.parse(created)+STORY_TTL_MS;
+  assert.equal(storyExpiresAt(created),expires);
+  assert.equal(storyEligible(created,expires-1),true);
+  assert.equal(storyEligible(created,expires),false);
+ }
+});
