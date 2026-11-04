@@ -79,7 +79,8 @@ async function run(name, width, fn) {
     reducedMotion: "reduce",
   });
   const page = await ctx.newPage();
-  await page.clock.install({ time: new Date(NOW) });
+  page.setDefaultTimeout(10000);
+  await page.clock.setFixedTime(new Date(NOW));
   await ctx.addInitScript((uid) => {
     localStorage.setItem(
       "sb-127-auth-token",
@@ -174,12 +175,18 @@ for (const width of [360, 390, 1280])
       if (!(await panel.innerText()).includes("Sample BOS Uncertain Guard"))
         fail("Questionable player status missing");
       if (
-        await panel.getByText("Sample BOS Starter 1", { exact: true }).count()
+        await panel
+          .locator("li")
+          .filter({ hasText: "Sample BOS Starter 1" })
+          .count()
       )
         fail("expected player presented as confirmed starter");
       setMode("confirmed");
       await panel.getByRole("button", { name: "Refresh lineups" }).click();
-      await panel.getByText("Sample BOS Starter 1", { exact: true }).waitFor();
+      await panel
+        .locator("li")
+        .filter({ hasText: "Sample BOS Starter 1" })
+        .waitFor();
       if (
         (await panel
           .getByText("Confirmed starters", { exact: true })
@@ -202,7 +209,10 @@ for (const width of [360, 390, 1280])
       await panel.getByRole("button", { name: "Refresh lineups" }).click();
       await page.waitForTimeout(100);
       if (
-        await panel.getByText("Sample BOS Starter 1", { exact: true }).count()
+        await panel
+          .locator("li")
+          .filter({ hasText: "Sample BOS Starter 1" })
+          .count()
       )
         fail("withdrawn confirmation remains visible");
     },
@@ -248,16 +258,11 @@ await run(
     if (!(await panel.innerText()).includes("Sample BOS Out Forward"))
       fail("detail page missing Out player");
     await page.evaluate(() => {
-      const old = localStorage.getItem("sb-127-auth-token");
       localStorage.removeItem("sb-127-auth-token");
-      window.dispatchEvent(
-        new StorageEvent("storage", {
-          key: "sb-127-auth-token",
-          oldValue: old,
-          newValue: null,
-          storageArea: localStorage,
-        }),
-      );
+      new BroadcastChannel("sb-127-auth-token").postMessage({
+        event: "SIGNED_OUT",
+        session: null,
+      });
     });
     await page.waitForTimeout(150);
     if (
