@@ -38,6 +38,10 @@ import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { isPublicationCard } from "@/lib/zone-publication-card";
 import ZonePublicationCard from "./zone-publication-card";
+import ReactionPicker, { useTypedReactions } from "./reaction-picker";
+import { nextReaction } from "@/lib/community-reaction-contracts";
+import "@/app/reaction-picker.css";
+import "@/app/zone-entry.css";
 type Post = {
   id: string;
   user_id: string;
@@ -744,6 +748,46 @@ export default function CommunityFeed() {
       if (generation === mutationEpoch.current) setBusy(false);
     }
   }
+  // Typed reactions (#206): one authoritative state per post shared by Like and the emoji picker.
+  const typed = useTypedReactions((id, st) =>
+    setRows((all) => all.map((x) => (x.id === id ? { ...x, reactions: st.total, reacted: st.mine !== null } : x))),
+  );
+  const [liking, setLiking] = useState<string | null>(null);
+  /** The heart: Like through the typed API when it exists (Like replaces another emoji, never
+   *  deletes it); the old insert/delete Like only when the typed API is not deployed. */
+  async function like(p: Post, onlyAdd = false) {
+    if (!uid || liking || typed.pending[p.id]) return;
+    if (typed.api === "unavailable") return react(p, onlyAdd);
+    setLiking(p.id);
+    try {
+      const current = p.id in typed.states ? typed.states[p.id] : await typed.load(p.id);
+      if (current === "unavailable") return void (await react(p, onlyAdd));
+      if (!current) return setNotice("Your like didn’t save; nothing changed. Please retry.");
+      // Double-tap only ever adds a Like (never removes or replaces into nothing).
+      if (onlyAdd && current.mine === "heart") return;
+      const saved = await typed.set(p.id, onlyAdd ? "heart" : nextReaction(current.mine, "heart"));
+      if (saved === null) setNotice("Your like didn’t save; nothing changed. Please retry.");
+    } finally {
+      setLiking(null);
+    }
+  }
+  // Load the typed state for posts that already show a reaction, so the heart lights only for Like.
+  useEffect(() => {
+    if (!uid || typed.api === "unavailable") return;
+    const pending = rows.filter((x) => x.reacted && !typed.states[x.id]).slice(0, 30);
+    let live = true;
+    void (async () => {
+      for (const x of pending) {
+        if (!live) return;
+        if ((await typed.load(x.id)) === "unavailable") return;
+      }
+    })();
+    return () => {
+      live = false;
+    };
+    // typed.states is read for filtering only; re-running on every state change would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows.map((x) => `${x.id}:${x.reacted}`).join(","), uid, typed.api]);
   async function react(p: Post, onlyLike = false) {
     if (!uid || busy || (onlyLike && p.reacted)) return;
     setBusy(true);
@@ -949,15 +993,42 @@ export default function CommunityFeed() {
         {!authReady ? (
           <p className="zone-status">Checking your session…</p>
         ) : !uid ? (
-          <section className="zone-join">
+          <section className="zone-join zone-entry" aria-labelledby="zone-entry-title">
             <Gem size={22} aria-hidden="true" />
-            <h2>Join the conversation</h2>
+            <h2 id="zone-entry-title">Join the conversation</h2>
             <p>
-              A free account lets you read member posts and VIP lays. Complete
-              your visible profile to publish and comment.
+              The Zone is where members share slips, talk through games and
+              post VIP lays. It’s member opinion, kept separate from Vegas
+              Quant’s published research.
             </p>
+            <ul className="zone-entry-list">
+              <li>
+                <b>Member slips and game talk</b> · read and comment once
+                you’re signed in
+              </li>
+              <li>
+                <b>VIP lays</b> · from contributors, labelled as theirs
+              </li>
+              <li>
+                <b>Recent posts</b> · tap through each member’s latest
+                posts, then the next member’s
+              </li>
+            </ul>
+            {/* Member posts are never sent to visitors, so the preview is honestly empty. */}
+            <div className="zone-entry-preview" role="note">
+              Member posts are only visible to signed-in members, so there’s
+              nothing to preview here.
+            </div>
             <Link className="primary" href="/membership">
               Sign in or create an account
+            </Link>
+            <p className="zone-entry-more">
+              A free account lets you read posts and VIP lays; complete your
+              visible profile to publish and comment. Posting is always
+              optional.
+            </p>
+            <Link className="zone-entry-research" href="/matchups">
+              Browse game research, open to everyone →
             </Link>
           </section>
         ) : (
@@ -1059,6 +1130,12 @@ export default function CommunityFeed() {
                 )}
               </fieldset>
             </form>
+            {/* The member's saved lays and lay in progress live on /parlays. */}
+            <p style={{ margin: "4px 0 8px" }}>
+              <Link className="zone-profile-link" href="/parlays">
+                My lays · saved and in progress →
+              </Link>
+            </p>
             {/* Contributors submit lays from Home or the VIP lays view, not above the feed. */}
             <div className="zone-tabs" role="tablist" aria-label="Feed">
               {(
@@ -1236,7 +1313,7 @@ export default function CommunityFeed() {
                           className="zone-card zone-media"
                           onDoubleClick={() => {
                             setBurst(p.id);
-                            void react(p, true);
+                            void like(p, true);
                           }}
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1277,7 +1354,7 @@ export default function CommunityFeed() {
                           className="zone-media"
                           onDoubleClick={() => {
                             setBurst(p.id);
-                            void react(p, true);
+                            void like(p, true);
                           }}
                         >
                           <CommunityPhoto
@@ -1316,20 +1393,24 @@ export default function CommunityFeed() {
                         </small>
                       ) : null}
                       <div className="zone-actions">
-                        <button
-                          className={p.reacted ? "is-liked" : ""}
-                          disabled={busy}
-                          aria-pressed={p.reacted}
-                          aria-label={p.reacted ? "Unlike" : "Like"}
-                          onClick={() => void react(p)}
-                        >
-                          <Heart
-                            size={21}
-                            fill={p.reacted ? "currentColor" : "none"}
-                            aria-hidden="true"
-                          />
-                          <span>{p.reactions || ""}</span>
-                        </button>
+                        {(() => {
+                          // Lit only for a confirmed Like: with typed reactions, another emoji is
+                          // not a Like; without them (API not deployed), the old any-reaction flag.
+                          const liked = typed.api === "unavailable" ? p.reacted : p.id in typed.states && typed.states[p.id].mine === "heart";
+                          return (
+                            <button
+                              className={liked ? "is-liked" : ""}
+                              disabled={busy || liking === p.id || !!typed.pending[p.id]}
+                              aria-pressed={liked}
+                              aria-label={liked ? "Unlike" : "Like"}
+                              onClick={() => void like(p)}
+                            >
+                              <Heart size={21} fill={liked ? "currentColor" : "none"} aria-hidden="true" />
+                              <span>{p.reactions || ""}</span>
+                            </button>
+                          );
+                        })()}
+                        <ReactionPicker postId={p.id} typed={typed} />
                         <button
                           aria-expanded={openComments === p.id}
                           aria-label="Comments"
