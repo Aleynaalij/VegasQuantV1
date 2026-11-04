@@ -1,5 +1,5 @@
-// Like and emoji reactions on VIP lays in the Zone feed (ruby_card_reaction_states /
-// set_ruby_card_reaction). Synthetic only: the lays and both RPCs are answered here; nothing is written.
+// Like, emoji, comments and share on VIP lays in the Zone feed (ruby_card_reaction_states /
+// set_ruby_card_reaction, ruby_card_comment_counts / ruby_card_comments / add_ruby_card_comment). Synthetic only: the lays and both RPCs are answered here; nothing is written.
 // Needs the app on :3100 built with NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321 and
 // scripts/ui-smoke/stub.mjs running (see check.mjs).
 // Negative control: UI_SMOKE_NEGATIVE=wrong-card answers every write for a different card, which the
@@ -23,7 +23,7 @@ const lay = (id, title) => ({ id, user_id: "u9", brand: "OmaticsZone", theme: "o
 
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
-async function open(name, { available = true, failWrites = 0, failReads = 0, signedIn = true } = {}, run) {
+async function open(name, { available = true, failWrites = 0, failReads = 0, signedIn = true, commentsAvailable = true, failComment = null } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript(({ uid, signedIn }) => {
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -33,6 +33,9 @@ async function open(name, { available = true, failWrites = 0, failReads = 0, sig
       access_token: "smoke", refresh_token: "smoke", token_type: "bearer", expires_in: 86400, expires_at: Math.floor(Date.now() / 1000) + 86400,
       user: { id: uid, aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } },
     }));
+    // Capture shares instead of opening the system sheet.
+    window.__shared = [];
+    Object.defineProperty(navigator, "share", { configurable: true, value: async (d) => { window.__shared.push(d); } });
   }, { uid: UID, signedIn });
   const mine = { [L1]: null, [L2]: null };
   const reads = [], writes = [], postWrites = [];
@@ -54,6 +57,23 @@ async function open(name, { available = true, failWrites = 0, failReads = 0, sig
     return r.fulfill({ json: NEG === "wrong-card" ? { ...s, post_id: "some-other-card" } : s });
   });
   await ctx.route("**/rest/v1/rpc/set_community_reaction*", (r) => { postWrites.push(r.request().postDataJSON()); return r.fulfill({ status: 500, json: {} }); });
+  const comments = { [L1]: [{ id: "c-1", user_id: "u7", parent_id: null, author_name: "SampleFan", body: "Sample comment on the lay", created_at: now }], [L2]: [] };
+  const commentWrites = [];
+  const missing = (r) => r.fulfill({ status: 404, json: { code: "PGRST202", message: "Could not find the function" } });
+  await ctx.route("**/rest/v1/rpc/ruby_card_comment_counts*", (r) => {
+    if (!commentsAvailable) return missing(r);
+    const ids = r.request().postDataJSON().p_cards;
+    return r.fulfill({ json: Object.fromEntries(ids.filter((id) => id in comments).map((id) => [id, comments[id].length])) });
+  });
+  await ctx.route("**/rest/v1/rpc/ruby_card_comments*", (r) => (commentsAvailable ? r.fulfill({ json: comments[r.request().postDataJSON().p_card] || [] }) : missing(r)));
+  await ctx.route("**/rest/v1/rpc/add_ruby_card_comment*", (r) => {
+    const { p_card, p_body, p_parent } = r.request().postDataJSON();
+    commentWrites.push({ p_card, p_body, p_parent });
+    if (failComment) return r.fulfill({ status: 400, json: { code: "P0001", message: failComment } });
+    const c = { id: `c-${commentWrites.length + 1}`, user_id: UID, parent_id: p_parent, author_name: "SampleMe", body: p_body, created_at: new Date().toISOString() };
+    comments[p_card].unshift(c);
+    return r.fulfill({ json: c });
+  });
   await ctx.route("**/rest/v1/rpc/notification_inbox*", (r) => r.fulfill({ json: { items: [], snapshot_at: now } }));
   const page = await ctx.newPage();
   page.setDefaultTimeout(10000);
@@ -64,7 +84,7 @@ async function open(name, { available = true, failWrites = 0, failReads = 0, sig
   try {
     await page.goto(BASE + "/community", { waitUntil: "networkidle" });
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
-    await run({ page, fail, reads, writes, postWrites });
+    await run({ page, fail, reads, writes, postWrites, commentWrites });
   } catch (e) {
     fail(`threw · ${String(e).split("\n")[0].slice(0, 200)}`);
   }
@@ -121,15 +141,65 @@ await open("a failed Like says so and stays unliked", { failWrites: 1 }, async (
 
 await open("a failed first read is retried on the next feed refresh", { failReads: 1 }, async ({ page, fail, reads }) => {
   await page.waitForTimeout(500);
-  if (await layCard(page, L1).locator(".zone-actions").count()) fail("controls shown without a loaded state");
+  if (await likeBtn(page, L1).count()) fail("Like shown without a loaded state");
   await page.evaluate(() => window.dispatchEvent(new Event("focus")));
   await likeBtn(page, L1).waitFor({ timeout: 5000 }).catch(() => fail(`lay reactions never recovered after the outage (reads ${reads.length})`));
+});
+
+const commentsBtn = (page, id) => layCard(page, id).getByRole("button", { name: "Comments on lay" });
+
+await open("comments on a lay: count, read, post, and the count updates", {}, async ({ page, fail, commentWrites }) => {
+  await commentsBtn(page, L1).waitFor().catch(() => fail("lay has no Comments button"));
+  if ((await commentsBtn(page, L1).innerText()).trim() !== "1") fail(`comment count is "${await commentsBtn(page, L1).innerText()}", expected 1`);
+  if ((await commentsBtn(page, L2).innerText()).trim() !== "") fail("a lay with no comments shows a count");
+  await layCard(page, L1).getByRole("button", { name: "View 1 comment" }).click();
+  await layCard(page, L1).getByText("Sample comment on the lay").waitFor().catch(() => fail("existing comment not shown"));
+  await layCard(page, L1).getByLabel("Add a comment").fill("Sample new take");
+  await layCard(page, L1).getByRole("button", { name: "Post" }).click();
+  await layCard(page, L1).getByText("Comment posted.").waitFor().catch(() => fail("no confirmation after posting"));
+  await layCard(page, L1).getByText("Sample new take").waitFor().catch(() => fail("new comment not listed"));
+  await page.waitForFunction((id) => document.querySelector(`#lay-${id} [aria-label="Comments on lay"]`)?.textContent.trim() === "2", L1, { timeout: 5000 }).catch(() => fail("count not refreshed to 2 after posting"));
+  if (JSON.stringify(commentWrites) !== JSON.stringify([{ p_card: L1, p_body: "Sample new take", p_parent: null }])) fail(`writes were ${JSON.stringify(commentWrites)}`);
+});
+
+await open("a reply on a lay is sent with its parent comment", {}, async ({ page, fail, commentWrites }) => {
+  await commentsBtn(page, L1).click();
+  await layCard(page, L1).getByRole("button", { name: "Reply" }).click();
+  await layCard(page, L1).getByText("Replying to @SampleFan").waitFor().catch(() => fail("reply target not shown"));
+  await layCard(page, L1).getByLabel("Add a comment").fill("Sample reply");
+  await layCard(page, L1).getByRole("button", { name: "Post" }).click();
+  await layCard(page, L1).getByText("Comment posted.").waitFor().catch(() => fail("reply not confirmed"));
+  if (commentWrites[0]?.p_parent !== "c-1") fail(`reply sent with parent ${commentWrites[0]?.p_parent}`);
+});
+
+await open("a refused comment explains why and keeps the draft", { failComment: "Wait ten seconds between comments" }, async ({ page, fail }) => {
+  await layCard(page, L2).getByRole("button", { name: "Add a comment…" }).click();
+  await layCard(page, L2).getByLabel("Add a comment").fill("Sample draft");
+  await layCard(page, L2).getByRole("button", { name: "Post" }).click();
+  await layCard(page, L2).getByText("Wait ten seconds between comments, then retry.").waitFor().catch(() => fail("reason not shown"));
+  if ((await layCard(page, L2).getByLabel("Add a comment").inputValue()) !== "Sample draft") fail("draft lost after a refused comment");
+});
+
+await open("share on a lay shares the lay's own link", {}, async ({ page, fail }) => {
+  await layCard(page, L2).getByRole("button", { name: "Share lay" }).click();
+  await page.getByText("Lay link shared.").waitFor().catch(() => fail("no share confirmation"));
+  const shared = await page.evaluate(() => window.__shared);
+  if (shared.length !== 1 || !shared[0].url.endsWith(`/community?view=vip&ruby=${L2}#ruby-${L2}`)) fail(`shared ${JSON.stringify(shared)}`);
+});
+
+await open("before lay comments are live: no Comments button, Share still works", { commentsAvailable: false }, async ({ page, fail }) => {
+  await likeBtn(page, L1).waitFor();
+  await page.waitForTimeout(500);
+  if (await commentsBtn(page, L1).count()) fail("Comments shown although the API is missing");
+  if (await layCard(page, L1).getByRole("button", { name: "Add a comment…" }).count()) fail("comment starter shown although the API is missing");
+  if (!(await layCard(page, L1).getByRole("button", { name: "Share lay" }).count())) fail("Share missing");
 });
 
 await open("before lay reactions are live: no dead buttons on lays", { available: false }, async ({ page, fail }) => {
   await layCard(page, L1).waitFor();
   await page.waitForTimeout(500);
-  if (await layCard(page, L1).locator(".zone-actions").count()) fail("lay shows reaction buttons although the API is missing");
+  if (await likeBtn(page, L1).count()) fail("lay shows a Like although the reactions API is missing");
+  if (await layCard(page, L1).getByRole("button", { name: "React with an emoji" }).count()) fail("lay shows the emoji picker although the reactions API is missing");
   if (!(await page.locator(".zone-post:not(.zone-lay) .zone-actions").count())) fail("member post lost its actions");
 });
 

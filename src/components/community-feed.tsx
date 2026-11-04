@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
   type FormEvent,
+  type ReactNode,
 } from "react";
 import Link from "next/link";
 import { Shell } from "./ui";
@@ -286,6 +287,173 @@ function Comments({
     </div>
   );
 }
+type LayComment = {
+  id: string;
+  user_id: string;
+  parent_id: string | null;
+  author_name: string;
+  body: string;
+  created_at: string;
+};
+/** Why a lay comment did not save, in the member's terms (the server's rule, never a raw error). */
+function layCommentError(message: string) {
+  if (/ten seconds/i.test(message)) return "Wait ten seconds between comments, then retry.";
+  if (/community profile/i.test(message)) return "Complete and enable your community profile to comment.";
+  if (/harmful content/i.test(message)) return "Remove harmful content, executable links or guaranteed-return claims.";
+  if (/1 to 1000/i.test(message)) return "Write 1 to 1000 characters.";
+  if (/Card unavailable|Comment unavailable/i.test(message)) return "This lay or comment is no longer available.";
+  return "Could not comment. Your draft is kept; please retry.";
+}
+/** Comments on a VIP lay: the same look and rules as post comments, through the lay comment API. */
+function LayComments({
+  cardId,
+  uid,
+  admin,
+  onChange,
+  onBlock,
+}: {
+  cardId: string;
+  uid: string;
+  admin: boolean;
+  onChange: () => void;
+  onBlock: (id: string, label: string) => Promise<void>;
+}) {
+  const [rows, setRows] = useState<LayComment[]>([]),
+    [body, setBody] = useState(""),
+    [notice, setNotice] = useState(""),
+    [busy, setBusy] = useState(false);
+  const [replyTo, setReplyTo] = useState<LayComment | null>(null);
+  const [faces, setFaces] = useState<Record<string, Person>>({});
+  const load = useCallback(async () => {
+    const r = await supabase.rpc("ruby_card_comments", { p_card: cardId });
+    if (r.error || !Array.isArray(r.data)) {
+      setNotice("Comments could not load. Try again.");
+      return;
+    }
+    const list = r.data as LayComment[];
+    setRows(list);
+    const ids = [...new Set(list.map((c) => c.user_id))].slice(0, 100);
+    if (!ids.length) return;
+    const f = await supabase.rpc("community_avatars", { p_users: ids });
+    if (!f.error)
+      setFaces(
+        Object.fromEntries(
+          ((f.data || []) as (Person & { user_id: string })[]).map((x) => [
+            x.user_id,
+            { avatar: x.avatar, staff: x.staff },
+          ]),
+        ),
+      );
+  }, [cardId]);
+  useEffect(() => {
+    void load();
+  }, [load]);
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    const r = await supabase.rpc("add_ruby_card_comment", {
+      p_card: cardId,
+      p_body: body.trim(),
+      p_parent: replyTo?.id || null,
+    });
+    setBusy(false);
+    if (r.error) return setNotice(layCommentError(r.error.message || ""));
+    setBody("");
+    setReplyTo(null);
+    setNotice("Comment posted.");
+    await load();
+    onChange();
+  }
+  async function remove(id: string) {
+    const r = await supabase.rpc("delete_ruby_card_comment", { p_comment: id });
+    if (r.error) setNotice("Could not remove comment.");
+    else {
+      await load();
+      onChange();
+    }
+  }
+  const field = `lay-reply-${cardId}`;
+  return (
+    <div className="social-comments zone-comments">
+      {rows.map((c) => (
+        <article
+          key={c.id}
+          id={`lay-comment-${c.id}`}
+          className={`zone-comment ${c.parent_id ? "is-reply" : ""}`}
+        >
+          <Avatar name={c.author_name} avatar={faces[c.user_id]?.avatar} size={32} />
+          <div className="zone-comment-main">
+            <p>
+              <b>
+                {c.author_name}
+                {faces[c.user_id]?.staff ? (
+                  <BadgeCheck className="zone-verified" size={14} aria-label="Vegas Quant" />
+                ) : null}
+              </b>{" "}
+              <RichText text={c.body} />
+            </p>
+            <div className="zone-comment-meta">
+              <time dateTime={c.created_at} title={time(c.created_at)}>
+                {ago(c.created_at)}
+              </time>
+              <button
+                type="button"
+                onClick={() => {
+                  setReplyTo(c);
+                  document.getElementById(field)?.focus();
+                }}
+              >
+                Reply
+              </button>
+              {uid !== c.user_id ? (
+                <button type="button" onClick={() => void onBlock(c.user_id, c.author_name)}>
+                  Block
+                </button>
+              ) : null}
+              {uid === c.user_id || admin ? (
+                <button type="button" onClick={() => void remove(c.id)}>
+                  Remove
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </article>
+      ))}
+      {rows.length === 50 ? <small>Showing the latest 50 comments.</small> : null}
+      <form onSubmit={submit} className="zone-comment-form">
+        {replyTo && (
+          <p className="zone-replying">
+            Replying to @{replyTo.author_name}{" "}
+            <button type="button" onClick={() => setReplyTo(null)}>
+              Cancel
+            </button>
+          </p>
+        )}
+        <label className="sr-only" htmlFor={field}>
+          Add a comment
+        </label>
+        <div className="zone-comment-box">
+          <textarea
+            id={field}
+            required
+            maxLength={1000}
+            rows={1}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Add a comment…"
+          />
+          <button disabled={busy || !body.trim()}>{busy ? "…" : "Post"}</button>
+        </div>
+      </form>
+      {notice ? (
+        <p role="status" className="zone-notice">
+          {notice}
+        </p>
+      ) : null}
+    </div>
+  );
+}
 type Person = { avatar: string | null; staff: boolean };
 function Avatar({
   name,
@@ -340,7 +508,29 @@ function RichText({ text }: { text: string }) {
   );
 }
 /** A contributor lay as a feed post: who, the legs and the price at a glance; the full card is one tap away. */
-function ZoneLay({ lay, reactions, signedIn }: { lay: RubySlip; reactions: TypedReactions; signedIn: boolean }) {
+function ZoneLay({
+  lay,
+  reactions,
+  signedIn,
+  comments,
+  commentsOpen,
+  me,
+  onComments,
+  onShare,
+  children,
+}: {
+  lay: RubySlip;
+  reactions: TypedReactions;
+  signedIn: boolean;
+  /** Readable comment count; undefined while lay comments are unavailable (nothing shown). */
+  comments: number | undefined;
+  commentsOpen: boolean;
+  me: { username: string; avatar: string | null };
+  onComments: (open: boolean, focus?: boolean) => void;
+  onShare: () => void;
+  /** The comments panel, rendered by the feed while open. */
+  children?: ReactNode;
+}) {
   const [copied, setCopied] = useState(false);
   const [liking, setLiking] = useState(false);
   const [failed, setFailed] = useState(false);
@@ -471,20 +661,39 @@ function ZoneLay({ lay, reactions, signedIn }: { lay: RubySlip; reactions: Typed
           </Link>
         </span>
       </div>
-      {/* Every Zone item takes a Like or an emoji; hidden until lay reactions are live. */}
-      {signedIn && reactions.api === "ok" && state ? (
+      {/* Every Zone item: Like, emoji, comments and share. Like/emoji and comments each appear only
+          once their API answers, so there are never dead buttons. */}
+      {signedIn ? (
         <div className="zone-actions zone-lay-reactions">
-          <button
-            className={liked ? "is-liked" : ""}
-            disabled={liking || !!reactions.pending[lay.id]}
-            aria-pressed={liked}
-            aria-label={liked ? "Unlike lay" : "Like lay"}
-            onClick={() => void like()}
-          >
-            <Heart size={21} fill={liked ? "currentColor" : "none"} aria-hidden="true" />
-            <span>{state.total || ""}</span>
+          {reactions.api === "ok" && state ? (
+            <>
+              <button
+                className={liked ? "is-liked" : ""}
+                disabled={liking || !!reactions.pending[lay.id]}
+                aria-pressed={liked}
+                aria-label={liked ? "Unlike lay" : "Like lay"}
+                onClick={() => void like()}
+              >
+                <Heart size={21} fill={liked ? "currentColor" : "none"} aria-hidden="true" />
+                <span>{state.total || ""}</span>
+              </button>
+              <ReactionPicker postId={lay.id} typed={reactions} />
+            </>
+          ) : null}
+          {comments !== undefined ? (
+            <button
+              type="button"
+              aria-expanded={commentsOpen}
+              aria-label="Comments on lay"
+              onClick={() => onComments(!commentsOpen)}
+            >
+              <MessageCircle size={21} aria-hidden="true" />
+              <span>{comments || ""}</span>
+            </button>
+          ) : null}
+          <button type="button" aria-label="Share lay" onClick={onShare}>
+            <Share2 size={20} aria-hidden="true" />
           </button>
-          <ReactionPicker postId={lay.id} typed={reactions} />
           {failed ? (
             <p role="alert" className="zone-lay-reaction-error">
               Your like didn’t save; nothing changed. Please retry.
@@ -492,6 +701,20 @@ function ZoneLay({ lay, reactions, signedIn }: { lay: RubySlip; reactions: Typed
           ) : null}
         </div>
       ) : null}
+      {signedIn && comments !== undefined && !commentsOpen ? (
+        <div className="zone-comment-peek">
+          {comments > 0 ? (
+            <button type="button" onClick={() => onComments(true)}>
+              View {comments === 1 ? "1 comment" : `all ${comments} comments`}
+            </button>
+          ) : null}
+          <button type="button" className="zone-comment-start" onClick={() => onComments(true, true)}>
+            <Avatar name={me.username || "You"} avatar={me.avatar} size={28} />
+            <span>Add a comment…</span>
+          </button>
+        </div>
+      ) : null}
+      {commentsOpen ? children : null}
     </article>
   );
 }
@@ -803,6 +1026,50 @@ export default function CommunityFeed() {
     // layReactions.states is read for filtering only; re-running on every state change would loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lays, uid, layReactions.api]);
+  // Lay comment counts ({lay id: count}); "unavailable" until the lay comment API is deployed.
+  const [layComments, setLayComments] = useState<Record<string, number>>({});
+  const [layCommentsApi, setLayCommentsApi] = useState<"unknown" | "ok" | "unavailable">("unknown");
+  const layCommentsAccount = useRef(0);
+  const loadLayCommentCounts = useCallback(async (ids: string[]) => {
+    const a = layCommentsAccount.current;
+    for (let i = 0; i < ids.length; i += 50) {
+      const r = await supabase.rpc("ruby_card_comment_counts", { p_cards: ids.slice(i, i + 50) });
+      if (a !== layCommentsAccount.current) return;
+      if (r.error) {
+        if (/PGRST202|not find the function|does not exist/i.test(`${r.error.code} ${r.error.message}`))
+          return setLayCommentsApi("unavailable");
+        return;
+      }
+      if (!r.data || typeof r.data !== "object" || Array.isArray(r.data)) return;
+      const got = Object.fromEntries(
+        Object.entries(r.data as Record<string, unknown>).filter(([, n]) => Number.isInteger(n)),
+      ) as Record<string, number>;
+      setLayComments((m) => ({ ...m, ...got }));
+      setLayCommentsApi("ok");
+    }
+  }, []);
+  useEffect(() => {
+    layCommentsAccount.current++;
+    setLayComments({});
+    setLayCommentsApi("unknown");
+  }, [uid]);
+  // Every feed load or refresh re-reads the counts, so they stay current and a failed read recovers.
+  useEffect(() => {
+    if (!uid || !lays.length || layCommentsApi === "unavailable") return;
+    void loadLayCommentCounts(lays.map((x) => x.id));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lays, uid]);
+  async function shareLay(lay: RubySlip) {
+    try {
+      const url = `${location.origin}/community?view=vip&ruby=${lay.id}#ruby-${lay.id}`;
+      if (navigator.share) await navigator.share({ title: `${lay.brand} lay on Vegas Quant`, url });
+      else await navigator.clipboard.writeText(url);
+      setNotice("Lay link shared.");
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === "AbortError"))
+        setNotice("Could not share this lay. Please retry.");
+    }
+  }
   const [liking, setLiking] = useState<string | null>(null);
   /** The heart: Like through the typed API when it exists (Like replaces another emoji, never
    *  deletes it); the old insert/delete Like only when the typed API is not deployed. */
@@ -1294,7 +1561,30 @@ export default function CommunityFeed() {
             ) : null}
             {(vipOnly ? [] : feed).map((item) =>
               item.kind === "lay" ? (
-                <ZoneLay key={`lay-${item.id}`} lay={item.lay} reactions={layReactions} signedIn={!!uid} />
+                <ZoneLay
+                  key={`lay-${item.id}`}
+                  lay={item.lay}
+                  reactions={layReactions}
+                  signedIn={!!uid}
+                  comments={layCommentsApi === "ok" ? layComments[item.lay.id] : undefined}
+                  commentsOpen={openComments === `lay:${item.lay.id}`}
+                  me={me}
+                  onComments={(open, focus) => {
+                    setOpenComments(open ? `lay:${item.lay.id}` : null);
+                    if (open && focus)
+                      requestAnimationFrame(() => document.getElementById(`lay-reply-${item.lay.id}`)?.focus());
+                  }}
+                  onShare={() => void shareLay(item.lay)}
+                >
+                  <LayComments
+                    key={`${uid}:${item.lay.id}`}
+                    cardId={item.lay.id}
+                    uid={uid}
+                    admin={admin}
+                    onBlock={block}
+                    onChange={() => void loadLayCommentCounts([item.lay.id])}
+                  />
+                </ZoneLay>
               ) : (
                 (() => {
                   const p = item.post;
