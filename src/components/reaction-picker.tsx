@@ -64,11 +64,15 @@ export function useTypedReactions(onCommitted: (postId: string, s: ReactionState
   const load = useCallback(async (postId: string): Promise<ReactionState | "unavailable" | null> => {
     const a = account.current;
     const before = changes.current[postId] ?? 0;
+    // Whether a change was in flight when this read was *sent*: its answer may predate that
+    // change even if it arrives after the change confirms, so it must be discarded either way.
+    const sentDuringChange = inFlight.current.has(postId);
     const r = await supabase.rpc("community_reaction_state", { p_post: postId });
     if (a !== account.current) return null;
-    // A change started after this read was sent (or is still in flight): the read is older than
-    // the newest confirmed state, so keep that state instead.
-    if ((changes.current[postId] ?? 0) !== before || inFlight.current.has(postId))
+    // A change started after this read was sent, was in flight when it was sent, or still is:
+    // the read is older than the newest confirmed state, so keep that state (and never let its
+    // error mark the typed API unavailable after a confirmed typed write).
+    if (sentDuringChange || (changes.current[postId] ?? 0) !== before || inFlight.current.has(postId))
       return statesRef.current[postId] ?? null;
     const s = r.error ? null : reactionState(r.data, postId);
     if (!s) {

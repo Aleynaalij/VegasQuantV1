@@ -22,7 +22,7 @@ const OTHERS = { heart: 1, fire: 1 }; // two other members' reactions
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
 const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
-async function open(name, { available = true, failWrites = 0, malformed = false, slow = 0, slowRead = 0, openPicker = true, readDelays = null, photo = false } = {}, run) {
+async function open(name, { available = true, failWrites = 0, malformed = false, slow = 0, slowRead = 0, openPicker = true, readDelays = null, readMissing = null, photo = false, initialMine = null } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript((uid) => {
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -33,13 +33,15 @@ async function open(name, { available = true, failWrites = 0, malformed = false,
       user: { id: uid, aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } },
     }));
   }, UID);
-  let mine = null, writes = [], failLeft = failWrites, legacy = [];
+  let mine = initialMine, writes = [], failLeft = failWrites, legacy = [];
   let reads = 0;
   await ctx.route("**/rest/v1/rpc/community_reaction_state*", async (r) => {
     // The answer reflects the state when the read was *sent*, however late it arrives.
     const snap = mine, n = ++reads;
     const wait = readDelays?.[n - 1] ?? slowRead;
     if (wait) await new Promise((res) => setTimeout(res, wait));
+    // readMissing: the nth read answers "function not found" (as if the typed API were gone).
+    if (readMissing?.includes(n)) return r.fulfill({ status: 404, json: { code: "PGRST202", message: "Could not find the function" } }).catch(() => {});
     return (available ? r.fulfill({ json: stateOf(snap, OTHERS) }) : r.fulfill({ status: 404, json: { code: "PGRST202", message: "Could not find the function" } })).catch(() => {});
   });
   if (photo) {
@@ -202,6 +204,26 @@ await open("rapid double-tap on a photo adds one Like, never a toggle", { photo:
   if (JSON.stringify(writes()) !== JSON.stringify(["heart"])) fail(`double-taps sent ${JSON.stringify(writes())}; expected exactly one heart`);
   if ((await heart(page).getAttribute("aria-pressed")) !== "true") fail("double-tap did not leave the post Liked");
 });
+
+// Schedule from Elo/Codex: a read is sent while a write is in flight, the write confirms, then the
+// older read resolves. The confirmed choice must stand.
+// The member starts on Like, so a stale read (Like) winning over the confirmed Fire is visible.
+for (const [label, opts] of [["stale success", { readDelays: [0, 2800] }], ["stale \"API missing\" error", { readDelays: [0, 2800], readMissing: [2] }]])
+  await open(`a read sent during a save, landing after it, cannot undo it (${label})`, { slow: 1200, initialMine: "heart", ...opts }, async ({ page, fail, writes }) => {
+    await choice(page, "Fire").click(); // write in flight for 1.2 s
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "React with an emoji" }).first().click(); // read 2 sent during the write
+    await page.keyboard.press("Escape"); // and closed: its late answer must not reopen it or take focus
+    await page.waitForTimeout(3600); // write confirms at ~1.2 s, read 2 lands at ~2.8 s
+    if (await page.getByRole("group", { name: "Reactions" }).count()) fail("late read reopened the picker");
+    if (await page.evaluate(() => !!document.activeElement?.closest(".reaction-panel"))) fail("late read moved focus");
+    if ((await heart(page).getAttribute("aria-pressed")) !== "false") fail("heart lit after a confirmed Fire");
+    if (!/3/.test(await likeCount(page))) fail(`post total is not the confirmed 3 ("${await likeCount(page)}")`);
+    await page.getByRole("button", { name: "React with an emoji" }).first().click(); // read 3: confirmed state
+    await choice(page, "Fire").waitFor({ timeout: 5000 }).catch(() => fail("typed reactions shown as unavailable after a confirmed typed write"));
+    if ((await pressed(page, "Fire")) !== "true") fail("confirmed Fire was replaced by the stale read");
+    if (JSON.stringify(writes()) !== JSON.stringify(["fire"])) fail(`writes were ${JSON.stringify(writes())}`);
+  });
 
 await browser.close();
 if (failures.length) {
