@@ -4,7 +4,8 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import { noAccess, type Access } from "@/lib/membership";
-import { nbaNickname, nbaWhen } from "@/lib/nba-home";
+import NbaLineups from "./nba-lineups";
+import { nbaLogoCode, nbaNickname, nbaWhen } from "@/lib/nba-home";
 import {
   doubleDoubleWatch,
   latestInjuries,
@@ -299,6 +300,15 @@ export default function NbaResearchTab() {
                       ET
                     </span>
                   </p>
+                  {access.allowed ? (
+                    <NbaLineups
+                      game={{
+                        away: nbaLogoCode(g.away_team),
+                        home: nbaLogoCode(g.home_team),
+                        start: g.tipoff,
+                      }}
+                    />
+                  ) : null}
                   {access.allowed
                     ? [g.away_team, g.home_team].map((team) => {
                         const list = (slate.injuries.get(team) || []).filter(
@@ -318,7 +328,7 @@ export default function NbaResearchTab() {
                                     {i.injury ? `, ${i.injury}` : ""})
                                   </span>
                                 ))
-                              : "no injuries reported"}
+                              : "no recent ESPN injury observations received; not player clearance"}
                           </p>
                         );
                       })

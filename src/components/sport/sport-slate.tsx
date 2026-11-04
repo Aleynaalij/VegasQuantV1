@@ -14,6 +14,7 @@ export default function SportSlate({
   games,
   faces = {},
   quoteTimes = {},
+  summaryExtra,
   onOpen,
   children,
   empty = "No games scheduled this week.",
@@ -21,6 +22,8 @@ export default function SportSlate({
   games: SlateGame[];
   faces?: Record<string, MoneylineRead>;
   quoteTimes?: Record<string, { observedAt: string; stale: boolean }>;
+  /** Optional sport-specific availability note, visible while the row is collapsed. */
+  summaryExtra?: (game: SlateGame) => ReactNode;
   /** Called the first time any game opens, so markets load only when wanted. */
   onOpen?: () => void;
   children: (game: SlateGame) => ReactNode;
@@ -42,6 +45,7 @@ export default function SportSlate({
           face={faces[g.id]}
           quoteTime={quoteTimes[g.id]}
           onOpen={onOpen}
+          summaryExtra={summaryExtra}
         >
           {children}
         </GameRow>
@@ -64,12 +68,14 @@ function GameRow({
   face,
   quoteTime,
   onOpen,
+  summaryExtra,
   children,
 }: {
   game: SlateGame;
   face?: MoneylineRead;
   quoteTime?: { observedAt: string; stale: boolean };
   onOpen?: () => void;
+  summaryExtra?: (game: SlateGame) => ReactNode;
   children: (game: SlateGame) => ReactNode;
 }) {
   const [open, setOpen] = useState(false);
@@ -130,6 +136,7 @@ function GameRow({
             awayLabel={g.away.short}
           />
         ) : null}
+        {summaryExtra?.(g)}
       </summary>
       <div className="vq-game-props">{open ? children(g) : null}</div>
     </details>
