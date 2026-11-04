@@ -43,6 +43,9 @@ await db.exec(`reset role;
  insert into public.ruby_visibility_events(submission_id,hidden) values('${h}',true);`);
 await db.exec(VIEW);
 await db.exec(RUBY_VISIBLE);
+// As in production: members read their own community profile (the post-comment trigger runs as them).
+await db.exec(`reset role;alter table public.community_profiles enable row level security;grant select on public.community_profiles to authenticated;
+ create policy own_profile_read on public.community_profiles for select to authenticated using(user_id=(select auth.uid()));`);
 await db.exec(process.env.VQ_COMMENT_MIGRATION ? fs.readFileSync(process.env.VQ_COMMENT_MIGRATION,'utf8') : sql('20261104031500_ruby_card_comments.sql'));
 const as = async user => db.exec(`reset role;set role authenticated;select set_config('test.uid','${user}',false);`);
 const owner = async statement => { await db.exec('reset role'); return db.exec(statement); };
@@ -61,6 +64,13 @@ await gap(b);
 // The ten-second gap is shared with post comments.
 await db.query('insert into public.community_post_comments(post_id,user_id,body) values($1,$2,$3)',[p,b,'Sample post comment']);
 await as(b);await assert.rejects(add('After a post comment'),/Wait ten seconds/);
+await gap(b);
+// ...and the reverse: a post comment right after a lay comment waits too.
+await as(b);const lf=await add('Lay first');
+await assert.rejects(db.query('insert into public.community_post_comments(post_id,user_id,body) values($1,$2,$3)',[p,b,'Post right after']),/Wait ten seconds/);
+await gap(b);
+await as(b);await db.query('insert into public.community_post_comments(post_id,user_id,body) values($1,$2,$3)',[p,b,'Post after the gap']);
+await as(b);await del(lf.id);
 await gap(b);
 await as(c);const r1=await add('Sample reply',c1.id);assert.equal(r1.parent_id,c1.id);
 let l=await list();assert.equal(l.length,2);assert.equal(l[0].id,r1.id,'newest first');

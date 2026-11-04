@@ -98,3 +98,31 @@ begin
 end $$;
 revoke all on function public.delete_ruby_card_comment(uuid) from public, anon, authenticated;
 grant execute on function public.delete_ruby_card_comment(uuid) to authenticated;
+
+-- The ten-second gap is shared in both directions: post comments also wait for a recent lay
+-- comment. prepare_member_publication runs as the commenter (security invoker), who cannot read
+-- ruby_card_comments, so the check is a definer helper scoped to the caller only.
+create function private.recent_ruby_card_comment() returns boolean
+language sql stable security definer set search_path='' as $$
+ select exists (select 1 from public.ruby_card_comments where user_id=auth.uid() and created_at>now()-interval '10 seconds')
+$$;
+revoke all on function private.recent_ruby_card_comment() from public, anon, authenticated;
+grant execute on function private.recent_ruby_card_comment() to authenticated;
+
+-- Unchanged from production except the comment branch, which now also checks lay comments.
+create or replace function private.prepare_member_publication() returns trigger language plpgsql security invoker set search_path='' as $$
+declare username text; begin
+ if auth.uid() is null or new.user_id<>auth.uid() then raise exception 'Sign in as the author'; end if;
+ select p.username into username from public.community_profiles p where p.user_id=auth.uid() and p.visible and p.avatar is not null and p.username !~* '^Member_[a-f0-9]{8}$';
+ if username is null then raise exception 'Complete and enable your community profile first'; end if;
+ perform pg_advisory_xact_lock(hashtextextended(auth.uid()::text,420));
+ if TG_TABLE_NAME='community_posts' then
+  if exists(select 1 from public.community_posts where user_id=auth.uid() and created_at>now()-interval '30 seconds') then raise exception 'Wait thirty seconds between posts'; end if;
+  if exists(select 1 from jsonb_array_elements(new.legs) l where jsonb_typeof(l)<>'string' or length(l#>>'{}') not between 1 and 180) then raise exception 'Use up to twelve text selections'; end if;
+  if new.photo_path is not null and not exists(select 1 from storage.objects where bucket_id='community-photos' and name=new.photo_path and owner_id=auth.uid()::text) then raise exception 'Upload your photo before publishing';end if;
+  if new.kind='slip' and jsonb_array_length(new.legs)=0 and new.photo_path is null then raise exception 'Add at least one selection'; end if;
+ else
+  if exists(select 1 from public.community_post_comments where user_id=auth.uid() and created_at>now()-interval '10 seconds')
+   or private.recent_ruby_card_comment() then raise exception 'Wait ten seconds between comments'; end if;
+ end if;
+ new.author_name=username;new.created_at=now();return new;end $$;
