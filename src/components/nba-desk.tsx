@@ -1,3 +1,4 @@
+import { NbaLineupsProvider } from "./nba-lineups";
 import NbaResearchFeed from "./nba-research-feed";
 import NbaGameBoard from "./nba-game-board";
 import NbaHome from "./nba-home";
@@ -47,7 +48,7 @@ const priorities = [
 ];
 /** Regular season opens October 20, 2026 (The NBA Betting Bible, Part III). Midnight ET. */
 const openingDay = "2026-10-20T04:00:00Z";
-export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
+function NbaDeskContent({ view = "home" }: { view?: NbaView }) {
   if (view === "home")
     return (
       <Shell active="home" sport="nba">
@@ -114,5 +115,13 @@ export default function NbaDesk({ view = "home" }: { view?: NbaView }) {
         ) : null}
       </div>
     </Shell>
+  );
+}
+
+export default function NbaDesk(props: { view?: NbaView }) {
+  return (
+    <NbaLineupsProvider>
+      <NbaDeskContent {...props} />
+    </NbaLineupsProvider>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import NbaLineups, { NbaAvailabilitySummary } from "./nba-lineups";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
@@ -205,6 +206,7 @@ export default function NbaGameBoard() {
             <div className="nba-board-source">
               <Source url={g.source} />
             </div>
+            <NbaAvailabilitySummary game={{ away: g.away_abbreviation, home: g.home_abbreviation, start: g.tipoff, tbd: g.tipoff_tbd }} />
             {access.allowed ? (
               <NbaGameDetails game={g} now={now} />
             ) : (
@@ -298,6 +300,7 @@ export function NbaGameDetails({
       <summary>Open research · lines, props & form</summary>
       {open && (
         <div>
+          <NbaLineups game={{ away: game.away_abbreviation, home: game.home_abbreviation, start: game.tipoff, tbd: game.tipoff_tbd }} />
           {loading && <p role="status">Loading source snapshots…</p>}
           {error && (
             <p role="alert">

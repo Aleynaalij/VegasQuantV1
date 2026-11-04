@@ -1,3 +1,4 @@
+import { NbaLineupsProvider } from "@/components/nba-lineups";
 import NbaResearchTab from "@/components/nba-research-tab";
 import { Shell } from "@/components/ui";
 export const metadata = {
@@ -8,7 +9,9 @@ export const metadata = {
 export default function Page() {
   return (
     <Shell active="game" sport="nba">
-      <NbaResearchTab />
+      <NbaLineupsProvider>
+        <NbaResearchTab />
+      </NbaLineupsProvider>
     </Shell>
   );
 }
