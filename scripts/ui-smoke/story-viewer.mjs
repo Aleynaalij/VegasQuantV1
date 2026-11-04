@@ -4,6 +4,8 @@
 // scripts/ui-smoke/stub.mjs running (see check.mjs).
 // Negative control: UI_SMOKE_NEGATIVE=read-on-tap marks a post read when its ring is tapped (the
 // old behaviour), so "a failed post is never marked read" must fail.
+// Negative control: UI_SMOKE_NEGATIVE=no-taps swallows clicks on the post area (no side-tap
+// navigation, the old behaviour), so the tap cases must fail.
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
@@ -41,6 +43,13 @@ async function open(name, { width = 390, detail = (pid) => posts.find((p) => p.i
         user: { id: uid, aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } },
       }));
   }, UID);
+  if (process.env.UI_SMOKE_NEGATIVE === "no-taps")
+    await ctx.addInitScript(() => {
+      document.addEventListener("click", (e) => {
+        const t = e.target instanceof Element ? e.target : null;
+        if (t?.closest(".story-viewer-body") && !t.closest("a,button")) e.stopPropagation();
+      }, true);
+    });
   if (process.env.UI_SMOKE_NEGATIVE === "read-on-tap")
     await ctx.addInitScript((uid) => {
       document.addEventListener("click", (e) => {
@@ -123,10 +132,9 @@ for (const width of [360, 390, 1280])
     }
     const want = ["SampleAlpha:SampleAlpha post 1", "SampleAlpha:SampleAlpha post 2", "SampleBravo:(photo)", "SampleBravo:SampleBravo post 4"];
     if (JSON.stringify(order) !== JSON.stringify(want)) fail(`sequence was ${JSON.stringify(order)}`);
-    // Tapping the unavailable Gambly note or the post text must not move the viewer.
+    // Tapping the unavailable Gambly note (the post's action area) must not move the viewer.
     await viewer(page).locator(".story-gambly").click();
-    await viewer(page).locator(".story-text").click();
-    if (!(await viewer(page).getByText("SampleBravo post 4").count())) fail("tapping the Gambly note or text advanced the viewer");
+    if (!(await viewer(page).getByText("SampleBravo post 4").count())) fail("tapping the Gambly note advanced the viewer");
     const seen = await read(page);
     for (const w of [id(1), id(2), id(4)]) if (!seen.includes(w)) fail(`displayed post ${w.slice(-1)} was not marked read`);
     if (seen.includes(id(3))) fail("photo-only post was marked read although its photo never loaded");
@@ -303,6 +311,69 @@ await open("sign-out in another tab closes the viewer and drops its posts", {}, 
   const gone = await page.waitForFunction(() => !document.querySelector("dialog.story-viewer[open]"), null, { timeout: 10000 }).then(() => true, () => false);
   if (!gone) fail("viewer stayed open with the previous account's posts after sign-out");
   if (await page.locator("dialog.story-viewer").getByText("SampleAlpha post 1").count()) fail("previous account's post text is still on the page");
+});
+
+// Instagram-style taps: right half forward one post, left half back one; no wrap at either end.
+const tapAt = async (page, side) => {
+  const box = await viewer(page).locator(".story-viewer-body").boundingBox();
+  // Tap on the post's content (its label line), not on a control, as a person would.
+  const label = await viewer(page).locator(".story-label").boundingBox();
+  await page.mouse.click(box.x + box.width * (side === "right" ? 0.85 : 0.15), label.y + label.height / 2);
+  await page.waitForTimeout(200);
+};
+const showing = async (page) => (await viewer(page).locator(".story-post h2").innerText().catch(() => "(photo)"));
+for (const width of [390, 1280])
+  await open(`@${width}: tap right for the next post, left for the previous, one step per tap, no wrap`, { width }, async ({ page, fail }) => {
+    await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
+    await viewer(page).getByText("SampleAlpha post 1").waitFor();
+    await tapAt(page, "left");
+    if ((await showing(page)) !== "SampleAlpha post 1") fail("a left tap on the first post moved (wrapped)");
+    await tapAt(page, "right");
+    if ((await showing(page)) !== "SampleAlpha post 2") fail(`right tap showed "${await showing(page)}", expected the next post`);
+    await tapAt(page, "right");
+    if ((await showing(page)) !== "(photo)") fail("right tap did not cross to the next member's first post");
+    if ((await heading(page)) !== "SampleBravo") fail("next member's name not shown after crossing");
+    await tapAt(page, "left");
+    if ((await showing(page)) !== "SampleAlpha post 2") fail(`left tap showed "${await showing(page)}", expected the previous member's last post`);
+    await tapAt(page, "right");
+    await tapAt(page, "right");
+    if ((await showing(page)) !== "SampleBravo post 4") fail("did not reach the last post by tapping");
+    await tapAt(page, "right");
+    if ((await showing(page)) !== "SampleBravo post 4") fail("a right tap on the last post moved (wrapped)");
+    if (!(await viewer(page).count())) fail("tapping past the end closed the viewer");
+  });
+
+await open("taps never fire from controls, links, selection drags or the nav buttons", {}, async ({ page, fail }) => {
+  await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
+  await viewer(page).getByText("SampleAlpha post 1").waitFor();
+  // The Next button moves exactly one post (no extra step from the tap area).
+  await viewer(page).getByRole("button", { name: /Next post/ }).click();
+  await page.waitForTimeout(200);
+  if ((await showing(page)) !== "SampleAlpha post 2") fail(`Next button moved to "${await showing(page)}" (double navigation?)`);
+  // The action area (discussion link and Gambly note) is not a tap target.
+  await viewer(page).locator(".story-gambly").click({ position: { x: 300, y: 5 } });
+  if ((await showing(page)) !== "SampleAlpha post 2") fail("tapping the action area navigated");
+  // Dragging across the text to select it (or to scroll) is not a tap.
+  const text = await viewer(page).locator(".story-text").boundingBox();
+  await page.mouse.move(text.x + 5, text.y + text.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(text.x + text.width - 5, text.y + text.height / 2, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(200);
+  if ((await showing(page)) !== "SampleAlpha post 2") fail("a text-selection drag navigated");
+  // With text selected, a click inside the post does not navigate either (it clears the selection first).
+  await page.evaluate(() => {
+    const el = document.querySelector("dialog.story-viewer .story-text");
+    const r = document.createRange(); r.selectNodeContents(el);
+    const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r);
+  });
+  await viewer(page).locator(".story-text").dispatchEvent("click", { button: 0, clientX: 300, clientY: 300 });
+  await page.waitForTimeout(150);
+  if ((await showing(page)) !== "SampleAlpha post 2") fail("a click while text is selected navigated");
+  // Close still closes; it is never treated as a tap.
+  await viewer(page).getByRole("button", { name: "Close recent posts" }).click();
+  await viewer(page).waitFor({ state: "detached" }).catch(() => {});
+  if (await viewer(page).count()) fail("Close did not close the viewer");
 });
 
 await browser.close();

@@ -17,7 +17,7 @@ import {
   type StoryGroup,
   type StoryPost,
 } from "@/lib/community-story-contracts";
-import CommunityPhoto from "./community-photo";
+import CommunityPhoto, { openCommunityPhoto } from "./community-photo";
 import "@/app/story-viewer.css";
 
 /** What the viewer renders: authorized post content only (no counts, emails or other fields). */
@@ -263,6 +263,24 @@ export default function StoryViewer({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [go]);
+  // Instagram-style taps on the post area: the right half goes forward one post, the left half
+  // back one. Controls, links, media controls, text selection and drags (scrolling) never
+  // navigate, and one gesture moves at most one step (click fires once per tap or mouse click).
+  const tapStart = useRef<{ x: number; y: number } | null>(null);
+  const onTapDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    tapStart.current = e.isPrimary ? { x: e.clientX, y: e.clientY } : null;
+  };
+  const onTap = (e: React.MouseEvent<HTMLDivElement>) => {
+    const start = tapStart.current;
+    tapStart.current = null;
+    if (state.kind !== "ready" || e.defaultPrevented || e.button !== 0) return;
+    const target = e.target as HTMLElement | null;
+    if (target?.closest?.("a,button,input,textarea,select,summary,label,video,audio,[contenteditable=true],[data-story-no-tap]")) return;
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10) return;
+    if ((window.getSelection()?.toString() ?? "").trim()) return;
+    const box = e.currentTarget.getBoundingClientRect();
+    go(e.clientX < box.left + box.width / 2 ? moves.current.prev : moves.current.next);
+  };
   // Keep focus inside the viewer when the focused nav button becomes disabled at an end.
   const prevButton = useRef<HTMLButtonElement>(null);
   const nextButton = useRef<HTMLButtonElement>(null);
@@ -311,7 +329,9 @@ export default function StoryViewer({
           </div>
         </header>
 
-        <div className="story-viewer-body" aria-live="polite">
+        {/* Taps are a pointer shortcut; the Previous/Next buttons and Arrow keys stay the
+            accessible way to move, so the tap area itself is not a control. */}
+        <div className="story-viewer-body" aria-live="polite" onPointerDown={onTapDown} onClick={onTap}>
           {state.kind === "loading" ? (
             <p role="status">Loading post…</p>
           ) : state.kind === "unavailable" ? (
@@ -338,9 +358,14 @@ export default function StoryViewer({
                 </ul>
               ) : null}
               {post.photo_path ? (
-                <CommunityPhoto path={post.photo_path} title={post.title || `${post.author_name}'s post`} onLoaded={() => setPhotoLoaded(true)} />
+                <CommunityPhoto path={post.photo_path} title={post.title || `${post.author_name}'s post`} onLoaded={() => setPhotoLoaded(true)} openable={false} />
               ) : null}
-              <div className="story-actions">
+              <div className="story-actions" data-story-no-tap>
+                {post.photo_path && photoLoaded ? (
+                  <button type="button" className="secondary story-open-photo" onClick={() => void openCommunityPhoto(post.photo_path!)}>
+                    Open full photo
+                  </button>
+                ) : null}
                 <Link
                   className="story-discussion"
                   href={storyDiscussion(post)}
