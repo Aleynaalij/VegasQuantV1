@@ -28,14 +28,34 @@ export type TypedReactions = {
   load: (postId: string) => Promise<ReactionState | "unavailable" | null>;
   /** null on failure; "busy" when another change for this post is still in flight (ignored). */
   set: (postId: string, desired: ReactionType | null) => Promise<ReactionState | "busy" | null>;
+  /** Reads many targets in one request (cards) or one by one (posts); same staleness rules as load. */
+  loadMany: (ids: string[]) => Promise<"unavailable" | void>;
 };
+
+/** What the reactions belong to: community posts (#206) or VIP contributor lays (ruby cards). */
+export type ReactionTarget = "post" | "card";
+
+const missingFunction = (e: { code?: string; message?: string }) =>
+  /PGRST202|not find the function|does not exist/i.test(`${e.code} ${e.message}`);
+
+async function readStates(target: ReactionTarget, ids: string[]) {
+  if (target === "post") {
+    const r = await supabase.rpc("community_reaction_state", { p_post: ids[0] });
+    return { error: r.error, rows: r.error ? [] : [r.data] };
+  }
+  const r = await supabase.rpc("ruby_card_reaction_states", { p_cards: ids });
+  return { error: r.error, rows: !r.error && Array.isArray(r.data) ? (r.data as unknown[]) : [] };
+}
 
 /**
  * One authoritative reaction state per post (#206 contract), shared by the Like heart and the
  * emoji picker so they can never disagree: the server's mine/counts are the only source of truth,
  * every write sends an explicit desired value, and an account change clears everything.
  */
-export function useTypedReactions(onCommitted: (postId: string, s: ReactionState) => void): TypedReactions {
+export function useTypedReactions(
+  onCommitted: (postId: string, s: ReactionState) => void,
+  target: ReactionTarget = "post",
+): TypedReactions {
   const [api, setApi] = useState<TypedReactions["api"]>("unknown");
   const [states, setStates] = useState<Record<string, ReactionState>>({});
   const [pending, setPending] = useState<Record<string, boolean>>({});
@@ -61,33 +81,56 @@ export function useTypedReactions(onCommitted: (postId: string, s: ReactionState
       }),
     [],
   );
-  const load = useCallback(async (postId: string): Promise<ReactionState | "unavailable" | null> => {
+  // One read for one or many targets. Each target keeps its own staleness check: a read that was
+  // sent before a change (or while one was in flight) never overwrites that change's state.
+  const read = useCallback(async (ids: string[]): Promise<Record<string, ReactionState | null> | "unavailable" | null> => {
     const a = account.current;
-    const before = changes.current[postId] ?? 0;
-    // Whether a change was in flight when this read was *sent*: its answer may predate that
-    // change even if it arrives after the change confirms, so it must be discarded either way.
-    const sentDuringChange = inFlight.current.has(postId);
-    const r = await supabase.rpc("community_reaction_state", { p_post: postId });
+    const before = ids.map((id) => [changes.current[id] ?? 0, inFlight.current.has(id)] as const);
+    const r = await readStates(target, ids);
     if (a !== account.current) return null;
-    // A change started after this read was sent, was in flight when it was sent, or still is:
-    // the read is older than the newest confirmed state, so keep that state (and never let its
-    // error mark the typed API unavailable after a confirmed typed write).
-    if (sentDuringChange || (changes.current[postId] ?? 0) !== before || inFlight.current.has(postId))
-      return statesRef.current[postId] ?? null;
-    const s = r.error ? null : reactionState(r.data, postId);
-    if (!s) {
+    const out: Record<string, ReactionState | null> = {};
+    let fresh = false;
+    let valid = false;
+    ids.forEach((id, i) => {
+      const [count, sentDuringChange] = before[i];
+      if (sentDuringChange || (changes.current[id] ?? 0) !== count || inFlight.current.has(id)) {
+        out[id] = statesRef.current[id] ?? null;
+        return;
+      }
+      fresh = true;
+      const s = r.rows.map((row) => reactionState(row, id)).find(Boolean) ?? null;
+      out[id] = s;
+      if (s) {
+        valid = true;
+        statesRef.current = { ...statesRef.current, [id]: s };
+      }
+    });
+    // Every target changed meanwhile: keep the confirmed states, and never let this read's error
+    // mark the typed API unavailable after a confirmed typed write.
+    if (!fresh) return out;
+    if (r.error) {
       // A missing function means the typed API is not deployed; any other failure stays "unknown".
-      if (r.error && /PGRST202|not find the function|does not exist/i.test(`${r.error.code} ${r.error.message}`)) {
+      if (missingFunction(r.error)) {
         setApi("unavailable");
         return "unavailable";
       }
-      return null;
+      return out;
     }
+    if (!valid) return out;
     setApi("ok");
-    statesRef.current = { ...statesRef.current, [postId]: s };
     setStates(statesRef.current);
-    return s;
-  }, []);
+    return out;
+  }, [target]);
+  const load = useCallback(async (postId: string): Promise<ReactionState | "unavailable" | null> => {
+    const r = await read([postId]);
+    return r === "unavailable" || r === null ? r : r[postId];
+  }, [read]);
+  const loadMany = useCallback(async (ids: string[]): Promise<"unavailable" | void> => {
+    // Cards: up to 50 per request (the server's cap); posts: one request each.
+    const size = target === "card" ? 50 : 1;
+    const batches = Array.from({ length: Math.ceil(ids.length / size) }, (_, i) => ids.slice(i * size, (i + 1) * size));
+    for (const batch of batches) if (batch.length && (await read(batch)) === "unavailable") return "unavailable";
+  }, [read, target]);
   const set = useCallback(async (postId: string, desired: ReactionType | null): Promise<ReactionState | "busy" | null> => {
     if (inFlight.current.has(postId)) return "busy";
     inFlight.current.add(postId);
@@ -96,7 +139,10 @@ export function useTypedReactions(onCommitted: (postId: string, s: ReactionState
     const a = account.current;
     let r;
     try {
-      r = await supabase.rpc("set_community_reaction", { p_post: postId, p_reaction: desired });
+      r =
+        target === "post"
+          ? await supabase.rpc("set_community_reaction", { p_post: postId, p_reaction: desired })
+          : await supabase.rpc("set_ruby_card_reaction", { p_card: postId, p_reaction: desired });
     } finally {
       if (a === account.current) {
         inFlight.current.delete(postId);
@@ -111,8 +157,8 @@ export function useTypedReactions(onCommitted: (postId: string, s: ReactionState
     setStates(statesRef.current);
     committed.current(postId, s);
     return s;
-  }, []);
-  return { api, states, pending, load, set };
+  }, [target]);
+  return { api, states, pending, load, set, loadMany };
 }
 
 type Panel =

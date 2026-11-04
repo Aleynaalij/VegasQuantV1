@@ -38,7 +38,7 @@ import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { isPublicationCard } from "@/lib/zone-publication-card";
 import ZonePublicationCard from "./zone-publication-card";
-import ReactionPicker, { useTypedReactions } from "./reaction-picker";
+import ReactionPicker, { useTypedReactions, type TypedReactions } from "./reaction-picker";
 import { nextReaction } from "@/lib/community-reaction-contracts";
 import "@/app/reaction-picker.css";
 import "@/app/zone-entry.css";
@@ -340,8 +340,27 @@ function RichText({ text }: { text: string }) {
   );
 }
 /** A contributor lay as a feed post: who, the legs and the price at a glance; the full card is one tap away. */
-function ZoneLay({ lay }: { lay: RubySlip }) {
+function ZoneLay({ lay, reactions, signedIn }: { lay: RubySlip; reactions: TypedReactions; signedIn: boolean }) {
   const [copied, setCopied] = useState(false);
+  const [liking, setLiking] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const state = lay.id in reactions.states ? reactions.states[lay.id] : undefined;
+  const liked = state?.mine === "heart";
+  /** Like on a lay: the same one-reaction-per-person state as the emoji picker. */
+  async function like(onlyAdd = false) {
+    if (!signedIn || liking || reactions.pending[lay.id]) return;
+    setLiking(true);
+    setFailed(false);
+    try {
+      const current = state ?? (await reactions.load(lay.id));
+      if (!current || current === "unavailable") return setFailed(true);
+      if (onlyAdd && current.mine === "heart") return;
+      const saved = await reactions.set(lay.id, onlyAdd ? "heart" : nextReaction(current.mine, "heart"));
+      if (saved === null) setFailed(true);
+    } finally {
+      setLiking(false);
+    }
+  }
   async function copy() {
     try {
       await navigator.clipboard.writeText(
@@ -452,6 +471,27 @@ function ZoneLay({ lay }: { lay: RubySlip }) {
           </Link>
         </span>
       </div>
+      {/* Every Zone item takes a Like or an emoji; hidden until lay reactions are live. */}
+      {signedIn && reactions.api === "ok" && state ? (
+        <div className="zone-actions zone-lay-reactions">
+          <button
+            className={liked ? "is-liked" : ""}
+            disabled={liking || !!reactions.pending[lay.id]}
+            aria-pressed={liked}
+            aria-label={liked ? "Unlike lay" : "Like lay"}
+            onClick={() => void like()}
+          >
+            <Heart size={21} fill={liked ? "currentColor" : "none"} aria-hidden="true" />
+            <span>{state.total || ""}</span>
+          </button>
+          <ReactionPicker postId={lay.id} typed={reactions} />
+          {failed ? (
+            <p role="alert" className="zone-lay-reaction-error">
+              Your like didn’t save; nothing changed. Please retry.
+            </p>
+          ) : null}
+        </div>
+      ) : null}
     </article>
   );
 }
@@ -752,6 +792,16 @@ export default function CommunityFeed() {
   const typed = useTypedReactions((id, st) =>
     setRows((all) => all.map((x) => (x.id === id ? { ...x, reactions: st.total, reacted: st.mine !== null } : x))),
   );
+  // VIP lays (ruby cards) keep their own reaction states; counts come from those states.
+  const layReactions = useTypedReactions(() => {}, "card");
+  const layKey = lays.map((x) => x.id).join(",");
+  useEffect(() => {
+    if (!uid || !layKey || layReactions.api === "unavailable") return;
+    const missing = layKey.split(",").filter((id) => !(id in layReactions.states));
+    if (missing.length) void layReactions.loadMany(missing);
+    // layReactions.states is read for filtering only; re-running on every state change would loop.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [layKey, uid, layReactions.api]);
   const [liking, setLiking] = useState<string | null>(null);
   /** The heart: Like through the typed API when it exists (Like replaces another emoji, never
    *  deletes it); the old insert/delete Like only when the typed API is not deployed. */
@@ -1243,7 +1293,7 @@ export default function CommunityFeed() {
             ) : null}
             {(vipOnly ? [] : feed).map((item) =>
               item.kind === "lay" ? (
-                <ZoneLay key={`lay-${item.id}`} lay={item.lay} />
+                <ZoneLay key={`lay-${item.id}`} lay={item.lay} reactions={layReactions} signedIn={!!uid} />
               ) : (
                 (() => {
                   const p = item.post;
