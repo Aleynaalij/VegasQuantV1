@@ -184,10 +184,8 @@ try {
     await page.goto(base + "/community?view=vip&ruby=" + mine.id, {
       waitUntil: "networkidle",
     });
-    const card = page
-      .locator(".ruby-card")
-      .filter({ hasText: mine.title })
-      .first();
+    // Pin by immutable card ID: an admin edit deliberately changes its title.
+    const card = page.locator(`article.ruby-card[id="ruby-${mine.id}"]`).first();
     await card
       .getByText("Contributor-shared Kalshi link", { exact: true })
       .waitFor();
