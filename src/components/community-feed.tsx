@@ -12,6 +12,8 @@ import Link from "next/link";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
 import RubyHub from "./ruby-cards";
+import KalshiSourceLink from "./kalshi-source-link";
+import { normalizeKalshiSourceLink } from "@/lib/kalshi-source-link";
 import { rubyBrands, type RubySlip } from "@/lib/ruby";
 import CommunityPhoto from "./community-photo";
 import CommunityParlayCard from "./community-parlay-card";
@@ -554,7 +556,7 @@ function ZoneLay({
   async function copy() {
     try {
       await navigator.clipboard.writeText(
-        [lay.brand + " · " + lay.title, ...lay.legs].join("\n"),
+        [lay.brand + " · " + lay.title, ...lay.legs, normalizeKalshiSourceLink(lay.source_link)].filter(Boolean).join("\n"),
       );
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
@@ -603,6 +605,7 @@ function ZoneLay({
           </span>
         ) : null}
       </h2>
+      <KalshiSourceLink key={lay.source_link} source={lay.source_link} />
       {/* Screenshot-only lays have no typed legs: show the slip itself. */}
       {!lay.legs.length && lay.photo_path ? (
         <div className="zone-media">
@@ -642,11 +645,11 @@ function ZoneLay({
           </span>
         )}
         <span className="zone-lay-actions">
-          {lay.legs.length ? (
+          {lay.legs.length || normalizeKalshiSourceLink(lay.source_link) ? (
             <button
               type="button"
               className="zone-copy"
-              aria-label={copied ? "Copied" : "Copy legs"}
+              aria-label={copied ? "Copied" : lay.source_link ? "Copy shared source" : "Copy legs"}
               onClick={() => void copy()}
             >
               {copied ? (

@@ -29,6 +29,8 @@ import {
   type RubyHomeState,
 } from "@/lib/ruby";
 import CommunityPhoto from "./community-photo";
+import KalshiSourceLink from "./kalshi-source-link";
+import { normalizeKalshiSourceLink } from "@/lib/kalshi-source-link";
 import GamblyLink from "./gambly-link";
 import {
   clipboardPhoto,
@@ -52,6 +54,7 @@ export function RubyCard({
 }) {
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState("");
+  const source = normalizeKalshiSourceLink(slip.source_link);
   const brand = rubyBrands.find((b) => b.theme === slip.theme) || rubyBrands[0];
   async function copy() {
     try {
@@ -61,6 +64,9 @@ export function RubyCard({
           slip.title,
           ...slip.legs,
           slip.note,
+          source
+            ? `Contributor-shared Kalshi source: ${source} (not a verified ticket)`
+            : null,
           `Contributor opinion · ${location.origin}${rubyLink(slip.id)}`,
         ]
           .filter(Boolean)
@@ -97,6 +103,7 @@ export function RubyCard({
         <span>{slip.sport}</span>
       </div>
       <h4>{slip.title}</h4>
+      <KalshiSourceLink key={source} source={source} />
       {slip.legs.length > 0 && (
         <ol className="ruby-legs">
           {slip.legs.map((leg, i) => (
@@ -174,28 +181,29 @@ export function RubyCard({
           <ArrowUpRight size={18} />
         </Link>
       </footer>
-      {slip.id !== "preview" && (
-        <div className="ruby-gambly">
-          {/* Typed legs copy as text; a screenshot-only lay copies the screenshot itself. */}
-          <GamblyLink
-            url="https://gambly.com/"
-            selection={slip.legs.length ? slip.legs.join("\n") : undefined}
-            kalshiTexts={slip.legs}
-            image={
-              !slip.legs.length && slip.photo_path
-                ? () => communityPhotoPng(slip.photo_path!)
-                : undefined
-            }
-            label={
-              slip.legs.length
-                ? "Copy lay & open with Gambly ↗"
-                : slip.photo_path
-                  ? "Copy screenshot & open with Gambly ↗"
-                  : "Open with Gambly ↗"
-            }
-          />
-        </div>
-      )}
+      {slip.id !== "preview" &&
+        (slip.legs.length > 0 || slip.photo_path || !source) && (
+          <div className="ruby-gambly">
+            {/* Typed legs copy as text; a screenshot-only lay copies the screenshot itself. */}
+            <GamblyLink
+              url="https://gambly.com/"
+              selection={slip.legs.length ? slip.legs.join("\n") : undefined}
+              kalshiTexts={source ? [] : slip.legs}
+              image={
+                !slip.legs.length && slip.photo_path
+                  ? () => communityPhotoPng(slip.photo_path!)
+                  : undefined
+              }
+              label={
+                slip.legs.length
+                  ? "Copy lay & open with Gambly ↗"
+                  : slip.photo_path
+                    ? "Copy screenshot & open with Gambly ↗"
+                    : "Open with Gambly ↗"
+              }
+            />
+          </div>
+        )}
       {admin && <AdminCardEditor slip={slip} onSaved={onFeatured} />}
       {!!slip.revision && (
         <p className="ruby-fine">
@@ -234,17 +242,26 @@ function AdminCardEditor({
           crypto.randomUUID(),
           data.session.access_token,
         );
-      const { error } = await supabase.rpc("edit_ruby", {
-        p_submission: slip.id,
-        p_expected: slip.revision || 0,
-        p_title: String(f.get("title")).trim(),
-        p_legs: rubyLegs(String(f.get("legs"))),
-        p_note: String(f.get("note")),
-        p_sport: String(f.get("sport")),
-        p_book: String(f.get("book")).trim() || null,
-        p_odds: rubyOdds(String(f.get("odds"))),
-        p_photo: photo,
-      });
+      const rawSource = String(f.get("source_link") || "");
+      const source = rawSource ? normalizeKalshiSourceLink(rawSource) : null;
+      if (rawSource && !source)
+        throw new Error("Use a valid supported Kalshi combo link.");
+      const sourceAware = Boolean(slip.source_link || source);
+      const { error } = await supabase.rpc(
+        sourceAware ? "edit_ruby_link" : "edit_ruby",
+        {
+          p_submission: slip.id,
+          p_expected: slip.revision || 0,
+          p_title: String(f.get("title")).trim(),
+          p_legs: rubyLegs(String(f.get("legs"))),
+          p_note: String(f.get("note")),
+          p_sport: String(f.get("sport")),
+          p_book: String(f.get("book")).trim() || null,
+          p_odds: rubyOdds(String(f.get("odds"))),
+          p_photo: photo,
+          ...(sourceAware ? { p_source_link: source } : {}),
+        },
+      );
       if (error) throw new Error(error.message);
       setEditing(false);
       setMessage("Card updated. Original preserved.");
@@ -312,6 +329,14 @@ function AdminCardEditor({
             />
           </label>
           <label>
+            Kalshi source link · optional
+            <input
+              name="source_link"
+              defaultValue={slip.source_link || ""}
+              maxLength={2048}
+            />
+          </label>
+          <label>
             Replace screenshot · optional
             <input
               name="photo"
@@ -352,6 +377,8 @@ function Composer({
   const [sport, setSport] = useState<ContributorSport>("NFL");
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [sourceInput, setSourceInput] = useState("");
+  const source = normalizeKalshiSourceLink(sourceInput);
   const [pasteHelp, setPasteHelp] = useState(false);
   function choosePhoto(f: File | null) {
     if (f && f.size > MAX_SELECTED_PHOTO_BYTES) {
@@ -411,7 +438,10 @@ function Composer({
   useEffect(() => {
     const stop = onUserChange(() => {
       epoch.current++;
+      pending.current = null;
+      setBusy(false);
       setOpen(false);
+      setSourceInput("");
       setFile(null);
       setMessage("");
     });
@@ -439,8 +469,12 @@ function Composer({
     let path: string | null = null;
     try {
       const legs = rubyLegs(text);
-      if (legs.length < 2 && !file)
-        throw new Error("Add at least two legs or upload a screenshot.");
+      if (sourceInput && !source)
+        throw new Error("Use a valid supported Kalshi combo link.");
+      if (legs.length < 2 && !file && !source)
+        throw new Error(
+          "Add at least two legs, upload a screenshot, or paste a Kalshi link.",
+        );
       if (legs.length > 20 || legs.some((l) => l.length > 180))
         throw new Error("Use up to 20 legs, each under 181 characters.");
       const odds = rubyOdds(String(form.get("odds")));
@@ -458,16 +492,22 @@ function Composer({
         path = await uploadCommunityPhoto(file, id, data.session.access_token);
       if (version !== epoch.current)
         throw new Error("Account changed. Submission cancelled.");
-      const result = await supabase.rpc("submit_ruby", {
-        p_id: id,
-        p_sport: sport,
-        p_title: title.trim() || `${state.contributor!.brand}’s daily lay`,
-        p_legs: legs,
-        p_note: note,
-        p_photo: path,
-        p_book: book || null,
-        p_odds: odds,
-      });
+      const result = await supabase.rpc(
+        source ? "submit_ruby_link" : "submit_ruby",
+        {
+          p_id: id,
+          p_sport: sport,
+          p_title:
+            title.trim() ||
+            `${state.contributor!.brand}’s ${source ? "shared Kalshi link" : "daily lay"}`,
+          p_legs: legs,
+          p_note: note,
+          p_photo: path,
+          ...(source ? { p_source_link: source } : {}),
+          p_book: book || null,
+          p_odds: odds,
+        },
+      );
       if (result.error) throw new Error(result.error.message);
       if (version === epoch.current) {
         setOpen(false);
@@ -475,6 +515,7 @@ function Composer({
           "Published to The Zone. Member notifications have been queued according to their settings.",
         );
         setFile(null);
+        setSourceInput("");
         pending.current = null;
         onPublished();
       }
@@ -591,9 +632,42 @@ function Composer({
               }}
             >
               <p>
-                Upload your screenshot and publish. No title, description or
-                typed legs needed. Up to three slips per Eastern day.
+                Paste a supported Kalshi combo link or upload your screenshot,
+                then publish. No title, description or typed legs needed. Up to
+                three slips per Eastern day.
               </p>
+              <label>
+                Paste Kalshi link
+                <input
+                  aria-label="Paste Kalshi link"
+                  value={sourceInput}
+                  maxLength={2048}
+                  disabled={busy}
+                  onChange={(e) => setSourceInput(e.target.value)}
+                  placeholder="https://kalshi.com/markets/kxmvecrosscategory/combo/…?marketTicker=…"
+                />
+              </label>
+              {sourceInput ? (
+                <div style={{ overflowWrap: "anywhere" }}>
+                  {source ? (
+                    <p>
+                      Contributor-shared Kalshi link · Preview: {source}. This
+                      is not a verified ticket or executed position.
+                    </p>
+                  ) : (
+                    <p role="alert">
+                      Use a supported Kalshi combo link with one marketTicker.
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setSourceInput("")}
+                  >
+                    Remove Kalshi link
+                  </button>
+                </div>
+              ) : null}
               <label className="ruby-upload">
                 <Upload size={18} /> Upload your slip
                 <input
@@ -729,6 +803,7 @@ function Composer({
                     legs: rubyLegs(text),
                     note,
                     photo_path: null,
+                    source_link: source,
                     sportsbook: null,
                     reported_odds: null,
                     created_at: new Date().toISOString(),
@@ -782,6 +857,7 @@ function ResultPrompt({
       </span>
       <h2>Did this slip clear?</h2>
       <h3>{card.title}</h3>
+      <KalshiSourceLink key={card.source_link} source={card.source_link} />
       {card.legs.map((l, i) => (
         <p key={i}>{l}</p>
       ))}
