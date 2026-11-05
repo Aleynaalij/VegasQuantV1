@@ -89,6 +89,18 @@ await t.test('queue claim and final dispatch recheck current protected-content e
  assert.equal((await db.query('select social_notification_delivery_allowed($1,$2) ok',[job.id,job.lease])).rows[0].ok,false);await valid();
 });
 await t.test('preexisting security/account mutes cannot erase inbox notices; external consent stays intact',async()=>{
+ // Additional review-only regressions against the existing #200 dependency.
+ await db.exec(`update public.notification_preferences set disabled_types=array[]::text[],push_enabled=false,email_enabled=true where user_id='${a}';`);
+ const emailNotice=await emit('security','review-email-consent');assert.ok(emailNotice);
+ await db.exec(`update private.notification_deliveries set due_at=now()-interval '1 second' where notification_id='${emailNotice}';`);
+ const emailJobs=(await db.query('select claim_social_notification_deliveries() jobs')).rows[0].jobs;
+ const emailJob=emailJobs.find(x=>x.notification_id===emailNotice&&x.channel==='email');assert.ok(emailJob);
+ const emailAllowed=async()=>(await db.query('select social_notification_delivery_allowed($1,$2) ok',[emailJob.id,emailJob.lease])).rows[0].ok;
+ assert.equal(await emailAllowed(),true);
+ await db.exec(`update public.notification_preferences set email_enabled=false where user_id='${a}';`);assert.equal(await emailAllowed(),false);
+ await db.exec(`update public.notification_preferences set email_enabled=true,disabled_types=array['security'] where user_id='${a}';`);assert.equal(await emailAllowed(),false);
+ await db.exec(`update public.notification_preferences set disabled_types=array[]::text[] where user_id='${a}';`);
+ await db.exec(`update private.notification_deliveries set lease_until=now()-interval '1 second' where id='${emailJob.id}';`);assert.equal(await emailAllowed(),false);
  await db.exec(`update public.notification_preferences set disabled_types=array['security','password_change','account'],push_enabled=false,email_enabled=false where user_id='${a}';`);
  for(const type of ['security','password_change','account']) {const id=await emit(type,'critical-'+type);assert.ok(id);assert.ok((await inbox()).some(x=>x.id===id));assert.equal((await db.query('select count(*)::int n from private.notification_deliveries where notification_id=$1',[id])).rows[0].n,0);}
 });
