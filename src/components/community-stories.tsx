@@ -172,7 +172,7 @@ export default function CommunityStories() {
         ))}
         {!unread.length ? (
           <Link className="story-empty" href="/community">
-            {failed
+            {failed || clock.failed || clock.now === null
               ? "Open Community →"
               : members.length
                 ? "All caught up · Community →"

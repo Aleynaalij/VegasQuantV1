@@ -410,6 +410,7 @@ for (const width of [390, 1280]) {
 }
 await open("unknown server time never opens or marks a story read", { clockFailure: true }, async ({ page, fail }) => {
   if (await page.locator(".community-story").count()) fail("untrusted clock exposed a story ring");
+  if (await page.getByText("All caught up · Community →", { exact: true }).count()) fail("unknown clock claimed all caught up");
   if ((await read(page)).length) fail("unknown clock marked a story read");
 });
 await open("hidden content stays hidden until resume obtains a new clock", {}, async ({ page, fail, ctx }) => {
