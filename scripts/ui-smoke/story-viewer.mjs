@@ -29,6 +29,8 @@ const activity = [
 
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
+const evidenceRoot = process.argv[2] || "/tmp/story-lifetime-evidence";
+await (await import("node:fs/promises")).mkdir(evidenceRoot, { recursive: true });
 async function open(name, { width = 390, detail = null, detailStatus = 200, readIds = null, plan = null, expiry = false, freeze = false, clockFailure = false } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   const baseTime = Date.UTC(2026, 9, 14, 2);
@@ -403,7 +405,7 @@ for (const width of [390, 1280]) {
     await page.clock.fastForward(20000);
     if (await viewer(page).locator(".story-post").count()) fail("expired story remained visible after all original expiries");
     if (await page.locator(".community-story").count()) fail("expired rail survived original expiry");
-    await page.screenshot({ path: `/tmp/story-expiry-${width}.png`, fullPage: true });
+    await page.screenshot({ path: `${evidenceRoot}/story-expiry-${width}.png`, fullPage: true });
   });
 }
 await open("unknown server time never opens or marks a story read", { clockFailure: true }, async ({ page, fail }) => {
