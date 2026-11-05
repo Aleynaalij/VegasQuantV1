@@ -195,3 +195,10 @@ dialog.story-viewer .story-actions a.story-discussion:focus-visible {
   outline: 2px solid #f4dc99;
   outline-offset: 2px;
 }
+
+/* Taps on the post move between posts; opening the full photo is its own small control. */
+.story-viewer .story-open-photo {
+  align-self: flex-start;
+  width: auto;
+  min-height: 44px;
+}

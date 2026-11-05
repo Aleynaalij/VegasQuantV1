@@ -7,17 +7,19 @@ import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import { time } from "@/lib/domain";
 import { SPORTS } from "@/lib/sports";
+import { useStoryClock } from "@/lib/use-story-clock";
 import {
   displayedStoryRead,
   stepStory,
   storyDetail,
   storyDiscussion,
   storyGroups,
+  storyEligible,
   type StoryCursor,
   type StoryGroup,
   type StoryPost,
 } from "@/lib/community-story-contracts";
-import CommunityPhoto from "./community-photo";
+import CommunityPhoto, { openCommunityPhoto } from "./community-photo";
 import "@/app/story-viewer.css";
 
 /** What the viewer renders: authorized post content only (no counts, emails or other fields). */
@@ -32,14 +34,23 @@ function content(row: Record<string, unknown>): Content {
   return {
     title: text(row.title),
     body: text(row.body),
-    legs: Array.isArray(row.legs) ? row.legs.filter((l): l is string => typeof l === "string") : [],
-    photo_path: typeof row.photo_path === "string" && row.photo_path ? row.photo_path : null,
+    legs: Array.isArray(row.legs)
+      ? row.legs.filter((l): l is string => typeof l === "string")
+      : [],
+    photo_path:
+      typeof row.photo_path === "string" && row.photo_path
+        ? row.photo_path
+        : null,
   };
 }
 type State =
   | { kind: "loading" }
   | { kind: "unavailable"; reason: "missing" | "error" }
-  | { kind: "ready"; groups: StoryGroup[]; posts: Map<string, StoryPost & Content> };
+  | {
+      kind: "ready";
+      groups: StoryGroup[];
+      posts: Map<string, StoryPost & Content>;
+    };
 
 /**
  * Full-screen recent-posts viewer: the tapped member's posts oldest → newest, then the next member.
@@ -59,6 +70,11 @@ export default function StoryViewer({
   const dialog = useRef<HTMLDialogElement>(null);
   const router = useRouter();
   const [state, setState] = useState<State>({ kind: "loading" });
+  const clock = useStoryClock(
+    state.kind === "ready"
+      ? [...state.posts.values()].map((p) => p.created_at)
+      : [],
+  );
   const [cursor, setCursor] = useState<StoryCursor | null>(null);
   const [photoLoaded, setPhotoLoaded] = useState(false);
   // Each post is re-checked with community_post before it is shown (deleted, blocked or newly
@@ -66,26 +82,40 @@ export default function StoryViewer({
   // The answer of the latest check, tagged with the arrival/focus it belongs to. Content is shown
   // only when that tag matches the *current* arrival, computed during render (not in an effect),
   // so an approval from an earlier arrival or focus can never show the post, even for one frame.
-  const [check, setCheck] = useState<{ key: string; status: "ok" | "gone" | "error" } | null>(null);
-  const session = useRef<{ viewerId: string | null; generation: number }>({ viewerId: null, generation: 0 });
+  const [check, setCheck] = useState<{
+    key: string;
+    status: "ok" | "gone" | "error";
+  } | null>(null);
+  const session = useRef<{ viewerId: string | null; generation: number }>({
+    viewerId: null,
+    generation: 0,
+  });
   const seen = useRef<string[]>([]);
   const closed = useRef(false);
 
   const pushed = useRef(false);
-  const close = useCallback((fromBack = false) => {
-    if (closed.current) return;
-    closed.current = true;
-    dialog.current?.close();
-    // Closing by button/Escape removes the history entry the viewer added, so Back is not wasted.
-    if (!fromBack && pushed.current && window.location.hash === "#story") window.history.back();
-    onClose();
-  }, [onClose]);
+  const close = useCallback(
+    (fromBack = false) => {
+      if (closed.current) return;
+      closed.current = true;
+      dialog.current?.close();
+      // Closing by button/Escape removes the history entry the viewer added, so Back is not wasted.
+      if (!fromBack && pushed.current && window.location.hash === "#story")
+        window.history.back();
+      onClose();
+    },
+    [onClose],
+  );
 
   // Browser Back closes the viewer: it adds one history entry (#story) on open, through the native
   // pushState the app router integrates with, and closes when that entry is popped.
   useEffect(() => {
     if (window.location.hash !== "#story") {
-      window.history.pushState(window.history.state, "", window.location.pathname + window.location.search + "#story");
+      window.history.pushState(
+        window.history.state,
+        "",
+        window.location.pathname + window.location.search + "#story",
+      );
       pushed.current = true;
     }
     const onPop = () => {
@@ -106,6 +136,7 @@ export default function StoryViewer({
 
   // Load the tapped post and the authorized sequence for the current account only.
   useEffect(() => {
+    if (clock.now === null || state.kind === "ready") return;
     let live = true;
     const generation = ++session.current.generation;
     void (async () => {
@@ -115,54 +146,90 @@ export default function StoryViewer({
       session.current.viewerId = viewerId;
       if (!viewerId) return close();
       try {
-        seen.current = JSON.parse(localStorage.getItem(`vq-community-read:${viewerId}`) || "[]");
+        seen.current = JSON.parse(
+          localStorage.getItem(`vq-community-read:${viewerId}`) || "[]",
+        );
         if (!Array.isArray(seen.current)) seen.current = [];
       } catch {
         seen.current = [];
       }
       const [detail, feed] = await Promise.all([
         supabase.rpc("community_post", { p_id: startPostId }),
-        supabase.rpc("community_feed", { p_sport: "all", p_limit: 100, p_following: false }),
+        supabase.rpc("community_feed", {
+          p_sport: "all",
+          p_limit: 100,
+          p_following: false,
+        }),
       ]);
       if (!live || generation !== session.current.generation) return;
       const request = { viewerId, generation, postId: startPostId };
-      const start = detail.error ? null : storyDetail(detail.data, request, session.current);
+      const start = detail.error
+        ? null
+        : storyDetail(detail.data, request, session.current, clock.getNow());
       if (!start) {
-        setState({ kind: "unavailable", reason: detail.error ? "error" : "missing" });
+        setState({
+          kind: "unavailable",
+          reason: detail.error ? "error" : "missing",
+        });
         return;
       }
       const rows: Record<string, unknown>[] = [
         detail.data as Record<string, unknown>,
-        ...(feed.error || !Array.isArray(feed.data) ? [] : (feed.data as Record<string, unknown>[])),
+        ...(feed.error || !Array.isArray(feed.data)
+          ? []
+          : (feed.data as Record<string, unknown>[])),
       ];
       const posts = new Map<string, StoryPost & Content>();
       for (const row of rows) {
         const id = typeof row.id === "string" ? row.id : "";
-        const post = storyDetail(row, { viewerId, generation, postId: id }, session.current);
-        if (post && !posts.has(post.id)) posts.set(post.id, { ...post, ...content(row) });
+        const post = storyDetail(
+          row,
+          { viewerId, generation, postId: id },
+          session.current,
+          clock.getNow(),
+        );
+        if (post && !posts.has(post.id))
+          posts.set(post.id, { ...post, ...content(row) });
       }
       // A post seen twice must be the same post: storyGroups drops conflicting duplicates.
-      const groups = storyGroups([...posts.values()].map(({ id, user_id, author_name, sport, created_at }) => ({ id, user_id, author_name, sport, created_at })));
+      const groups = storyGroups(
+        [...posts.values()].map(
+          ({ id, user_id, author_name, sport, created_at }) => ({
+            id,
+            user_id,
+            author_name,
+            sport,
+            created_at,
+          }),
+        ),
+        clock.getNow(),
+      );
       setState({ kind: "ready", groups, posts });
       // Enter this member's posts in order: their oldest post not yet read (or their first post
       // when all are read), so Next plays through every post of theirs before the next member.
       const own = groups.find((g) => g.authorId === start.user_id)?.posts ?? [];
-      const entry = own.find((p) => !seen.current.includes(p.id)) ?? own[0] ?? start;
+      const entry =
+        own.find((p) => !seen.current.includes(p.id)) ?? own[0] ?? start;
       setCursor({ authorId: start.user_id, postId: entry.id });
     })();
-    // A different account (or signing out) must never see this account's posts.
-    const stop = onUserChange(() => {
-      session.current.generation++;
-      setState({ kind: "loading" });
-      setCursor(null);
-      close();
-    });
     return () => {
       live = false;
       session.current.generation++;
-      stop();
     };
-  }, [startPostId, close]);
+  }, [startPostId, close, clock.version, clock.getNow]);
+
+  // Account revocation stays subscribed even while clock synchronization is pending/failed.
+  useEffect(
+    () =>
+      onUserChange(() => {
+        session.current.generation++;
+        session.current.viewerId = null;
+        setState({ kind: "loading" });
+        setCursor(null);
+        close();
+      }),
+    [close],
+  );
 
   const [focusTick, setFocusTick] = useState(0);
   // Each move (Previous/Next) is a new arrival, even back onto a post checked before.
@@ -178,16 +245,28 @@ export default function StoryViewer({
   // so an earlier success can never show content while a newer check is pending or denied.
   const checkSeq = useRef(0);
   useEffect(() => {
-    if (state.kind !== "ready" || !currentId) return;
+    if (state.kind !== "ready" || !currentId || clock.now === null) return;
     let live = true;
     const n = ++checkSeq.current;
     const generation = session.current.generation;
-    const key = `${currentId}|${focusTick}|${arrival}`;
+    const key = `${currentId}|${focusTick}|${arrival}|${clock.version}`;
     void (async () => {
       const r = await supabase.rpc("community_post", { p_id: currentId });
-      if (!live || n !== checkSeq.current || generation !== session.current.generation) return;
+      if (
+        !live ||
+        n !== checkSeq.current ||
+        generation !== session.current.generation
+      )
+        return;
       const viewerId = session.current.viewerId || "";
-      const fresh = r.error ? null : storyDetail(r.data, { viewerId, generation, postId: currentId }, session.current);
+      const fresh = r.error
+        ? null
+        : storyDetail(
+            r.data,
+            { viewerId, generation, postId: currentId },
+            session.current,
+            clock.getNow(),
+          );
       if (fresh) {
         const row = r.data as Record<string, unknown>;
         setState((st) => {
@@ -203,18 +282,49 @@ export default function StoryViewer({
       live = false;
     };
     // focusTick re-checks the post on screen when the window regains focus.
-  }, [state.kind, currentId, focusTick, arrival]);
+  }, [state.kind, currentId, focusTick, arrival, clock.version, clock.getNow]);
 
-  const status = currentId && check?.key === `${currentId}|${focusTick}|${arrival}` ? check.status : undefined;
-  const post = state.kind === "ready" && cursor && status === "ok" ? state.posts.get(cursor.postId) ?? null : null;
-  const group = state.kind === "ready" && cursor ? state.groups.find((g) => g.authorId === cursor.authorId) : undefined;
-  const index = group && cursor ? group.posts.findIndex((p) => p.id === cursor.postId) : -1;
-  const prev = state.kind === "ready" && cursor ? stepStory(state.groups, cursor, -1) : null;
-  const next = state.kind === "ready" && cursor ? stepStory(state.groups, cursor, 1) : null;
-  const nextAuthor = next && next.authorId !== cursor?.authorId && state.kind === "ready"
-    ? state.posts.get(next.postId)?.author_name
-    : null;
-  const textShown = Boolean(post && (post.title.trim() || post.body.trim() || post.legs.length));
+  const status =
+    currentId &&
+    check?.key === `${currentId}|${focusTick}|${arrival}|${clock.version}`
+      ? check.status
+      : undefined;
+  const candidate =
+    state.kind === "ready" && cursor && status === "ok"
+      ? (state.posts.get(cursor.postId) ?? null)
+      : null;
+  const post =
+    candidate && storyEligible(candidate.created_at, clock.now)
+      ? candidate
+      : null;
+  const group =
+    state.kind === "ready" && cursor
+      ? state.groups
+          .map((g) => ({
+            ...g,
+            posts: g.posts.filter((p) =>
+              storyEligible(p.created_at, clock.now),
+            ),
+          }))
+          .find((g) => g.authorId === cursor.authorId)
+      : undefined;
+  const index =
+    group && cursor ? group.posts.findIndex((p) => p.id === cursor.postId) : -1;
+  const prev =
+    state.kind === "ready" && cursor
+      ? stepStory(state.groups, cursor, -1, clock.now)
+      : null;
+  const next =
+    state.kind === "ready" && cursor
+      ? stepStory(state.groups, cursor, 1, clock.now)
+      : null;
+  const nextAuthor =
+    next && next.authorId !== cursor?.authorId && state.kind === "ready"
+      ? state.posts.get(next.postId)?.author_name
+      : null;
+  const textShown = Boolean(
+    post && (post.title.trim() || post.body.trim() || post.legs.length),
+  );
 
   // Read only once meaningful content is on screen: text after it renders, a photo-only post
   // after its photo loads. A failed or unavailable post is never marked read.
@@ -227,8 +337,19 @@ export default function StoryViewer({
     if (!displayed) return;
     const frame = requestAnimationFrame(() => {
       const current = session.current;
-      const request = { viewerId: current.viewerId || "", generation: current.generation, postId: post.id };
-      const nextSeen = displayedStoryRead(seen.current, post, request, current, true);
+      const request = {
+        viewerId: current.viewerId || "",
+        generation: current.generation,
+        postId: post.id,
+      };
+      const nextSeen = displayedStoryRead(
+        seen.current,
+        post,
+        request,
+        current,
+        true,
+        clock.getNow(),
+      );
       // Compare by ID, not length: at the 2,000-ID cap the length stays the same while the oldest
       // ID is evicted for this one.
       if (!seen.current.includes(post.id) && nextSeen.includes(post.id)) {
@@ -244,6 +365,18 @@ export default function StoryViewer({
     setArrival((n) => n + 1);
     setCursor(to);
   }, []);
+  useEffect(() => {
+    if (state.kind !== "ready" || !cursor || clock.now === null) return;
+    const current = state.posts.get(cursor.postId);
+    if (current && !storyEligible(current.created_at, clock.now)) {
+      const next = stepStory(state.groups, cursor, 1, clock.now);
+      if (next) go(next);
+      else {
+        setCursor(null);
+        setState({ kind: "unavailable", reason: "missing" });
+      }
+    }
+  }, [state, cursor, clock.now, go]);
   // Arrow keys work wherever focus sits while the viewer is open (a nav button that becomes
   // disabled at either end drops focus to the page), except inside a control that uses them.
   const moves = useRef({ prev, next });
@@ -251,7 +384,8 @@ export default function StoryViewer({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
-      if (target?.closest?.("input,textarea,select,[contenteditable=true]")) return;
+      if (target?.closest?.("input,textarea,select,[contenteditable=true]"))
+        return;
       if (e.key === "ArrowRight") {
         e.preventDefault();
         go(moves.current.next);
@@ -263,6 +397,34 @@ export default function StoryViewer({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [go]);
+  // Instagram-style taps on the post area: the right half goes forward one post, the left half
+  // back one. Controls, links, media controls, text selection and drags (scrolling) never
+  // navigate, and one gesture moves at most one step (click fires once per tap or mouse click).
+  const tapStart = useRef<{ x: number; y: number } | null>(null);
+  const onTapDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    tapStart.current = e.isPrimary ? { x: e.clientX, y: e.clientY } : null;
+  };
+  const onTap = (e: React.MouseEvent<HTMLDivElement>) => {
+    const start = tapStart.current;
+    tapStart.current = null;
+    if (state.kind !== "ready" || e.defaultPrevented || e.button !== 0) return;
+    const target = e.target as HTMLElement | null;
+    if (
+      target?.closest?.(
+        "a,button,input,textarea,select,summary,label,video,audio,[contenteditable=true],[data-story-no-tap]",
+      )
+    )
+      return;
+    if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10)
+      return;
+    if ((window.getSelection()?.toString() ?? "").trim()) return;
+    const box = e.currentTarget.getBoundingClientRect();
+    go(
+      e.clientX < box.left + box.width / 2
+        ? moves.current.prev
+        : moves.current.next,
+    );
+  };
   // Keep focus inside the viewer when the focused nav button becomes disabled at an end.
   const prevButton = useRef<HTMLButtonElement>(null);
   const nextButton = useRef<HTMLButtonElement>(null);
@@ -285,9 +447,16 @@ export default function StoryViewer({
       <div className="story-viewer-frame">
         <header className="story-viewer-head">
           {group ? (
-            <ol className="story-segments" aria-label={`${group.posts.length} recent post${group.posts.length === 1 ? "" : "s"} from ${post?.author_name ?? "this member"}`}>
+            <ol
+              className="story-segments"
+              aria-label={`${group.posts.length} recent post${group.posts.length === 1 ? "" : "s"} from ${post?.author_name ?? "this member"}`}
+            >
               {group.posts.map((p, i) => (
-                <li key={p.id} className={i < index ? "done" : i === index ? "current" : ""} aria-current={i === index ? "step" : undefined}>
+                <li
+                  key={p.id}
+                  className={i < index ? "done" : i === index ? "current" : ""}
+                  aria-current={i === index ? "step" : undefined}
+                >
                   <span className="sr-only">Post {i + 1}</span>
                 </li>
               ))}
@@ -299,20 +468,40 @@ export default function StoryViewer({
                 <b>{post.author_name}</b>
                 <small>
                   {SPORTS[post.sport].label} · {time(post.created_at)}
-                  {group && group.posts.length > 1 ? ` · ${index + 1} of ${group.posts.length}` : ""}
+                  {group && group.posts.length > 1
+                    ? ` · ${index + 1} of ${group.posts.length}`
+                    : ""}
                 </small>
               </>
             ) : (
               <b>Recent posts</b>
             )}
-            <button type="button" className="story-close" onClick={() => close()} aria-label="Close recent posts">
+            <button
+              type="button"
+              className="story-close"
+              onClick={() => close()}
+              aria-label="Close recent posts"
+            >
               <X size={22} aria-hidden="true" />
             </button>
           </div>
         </header>
 
-        <div className="story-viewer-body" aria-live="polite">
-          {state.kind === "loading" ? (
+        {/* Taps are a pointer shortcut; the Previous/Next buttons and Arrow keys stay the
+            accessible way to move, so the tap area itself is not a control. */}
+        <div
+          className="story-viewer-body"
+          aria-live="polite"
+          onPointerDown={onTapDown}
+          onClick={onTap}
+        >
+          {clock.now === null ? (
+            <p role="status">
+              {clock.failed
+                ? "Story time could not be verified. Close and reopen to retry."
+                : "Checking story time…"}
+            </p>
+          ) : state.kind === "loading" ? (
             <p role="status">Loading post…</p>
           ) : state.kind === "unavailable" ? (
             <div className="story-unavailable">
@@ -321,15 +510,23 @@ export default function StoryViewer({
                   ? "This post could not load. Check your connection and try again."
                   : "This post is no longer available."}
               </p>
-              <button type="button" className="secondary" onClick={() => close()}>
+              <button
+                type="button"
+                className="secondary"
+                onClick={() => close()}
+              >
                 Close
               </button>
             </div>
           ) : post ? (
             <article className="story-post" key={post.id}>
-              <span className="story-label">Member post · not Vegas Quant research</span>
+              <span className="story-label">
+                Member post · not Vegas Quant research
+              </span>
               {post.title.trim() ? <h2>{post.title}</h2> : null}
-              {post.body.trim() ? <p className="story-text">{post.body}</p> : null}
+              {post.body.trim() ? (
+                <p className="story-text">{post.body}</p>
+              ) : null}
               {post.legs.length ? (
                 <ul className="story-legs" aria-label="Selections in this post">
                   {post.legs.map((leg, i) => (
@@ -338,9 +535,23 @@ export default function StoryViewer({
                 </ul>
               ) : null}
               {post.photo_path ? (
-                <CommunityPhoto path={post.photo_path} title={post.title || `${post.author_name}'s post`} onLoaded={() => setPhotoLoaded(true)} />
+                <CommunityPhoto
+                  path={post.photo_path}
+                  title={post.title || `${post.author_name}'s post`}
+                  onLoaded={() => setPhotoLoaded(true)}
+                  openable={false}
+                />
               ) : null}
-              <div className="story-actions">
+              <div className="story-actions" data-story-no-tap>
+                {post.photo_path && photoLoaded ? (
+                  <button
+                    type="button"
+                    className="secondary story-open-photo"
+                    onClick={() => void openCommunityPhoto(post.photo_path!)}
+                  >
+                    Open full photo
+                  </button>
+                ) : null}
                 <Link
                   className="story-discussion"
                   href={storyDiscussion(post)}
@@ -350,7 +561,11 @@ export default function StoryViewer({
                     e.preventDefault();
                     const href = storyDiscussion(post);
                     if (pushed.current && window.location.hash === "#story")
-                      window.addEventListener("popstate", () => router.push(href), { once: true });
+                      window.addEventListener(
+                        "popstate",
+                        () => router.push(href),
+                        { once: true },
+                      );
                     else setTimeout(() => router.push(href), 0);
                     close();
                   }}
@@ -358,30 +573,50 @@ export default function StoryViewer({
                   View discussion →
                 </Link>
                 <p className="story-gambly">
-                  <b>Open with Gambly isn’t available for member posts.</b> Only plays Vegas Quant
-                  published with an exact market can be copied to Gambly; a member’s text or
-                  screenshot can’t be matched to one.
+                  <b>Open with Gambly isn’t available for member posts.</b> Only
+                  plays Vegas Quant published with an exact market can be copied
+                  to Gambly; a member’s text or screenshot can’t be matched to
+                  one.
                 </p>
               </div>
             </article>
+          ) : status === "gone" ? (
+            <p role="alert">This post is no longer available.</p>
+          ) : status === "error" ? (
+            <p role="alert">
+              This post could not load. Check your connection, then move on or
+              try again.
+            </p>
           ) : (
-            status === "gone" ? (
-              <p role="alert">This post is no longer available.</p>
-            ) : status === "error" ? (
-              <p role="alert">This post could not load. Check your connection, then move on or try again.</p>
-            ) : (
-              <p role="status">Checking this post…</p>
-            )
+            <p role="status">Checking this post…</p>
           )}
         </div>
 
         {state.kind === "ready" ? (
           <nav className="story-nav" aria-label="Move between posts">
-            <button ref={prevButton} type="button" onClick={() => go(prev)} disabled={!prev} aria-label="Previous post">
+            <button
+              ref={prevButton}
+              type="button"
+              onClick={() => go(prev)}
+              disabled={!prev}
+              aria-label="Previous post"
+            >
               <ChevronLeft size={22} aria-hidden="true" /> Previous
             </button>
-            <button ref={nextButton} type="button" onClick={() => go(next)} disabled={!next} aria-label={nextAuthor ? `Next post, from ${nextAuthor}` : "Next post"}>
-              {nextAuthor ? `Next · ${nextAuthor}` : next ? "Next" : "No more posts"}
+            <button
+              ref={nextButton}
+              type="button"
+              onClick={() => go(next)}
+              disabled={!next}
+              aria-label={
+                nextAuthor ? `Next post, from ${nextAuthor}` : "Next post"
+              }
+            >
+              {nextAuthor
+                ? `Next · ${nextAuthor}`
+                : next
+                  ? "Next"
+                  : "No more posts"}
               <ChevronRight size={22} aria-hidden="true" />
             </button>
           </nav>

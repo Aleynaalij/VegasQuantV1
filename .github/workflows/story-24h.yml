@@ -1,0 +1,56 @@
+name: Combined story lifetime
+on:
+  pull_request:
+    paths:
+      [
+        "src/components/story-viewer.tsx",
+        "src/components/community-stories.tsx",
+        "src/lib/*story*",
+        "src/lib/community-stor*",
+        "tests/*story*",
+        "tests/*stor*",
+        "scripts/ui-smoke/story-viewer.mjs",
+        ".github/workflows/story-24h.yml",
+      ]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  story:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - name: Prepare browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"; else npx playwright install --with-deps chromium; fi
+      - name: Combined viewer, rail and intended gesture/expiry rejection
+        run: |
+          node scripts/ui-smoke/stub.mjs &
+          LIVE_SCORES_DISABLED=1 npx next start -H 127.0.0.1 -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
+          node scripts/ui-smoke/story-viewer.mjs
+          if UI_SMOKE_NEGATIVE=no-taps node scripts/ui-smoke/story-viewer.mjs > /tmp/story-no-taps.log 2>&1; then cat /tmp/story-no-taps.log; exit 1; fi
+          grep -q 'right.*tap\|left.*tap\|tap.*right\|tap.*left' /tmp/story-no-taps.log
+          if UI_SMOKE_NEGATIVE=missing-expiry node scripts/ui-smoke/story-viewer.mjs > /tmp/story-missing-expiry.log 2>&1; then cat /tmp/story-missing-expiry.log; exit 1; fi
+          grep -q 'expired story remained visible' /tmp/story-missing-expiry.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: story-lifetime-synthetic-evidence
+          path: |
+            /tmp/story-expiry-*.png
+            /tmp/story-no-taps.log
+            /tmp/story-missing-expiry.log

@@ -1,3 +1,5 @@
+import { storyEligible } from "./community-story-contracts";
+
 export type CommunityActivity = {
   post_id: string;
   username: string;
@@ -6,10 +8,10 @@ export type CommunityActivity = {
   created_at?: string;
 };
 
-export function unreadStories(rows: CommunityActivity[], seen: string[]) {
+export function unreadStories(rows: CommunityActivity[], seen: string[], serverNowMs: number | null = null) {
   const read = new Set(seen);
   return rows
-    .filter((row) => !read.has(row.post_id))
+    .filter((row) => !read.has(row.post_id) && storyEligible(row.created_at, serverNowMs))
     .sort(
       (a, b) =>
         (Date.parse(b.created_at || "") || 0) -
