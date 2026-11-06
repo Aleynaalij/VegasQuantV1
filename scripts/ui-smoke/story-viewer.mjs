@@ -32,6 +32,10 @@ const failures = [];
 const evidenceRoot = process.argv[2] || "/tmp/story-lifetime-evidence";
 await (await import("node:fs/promises")).mkdir(evidenceRoot, { recursive: true });
 async function open(name, { width = 390, detail = null, detailStatus = 200, readIds = null, plan = null, expiry = false, freeze = false, clockFailure = false, single = false } = {}, run) {
+  // Run each deliberate mutation only against the behavior it is intended to break.
+  // This keeps unrelated fixture failures from being mistaken for negative evidence.
+  if (process.env.UI_SMOKE_NEGATIVE === "no-taps" && !name.includes("tap right for the next post")) return;
+  if (process.env.UI_SMOKE_NEGATIVE === "missing-expiry" && !name.includes("original expiry removes open content and rail")) return;
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   const baseTime = Date.UTC(2026, 9, 14, 2);
   const rows = single ? [posts[0]] : expiry ? posts.map((p, i) => ({ ...p, created_at: new Date(baseTime - 86400000 + (i + 1) * 5000).toISOString() })) : posts;
