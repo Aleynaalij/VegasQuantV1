@@ -233,10 +233,12 @@ try {
           {
             user_id: a,
             username: "FixtureMember",
-            avatar: "ruby",
+            avatar: null,
             visible: true,
           },
         ];
+      if (path.endsWith("notification_counts"))
+        data = { unread: 0, unviewed: 0, messages: 0 };
       if (path.endsWith("notification_inbox"))
         data =
           inboxMode === "null"

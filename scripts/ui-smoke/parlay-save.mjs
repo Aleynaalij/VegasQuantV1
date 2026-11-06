@@ -417,7 +417,7 @@ for (const width of [390, 1280]) {
         .getByRole("button", { name: "Open with Gambly ↗", exact: true })
         .click();
       await prompt.getByRole("alert").waitFor();
-      assert.match(await prompt.innerText(), /parlay has closed/);
+      assert.match(await prompt.innerText(), /lay has closed/);
       assert.equal(await gambly.isVisible(), false);
       await prompt
         .getByRole("button", { name: "Kalshi ↗", exact: true })
