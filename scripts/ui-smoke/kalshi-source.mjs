@@ -243,6 +243,10 @@ try {
       ),
       "horizontal overflow",
     );
+    // The launch overlay is intentionally noninteractive; wait for its normal dismissal so
+    // the evidence shows the actual card, rather than the brief welcome animation.
+    await page.locator(".vq-brand-opening").waitFor({ state: "detached" });
+    await card.screenshot({ path: `${out}/${width}-card-detail.png` });
     await page.screenshot({
       path: `${out}/${width}-link-only-edited.png`,
       fullPage: true,
