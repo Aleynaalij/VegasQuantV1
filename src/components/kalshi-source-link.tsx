@@ -13,31 +13,33 @@ export default function KalshiSourceLink({
   const url = normalizeKalshiSourceLink(source);
   if (!url) return null;
   return (
-    <div className="ruby-source-link" style={{ overflowWrap: "anywhere" }}>
+    <div className="ruby-source-link" style={{ overflowWrap: "anywhere", display: "grid", gap: 12 }}>
       <p>
         <b>Contributor-shared Kalshi link</b> · Not a verified ticket, executed
         position or VQ endorsement.
       </p>
-      <button type="button" onClick={() => setShow((v) => !v)}>
+      <button className="secondary" type="button" onClick={() => setShow((v) => !v)}>
         Open source on Kalshi ↗
       </button>
       {show ? (
-        <div>
+        <div style={{ display: "grid", gap: 12 }}>
           <p>Destination: {url}</p>
-          <label>
+          <label style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
             <input
+              style={{ flex: "0 0 auto", marginTop: 4 }}
               type="checkbox"
               checked={confirmed}
               onChange={(e) => setConfirmed(e.target.checked)}
-            />{" "}
-            I am 21+ and meet Kalshi’s eligibility requirements.
+            />
+            <span>I am 21+ and meet Kalshi’s eligibility requirements.</span>
           </label>
           {confirmed ? (
-            <a href={url} target="_blank" rel="noopener noreferrer">
+            <a className="secondary" href={url} target="_blank" rel="noopener noreferrer">
               Continue to Kalshi ↗
             </a>
           ) : null}
           <button
+            className="secondary"
             type="button"
             onClick={() => {
               setShow(false);
