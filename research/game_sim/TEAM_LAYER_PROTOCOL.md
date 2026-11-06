@@ -80,9 +80,15 @@ templates split into four groups:
   - F's total probability mass and its internal proportions never change.
   - So turnover, penalty, kick, timeout and clock-event shares stay at league level.
 
+**Sign convention (amendment A1, 2026-11-06).** `b_d` and `h_d` are what a defense *allows*: the
+shared ridge (`matchup.py`, `defense_allowed`) estimates them from residuals with the offense
+effect removed, so a positive value means opponents gain more or pass more against that defense.
+They are therefore **added**. The earlier draft's `a_o − b_d` and `g_o − h_d` would have inverted
+every defense; no fit or evaluation ever used them.
+
 The adjustment works in two steps.
 1. **Run/pass split.** The combined mass `M = P(G_run) + P(G_pass)` is fixed. The pass share
-   `q = P(G_pass)/M` becomes `q' = logistic(logit(q) + g_o − h_d)`.
+   `q = P(G_pass)/M` becomes `q' = logistic(logit(q) + g_o + h_d)`.
    - **Degenerate contexts:** when `M = 0`, `q = 0` or `q = 1`, the split is left unchanged and
      counted as `split_degenerate`. A one-sided context is never given a group it has no
      templates for.
@@ -90,7 +96,7 @@ The adjustment works in two steps.
 2. **Gain tilt within each group.** Each template weight is multiplied by `exp(λ·y_t)`, where `y_t`
    is the template's source-recorded signed yards: sacks are negative and incompletions are 0.
    - The group is then renormalized back to its new mass.
-   - λ is the numerical root of `E_λ[y] = E_0[y] + (a_o − b_d)` on the group's own templates.
+   - λ is the numerical root of `E_λ[y] = E_0[y] + (a_o + b_d)` on the group's own templates.
      - Solved by bisection on λ ∈ [−0.5, 0.5].
      - Stops at |residual| ≤ 1e-6 yards or after 200 iterations.
    - If the target is outside the attainable range at the bracket ends, nothing is clamped:
@@ -106,7 +112,12 @@ unchanged. This is disclosed as an approximation.
 0.2.10.1 code path** and makes no extra RNG calls. A test checks bit-for-bit equality of full traces
 for 1,000 seeds.
 
-**Clock, timeouts and kicking stay league-level** in v0.3.0. This is listed as a limitation.
+**Clock, timeouts and kicking stay league-level** in v0.3.0. This is listed as a limitation. With a
+two-stage base (timeout decision, then play), the mapping applies only to the stage-2 play table
+(amendment A2).
+
+**Reference implementation:** `research/game_sim/team_layer/` implements sections 1–3 as pure
+functions with synthetic tests. It is not wired into any engine before the section-0 base exists.
 
 ## 4. Data, exposure and splits
 - **Fit / evidence seasons:** 2022 and 2023 REG play-by-play, which is already inspected, plus
