@@ -272,6 +272,7 @@ export function Shell({
                 {
                   lobby: "Home",
                   lays: "Your lays",
+                  parlays: "Your lays",
                   // A page without a sport (lays, profiles) is not any one sport's desk.
                   home: pageSport ? `${SPORTS[pageSport].label} desk` : "Sports desk",
                   game: `${SPORTS[sport].label} games`,
