@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import { time } from "@/lib/domain";
@@ -43,6 +43,19 @@ function content(row: Record<string, unknown>): Content {
         : null,
   };
 }
+/**
+ * How long a post stays up before the viewer moves on: about 200 words a minute to read it, never
+ * under 6 seconds. Long posts are never cut off: if the text runs past the screen, the timer also
+ * holds until it has been scrolled to the end.
+ */
+const MIN_POST_MS = 6000;
+function readingMs(p: Content) {
+  const words = `${p.title} ${p.body} ${p.legs.join(" ")}`.split(/\s+/).filter(Boolean).length;
+  return Math.max(MIN_POST_MS, Math.round((words / 200) * 60000) + 1500);
+}
+const reducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
 type State =
   | { kind: "loading" }
   | { kind: "unavailable"; reason: "missing" | "error" }
@@ -55,8 +68,15 @@ type State =
 /**
  * Full-screen recent-posts viewer: the tapped member's posts oldest → newest, then the next member.
  * Built only from rows the signed-in viewer is authorized to read (`community_post` for the tapped
- * post, the bounded `community_feed` set for the sequence), grouped by author UUID. It never loops,
- * never advances on its own, and reports a post as read only after its content is on screen.
+ * post, the bounded `community_feed` set for the sequence), grouped by author UUID. It never loops
+ * and reports a post as read only after its content is on screen.
+ *
+ * Like Instagram, each post plays for its reading time (the current segment fills) and then the
+ * viewer moves to the next post, then the next member, and closes after the last. The timer runs
+ * only while an authorized post is fully shown (photo loaded) and nothing has asked it to wait:
+ * press-and-hold, the Pause control or Space, a hidden tab, focus on the post's own actions or (once
+ * the reader moves it there) on the header controls, or a long post not yet scrolled to its end. A
+ * photo counts as shown only for the exact image instance on screen after the latest check. Previous, Next, Pause and Close stay as labelled controls.
  */
 export default function StoryViewer({
   startPostId,
@@ -76,7 +96,9 @@ export default function StoryViewer({
       : [],
   );
   const [cursor, setCursor] = useState<StoryCursor | null>(null);
-  const [photoLoaded, setPhotoLoaded] = useState(false);
+  // Which image instance has loaded: post, authorization check and photo path. A re-check (focus,
+  // clock renewal, re-arrival) remounts the image, so readiness never carries over to it.
+  const [photoLoadedFor, setPhotoLoadedFor] = useState<string | null>(null);
   // Each post is re-checked with community_post before it is shown (deleted, blocked or newly
   // restricted posts drop out), and again when the window regains focus.
   // The answer of the latest check, tagged with the arrival/focus it belongs to. Content is shown
@@ -328,9 +350,15 @@ export default function StoryViewer({
 
   // Read only once meaningful content is on screen: text after it renders, a photo-only post
   // after its photo loads. A failed or unavailable post is never marked read.
-  useEffect(() => {
-    setPhotoLoaded(false);
-  }, [cursor?.postId]);
+  // The image instance on screen now. Its load callback only counts while it is still current, so a
+  // late load from a replaced or reauthorized image never marks the new one ready.
+  const photoKey =
+    post?.photo_path && currentId
+      ? `${currentId}|${focusTick}|${arrival}|${clock.version}|${post.photo_path}`
+      : null;
+  const currentPhoto = useRef<string | null>(null);
+  currentPhoto.current = photoKey;
+  const photoLoaded = photoKey !== null && photoLoadedFor === photoKey;
   useEffect(() => {
     if (!post || !cursor) return;
     const displayed = textShown || photoLoaded;
@@ -377,6 +405,103 @@ export default function StoryViewer({
       }
     }
   }, [state, cursor, clock.now, go]);
+  // --- Auto-advance -------------------------------------------------------------------------
+  // Shown means authorized, on screen and complete: text rendered, and any photo loaded.
+  const shown = Boolean(post && (post.photo_path ? photoLoaded : textShown));
+  const [paused, setPaused] = useState(false);
+  const [held, setHeld] = useState(false);
+  const [hidden, setHidden] = useState(false);
+  const [actionFocus, setActionFocus] = useState(false);
+  // Header controls pause only when the reader moved focus there (Tab), not when the dialog's own
+  // initial focus lands on Close at open, which would stop autoplay before it began. Choosing Play
+  // while focused there resumes until focus leaves the header.
+  const [headerFocus, setHeaderFocus] = useState(false);
+  const [playOverride, setPlayOverride] = useState(false);
+  const tabbing = useRef(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Tab") tabbing.current = true;
+    };
+    const onPointer = () => {
+      tabbing.current = false;
+    };
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("pointerdown", onPointer, true);
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("pointerdown", onPointer, true);
+    };
+  }, []);
+  const [unread, setUnread] = useState(false); // long text not yet scrolled to its end
+  const [progress, setProgress] = useState(0);
+  const elapsed = useRef(0);
+  const body = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onVisibility = () => setHidden(document.visibilityState === "hidden");
+    onVisibility();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
+  // Every arrival starts its post from zero.
+  useEffect(() => {
+    elapsed.current = 0;
+    setProgress(0);
+    // The previous post's actions are gone, so their focus no longer holds the timer.
+    setActionFocus(false);
+  }, [cursor?.postId, arrival]);
+  // A long post holds until its last line of text has been on screen.
+  const measure = useCallback(() => {
+    const el = body.current;
+    // The post's last line of text, in document order (title, body, then selections).
+    const parts = el?.querySelectorAll<HTMLElement>(".story-post h2, .story-text, .story-legs");
+    const last = parts?.length ? parts[parts.length - 1] : null;
+    if (!el || !last) return setUnread(false);
+    const lastBox = last.getBoundingClientRect();
+    const view = el.getBoundingClientRect();
+    setUnread(lastBox.bottom > view.bottom + 2);
+  }, []);
+  useEffect(() => {
+    if (!shown) return;
+    measure();
+    const el = body.current;
+    el?.addEventListener("scroll", measure, { passive: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      el?.removeEventListener("scroll", measure);
+      window.removeEventListener("resize", measure);
+    };
+  }, [shown, post?.id, measure]);
+  // What the Pause/Play control reports: an explicit pause, or focus resting on the header controls.
+  const holding = paused || (headerFocus && !playOverride);
+  const running = shown && !holding && !held && !hidden && !actionFocus && !unread;
+  const advance = useRef(() => {});
+  advance.current = () => {
+    if (moves.current.next) go(moves.current.next);
+    else close();
+  };
+  useEffect(() => {
+    if (!running || !post) return;
+    const total = readingMs(post);
+    const stepped = reducedMotion();
+    let last = performance.now();
+    let painted = 0;
+    let frame = 0;
+    const tick = (t: number) => {
+      elapsed.current += t - last;
+      last = t;
+      const p = Math.min(1, elapsed.current / total);
+      // Reduced motion: the bar steps once a second instead of gliding.
+      if (!stepped || t - painted >= 1000 || p >= 1) {
+        setProgress(p);
+        painted = t;
+      }
+      if (p >= 1) return advance.current();
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [running, post]);
+
   // Arrow keys work wherever focus sits while the viewer is open (a nav button that becomes
   // disabled at either end drops focus to the page), except inside a control that uses them.
   const moves = useRef({ prev, next });
@@ -392,6 +517,9 @@ export default function StoryViewer({
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         go(moves.current.prev);
+      } else if (e.key === " " && !target?.closest?.("button,a,summary")) {
+        e.preventDefault();
+        setPaused((v) => !v);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -400,10 +528,24 @@ export default function StoryViewer({
   // Instagram-style taps on the post area: the right half goes forward one post, the left half
   // back one. Controls, links, media controls, text selection and drags (scrolling) never
   // navigate, and one gesture moves at most one step (click fires once per tap or mouse click).
-  const tapStart = useRef<{ x: number; y: number } | null>(null);
+  const tapStart = useRef<{ x: number; y: number; at: number } | null>(null);
   const onTapDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    tapStart.current = e.isPrimary ? { x: e.clientX, y: e.clientY } : null;
+    tapStart.current = e.isPrimary ? { x: e.clientX, y: e.clientY, at: performance.now() } : null;
+    // Press-and-hold pauses; letting go (anywhere) resumes.
+    if (e.isPrimary) setHeld(true);
   };
+  useEffect(() => {
+    if (!held) return;
+    const release = () => setHeld(false);
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", release);
+    window.addEventListener("blur", release);
+    return () => {
+      window.removeEventListener("pointerup", release);
+      window.removeEventListener("pointercancel", release);
+      window.removeEventListener("blur", release);
+    };
+  }, [held]);
   const onTap = (e: React.MouseEvent<HTMLDivElement>) => {
     const start = tapStart.current;
     tapStart.current = null;
@@ -417,6 +559,8 @@ export default function StoryViewer({
       return;
     if (start && Math.hypot(e.clientX - start.x, e.clientY - start.y) > 10)
       return;
+    // A long press was a pause, not a tap.
+    if (start && performance.now() - start.at > 500) return;
     if ((window.getSelection()?.toString() ?? "").trim()) return;
     const box = e.currentTarget.getBoundingClientRect();
     go(
@@ -445,7 +589,18 @@ export default function StoryViewer({
       }}
     >
       <div className="story-viewer-frame">
-        <header className="story-viewer-head">
+        <header
+          className="story-viewer-head"
+          onFocus={() => {
+            if (tabbing.current) setHeaderFocus(true);
+          }}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+              setHeaderFocus(false);
+              setPlayOverride(false);
+            }
+          }}
+        >
           {group ? (
             <ol
               className="story-segments"
@@ -456,6 +611,7 @@ export default function StoryViewer({
                   key={p.id}
                   className={i < index ? "done" : i === index ? "current" : ""}
                   aria-current={i === index ? "step" : undefined}
+                  style={i === index ? ({ "--story-progress": progress } as React.CSSProperties) : undefined}
                 >
                   <span className="sr-only">Post {i + 1}</span>
                 </li>
@@ -476,20 +632,62 @@ export default function StoryViewer({
             ) : (
               <b>Recent posts</b>
             )}
-            <button
-              type="button"
-              className="story-close"
-              onClick={() => close()}
-              aria-label="Close recent posts"
-            >
-              <X size={22} aria-hidden="true" />
-            </button>
+            <div className="story-controls">
+              {state.kind === "ready" ? (
+                <>
+                  <button
+                    ref={prevButton}
+                    type="button"
+                    className="story-control"
+                    onClick={() => go(prev)}
+                    disabled={!prev}
+                    aria-label="Previous post"
+                  >
+                    <ChevronLeft size={22} aria-hidden="true" />
+                  </button>
+                  <button
+                    ref={nextButton}
+                    type="button"
+                    className="story-control"
+                    onClick={() => go(next)}
+                    disabled={!next}
+                    aria-label={nextAuthor ? `Next post, from ${nextAuthor}` : "Next post"}
+                  >
+                    <ChevronRight size={22} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="story-control"
+                    onClick={() => {
+                      // Play is an explicit request: it wins over focus resting on the header.
+                      if (holding) {
+                        setPaused(false);
+                        setPlayOverride(true);
+                      } else setPaused(true);
+                    }}
+                    aria-pressed={holding}
+                    aria-label={holding ? "Play: move on automatically" : "Pause: stay on this post"}
+                  >
+                    {holding ? <Play size={20} aria-hidden="true" /> : <Pause size={20} aria-hidden="true" />}
+                  </button>
+                </>
+              ) : null}
+              <button
+                type="button"
+                className="story-close"
+                onClick={() => close()}
+                aria-label="Close recent posts"
+              >
+                <X size={22} aria-hidden="true" />
+              </button>
+            </div>
           </div>
         </header>
 
-        {/* Taps are a pointer shortcut; the Previous/Next buttons and Arrow keys stay the
-            accessible way to move, so the tap area itself is not a control. */}
+        {/* Taps are a pointer shortcut; the Previous/Next/Pause controls above and the Arrow and
+            Space keys stay the accessible way to move, so the tap area itself is not a control. */}
         <div
+          ref={body}
           className="story-viewer-body"
           aria-live="polite"
           onPointerDown={onTapDown}
@@ -539,11 +737,22 @@ export default function StoryViewer({
                 <CommunityPhoto
                   path={post.photo_path}
                   title={post.title || `${post.author_name}'s post`}
-                  onLoaded={() => setPhotoLoaded(true)}
+                  key={photoKey ?? undefined}
+                  onLoaded={() => {
+                    const loaded = photoKey;
+                    if (loaded && loaded === currentPhoto.current) setPhotoLoadedFor(loaded);
+                  }}
                   openable={false}
                 />
               ) : null}
-              <div className="story-actions" data-story-no-tap>
+              <div
+                className="story-actions"
+                data-story-no-tap
+                onFocus={() => setActionFocus(true)}
+                onBlur={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setActionFocus(false);
+                }}
+              >
                 {post.photo_path && photoLoaded ? (
                   <button
                     type="button"
@@ -593,35 +802,6 @@ export default function StoryViewer({
           )}
         </div>
 
-        {state.kind === "ready" ? (
-          <nav className="story-nav" aria-label="Move between posts">
-            <button
-              ref={prevButton}
-              type="button"
-              onClick={() => go(prev)}
-              disabled={!prev}
-              aria-label="Previous post"
-            >
-              <ChevronLeft size={22} aria-hidden="true" /> Previous
-            </button>
-            <button
-              ref={nextButton}
-              type="button"
-              onClick={() => go(next)}
-              disabled={!next}
-              aria-label={
-                nextAuthor ? `Next post, from ${nextAuthor}` : "Next post"
-              }
-            >
-              {nextAuthor
-                ? `Next · ${nextAuthor}`
-                : next
-                  ? "Next"
-                  : "No more posts"}
-              <ChevronRight size={22} aria-hidden="true" />
-            </button>
-          </nav>
-        ) : null}
       </div>
     </dialog>
   );
