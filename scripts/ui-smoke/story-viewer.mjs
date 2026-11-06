@@ -89,6 +89,16 @@ async function open(name, { width = 390, detail = null, detailStatus = 200, read
   await ctx.route("**/storage/v1/object/sign/community-photos/**", (r) =>
     r.request().method() === "GET" ? r.fulfill({ status: 404, body: "" }) : r.fallback());
   const page = await ctx.newPage();
+  await ctx.addInitScript(() => {
+    const original=window.fetch;
+    window.__clockRequests=[];
+    window.fetch=async(...args)=>{
+      const url=String(args[0] instanceof Request?args[0].url:args[0]);
+      if(!url.includes("/community_story_clock")) return original(...args);
+      const sent=performance.now();const r=await original(...args);
+      window.__clockRequests.push({sent,received:performance.now(),status:r.status});return r;
+    };
+  });
   if (freeze) await page.clock.install({ time: new Date("2026-10-14T02:00:00Z") });
   page.setDefaultTimeout(12000);
   const errors = [];
@@ -97,13 +107,16 @@ async function open(name, { width = 390, detail = null, detailStatus = 200, read
   const fail = (m) => failures.push(`${name}: ${m}`);
   try {
     await page.goto(BASE + "/community", { waitUntil: "networkidle" });
+    // Let hydration use normal timers, then stop time before opening a viewer. This
+    // keeps expiry/lease samples from racing the clock's real-time progression.
+    if (freeze) await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now() + 1000)));
     await page.evaluate(() => document.querySelectorAll("dialog[open]:not(.story-viewer)").forEach((d) => d.close()));
     // Let the negative control find the tapped ring's post.
     await page.locator(".community-story").evaluateAll((els, ids) => els.forEach((el, i) => el.setAttribute("data-smoke-post", ids[i])), activity.map((a) => a.post_id));
     await run({ page, fail, ctx });
   } catch (e) {
     fail(`threw · ${String(e).split("\n")[0].slice(0, 200)} @ ${(e.stack || "").match(/story-viewer\.mjs:(\d+)/)?.[1] ?? "?"}`);
-    console.error(JSON.stringify({ name, clockSamples, visible: await page.locator("dialog.story-viewer").innerText().catch(() => "no viewer") }));
+    console.error(JSON.stringify({ name, clockSamples, requests: await page.evaluate(()=>window.__clockRequests), visible: await page.locator("dialog.story-viewer").innerText().catch(() => "no viewer") }));
     await page.screenshot({ path: `${evidenceRoot}/failure-${name.replace(/[^a-zA-Z0-9]/g, "-").slice(0,90)}.png`, fullPage: true }).catch(() => {});
   }
   if (errors.length) fail(`page error · ${errors[0].slice(0, 160)}`);
