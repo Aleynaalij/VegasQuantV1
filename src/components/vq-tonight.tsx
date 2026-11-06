@@ -1,36 +1,20 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ChevronRight, Layers, Search, Users } from "lucide-react";
 import BrandMark from "./brand-mark";
 import SkyboxFace from "./skybox-face";
-import { useCallback, useEffect, useMemo, useRef, useState, useId } from "react";
+import { useEffect, useState, useId } from "react";
 import { supabase } from "@/lib/supabase";
 import { SPORTS, type Sport } from "@/lib/sports";
 import type { Game } from "@/lib/domain";
-import {
-  fromDeskGames,
-  fromNbaGames,
-  fromSportsHome,
-  startLabel,
-  statusLabel,
-  tonightGames,
-  tonightWindow,
-  type TonightGame,
-} from "@/lib/vq-tonight";
+import { startLabel, statusLabel } from "@/lib/vq-tonight";
+import { useTonightSchedules } from "@/lib/use-tonight-schedules";
+import SkyboxSpin from "./skybox-spin";
 import "@/app/vq-tonight.css";
 
-/**
- * A sport's schedule as last read. `checkedAt` is when Vegas Quant last read it, not when the
- * provider last changed it; `stale` means a later refresh failed and these are the earlier games.
- */
-type Load =
-  | { state: "loading" }
-  | { state: "error" }
-  | { state: "ok"; games: TonightGame[]; checkedAt: number; stale: boolean };
 const ORDER: Sport[] = ["nfl", "nba", "nhl", "ncaab"];
 const SHOWN = 8;
-/** Re-read schedules every 5 minutes while the page is visible: 3 small reads, no provider credits. */
-const REFRESH = 5 * 60000;
 const clock = (t: number) =>
   `${new Date(t).toLocaleTimeString("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit" })} ET`;
 
@@ -39,83 +23,23 @@ const clock = (t: number) =>
  * existing page, the lay in progress and the Zone. Built only from readers Home already uses; it
  * does not rank games or claim research exists for a game.
  */
-export default function VqTonight({ nflGames, presentation = "standard" }: { nflGames: Game[]; presentation?: "standard" | "skybox" }) {
+export default function VqTonight({
+  nflGames,
+  nflUnavailable = false,
+  presentation = "standard",
+}: {
+  nflGames: Game[];
+  /** The server desk read failed: NFL is unavailable, never "no games today". */
+  nflUnavailable?: boolean;
+  presentation?: "standard" | "skybox";
+}) {
   const skybox = presentation === "skybox";
+  const router = useRouter();
   const previewLimit = skybox ? 3 : SHOWN;
-  const [now, setNow] = useState(() => Date.now());
-  const day = useMemo(() => tonightWindow(now), [now]);
-  const [loads, setLoads] = useState<Record<Exclude<Sport, "nfl">, Load>>({
-    nba: { state: "loading" }, nhl: { state: "loading" }, ncaab: { state: "loading" },
-  });
+  const { day, loads, load, rows, faceState } = useTonightSchedules(nflGames, nflUnavailable);
   const [all, setAll] = useState(false);
   const [signedIn, setSignedIn] = useState<boolean | null>(null);
   const [draft, setDraft] = useState(0);
-
-  // Each sport's newest request wins: a late answer from an earlier request (or an earlier ET day)
-  // is ignored, whether it succeeded or failed.
-  const latest = useRef<Record<Exclude<Sport, "nfl">, number>>({ nba: 0, nhl: 0, ncaab: 0 });
-  const dayStart = useRef(day.start);
-  dayStart.current = day.start;
-  const load = useCallback(async (sport: Exclude<Sport, "nfl">, w = day) => {
-    const n = ++latest.current[sport];
-    const current = () => n === latest.current[sport] && w.start === dayStart.current;
-    // Keep showing what we have while refreshing; only a first load shows "loading".
-    setLoads((l) => (l[sport].state === "ok" ? l : { ...l, [sport]: { state: "loading" } }));
-    try {
-      let games: TonightGame[];
-      if (sport === "nba") {
-        const r = await supabase
-          .from("nba_games")
-          .select("id,slug,away_team,home_team,tipoff,tipoff_tbd,status")
-          .gte("tipoff", new Date(w.start).toISOString())
-          .lt("tipoff", new Date(w.end).toISOString())
-          .order("tipoff")
-          .limit(100);
-        if (r.error) throw r.error;
-        games = fromNbaGames(r.data);
-      } else {
-        const r = await supabase.rpc("sports_home", { p_sport: sport, p_days: 1 });
-        if (r.error) throw r.error;
-        const parsed = fromSportsHome(sport, r.data);
-        if (!parsed) throw Error("Unexpected schedule response");
-        games = parsed;
-      }
-      if (!current()) return;
-      setLoads((l) => ({ ...l, [sport]: { state: "ok", games, checkedAt: Date.now(), stale: false } }));
-    } catch {
-      if (!current()) return;
-      // A failed refresh keeps the earlier games, marked stale; a failed first load is an error.
-      setLoads((l) => {
-        const prev = l[sport];
-        return { ...l, [sport]: prev.state === "ok" ? { ...prev, stale: true } : { state: "error" } };
-      });
-    }
-  }, [day]);
-
-  useEffect(() => {
-    // A new ET day starts clean: the previous day's games are never shown as today's.
-    setLoads({ nba: { state: "loading" }, nhl: { state: "loading" }, ncaab: { state: "loading" } });
-    const all = () => (["nba", "nhl", "ncaab"] as const).forEach((s) => void load(s));
-    all();
-    // Same-day status changes (final, postponed) appear without a reload.
-    const timer = setInterval(() => {
-      if (document.visibilityState === "visible") all();
-    }, REFRESH);
-    return () => clearInterval(timer);
-  }, [load]);
-
-  // Roll over at ET midnight, and catch up when the tab wakes.
-  useEffect(() => {
-    const wake = () => {
-      if (document.visibilityState === "visible" && Date.now() >= day.end) setNow(Date.now());
-    };
-    const timer = setTimeout(() => setNow(Date.now()), Math.max(1000, day.end - Date.now() + 1000));
-    document.addEventListener("visibilitychange", wake);
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener("visibilitychange", wake);
-    };
-  }, [day.end]);
 
   // Signed-in state and the lay in progress (this account's draft only).
   useEffect(() => {
@@ -150,14 +74,13 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
     };
   }, []);
 
-  const rows = useMemo(() => {
-    const loaded = (["nba", "nhl", "ncaab"] as const).flatMap((s) => {
-      const l = loads[s];
-      return l.state === "ok" ? l.games : [];
-    });
-    return tonightGames([...fromDeskGames(nflGames), ...loaded], now);
-  }, [loads, nflGames, now]);
-  const failed = (["nba", "nhl", "ncaab"] as const).filter((s) => loads[s].state === "error");
+  const failedClient = (["nba", "nhl", "ncaab"] as const).filter((s) => loads[s].state === "error");
+  // A failed NFL desk read is reported like any other failed sport, never as "no games".
+  const failed: Sport[] = [...(nflUnavailable ? (["nfl"] as const) : []), ...failedClient];
+  const retryFailed = () => {
+    failedClient.forEach((s) => void load(s));
+    if (nflUnavailable) router.refresh();
+  };
   const stale = (["nba", "nhl", "ncaab"] as const).filter((s) => {
     const l = loads[s];
     return l.state === "ok" && l.stale;
@@ -174,12 +97,7 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
     ? [["all", shown] as const]
     : ORDER.map((s) => [s, shown.filter((g) => g.sport === s)] as const).filter(([, g]) => g.length);
 
-  return (
-    <section
-      id="vq-tonight"
-      className={`vq-tonight${skybox ? " vq-tonight-skybox" : ""}`}
-      aria-labelledby="vq-tonight-title"
-    >
+  const board = (
       <SkyboxFace faceId="overview" presentation={presentation}>
         {skybox ? <SkyboxEnclosure /> : null}
         <header className="vq-tonight-head">
@@ -221,7 +139,7 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
             load.{" "}
             <button
               type="button"
-              onClick={() => failed.forEach((s) => void load(s))}
+              onClick={retryFailed}
             >
               Retry
             </button>
@@ -292,6 +210,25 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
         )}
         {skybox && lastChecked ? <p className="vq-tonight-checked vq-tonight-screen-note">Schedules checked {clock(lastChecked)} · League times and statuses at that check.</p> : null}
       </SkyboxFace>
+  );
+
+  return (
+    <section
+      id="vq-tonight"
+      className={`vq-tonight${skybox ? " vq-tonight-skybox" : ""}`}
+      aria-labelledby="vq-tonight-title"
+    >
+      {skybox ? (
+        <SkyboxSpin
+          day={day}
+          faceState={faceState}
+          onRetry={(sport) => void load(sport)}
+          enclosure={() => <SkyboxEnclosure />}
+          overview={board}
+        />
+      ) : (
+        board
+      )}
       {skybox ? (
         <h3 className="vq-lobby-section-title">Your next move</h3>
       ) : null}
