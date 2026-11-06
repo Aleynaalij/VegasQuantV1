@@ -459,7 +459,14 @@ await open("lease expiry and resume resync before displaying content", { freeze:
   await page.clock.fastForward(300000);
   await viewer(page).getByText("Story time could not be verified. Retrying shortly.").waitFor();
   if (await viewer(page).locator(".story-post").count()) fail("expired clock lease exposed content");
+  // Resume starts asynchronous samples for both rail and viewer. Finish the failed
+  // renewal before advancing to the retry boundary; networkidle is not a React-state barrier.
+  const failedRenewal = page.waitForResponse(r => r.url().includes("/rpc/community_story_clock") && r.status() === 500);
   await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
+  await (await failedRenewal).finished();
+  await viewer(page).getByText("Story time could not be verified. Retrying shortly.").waitFor();
+  // Passive effects register the bounded retry after committing the unavailable state.
+  await page.waitForTimeout(100);
   if (await viewer(page).locator(".story-post").count()) fail("resume restored content without a trusted clock");
   await ctx.route("**/rest/v1/rpc/community_story_clock*", async r => {
     const elapsed=await r.request().frame().evaluate(()=>performance.now());
