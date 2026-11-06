@@ -65,8 +65,14 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
         <VqTonight nflGames={nflGames} />
       </SectionBoundary>
 
-      {/* VQ Tonight carries Build a lay (or "Continue your lay") and The Zone (or its sign-in). */}
+      {/* VQ Tonight carries My lays (or "Continue your lay") and The Zone (or its sign-in). */}
       <section className="vq-lobby-tools" aria-label="More from Vegas Quant">
+        <LobbyTool
+          href="/parlays?build=1"
+          icon={<span className="vq-lobby-diamond" aria-hidden="true">+</span>}
+          title="Build a lay"
+          body="Start a new lay from the current legs. Nothing is placed or shared unless you choose to."
+        />
         <LobbyTool
           href="/slots"
           icon={<span className="vq-lobby-diamond" aria-hidden="true">♦</span>}

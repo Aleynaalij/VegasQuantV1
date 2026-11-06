@@ -408,7 +408,7 @@ export default function MatchupIntelligence({
         } as CSSProperties
       }
     >
-      <Shell active="game">
+      <Shell active="game" sport="nfl">
         <div className="heading">
           <div>
             <span className="eyebrow">VEGAS QUANT INTELLIGENCE</span>

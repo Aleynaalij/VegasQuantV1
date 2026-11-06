@@ -131,14 +131,14 @@ await open("signed in with a lay in progress", { signedIn: true, draft: ["k1", "
 // The game rows live on the NFL desk (/nfl); VQ Tonight renders there too.
 await open("lay card follows selections on the NFL desk without a reload", { signedIn: true, path: "/nfl" }, async ({ page, fail }) => {
   const card = () => tonight(page).locator(".vq-tonight-next a").first();
-  if (!/Your lays/.test(await card().innerText())) fail("lay card does not start as Your lays with no draft");
+  if (!/My lays/.test(await card().innerText())) fail("lay card does not start as My lays with no draft");
   await page.locator("details.vq-game-row").first().locator("summary").click();
   await page.getByRole("button", { name: /Sample Runner/ }).first().click();
   await page.getByRole("button", { name: "Add to your lay" }).click();
   const added = await page.waitForFunction(() => /Continue your lay · 1 selected/.test(document.querySelector(".vq-tonight-next a")?.textContent || ""), null, { timeout: 5000 }).then(() => true, () => false);
   if (!added) fail("lay card did not update after adding a pick on Home");
   await page.getByRole("button", { name: /Added to your lay/ }).click();
-  const removed = await page.waitForFunction(() => /Your lays/.test(document.querySelector(".vq-tonight-next a")?.textContent || ""), null, { timeout: 5000 }).then(() => true, () => false);
+  const removed = await page.waitForFunction(() => /My lays/.test(document.querySelector(".vq-tonight-next a")?.textContent || ""), null, { timeout: 5000 }).then(() => true, () => false);
   if (!removed) fail("lay card did not update after removing the pick");
 });
 

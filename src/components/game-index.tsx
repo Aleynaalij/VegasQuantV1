@@ -14,7 +14,7 @@ export default function GameIndex({ games }: { games: Game[] }) {
     )
     .sort((a, b) => Date.parse(b.kickoff) - Date.parse(a.kickoff));
   return (
-    <Shell active="game">
+    <Shell active="game" sport="nfl">
       <div className="heading">
         <div>
           <span className="eyebrow">RESEARCH INDEX</span>

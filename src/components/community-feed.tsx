@@ -1288,7 +1288,7 @@ export default function CommunityFeed() {
     <Avatar name={name} avatar={avatar} />
   );
   return (
-    <Shell active="community" sport={sport === "all" ? "nfl" : sport}>
+    <Shell active="community" sport={sport === "all" ? undefined : sport}>
       <div className="community-feed zone-feed">
         <header className="zone-head">
           <h1>The Zone</h1>

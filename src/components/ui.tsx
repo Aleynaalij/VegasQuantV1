@@ -92,14 +92,17 @@ export function Stat({
 export function Shell({
   children,
   active = "home",
-  sport: requested = "nfl",
+  sport: requested,
 }: {
   children: ReactNode;
   active?: string;
   sport?: Sport;
 }) {
-  // A sport that isn't live yet wears the NFL chrome.
-  const sport = SPORTS[requested]?.live ? requested : "nfl";
+  // Only a page that names its (live) sport selects that chip and shows its sport-only card;
+  // pages without one (the lobby, The Zone across sports, lays, profiles) select no sport.
+  // Their links still default to the NFL chrome.
+  const pageSport = requested && SPORTS[requested]?.live ? requested : undefined;
+  const sport = pageSport ?? "nfl";
   // The neutral lobby (/) belongs to no sport: no chip is selected and no sport-only claims show.
   const lobby = active === "lobby";
   const home = SPORTS[sport].home;
@@ -216,7 +219,7 @@ export function Shell({
             Account
           </Link>
         </nav>
-        {!lobby && !(sport === "nba" && active === "home") && (
+        {pageSport && !(pageSport === "nba" && active === "home") && (
           <div className="sidebar-rule">
             <ShieldCheck size={23} />
             <h3>
@@ -305,16 +308,16 @@ export function Shell({
               <Link
                 key={key}
                 href={chipHref(key)}
-                aria-current={!lobby && sport === key ? "page" : undefined}
+                aria-current={pageSport === key ? "page" : undefined}
                 aria-label={SPORTS[key].name}
-                className={!lobby && sport === key ? "selected" : ""}
+                className={pageSport === key ? "selected" : ""}
                 data-sport={key}
               >
                 {SPORTS[key].label}
               </Link>
             );
             // Frank's surprise is NHL itself: its chip waits for his invitation status.
-            return key === "nhl" && (lobby || sport !== "nhl") ? (
+            return key === "nhl" && pageSport !== "nhl" ? (
               <NhlChipHold key={key}>{chip}</NhlChipHold>
             ) : (
               chip

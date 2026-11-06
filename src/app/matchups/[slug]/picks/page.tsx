@@ -21,7 +21,7 @@ export default async function GamePicksPage({
   );
   if (!game) notFound();
   return (
-    <Shell active="feed">
+    <Shell active="feed" sport="nfl">
       <div className="game-picks-page">
         <nav className="game-picks-breadcrumbs" aria-label="Game navigation">
           <Link href="/">← Home</Link>
