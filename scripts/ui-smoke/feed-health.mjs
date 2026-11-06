@@ -96,6 +96,14 @@ try {
               }),
             );
           });
+        // networkidle can precede React's committed authorization/query state.
+        await page.waitForFunction(mode => {
+          const text=document.body.innerText;
+          return mode==="denied" ? text.includes("Sign in and verify your administrator account.")
+            : mode==="query-error" ? text.includes("Health queries failed; coverage cannot be verified.")
+            : mode==="failed-stale" ? text.includes("error; refresh older than 30 minutes")
+            : text.includes("six listed NFL feed checks");
+        }, mode);
         const text = await page.locator("body").innerText();
         if (/All sports coverage verified/.test(text))
           fail("false multisport coverage promise");
