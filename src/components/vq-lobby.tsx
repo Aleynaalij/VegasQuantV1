@@ -19,10 +19,21 @@ const DESK: Record<Sport, string> = {
   ncaab: "Today’s games and research for college basketball.",
 };
 
-/** Old links pointed at the NFL desk's game list on "/" with only a hash; send them to /nfl. */
+/**
+ * Old links pointed at the NFL desk's game list on "/" with only a hash (which never reaches the
+ * server), so the lobby forwards them to /nfl itself: on arrival and on a later hash change while
+ * the lobby is open, keeping every query value (repeated keys included). `replace` swaps the old
+ * entry, so Back returns to the page before it rather than looping into the lobby again.
+ */
 function LegacyHashForward() {
   useEffect(() => {
-    if (window.location.hash === "#home-games") window.location.replace("/nfl#home-games");
+    const forward = () => {
+      if (window.location.pathname !== "/" || window.location.hash !== "#home-games") return;
+      window.location.replace(`/nfl${window.location.search}#home-games`);
+    };
+    forward();
+    window.addEventListener("hashchange", forward);
+    return () => window.removeEventListener("hashchange", forward);
   }, []);
   return null;
 }

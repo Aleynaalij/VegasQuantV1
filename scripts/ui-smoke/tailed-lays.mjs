@@ -16,23 +16,28 @@ const PUBLISHED = {
   p2: leg("p2", "HAIL_MARY", "Sample Hail Mary", "LOSS", past),
   s1: leg("s1", "SINGLE", "Sample pick", "WIN", past),
   b1: leg("b1", "SINGLE", "Account B pick", null, soon),
+  e1: leg("e1", "PARLAY", "Sample locking parlay", null, new Date(Date.now() + 60000).toISOString()),
 };
 const TAILS = { [A]: ["p1", "p2", "s1"], [B]: ["b1"] };
 
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
 const token = (uid) => JSON.stringify({ access_token: "smoke", refresh_token: "smoke", token_type: "bearer", expires_in: 86400, expires_at: Math.floor(Date.now() / 1000) + 86400, user: { id: uid, aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } } });
-async function open(name, { uid = A, tails = null, failFirst = 0, noAccess = false, width = 390 } = {}, run) {
+async function open(name, { uid = A, tails = null, failFirst = 0, noAccess = false, width = 390, hang = false, expired = false, lockInMs = 0, until = "networkidle" } = {}, run) {
+  if (lockInMs) PUBLISHED.e1.expires_at = new Date(Date.now() + lockInMs).toISOString();
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript(({ uid, t }) => {
     localStorage.setItem(`vq-app-refresh:${uid || "x"}`, "gold-2026-10-22-v2");
     localStorage.setItem(`vq-push-prompt:${uid || "x"}`, String(Date.now() + 9e8));
     sessionStorage.setItem("vq-prompt-shown", "fixture");
     if (uid && !sessionStorage.getItem("vq-smoke-token")) { localStorage.setItem("sb-127-auth-token", t); sessionStorage.setItem("vq-smoke-token", "1"); }
-  }, { uid, t: uid ? token(uid) : "" });
+  }, { uid, t: uid ? (expired ? JSON.stringify({ ...JSON.parse(token(uid)), expires_at: Math.floor(Date.now() / 1000) - 60 }) : token(uid)) : "" });
+  // An expired session whose refresh fails: the session lookup itself errors.
+  if (expired) await ctx.route("**/auth/v1/token*", (r) => r.fulfill({ status: 500, json: { message: "synthetic auth outage" } }));
   let fails = failFirst;
   const current = () => ctx.pages()[0]?.evaluate(() => JSON.parse(localStorage.getItem("sb-127-auth-token") || "null")?.user?.id).catch(() => null);
   await ctx.route("**/rest/v1/leg_tails*", async (r) => {
+    if (hang) return; // never answers
     if (fails-- > 0) return r.fulfill({ status: 500, json: { message: "synthetic failure" } });
     const who = new URL(r.request().url()).searchParams.get("user_id")?.replace("eq.", "") || (await current());
     const keys = tails ?? TAILS[NEG === "other-account" ? A : who] ?? [];
@@ -52,7 +57,7 @@ async function open(name, { uid = A, tails = null, failFirst = 0, noAccess = fal
   const before = failures.length;
   const fail = (m) => failures.push(`${name}: ${m}`);
   try {
-    await page.goto(BASE + "/parlays/tailed", { waitUntil: "networkidle" });
+    await page.goto(BASE + "/parlays/tailed", { waitUntil: until });
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
     await run({ page, fail });
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
@@ -100,12 +105,34 @@ await open("a failed load says so, and Retry recovers", { failFirst: 1 }, async 
   await main(page).getByText("Sample Sunday parlay").waitFor().catch(() => fail("Retry did not recover"));
 });
 
-await open("tails kept, details need access: honest message, no fake rows", { noAccess: true }, async ({ page, fail }) => {
-  await main(page).getByText("need active research access", { exact: false }).waitFor().catch(() => fail("no access message"));
+await open("tails kept, no details readable: honest unavailable state (no asserted reason), no fake rows", { noAccess: true }, async ({ page, fail }) => {
+  await main(page).getByText("aren’t available right now", { exact: false }).waitFor().catch(() => fail("no unavailable message"));
+  if (!(await main(page).getByRole("button", { name: "Try again" }).count())) fail("no Try again");
   if (!/3 picks/.test(await main(page).innerText())) fail("tail count not shown");
   if (await page.getByRole("region", { name: /Tailed (parlays|picks)/ }).count()) fail("rows shown without access");
 });
 
+await open("partly missing details: shown rows plus an honest count, nothing silently dropped", { tails: ["p1", "gone1", "gone2"] }, async ({ page, fail }) => {
+  await main(page).getByText("Sample Sunday parlay").waitFor();
+  await main(page).getByText("2 more tailed picks couldn’t be shown", { exact: false }).waitFor().catch(() => fail("missing count not reported"));
+});
+
+await open("an open parlay stops reading Open at its lock time while the page sits open", { tails: ["e1"], lockInMs: 4000 }, async ({ page, fail }) => {
+  const item = page.getByRole("link", { name: /Sample locking parlay/ });
+  await item.waitFor();
+  if (!/Open · locks/.test(await item.innerText())) fail("not shown as open before the lock");
+  await page.waitForFunction(() => /Awaiting the verified result/.test(document.querySelector("section.vq-tailed")?.textContent || ""), null, { timeout: 9000 }).catch(() => fail("still Open after its lock time"));
+  if (/Won|Lost/.test(await item.innerText())) fail("a result was inferred at lock time");
+});
+
+await open("a request that never answers becomes a recoverable error, not endless Loading", { hang: true, until: "load" }, async ({ page, fail }) => {
+  await main(page).getByRole("alert").waitFor({ timeout: 14000 }).catch(() => fail("still loading after the read bound"));
+  if (!(await main(page).getByRole("button", { name: "Retry" }).count())) fail("no Retry after a hung read");
+});
+
+// A failed session lookup (expired session, refresh fails) is caught first by the app-wide account
+// gate ("Checking your account…"), so it never reaches this page; the component also treats a
+// session error as an error with Retry rather than signed out (code path, not browser-reachable).
 await open("an account switch shows only the new account's tails", {}, async ({ page, fail }) => {
   await main(page).getByText("Sample Sunday parlay").waitFor();
   await page.evaluate((t) => {

@@ -45,6 +45,9 @@ jobs:
           cat /tmp/tailed-negative.log
           grep -q "account A.s tails still shown after switching to B" /tmp/tailed-negative.log
           LOBBY_COMBINED=1 node scripts/ui-smoke/lobby-destinations.mjs
+          node scripts/ui-smoke/parlay-save.mjs
+          mkdir -p artifacts/parlay-save
+          cp /tmp/vq-parlay-save-*.png artifacts/parlay-save/
           if UI_SMOKE_NEGATIVE=approval-label UI_ARTIFACT_DIR=artifacts/lobby-negative node scripts/ui-smoke/lobby-destinations.mjs > /tmp/lobby-negative.log 2>&1; then
             cat /tmp/lobby-negative.log
             echo 'ERROR: misleading approval negative control passed unexpectedly'
