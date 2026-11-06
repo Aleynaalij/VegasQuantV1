@@ -45,7 +45,7 @@ export default function PublicOverview({
   );
   if (page !== "home")
     return (
-      <Shell active={page}>
+      <Shell active={page} sport="nfl">
         <div className="heading">
           <div>
             <div className="eyebrow">

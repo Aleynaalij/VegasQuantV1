@@ -27,6 +27,7 @@ jobs:
           browser_path=$(command -v google-chrome || command -v chromium || true)
           if [ -n "$browser_path" ]; then
             echo "CHROMIUM_PATH=$browser_path" >> "$GITHUB_ENV"
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
           else
             npx playwright install --with-deps chromium
           fi
@@ -35,7 +36,15 @@ jobs:
           node scripts/ui-smoke/stub.mjs &
           LIVE_SCORES_DISABLED=1 npx next start -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
-          node scripts/ui-smoke/lobby-destinations.mjs
+          node scripts/ui-smoke/tailed-lays.mjs
+          if UI_SMOKE_NEGATIVE=other-account node scripts/ui-smoke/tailed-lays.mjs > /tmp/tailed-negative.log 2>&1; then
+            cat /tmp/tailed-negative.log
+            echo 'ERROR: other-account tailed negative passed unexpectedly'
+            exit 1
+          fi
+          cat /tmp/tailed-negative.log
+          grep -q "account A.s tails still shown after switching to B" /tmp/tailed-negative.log
+          LOBBY_COMBINED=1 node scripts/ui-smoke/lobby-destinations.mjs
           node scripts/ui-smoke/parlay-save.mjs
           mkdir -p artifacts/parlay-save
           cp /tmp/vq-parlay-save-*.png artifacts/parlay-save/

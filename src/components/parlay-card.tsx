@@ -104,7 +104,7 @@ export default function ParlayCard({
       </p>
       <LegActions legKey={key} parlay expired={expired} />
       <p>
-        <Link href="/">See your tailed parlays on Home →</Link>
+        <Link href="/parlays/tailed">See your tailed parlays →</Link>
       </p>
       <GamblyLink
         url={c.gambly_url}

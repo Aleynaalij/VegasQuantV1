@@ -168,7 +168,7 @@ for (const [width, height, sel] of [[390, 844, ".mobile-nav"], [1280, 900, ".sid
 }
 
 const RESEARCH_FEED = "/feed?view=latest";
-const RESEARCH_SUBTITLE = "Research, injury news and legs we like.";
+const RESEARCH_SUBTITLE = "Vegas Quant’s picks with their case, risks and observed price";
 // Empty and failing data. Empty: every table read returns [] (RPCs keep their documented object
 // shapes from the stub). Failing: every REST call, RPCs included, returns HTTP 500. The page must still
 // render a shell with readable content, no uncaught error and no sideways scroll.

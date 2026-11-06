@@ -236,8 +236,8 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
 
       <div className="vq-tonight-next">
         <Link href="/parlays" className="vq-tonight-card">
-          <b>{draft ? `Continue your lay · ${draft} selected` : "Your lays"}</b>
-          <small>{draft ? "Pick up where you left off." : "Saved lays and the leg library."}</small>
+          <b>{draft ? `Continue your lay · ${draft} selected` : "My lays"}</b>
+          <small>{draft ? "Pick up where you left off." : "Your saved lays and the leg library."}</small>
         </Link>
         {signedIn === false ? (
           <Link href="/membership" className="vq-tonight-card">

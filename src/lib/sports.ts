@@ -24,7 +24,8 @@ export const SPORTS: Record<Sport, SportInfo> = {
     key: "nfl",
     label: "NFL",
     name: "NFL",
-    home: "/",
+    // The NFL desk; "/" is the neutral lobby.
+    home: "/nfl",
     next: "Next kickoff",
     countdown: "Time to kickoff",
     started: "Kicked off",

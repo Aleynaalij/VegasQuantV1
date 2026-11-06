@@ -227,7 +227,7 @@ export default function LegActions({
       <small>
         {parlay ? (
           <>
-            Tailing adds this parlay to <Link href="/">Home</Link>
+            Tailing adds this parlay to <Link href="/parlays/tailed">Your lays → Tailed</Link>
             {admin && (
               <>
                 {" "}
@@ -236,12 +236,10 @@ export default function LegActions({
             )}
             .
           </>
-        ) : admin ? (
-          <>
-            Tailing adds this pick to <Link href="/history">your Records</Link>.
-          </>
         ) : (
-          <>Tailing marks this pick as one you’re following.</>
+          <>
+            Tailing adds this pick to <Link href="/parlays/tailed">Your lays → Tailed</Link>.
+          </>
         )}{" "}
         It does not place or record a wager.
       </small>

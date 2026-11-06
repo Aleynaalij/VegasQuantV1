@@ -292,7 +292,7 @@ export default function DeskApp({
   const access = (d as Desk & { access?: Access }).access || noAccess;
   if ((page === "history" || page === "performance") && admin !== true)
     return (
-      <Shell active="home">
+      <Shell active="home" sport="nfl">
         <p className="vq-soft-notice" role="status">
           {admin === null ? "Checking access…" : "Records are private."}
         </p>
@@ -329,7 +329,7 @@ export default function DeskApp({
         } as React.CSSProperties
       }
     >
-      <Shell active={page}>
+      <Shell active={page} sport="nfl">
         {access.allowed && !access.admin && (
           <div className="member-stamp">
             VEGAS QUANT · {access.member_code} · Personal access
@@ -982,7 +982,7 @@ function MatchupWorkspace({
                     </Link>
                   </p>
                 ))}
-                <Link href="/">View current research →</Link>
+                <Link href="/feed?view=latest">View current research →</Link>
               </details>
             )}
           </div>
