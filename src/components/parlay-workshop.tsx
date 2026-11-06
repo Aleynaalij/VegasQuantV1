@@ -42,7 +42,21 @@ export default function ParlayWorkshop({
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const routeSaved = params.get("saved") || "";
+  const [hashSaved, setHashSaved] = useState("");
+  useEffect(() => {
+    const update = () =>
+      setHashSaved(
+        /^#my-parlay-([a-f0-9-]{36})$/i.exec(window.location.hash)?.[1] || "",
+      );
+    update();
+    window.addEventListener("hashchange", update);
+    window.addEventListener("popstate", update);
+    return () => {
+      window.removeEventListener("hashchange", update);
+      window.removeEventListener("popstate", update);
+    };
+  }, []);
+  const routeSaved = params.get("saved") || hashSaved;
   const routeBuild = params.get("build") === "1";
   const requestedSaved = useRef(routeSaved);
   requestedSaved.current = routeSaved;
@@ -283,6 +297,8 @@ export default function ParlayWorkshop({
       setChosen([]);
       setSavedPrompt(null);
       setOpen(false);
+      setNotice("");
+      setError("");
       setBusy(false);
       setSharing(null);
       setSharedPost(null);

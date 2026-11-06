@@ -251,7 +251,7 @@ try {
     await workshop
       .getByRole("button", { name: "Recent form", exact: true })
       .click();
-    await workshop.getByText("RECENT FORM", { exact: true }).first().waitFor();
+    await workshop.locator(".vq-stamp").first().waitFor();
     if (process.env.UI_SMOKE_NEGATIVE === "approval-label")
       await workshop
         .locator(".vq-stamp")
