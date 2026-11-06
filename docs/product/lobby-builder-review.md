@@ -7,7 +7,7 @@ Claim: issue #65 comment 6684879047. Routing/selector coordination: comment 6684
 
 | Item | State | Evidence/dependency |
 |---|---|---|
-| X1 session/access/library recovery | In progress | Session precedes membership and protected reads; signed-out, denied, failed and loaded/empty states are separate. Explicit retry; bounded network reads; account-generation guards. Browser acceptance pending. |
+| X1 session/access/library recovery | In progress | Session precedes membership and protected reads; signed-out, denied, failed and loaded/empty states are separate. Explicit retry; bounded network reads; account-generation guards. Existing owner-only saved history remains readable when research access expires, without catalog reads or new build/publication. Expanded final browser acceptance pending. |
 | X2 labels and form screen | In progress | Build a lay / My lays / Save lay / Edit a copy. VqStamp visible, tooltip and accessible wording describes historical form, not approval. Existing stamp predicate, server recommendation gates and legacy identifiers unchanged. Render and helper tests passed. |
 | X3 save/reuse/share/outbound | In progress | Existing server ownership, immutable snapshots, deduplication, optional share, eligibility and explicit outbound controls retained. Saved query changes can fetch exact authorized ID without discarding a draft. Browser save/reopen/copy and account cases prepared; broader existing save/share/Gambly/Kalshi regressions still required. |
 | X4 complete destination acceptance | In progress | New isolated browser harness and workflow cover builder states at 360/390/1280 and an intended approval-label failure. Full C1 inventory and Claude routing head required for lobby/cross-sport/history acceptance. |

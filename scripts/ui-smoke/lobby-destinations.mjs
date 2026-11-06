@@ -304,6 +304,37 @@ try {
       !new URL(page.url()).searchParams.has("saved"),
       "hash identity works without a saved query",
     );
+    const catalogBeforeExpiry = catalogCalls;
+    allowed = false;
+    await page.reload();
+    await workshop
+      .getByText(/does not currently have research access/)
+      .waitFor();
+    await card.waitFor();
+    assert.equal(
+      catalogCalls,
+      catalogBeforeExpiry,
+      "expired access must not fetch the protected catalog",
+    );
+    assert.equal(
+      await card
+        .getByRole("button", { name: "Edit a copy", exact: true })
+        .isEnabled(),
+      false,
+    );
+    assert.equal(
+      await card
+        .getByRole("button", { name: "Post to Community", exact: true })
+        .isEnabled(),
+      false,
+    );
+    assert.equal(
+      await card.getAttribute("open"),
+      "",
+      "existing owner-only saved history remains readable after research expiry",
+    );
+    allowed = true;
+    await page.reload();
     await card
       .getByRole("button", { name: "Edit a copy", exact: true })
       .click();

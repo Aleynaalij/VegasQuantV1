@@ -130,18 +130,20 @@ export default function ParlayWorkshop({
         if (!live || n !== epoch.current) return;
         owner.current = access.owner;
         setAccessState(access.state);
-        if (access.state !== "ready") {
+        if (access.state !== "ready" && access.state !== "denied") {
           if (access.state === "failed") setError(access.message);
           setLoading(false);
           return;
         }
         const signal = AbortSignal.timeout(20000);
         const [catalog, mine] = await Promise.all([
-          supabase
-            .rpc("published_leg_catalog", {
-              p_since: homeWeekStart(new Date()),
-            })
-            .abortSignal(signal),
+          access.state === "ready"
+            ? supabase
+                .rpc("published_leg_catalog", {
+                  p_since: homeWeekStart(new Date()),
+                })
+                .abortSignal(signal)
+            : Promise.resolve({ data: [], error: null }),
           supabase
             .from("member_parlays")
             .select("id,title,legs,created_at,expires_at,community_post_id")
@@ -197,6 +199,7 @@ export default function ParlayWorkshop({
           if (pinned) setSavedId(pinned.id);
           try {
             const raw =
+              access.state === "ready" &&
               owner.current &&
               sessionStorage.getItem(`vq-parlay-draft:${owner.current}`);
             const draft = raw ? JSON.parse(raw) : null;
@@ -224,9 +227,9 @@ export default function ParlayWorkshop({
           } catch {
             /* Browser recovery is optional; saved cards live in your account. */
           }
-          if (buildRequested.current) setOpen(true);
-          accessReady.current = true;
-          setDraftReady(true);
+          if (buildRequested.current && access.state === "ready") setOpen(true);
+          accessReady.current = access.state === "ready";
+          setDraftReady(access.state === "ready");
         }
         setLoading(false);
       } catch {
@@ -524,7 +527,12 @@ export default function ParlayWorkshop({
     if (routeBuild && accessState === "ready" && !loading) setOpen(true);
   }, [routeBuild, accessState, loading]);
   useEffect(() => {
-    if (!routeSaved || !accessReady.current || loading) return;
+    if (
+      !routeSaved ||
+      (!accessReady.current && accessState !== "denied") ||
+      loading
+    )
+      return;
     let active = true;
     const n = epoch.current;
     setSavedId(routeSaved);
@@ -561,7 +569,7 @@ export default function ParlayWorkshop({
     return () => {
       active = false;
     };
-  }, [routeSaved, loading, saved]);
+  }, [routeSaved, loading, saved, accessState]);
   useEffect(() => {
     if (
       mode !== "parlays" ||
@@ -850,7 +858,7 @@ export default function ParlayWorkshop({
           </>
         )}
       </dialog>
-      {accessState === "ready" &&
+      {(accessState === "ready" || accessState === "denied") &&
         !loading &&
         (mode === "parlays" || savedId) && (
           <section className="workshop-saved" id="my-parlays">
@@ -898,7 +906,7 @@ export default function ParlayWorkshop({
                 />
                 <button
                   className="btn"
-                  disabled={busy || loading}
+                  disabled={busy || loading || accessState !== "ready"}
                   onClick={() => reuse(p)}
                 >
                   Edit a copy
@@ -924,7 +932,7 @@ export default function ParlayWorkshop({
                   <button
                     type="button"
                     className="primary"
-                    disabled={sharing !== null}
+                    disabled={sharing !== null || accessState !== "ready"}
                     onClick={() => void share(p)}
                   >
                     {sharing === p.id ? "Posting…" : "Post to Community"}
