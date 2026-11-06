@@ -4,10 +4,15 @@ import { useEffect, type ReactNode } from "react";
 import { ArrowRight, Grid2X2, Plus, Diamond } from "lucide-react";
 import { Shell } from "./ui";
 import VqTonight from "./vq-tonight";
+import LobbyIntelligence from "./lobby-intelligence";
 import HomeRecordCard from "./home-record";
 import SectionBoundary from "./section-boundary";
 import CommunityStories from "./community-stories";
-import { LOBBY_SKYLINE, LobbyArenaPennants, LobbyArenaSkyline } from "./lobby-arena-decor";
+import {
+  LOBBY_SKYLINE,
+  LobbyArenaPennants,
+  LobbyArenaSkyline,
+} from "./lobby-arena-decor";
 import { NhlChipHold } from "./frank-anniversary-gate";
 import { liveSports, SPORTS, type Sport } from "@/lib/sports";
 import type { Game } from "@/lib/domain";
@@ -107,6 +112,12 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
         <VqTonight nflGames={nflGames} presentation="skybox" />
       </SectionBoundary>
 
+      <LobbyIntelligence />
+      <LobbyArenaSkyline src={LOBBY_SKYLINE.src} />
+      <SectionBoundary name="Track record">
+        <HomeRecordCard />
+      </SectionBoundary>
+
       {/* VQ Tonight carries My lays (or "Continue your lay") and The Zone (or its sign-in). */}
       <section className="vq-lobby-tools" aria-label="More from Vegas Quant">
         <LobbyTool
@@ -122,11 +133,6 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
           body="Spin up a random set of legs from the current board, for fun. Not a recommendation."
         />
       </section>
-
-      <SectionBoundary name="Track record">
-        <HomeRecordCard />
-      </SectionBoundary>
-      <LobbyArenaSkyline src={LOBBY_SKYLINE.src} />
     </Shell>
   );
 }

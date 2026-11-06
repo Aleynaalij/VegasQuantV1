@@ -3,10 +3,10 @@
   --zf-gold: #e8ca7d;
   --zf-pale: #f4dc99;
   --zf-deep: #b48a36;
-  --zf-card: linear-gradient(180deg, #11151c 0%, #0b0e13 100%);
-  --zf-line: rgba(232, 202, 125, 0.14);
-  --zf-text: #eef0f2;
-  --zf-muted: #8d96a0;
+  --zf-card: linear-gradient(145deg, #1c3b31, #12261f);
+  --zf-line: rgba(232, 202, 125, 0.3);
+  --zf-text: #f5eedd;
+  --zf-muted: #c1cfc5;
   max-width: 640px;
   margin: 0 auto;
   display: grid;
@@ -85,7 +85,7 @@
   outline: none;
 }
 .zone-feed .zone-composer textarea::placeholder {
-  color: #6f7882;
+  color: #c1cfc5;
 }
 .zone-feed .zone-composer-preview {
   display: grid;
@@ -893,7 +893,7 @@ html[data-theme] body .zone-feed .zone-composer textarea::placeholder {
   text-shadow: 0 0 10px rgba(232, 202, 125, 0.55);
 }
 html[data-theme] body .zone-feed .zone-composer textarea:focus::placeholder {
-  color: #6f7882;
+  color: #c1cfc5;
   animation: none;
   text-shadow: none;
 }
@@ -951,4 +951,36 @@ html[data-theme] body .zone-feed .zone-sports button[aria-pressed="true"] {
   color: var(--zf-muted);
   font-size: 0.8rem;
   font-weight: 700;
+}
+
+/* The lounge feed uses lifted reading surfaces; photos and contributor signatures retain identity. */
+.screen-community #main-content {
+  background: radial-gradient(ellipse at 50% 0, #244b3938, transparent 900px);
+}
+html[data-theme] body .zone-feed .zone-composer {
+  background: var(--zf-card);
+  border: 1px solid var(--zf-line);
+  box-shadow: 0 12px 32px #0003, inset 0 1px #f4dc9912;
+}
+html[data-theme] body .zone-feed .zone-post:not(.zone-lay) {
+  background: linear-gradient(145deg, #19352b, #12271f);
+  border: 1px solid var(--zf-line);
+  border-radius: 18px;
+  padding: 16px;
+  margin-inline: 0;
+  box-shadow: 0 10px 24px #0002;
+}
+.zone-feed .zone-head {
+  padding: 16px 0 8px;
+}
+.zone-feed .zone-tabs {
+  background: #12271f;
+  border-radius: 12px;
+}
+html[data-theme] body .zone-feed .zone-composer textarea::placeholder {
+  color: #dfd4b4;
+}
+@media (max-width: 640px) {
+  .zone-feed { gap: 12px; }
+  .zone-feed .zone-tabs { margin-inline: 0; }
 }

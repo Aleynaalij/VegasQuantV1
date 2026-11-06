@@ -1,0 +1,82 @@
+/* VQ Intelligence (lobby-intelligence.tsx): two "Coming soon" cards, drawn like the concept (dark
+   outlined panels, gold icon, light label, green pill) but visibly inert: no hover lift, default
+   cursor, nothing to press. */
+.vq-intel {
+  display: grid;
+  gap: 12px;
+  margin: 6px 0 18px;
+  /* Line the cards up with the Your next move tiles above. */
+  padding-inline: 4px;
+}
+@media (min-width: 640px) {
+  .vq-intel {
+    padding-inline: 12px;
+  }
+}
+.vq-intel-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html body .vq-intel-list > li.vq-intel-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 1px solid #b69b4e8c;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #151a15f2, #0a0d0af2);
+  box-shadow: inset 0 1px 0 #ffffff0f, 0 6px 16px #0008;
+  cursor: default;
+}
+.vq-intel-icon {
+  flex: none;
+  color: #e6c26a;
+}
+.vq-intel-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #f1ece0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vq-intel-soon {
+  flex: none;
+  margin-left: auto;
+  padding: 3px 10px;
+  border: 1px solid #2f9e70;
+  border-radius: 999px;
+  color: #9fe3c3;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+/* Narrow phones: badge drops under the name so neither is squeezed. */
+@media (max-width: 420px) {
+  html body .vq-intel-list > li.vq-intel-card {
+    flex-wrap: wrap;
+    row-gap: 6px;
+    padding: 10px 12px;
+  }
+  .vq-intel-name {
+    font-size: 0.95rem;
+  }
+  .vq-intel-soon {
+    margin-left: 36px;
+  }
+}
+.vq-intel-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

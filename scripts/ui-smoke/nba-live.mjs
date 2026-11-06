@@ -222,18 +222,18 @@ for (const width of [390, 1280]) {
     await p.evaluate(() =>
       document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
     );
-    const chips = p.getByRole("navigation", { name: "Sport selection" });
-    // The NHL chip appears once the member's anniversary status is known (Frank's surprise).
-    await chips.locator('a[data-sport="nhl"]').waitFor();
+    const rooms = p.getByRole("navigation", { name: "Sport desks" });
+    await rooms.locator('a[data-sport="nhl"]').waitFor();
     assert.deepEqual(
-      await chips
-        .locator("a[data-sport]")
-        .evaluateAll((a) => a.map((x) => x.textContent.trim())),
-      ["NFL", "NBA", "NHL", "NCAAB"],
-      `live chips ${label}`,
+      await rooms.locator("a[data-sport]").evaluateAll(a => a.map(x => x.dataset.sport)),
+      ["nfl", "nba", "nhl", "ncaab"],
+      `live sport rooms ${label}`,
     );
-    await chips.locator('a[data-sport="nba"]').click();
+    await rooms.locator('a[data-sport="nba"]').click();
     await p.waitForURL(`${base}/nba`);
+    const chips = p.getByRole("navigation", { name: "Sport selection" });
+    assert.deepEqual(await chips.locator("a[data-sport]").evaluateAll(a => a.map(x => x.dataset.sport)), ["nfl", "nba", "nhl", "ncaab"]);
+    assert.equal(await chips.locator('a[aria-current="page"]').getAttribute('data-sport'), 'nba');
     await p.locator(".home-brief[data-sport=nba] .vq-matchup").waitFor();
     assert.match(await p.locator(".home-brief").innerText(), /NEXT TIP-OFF/i);
     assert.match(await p.locator(".home-brief").innerText(), /Trail Blazers/);
