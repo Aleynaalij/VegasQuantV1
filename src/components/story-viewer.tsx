@@ -74,8 +74,9 @@ type State =
  * Like Instagram, each post plays for its reading time (the current segment fills) and then the
  * viewer moves to the next post, then the next member, and closes after the last. The timer runs
  * only while an authorized post is fully shown (photo loaded) and nothing has asked it to wait:
- * press-and-hold, the Pause control or Space, a hidden tab, focus on the post's own actions, or a
- * long post not yet scrolled to its end. Previous, Next, Pause and Close stay as labelled controls.
+ * press-and-hold, the Pause control or Space, a hidden tab, focus on the post's own actions or (once
+ * the reader moves it there) on the header controls, or a long post not yet scrolled to its end. A
+ * photo counts as shown only for the exact image instance on screen after the latest check. Previous, Next, Pause and Close stay as labelled controls.
  */
 export default function StoryViewer({
   startPostId,
@@ -95,7 +96,9 @@ export default function StoryViewer({
       : [],
   );
   const [cursor, setCursor] = useState<StoryCursor | null>(null);
-  const [photoLoaded, setPhotoLoaded] = useState(false);
+  // Which image instance has loaded: post, authorization check and photo path. A re-check (focus,
+  // clock renewal, re-arrival) remounts the image, so readiness never carries over to it.
+  const [photoLoadedFor, setPhotoLoadedFor] = useState<string | null>(null);
   // Each post is re-checked with community_post before it is shown (deleted, blocked or newly
   // restricted posts drop out), and again when the window regains focus.
   // The answer of the latest check, tagged with the arrival/focus it belongs to. Content is shown
@@ -347,9 +350,15 @@ export default function StoryViewer({
 
   // Read only once meaningful content is on screen: text after it renders, a photo-only post
   // after its photo loads. A failed or unavailable post is never marked read.
-  useEffect(() => {
-    setPhotoLoaded(false);
-  }, [cursor?.postId]);
+  // The image instance on screen now. Its load callback only counts while it is still current, so a
+  // late load from a replaced or reauthorized image never marks the new one ready.
+  const photoKey =
+    post?.photo_path && currentId
+      ? `${currentId}|${focusTick}|${arrival}|${clock.version}|${post.photo_path}`
+      : null;
+  const currentPhoto = useRef<string | null>(null);
+  currentPhoto.current = photoKey;
+  const photoLoaded = photoKey !== null && photoLoadedFor === photoKey;
   useEffect(() => {
     if (!post || !cursor) return;
     const displayed = textShown || photoLoaded;
@@ -403,6 +412,26 @@ export default function StoryViewer({
   const [held, setHeld] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [actionFocus, setActionFocus] = useState(false);
+  // Header controls pause only when the reader moved focus there (Tab), not when the dialog's own
+  // initial focus lands on Close at open, which would stop autoplay before it began. Choosing Play
+  // while focused there resumes until focus leaves the header.
+  const [headerFocus, setHeaderFocus] = useState(false);
+  const [playOverride, setPlayOverride] = useState(false);
+  const tabbing = useRef(false);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Tab") tabbing.current = true;
+    };
+    const onPointer = () => {
+      tabbing.current = false;
+    };
+    window.addEventListener("keydown", onKey, true);
+    window.addEventListener("pointerdown", onPointer, true);
+    return () => {
+      window.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("pointerdown", onPointer, true);
+    };
+  }, []);
   const [unread, setUnread] = useState(false); // long text not yet scrolled to its end
   const [progress, setProgress] = useState(0);
   const elapsed = useRef(0);
@@ -442,7 +471,9 @@ export default function StoryViewer({
       window.removeEventListener("resize", measure);
     };
   }, [shown, post?.id, measure]);
-  const running = shown && !paused && !held && !hidden && !actionFocus && !unread;
+  // What the Pause/Play control reports: an explicit pause, or focus resting on the header controls.
+  const holding = paused || (headerFocus && !playOverride);
+  const running = shown && !holding && !held && !hidden && !actionFocus && !unread;
   const advance = useRef(() => {});
   advance.current = () => {
     if (moves.current.next) go(moves.current.next);
@@ -558,7 +589,18 @@ export default function StoryViewer({
       }}
     >
       <div className="story-viewer-frame">
-        <header className="story-viewer-head">
+        <header
+          className="story-viewer-head"
+          onFocus={() => {
+            if (tabbing.current) setHeaderFocus(true);
+          }}
+          onBlur={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+              setHeaderFocus(false);
+              setPlayOverride(false);
+            }
+          }}
+        >
           {group ? (
             <ol
               className="story-segments"
@@ -616,11 +658,17 @@ export default function StoryViewer({
                   <button
                     type="button"
                     className="story-control"
-                    onClick={() => setPaused((v) => !v)}
-                    aria-pressed={paused}
-                    aria-label={paused ? "Play: move on automatically" : "Pause: stay on this post"}
+                    onClick={() => {
+                      // Play is an explicit request: it wins over focus resting on the header.
+                      if (holding) {
+                        setPaused(false);
+                        setPlayOverride(true);
+                      } else setPaused(true);
+                    }}
+                    aria-pressed={holding}
+                    aria-label={holding ? "Play: move on automatically" : "Pause: stay on this post"}
                   >
-                    {paused ? <Play size={20} aria-hidden="true" /> : <Pause size={20} aria-hidden="true" />}
+                    {holding ? <Play size={20} aria-hidden="true" /> : <Pause size={20} aria-hidden="true" />}
                   </button>
                 </>
               ) : null}
@@ -689,7 +737,11 @@ export default function StoryViewer({
                 <CommunityPhoto
                   path={post.photo_path}
                   title={post.title || `${post.author_name}'s post`}
-                  onLoaded={() => setPhotoLoaded(true)}
+                  key={photoKey ?? undefined}
+                  onLoaded={() => {
+                    const loaded = photoKey;
+                    if (loaded && loaded === currentPhoto.current) setPhotoLoadedFor(loaded);
+                  }}
                   openable={false}
                 />
               ) : null}

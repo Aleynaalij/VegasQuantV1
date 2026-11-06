@@ -10,6 +10,9 @@ on:
         "tests/*story*",
         "tests/*stor*",
         "scripts/ui-smoke/story-viewer.mjs",
+        "scripts/ui-smoke/story-autoplay.mjs",
+        "src/app/story-viewer.css",
+        "src/components/community-photo.tsx",
         ".github/workflows/story-24h.yml",
       ]
   workflow_dispatch:
@@ -46,6 +49,11 @@ jobs:
           grep -q 'right.*tap\|left.*tap\|tap.*right\|tap.*left' /tmp/story-no-taps.log
           if UI_SMOKE_NEGATIVE=missing-expiry node scripts/ui-smoke/story-viewer.mjs /tmp/story-missing-expiry-evidence > /tmp/story-missing-expiry.log 2>&1; then cat /tmp/story-missing-expiry.log; exit 1; fi
           grep -q 'expired story remained visible' /tmp/story-missing-expiry.log
+          # Auto-advance (LOBBY-POLISH-02 B) on the same server, plus its intended hold rejection.
+          node scripts/ui-smoke/story-autoplay.mjs
+          if UI_SMOKE_NEGATIVE=ignore-hold node scripts/ui-smoke/story-autoplay.mjs > /tmp/story-autoplay-ignore-hold.log 2>&1; then cat /tmp/story-autoplay-ignore-hold.log; echo 'ERROR: ignore-hold negative passed unexpectedly'; exit 1; fi
+          cat /tmp/story-autoplay-ignore-hold.log
+          grep -q 'press-and-hold did not pause' /tmp/story-autoplay-ignore-hold.log
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -56,3 +64,4 @@ jobs:
             /tmp/story-missing-expiry-evidence
             /tmp/story-no-taps.log
             /tmp/story-missing-expiry.log
+            /tmp/story-autoplay-ignore-hold.log

@@ -28,7 +28,14 @@ const makePosts = ({ long = false } = {}) => [
 
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
-async function open(name, { width = 390, long = false } = {}, run) {
+// A real 1x1 PNG, so photos can actually load when a case asks for it.
+const PNG = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=", "base64");
+// photo(replacement, route): answer an image request; `replacement` is true once the case has
+// triggered its re-check (the feed and the viewer's first image both load before that). detail(pid, n): the nth
+// community_post answer for a post (e.g. a changed photo path on re-check).
+async function open(name, { width = 390, long = false, photo = null, detail = null } = {}, run) {
+  // UI_SMOKE_ONLY=<text> runs just the matching cases (local debugging).
+  if (process.env.UI_SMOKE_ONLY && !name.includes(process.env.UI_SMOKE_ONLY)) return;
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   const rows = makePosts({ long });
   const rail = [
@@ -59,10 +66,27 @@ async function open(name, { width = 390, long = false } = {}, run) {
     });
   await ctx.route("**/rest/v1/rpc/community_activity*", (r) => r.fulfill({ json: rail }));
   await ctx.route("**/rest/v1/rpc/community_feed*", (r) => r.fulfill({ json: rows }));
-  await ctx.route("**/rest/v1/rpc/community_post*", (r) => r.fulfill({ json: rows.find((p) => p.id === r.request().postDataJSON()?.p_id) ?? null }));
+  const detailCalls = {};
+  await ctx.route("**/rest/v1/rpc/community_post*", (r) => {
+    const pid = r.request().postDataJSON()?.p_id;
+    detailCalls[pid] = (detailCalls[pid] || 0) + 1;
+    const row = rows.find((p) => p.id === pid) ?? null;
+    return r.fulfill({ json: detail && row ? detail(row, detailCalls[pid]) : row });
+  });
   await ctx.route("**/rest/v1/rpc/notification_inbox*", (r) => r.fulfill({ json: { items: [], snapshot_at: new Date().toISOString() } }));
-  await ctx.route("**/storage/v1/object/sign/**", (r) => r.fulfill({ json: { signedURL: "/object/sign/community-photos/sample/photo-3.png?token=smoke" } }));
-  await ctx.route("**/storage/v1/object/sign/community-photos/**", (r) => (r.request().method() === "GET" ? r.fulfill({ status: 404, body: "" }) : r.fallback()));
+  // Each signing gets its own URL, so a remounted image is a new request, never a cache hit.
+  let signs = 0;
+  const signed = [];
+  await ctx.route("**/storage/v1/object/sign/**", (r) => {
+    signed.push(r.request().url());
+    return r.fulfill({ json: { signedURL: `/object/sign/community-photos/sample/photo-3.png?token=smoke-${++signs}` } });
+  });
+  const phase = { recheck: false };
+  await ctx.route("**/storage/v1/object/sign/community-photos/**", (r) => {
+    if (r.request().method() !== "GET") return r.fallback();
+    if (!photo) return r.fulfill({ status: 404, body: "" });
+    return photo(phase.recheck, r);
+  });
   const page = await ctx.newPage();
   await page.clock.install({ time: new Date("2026-10-14T02:00:00Z") });
   page.setDefaultTimeout(12000);
@@ -74,7 +98,7 @@ async function open(name, { width = 390, long = false } = {}, run) {
     await page.goto(BASE + "/community", { waitUntil: "networkidle" });
     await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now() + 1000)));
     await page.evaluate(() => document.querySelectorAll("dialog[open]:not(.story-viewer)").forEach((d) => d.close()));
-    await run({ page, fail, ctx });
+    await run({ page, fail, ctx, signed, phase });
   } catch (e) {
     fail(`threw · ${String(e).split("\n")[0].slice(0, 200)} @ ${(e.stack || "").match(/story-autoplay\.mjs:(\d+)/)?.[1] ?? "?"}`);
   }
@@ -163,7 +187,8 @@ await open("a hidden tab and focus on the post's actions hold the timer", {}, as
   await viewer(page).getByRole("link", { name: /View discussion/ }).focus();
   await run(page, 12000);
   if ((await showing(page)) !== "SampleAlpha post 1") fail("advanced while View discussion had focus");
-  await viewer(page).getByRole("button", { name: /Close recent posts/ }).focus();
+  // Focus leaving the actions entirely (not onto a header control, which holds too) resumes.
+  await page.evaluate(() => document.activeElement?.blur());
   await run(page, 7000);
   if ((await showing(page)) !== "SampleAlpha post 2") fail("did not resume once focus left the post's actions");
 });
@@ -216,6 +241,131 @@ await open("controls: Previous, Next, Pause, Close in the header in that order; 
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1);
   if (overflow) fail("horizontal overflow");
 });
+
+const held = (page) => viewer(page).getByRole("button", { name: /^Play/ }).count().then((n) => n > 0);
+for (const entry of ["pointer", "keyboard"])
+  await open(`${entry} entry: autoplay runs despite the dialog's initial focus; Tab onto a header control holds it`, {}, async ({ page, fail }) => {
+    const ring = page.getByRole("button", { name: /SampleAlpha's recent community posts/ });
+    if (entry === "keyboard") {
+      await ring.focus();
+      await page.keyboard.press("Enter");
+    } else await ring.click();
+    await viewer(page).getByText("SampleAlpha post 1").waitFor();
+    // The modal's own initial focus is not a reason to stop.
+    await run(page, 6800);
+    if ((await showing(page)) !== "SampleAlpha post 2") fail(`${entry} entry: autoplay did not start (still "${await showing(page)}")`);
+    // Deliberate keyboard focus on a header control holds the post, without moving or closing.
+    // (Initial focus sits on Close, the last header control; Shift+Tab moves back onto Pause.)
+    await page.keyboard.press("Shift+Tab");
+    const onHeader = await page.evaluate(() => Boolean(document.activeElement?.closest(".story-viewer-head")));
+    if (!onHeader) fail("Tab did not land on a header control");
+    await run(page, 12000);
+    if (!(await viewer(page).count())) fail("viewer closed while a header control had focus");
+    if ((await showing(page)) !== "SampleAlpha post 2") fail(`advanced while a header control had focus ("${await showing(page)}")`);
+    if (!(await held(page))) fail("Pause/Play did not report the hold (expected Play, pressed)");
+    // Explicit Play wins while focus stays on the header; pressing again pauses.
+    const play = viewer(page).getByRole("button", { name: /^Play/ });
+    await play.focus();
+    await page.keyboard.press("Enter");
+    if ((await viewer(page).getByRole("button", { name: /^Pause/ }).getAttribute("aria-pressed")) !== "false") fail("Play did not resume");
+    await viewer(page).getByRole("button", { name: /^Pause/ }).focus();
+    await page.keyboard.press("Enter");
+    await run(page, 9000);
+    if ((await showing(page)) !== "SampleAlpha post 2") fail("pressing Pause again did not pause");
+    await page.keyboard.press("Enter"); // Play
+    await run(page, 7000);
+    if ((await showing(page)) === "SampleAlpha post 2") fail("explicit Play with focus on the header did not move on");
+  });
+await open("focus leaving the header controls resumes", {}, async ({ page, fail }) => {
+  await openAlpha(page);
+  await page.keyboard.press("Shift+Tab");
+  await run(page, 9000);
+  if ((await showing(page)) !== "SampleAlpha post 1") fail("advanced while a header control had focus");
+  await page.evaluate(() => document.activeElement?.blur());
+  await run(page, 7000);
+  if ((await showing(page)) !== "SampleAlpha post 2") fail("did not resume after focus left the header");
+});
+
+// Photo readiness belongs to the image instance on screen. Bravo's first post is photo-only.
+const openBravo = async (page) => {
+  await page.getByRole("button", { name: /SampleBravo's recent community posts/ }).click();
+  for (let i = 0; i < 40 && !(await viewer(page).getByRole("button", { name: "Open full photo" }).count()); i++) await run(page, 100);
+  if (!(await viewer(page).getByRole("button", { name: "Open full photo" }).count()))
+    console.log("PHOTO", JSON.stringify(await viewer(page).evaluate((d) => [...d.querySelectorAll("img")].map((i) => [i.src.slice(-40), i.complete, i.naturalWidth]).concat([d.innerText.slice(0, 120)]))));
+  await viewer(page).getByRole("button", { name: "Open full photo" }).waitFor();
+};
+const recheck = (page, phase) => {
+  phase.recheck = true;
+  return page.evaluate(() => window.dispatchEvent(new Event("focus")));
+};
+const onBravoPhoto = async (page) =>
+  /SampleBravo/.test(await viewer(page).locator(".story-viewer-meta").innerText().catch(() => "")) && (await showing(page)) !== "SampleBravo post 4";
+function gate() {
+  let release;
+  const wait = new Promise((r) => (release = r));
+  return { wait, release: () => release() };
+}
+for (const variant of ["same photo", "changed photo"]) {
+  const g = gate();
+  const changed = { on: false };
+  await open(`re-checked photo (${variant}): no advance until the new image loads`, {
+    photo: async (replacement, r) => {
+      if (replacement) await g.wait;
+      return r.fulfill({ status: 200, contentType: "image/png", body: PNG }).catch(() => {});
+    },
+    detail: (row) => (variant === "changed photo" && row.id === id(3) && changed.on ? { ...row, photo_path: "sample/photo-3b.png" } : row),
+  }, async ({ page, fail, signed, phase }) => {
+    await openBravo(page);
+    await run(page, 3000);
+    changed.on = true;
+    await recheck(page, phase);
+    await run(page, 300);
+    // The replacement image is held well past the 3 s left of this post.
+    await run(page, 12000);
+    if (!(await onBravoPhoto(page))) fail("advanced before the re-checked image loaded");
+    if (variant === "changed photo" && !signed.some((u) => /photo-3b/.test(decodeURIComponent(u)))) fail("changed photo path was never requested");
+    g.release();
+    await viewer(page).getByRole("button", { name: "Open full photo" }).waitFor().catch(() => fail("replacement image never reported loaded"));
+    await run(page, 3500);
+    if ((await showing(page)) !== "SampleBravo post 4") fail("did not move on once the current image loaded");
+  });
+}
+await open("re-checked photo that now fails: never advances", {
+  photo: (replacement, r) => (replacement ? r.fulfill({ status: 404, body: "" }) : r.fulfill({ status: 200, contentType: "image/png", body: PNG })),
+}, async ({ page, fail, phase }) => {
+  await openBravo(page);
+  await run(page, 3000);
+  await recheck(page, phase);
+  await run(page, 20000);
+  if (!(await onBravoPhoto(page))) fail("advanced although the current image failed to load");
+});
+{
+  const g = gate();
+  await open("account change while the re-checked image is pending: closes, never shows the old account's next post", {
+    photo: async (replacement, r) => {
+      if (replacement) await g.wait;
+      return r.fulfill({ status: 200, contentType: "image/png", body: PNG }).catch(() => {});
+    },
+  }, async ({ page, fail, ctx, phase }) => {
+    await openBravo(page);
+    await run(page, 3000);
+    await recheck(page, phase);
+    await run(page, 300);
+    const other = await ctx.newPage();
+    await other.goto(BASE + "/methodology");
+    await other.evaluate(() => {
+      sessionStorage.setItem("vq-smoke-signed-out", "1");
+      localStorage.removeItem("sb-127-auth-token");
+      new BroadcastChannel("sb-127-auth-token").postMessage({ event: "SIGNED_OUT", session: null });
+    });
+    await run(page, 500);
+    const gone = await page.waitForFunction(() => !document.querySelector("dialog.story-viewer[open]"), null, { timeout: 10000 }).then(() => true, () => false);
+    if (!gone) fail("viewer stayed open after sign-out");
+    g.release();
+    await run(page, 8000);
+    if (await page.getByText("SampleBravo post 4").count()) fail("old account's next post appeared after sign-out");
+  });
+}
 
 await browser.close();
 if (failures.length) {
