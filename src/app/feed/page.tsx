@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import ResearchFeed from "@/components/research-feed";
+import ResearchEntry from "@/components/research-entry";
 import PublishedLegBoard from "@/components/published-leg-board";
 import { Shell } from "@/components/ui";
 import Link from "next/link";
@@ -11,6 +12,13 @@ export default async function Page({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = await searchParams;
+  // The lobby Research action keeps its old URL; saved publication links keep their original target.
+  if (query.view === "latest" && !query.release)
+    return (
+      <Suspense fallback={<p role="status">Opening research…</p>}>
+        <ResearchEntry />
+      </Suspense>
+    );
   if (query.view === "selection") {
     const key = typeof query.leg === "string" ? query.leg : "";
     return (
