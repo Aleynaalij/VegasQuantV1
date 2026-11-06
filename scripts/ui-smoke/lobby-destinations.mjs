@@ -86,6 +86,11 @@ async function verifyCombinedRoutes() {
       await page
         .locator(`.sport-switch a[data-sport="${sport}"][aria-current="page"]`)
         .waitFor();
+      assert.equal(
+        (await page.locator(".breadcrumb b").textContent())?.trim(),
+        `${sport.toUpperCase()} desk`,
+        "desk header must name the selected sport",
+      );
       await page.locator('a[href="/"]:visible').first().click();
       await heading.waitFor();
       assert.equal(
@@ -93,6 +98,27 @@ async function verifyCombinedRoutes() {
         0,
       );
     }
+    for (const sport of ["nba", "nhl", "ncaab"]) {
+      await page.goto(base + `/${sport}/games/sample-header-contract`);
+      assert.equal(
+        (await page.locator(".breadcrumb b").textContent())?.trim(),
+        `${sport.toUpperCase()} games`,
+        "game header must not default to NFL",
+      );
+    }
+    await page.goto(base + "/parlays");
+    assert.equal(
+      (await page.locator(".breadcrumb b").textContent())?.trim(),
+      "Your lays",
+      "builder and tailed destination share the lays header contract",
+    );
+    await page.goto(base + "/community/FixtureHeaderMember");
+    assert.equal(
+      (await page.locator(".breadcrumb b").textContent())?.trim(),
+      "Sports desk",
+      "a neutral profile must not claim the NFL desk",
+    );
+    console.log(`PASS 9 desk/game/neutral header assertions at ${width}px`);
     const response = await ctx.request.get(
       base + "/?game=sample-sea-den-2026-10-15&tag=a&tag=b&saved=sample-id",
       { maxRedirects: 0 },
