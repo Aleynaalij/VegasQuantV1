@@ -245,7 +245,7 @@ const shows = (page, t) => page.waitForFunction((t) => { document.querySelectorA
 // replaced by loading the route directly.
 await scenario("signed-in navigation: Zone, Slots, Account, Home", {}, async ({ page, go, fail }) => {
   await go("/");
-  for (const [href, name, expect] of [["/community", "The Zone", "The Zone"], ["/slots", "VQ Slots", "Slots"], ["/membership", "Account", "Your account."], ["/", "Home", "Next kickoff"]]) {
+  for (const [href, name, expect] of [["/community", "The Zone", "The Zone"], ["/slots", "VQ Slots", "Slots"], ["/membership", "Account", "Your account."], ["/", "Home", "Every game. One clear read."]]) {
     // One-time prompts open after load and are excluded by the fixture member's saved choices; close any left.
     await page.waitForTimeout(1000);
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
