@@ -1,6 +1,6 @@
 # Record presentation draft
 
-Status: isolated local draft from main `133330d3dcc2c14563d27af212557ef78c9a1fe4`. No remote claim, push, PR, merge, deployment or production operation. The issue #65 public claim could not be posted; latest Claude claim already leaves these record files with Elo. The local draft must be coordinated before integration.
+Status: published draft PR [#231](https://github.com/Aleynaalij/VegasQuantV1/pull/231), from main `133330d3dcc2c14563d27af212557ef78c9a1fe4`. Mike explicitly approved publishing the branch and opening a draft PR. The initial remote source tree exactly matches the locally tested draft. No merge, production deployment or production operation. The issue #65 public claim was not posted; latest Claude/Codex coordination already leaves these record files with Elo. Integration remains separate.
 
 ## Presentation
 
@@ -16,6 +16,7 @@ The lobby and NFL desk share a compact evergreen record with champagne headings,
 - new `src/app/record-presentation.module.css`
 - new `tests/record-presentation.test.ts`
 - new `scripts/ui-smoke/record-presentation.mjs`
+- new `.github/workflows/record-presentation.yml` (isolated synthetic browser and screenshot CI)
 - this draft note
 
 ## Combined QA handoff
@@ -39,4 +40,4 @@ Chromium launch fails with `socket() failed: Operation not permitted`, including
 - The initial default-parallel `npm test` run was 577/580: NBA daily collection, NFL selection gate and notification/access SQL child processes ended with SIGKILL. All three passed in a serial rerun, and all 580 passed in the bounded full run. The earlier failed run is not hidden or counted as green.
 - Final TypeScript, production webpack build, formatting, browser-script syntax and `git diff --check`: passed.
 - React review: no new data effect, hook, event listener, dependency or client fetching; semantic heading/definition list and explicit loss labels retained. CSS is route/component scoped, with no added `!important` rules. All existing official/research/personal classifications remain in place.
-- Browser execution, screenshots, negative controls, combined-head CI and live verification: not run/pending, for the launch blocker above.
+- Browser execution, screenshots and negative controls: pending the isolated CI workflow. Combined-head acceptance and live verification remain separate. Local browser execution remains blocked as documented above.

@@ -1,0 +1,85 @@
+name: Record presentation acceptance
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/record-presentation.yml'
+      - 'src/components/home-record.tsx'
+      - 'src/components/records-dashboard.tsx'
+      - 'src/app/history/page.tsx'
+      - 'src/app/record-presentation.module.css'
+      - 'scripts/ui-smoke/record-presentation.mjs'
+      - 'tests/record-presentation.test.ts'
+permissions:
+  contents: read
+concurrency:
+  group: record-presentation-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  record-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build isolated synthetic app
+        run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+          LIVE_SCORES_DISABLED: '1'
+      - name: Prepare Chromium
+        run: |
+          npm install --no-save playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "CHROMIUM_PATH=$browser_path" >> "$GITHUB_ENV"
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Run record viewport and access cases
+        env:
+          LIVE_SCORES_DISABLED: '1'
+          UI_SMOKE_URL: http://127.0.0.1:3100
+          RECORD_SCREENSHOTS: artifacts/record-presentation/positive
+        run: |
+          mkdir -p artifacts/record-presentation
+          node scripts/ui-smoke/stub.mjs > artifacts/record-presentation/stub.log 2>&1 &
+          npx next start -p 3100 > artifacts/record-presentation/app.log 2>&1 &
+          ready=0
+          for i in $(seq 1 45); do
+            if curl -sf -o /dev/null http://127.0.0.1:3100/; then ready=1; break; fi
+            sleep 2
+          done
+          test "$ready" = 1
+          node scripts/ui-smoke/record-presentation.mjs 2>&1 | tee artifacts/record-presentation/positive.log
+      - name: Verify intended negative controls
+        env:
+          UI_SMOKE_URL: http://127.0.0.1:3100
+        run: |
+          for mode in loss clv private; do
+            case "$mode" in
+              loss) expected='All losses retained beside wins' ;;
+              clv) expected='Beat the close:' ;;
+              private) expected='Private record remains restricted' ;;
+            esac
+            log="artifacts/record-presentation/negative-$mode.log"
+            if RECORD_NEGATIVE="$mode" RECORD_SCREENSHOTS="artifacts/record-presentation/negative-$mode" node scripts/ui-smoke/record-presentation.mjs > "$log" 2>&1; then
+              cat "$log"
+              echo "Negative $mode incorrectly passed"
+              exit 1
+            fi
+            cat "$log"
+            grep -F "$expected" "$log"
+            echo "Negative $mode rejected at the intended assertion"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: record-presentation-${{ github.event.pull_request.head.sha }}
+          path: artifacts/record-presentation
+          if-no-files-found: error
+          retention-days: 14
