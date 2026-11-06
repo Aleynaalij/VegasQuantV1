@@ -89,7 +89,7 @@ for (const width of [390, 1280]) {
   });
   const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3104";
   for (const path of [
-    "/",
+    "/nfl", // Let's Sweat is NFL chrome; "/" is the neutral lobby
     "/history",
     "/community",
     "/feed?view=legs",

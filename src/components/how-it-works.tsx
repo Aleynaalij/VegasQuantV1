@@ -13,10 +13,13 @@ export default function HowItWorks() {
         <section>
           <h3>Where things live</h3>
           <p>
-            <Link href="/">Home</Link>: the next kickoff and the Pick of the
-            Day. <Link href="/feed">The Zone</Link>: game research, injury news
-            and legs we like. <Link href="/community">Community</Link>: member
-            slips and game talk.{" "}
+            <Link href="/">Home</Link>: every sport and tonight’s games.{" "}
+            <Link href="/nfl">NFL desk</Link> and the other sport desks: the
+            slate, game research and player props.{" "}
+            <Link href="/feed?view=latest">Published research</Link>: the Pick
+            of the Day and the legs we like, each with its case, risks and
+            observed price. <Link href="/community">The Zone</Link>: member
+            posts, stories and game talk.{" "}
             <AdminOnly>
               <Link href="/history">Records</Link>: every published outcome,
               wins and losses.
@@ -42,8 +45,8 @@ export default function HowItWorks() {
           </p>
         </section>
         <p className="vq-how-note">
-          A winning example does not guarantee the next outcome. Community posts
-          are member opinions; The Zone contains Vegas Quant research.{" "}
+          A winning example does not guarantee the next outcome. Posts in The
+          Zone are member opinions; published research is Vegas Quant’s.{" "}
           <Link href="/methodology">Methodology →</Link>
         </p>
       </div>

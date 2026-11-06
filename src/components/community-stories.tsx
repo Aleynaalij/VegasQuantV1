@@ -17,6 +17,8 @@ import {
 export default function CommunityStories() {
   const [members, setMembers] = useState<CommunityActivity[]>([]);
   const [failed, setFailed] = useState(false);
+  // Stories are for signed-in members: a visitor never gets a stories Retry, only the Zone link.
+  const [signedIn, setSignedIn] = useState(false);
   const generation = useRef(0);
   const viewer = useRef<string | null>(null);
   const [seen, setSeen] = useState<string[]>([]);
@@ -29,6 +31,7 @@ export default function CommunityStories() {
       const session = await supabase.auth.getSession();
       if (!live || version !== generation.current) return;
       viewer.current = session.data.session?.user.id || null;
+      setSignedIn(Boolean(viewer.current));
       setSeen(viewer.current ? readStories(viewer.current) : []);
       if (!session.data.session) {
         setMembers([]);
@@ -184,7 +187,7 @@ export default function CommunityStories() {
             <small>{member.username}</small>
           </button>
         ))}
-        {clock.failed ? (
+        {clock.failed && signedIn ? (
           <button type="button" className="story-empty" onClick={clock.retry}>
             Stories unavailable · Retry
           </button>

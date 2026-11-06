@@ -1,0 +1,154 @@
+/* The neutral lobby: a casino skybox over the four sport desks. Static light (no animation), so it
+   never moves under the reader or costs battery; content and controls sit above the decoration. */
+.vq-lobby-skybox {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 22px 16px 18px;
+  border: 1px solid #b69b4e66;
+  border-radius: 22px;
+  color: #ede7d6;
+  background:
+    radial-gradient(120% 70% at 50% -10%, #2a2410 0%, transparent 60%),
+    linear-gradient(180deg, #11161c 0%, #0a0d11 100%);
+}
+/* Marquee bulbs along the top edge and a low skyline glow: pure CSS, decorative only. */
+.vq-lobby-lights {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle, #f4dc99 0 1.6px, transparent 2.4px) 8px 8px / 22px 22px repeat-x,
+    linear-gradient(0deg, #f4dc9914 0%, transparent 38%);
+  opacity: 0.75;
+}
+.vq-lobby-eyebrow {
+  margin: 0;
+  color: #d8be72;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.vq-lobby-skybox h1 {
+  margin: 0;
+  color: #f8e7b4;
+  font-size: clamp(1.7rem, 7vw, 2.6rem);
+  line-height: 1.08;
+  letter-spacing: 0.01em;
+}
+.vq-lobby-lede {
+  max-width: 62ch;
+  margin: 0;
+  color: #c3ccc6;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+/* Phones: a compact 2×2 so tonight's games stay near the top; desktop: four across. */
+.vq-lobby-desks {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 4px;
+}
+@media (max-width: 639px) {
+  html body a.vq-lobby-desk {
+    padding: 12px;
+  }
+  a.vq-lobby-desk small {
+    font-size: 0.78rem;
+  }
+  .vq-lobby-go {
+    font-size: 0.8rem;
+  }
+}
+@media (min-width: 1100px) {
+  .vq-lobby-desks {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+html body .vq-lobby a.vq-lobby-desk,
+html body a.vq-lobby-desk {
+  display: grid;
+  gap: 4px;
+  min-height: 44px;
+  padding: 14px;
+  border: 1px solid #b69b4e55;
+  border-radius: 16px;
+  color: #ede7d6;
+  text-decoration: none;
+  background: #0d1116e6;
+}
+a.vq-lobby-desk b {
+  color: #f4dc99;
+  font-size: 1.05rem;
+}
+a.vq-lobby-desk small {
+  color: #b7c2bb;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.vq-lobby-go {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  color: #e7cf86;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+a.vq-lobby-desk:hover,
+a.vq-lobby-desk:focus-visible {
+  border-color: #e7cf86;
+  background: #151b22;
+}
+a.vq-lobby-desk:focus-visible,
+a.vq-lobby-tool:focus-visible {
+  outline: 2px solid #f4dc99;
+  outline-offset: 2px;
+}
+.vq-lobby-tools {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 18px;
+}
+html body a.vq-lobby-tool {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 14px 16px;
+  border: 1px solid #b69b4e44;
+  border-radius: 16px;
+  color: #ede7d6;
+  text-decoration: none;
+  background: #0d1116;
+}
+a.vq-lobby-tool b {
+  display: block;
+  color: #f4dc99;
+}
+a.vq-lobby-tool small {
+  display: block;
+  color: #b7c2bb;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+.vq-lobby-tool-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  color: #f4dc99;
+  background: #1a1f26;
+}
+.vq-lobby-diamond {
+  font-size: 1.1rem;
+  line-height: 1;
+}

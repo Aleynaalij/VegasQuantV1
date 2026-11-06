@@ -408,14 +408,14 @@ export default function MatchupIntelligence({
         } as CSSProperties
       }
     >
-      <Shell active="game">
+      <Shell active="game" sport="nfl">
         <div className="heading">
           <div>
             <span className="eyebrow">VEGAS QUANT INTELLIGENCE</span>
             <h1>
               {row
                 ? `${row.game.away_abbreviation || row.game.away_team} @ ${row.game.home_abbreviation || row.game.home_team}`
-                : "The Zone · Games"}
+                : "NFL games"}
             </h1>
             <p>
               {row

@@ -288,7 +288,7 @@ export default function AskVegas() {
                       </button>
                     )}
                     {m.topic?.id === "pick-routing" && (
-                      <Link href="/" onClick={close}>
+                      <Link href="/feed?view=latest" onClick={close}>
                         View Pick of the Day & Hail Mary{" "}
                         <ArrowUpRight size={15} />
                       </Link>
