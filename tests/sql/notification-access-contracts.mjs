@@ -80,11 +80,26 @@ await t.test('queue claim and final dispatch recheck current protected-content e
  await db.exec(`update public.notification_preferences set push_enabled=true where user_id='${a}';insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values('${a}','https://example.invalid/push','synthetic','synthetic');`);
  const id=await emit('pick','delivery-pick');
  await db.exec(`update private.notification_deliveries set due_at=now()-interval '1 second';update private.memberships set expires_at=now()-interval '1 second';`);
+ // Future work and active leases must remain byte-for-byte unchanged by ineligible backoff.
+ const protectedIds=[];
+ for(const [state,due,leaseUntil] of [
+  ['pending',"now()+interval '15 minutes'",'null'],
+  ['leased',"now()+interval '15 minutes'","now()-interval '1 second'"],
+  ['leased',"now()-interval '1 second'","now()+interval '15 minutes'"]
+ ]) {
+  const subscription=(await db.query(`insert into public.push_subscriptions(user_id,endpoint,p256dh,auth) values($1,'https://example.invalid/snapshot-'||gen_random_uuid(),'synthetic','synthetic') returning id`,[a])).rows[0].id;
+  const inserted=(await db.query(`insert into private.notification_deliveries(notification_id,channel,subscription_id,state,due_at,attempts,lease,lease_until) values($1,'push',$2,$3,${due},2,case when $3='leased' then gen_random_uuid() else null end,${leaseUntil}) returning id`,[id,subscription,state])).rows[0].id;
+  protectedIds.push(inserted);
+ }
+ const protectedSnapshot=async()=>(await db.query(`select id,state,due_at::text due_at,attempts,lease,lease_until::text lease_until from private.notification_deliveries where id=any($1::uuid[]) order by id`,[protectedIds])).rows;
+ const protectedBefore=await protectedSnapshot();
  let jobs=(await db.query('select claim_social_notification_deliveries() jobs')).rows[0].jobs;
  assert.equal(jobs.some(x=>x.notification_id===id),false);
+ assert.deepEqual(await protectedSnapshot(),protectedBefore,'future pending, future expired lease and active lease snapshots must be unchanged');
  const due=async()=>(await db.query(`select exists(select 1 from private.notification_deliveries where (state='pending' or(state='leased' and lease_until<now())) and due_at<=now() and (attempts<5 or state='leased')) due`)).rows[0].due;
  assert.equal(await due(),false,'ineligible queue must stop immediate dispatcher wakeups');
  await db.query('select claim_social_notification_deliveries()');assert.equal(await due(),false);
+ assert.deepEqual(await protectedSnapshot(),protectedBefore,'repeated claims retain state, due time, attempts and lease ownership');
  await valid();
  assert.equal((await db.query('select claim_social_notification_deliveries() jobs')).rows[0].jobs.some(x=>x.notification_id===id),false,'recovery respects retry time');
  await db.exec(`update private.notification_deliveries set due_at=now()-interval '1 second' where notification_id='${id}'`);
