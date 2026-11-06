@@ -77,7 +77,7 @@ no `sports_home` for NHL/NCAAB, and returns `null` for unknown RPCs.
 | `/nba` | “No NBA games this week.” empty state renders | C | Reuse |
 | `/nhl`, `/ncaab` | stuck on “Loading the slate…” when the slate RPC returned null/wrong-sport; a real error still showed “Loading” above the Retry | C | **Done (C3-1):** loading / no games / unavailable + Retry distinct (`sport-desk.tsx`; synthetic 4/4) |
 | `/matchups` | search, week, slot filters, sort, upcoming toggle render; h1/title/breadcrumb said “The Zone · Games” | C | **Done (C3-1):** “NFL games” |
-| `/feed?view=…` (published research) | the research feed is still branded “The Zone” (page title, `ResearchFeed` copy) while The Zone = member talk | C | Fix (C3-2, needs `research-feed.tsx` claim) |
+| `/feed?view=…` (published research) | was branded “The Zone” (h1, title, loading, breadcrumb) while The Zone = member talk | C | **Done (C3-2):** “Published research”, pointing member talk to The Zone |
 | `/matchups/<slug>`, `/games/<slug>` | game workspace; not exercised without data | C | Not run (needs game fixture) |
 | `/feed` | redirects to `/community` (no query kept) | C | Reuse; never label as research |
 | Sport `…/records` | 200 with headings | C | Reuse (check access copy §8) |
@@ -88,7 +88,7 @@ no `sports_home` for NHL/NCAAB, and returns `null` for unknown RPCs.
 | Destination | Finding | Owner | Action |
 |---|---|---|---|
 | `/parlays` | h1 “Your lay”; lobby/VQ Tonight call it “Your lays”, footer copy elsewhere “My lays”/“parlays” | X | Fix (X2 labels) |
-| `/saved` | “Saved for the sweat.” published-leg board with filters (ALL/SINGLE/PICK OF DAY/HAIL MARY/OFFICIAL/RESEARCH) | X/C | Decision: is `/saved` linked from anywhere a member sees? (no chrome link found) |
+| `/saved` | “Saved for the sweat.” published-leg board with filters; linked from published research (“Saved legs →”) | X/C | Reuse |
 | `VqStamp` “VQ APPROVED” | heuristic badge | X | Fix (X2) |
 
 ## 5. VQ Slots (`/slots`)
@@ -137,8 +137,7 @@ copy not yet reviewed against #139. Owner C · Action: review copy (no broad-cov
 0. **Tailed parlays** — members currently have no page that shows them (see above). Where should they live?
 
 1. **Support contact** — no monitored address/intake exists; page must not imply one.
-2. **`/saved`** — keep as a member destination (and link it), or leave unlinked?
-3. **Contributor composer** — on the lobby, or only on `/nfl` and the Zone?
+2. **Contributor composer** — on the lobby, or only on `/nfl` and the Zone?
 
 ## Status
 

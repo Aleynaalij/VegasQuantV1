@@ -110,7 +110,7 @@ await scenario("signed out", { expiresIn: null, setup: (ctx) => membership(ctx, 
 await scenario("slow access check (loading)", { setup: (ctx) => membership(ctx, allowed, { delay: 4000 }) }, async ({ page, has, fail }) => {
   await page.goto(BASE + FEED, { waitUntil: "domcontentloaded" });
   await page.waitForTimeout(1500);
-  if (!(await has("Entering The Zone"))) fail("no loading state while access is checked");
+  if (!(await has("Loading published research"))) fail("no loading state while access is checked");
   if (await has(ACCESS_NOTE)) fail("shows the sign-in note before access is known");
   if (await has(MEMBER_POST)) fail("shows member research before access is known");
   await page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.toLowerCase().includes(t.toLowerCase()); }, MEMBER_POST, { timeout: 15000 }).catch(() => fail("member research never appeared after access was granted"));
@@ -218,7 +218,7 @@ await scenario("dropped request, then retry", {
   const shown = await page.waitForFunction(() => document.body.innerText.includes("could not refresh"), null, { timeout: 30000 }).then(() => true, () => false);
   if (!shown) return fail("no message when selections fail to load (waited 30 s)");
   if (await has(SELECTION)) fail("selections shown although their request failed");
-  if (!(await has("The Zone"))) fail("page shell missing after a dropped request");
+  if (!(await has("Published research"))) fail("page shell missing after a dropped request");
   const retry = page.getByRole("button", { name: /retry/i }).first();
   if (!(await retry.count())) return fail("no Retry control after a dropped request");
   // Attribution: with background refresh off, no new selections request happens until Retry.

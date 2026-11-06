@@ -272,7 +272,7 @@ export function Shell({
                   game: "NFL games",
                   community: "The Zone",
                   slots: "VQ Slots",
-                  feed: "The Zone",
+                  feed: "Published research",
                   history: "Records",
                   performance: "Performance",
                   account: "Account",
