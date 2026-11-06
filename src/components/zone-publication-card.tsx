@@ -134,14 +134,14 @@ export default function ZonePublicationCard({
       text(
         `${stamp} · ${index + 1} / ${pages.length}`,
         74,
-        current.start - 82,
+        current.start - 110,
         40,
         "#c2cdbf",
       );
       c.strokeStyle = theme.accent + "55";
       c.beginPath();
-      c.moveTo(74, current.start - 56);
-      c.lineTo(1006, current.start - 56);
+      c.moveTo(74, current.start - 80);
+      c.lineTo(1006, current.start - 80);
       c.stroke();
       if (watchers) {
         text("LINE", 74, 464, 22, theme.accent, 700);
@@ -259,11 +259,11 @@ export default function ZonePublicationCard({
             {line}
           </text>
         ))}
-        <text x="74" y={current.start - 82} fontSize="40" fill="#c2cdbf">
+        <text x="74" y={current.start - 110} fontSize="40" fill="#c2cdbf">
           {stamp} · {index + 1} / {pages.length}
         </text>
         <path
-          d={`M74 ${current.start - 56} H1006`}
+          d={`M74 ${current.start - 80} H1006`}
           stroke={theme.accent + "55"}
         />
         {watchers && (
