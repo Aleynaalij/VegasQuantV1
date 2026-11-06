@@ -62,6 +62,7 @@ try {
       creates = 0,
       shares = 0,
       currentOwner = null,
+      excludeSavedFromList = false,
       mine = [];
     await ctx.addInitScript(
       ({ a, b }) => {
@@ -117,7 +118,9 @@ try {
         const own = currentOwner === a ? mine : [];
         data = u.searchParams.has("id")
           ? own.find((p) => `eq.${p.id}` === u.searchParams.get("id")) || null
-          : own;
+          : excludeSavedFromList
+            ? []
+            : own;
       }
       if (path.endsWith("leg_history"))
         data = legs.map((l) => ({
@@ -285,6 +288,21 @@ try {
     await card.waitFor();
     assert.equal(await card.getAttribute("open"), "");
     assert.match(page.url(), /saved=11111111/);
+    // A saved hash can identify a card outside the newest 50, without a query or recent pointer.
+    excludeSavedFromList = true;
+    await page.evaluate(
+      (uid) => sessionStorage.removeItem(`vq-parlay-recent:${uid}`),
+      a,
+    );
+    await page.goto(
+      base + "/parlays#my-parlay-11111111-1111-4111-8111-111111111111",
+    );
+    await card.waitFor();
+    assert.equal(await card.getAttribute("open"), "");
+    assert.ok(
+      !new URL(page.url()).searchParams.has("saved"),
+      "hash identity works without a saved query",
+    );
     await card
       .getByRole("button", { name: "Edit a copy", exact: true })
       .click();

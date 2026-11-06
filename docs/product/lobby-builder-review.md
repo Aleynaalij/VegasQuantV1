@@ -23,9 +23,11 @@ Claim: issue #65 comment 6684879047. Routing/selector coordination: comment 6684
 
 ## Validation evidence
 
-Local: 551 tests passed, including existing SQL-backed parlay ownership/snapshot/model-gate checks and new ordered-access and rendered-stamp tests. TypeScript and fixture-configured production build passed before the last focus-restoration/browser-harness additions; final-head CI remains required. New harness syntax checked. Local Chromium launch failed at browser startup in this environment; no local browser pass or screenshot evidence claimed.
+Local: 551 tests passed, including existing SQL-backed parlay ownership/snapshot/model-gate checks and new ordered-access and rendered-stamp tests. TypeScript and fixture-configured production build passed before the last focus-restoration/browser-harness additions; final-head CI remains required. New harness syntax checked. Local Chromium launch failed at browser startup in this environment; browser execution used CI instead.
 
-The dedicated workflow retains actual viewport screenshots and runs an approval-label mutation that must fail with the intended assertion. Its terminal run, artifacts and screenshots must be inspected before marking browser cases passed. Existing shared harness label selectors require the requested overlap ACK before editing; older tests still use Create parlay/My parlays. Their failure is an outstanding compatibility correction, not evidence that the old journeys were executed successfully on this draft.
+At source head `8579c06af0e72ae1da0090fefd9ae5574cb61a50`, dedicated [run 42220046735](https://github.com/Aleynaalij/VegasQuantV1/actions/runs/42220046735) passed all three viewport cases and rejected the approval-label mutation with the intended assertion. Artifact `13503480526` contains 10 viewport captures (9 positive and 1 negative). This proves only the synthetic builder cases, not combined lobby acceptance. The preceding head 14f51b7 failed on an overly exact text selector; that failure remains in run 42219689840. Hash-only saved-ID coverage was then added and needs its own final-head run.
+
+The dedicated workflow retains actual viewport screenshots and runs an approval-label mutation that must fail with the intended assertion. Final-head terminal results and screenshot inspection remain required for the expanded hash-only case. Existing shared harness label selectors require the requested overlap ACK before editing; older tests still use Create parlay/My parlays. Their failure is an outstanding compatibility correction, not evidence that the old journeys were executed successfully on this draft.
 
 ## Boundaries and decisions
 
