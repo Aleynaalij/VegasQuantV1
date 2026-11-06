@@ -24,7 +24,13 @@ jobs:
       - name: Browser
         run: |
           npm install --no-save playwright@1.56.1
-          echo "PLAYWRIGHT_EXECUTABLE=$(command -v google-chrome)" >> "$GITHUB_ENV"
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+            echo "CHROMIUM_PATH=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
       - name: Synthetic phone and desktop design journeys
         run: |
           node scripts/ui-smoke/stub.mjs &
