@@ -93,3 +93,18 @@ Diagnosis from the batch counters (descriptive, not a new experiment):
 
 2023 already-inspected CRPS, context only: margin 8.1730 vs 8.0656 historical, 95% CI on the
 difference [−0.040, 0.246]; total 7.6261 vs 7.5984, CI [−0.034, 0.088]. No superiority shown.
+
+## Follow-up diagnostic (frozen in `budget_diagnostic.py` before it ran)
+`diagnostics/budget-at-opportunity-0.2.20.json`: 1,000 certified seeds of v0.2.20 compared with the
+2022 source, late running-clock opportunities only.
+- **Budget hypothesis mostly rejected.** Mean timeouts left at the opportunity are close: second
+  half offense 1.95 vs 2.00 and defense 1.95 vs 2.02; first half 2.17/2.20 vs 2.22/2.30.
+- **Fewer opportunities in the second half:** 7.62 vs 8.92 per game (last300@h2 4.74 vs 5.59,
+  last120@h2 2.47 vs 3.03). The first half is close (9.17 vs 9.44).
+- **Lower calls per opportunity in the 31–120 s bands** despite source-keyed cells: h1 0.264 vs
+  0.317, h2 0.340 vs 0.387. That means the within-band mix of lead, field and eligibility differs.
+- **Too many last-10-second plays:** h1 0.308 vs 0.107 per game, h2 0.091 vs 0.033, with lower call
+  rates there.
+- Next step before any v0.2.21: a separately frozen diagnostic of (a) the within-band cell mix (lead
+  and field) at opportunities, and (b) the late-half play mix (kneels, spikes, incompletions,
+  out-of-bounds) that decides how many continuing running plays occur. No change is proposed yet.

@@ -1,0 +1,270 @@
+{
+  "scope": "DESCRIPTIVE_DIAGNOSTIC_ONLY",
+  "source_games": 271,
+  "sim_games": 1000,
+  "model": "research/game_sim/artifacts/v0.2.20/model.json.gz",
+  "source": {
+    "all@h1": {
+      "opportunities_per_game": 9.4391,
+      "share": {
+        "both": 0.9339,
+        "offense": 0.0242,
+        "defense": 0.0395,
+        "none": 0.0023
+      },
+      "mean_offense_timeouts": 2.2244,
+      "mean_defense_timeouts": 2.3034,
+      "calls_per_opportunity": 0.2256,
+      "n": 2558
+    },
+    "all@h2": {
+      "opportunities_per_game": 8.9225,
+      "share": {
+        "both": 0.7709,
+        "offense": 0.0968,
+        "defense": 0.1191,
+        "none": 0.0132
+      },
+      "mean_offense_timeouts": 1.9971,
+      "mean_defense_timeouts": 2.0219,
+      "calls_per_opportunity": 0.2639,
+      "n": 2418
+    },
+    "last10@h1": {
+      "opportunities_per_game": 0.107,
+      "share": {
+        "both": 0.5172,
+        "offense": 0.2759,
+        "defense": 0.2069,
+        "none": 0.0
+      },
+      "mean_offense_timeouts": 1.069,
+      "mean_defense_timeouts": 1.1379,
+      "calls_per_opportunity": 0.7241,
+      "n": 29
+    },
+    "last10@h2": {
+      "opportunities_per_game": 0.0332,
+      "share": {
+        "both": 0.2222,
+        "offense": 0.3333,
+        "defense": 0.3333,
+        "none": 0.1111
+      },
+      "mean_offense_timeouts": 1.0,
+      "mean_defense_timeouts": 0.5556,
+      "calls_per_opportunity": 0.4444,
+      "n": 9
+    },
+    "last120@h1": {
+      "opportunities_per_game": 4.3137,
+      "share": {
+        "both": 0.9341,
+        "offense": 0.0317,
+        "defense": 0.0317,
+        "none": 0.0026
+      },
+      "mean_offense_timeouts": 2.1369,
+      "mean_defense_timeouts": 2.2275,
+      "calls_per_opportunity": 0.3174,
+      "n": 1169
+    },
+    "last120@h2": {
+      "opportunities_per_game": 3.0332,
+      "share": {
+        "both": 0.6217,
+        "offense": 0.1363,
+        "defense": 0.2202,
+        "none": 0.0219
+      },
+      "mean_offense_timeouts": 1.6423,
+      "mean_defense_timeouts": 1.8102,
+      "calls_per_opportunity": 0.3869,
+      "n": 822
+    },
+    "last300@h1": {
+      "opportunities_per_game": 4.1107,
+      "share": {
+        "both": 0.9865,
+        "offense": 0.0036,
+        "defense": 0.0099,
+        "none": 0.0
+      },
+      "mean_offense_timeouts": 2.5449,
+      "mean_defense_timeouts": 2.5171,
+      "calls_per_opportunity": 0.0305,
+      "n": 1114
+    },
+    "last300@h2": {
+      "opportunities_per_game": 5.5904,
+      "share": {
+        "both": 0.8746,
+        "offense": 0.0752,
+        "defense": 0.0462,
+        "none": 0.004
+      },
+      "mean_offense_timeouts": 2.2594,
+      "mean_defense_timeouts": 2.1729,
+      "calls_per_opportunity": 0.1881,
+      "n": 1515
+    },
+    "last30@h1": {
+      "opportunities_per_game": 0.9077,
+      "share": {
+        "both": 0.7439,
+        "offense": 0.0528,
+        "defense": 0.1911,
+        "none": 0.0122
+      },
+      "mean_offense_timeouts": 1.3252,
+      "mean_defense_timeouts": 1.8333,
+      "calls_per_opportunity": 0.6138,
+      "n": 246
+    },
+    "last30@h2": {
+      "opportunities_per_game": 0.2657,
+      "share": {
+        "both": 0.3611,
+        "offense": 0.0694,
+        "defense": 0.4722,
+        "none": 0.0972
+      },
+      "mean_offense_timeouts": 0.6528,
+      "mean_defense_timeouts": 1.4444,
+      "calls_per_opportunity": 0.4306,
+      "n": 72
+    }
+  },
+  "sim": {
+    "all@h1": {
+      "opportunities_per_game": 9.166,
+      "share": {
+        "both": 0.8629,
+        "offense": 0.0508,
+        "defense": 0.0622,
+        "none": 0.0241
+      },
+      "mean_offense_timeouts": 2.1678,
+      "mean_defense_timeouts": 2.197,
+      "calls_per_opportunity": 0.1864,
+      "n": 9166
+    },
+    "all@h2": {
+      "opportunities_per_game": 7.617,
+      "share": {
+        "both": 0.7622,
+        "offense": 0.1037,
+        "defense": 0.1141,
+        "none": 0.02
+      },
+      "mean_offense_timeouts": 1.9526,
+      "mean_defense_timeouts": 1.9512,
+      "calls_per_opportunity": 0.246,
+      "n": 7617
+    },
+    "last10@h1": {
+      "opportunities_per_game": 0.308,
+      "share": {
+        "both": 0.4448,
+        "offense": 0.2175,
+        "defense": 0.2045,
+        "none": 0.1331
+      },
+      "mean_offense_timeouts": 1.2468,
+      "mean_defense_timeouts": 1.2727,
+      "calls_per_opportunity": 0.3182,
+      "n": 308
+    },
+    "last10@h2": {
+      "opportunities_per_game": 0.091,
+      "share": {
+        "both": 0.3077,
+        "offense": 0.1978,
+        "defense": 0.3077,
+        "none": 0.1868
+      },
+      "mean_offense_timeouts": 0.9121,
+      "mean_defense_timeouts": 1.2088,
+      "calls_per_opportunity": 0.2527,
+      "n": 91
+    },
+    "last120@h1": {
+      "opportunities_per_game": 3.825,
+      "share": {
+        "both": 0.8405,
+        "offense": 0.0536,
+        "defense": 0.0742,
+        "none": 0.0316
+      },
+      "mean_offense_timeouts": 2.0222,
+      "mean_defense_timeouts": 2.0643,
+      "calls_per_opportunity": 0.2641,
+      "n": 3825
+    },
+    "last120@h2": {
+      "opportunities_per_game": 2.472,
+      "share": {
+        "both": 0.64,
+        "offense": 0.1299,
+        "defense": 0.195,
+        "none": 0.0352
+      },
+      "mean_offense_timeouts": 1.5667,
+      "mean_defense_timeouts": 1.7731,
+      "calls_per_opportunity": 0.3402,
+      "n": 2472
+    },
+    "last300@h1": {
+      "opportunities_per_game": 4.255,
+      "share": {
+        "both": 0.9514,
+        "offense": 0.0221,
+        "defense": 0.0251,
+        "none": 0.0014
+      },
+      "mean_offense_timeouts": 2.4818,
+      "mean_defense_timeouts": 2.471,
+      "calls_per_opportunity": 0.0369,
+      "n": 4255
+    },
+    "last300@h2": {
+      "opportunities_per_game": 4.741,
+      "share": {
+        "both": 0.8587,
+        "offense": 0.0835,
+        "defense": 0.0546,
+        "none": 0.0032
+      },
+      "mean_offense_timeouts": 2.232,
+      "mean_defense_timeouts": 2.0915,
+      "calls_per_opportunity": 0.1865,
+      "n": 4741
+    },
+    "last30@h1": {
+      "opportunities_per_game": 0.778,
+      "share": {
+        "both": 0.6542,
+        "offense": 0.1285,
+        "defense": 0.1491,
+        "none": 0.0681
+      },
+      "mean_offense_timeouts": 1.5308,
+      "mean_defense_timeouts": 1.7172,
+      "calls_per_opportunity": 0.5707,
+      "n": 778
+    },
+    "last30@h2": {
+      "opportunities_per_game": 0.313,
+      "share": {
+        "both": 0.3994,
+        "offense": 0.1757,
+        "defense": 0.3195,
+        "none": 0.1054
+      },
+      "mean_offense_timeouts": 1.0703,
+      "mean_defense_timeouts": 1.4473,
+      "calls_per_opportunity": 0.4026,
+      "n": 313
+    }
+  }
+}
