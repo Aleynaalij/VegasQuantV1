@@ -148,6 +148,12 @@ try {
       assert.ok((await card.locator('svg').boundingBox()).width * 56 / 1080 >= 14, "analysis must remain readable at phone scale");
       await card.scrollIntoViewIfNeeded();
       await p.screenshot({ path: `${out}/${width}-${sport}-card.png` });
+      const geometry = await card.locator('svg').evaluate(svg => {
+        const divider = svg.querySelector(':scope > path');
+        const body = svg.querySelector('text[font-size="56"]');
+        return { divider: divider.getBBox().y, body: body.getBBox().y };
+      });
+      assert.ok(geometry.divider < geometry.body, "divider must not strike through analysis");
       const lines = [];
       for (;;) {
         lines.push(
@@ -186,6 +192,8 @@ try {
       );
     }
     const first = p.locator(".zone-publication[data-sport=nfl]");
+    const previous = first.getByRole("button", { name: "Previous card", exact: true });
+    while (!(await previous.isDisabled())) await previous.click();
     await first.getByRole("button", { name: /Download card/ }).click();
     const save = first.getByRole("link", { name: /Save image/ });
     await save.waitFor();
