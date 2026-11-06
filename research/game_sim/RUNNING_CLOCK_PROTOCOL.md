@@ -69,3 +69,27 @@ this definition and committed with the amendment.
 
 No team/player coupling, model approval, forecasts, member release, database writes or
 notifications.
+
+## Result (2026-11-06, appended after the run; nothing above was changed)
+Package `artifacts/v0.2.20`, built from commit `7335768` on source `0c69a71e…`:
+- 10,000 / 10,000 complete, 0 failed, 0 unsupported samples. `verify_package`: 6 files and 22
+  implementation hashes verified against the source.
+- Scoring gates PASS: total 44.1848 vs 43.7638, TD 4.904 vs 4.852, FG 3.3269 vs 3.3321, punts
+  7.8857 vs 8.1181. FG attempts, late FG attempts and late decisions PASS.
+- **FAIL** late timeout-followed continuing plays **3.5521** vs 4.4834 (v0.2.11: 1.995).
+- **FAIL** timeouts **6.9025** vs 7.7823 (v0.2.11: 7.3488).
+- v0.2.20 is a failed package and is preserved as such. No retuning, reseeding or threshold change.
+
+Diagnosis from the batch counters (descriptive, not a new experiment):
+- Running decisions: 166,858 candidates (16.7 per game; source 18.2 opportunities per game with a
+  budget) and 35,735 calls, a rate of 0.214 per opportunity against 0.246 in the source.
+- Stopped decisions: 33,290 calls (3.33 per game; source 3.06).
+- Lookup depth: 23,008 coarsened cells and 5,863 role-marginal cells across 1.48M decisions.
+- 1,946 running plays found no eligible stopped duration and so had no decision.
+- The likeliest reasons for the running shortfall: simulated teams reach late running-clock moments
+  with fewer timeouts left (budgets spent earlier through the stopped family), and fewer continuing
+  late plays reach a decision. Testing that needs a separately frozen diagnostic (budget-at-
+  opportunity distribution, sim vs source) before any v0.2.21 change.
+
+2023 already-inspected CRPS, context only: margin 8.1730 vs 8.0656 historical, 95% CI on the
+difference [−0.040, 0.246]; total 7.6261 vs 7.5984, CI [−0.034, 0.088]. No superiority shown.
