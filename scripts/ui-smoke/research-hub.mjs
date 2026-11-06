@@ -416,7 +416,13 @@ try {
   setState("denied");
   const other = await ctx.newPage();
   await other.goto(base + "/about");
-  await other.evaluate(() => localStorage.removeItem("sb-127-auth-token"));
+  await other.evaluate(() => {
+    localStorage.removeItem("sb-127-auth-token");
+    // This is the SDK's real cross-tab auth transport, also used by signOut().
+    const channel = new BroadcastChannel("sb-127-auth-token");
+    channel.postMessage({ event: "SIGNED_OUT", session: null });
+    setTimeout(() => channel.close(), 1000);
+  });
   await page
     .getByRole("heading", { name: "Open your research access" })
     .waitFor();
