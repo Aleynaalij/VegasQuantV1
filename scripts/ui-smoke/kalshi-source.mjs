@@ -287,6 +287,10 @@ try {
     await card
       .getByRole("button", { name: "Restore to The Zone", exact: true })
       .click();
+    // Click completion does not await the asynchronous RPC and refreshed card.
+    await card
+      .getByRole("button", { name: "Remove from The Zone", exact: true })
+      .waitFor();
     assert.deepEqual(
       hideCalls.map((p) => p.p_hidden),
       [true, false],
