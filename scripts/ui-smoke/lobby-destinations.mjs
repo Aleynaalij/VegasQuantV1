@@ -177,6 +177,7 @@ try {
       "signed-out entry must not request protected catalog",
     );
     assert.equal(savedCalls, 0, "signed-out entry must not request saved lays");
+    await page.locator(".vq-brand-opening").waitFor({ state: "hidden" });
     await page.screenshot({ path: `${out}/${width}-signed-out.png` });
     async function auth(id, event = "SIGNED_IN") {
       currentOwner = id;
@@ -354,6 +355,20 @@ try {
       "no horizontal overflow",
     );
     await page.screenshot({ path: `${out}/${width}-member-empty-draft.png` });
+    await workshop.getByRole("button", { name: "Review", exact: true }).click();
+    await workshop
+      .getByLabel("Lay name", { exact: true })
+      .scrollIntoViewIfNeeded();
+    const tray = await workshop.locator(".workshop-save-tray").boundingBox();
+    const nav = page.locator(".mobile-nav");
+    if (await nav.isVisible()) {
+      const box = await nav.boundingBox();
+      assert.ok(
+        tray.y + tray.height <= box.y,
+        "save tray must clear mobile navigation",
+      );
+    }
+    await page.screenshot({ path: `${out}/${width}-builder-controls.png` });
     await auth(null, "SIGNED_OUT");
     await workshop.getByText(/Sign in to build a lay/).waitFor();
     assert.equal(

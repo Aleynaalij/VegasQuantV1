@@ -354,7 +354,13 @@ export default function ParlayWorkshop({
     setOpen(true);
     setTimeout(
       () =>
-        builder.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        builder.current?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        }),
       0,
     );
   }
@@ -632,9 +638,7 @@ export default function ParlayWorkshop({
       <div className="workshop-head">
         <div>
           <h2>
-            {mode === "catalog"
-              ? "This week’s published legs"
-              : "Make it your lay"}
+            {mode === "catalog" ? "This week’s published legs" : "Build a lay"}
           </h2>
           <p>
             {mode === "catalog"
