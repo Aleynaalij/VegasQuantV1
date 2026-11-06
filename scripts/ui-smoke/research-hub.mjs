@@ -273,6 +273,9 @@ try {
         fullPage: true,
       });
       await page.getByRole("button", { name: "NFL", exact: true }).click();
+      await page.waitForFunction(
+        () => document.querySelectorAll(".rh-event").length === 1,
+      );
       assert.equal(await page.locator(".rh-event").count(), 1);
       await page.getByLabel("Event date", { exact: true }).fill("2026-11-06");
       await page.waitForURL("**/*date=2026-11-06*");
