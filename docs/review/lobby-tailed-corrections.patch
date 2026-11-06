@@ -1,0 +1,218 @@
+--- a/src/components/vq-lobby.tsx
++++ b/src/components/vq-lobby.tsx
+@@ -7,6 +7,7 @@
+ import HomeRecordCard from "./home-record";
+ import SectionBoundary from "./section-boundary";
+ import { NhlChipHold } from "./frank-anniversary-gate";
++import { legacyNflHashTarget } from "@/lib/lobby-route-compat";
+ import { liveSports, SPORTS, type Sport } from "@/lib/sports";
+ import type { Game } from "@/lib/domain";
+ import "@/app/vq-lobby.css";
+@@ -22,7 +23,17 @@
+ /** Old links pointed at the NFL desk's game list on "/" with only a hash; send them to /nfl. */
+ function LegacyHashForward() {
+   useEffect(() => {
+-    if (window.location.hash === "#home-games") window.location.replace("/nfl#home-games");
++    const forward = () => {
++      const target = legacyNflHashTarget(window.location.href);
++      if (target) window.location.replace(target);
++    };
++    forward();
++    window.addEventListener("hashchange", forward);
++    window.addEventListener("popstate", forward);
++    return () => {
++      window.removeEventListener("hashchange", forward);
++      window.removeEventListener("popstate", forward);
++    };
+   }, []);
+   return null;
+ }
+--- a/src/components/tailed-lays.tsx
++++ b/src/components/tailed-lays.tsx
+@@ -21,8 +21,8 @@
+   | { kind: "signed-out" }
+   | { kind: "error" }
+   // Tails exist but none of their publications are readable with the current access.
+-  | { kind: "no-access"; tails: number }
+-  | { kind: "ready"; rows: Tailed[] };
++  | { kind: "unavailable"; tails: number }
++  | { kind: "ready"; rows: Tailed[]; missing: number };
+ 
+ const PARLAY = new Set(["PARLAY", "HAIL_MARY"]);
+ const FINAL: Record<string, string> = { WIN: "Won", LOSS: "Lost", PUSH: "Push", VOID: "Void" };
+@@ -47,32 +47,38 @@
+     const n = ++epoch.current;
+     setState({ kind: "loading" });
+     try {
+-      const s = await supabase.auth.getSession();
++      const signal = AbortSignal.timeout(20000);
++      let timeout: ReturnType<typeof setTimeout> | undefined;
++      const s = await Promise.race([
++        supabase.auth.getSession(),
++        new Promise<never>((_, reject) => { timeout = setTimeout(() => reject(Error("Session check timed out")), 20000); }),
++      ]).finally(() => clearTimeout(timeout));
++      if (s.error) throw s.error;
+       if (n !== epoch.current) return;
+       const uid = s.data.session?.user.id;
+       if (!uid) return setState({ kind: "signed-out" });
+       const keys: string[] = [];
+       for (let offset = 0; ; offset += 500) {
+-        const t = await supabase.from("leg_tails").select("leg_key").eq("user_id", uid).order("leg_key").range(offset, offset + 499);
++        const t = await supabase.from("leg_tails").select("leg_key").eq("user_id", uid).order("leg_key").range(offset, offset + 499).abortSignal(signal);
+         if (n !== epoch.current) return;
+         if (t.error) throw t.error;
+         keys.push(...(t.data || []).map((x) => x.leg_key as string));
+         if ((t.data?.length || 0) < 500) break;
+       }
+-      if (!keys.length) return setState({ kind: "ready", rows: [] });
++      if (!keys.length) return setState({ kind: "ready", rows: [], missing: 0 });
+       const rows: Tailed[] = [];
+       for (let i = 0; i < keys.length; i += 50) {
+         const r = await supabase
+           .from("published_legs")
+           .select("leg_key,kind,name,market,matchup,release_id,result,expires_at")
+-          .in("leg_key", keys.slice(i, i + 50));
++          .in("leg_key", keys.slice(i, i + 50)).abortSignal(signal);
+         if (n !== epoch.current) return;
+         if (r.error) throw r.error;
+         rows.push(...((r.data || []) as Tailed[]));
+       }
+-      if (!rows.length) return setState({ kind: "no-access", tails: keys.length });
++      if (!rows.length) return setState({ kind: "unavailable", tails: keys.length });
+       rows.sort((a, b) => Date.parse(b.expires_at) - Date.parse(a.expires_at) || a.leg_key.localeCompare(b.leg_key));
+-      setState({ kind: "ready", rows });
++      setState({ kind: "ready", rows, missing: keys.length - new Set(rows.map((r) => r.leg_key)).size });
+     } catch {
+       if (n === epoch.current) setState({ kind: "error" });
+     }
+@@ -90,7 +96,28 @@
+     };
+   }, [load]);
+ 
+-  const now = Date.now();
++  const [now, setNow] = useState(Date.now);
++  useEffect(() => {
++    const refreshClock = () => setNow(Date.now());
++    window.addEventListener("pageshow", refreshClock);
++    document.addEventListener("visibilitychange", refreshClock);
++    const interval = setInterval(refreshClock, 30000);
++    return () => {
++      window.removeEventListener("pageshow", refreshClock);
++      document.removeEventListener("visibilitychange", refreshClock);
++      clearInterval(interval);
++    };
++  }, []);
++  useEffect(() => {
++    if (state.kind !== "ready") return;
++    const next = state.rows.reduce((soonest, row) => {
++      const at = Date.parse(row.expires_at);
++      return !row.result && at > now ? Math.min(soonest, at) : soonest;
++    }, Infinity);
++    if (!Number.isFinite(next)) return;
++    const timer = setTimeout(() => setNow(Date.now()), Math.min(2147483647, Math.max(0, next - Date.now())));
++    return () => clearTimeout(timer);
++  }, [state, now]);
+   return (
+     <section className="vq-tailed" aria-labelledby="vq-tailed-title">
+       <header className="vq-tailed-head">
+@@ -122,15 +149,14 @@
+             Retry
+           </button>
+         </div>
+-      ) : state.kind === "no-access" ? (
++      ) : state.kind === "unavailable" ? (
+         <div className="vq-tailed-empty">
+           <p>
+-            You tailed {state.tails === 1 ? "1 pick" : `${state.tails} picks`}, but their details need active
+-            research access. Your tails are kept.
++            You tailed {state.tails === 1 ? "1 pick" : `${state.tails} picks`}, but their publication details
++            are unavailable. Access may be limited or the publication may no longer be available. Your tails are kept.
+           </p>
+-          <Link className="vq-btn" href="/membership">
+-            See access options
+-          </Link>
++          <Link className="vq-btn" href="/membership">Check account access</Link>
++          <button type="button" className="secondary" onClick={() => void load()}>Retry details</button>
+         </div>
+       ) : !state.rows.length ? (
+         <div className="vq-tailed-empty">
+@@ -141,6 +167,7 @@
+         </div>
+       ) : (
+         <>
++          {state.missing > 0 && <p role="status">{state.missing} tailed publication{state.missing === 1 ? " is" : "s are"} unavailable. Your tails are kept; access may be limited or details may no longer be available.</p>}
+           <TailedGroup title="Parlays" rows={state.rows.filter((r) => PARLAY.has(r.kind))} now={now} />
+           <TailedGroup title="Picks" rows={state.rows.filter((r) => !PARLAY.has(r.kind))} now={now} />
+         </>
+--- a/scripts/ui-smoke/tailed-lays.mjs
++++ b/scripts/ui-smoke/tailed-lays.mjs
+@@ -22,16 +22,22 @@
+ const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
+ const failures = [];
+ const token = (uid) => JSON.stringify({ access_token: "smoke", refresh_token: "smoke", token_type: "bearer", expires_in: 86400, expires_at: Math.floor(Date.now() / 1000) + 86400, user: { id: uid, aud: "authenticated", role: "authenticated", email: "smoke@example.com", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } } });
+-async function open(name, { uid = A, tails = null, failFirst = 0, noAccess = false, width = 390 } = {}, run) {
++async function open(name, { uid = A, tails = null, failFirst = 0, noAccess = false, width = 390, clock = false } = {}, run) {
+   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
+   await ctx.addInitScript(({ uid, t }) => {
+-    localStorage.setItem(`vq-app-refresh:${uid || "x"}`, "gold-2026-10-22-v2");
+-    localStorage.setItem(`vq-push-prompt:${uid || "x"}`, String(Date.now() + 9e8));
++    for (const id of ["00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002", uid || "x"]) {
++      localStorage.setItem(`vq-app-refresh:${id}`, "gold-2026-10-22-v2");
++      localStorage.setItem(`vq-push-prompt:${id}`, String(Date.now() + 9e8));
++    }
+     sessionStorage.setItem("vq-prompt-shown", "fixture");
+     if (uid && !sessionStorage.getItem("vq-smoke-token")) { localStorage.setItem("sb-127-auth-token", t); sessionStorage.setItem("vq-smoke-token", "1"); }
+   }, { uid, t: uid ? token(uid) : "" });
+   let fails = failFirst;
+   const current = () => ctx.pages()[0]?.evaluate(() => JSON.parse(localStorage.getItem("sb-127-auth-token") || "null")?.user?.id).catch(() => null);
++  await ctx.route("**/rest/v1/community_profiles*", (r) => {
++    const id = new URL(r.request().url()).searchParams.get("user_id")?.replace("eq.", "") || A;
++    return r.fulfill({ json: [{user_id:id,username:id === B ? "FixtureMemberB" : "FixtureMemberA",avatar:"/icons/icon-192.png",visible:true}] });
++  });
+   await ctx.route("**/rest/v1/leg_tails*", async (r) => {
+     if (fails-- > 0) return r.fulfill({ status: 500, json: { message: "synthetic failure" } });
+     const who = new URL(r.request().url()).searchParams.get("user_id")?.replace("eq.", "") || (await current());
+@@ -47,13 +53,13 @@
+   await ctx.route("**/rest/v1/rpc/notification_inbox*", (r) => r.fulfill({ json: { items: [], snapshot_at: new Date().toISOString() } }));
+   const page = await ctx.newPage();
+   page.setDefaultTimeout(10000);
++  if (clock) await page.clock.install({time:new Date()});
+   const errors = [];
+   page.on("pageerror", (e) => errors.push(e.message));
+   const before = failures.length;
+   const fail = (m) => failures.push(`${name}: ${m}`);
+   try {
+     await page.goto(BASE + "/parlays/tailed", { waitUntil: "networkidle" });
+-    await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
+     await run({ page, fail });
+     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
+     if (overflow) fail("horizontal overflow");
+@@ -101,7 +107,7 @@
+ });
+ 
+ await open("tails kept, details need access: honest message, no fake rows", { noAccess: true }, async ({ page, fail }) => {
+-  await main(page).getByText("need active research access", { exact: false }).waitFor().catch(() => fail("no access message"));
++  await main(page).getByText("publication details are unavailable", { exact: false }).waitFor().catch(() => fail("no access message"));
+   if (!/3 picks/.test(await main(page).innerText())) fail("tail count not shown");
+   if (await page.getByRole("region", { name: /Tailed (parlays|picks)/ }).count()) fail("rows shown without access");
+ });
+@@ -118,6 +124,19 @@
+   if (!/Account B pick/.test(text)) fail("account B's tail not shown");
+ });
+ 
++const originalExpiry = PUBLISHED.p1.expires_at;
++PUBLISHED.p1.expires_at = new Date(Date.now() + 60000).toISOString();
++await open("an idle open tail crosses cutoff without implying a final result", {tails:["p1"],clock:true}, async ({page,fail}) => {
++  await main(page).getByText(/Open · locks/).waitFor();
++  await page.clock.fastForward(65000);
++  await main(page).getByText("Awaiting the verified result",{exact:true}).waitFor().catch(()=>fail("open label survived its cutoff"));
++});
++PUBLISHED.p1.expires_at = originalExpiry;
++await open("partly unavailable publications remain visible as an honest gap", {tails:["p1","missing"]}, async ({page,fail}) => {
++  await main(page).getByText("Sample Sunday parlay",{exact:true}).waitFor();
++  if(!/1 tailed publication is unavailable/.test(await main(page).innerText())) fail("missing publication silently omitted");
++});
++
+ await browser.close();
+ if (failures.length) {
+   console.error(`\n${failures.length} failure(s):\n- ${failures.join("\n- ")}`);

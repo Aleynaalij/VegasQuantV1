@@ -231,9 +231,9 @@ try {
       if (path.endsWith("community_profiles"))
         data = [
           {
-            user_id: a,
-            username: "FixtureMember",
-            avatar: null,
+            user_id: currentOwner || a,
+            username: currentOwner === b ? "FixtureMemberB" : "FixtureMemberA",
+            avatar: "/icons/icon-192.png",
             visible: true,
           },
         ];
@@ -429,6 +429,8 @@ try {
       .click();
     const card = workshop.locator(".workshop-saved > details").first();
     await card.waitFor();
+    await card.scrollIntoViewIfNeeded();
+    await card.locator(".workshop-new").waitFor();
     assert.equal(await card.getAttribute("open"), "");
     assert.match(page.url(), /saved=11111111/);
     // A saved hash can identify a card outside the newest 50, without a query or recent pointer.
