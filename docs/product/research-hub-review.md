@@ -24,7 +24,7 @@ publication writes are added. Protected reads retain membership checks and datab
 
 | Sport | Schedule and identity | Dossier inputs | Provenance / actual limits |
 | --- | --- | --- | --- |
-| NFL | `games`: canonical ID, slug, kickoff/TBD, venue/roof, schedule source and observation | Exact `game_id` in `analysis_versions`, `research_feed_posts`, `market_snapshots`; both prose sections and structured injuries/weather/teams | Original topic publication dates retained, including inherited structured fields. Explicit issued/observed source times are separate from publication. No inferred starters; missing weather/availability is unknown. |
+| NFL | `games`: canonical ID, slug, kickoff/TBD, venue/roof, schedule source and observation | Exact `game_id` in `analysis_versions`, `research_feed_posts`, `market_snapshots`, collector `source_observations` (injuries/news/weather and FanDuel odds), and `published_legs`; both prose sections and structured injuries/weather/teams | Original topic publication dates retained, including inherited structured fields. Explicit issued/observed source times are separate from publication. No inferred starters; missing weather/availability is unknown. |
 | NBA | `nba_games`: canonical ID, ordered teams, start/TBD, venue/status, source URL | Exact `game_id` in `nba_observations` injury/odds/prop; existing protected `/api/nba/lineups` reader | Observation vs receipt times distinct. Schedule `updated_at` is NOT labelled source freshness. Existing RotoWire lineup reader requires exact ordered teams, ET date/time, distinct complete confirmed fives and current report. Expected is not confirmed. |
 | NHL | Existing `sports_slate(nhl,7)` contract with canonical ID/sport | Same-ID protected facts, markets and selections; existing `nhl_game_context` component inside lineup section | Quoted markets retain original observed time/source. Injuries from existing fact parser. Context reader includes goalie/source status and missing-source states. No roster-to-starter inference. |
 | NCAAB | Existing `sports_slate(ncaab,7)` contract | Same-ID protected context facts, reported injuries and ML/spread observations, editorial selections | Availability may be absent. No college props or totals added. No invented lineup or outdoor weather coverage. |
@@ -34,6 +34,15 @@ Collected time never substitutes for source observation. Quotes use a 30-minute 
 other explicit source times use a one-hour display warning. These are age labels, not a claim that
 the upstream provider has updated. No validated probability, hidden-liability or sharp-money claim
 is generated. Existing source text/interpretation is labelled separately from provider reports.
+
+### Read-only live inventory (November 6, 2026, 23:25 UTC)
+
+This is a coverage count, not validation of every report. In the upcoming seven-day window:
+15 NFL events had collector injury observations, 51 NBA events included 18 with injury rows in the
+last 48 hours; NHL had 48 events / 15 with facts, NCAAB 387 / 128 with facts. NFL had zero analysis
+versions/weather briefings for the upcoming games in the inspected stores, but 71 exact game-linked
+published legs. The adapter includes collector observations separately so an absent analyst version
+cannot hide actual injury/news collection. No weather briefing is fabricated to fill that gap.
 
 ## Failure and privacy behavior
 
@@ -71,7 +80,7 @@ not claimed. Source/artifact failures and frozen-protocol gates remain; no model
 
 ## Verification / release boundary
 
-- 43 relevant local unit tests passed (hub, game research, research facts, lineup identity, sport adapters,
+- 44 relevant local unit tests passed (hub, game research, research facts, lineup identity, sport adapters,
   feed timeline); TypeScript passed.
 - Production build passed with structured fields and legacy-fragment preservation. Remote exact-head
   CI results must still be attached before acceptance.

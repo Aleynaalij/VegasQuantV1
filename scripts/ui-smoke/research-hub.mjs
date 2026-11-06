@@ -102,7 +102,8 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true) {
     ({ uid, version, theme, signedIn }) => {
       sessionStorage.setItem("vq-prompt-shown", "fixture");
       localStorage.setItem("vq-theme", theme);
-      document.documentElement.dataset.theme = theme;
+      if (document.documentElement)
+        document.documentElement.dataset.theme = theme;
       if (signedIn) {
         localStorage.setItem("vq-app-refresh:" + uid, version);
         localStorage.setItem(
@@ -169,6 +170,12 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true) {
   );
   await ctx.route("**/rest/v1/research_feed_posts?**", (r) =>
     r.fulfill({ json: state === "missing" ? [] : [news, wrong] }),
+  );
+  await ctx.route("**/rest/v1/source_observations?**", (r) =>
+    r.fulfill({ json: [] }),
+  );
+  await ctx.route("**/rest/v1/published_legs?**", (r) =>
+    r.fulfill({ json: [] }),
   );
   await ctx.route("**/rest/v1/market_snapshots?**", (r) =>
     r.fulfill({ json: [] }),

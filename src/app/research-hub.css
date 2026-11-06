@@ -8,6 +8,9 @@
   --surface: var(--rh-paper);
   --muted: var(--rh-muted);
   --line: var(--rh-line);
+  --text: var(--rh-ink);
+  --panel: var(--rh-paper);
+  --panel2: var(--rh-paper);
   color: var(--rh-ink);
   background: var(--rh-bg);
   max-width: 1220px;
@@ -643,4 +646,15 @@ html[data-theme="dark"] .rh-sport {
 }
 html[data-theme="dark"] .rh-hub .nba-lineup-team h4 .nba-lineup-confirmed {
   color: #a6deba;
+}
+
+@media (max-width: 650px) {
+  .rh-sports {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .rh-sports button {
+    padding: 10px 4px;
+    font-size: 10.5px;
+  }
 }

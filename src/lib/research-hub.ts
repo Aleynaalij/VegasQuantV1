@@ -36,6 +36,7 @@ export type ResearchEvent = {
   homeAbbreviation?: string;
 };
 export type Finding = {
+  publicationHref?: string;
   id: string;
   eventKey: string;
   topic: Exclude<Topic, "all">;

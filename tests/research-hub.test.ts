@@ -234,3 +234,54 @@ test("inherited structured weather keeps its original publication and issue time
   assert.equal(weather.sourceAt, "2026-11-04T23:00:00Z");
   assert.match(weather.text, /Rain/);
 });
+import {
+  nflObservationFindings,
+  publishedFindings,
+} from "../src/lib/research-hub-reader";
+test("NFL collector injuries and published legs use exact event IDs and original times", () => {
+  const e = { ...event, key: "nfl:game-a", sport: "nfl" as const };
+  const observation = {
+    id: "o",
+    game_id: e.id,
+    kind: "injury",
+    provider: "ESPN",
+    source: "https://example.com/injuries",
+    observed_at: null,
+    recorded_at: "2026-11-06T22:00:00Z",
+    payload: {
+      team: "Seattle",
+      player: "Collected Runner",
+      status: "Questionable",
+      injury: "Ankle",
+    },
+  };
+  const rows = nflObservationFindings(e, [
+    observation,
+    {
+      ...observation,
+      id: "wrong",
+      game_id: "other",
+      payload: { player: "Wrong Event Player" },
+    },
+  ]);
+  assert.equal(rows.length, 1);
+  assert.match(rows[0].text, /Collected Runner.*Questionable/);
+  assert.equal(rows[0].sourceAt, null);
+  const leg = {
+    leg_key: "published:1",
+    game_id: e.id,
+    name: "Collected Runner",
+    market: "60+ yards",
+    why: "Original case",
+    risk: "Role risk",
+    quote: "Original price",
+    quote_observed_at: "2026-11-05T21:00:00Z",
+    published_at: "2026-11-05T22:00:00Z",
+    result: "PENDING",
+  };
+  assert.equal(publishedFindings(e, [{ ...leg, game_id: "wrong" }]).length, 0);
+  const f = publishedFindings(e, [leg])[0];
+  assert.equal(f.recordedAt, leg.published_at);
+  assert.equal(f.sourceAt, leg.quote_observed_at);
+  assert.match(f.publicationHref!, /view=selection/);
+});

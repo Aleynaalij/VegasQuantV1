@@ -43,7 +43,7 @@ const when = (at: string | null, tbd = false) => {
 };
 function SourceNote({ item, now }: { item: Finding; now: number }) {
   return (
-    <footer className="rh-source">
+    <div className="rh-source">
       <span
         data-age={sourceAge(
           item.sourceAt,
@@ -64,6 +64,11 @@ function SourceNote({ item, now }: { item: Finding; now: number }) {
           {when(item.recordedAt)}
         </span>
       )}
+      {item.publicationHref && (
+        <Link href={item.publicationHref}>
+          Original publication <ArrowUpRight size={12} aria-hidden="true" />
+        </Link>
+      )}
       {item.sources.length ? (
         item.sources.map((url) => (
           <a href={url} key={url} target="_blank" rel="noopener noreferrer">
@@ -74,7 +79,7 @@ function SourceNote({ item, now }: { item: Finding; now: number }) {
       ) : (
         <span>No source link supplied</span>
       )}
-    </footer>
+    </div>
   );
 }
 function Dossier({
@@ -321,11 +326,7 @@ export default function ResearchHub() {
             <div>
               <h1>
                 The research lounge
-                <span>
-                  Know the game.
-                  <br />
-                  See the whole picture.
-                </span>
+                <span>Know the game. See the whole picture.</span>
               </h1>
               <p>
                 Your desk for the events ahead. Availability, context and the

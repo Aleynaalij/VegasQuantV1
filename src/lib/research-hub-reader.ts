@@ -148,6 +148,117 @@ export function nbaFindings(
     return item ? [item] : [];
   });
 }
+/** NFL collector observations are separate from analyst versions. Join only the canonical game ID. */
+export function nflObservationFindings(
+  e: ResearchEvent,
+  rows: NbaObservation[],
+): Finding[] {
+  if (e.sport !== "nfl") return [];
+  const own = rows.filter((r) => r.game_id === e.id);
+  const seen = new Set<string>();
+  return [...own]
+    .sort((a, b) => Date.parse(b.recorded_at) - Date.parse(a.recorded_at))
+    .flatMap((r) => {
+      const p = r.payload;
+      const key = [
+        r.kind,
+        r.provider,
+        p.book,
+        p.market,
+        p.team,
+        p.player,
+        r.kind === "news" ? p.headline : "",
+      ].join("|");
+      if (seen.has(key)) return [];
+      seen.add(key);
+      let topic: Finding["topic"], text: string, title: string;
+      if (r.kind === "injury") {
+        topic = "injuries";
+        title = "Reported availability";
+        text = [
+          `${str(p.team)} · ${str(p.player) || "Player not supplied"}: ${str(p.status) || "Status not supplied"}`,
+          ...["injury", "position", "expected_return"].flatMap((k) =>
+            str(p[k]) ? [`${k.replaceAll("_", " ")}: ${str(p[k])}`] : [],
+          ),
+        ].join("\n");
+      } else if (r.kind === "news") {
+        topic = "overview";
+        title = str(p.headline);
+        text = "Collected event news. Open the source for the full report.";
+        if (!title) return [];
+      } else if (r.kind === "weather") {
+        topic = "weather";
+        title = "Collected weather report";
+        text = researchFacts(p)
+          .map((g) => g.map((f) => `${f.label}: ${f.value}`).join("\n"))
+          .join("\n\n");
+        if (!text) return [];
+      } else if (r.kind === "odds") {
+        topic = "markets";
+        title = `${str(p.book) || r.provider} · ${nbaMarkets[str(p.market)] || str(p.market)}`;
+        text = nbaOutcomes(p)
+          .map(
+            (o) =>
+              `${o.name}${o.point !== null ? " " + o.point : ""} (${o.price})`,
+          )
+          .join(" · ");
+      } else return [];
+      return [
+        {
+          id: r.id,
+          eventKey: e.key,
+          topic,
+          title,
+          text,
+          sources: sources(r.source),
+          sourceAt: r.observed_at,
+          recordedAt: r.recorded_at,
+          label:
+            r.kind === "odds"
+              ? ("Observed quote" as const)
+              : ("Provider report" as const),
+        },
+      ];
+    });
+}
+export type ResearchPublishedLeg = {
+  leg_key: string;
+  game_id: string | null;
+  name: string;
+  market: string;
+  why: string;
+  risk: string;
+  quote: string;
+  quote_observed_at: string | null;
+  published_at: string;
+  result: string | null;
+};
+export function publishedFindings(
+  e: ResearchEvent,
+  rows: ResearchPublishedLeg[],
+): Finding[] {
+  return rows
+    .filter((r) => r.game_id === e.id)
+    .map((r) => ({
+      id: r.leg_key,
+      eventKey: e.key,
+      topic: "overview",
+      title: `${r.name} · ${r.market}`,
+      text: [
+        memberResearchText(r.why),
+        r.risk ? `Risk: ${memberResearchText(r.risk)}` : "",
+        r.quote,
+        r.result ? `Recorded outcome: ${r.result}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n"),
+      sources: [],
+      sourceAt: r.quote_observed_at,
+      recordedAt: r.published_at,
+      label: "Published research",
+      publicationHref: `/feed?view=selection&leg=${encodeURIComponent(r.leg_key)}`,
+    }));
+}
 export function nflFindings(
   e: ResearchEvent,
   versions: (Analysis & { intelligence?: Record<string, unknown> })[],
@@ -446,16 +557,63 @@ export async function readResearchHub(): Promise<HubData> {
                 .in("game_id", ids)
                 .order("observed_at", { ascending: false })
                 .limit(500),
+              supabase
+                .from("source_observations")
+                .select(
+                  "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
+                )
+                .in("game_id", ids)
+                .in("kind", ["injury", "news", "weather"])
+                .gte(
+                  "recorded_at",
+                  new Date(now.getTime() - 48 * 3600000).toISOString(),
+                )
+                .order("recorded_at", { ascending: false })
+                .limit(1000),
+              supabase
+                .from("source_observations")
+                .select(
+                  "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
+                )
+                .in("game_id", ids)
+                .eq("kind", "odds")
+                .eq("payload->>book", "FanDuel")
+                .gte(
+                  "observed_at",
+                  new Date(now.getTime() - 6 * 3600000).toISOString(),
+                )
+                .order("recorded_at", { ascending: false })
+                .limit(1000),
+              supabase
+                .from("published_legs")
+                .select(
+                  "leg_key,game_id,name,market,why,risk,quote,quote_observed_at,published_at,result",
+                )
+                .in("game_id", ids)
+                .order("published_at", { ascending: false })
+                .limit(500),
             ]);
-            const [a, n, m] = results;
+            const [a, n, m, observations, odds, legs] = results;
             if (results.some((r) => r.error))
               data.errors.push(
                 "Some NFL research sources could not load. Available sections are partial; retry.",
               );
-            if (results.some((r) => r.data?.length === 500))
+            if (
+              results.some(
+                (r) => r.data?.length === 500 || r.data?.length === 1000,
+              )
+            )
               data.truncated = true;
             for (const e of data.events.filter((e) => e.sport === sport))
               data.findings.push(
+                ...nflObservationFindings(e, [
+                  ...(observations.data || []),
+                  ...(odds.data || []),
+                ] as NbaObservation[]),
+                ...publishedFindings(
+                  e,
+                  (legs.data || []) as ResearchPublishedLeg[],
+                ),
                 ...nflFindings(
                   e,
                   (a.data || []) as (Analysis & {
