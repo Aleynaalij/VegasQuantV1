@@ -26,6 +26,8 @@ type Load =
   | { state: "ok"; games: TonightGame[]; checkedAt: number; stale: boolean };
 const ORDER: Sport[] = ["nfl", "nba", "nhl", "ncaab"];
 const SHOWN = 8;
+/** The lobby scoreboard opens on the next few games; "See all" expands it in place. */
+const BOARD_SHOWN = 4;
 /** Re-read schedules every 5 minutes while the page is visible: 3 small reads, no provider credits. */
 const REFRESH = 5 * 60000;
 const clock = (t: number) =>
@@ -36,15 +38,20 @@ const clock = (t: number) =>
  * existing page, the lay in progress and the Zone. Built only from readers Home already uses; it
  * does not rank games or claim research exists for a game.
  */
-export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
+export default function VqTonight({
+  nflGames,
+  variant = "list",
+}: {
+  nflGames: Game[];
+  /** "scoreboard": the lobby's framed board (rows by start time, no next-step cards). */
+  variant?: "list" | "scoreboard";
+}) {
   const [now, setNow] = useState(() => Date.now());
   const day = useMemo(() => tonightWindow(now), [now]);
   const [loads, setLoads] = useState<Record<Exclude<Sport, "nfl">, Load>>({
     nba: { state: "loading" }, nhl: { state: "loading" }, ncaab: { state: "loading" },
   });
   const [all, setAll] = useState(false);
-  const [signedIn, setSignedIn] = useState<boolean | null>(null);
-  const [draft, setDraft] = useState(0);
 
   // Each sport's newest request wins: a late answer from an earlier request (or an earlier ET day)
   // is ignored, whether it succeeded or failed.
@@ -112,38 +119,7 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
     };
   }, [day.end]);
 
-  // Signed-in state and the lay in progress (this account's draft only).
-  useEffect(() => {
-    let live = true;
-    let reads = 0;
-    const read = async () => {
-      const n = ++reads;
-      const s = await supabase.auth.getSession();
-      if (!live || n !== reads) return; // a newer read (e.g. after an account change) won
-      const uid = s.data.session?.user.id;
-      setSignedIn(Boolean(uid));
-      try {
-        const d = uid ? JSON.parse(sessionStorage.getItem(`vq-parlay-draft:${uid}`) || "null") : null;
-        setDraft(Array.isArray(d?.keys) ? d.keys.length : 0);
-      } catch {
-        setDraft(0);
-      }
-    };
-    void read();
-    const sub = supabase.auth.onAuthStateChange(() => void read());
-    // Selections added or removed on Home in this visit, or in another tab.
-    const changed = () => void read();
-    window.addEventListener("vq-parlay-draft-changed", changed);
-    window.addEventListener("storage", changed);
-    window.addEventListener("focus", changed);
-    return () => {
-      live = false;
-      sub.data.subscription.unsubscribe();
-      window.removeEventListener("vq-parlay-draft-changed", changed);
-      window.removeEventListener("storage", changed);
-      window.removeEventListener("focus", changed);
-    };
-  }, []);
+  const { signedIn, draft } = useLayDraft();
 
   const rows = useMemo(() => {
     const loaded = (["nba", "nhl", "ncaab"] as const).flatMap((s) => {
@@ -163,8 +139,81 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
   });
   const lastChecked = checked.length ? Math.min(...checked) : null;
   const loading = (["nba", "nhl", "ncaab"] as const).some((s) => loads[s].state === "loading");
-  const shown = all ? rows : rows.slice(0, SHOWN);
+  const board = variant === "scoreboard";
+  const limit = board ? BOARD_SHOWN : SHOWN;
+  const shown = all ? rows : rows.slice(0, limit);
   const bySport = ORDER.map((s) => [s, shown.filter((g) => g.sport === s)] as const).filter(([, g]) => g.length);
+
+  if (board)
+    return (
+      <section className="vq-tonight vq-board" id="vq-tonight" aria-labelledby="vq-tonight-title">
+        <div className="vq-board-frame">
+          <header className="vq-board-head">
+            <h2 id="vq-tonight-title">
+              <span className="vq-board-mark" aria-hidden="true">VQ</span>
+              <span className="vq-board-word">
+                <span className="sr-only">VQ </span>Tonight
+              </span>
+            </h2>
+            <p className="vq-board-sub">Today · {day.label} · ET</p>
+          </header>
+          {stale.length ? (
+            <p className="vq-tonight-alert" role="alert">
+              Couldn’t refresh {stale.map((s) => SPORTS[s].label).join(", ")}: showing games as last
+              checked, which may be out of date.{" "}
+              <button type="button" onClick={() => stale.forEach((s) => void load(s))}>
+                Retry
+              </button>
+            </p>
+          ) : null}
+
+          {failed.length ? (
+            <p className="vq-tonight-alert" role="alert">
+              {failed.map((s) => SPORTS[s].label).join(", ")} games could not load.{" "}
+              <button type="button" onClick={() => failed.forEach((s) => void load(s))}>
+                Retry
+              </button>
+            </p>
+          ) : null}
+
+          {!rows.length ? (
+            <p className="vq-tonight-empty" role="status">
+              {loading ? "Loading today’s games…" : failed.length ? "No other games to show right now." : "No games are scheduled today."}
+            </p>
+          ) : (
+            <ul className="vq-board-rows">
+              {shown.map((g) => {
+                const status = statusLabel(g.status);
+                return (
+                  <li key={`${g.sport}:${g.id}`}>
+                    <Link href={g.href} className="vq-board-row" aria-label={`${SPORTS[g.sport].label}: ${g.away} at ${g.home}, ${status ?? startLabel(g)}. Open the game page`}>
+                      <span className="vq-board-badge">{SPORTS[g.sport].label}</span>
+                      <span className="vq-board-match">
+                        <b>{g.away}</b>
+                        <small>@</small>
+                        <b>{g.home}</b>
+                      </span>
+                      <span className="vq-board-when">{status ? <b>{status}</b> : startLabel(g)}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {rows.length > limit ? (
+            <button type="button" className="vq-board-all" aria-expanded={all} onClick={() => setAll((v) => !v)}>
+              {all ? "Show fewer games" : `See all ${rows.length} games`} <span aria-hidden="true">›</span>
+            </button>
+          ) : null}
+          {rows.length && loading ? <p className="vq-tonight-note" role="status">Still loading some sports…</p> : null}
+          {lastChecked ? (
+            <p className="vq-board-checked">
+              Schedules checked {clock(lastChecked)}, as the league data reported them then.
+            </p>
+          ) : null}
+        </div>
+      </section>
+    );
 
   return (
     <section className="vq-tonight" aria-labelledby="vq-tonight-title">
@@ -225,7 +274,7 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
               </ul>
             </div>
           ))}
-          {rows.length > SHOWN ? (
+          {rows.length > limit ? (
             <button type="button" className="vq-tonight-more" aria-expanded={all} onClick={() => setAll((v) => !v)}>
               {all ? "Show fewer games" : `Show all ${rows.length} games`}
             </button>
@@ -253,4 +302,46 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
       </div>
     </section>
   );
+}
+
+/**
+ * Whether someone is signed in, and how many selections are in this account's lay in progress
+ * (its own draft only). Shared by VQ Tonight and the lobby's "Your next move".
+ */
+export function useLayDraft() {
+  const [signedIn, setSignedIn] = useState<boolean | null>(null);
+  const [draft, setDraft] = useState(0);
+  useEffect(() => {
+    let live = true;
+    let reads = 0;
+    const read = async () => {
+      const n = ++reads;
+      const s = await supabase.auth.getSession();
+      if (!live || n !== reads) return; // a newer read (e.g. after an account change) won
+      const uid = s.data.session?.user.id;
+      setSignedIn(Boolean(uid));
+      try {
+        const d = uid ? JSON.parse(sessionStorage.getItem(`vq-parlay-draft:${uid}`) || "null") : null;
+        setDraft(Array.isArray(d?.keys) ? d.keys.length : 0);
+      } catch {
+        setDraft(0);
+      }
+    };
+    void read();
+    const sub = supabase.auth.onAuthStateChange(() => void read());
+    // Selections added or removed on Home in this visit, or in another tab.
+    const changed = () => void read();
+    window.addEventListener("vq-parlay-draft-changed", changed);
+    window.addEventListener("storage", changed);
+    window.addEventListener("focus", changed);
+    return () => {
+      live = false;
+      sub.data.subscription.unsubscribe();
+      window.removeEventListener("vq-parlay-draft-changed", changed);
+      window.removeEventListener("storage", changed);
+      window.removeEventListener("focus", changed);
+    };
+  }, []);
+
+  return { signedIn, draft };
 }

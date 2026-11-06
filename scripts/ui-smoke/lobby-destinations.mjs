@@ -57,7 +57,7 @@ async function verifyCombinedRoutes() {
     page.setDefaultTimeout(15000);
     await page.goto(base + "/");
     const heading = page.getByRole("heading", {
-      name: "Every game. One clear read.",
+      name: "Your sports research starts here.",
       exact: true,
     });
     await heading.waitFor();

@@ -44,6 +44,14 @@ jobs:
           fi
           cat /tmp/tailed-negative.log
           grep -q "account A.s tails still shown after switching to B" /tmp/tailed-negative.log
+          node scripts/ui-smoke/lobby-skybox.mjs
+          if UI_SMOKE_NEGATIVE=concept-link node scripts/ui-smoke/lobby-skybox.mjs > /tmp/skybox-negative.log 2>&1; then
+            cat /tmp/skybox-negative.log
+            echo 'ERROR: concept-link lobby negative passed unexpectedly'
+            exit 1
+          fi
+          cat /tmp/skybox-negative.log
+          grep -q "a concept card is a link" /tmp/skybox-negative.log
           LOBBY_COMBINED=1 node scripts/ui-smoke/lobby-destinations.mjs
           node scripts/ui-smoke/parlay-save.mjs
           mkdir -p artifacts/parlay-save

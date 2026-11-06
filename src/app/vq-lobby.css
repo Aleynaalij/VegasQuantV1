@@ -1,154 +1,288 @@
-/* The neutral lobby: a casino skybox over the four sport desks. Static light (no animation), so it
-   never moves under the reader or costs battery; content and controls sit above the decoration. */
-.vq-lobby-skybox {
+/* The neutral lobby, styled as a Vegas skybox: stadium lights over a gold serif headline, the sport
+   rooms, the VQ Tonight scoreboard, the next moves, what's coming and the Strip at night. Static
+   decoration only (no animation, nothing moves under the reader); controls sit above it. */
+.vq-skybox {
+  --sky-gold: #e2c272;
+  --sky-gold-hi: #f6dc94;
+  --sky-gold-lo: #a8823a;
+  --sky-green: #0e3d2d;
+  --sky-green-hi: #1f9b6c;
+  --sky-ink: #ede7d6;
   position: relative;
   isolation: isolate;
-  overflow: hidden;
   display: grid;
-  gap: 12px;
+  gap: 18px;
   margin: 0 0 18px;
-  padding: 22px 16px 18px;
-  border: 1px solid #b69b4e66;
+  padding: 0 0 0;
+  overflow: hidden;
+  border: 1px solid #b69b4e40;
   border-radius: 22px;
-  color: #ede7d6;
+  color: var(--sky-ink);
   background:
-    radial-gradient(120% 70% at 50% -10%, #2a2410 0%, transparent 60%),
-    linear-gradient(180deg, #11161c 0%, #0a0d11 100%);
+    radial-gradient(90% 40% at 50% 0%, #1d2a22 0%, transparent 70%),
+    linear-gradient(180deg, #0b1014 0%, #07090c 55%, #0a0c10 100%);
 }
-/* Marquee bulbs along the top edge and a low skyline glow: pure CSS, decorative only. */
-.vq-lobby-lights {
+
+/* Hero: crowd-and-floodlight glow, pennants, the headline and its green swash. */
+.vq-sky-hero {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  padding: 26px 50px 4px;
+  text-align: center;
+}
+.vq-sky-lights {
   position: absolute;
-  inset: 0;
+  inset: 0 0 -20px;
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(circle, #f4dc99 0 1.6px, transparent 2.4px) 8px 8px / 22px 22px repeat-x,
-    linear-gradient(0deg, #f4dc9914 0%, transparent 38%);
-  opacity: 0.75;
+    /* floodlight rows, upper left and right */
+    radial-gradient(circle, #fff3c4 0 1.4px, transparent 2.2px) 0 14px / 14px 14px repeat-x,
+    radial-gradient(60% 55% at 0% 10%, #f4dc9926 0%, transparent 60%),
+    radial-gradient(60% 55% at 100% 10%, #f4dc9926 0%, transparent 60%),
+    /* stands */
+    repeating-linear-gradient(170deg, #ffffff06 0 2px, transparent 2px 6px),
+    linear-gradient(180deg, #121a16 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent);
+  mask-image: linear-gradient(180deg, #000 55%, transparent);
+  opacity: 0.9;
 }
-.vq-lobby-eyebrow {
+.vq-pennant {
+  position: absolute;
+  top: 0;
+  width: 34px;
+  height: 68px;
+  filter: drop-shadow(0 4px 6px #0008);
+}
+.vq-pennant-left {
+  left: 14px;
+}
+.vq-pennant-right {
+  right: 14px;
+}
+.vq-sky-hero h1 {
   margin: 0;
-  color: #d8be72;
-  font-size: 0.72rem;
+  color: var(--sky-gold);
+  font-family: var(--font-serif), Georgia, "Times New Roman", serif;
+  font-size: clamp(1.6rem, 7.2vw, 3.1rem);
+  font-style: italic;
   font-weight: 700;
-  letter-spacing: 0.18em;
+  line-height: 1.08;
+  letter-spacing: 0;
+  text-shadow: 0 2px 0 #3b2a0a, 0 0 22px #f4dc9930;
+}
+.vq-sky-hero h1 span {
+  display: block;
+  color: var(--sky-gold-hi);
+}
+.vq-sky-swash {
+  width: min(60%, 240px);
+  height: 14px;
+}
+
+/* Section rules: a gold line either side of a spaced label. */
+.vq-skybox .vq-rule {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  color: var(--sky-gold);
+  font-family: var(--font-display), Arial, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
 }
-.vq-lobby-skybox h1 {
-  margin: 0;
-  color: #f8e7b4;
-  font-size: clamp(1.7rem, 7vw, 2.6rem);
-  line-height: 1.08;
-  letter-spacing: 0.01em;
+.vq-skybox .vq-rule::before,
+.vq-skybox .vq-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--sky-gold-lo));
 }
-.vq-lobby-lede {
-  max-width: 62ch;
-  margin: 0;
-  color: #c3ccc6;
-  font-size: 0.95rem;
-  line-height: 1.5;
+.vq-skybox .vq-rule::after {
+  background: linear-gradient(90deg, var(--sky-gold-lo), transparent);
 }
-/* Phones: a compact 2×2 so tonight's games stay near the top; desktop: four across. */
-.vq-lobby-desks {
+.vq-rooms,
+.vq-moves,
+.vq-intel {
+  padding: 0 14px;
+}
+
+/* Sport rooms: gold-outlined pills, 2x2 on phones and four across from tablet width. */
+.vq-rooms-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 4px;
+  gap: 10px;
 }
-@media (max-width: 639px) {
-  html body a.vq-lobby-desk {
-    padding: 12px;
-  }
-  a.vq-lobby-desk small {
-    font-size: 0.78rem;
-  }
-  .vq-lobby-go {
-    font-size: 0.8rem;
-  }
-}
-@media (min-width: 1100px) {
-  .vq-lobby-desks {
+@media (min-width: 640px) {
+  .vq-rooms-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-html body .vq-lobby a.vq-lobby-desk,
-html body a.vq-lobby-desk {
-  display: grid;
-  gap: 4px;
-  min-height: 44px;
-  padding: 14px;
-  border: 1px solid #b69b4e55;
-  border-radius: 16px;
-  color: #ede7d6;
-  text-decoration: none;
-  background: #0d1116e6;
-}
-a.vq-lobby-desk b {
-  color: #f4dc99;
-  font-size: 1.05rem;
-}
-a.vq-lobby-desk small {
-  color: #b7c2bb;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-.vq-lobby-go {
-  display: inline-flex;
+html body a.vq-room {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  color: #e7cf86;
-  font-size: 0.85rem;
+  justify-content: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1.5px solid var(--sky-gold-lo);
+  border-radius: 14px;
+  color: var(--sky-ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-decoration: none;
+  background: linear-gradient(180deg, #14110b, #0b0b0a);
+  box-shadow: inset 0 0 0 1px #f4dc9914, 0 4px 12px #0007;
+}
+html body a.vq-room svg {
+  flex: none;
+  color: var(--sky-gold);
+}
+html body a.vq-rooms-all {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 50px;
+  margin-top: 10px;
+  border: 1.5px solid #2c8b62;
+  border-radius: 14px;
+  color: var(--sky-ink);
+  font-weight: 700;
+  text-decoration: none;
+  background: linear-gradient(180deg, #145a40, #0b3426);
+  box-shadow: inset 0 1px 0 #ffffff1a;
+}
+html body a.vq-rooms-all svg {
+  color: var(--sky-gold);
+}
+
+/* Next moves: green tiles with gold icons; stacked on narrow phones, three across otherwise. */
+.vq-moves-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 379px) {
+  .vq-moves-grid {
+    grid-template-columns: 1fr;
+  }
+}
+html body a.vq-move {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 64px;
+  padding: 10px;
+  border: 1.5px solid #2c8b62;
+  border-radius: 14px;
+  color: var(--sky-ink);
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-decoration: none;
+  background: linear-gradient(180deg, #10392b, #08201a);
+  box-shadow: inset 0 1px 0 #ffffff14, 0 4px 12px #0007;
+}
+html body a.vq-move svg {
+  flex: none;
+  color: var(--sky-gold);
+}
+html body a.vq-move small {
+  display: block;
+  color: #a9d9c2;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+@media (max-width: 520px) and (min-width: 380px) {
+  html body a.vq-move {
+    flex-direction: column;
+    gap: 6px;
+    text-align: center;
+  }
+}
+
+/* What's coming: labelled concepts, deliberately not links. */
+.vq-intel-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 379px) {
+  .vq-intel-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.vq-intel-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 4px;
+  padding: 12px;
+  border: 1px solid #b69b4e55;
+  border-radius: 14px;
+  background: #0c0f12;
+}
+.vq-intel-card svg {
+  color: var(--sky-gold);
+}
+.vq-intel-card b {
+  color: var(--sky-ink);
+  font-size: 1rem;
+}
+.vq-concept {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 2px 10px;
+  border: 1px solid #2c8b62;
+  border-radius: 999px;
+  color: #8fe0bb;
+  font-size: 0.72rem;
   font-weight: 700;
 }
-a.vq-lobby-desk:hover,
-a.vq-lobby-desk:focus-visible {
-  border-color: #e7cf86;
-  background: #151b22;
+.vq-intel-card small {
+  grid-column: 1 / -1;
+  color: #9fa9a3;
+  font-size: 0.8rem;
+  line-height: 1.35;
 }
-a.vq-lobby-desk:focus-visible,
-a.vq-lobby-tool:focus-visible {
-  outline: 2px solid #f4dc99;
+
+.vq-skybox .home-record,
+.vq-skybox > .vq-soft-notice {
+  margin-inline: 14px;
+}
+
+/* The Strip at night along the foot. */
+.vq-skyline {
+  height: clamp(96px, 20vw, 170px);
+  margin-top: -6px;
+  background: radial-gradient(70% 90% at 50% 100%, #3a2a0e66, transparent 70%);
+}
+.vq-skyline svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Keyboard focus stays obvious on every lobby control. */
+html body a.vq-room:focus-visible,
+html body a.vq-rooms-all:focus-visible,
+html body a.vq-move:focus-visible {
+  outline: 2px solid var(--sky-gold-hi);
   outline-offset: 2px;
 }
-.vq-lobby-tools {
-  display: grid;
-  gap: 10px;
-  margin: 0 0 18px;
-}
-html body a.vq-lobby-tool {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  padding: 14px 16px;
-  border: 1px solid #b69b4e44;
-  border-radius: 16px;
-  color: #ede7d6;
-  text-decoration: none;
-  background: #0d1116;
-}
-a.vq-lobby-tool b {
-  display: block;
-  color: #f4dc99;
-}
-a.vq-lobby-tool small {
-  display: block;
-  color: #b7c2bb;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-.vq-lobby-tool-icon {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  color: #f4dc99;
-  background: #1a1f26;
-}
-.vq-lobby-diamond {
-  font-size: 1.1rem;
-  line-height: 1;
+html body a.vq-room:hover,
+html body a.vq-move:hover,
+html body a.vq-rooms-all:hover {
+  filter: brightness(1.12);
 }

@@ -1,7 +1,16 @@
 import { permanentRedirect } from "next/navigation";
+import localFont from "next/font/local";
 import { getDeskOrEmpty } from "@/lib/data";
 import VqLobby from "@/components/vq-lobby";
 export const dynamic = "force-dynamic";
+// The lobby headline's gold italic serif (Playfair Display, SIL OFL; licence in ./fonts). Loaded
+// only on the lobby, self-hosted, so no page fetches Google Fonts.
+const serif = localFont({
+  src: [{ path: "./fonts/playfair-display-latin-700-italic.woff2", weight: "700", style: "italic" }],
+  display: "swap",
+  variable: "--font-serif",
+  fallback: ["Georgia", "serif"],
+});
 /**
  * The neutral Vegas Quant lobby. Old NFL-desk links that carried a game (`/?game=<slug>`, shared and
  * bookmarked before the desk moved to /nfl) keep working: they land on the same game at /nfl with
@@ -21,5 +30,5 @@ export default async function Home({
     permanentRedirect(`/nfl?${params.toString()}#home-games`);
   }
   const desk = await getDeskOrEmpty();
-  return <VqLobby nflGames={desk.games} />;
+  return <VqLobby nflGames={desk.games} serifClass={serif.variable} />;
 }
