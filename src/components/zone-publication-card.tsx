@@ -47,7 +47,11 @@ export default function ZonePublicationCard({
   const theme = PUBLICATION_COLORS[p.sport],
     index = Math.min(page, pages.length - 1),
     current = pages[index];
-  const headline = `${theme.label} ${watchers ? "WATCHERS" : p.legs.length ? "PICKS" : "UPDATE"}`;
+  const headline = watchers
+    ? "WATCHLIST"
+    : p.legs.length
+      ? "PUBLISHED PICKS"
+      : "RESEARCH UPDATE";
   const stamp = publicationStamp(p.created_at),
     copyText = publicationCopy(p);
   const footer = watchers
@@ -71,25 +75,24 @@ export default function ZonePublicationCard({
     setError("");
     try {
       const css = getComputedStyle(document.body),
-        board = css.getPropertyValue("--font-board").trim(),
         body = css.getPropertyValue("--font-body").trim();
       await Promise.all([
         // Next's fallback faces reference local system fonts. Loading the entire family list
         // rejects when Arial Narrow is absent, even though our bundled font loaded correctly.
-        document.fonts.load(`800 128px ${board.split(",")[0]}`),
-        document.fonts.load(`700 48px ${body.split(",")[0]}`),
-        document.fonts.load(`500 32px ${body.split(",")[0]}`),
+        document.fonts.load(`800 40px ${body.split(",")[0]}`),
+        document.fonts.load(`700 60px ${body.split(",")[0]}`),
+        document.fonts.load(`500 56px ${body.split(",")[0]}`),
       ]);
       const canvas = document.createElement("canvas");
       canvas.width = 1080;
       canvas.height = 1350;
       const c = canvas.getContext("2d");
       if (!c) throw Error("Canvas unavailable");
-      c.fillStyle = "#07090d";
+      c.fillStyle = "#10271f";
       c.fillRect(0, 0, 1080, 1350);
       const glow = c.createRadialGradient(540, -135, 0, 540, -135, 950);
       glow.addColorStop(0, theme.glow);
-      glow.addColorStop(1, "#07090d");
+      glow.addColorStop(1, "#10271f");
       c.fillStyle = glow;
       c.fillRect(0, 0, 1080, 1350);
       c.strokeStyle = theme.accent + "66";
@@ -118,22 +121,22 @@ export default function ZonePublicationCard({
         c.fillStyle = color;
         c.fillText(s, x, y);
       };
-      text("V E G A S  Q U A N T", 152, 102, 22, "#f4dc99", 700);
+      text("V E G A S Q U A N T", 152, 102, 22, "#f4dc99", 700);
       c.strokeStyle = theme.accent + "88";
       c.beginPath();
       c.roundRect(800, 76, 206, 40, 20);
       c.stroke();
       text(theme.label, 828, 103, 20, theme.accent, 700);
-      text(headline, 74, 260, watchers ? 100 : 128, theme.accent, 800, board);
+      text(headline, 74, 204, 40, theme.accent, 800, body);
       current.title.forEach((line, n) =>
-        text(line, 74, 324 + n * 58, 48, "#f2f4f5", 700),
+        text(line, 74, 260 + n * 72, 60, "#f5eedd", 700),
       );
       text(
         `${stamp} · ${index + 1} / ${pages.length}`,
         74,
         current.start - 46,
         24,
-        "#8f99a3",
+        "#c2cdbf",
       );
       c.strokeStyle = theme.accent + "55";
       c.beginPath();
@@ -145,17 +148,17 @@ export default function ZonePublicationCard({
         text("CONCERN", 540, 464, 22, theme.accent, 700);
         for (const row of watchers) {
           row.line.forEach((line, n) =>
-            text(line, 74, row.y + n * 34, 26, "#f2f4f5", 700),
+            text(line, 74, row.y + n * 34, 26, "#f5eedd", 700),
           );
           row.risk.forEach((line, n) =>
-            text(line, 540, row.y + n * 34, 26, "#d9dee2"),
+            text(line, 540, row.y + n * 34, 26, "#e0e9df"),
           );
         }
       }
       current.lines.forEach((line, n) =>
-        text(line, 74, current.start + n * 42, 32, "#d9dee2"),
+        text(line, 74, current.start + n * 70, 56, "#e0e9df"),
       );
-      text(footer, 74, 1246, 24, "#8f99a3");
+      text(footer, 74, 1246, 24, "#c2cdbf");
       text("VEGASQUANT.APP", 74, 1284, 24, theme.accent, 700);
       const blob = await new Promise<Blob>((ok, fail) =>
         canvas.toBlob(
@@ -177,6 +180,9 @@ export default function ZonePublicationCard({
       data-sport={p.sport}
       aria-label={`${theme.label} Vegas Quant publication`}
     >
+      <p className="publication-time">
+        {stamp} · Publication time, not a price observation.
+      </p>
       <svg
         className="zone-publication-face"
         viewBox="0 0 1080 1350"
@@ -192,10 +198,10 @@ export default function ZonePublicationCard({
             r="950"
           >
             <stop stopColor={theme.glow} />
-            <stop offset="1" stopColor="#07090d" />
+            <stop offset="1" stopColor="#10271f" />
           </radialGradient>
         </defs>
-        <rect width="1080" height="1350" fill="#07090d" />
+        <rect width="1080" height="1350" fill="#10271f" />
         <rect width="1080" height="1350" fill={`url(#${id})`} />
         <rect
           x="28"
@@ -235,9 +241,8 @@ export default function ZonePublicationCard({
         </text>
         <text
           x="74"
-          y="260"
+          y="204"
           className="publication-headline"
-          style={watchers ? { fontSize: 100 } : undefined}
           fill={theme.accent}
         >
           {headline}
@@ -246,15 +251,15 @@ export default function ZonePublicationCard({
           <text
             key={n}
             x="74"
-            y={324 + n * 58}
-            fontSize="48"
+            y={260 + n * 72}
+            fontSize="60"
             fontWeight="700"
-            fill="#f2f4f5"
+            fill="#f5eedd"
           >
             {line}
           </text>
         ))}
-        <text x="74" y={current.start - 46} fontSize="24" fill="#8f99a3">
+        <text x="74" y={current.start - 46} fontSize="24" fill="#c2cdbf">
           {stamp} · {index + 1} / {pages.length}
         </text>
         <path
@@ -290,7 +295,7 @@ export default function ZonePublicationCard({
                     y={row.y + n * 34}
                     fontSize="26"
                     fontWeight="700"
-                    fill="#f2f4f5"
+                    fill="#f5eedd"
                   >
                     {line}
                   </text>
@@ -301,7 +306,7 @@ export default function ZonePublicationCard({
                     x="540"
                     y={row.y + n * 34}
                     fontSize="26"
-                    fill="#d9dee2"
+                    fill="#e0e9df"
                   >
                     {line}
                   </text>
@@ -314,14 +319,14 @@ export default function ZonePublicationCard({
           <text
             key={n}
             x="74"
-            y={current.start + n * 42}
-            fontSize="32"
-            fill="#d9dee2"
+            y={current.start + n * 70}
+            fontSize="56"
+            fill="#e0e9df"
           >
             {line}
           </text>
         ))}
-        <text x="74" y="1246" fontSize="24" fill="#8f99a3">
+        <text x="74" y="1246" fontSize="24" fill="#c2cdbf">
           {footer}
         </text>
         <text

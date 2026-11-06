@@ -297,13 +297,13 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
       ) : null}
       <div className="vq-tonight-next">
         {skybox ? (
-          <Link href="/feed?view=latest" className="vq-tonight-card">
+          <Link href="/feed?view=latest" className="vq-tonight-card" aria-label="Research — published research, reasons and risks">
             <Search aria-hidden="true" />
             <b>Research</b>
             <small>Published research, reasons and risks.</small>
           </Link>
         ) : null}
-        <Link href="/parlays" className="vq-tonight-card">
+        <Link href="/parlays" className="vq-tonight-card" aria-label={draft ? `Continue your lay — ${draft} selected. Pick up where you left off.` : "My lays — your saved lays and the leg library"}>
           {skybox ? <Layers aria-hidden="true" /> : null}
           <b>{draft ? `Continue your lay · ${draft} selected` : "My lays"}</b>
           <small>
@@ -313,13 +313,13 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
           </small>
         </Link>
         {signedIn === false ? (
-          <Link href="/membership" className="vq-tonight-card">
+          <Link href="/membership" className="vq-tonight-card" aria-label="The Zone — sign in for member discussion">
             {skybox ? <Users aria-hidden="true" /> : null}
             <b>The Zone · sign in</b>
             <small>Member discussion is for signed-in members.</small>
           </Link>
         ) : (
-          <Link href="/community" className="vq-tonight-card">
+          <Link href="/community" className="vq-tonight-card" aria-label="The Zone — member discussion, separate from published research">
             {skybox ? <Users aria-hidden="true" /> : null}
             <b>The Zone</b>
             <small>Member talk, kept separate from published research.</small>

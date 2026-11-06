@@ -600,3 +600,17 @@ a.vq-lobby-tool small {
     height: 20px;
   }
 }
+
+/* Compact next actions keep their full descriptions in the accessible link names. */
+html body .vq-tonight-skybox a.vq-tonight-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 52px;
+  padding: 10px 8px;
+  text-align: center;
+}
+.vq-tonight-skybox .vq-tonight-card small { display: none; }
+.vq-tonight-skybox .vq-tonight-card svg { width: 20px; height: 20px; flex: none; }

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import "@/app/sports-switcher.css";
 import BrandMark from "./brand-mark";
 import InstallApp from "./install-app";
 import { NotificationBell as UpdateInbox } from "./notification-provider";
@@ -101,7 +102,8 @@ export function Shell({
   // Only a page that names its (live) sport selects that chip and shows its sport-only card;
   // pages without one (the lobby, The Zone across sports, lays, profiles) select no sport.
   // Their links still default to the NFL chrome.
-  const pageSport = requested && SPORTS[requested]?.live ? requested : undefined;
+  const pageSport =
+    requested && SPORTS[requested]?.live ? requested : undefined;
   const sport = pageSport ?? "nfl";
   // The neutral lobby (/) belongs to no sport: no chip is selected and no sport-only claims show.
   const lobby = active === "lobby";
@@ -273,7 +275,9 @@ export function Shell({
                   lobby: "Home",
                   lays: "Your lays",
                   // A page without a sport (lays, profiles) is not any one sport's desk.
-                  home: pageSport ? `${SPORTS[pageSport].label} desk` : "Sports desk",
+                  home: pageSport
+                    ? `${SPORTS[pageSport].label} desk`
+                    : "Sports desk",
                   game: `${SPORTS[sport].label} games`,
                   community: "The Zone",
                   slots: "VQ Slots",
@@ -293,44 +297,73 @@ export function Shell({
             </b>
           </div>
           <div className="top-actions">
-            {sport === "nfl" && !lobby && active !== "community" && <LetsSweat />}
+            {sport === "nfl" && !lobby && active !== "community" && (
+              <LetsSweat />
+            )}
             <InstallApp />
             <UpdateInbox />
             <span className="desktop">Research desk</span>
             <AccountLink />
           </div>
         </header>
-        <nav
-          className="sport-switch"
-          aria-label="Sport selection"
-          data-swipe-tabs
-        >
-          {liveSports().map((key) => {
-            const chip = (
-              <Link
-                key={key}
-                href={chipHref(key)}
-                aria-current={pageSport === key ? "page" : undefined}
-                aria-label={SPORTS[key].name}
-                className={pageSport === key ? "selected" : ""}
-                data-sport={key}
-              >
-                {SPORTS[key].label}
-              </Link>
-            );
-            // Frank's surprise is NHL itself: its chip waits for his invitation status.
-            return key === "nhl" && pageSport !== "nhl" ? (
-              <NhlChipHold key={key}>{chip}</NhlChipHold>
-            ) : (
-              chip
-            );
-          })}
-          {active === "home" || active === "community" ? (
-            <CommunityStories />
-          ) : sport === "nba" ? (
-            <span>{active === "feed" ? "Legs we like" : "NBA research"}</span>
-          ) : null}
-        </nav>
+        {!lobby && (
+          <nav
+            className="sport-switch sports-rail"
+            aria-label="Sport selection"
+            data-swipe-tabs
+          >
+            {liveSports().map((key) => {
+              const chip = (
+                <Link
+                  key={key}
+                  href={chipHref(key)}
+                  aria-current={pageSport === key ? "page" : undefined}
+                  aria-label={SPORTS[key].name}
+                  className={pageSport === key ? "selected" : ""}
+                  data-sport={key}
+                >
+                  <svg
+                    className="sports-rail-icon"
+                    viewBox="0 0 32 32"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    aria-hidden="true"
+                  >
+                    {key === "nfl" ? (
+                      <g transform="rotate(38 16 16)">
+                        <ellipse cx="16" cy="16" rx="8" ry="13" />
+                        <path d="M16 9v14M12 12h8M12 16h8M12 20h8" />
+                      </g>
+                    ) : key === "nhl" ? (
+                      <>
+                        <path d="m25 4-13 20H4v4h10L28 6" />
+                        <ellipse cx="25" cy="27" rx="4" ry="2" />
+                      </>
+                    ) : (
+                      <>
+                        <circle cx="16" cy="16" r="13" />
+                        <path d="M3 16h26M16 3v26M7 6c12 6 12 14 0 20M25 6c-12 6-12 14 0 20" />
+                      </>
+                    )}
+                  </svg>
+                  {SPORTS[key].label}
+                </Link>
+              );
+              // Frank's surprise is NHL itself: its chip waits for his invitation status.
+              return key === "nhl" && pageSport !== "nhl" ? (
+                <NhlChipHold key={key}>{chip}</NhlChipHold>
+              ) : (
+                chip
+              );
+            })}
+            {active === "home" || active === "community" ? (
+              <CommunityStories />
+            ) : sport === "nba" ? (
+              <span>{active === "feed" ? "Legs we like" : "NBA research"}</span>
+            ) : null}
+          </nav>
+        )}
         <main id="main-content" tabIndex={-1}>
           {lobby || active === "home" ? <FrankNhlFeedback /> : null}
           {children}

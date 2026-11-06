@@ -33,7 +33,7 @@ test("automated cards keep all content across bounded pages and copy only explic
       .replace(/\s/g, ""),
     [...post.legs, post.body].join("").replace(/\s/g, ""),
   );
-  assert.ok(pages.every((p) => p.start + (p.lines.length - 1) * 42 < 1180));
+  assert.ok(pages.every((p) => p.start + (p.lines.length - 1) * 70 <= 1180));
   assert.equal(publicationCopy(post), post.title + "\n" + post.legs[0]);
   assert.equal(publicationCopy({ ...post, legs: [] }), "");
   assert.ok(wrapCardText("W".repeat(100), 32).every((l) => l.length <= 29));
@@ -90,4 +90,18 @@ test("early watchers pair five stored lines with concerns on one two-column face
     null,
   );
   assert.equal(watcherRows(post), null);
+});
+
+test("phone-size pages bound long titles and never turn a publication time into a quote time", async () => {
+  const { publicationStamp } = await import("../src/lib/zone-publication-card");
+  const pages = publicationPages({
+    ...post,
+    title: "Long matchup title ".repeat(100),
+  });
+  assert.ok(pages.every((p) => p.title.length <= 3));
+  assert.ok(
+    pages.every((p) => p.start + Math.max(0, p.lines.length - 1) * 70 <= 1180),
+  );
+  assert.ok(publicationStamp(post.created_at).startsWith("Published "));
+  assert.equal(publicationStamp("bad"), "Publication time unavailable");
 });

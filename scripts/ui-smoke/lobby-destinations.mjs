@@ -81,7 +81,7 @@ async function verifyCombinedRoutes() {
     );
     await page.screenshot({ path: `${out}/${width}-neutral-lobby.png` });
     for (const sport of ["nfl", "nba", "nhl", "ncaab"]) {
-      await page.locator(`.sport-switch a[data-sport="${sport}"]`).click();
+      await page.locator(`.vq-lobby-desks a[data-sport="${sport}"]`).click();
       await page.waitForURL(new RegExp("/" + sport + "(?:[?#]|$)"));
       await page
         .locator(`.sport-switch a[data-sport="${sport}"][aria-current="page"]`)

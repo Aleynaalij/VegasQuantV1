@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
@@ -51,7 +51,7 @@ posts.push(
   },
 );
 try {
-  for (const width of [390, 1280]) {
+  for (const width of [360, 390, 1280]) {
     const ctx = await browser.newContext({
       viewport: { width, height: 900 },
       reducedMotion: "reduce",
@@ -107,17 +107,30 @@ try {
     await p.goto(base + "/community", { waitUntil: "networkidle" });
     await p.locator(".zone-publication").first().waitFor();
     await p.evaluate(() => document.fonts.ready);
+    await p.locator(".vq-brand-opening").waitFor({ state: "hidden" });
     assert.equal(await p.locator(".zone-publication").count(), 4);
+    if (process.env.UI_SMOKE_NEGATIVE === "card-palette")
+      await p.locator('.zone-publication .publication-headline').first().evaluate(e => e.setAttribute('fill', '#ff858e'));
+    const out = process.env.UI_ARTIFACT_DIR || "artifacts/sports-zone-design";
+    mkdirSync(out, { recursive: true });
+    await p.screenshot({ path: `${out}/${width}-zone.png` });
+    const selected = p.locator('.sports-rail > a[aria-current="page"]');
+    assert.equal(await selected.count(), 0, "Zone must not select NFL by default");
+    for (const link of await p.locator('.sports-rail > a').all()) {
+      const box = await link.boundingBox();
+      assert.ok(box && box.height >= 44, "sport navigation touch height");
+    }
     for (const [sport, color] of [
-      ["nfl", "#7db8ff"],
-      ["nba", "#e8ca7d"],
-      ["nhl", "#ff858e"],
-      ["ncaab", "#74d6a4"],
+      ["nfl", "#c8decf"],
+      ["nba", "#e7cb82"],
+      ["nhl", "#b7dad5"],
+      ["ncaab", "#d5d8b5"],
     ]) {
       const card = p.locator(`.zone-publication[data-sport=${sport}]`);
       assert.equal(
         await card.locator(".publication-headline").getAttribute("fill"),
         color,
+        "publication palette must match approved lounge design",
       );
       await card
         .getByRole("button", { name: "Copy picks", exact: true })
@@ -126,10 +139,13 @@ try {
         await p.evaluate(() => window.fixtureCopies.at(-1)),
         `${sport.toUpperCase()} stored selection\n${posts[0].legs[0]}`,
       );
+      assert.ok((await card.locator('svg').boundingBox()).width * 56 / 1080 >= 14, "analysis must remain readable at phone scale");
+      await card.scrollIntoViewIfNeeded();
+      await p.screenshot({ path: `${out}/${width}-${sport}-card.png` });
       const lines = [];
       for (;;) {
         lines.push(
-          ...(await card.locator("svg text[font-size='32']").allTextContents()),
+          ...(await card.locator("svg text[font-size='56']").allTextContents()),
         );
         const overflow = await card.locator("svg text").evaluateAll((es) =>
           es
@@ -202,7 +218,7 @@ try {
     assert.deepEqual(errors, []);
     await ctx.close();
     console.log(
-      `PASS publication cards ${width}px: four sport colors, full paginated content, bounded text, copy, 1080x1350 download, Gambly age gate and unchanged manual/threes`,
+      `PASS publication cards ${width}px: labelled sports with restrained accents, full paginated content, bounded text, copy, 1080x1350 download, Gambly age gate and unchanged manual/threes`,
     );
   }
 } finally {

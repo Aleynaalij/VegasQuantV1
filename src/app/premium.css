@@ -72,30 +72,6 @@ html[data-theme="dark"] body .sidebar nav a.active {
 html[data-theme="dark"] body :is(.sidebar-rule, .sidebar-bottom) { background: var(--panel) !important; border-color: var(--line) !important; }
 html[data-theme="dark"] body .sidebar-rule strong { color: var(--money) !important; }
 
-/* Sport switch becomes a segmented control. */
-html[data-theme="dark"] body .sport-switch {
-  background: transparent;
-  border-bottom: 1px solid var(--line);
-  gap: 0;
-}
-html[data-theme="dark"] body .sport-switch a {
-  min-height: 40px;
-  min-width: 72px;
-  border-radius: 999px;
-  color: var(--muted) !important;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  background: var(--panel);
-  border: 1px solid var(--line);
-}
-html[data-theme="dark"] body .sport-switch a + a { margin-left: 6px; }
-html[data-theme="dark"] body .sport-switch a.selected {
-  background: linear-gradient(180deg, var(--brand-hi), var(--brand)) !important;
-  border-color: transparent;
-  color: #fff !important;
-  box-shadow: var(--glow);
-}
-
 /* Bottom tab bar: glass, with a lit active tab. */
 html[data-theme="dark"] body .mobile-nav {
   background: #070b14e6 !important;

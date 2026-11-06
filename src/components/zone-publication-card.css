@@ -16,9 +16,8 @@
   font-weight: 700;
 }
 .zone-publication-face .publication-headline {
-  font:
-    800 128px var(--font-board),
-    sans-serif;
+  font: 800 40px var(--font-body), sans-serif;
+  letter-spacing: 1px;
 }
 .publication-controls {
   display: flex;
@@ -53,3 +52,9 @@
   min-height: 100px;
   font-size: 16px;
 }
+
+.zone-publication-face { border: 1px solid #e7cb824d; background: #10271f; }
+.publication-analysis { color: #f5eedd; font-size: 16px; line-height: 1.65; }
+.publication-analysis summary { color: #f4dc99; font-weight: 700; }
+
+.publication-time { color: #c2cdbf; font-size: 13px; line-height: 1.4; }

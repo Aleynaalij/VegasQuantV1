@@ -30,37 +30,6 @@ html[data-theme="dark"] body .mobile-nav a.active::before {
   box-shadow: 0 0 10px #e8c46a66;
 }
 
-/* NFL / NBA: casino chips with striped edges. */
-html[data-theme="dark"] body .sport-switch {
-  gap: 12px;
-  border-bottom-color: var(--gold-line);
-}
-html[data-theme="dark"] body .sport-switch a,
-html[data-theme="dark"] body .sport-switch a + a {
-  width: 58px;
-  min-width: 58px;
-  height: 58px;
-  min-height: 58px;
-  margin: 0;
-  padding: 0;
-  border-radius: 50%;
-  border: 0;
-  background:
-    radial-gradient(circle, #171b24 0 54%, #2c313d 55% 58%, transparent 59%),
-    repeating-conic-gradient(#3a404d 0 15deg, #171b24 15deg 30deg);
-  color: var(--muted) !important;
-  font: 800 14px/1 var(--font-board), sans-serif;
-  letter-spacing: 0.08em;
-  box-shadow: 0 4px 10px #0008, inset 0 0 0 2px #0006;
-}
-html[data-theme="dark"] body .sport-switch a.selected {
-  background:
-    radial-gradient(circle, #20180a 0 54%, #f3dc9a 55% 58%, transparent 59%),
-    repeating-conic-gradient(#e8c46a 0 15deg, #6b4e18 15deg 30deg) !important;
-  color: var(--gold-hi) !important;
-  box-shadow: 0 6px 16px #000a, 0 0 0 1px #e8c46a55;
-}
-
 /* ---------- Shared surfaces ---------- */
 html[data-theme="dark"] body :is(.panel, .feed-post, .candidate-tracker, .feed-featured, .mi-game, .leg-record, .community-panel, .sports-ticker, .notebook, .official-card) {
   background: linear-gradient(180deg, #ffffff05, transparent 40%), var(--panel) !important;
@@ -280,11 +249,6 @@ html[data-theme="dark"] body :is(
   box-shadow: 0 6px 16px #0008, inset 0 1px 0 #fff5 !important;
 }
 html[data-theme="dark"] body :is(.primary, .btn, .ask-vegas-launcher) :is(svg, span, b, strong) { color: #17120a !important; }
-/* The chips keep their own look (declared again so they win over the rule above). */
-html[data-theme="dark"] body .sport-switch a.selected {
-  color: var(--gold-hi) !important;
-  border: 0 !important;
-}
 html[data-theme="dark"] body :is(.secondary, button.secondary, a.secondary) {
   border-color: #e8c46a55 !important;
 }
