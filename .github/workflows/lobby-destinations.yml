@@ -1,0 +1,51 @@
+name: Lobby destinations draft acceptance
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'scripts/ui-smoke/lobby-destinations.mjs'
+      - '.github/workflows/lobby-destinations.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  builder:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - name: Prepare browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "CHROMIUM_PATH=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Verify builder journeys and approval negative control
+        run: |
+          node scripts/ui-smoke/stub.mjs &
+          LIVE_SCORES_DISABLED=1 npx next start -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
+          node scripts/ui-smoke/lobby-destinations.mjs
+          if UI_SMOKE_NEGATIVE=approval-label UI_ARTIFACT_DIR=artifacts/lobby-negative node scripts/ui-smoke/lobby-destinations.mjs > /tmp/lobby-negative.log 2>&1; then
+            cat /tmp/lobby-negative.log
+            echo 'ERROR: misleading approval negative control passed unexpectedly'
+            exit 1
+          fi
+          cat /tmp/lobby-negative.log
+          grep -q 'misleading approval label must be rejected' /tmp/lobby-negative.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lobby-destinations-browser-evidence
+          path: artifacts/
+          if-no-files-found: error
