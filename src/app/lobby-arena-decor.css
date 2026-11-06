@@ -72,8 +72,14 @@
 /* Preserve the wheel, tower and illuminated bases when the wide panorama is cropped on phones. */
 @media (max-width: 639px) {
   .vq-arena-skyline {
-    aspect-ratio: 1.6 !important;
+    /* Crop the panorama's empty upper sky, preserving the city's previous display scale. */
+    aspect-ratio: 2.4 !important;
+    margin-top: 0;
     background-position: 54% bottom;
-    background-size: auto 100%;
+    background-size: auto 150%;
+    -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 93%, transparent 100%),
+      linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+    mask-image: linear-gradient(180deg, transparent 0%, #000 6%, #000 93%, transparent 100%),
+      linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
   }
 }
