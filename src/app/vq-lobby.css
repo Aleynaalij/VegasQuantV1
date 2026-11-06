@@ -148,54 +148,80 @@ html body .vq-tonight.vq-tonight-skybox {
   background: transparent;
   scroll-margin-top: 90px;
 }
+/* A hanging, tapered enclosure, with separate planes rather than a gold card border.
+   Only the decorative side walls stretch with an expanded schedule. The top, projecting
+   lower beam and lit underside keep their physical proportions at every content height. */
 .vq-tonight-skybox .vq-tonight-board {
+  --skybox-cap: clamp(44px, 8vw, 100px);
+  --skybox-beam: clamp(29px, 5vw, 64px);
+  --skybox-base: clamp(39px, 7vw, 88px);
   position: relative;
+  isolation: isolate;
   display: grid;
   gap: 10px;
-  padding: 22px 24px 20px;
-  border: 9px solid transparent;
-  border-radius: 28px 28px 12px 12px;
-  background:
-    linear-gradient(155deg, #191d16, #050807 45%, #10160f) padding-box,
-    linear-gradient(
-        115deg,
-        #624018 0%,
-        #d99d3a 6%,
-        #fff0a7 12%,
-        #88551b 15%,
-        #e8b95a 33%,
-        #ffe9a1 46%,
-        #a97428 70%,
-        #efc36f 88%,
-        #6c4016 94%,
-        #f5d391
-      )
-      border-box;
-  box-shadow:
-    inset 0 0 0 2px #fce2a26b,
-    inset 0 0 35px #000,
-    0 8px 0 -2px #5b3916,
-    0 11px 0 -2px #d5a14c,
-    0 28px 28px #000b;
+  padding: clamp(26px, 3.8vw, 48px) 14%
+    calc(var(--skybox-base) + var(--skybox-beam) * 0.55);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  filter: drop-shadow(0 22px 16px #000c);
 }
-.vq-tonight-skybox .vq-tonight-board::before,
-.vq-tonight-skybox .vq-tonight-board::after {
+.vq-tonight-skybox .vq-tonight-board > :not(.vq-jumbotron-casing) {
+  position: relative;
+  z-index: 1;
+}
+.vq-jumbotron-casing {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+}
+.vq-jumbotron-defs {
+  position: absolute;
+}
+.vq-jumbotron-casing > svg:not(.vq-jumbotron-defs) {
+  position: absolute;
+  width: 100%;
+  overflow: visible;
+}
+.vq-jumbotron-body {
+  top: 12px;
+  bottom: calc(var(--skybox-base) * 0.66);
+  height: calc(100% - 12px - var(--skybox-base) * 0.66);
+}
+.vq-jumbotron-top {
+  top: 0;
+  height: var(--skybox-cap);
+}
+.vq-jumbotron-bottom {
+  bottom: calc(var(--skybox-base) * 0.55);
+  height: var(--skybox-beam);
+}
+.vq-jumbotron-underside {
+  bottom: 0;
+  height: var(--skybox-base);
+}
+.vq-tonight-skybox .vq-tonight-head::before,
+.vq-tonight-skybox .vq-tonight-head::after {
   content: "";
   position: absolute;
-  z-index: 0;
-  top: 15px;
-  width: 8%;
-  height: 48px;
+  top: 0;
+  width: 19%;
+  height: 42px;
   pointer-events: none;
-  background: repeating-linear-gradient(65deg, #127347 0 4px, #062517 5px 10px);
-  opacity: 0.7;
+  background: repeating-linear-gradient(65deg, #14b675 0 5px, #052c1b 6px 12px);
+  opacity: 0.85;
+  clip-path: polygon(0 0, 72% 0, 100% 100%, 28% 100%);
 }
-.vq-tonight-skybox .vq-tonight-board::before {
-  left: 12px;
+.vq-tonight-skybox .vq-tonight-head::before {
+  left: 0;
+  transform: skewX(18deg);
+  mask-image: linear-gradient(90deg, #000 30%, transparent);
 }
-.vq-tonight-skybox .vq-tonight-board::after {
-  right: 12px;
-  transform: scaleX(-1);
+.vq-tonight-skybox .vq-tonight-head::after {
+  right: 0;
+  transform: scaleX(-1) skewX(18deg);
+  mask-image: linear-gradient(90deg, #000 30%, transparent);
 }
 .vq-tonight-skybox .vq-tonight-head {
   text-align: center;
@@ -206,6 +232,8 @@ html[data-theme] body .vq-tonight-skybox h2 {
   justify-content: center;
   gap: 12px;
   margin: 0 0 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #9d763c;
   color: #f7e7b4 !important;
   font-size: clamp(1.45rem, 3.5vw, 2.6rem);
   font-style: italic;
@@ -219,6 +247,8 @@ html[data-theme] body .vq-tonight-skybox h2 {
   height: 48px;
 }
 .vq-tonight-skybox .vq-tonight-head > p {
+  letter-spacing: .12em;
+  text-transform: uppercase;
   color: #ebd697;
   font-size: 0.8rem;
 }
@@ -257,17 +287,33 @@ html body .vq-tonight-skybox a.vq-tonight-game {
   text-align: center;
 }
 .vq-tonight-skybox .vq-tonight-teams {
+  text-align: center;
   font-size: 0.93rem;
   line-height: 1.3;
 }
 .vq-tonight-skybox .vq-tonight-when {
+  padding-left: 10px;
+  border-left: 1px solid #b795534d;
   font-size: 0.77rem;
+}
+.vq-tonight-day { display: block; }
+.vq-tonight-skybox .vq-tonight-sport-badge { position: relative; }
+.vq-tonight-skybox .vq-tonight-sport-badge::after {
+  content: ""; position: absolute; top: -2px; bottom: -2px; right: -7px;
+  border-right: 1px solid #b795534d;
+}
+.vq-tonight-skybox .vq-tonight-screen-note {
+  margin: 0; color: #aeb8ab; font-size: .7rem; line-height: 1.4; text-align: center;
 }
 .vq-tonight-skybox .vq-tonight-go {
   display: none;
 }
 html body .vq-tonight-skybox .vq-tonight-more {
   justify-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 44px;
   margin-top: 6px;
   padding: 10px 32px;
@@ -429,22 +475,23 @@ a.vq-lobby-tool small {
     scroll-margin-top: 78px;
   }
   .vq-tonight-skybox .vq-tonight-board {
+    --skybox-cap: 44px;
+    --skybox-beam: 29px;
+    --skybox-base: 39px;
     gap: 8px;
-    padding: 12px 9px 12px;
-    border-width: 6px;
-    border-radius: 19px 19px 9px 9px;
+    padding: 22px 14% 56px;
   }
-  .vq-tonight-skybox .vq-tonight-board::before,
-  .vq-tonight-skybox .vq-tonight-board::after {
-    top: 12px;
-    width: 7%;
-    height: 30px;
+  .vq-tonight-skybox .vq-tonight-head::before,
+  .vq-tonight-skybox .vq-tonight-head::after {
+    width: 19%;
+    height: 28px;
   }
   html[data-theme] body .vq-tonight-skybox h2 {
     gap: 7px;
     margin-bottom: 6px;
-    font-size: 1.5rem;
-    letter-spacing: 0.11em;
+    font-size: clamp(1.2rem, 5.7vw, 1.5rem);
+    letter-spacing: 0.09em;
+    padding-bottom: 8px;
   }
   .vq-tonight-skybox h2 .vq-mark {
     width: 48px;
@@ -458,7 +505,7 @@ a.vq-lobby-tool small {
     line-height: 1.35;
   }
   html body .vq-tonight-skybox a.vq-tonight-game {
-    grid-template-columns: 42px minmax(0, 1fr) 63px;
+    grid-template-columns: 42px minmax(0, 1fr) 64px;
     gap: 6px;
     min-height: 53px;
     padding: 7px 6px;
@@ -472,7 +519,8 @@ a.vq-lobby-tool small {
     font-size: 0.75rem;
   }
   .vq-tonight-skybox .vq-tonight-when {
-    font-size: 0.7rem;
+    padding-left: 6px;
+    font-size: 0.66rem;
     white-space: normal;
     text-align: right;
   }

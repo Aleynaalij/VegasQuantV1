@@ -15,7 +15,7 @@ const browser = await chromium.launch({
 const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const out = process.env.UI_ARTIFACT_DIR || "artifacts/lobby-mobile";
 const now = new Date("2026-10-14T02:00:00Z");
-const nba = Array.from({ length: 5 }, (_, i) => ({
+const nba = Array.from({ length: 3 }, (_, i) => ({
   id: `lobby-nba-${i}`,
   slug: `sample-lobby-game-${i}`,
   away_team: `Sample Away ${i}`,
@@ -24,6 +24,35 @@ const nba = Array.from({ length: 5 }, (_, i) => ({
   tipoff_tbd: false,
   status: i === 0 ? "STATUS_FINAL" : "STATUS_SCHEDULED",
 }));
+const otherSports = {
+  nhl: [
+    {
+      id: "lobby-nhl-0",
+      slug: "sample-lobby-nhl-0",
+      start_time: "2026-10-14T00:45:00Z",
+      status: "STATUS_SCHEDULED",
+      away: { short_name: "Sample NHL Away" },
+      home: { short_name: "Sample NHL Home" },
+    },
+  ],
+  ncaab: [
+    {
+      id: "lobby-college-0",
+      slug: "sample-lobby-college-0",
+      start_time: "2026-10-14T01:45:00Z",
+      status: "STATUS_SCHEDULED",
+      away: { short_name: "Sample College Away" },
+      home: { short_name: "Sample College Home" },
+    },
+  ],
+};
+const chronologicalHrefs = [
+  `/nba/games/${nba[0].slug}`,
+  `/nhl/games/${otherSports.nhl[0].slug}`,
+  `/nba/games/${nba[1].slug}`,
+  `/ncaab/games/${otherSports.ncaab[0].slug}`,
+  `/nba/games/${nba[2].slug}`,
+];
 await mkdir(out, { recursive: true });
 const metrics = [];
 let activePage;
@@ -75,14 +104,17 @@ try {
           });
         return route.fulfill({ json: state === "empty" ? [] : nba });
       }
-      if (path.endsWith("sports_home"))
+      if (path.endsWith("sports_home")) {
+        if (state === "loading") await loadingGate;
+        const sport = route.request().postDataJSON()?.p_sport;
         return route.fulfill({
           json: {
             version: 1,
-            sport: route.request().postDataJSON()?.p_sport,
-            games: [],
+            sport,
+            games: state === "empty" ? [] : (otherSports[sport] ?? []),
           },
         });
+      }
       if (path.endsWith("membership_status"))
         return route.fulfill({ json: { allowed: false, admin: false } });
       if (path.endsWith("community_story_clock"))
@@ -203,6 +235,13 @@ try {
       3,
       "initial preview contains three actual schedule rows",
     );
+    assert.deepEqual(
+      await page
+        .locator(".vq-tonight-game")
+        .evaluateAll((links) => links.map((link) => link.getAttribute("href"))),
+      chronologicalHrefs.slice(0, 3),
+      "mixed-sport preview must preserve chronological order",
+    );
     const layout = await page.evaluate(() => {
       const rect = (sel) => {
         const r = document.querySelector(sel).getBoundingClientRect();
@@ -232,6 +271,58 @@ try {
     );
     metrics.push(layout);
     await page.screenshot({ path: `${out}/${width}-arena-ready.png` });
+    stage = "dimensional enclosure evidence";
+    const casing = page.locator(".vq-jumbotron-casing");
+    assert.equal(
+      await casing.getAttribute("aria-hidden"),
+      "true",
+      "decorative enclosure stays out of the accessibility tree",
+    );
+    assert.equal(
+      await casing.evaluate((node) => getComputedStyle(node).pointerEvents),
+      "none",
+      "frame must not intercept game controls",
+    );
+    assert.equal(
+      await casing.locator('[data-skybox-lights="cluster"]').count(),
+      5,
+      "five separate downlight clusters under the hanging box",
+    );
+    for (const plane of ["left", "right"]) {
+      const side = await casing
+        .locator(`[data-skybox-plane="${plane}"]`)
+        .boundingBox();
+      assert.ok(
+        side.width >= 25 && side.height >= 100,
+        `${plane} side must have visible perspective depth`,
+      );
+    }
+    assert.ok(
+      (await casing.locator(".vq-jumbotron-top").boundingBox()).height >= 40,
+      "top fascia is a separate dimensional cap",
+    );
+    assert.ok(
+      (await casing.locator(".vq-jumbotron-underside").boundingBox()).height >=
+        35,
+      "underside must have visible depth",
+    );
+    await page.screenshot({
+      path: `${out}/${width}-arena-full.png`,
+      fullPage: true,
+    });
+    await page
+      .locator(".vq-tonight-board")
+      .evaluate((board) =>
+        window.scrollTo(
+          0,
+          window.scrollY + board.getBoundingClientRect().top - 140,
+        ),
+      );
+    await page.screenshot({ path: `${out}/${width}-jumbotron-focused.png` });
+    await page
+      .locator(".vq-tonight-board")
+      .screenshot({ path: `${out}/${width}-jumbotron-enclosure.png` });
+    await page.evaluate(() => window.scrollTo(0, 0));
     stage = "sport targets and focus";
     const desks = page.getByRole("navigation", { name: "Sport desks" });
     await page.keyboard.press("Tab");
@@ -293,6 +384,13 @@ try {
     });
     await more.click();
     assert.equal(await page.locator(".vq-tonight-game").count(), 5);
+    assert.deepEqual(
+      await page
+        .locator(".vq-tonight-game")
+        .evaluateAll((links) => links.map((link) => link.getAttribute("href"))),
+      chronologicalHrefs,
+      "expanded mixed-sport board must keep chronological order",
+    );
     assert.equal(
       await page
         .getByRole("button", { name: "Show fewer games" })
