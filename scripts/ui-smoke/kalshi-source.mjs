@@ -211,6 +211,9 @@ try {
     };
     const assertRetained = async (card) => {
       await card.waitFor();
+      // A visible card can still sit beneath the document-load welcome overlay.
+      // Wait for its real dismissal so assertions and captures match what users see.
+      await page.locator(".vq-brand-opening").waitFor({ state: "hidden" });
       assert.equal(
         await card
           .locator(".ruby-source-link p")
