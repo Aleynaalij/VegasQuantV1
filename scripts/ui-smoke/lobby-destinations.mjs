@@ -30,6 +30,140 @@ function token(id) {
     },
   };
 }
+
+async function verifyCombinedRoutes() {
+  for (const width of [360, 390, 1280]) {
+    const ctx = await browser.newContext({
+      viewport: { width, height: 844 },
+      reducedMotion: "reduce",
+    });
+    let privateRequests = [];
+    await ctx.route("**/rest/v1/**", async (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (
+        /\/(community_feed|community_stories|member_parlays|published_leg_catalog)$/.test(
+          path,
+        )
+      )
+        privateRequests.push(path);
+      let data = [];
+      if (path.endsWith("membership_status"))
+        data = { allowed: false, admin: false };
+      if (path.endsWith("community_story_clock"))
+        data = { server_now: new Date().toISOString() };
+      await route.fulfill({ json: data });
+    });
+    const page = await ctx.newPage();
+    page.setDefaultTimeout(15000);
+    await page.goto(base + "/");
+    const heading = page.getByRole("heading", {
+      name: "Every game. One clear read.",
+      exact: true,
+    });
+    await heading.waitFor();
+    await page.locator(".vq-brand-opening").waitFor({ state: "hidden" });
+    assert.equal(
+      await page.locator('.sport-switch [aria-current="page"]').count(),
+      0,
+      "neutral lobby must not select NFL",
+    );
+    assert.equal(
+      privateRequests.length,
+      0,
+      "signed-out lobby must not fetch private member content",
+    );
+    assert.equal(await page.locator(".leg-model").count(), 0);
+    assert.ok(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth + 1,
+      ),
+      "lobby must not overflow",
+    );
+    await page.screenshot({ path: `${out}/${width}-neutral-lobby.png` });
+    for (const sport of ["nfl", "nba", "nhl", "ncaab"]) {
+      await page.locator(`.sport-switch a[data-sport="${sport}"]`).click();
+      await page.waitForURL(new RegExp("/" + sport + "(?:[?#]|$)"));
+      await page
+        .locator(`.sport-switch a[data-sport="${sport}"][aria-current="page"]`)
+        .waitFor();
+      await page.locator('a[href="/"]:visible').first().click();
+      await heading.waitFor();
+      assert.equal(
+        await page.locator('.sport-switch [aria-current="page"]').count(),
+        0,
+      );
+    }
+    const response = await ctx.request.get(
+      base + "/?game=sample-sea-den-2026-10-15&tag=a&tag=b&saved=sample-id",
+      { maxRedirects: 0 },
+    );
+    assert.equal(
+      response.status(),
+      308,
+      "legacy game link must use a real permanent redirect",
+    );
+    const target = new URL(response.headers().location, base);
+    assert.equal(target.pathname, "/nfl");
+    assert.deepEqual(target.searchParams.getAll("tag"), ["a", "b"]);
+    assert.equal(target.searchParams.get("saved"), "sample-id");
+    assert.equal(target.hash, "#home-games");
+    await page.goto(
+      base + "/?game=sample-sea-den-2026-10-15&tag=a&tag=b#home-games",
+    );
+    await page.waitForURL(/\/nfl\?.*game=sample-sea-den-2026-10-15/);
+    assert.deepEqual(new URL(page.url()).searchParams.getAll("tag"), [
+      "a",
+      "b",
+    ]);
+    // Loading a hash-only bookmark must preserve its non-game query identity.
+    await page.goto(base + "/?tag=a&tag=b#home-games");
+    await page.waitForURL(/\/nfl\?.*tag=a.*#home-games/);
+    assert.deepEqual(
+      new URL(page.url()).searchParams.getAll("tag"),
+      ["a", "b"],
+      "legacy hash redirect must preserve query identity",
+    );
+    // Hash-only changes in an already-mounted lobby must work, including browser history.
+    await page.goto(base + "/?from=existing");
+    await heading.waitFor();
+    await page.evaluate(() => {
+      window.location.hash = "home-games";
+    });
+    await page.waitForURL(/\/nfl\?from=existing#home-games/);
+    await page.goBack();
+    await heading.waitFor();
+    assert.equal(
+      new URL(page.url()).pathname,
+      "/",
+      "Back from a replaced hash destination must not loop",
+    );
+    await page.goForward();
+    await page.waitForURL(/\/nfl\?from=existing#home-games/);
+    await page.goto(base + "/community?build=1");
+    await page.waitForURL(/\/parlays/);
+    await page.getByText(/Sign in to build a lay/).waitFor();
+    await page.goto(
+      base + "/community?saved=11111111-1111-4111-8111-111111111111",
+    );
+    await page.waitForURL(/\/parlays\?saved=11111111/);
+    await page.goto(
+      base + "/feed?view=latest&release=sample-release#release-sample-release",
+    );
+    assert.equal(
+      new URL(page.url()).searchParams.get("release"),
+      "sample-release",
+    );
+    assert.equal(new URL(page.url()).hash, "#release-sample-release");
+    await page
+      .getByRole("heading", { name: "Published research", exact: true })
+      .waitFor();
+    console.log(
+      `PASS combined neutral/sport/legacy query+hash/history/private entry at ${width}px`,
+    );
+    await ctx.close();
+  }
+}
+
 try {
   for (const width of [360, 390, 1280]) {
     const ctx = await browser.newContext({
@@ -436,6 +570,7 @@ try {
     );
     await ctx.close();
   }
+  if (process.env.LOBBY_COMBINED === "1") await verifyCombinedRoutes();
 } finally {
   await browser.close();
 }
