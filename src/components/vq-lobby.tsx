@@ -54,7 +54,7 @@ function LegacyHashForward() {
  * It belongs to no sport (no chip selected, no NFL-only claims) and shows only real data: games come
  * from VQ Tonight's checked schedules and the record card appears only when the record is public.
  */
-export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
+export default function VqLobby({ nflGames, nflUnavailable = false }: { nflGames: Game[]; nflUnavailable?: boolean }) {
   return (
     <Shell active="lobby">
       <LegacyHashForward />
@@ -109,7 +109,7 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
       <CommunityStories placement="lobby" />
 
       <SectionBoundary name="VQ Tonight">
-        <VqTonight nflGames={nflGames} presentation="skybox" />
+        <VqTonight nflGames={nflGames} nflUnavailable={nflUnavailable} presentation="skybox" />
       </SectionBoundary>
 
       <LobbyIntelligence />

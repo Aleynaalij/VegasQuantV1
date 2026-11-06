@@ -21,5 +21,5 @@ export default async function Home({
     permanentRedirect(`/nfl?${params.toString()}#home-games`);
   }
   const desk = await getDeskOrEmpty();
-  return <VqLobby nflGames={desk.games} />;
+  return <VqLobby nflGames={desk.games} nflUnavailable={Boolean(desk.unavailable)} />;
 }

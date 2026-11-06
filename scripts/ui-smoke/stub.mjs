@@ -32,6 +32,9 @@ const posts = [
   { id: "w1", game: null, game_id: null, category: "Decision", title: "Sample winning ticket", summary: "Sample.", matchup: "Ravens @ Falcons", away_code: "BAL", home_code: "ATL", market_label: "zone-win:ravens-falcons-full5-20261011", why_watch: "Sample.", caution: "Sample.", next_check: "Sample.", source_url: "https://example.com", source_at: NOW, created_at: "2026-10-13T12:00:00Z" },
   { id: "f1", game: { slug: games[0].slug }, game_id: "g1", category: "Injury watch", title: "Sample Seahawks–Broncos injury update", summary: "Sample summary.", matchup: "Seahawks @ Broncos", away_code: "SEA", home_code: "DEN", market_label: "Sample market", why_watch: "Sample.", caution: "Sample.", next_check: "Sample.", source_url: "https://example.com", source_at: NOW, created_at: NOW },
 ];
+// Test-only switch for server-rendered failures (the browser cannot intercept server reads):
+// GET /__stub/desk?fail=1 makes desk_data fail until GET /__stub/desk?fail=0.
+let deskFails = false;
 const json = (res, body, status = 200) => { res.statusCode = status; res.setHeader("Content-Type", "application/json"); res.end(JSON.stringify(body)); };
 http.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -40,7 +43,8 @@ http.createServer((req, res) => {
   if (req.method === "OPTIONS") return res.end();
   const u = decodeURIComponent(req.url || "");
   const rpc = (name) => u.startsWith(`/rest/v1/rpc/${name}`);
-  if (rpc("desk_data")) return json(res, desk);
+  if (u.startsWith("/__stub/desk")) { deskFails = u.includes("fail=1"); return json(res, { deskFails }); }
+  if (rpc("desk_data")) return deskFails ? json(res, { message: "synthetic desk failure" }, 500) : json(res, desk);
   if (rpc("matchup_directory")) return json(res, games.map((game) => ({ game, analysis: null, market: null })));
   if (rpc("public_research_status")) return json(res, { updated_at: NOW, games: [], results: [{ id: "r1", game: "BUF @ LAR", published_at: pick.created_at, selection: pick.selection, odds: -110, result: "WIN", profit_cents: 1818, stake_cents: 2000, closing_recorded: false }] });
   if (rpc("membership_status")) return json(res, { allowed: true, admin: false, member_code: "SAMPLE" });
