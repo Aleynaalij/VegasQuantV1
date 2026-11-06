@@ -31,13 +31,15 @@ const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { exec
 const failures = [];
 const evidenceRoot = process.argv[2] || "/tmp/story-lifetime-evidence";
 await (await import("node:fs/promises")).mkdir(evidenceRoot, { recursive: true });
-async function open(name, { width = 390, detail = null, detailStatus = 200, readIds = null, plan = null, expiry = false, freeze = false, clockFailure = false } = {}, run) {
+async function open(name, { width = 390, detail = null, detailStatus = 200, readIds = null, plan = null, expiry = false, freeze = false, clockFailure = false, single = false } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   const baseTime = Date.UTC(2026, 9, 14, 2);
-  const rows = expiry ? posts.map((p, i) => ({ ...p, created_at: new Date(baseTime - 86400000 + (i + 1) * 5000).toISOString() })) : posts;
-  const rail = expiry ? activity.map(a => ({ ...a, created_at: rows.find(p => p.id === a.post_id).created_at })) : activity;
+  const rows = single ? [posts[0]] : expiry ? posts.map((p, i) => ({ ...p, created_at: new Date(baseTime - 86400000 + (i + 1) * 5000).toISOString() })) : posts;
+  const rail = single ? [{ ...activity[0], post_id: rows[0].id, created_at: rows[0].created_at }] : expiry ? activity.map(a => ({ ...a, created_at: rows.find(p => p.id === a.post_id).created_at })) : activity;
+  const clockSamples = [];
   await ctx.route("**/rest/v1/rpc/community_story_clock*", async r => {
     const elapsed = await r.request().frame().evaluate(() => performance.now()).catch(() => 0);
+    clockSamples.push({ elapsed, failure: clockFailure });
     return clockFailure ? r.fulfill({ status: 500, json: { message: "Synthetic clock failure" } }) : r.fulfill({ json: { version: 1, server_now: new Date(baseTime + elapsed).toISOString() } });
   });
   if (readIds) await ctx.addInitScript(({ uid, ids }) => { if (!sessionStorage.getItem("vq-smoke-read-set")) { localStorage.setItem(`vq-community-read:${uid}`, JSON.stringify(ids)); sessionStorage.setItem("vq-smoke-read-set", "1"); } }, { uid: UID, ids: readIds });
@@ -101,6 +103,8 @@ async function open(name, { width = 390, detail = null, detailStatus = 200, read
     await run({ page, fail, ctx });
   } catch (e) {
     fail(`threw · ${String(e).split("\n")[0].slice(0, 200)} @ ${(e.stack || "").match(/story-viewer\.mjs:(\d+)/)?.[1] ?? "?"}`);
+    console.error(JSON.stringify({ name, clockSamples, visible: await page.locator("dialog.story-viewer").innerText().catch(() => "no viewer") }));
+    await page.screenshot({ path: `${evidenceRoot}/failure-${name.replace(/[^a-zA-Z0-9]/g, "-").slice(0,90)}.png`, fullPage: true }).catch(() => {});
   }
   if (errors.length) fail(`page error · ${errors[0].slice(0, 160)}`);
   console.log(`${failures.length > before ? "FAIL" : "ok  "} ${name}`);
@@ -430,7 +434,7 @@ await open("hidden content stays hidden until resume obtains a new clock", {}, a
   await page.waitForTimeout(100);
   if (await viewer(page).locator(".story-post").count()) fail("resume exposed content before clock validation");
 });
-await open("lease expiry and resume resync before displaying content", { freeze: true }, async ({ page, fail, ctx }) => {
+await open("lease expiry and resume resync before displaying content", { freeze: true, single: true }, async ({ page, fail, ctx }) => {
   await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
   await viewer(page).getByText("SampleAlpha post 1").waitFor();
   // Revoke the clock endpoint: the current lease expires, with no new trusted anchor.
