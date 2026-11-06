@@ -239,10 +239,18 @@ try {
           await page
             .getByText("Full ledger, leg board & audit", { exact: false })
             .click();
-          await page
-            .getByLabel("Filter", { exact: true })
-            .selectOption("Losses");
-          await page.getByLabel("Filter", { exact: true }).selectOption("All");
+          const resultFilter = page.locator(
+            ".admin-section .filter-bar .field select",
+          );
+          assert.equal(
+            await resultFilter.count(),
+            1,
+            "One archived result filter",
+          );
+          await resultFilter.selectOption("Losses");
+          assert.equal(await resultFilter.inputValue(), "Losses");
+          await resultFilter.selectOption("All");
+          assert.equal(await resultFilter.inputValue(), "All");
           await page.screenshot({
             path: path.join(out, `history-admin-${width}.png`),
             fullPage: true,
