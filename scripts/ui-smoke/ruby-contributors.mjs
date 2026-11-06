@@ -150,6 +150,10 @@ for (const { width, photoOnly } of [
   }));
   await page.route("**/rest/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (/\/rpc\/[^/]*kalshi/i.test(path)) {
+      kalshiRequests.push(route.request().url());
+      return route.fulfill({ status: 503, json: { code: "KALSHI_PAUSED" } });
+    }
     let body;
     if (path.endsWith("/community_profiles")) {
       const profile = {
@@ -280,23 +284,14 @@ for (const { width, photoOnly } of [
     });
   });
   let uploadedPhoto = null;
-  let kalshiTexts = null;
-  await page.route("**/api/kalshi", (route) => {
-    const body = route.request().postDataJSON();
-    kalshiTexts = body.texts;
-    return route.fulfill({
-      contentType: "application/json",
-      body: JSON.stringify({
-        results: [],
-        text_results: body.texts.map((t, i) => ({
-          key: `text:${i}`,
-          label: t,
-          url: null,
-          status: "NO_MATCH",
-        })),
-      }),
-    });
-  });
+  const kalshiRequests = [];
+  await ctx.route(
+    /https?:\/\/[^/]*kalshi\.com\/|\/api\/kalshi(?:[/?]|$)|\/rpc\/[^/?]*kalshi/i,
+    (route) => {
+      kalshiRequests.push(route.request().url());
+      return route.fulfill({ status: 503, json: { code: "KALSHI_PAUSED" } });
+    },
+  );
   await page.route("**/api/community/photo?post=*", (route) => {
     uploadedPhoto = route.request().postDataBuffer();
     return route.fulfill({
@@ -328,8 +323,15 @@ for (const { width, photoOnly } of [
   await go(page, base + "/nfl");
   const shortcut = page.getByRole("link", { name: "Submit a Lay" });
   await shortcut.waitFor();
-  assert.equal(await shortcut.getAttribute("href"), "/community?view=vip#submit-lay");
-  assert.equal(await page.locator(".ruby-submit-drawer").count(), 0, "no submission form on the NFL desk");
+  assert.equal(
+    await shortcut.getAttribute("href"),
+    "/community?view=vip#submit-lay",
+  );
+  assert.equal(
+    await page.locator(".ruby-submit-drawer").count(),
+    0,
+    "no submission form on the NFL desk",
+  );
   await go(page, base + "/community?view=vip");
   const submissionDrawer = page.locator(".ruby-submit-drawer");
   await submissionDrawer.waitFor();
@@ -346,6 +348,8 @@ for (const { width, photoOnly } of [
     .locator(".ruby-submit-content")
     .getByRole("button", { name: "Submit today’s lay" })
     .click();
+  assert.equal(await page.getByLabel("Paste Kalshi link").count(), 0);
+  assert.equal(await page.locator('input[name="source_link"]').count(), 0);
   if (photoOnly) {
     assert.equal(
       await page
@@ -391,7 +395,10 @@ for (const { width, photoOnly } of [
   } else {
     await page.getByText("Add details · optional", { exact: true }).click();
     // Scoped to the form: the contributor area (The Zone) has its own Sport filter.
-    await page.locator(".ruby-modal").getByLabel("Sport", { exact: true }).selectOption("NBA");
+    await page
+      .locator(".ruby-modal")
+      .getByLabel("Sport", { exact: true })
+      .selectOption("NBA");
     await page.getByLabel("Card title").fill("Sample Ruby drop");
     await page
       .getByLabel("Your legs")
@@ -500,40 +507,10 @@ for (const { width, photoOnly } of [
     .locator("dialog[open]")
     .getByRole("button", { name: "Cancel" })
     .click();
-  // Kalshi is offered beside Gambly: typed legs are checked for an exact market; a
-  // screenshot-only lay (or no exact match) can still browse Kalshi.
-  await page
-    .locator(".ruby-card.ruby-diamond .ruby-gambly")
-    .getByRole("button", { name: "Kalshi ↗", exact: true })
-    .click();
-  const kalshi = page.locator("dialog[open]");
-  await kalshi
-    .getByRole("heading", { name: "Open selections on Kalshi" })
-    .waitFor();
-  await kalshi
-    .getByText(
-      photoOnly ? "No typed legs to match." : "No exact Kalshi market",
-      {
-        exact: false,
-      },
-    )
-    .waitFor();
-  if (photoOnly) assert.equal(kalshiTexts, null);
-  else {
-    assert.deepEqual(kalshiTexts, [
-      "Sample X 20+ points",
-      "Sample Y 5+ rebounds",
-    ]);
-    // Kalshi can't take a ticket, so the typed legs are copied for its search.
-    await kalshi.getByText("Your legs are copied.", { exact: false }).waitFor();
-    assert.equal(
-      await page.evaluate(() => navigator.clipboard.readText()),
-      "Sample X 20+ points\nSample Y 5+ rebounds",
-    );
-  }
-  await kalshi.getByLabel(/I am 21\+/).check();
-  await kalshi.getByRole("link", { name: "Browse Kalshi ↗" }).waitFor();
-  await kalshi.getByRole("button", { name: "Close" }).click();
+  // Paused everywhere, including both typed and screenshot-only cards.
+  assert.equal(await page.getByRole("button", { name: /Kalshi/i }).count(), 0);
+  assert.equal(await page.locator('a[href*="kalshi.com"]').count(), 0);
+  assert.deepEqual(kalshiRequests, [], "paused Kalshi made a request");
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth + 1,
@@ -644,6 +621,7 @@ for (const { width, photoOnly } of [
   await go(page, base + "/nfl"); // contributor pieces are on the NFL desk
   assert.equal(await page.locator(".ruby-board").count(), 0);
   assert.deepEqual(errors, []);
+  assert.deepEqual(kalshiRequests, [], "paused Kalshi made a request");
   console.log(
     `PASS Ruby composer, preview, NBA member submission, daily lock, five templates and Zone link @${width} photoOnly=${photoOnly}`,
   );

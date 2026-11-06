@@ -1,5 +1,7 @@
 # Open published selections on Kalshi
 
+Current app preparation: Kalshi is temporarily paused. See [the pause and release runbook](kalshi-pause.md). The implementation below is preserved for history and a separately approved re-enablement; code presence is not live availability.
+
 Cards and saved member parlays offer **Find on Kalshi** below Gambly. Lookup is read-only and on demand; no Kalshi account, trading key, order submission or price conversion is involved. Users confirm eligibility before opening external links.
 
 The authenticated `/api/kalshi` route reads selection snapshots from `published_legs` or immutable `nfl_analyst_double_ups` snapshots and the authoritative `games` row. It never trusts client-supplied player, target or matchup data. Currently supported: upcoming NFL full-game integer N+ passing yards, receiving yards, rushing yards and receptions. Other markets, closed/graded selections, started games and unverified context produce no match.
