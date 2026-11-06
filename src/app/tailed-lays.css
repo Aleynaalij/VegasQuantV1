@@ -80,3 +80,12 @@ a.vq-tailed-item small {
 .vq-tailed-empty p {
   margin: 0;
 }
+.vq-tailed-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.vq-tailed-missing {
+  margin: 0;
+  color: var(--muted);
+}
