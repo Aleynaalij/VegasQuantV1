@@ -49,6 +49,14 @@ rates in every late band (#144 6484160451).
 Unchanged: play contexts and templates, stop-duration and non-followed runoff tables, clock rules,
 OT using h2 support, scoring corrections, the reload fix and phantom-stop correction.
 
+## Amendment A1 (before any fit, 2026-11-06)
+Found while porting unit fixtures, before any fit or simulation: nflverse records **post-timeout**
+budgets on a compound row (a run/pass that carries the timeout called after it). Keyed as recorded,
+the caller can appear to have had no timeout. Both families now key a compound row's pre-snap state
+with `pre_timeout_budgets` (caller +1), the correction the engine already applies to compound play
+templates since 0.2.7. Separate `no_play` timeout rows are unchanged. The support audit is re-run on
+this definition and committed with the amendment.
+
 ## Acceptance (unchanged)
 - 10,000 runs, seed 1701, old OT, the full requested denominator.
 - All four scoring gates and all five diagnostics, with the corrected source counter for the 9th,

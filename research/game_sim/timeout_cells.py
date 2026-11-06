@@ -15,9 +15,19 @@ Each cell is categorical over {no call, offense call, defense call} for one elig
 import argparse, csv, gzip, hashlib, io, json
 from collections import Counter, defaultdict
 from pathlib import Path
-from .model import source_state, timeout_contexts, recovered_timeout_state, training_events, other
+from dataclasses import replace
+from .model import source_state, timeout_contexts, recovered_timeout_state, training_events, other, pre_timeout_budgets, COMPOUND_PLAY_TYPES
 
 MIN = 30
+
+
+def presnap_state(row):
+    """Pre-snap state; a compound row (a play carrying its following timeout) records post-timeout
+    budgets, so the caller's timeout is restored (amendment A1, pre_timeout_budgets)."""
+    s = source_state(row)
+    if row.get('timeout') == '1' and row.get('play_type') in COMPOUND_PLAY_TYPES and s.phase == 'scrimmage':
+        s = replace(s, **pre_timeout_budgets(row))
+    return s
 
 
 def stop_band(s):
@@ -138,6 +148,12 @@ def tabulate(path):
     digest = hashlib.sha256(raw).hexdigest()
     body = gzip.decompress(raw) if raw[:2] == b'\x1f\x8b' else raw
     rows = list(csv.DictReader(io.StringIO(body.decode('utf-8-sig'))))
+    running, stopped, coverage = tabulate_rows(rows)
+    return running, stopped, coverage, digest
+
+
+def tabulate_rows(rows):
+    """(running cells, stopped cells, coverage) from source rows, coarsened floors included."""
     running, stopped = defaultdict(Counter), defaultdict(Counter)
     coverage = Counter()
     consumed = set()  # snap rows whose pre-snap decision a no-call running play consumed
@@ -146,7 +162,7 @@ def tabulate(path):
         if row.get('season_type') != 'REG':
             continue
         try:
-            s = source_state(row)
+            s = presnap_state(row)
         except (ValueError, TypeError, KeyError):
             continue
         ok, followed, caller, cont = running_play(rows, i, row, s)
@@ -189,7 +205,7 @@ def tabulate(path):
             if timeout:
                 s, caller = recovered_timeout_state(rows, i, row)
             else:
-                s, caller = source_state(row), None
+                s, caller = presnap_state(row), None
             if s.period > 4 or s.phase != 'scrimmage':
                 continue
         except (ValueError, TypeError, KeyError) as e:
@@ -207,7 +223,7 @@ def tabulate(path):
 
     add_coarse(running, 'running')
     add_coarse(stopped, 'stopped')
-    return running, stopped, coverage, digest
+    return running, stopped, coverage
 
 
 def audit(path):
