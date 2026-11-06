@@ -510,15 +510,21 @@ for(const event of ["SIGNED_OUT","SIGNED_IN"]) await open(`delayed old-account d
  if(otherReads.length) fail("late detail polluted new-account read state");
 });
 
-await open("delayed old-account clock cannot restore the viewer after sign-out", {}, async({page,fail,ctx})=>{
+for(const event of ["SIGNED_OUT","SIGNED_IN"]) await open(`delayed old-account clock cannot restore the viewer after ${event}`, {}, async({page,fail,ctx})=>{
  let release;const pending=new Promise(resolve=>{release=resolve;});
  await ctx.route("**/rest/v1/rpc/community_story_clock*",async r=>{await pending;return r.fulfill({json:{version:1,server_now:"2026-10-14T02:00:00Z"}}).catch(()=>{});});
  await page.getByRole("button",{name:/SampleAlpha's recent community posts/}).click();
  const other=await ctx.newPage();await other.goto(BASE+"/methodology");
- await other.evaluate(()=>{localStorage.removeItem("sb-127-auth-token");new BroadcastChannel("sb-127-auth-token").postMessage({event:"SIGNED_OUT",session:null});});
+ await other.evaluate(({event,uid})=>{
+  const session=event==="SIGNED_OUT"?null:{access_token:"other",refresh_token:"other",expires_at:Math.floor(Date.now()/1000)+86400,token_type:"bearer",user:{id:uid,aud:"authenticated",role:"authenticated",app_metadata:{},user_metadata:{}}};
+  if(session)localStorage.setItem("sb-127-auth-token",JSON.stringify(session));else localStorage.removeItem("sb-127-auth-token");
+  new BroadcastChannel("sb-127-auth-token").postMessage({event,session});
+ },{event,uid:B});
  release();await page.waitForTimeout(250);
  if(await page.locator("dialog.story-viewer[open]").count())fail("late old-account clock restored viewer");
  if((await read(page)).length)fail("late old-account clock wrote read state");
+ const otherReads=await page.evaluate(uid=>JSON.parse(localStorage.getItem(`vq-community-read:${uid}`)||"[]"),B);
+ if(otherReads.length) fail("late old-account clock polluted new-account read state");
 });
 await browser.close();
 if (failures.length) {
