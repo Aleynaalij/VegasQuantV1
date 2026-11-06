@@ -149,7 +149,7 @@ try {
     });
     const page = await ctx.newPage();
     page.setDefaultTimeout(15000);
-    await page.goto(base + "/nfl", { waitUntil: "networkidle" }); // contributor drawer is on the NFL desk
+    await page.goto(base + "/community?view=vip", { waitUntil: "networkidle" }); // Submit a Lay lives in the contributor area
     await page.evaluate(() =>
       document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
     );
@@ -303,7 +303,7 @@ try {
     assert.equal(outbound,1,"Cancel/Remove navigated externally");
     await fs.writeFile(`${out}/${width}-card-controls.json`,JSON.stringify({width,controls:interactionEvidence,cancelClearedEligibility:true,removeRestoreSequence:hideCalls.map(p=>p.p_hidden),sourceRetained:mine.source_link===canonical,outbound},null,2));
     console.log(`${width}px card Cancel/Remove/Restore ordinary clicks passed; controls clear of fixed navigation`);
-    await page.goto(base + "/nfl", { waitUntil: "networkidle" }); // contributor drawer is on the NFL desk
+    await page.goto(base + "/community?view=vip", { waitUntil: "networkidle" }); // Submit a Lay lives in the contributor area
     await page.locator(".ruby-submit-drawer summary").click();
     await page.getByRole("button", { name: "Submit today’s lay", exact: true }).click();
     // Committed screenshot-plus-source insert with a lost response takes the stored-card recovery path.

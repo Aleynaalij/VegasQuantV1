@@ -370,6 +370,13 @@ function Composer({
   onPublished: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  // "Submit a Lay" from a consumer page arrives as #submit-lay: open the drawer and bring it into view.
+  const drawer = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    if (window.location.hash !== "#submit-lay" || !drawer.current) return;
+    drawer.current.open = true;
+    drawer.current.scrollIntoView({ block: "start" });
+  }, []);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [title, setTitle] = useState("");
@@ -556,10 +563,11 @@ function Composer({
     <section
       className={`ruby-composer-home ruby-submit-compact ruby-${contributor.theme}`}
     >
-      <details className="ruby-submit-drawer">
-        <summary aria-label="Submit today’s lay options">
+      {/* The contributor area's "Submit a Lay" action; #submit-lay opens it directly. */}
+      <details className="ruby-submit-drawer" id="submit-lay" ref={drawer}>
+        <summary aria-label="Submit a Lay">
           <Gem size={16} aria-hidden="true" />
-          <span>Submit today’s lay</span>
+          <span>Submit a Lay</span>
           <small>{state.submission_count || 0} / 3</small>
           <ChevronRight
             className="ruby-submit-chevron"
@@ -1083,15 +1091,16 @@ export default function RubyHub({
         )}
       </div>
     );
+  // Consumer pages (the NFL desk) never carry the submission form: an authorized contributor gets
+  // one role-gated Submit a Lay action that opens the form in the contributor area (VIP lays).
   if (composerOnly)
     return (
       <div className="ruby-hub">
         {state.contributor ? (
-          <Composer
-            key={state.user_id}
-            state={state}
-            onPublished={() => void refresh()}
-          />
+          <Link className="ruby-submit-shortcut" href="/community?view=vip#submit-lay">
+            <Gem size={16} aria-hidden="true" /> Submit a Lay
+            <ArrowUpRight size={16} aria-hidden="true" />
+          </Link>
         ) : null}
         {state.due?.length ? (
           <ResultPrompt

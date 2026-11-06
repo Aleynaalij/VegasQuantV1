@@ -271,6 +271,7 @@ export function Shell({
               {(
                 {
                   lobby: "Home",
+                  lays: "Your lays",
                   home: `${SPORTS[sport].label} desk`,
                   game: "NFL games",
                   community: "The Zone",
