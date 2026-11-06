@@ -91,10 +91,11 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
             );
           })}
         </nav>
-        <a className="vq-lobby-all-sports" href="#vq-tonight">
+        {/* Keep hash entries in the App Router's history so Back from a game restores Home. */}
+        <Link className="vq-lobby-all-sports" href="#vq-tonight">
           <Grid2X2 size={20} aria-hidden="true" /> All sports{" "}
           <ArrowRight size={17} aria-hidden="true" />
-        </a>
+        </Link>
       </section>
 
       <SectionBoundary name="VQ Tonight">

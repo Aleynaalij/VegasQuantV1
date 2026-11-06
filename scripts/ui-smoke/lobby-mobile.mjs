@@ -31,6 +31,7 @@ let activeWidth;
 let stage = "starting";
 const navigationEvents = [];
 const pageErrors = [];
+const historySnapshots = [];
 try {
   for (const [width, height] of [
     [360, 800],
@@ -108,6 +109,73 @@ try {
         })
         .waitFor();
       await page.locator(".vq-brand-opening").waitFor({ state: "hidden" });
+    };
+    const recordHistory = async () => {
+      const snapshot = await page.evaluate(() => ({
+        url: window.location.href,
+        length: window.history.length,
+        state: window.history.state,
+      }));
+      historySnapshots.push({ width, stage, ...snapshot });
+      return snapshot;
+    };
+    const expectLobby = async (url) => {
+      await page.waitForURL(url);
+      await page
+        .getByRole("heading", {
+          name: "Your sports research starts here.",
+          exact: true,
+        })
+        .waitFor();
+      await page
+        .getByRole("heading", { name: "VQ Tonight", exact: true })
+        .waitFor();
+      assert.equal(
+        await page.locator(".nba-matchup-page").count(),
+        0,
+        "history must restore lobby DOM, not only its URL",
+      );
+      assert.equal(
+        await page.locator('.sport-switch [aria-current="page"]').count(),
+        0,
+        "restored lobby is neutral",
+      );
+      await recordHistory();
+    };
+    const verifyGameHistory = async (label) => {
+      stage = `${label}: open exact game`;
+      const returnUrl = page.url();
+      await page
+        .getByRole("button", { name: "Show all 5 games", exact: true })
+        .waitFor();
+      const game = page.locator(".vq-tonight-game").first();
+      const href = await game.getAttribute("href");
+      const selected = nba.find(
+        (fixture) => href === `/nba/games/${fixture.slug}`,
+      );
+      assert.ok(selected, "game link must identify an actual fixture");
+      const gameUrl = new URL(href, base).href;
+      const expectGame = async () => {
+        await page.waitForURL(gameUrl);
+        await page
+          .getByRole("heading", {
+            name: `${selected.away_team} @ ${selected.home_team}`,
+            exact: true,
+          })
+          .waitFor();
+        await recordHistory();
+      };
+      await game.click();
+      await expectGame();
+      stage = `${label}: Back restores exact lobby content`;
+      await page.goBack();
+      await expectLobby(returnUrl);
+      stage = `${label}: Forward restores exact game content`;
+      await page.goForward();
+      await expectGame();
+      stage = `${label}: second Back restores exact lobby content`;
+      await page.goBack();
+      await expectLobby(returnUrl);
     };
     stage = "initial lobby title";
     await open();
@@ -194,8 +262,26 @@ try {
         "keyboard focus must be visible",
       );
     }
-    stage = "all sports and schedule expansion";
+    await verifyGameHistory("ordinary no-hash journey");
+    const plainLobbyUrl = page.url();
+    stage = "All sports creates restorable hash entry";
+    await recordHistory();
     await page.getByRole("link", { name: "All sports", exact: true }).click();
+    await page.waitForURL(new URL("#vq-tonight", plainLobbyUrl).href);
+    const hashEntry = await recordHistory();
+    assert.ok(
+      hashEntry.state?.__NA,
+      "All sports must retain the App Router's history state",
+    );
+    stage = "Repeated All sports keeps the same history entry";
+    await page.getByRole("link", { name: "All sports", exact: true }).click();
+    const repeatedHashEntry = await recordHistory();
+    assert.equal(
+      repeatedHashEntry.length,
+      hashEntry.length,
+      "repeated All sports clicks must not accumulate history entries",
+    );
+    stage = "all sports and schedule expansion";
     assert.equal(
       new URL(page.url()).hash,
       "#vq-tonight",
@@ -240,41 +326,17 @@ try {
         .getAttribute("href"),
       "/membership",
     );
-    stage = "open exact game";
-    const returnUrl = page.url();
-    const game = page.locator(".vq-tonight-game").first();
-    const href = await game.getAttribute("href");
-    const selected = nba.find(
-      (fixture) => href === `/nba/games/${fixture.slug}`,
-    );
-    assert.ok(selected, "game link must identify an actual fixture");
-    await game.click();
-    await page.waitForURL(new URL(href, base).href);
-    // The destination must finish rendering its actual game, not only push a URL.
-    await page
-      .getByRole("heading", {
-        name: `${selected.away_team} @ ${selected.home_team}`,
-        exact: true,
-      })
-      .waitFor();
-    stage = "Back restores exact lobby URL";
+    await verifyGameHistory("All sports hash journey");
+    const hashLobbyUrl = page.url();
+    stage = "Back through the hash restores the original lobby entry";
     await page.goBack();
-    await page.waitForURL(returnUrl);
-    stage = "Back restores lobby content";
-    await page
-      .getByRole("heading", {
-        name: "Your sports research starts here.",
-        exact: true,
-      })
-      .waitFor();
-    await page
-      .getByRole("heading", { name: "VQ Tonight", exact: true })
-      .waitFor();
-    assert.equal(
-      new URL(page.url()).pathname,
-      "/",
-      "Back returns to the neutral lobby",
-    );
+    await expectLobby(plainLobbyUrl);
+    stage = "Forward restores the hash and lobby together";
+    await page.goForward();
+    await expectLobby(hashLobbyUrl);
+    await page.screenshot({
+      path: `${out}/${width}-arena-history-restored.png`,
+    });
     stage = "empty schedule";
     state = "empty";
     await open();
@@ -325,6 +387,10 @@ try {
     await ctx.close();
   }
   await writeFile(
+    `${out}/history-snapshots.json`,
+    JSON.stringify(historySnapshots, null, 2),
+  );
+  await writeFile(
     `${out}/layout-metrics.json`,
     JSON.stringify(metrics, null, 2),
   );
@@ -341,6 +407,18 @@ try {
     }
   };
   if (activePage && !activePage.isClosed()) {
+    await save("history state", async () => {
+      historySnapshots.push({
+        width: activeWidth,
+        stage,
+        failure: true,
+        ...(await activePage.evaluate(() => ({
+          url: window.location.href,
+          length: window.history.length,
+          state: window.history.state,
+        }))),
+      });
+    });
     await save("viewport screenshot", () =>
       activePage.screenshot({ path: `${prefix}.png`, timeout: 5000 }),
     );
@@ -382,6 +460,7 @@ try {
     error: String(error),
     stack: error?.stack,
     navigationEvents,
+    historySnapshots,
     pageErrors,
     captureErrors,
   };

@@ -1,7 +1,7 @@
 # Lobby follow-up fixes
 
 Base: `0f8433fd53e6ee7f60f6672502915c61e33e8d7d`.
-Draft implementation only. No merge, deployment, migration, permission change, production data mutation, payment, real-member notification or wager.
+Draft implementation only. No merge, production deployment, migration, permission change, production data mutation, payment, real-member notification or wager. Vercel may build its configured preview from the draft branch.
 
 ## Changes
 
