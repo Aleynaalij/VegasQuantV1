@@ -209,7 +209,7 @@ for (const width of [360, 390, 1280]) {
       await page.waitForURL(/\/parlays/);
       await page.waitForLoadState("networkidle");
       const builder = await step(log, page, "builder", "Opened the builder from Home");
-      if (!builder.actions.some((a) => /Save my parlay/.test(a))) log.findings.push("Builder opened from Home does not show the started lay with a save action.");
+      if (!builder.actions.some((a) => /Save lay/.test(a))) log.findings.push("Builder opened from Home does not show the started lay with a save action.");
       if (/\b1 legs\b/.test(await page.evaluate(() => document.body.innerText))) log.findings.push('Builder says "1 legs".');
       const dead = await page.locator('main a[href="/records"]').count();
       if (dead) log.findings.push(`${dead} "Original publication" link(s) point to /records, which does not exist (404).`);
@@ -218,10 +218,10 @@ for (const width of [360, 390, 1280]) {
       if (bare) log.findings.push(`${bare} "Original publication" link(s) use a bare /feed#…, which redirects to the Zone and loses the release.`);
       const want = `/feed?view=latest&release=${RELEASE}#release-${RELEASE}`;
       if (!(await page.locator(`main a[href="${want}"]`).count())) log.findings.push(`Research-board leg has no "Original publication" link to ${want}.`);
-      const add = page.getByRole("button", { name: "+ Add to parlay", exact: true });
+      const add = page.getByRole("button", { name: "+ Add to lay", exact: true });
       if (await add.count()) await add.first().click();
       await step(log, page, "builder-two-legs", "Added a second leg in the builder");
-      const save = page.getByRole("button", { name: "Save my parlay", exact: true });
+      const save = page.getByRole("button", { name: "Save lay", exact: true });
       if (await save.count()) {
         await save.click();
         await page.waitForTimeout(800);

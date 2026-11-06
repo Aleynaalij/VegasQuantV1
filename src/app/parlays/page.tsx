@@ -4,7 +4,7 @@ import ParlayWorkshop from "@/components/parlay-workshop";
 export const metadata = { title: "My lays | Vegas Quant" };
 export default function Page() {
   return (
-    <Shell active="home">
+    <Shell active="parlays">
       <h1>Lay workshop</h1>
       <Suspense fallback={<p role="status">Loading your lays…</p>}>
         <ParlayWorkshop mode="parlays" />

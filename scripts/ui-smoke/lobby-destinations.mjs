@@ -62,6 +62,7 @@ try {
       creates = 0,
       shares = 0,
       currentOwner = null,
+      inboxMode = "ok",
       excludeSavedFromList = false,
       mine = [];
     await ctx.addInitScript(
@@ -103,7 +104,12 @@ try {
           },
         ];
       if (path.endsWith("notification_inbox"))
-        data = { items: [], snapshot_at: now };
+        data =
+          inboxMode === "null"
+            ? null
+            : inboxMode === "malformed"
+              ? { items: "invalid", snapshot_at: now }
+              : { items: [], snapshot_at: now };
       if (path.endsWith("published_leg_catalog")) {
         catalogCalls++;
         if (catalogFails)
@@ -400,6 +406,25 @@ try {
       );
     }
     await page.screenshot({ path: `${out}/${width}-builder-controls.png` });
+    inboxMode = "null";
+    await page.goto(base + "/notifications");
+    await page
+      .getByText("Notifications could not load. Please retry.", { exact: true })
+      .waitFor();
+    await page.screenshot({ path: `${out}/${width}-inbox-unavailable.png` });
+    inboxMode = "malformed";
+    await page.getByRole("button", { name: "Refresh", exact: true }).click();
+    await page
+      .getByText("Notifications could not load. Please retry.", { exact: true })
+      .waitFor();
+    inboxMode = "ok";
+    await page.getByRole("button", { name: "Refresh", exact: true }).click();
+    await page.locator(".notification-empty").waitFor();
+    assert.match(
+      await page.locator(".notification-empty").innerText(),
+      /all caught up/,
+    );
+    await page.goto(base + "/parlays?build=1");
     await auth(null, "SIGNED_OUT");
     await workshop.getByText(/Sign in to build a lay/).waitFor();
     assert.equal(

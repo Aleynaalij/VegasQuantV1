@@ -107,15 +107,15 @@ async function scenario(name, run) {
 
 // Draft two legs under a title; returns the locators the cases need.
 async function draft(page, title) {
-  await page.getByRole("button", { name: "+ Create parlay", exact: true }).click();
-  await page.getByLabel("Parlay name", { exact: true }).fill(title);
-  const add = page.getByRole("button", { name: "+ Add to parlay", exact: true });
+  await page.getByRole("button", { name: "Build a lay", exact: true }).click();
+  await page.getByLabel("Lay name", { exact: true }).fill(title);
+  const add = page.getByRole("button", { name: "+ Add to lay", exact: true });
   await add.nth(0).click();
   await add.nth(0).click();
   return {
-    save: page.getByRole("button", { name: "Save my parlay", exact: true }),
-    saved: page.getByRole("dialog", { name: "Parlay saved", exact: true }),
-    draftLegs: () => page.getByRole("region", { name: "Your parlay draft", exact: true }).getByRole("button", { name: /^Remove / }).count(),
+    save: page.getByRole("button", { name: "Save lay", exact: true }),
+    saved: page.getByRole("dialog", { name: "Lay saved", exact: true }),
+    draftLegs: () => page.getByRole("region", { name: "Your lay draft", exact: true }).getByRole("button", { name: /^Remove / }).count(),
   };
 }
 const alertText = (page) => page.getByRole("alert").allInnerTexts().then((t) => t.join(" "));
@@ -159,8 +159,8 @@ await scenario("saved but confirmation cannot load: honest message, no duplicate
   await page.goto(BASE + "/parlays", { waitUntil: "networkidle" });
   const cards = page.locator(".workshop-saved > details");
   await cards.first().waitFor();
-  if ((await cards.count()) !== 1) fail(`My parlays shows ${await cards.count()} cards after reload, expected 1`);
-  if (!/Unconfirmed save/.test(await cards.first().innerText())) fail("the saved parlay is missing from My parlays");
+  if ((await cards.count()) !== 1) fail(`My lays shows ${await cards.count()} cards after reload, expected 1`);
+  if (!/Unconfirmed save/.test(await cards.first().innerText())) fail("the saved parlay is missing from My lays");
 });
 
 await scenario("double tap on Save: one parlay, one success dialog", async ({ page, f, fail }) => {
@@ -170,7 +170,7 @@ await scenario("double tap on Save: one parlay, one success dialog", async ({ pa
   await d.saved.waitFor();
   await page.waitForTimeout(1500);
   if (f.mine.length !== 1) fail(`double tap stored ${f.mine.length} parlays`);
-  if ((await page.getByRole("dialog", { name: "Parlay saved", exact: true }).count()) !== 1) fail("more than one success dialog");
+  if ((await page.getByRole("dialog", { name: "Lay saved", exact: true }).count()) !== 1) fail("more than one success dialog");
   if (/already saved/i.test(await d.saved.innerText())) fail('first save of a new parlay says "already saved"');
   console.log(`     (create requests sent: ${f.creates})`);
 });
@@ -197,7 +197,7 @@ await scenario("reopen after reload: the saved card is still there and opens", a
   const d = await draft(page, "Reopen me");
   await d.save.click();
   await d.saved.waitFor();
-  await d.saved.getByRole("button", { name: "View My parlays", exact: true }).click();
+  await d.saved.getByRole("button", { name: "View My lays", exact: true }).click();
   await page.waitForURL(/\/parlays\?saved=/);
   const url = page.url();
   await page.reload({ waitUntil: "networkidle" });
