@@ -197,10 +197,19 @@ await open("a long post waits until it has been read to the end", { long: true }
   await openAlpha(page);
   await run(page, 90000);
   if ((await showing(page)) !== "SampleAlpha post 1") fail("cut off a long post that hadn't been scrolled to its end");
-  await viewer(page).locator(".story-viewer-body").evaluate((el) => el.scrollTo(0, el.scrollHeight));
-  await run(page, 500);
-  // 260 words + legs ≈ 81 s of reading time once the end has been reached.
-  await run(page, 85000);
+  // The browser delivers scroll events on its next real rendering frame, not on the fake clock. On
+  // a slow runner the fast-forward below could finish before that, so the viewer would still see
+  // the post as unread. Dispatch the scroll now and give React real time to apply it first.
+  await viewer(page).locator(".story-viewer-body").evaluate((el) => {
+    el.scrollTo(0, el.scrollHeight);
+    el.dispatchEvent(new Event("scroll"));
+  });
+  await page.waitForTimeout(250);
+  // 260 words + title + legs = 272 words ≈ 83.1 s of reading time once the end has been reached.
+  // Check both sides of it: still up just before, moved on just after (but before post 2's own 6 s).
+  await run(page, 79000);
+  if ((await showing(page)) !== "SampleAlpha post 1") fail(`moved on before the long post's reading time (now "${await showing(page)}")`);
+  await run(page, 7000);
   if ((await showing(page)) !== "SampleAlpha post 2") fail("did not move on after the long post was read");
 });
 
