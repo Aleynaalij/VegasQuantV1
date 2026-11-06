@@ -323,7 +323,8 @@ for (const { width, photoOnly } of [
           body: storedSlip,
         }),
   );
-  await go(page, base + "/");
+  // The contributor drawer is on the NFL desk (/nfl); "/" is the neutral lobby.
+  await go(page, base + "/nfl");
   const submissionDrawer = page.locator(".ruby-submit-drawer");
   await submissionDrawer.waitFor();
   assert.equal(await submissionDrawer.getAttribute("open"), null);
@@ -534,7 +535,7 @@ for (const { width, photoOnly } of [
   );
   // The next day, Home asks about each earlier slip one at a time; results feed the standings.
   reviewing = true;
-  await go(page, base + "/");
+  await go(page, base + "/nfl"); // contributor pieces are on the NFL desk
   const prompt = page.getByRole("region", { name: "Confirm your slip result" });
   await prompt.getByRole("heading", { name: "Did this slip clear?" }).waitFor();
   assert.ok((await prompt.innerText()).includes("Yesterday’s lay"));
@@ -549,7 +550,7 @@ for (const { width, photoOnly } of [
     .waitFor({ state: "detached" });
   assert.equal(reported, "WIN");
   // The standings live only at the bottom of Home for contributors.
-  await go(page, base + "/");
+  await go(page, base + "/nfl"); // contributor pieces are on the NFL desk
   const board = page.locator(".ruby-board");
   await board.waitFor();
   assert.deepEqual(
@@ -633,7 +634,7 @@ for (const { width, photoOnly } of [
       0,
     );
   }
-  await go(page, base + "/");
+  await go(page, base + "/nfl"); // contributor pieces are on the NFL desk
   assert.equal(await page.locator(".ruby-board").count(), 0);
   assert.deepEqual(errors, []);
   console.log(

@@ -25,7 +25,7 @@ const nba = [
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
 const homeLegs = [{ leg_key: "tonight:0", name: "Sample Runner", market: "Full game · 60+ rushing yards", game_id: "g1", quote: null, expires_at: "2026-10-16T00:15:00Z", result: null, copy_text: "Sample Runner 60+ rushing yards", gambly_url: null, why: "w", risk: "r" }];
-async function open(name, { width = 390, signedIn = false, draft = null, empty = false, collegeFailsOnce = false, refresh = null, clockAt = null, nbaCalls = null } = {}, run) {
+async function open(name, { width = 390, signedIn = false, draft = null, empty = false, collegeFailsOnce = false, refresh = null, clockAt = null, nbaCalls = null, path = "/" } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript(({ uid, signedIn, draft }) => {
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -78,7 +78,7 @@ async function open(name, { width = 390, signedIn = false, draft = null, empty =
   try {
     // A deliberately delayed request would hold "networkidle" until it lands, defeating the
     // out-of-order test, so those cases only wait for the page itself.
-    await page.goto(BASE + "/", { waitUntil: nbaCalls ? "load" : "networkidle" });
+    await page.goto(BASE + path, { waitUntil: nbaCalls ? "load" : "networkidle" });
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
     await page.locator(".vq-tonight").waitFor();
     await run({ page, fail });
@@ -128,7 +128,8 @@ await open("signed in with a lay in progress", { signedIn: true, draft: ["k1", "
   if ((await zone.getAttribute("href")) !== "/community") fail("signed-in Zone card does not go to /community");
 });
 
-await open("lay card follows selections on Home without a reload", { signedIn: true }, async ({ page, fail }) => {
+// The game rows live on the NFL desk (/nfl); VQ Tonight renders there too.
+await open("lay card follows selections on the NFL desk without a reload", { signedIn: true, path: "/nfl" }, async ({ page, fail }) => {
   const card = () => tonight(page).locator(".vq-tonight-next a").first();
   if (!/Your lays/.test(await card().innerText())) fail("lay card does not start as Your lays with no draft");
   await page.locator("details.vq-game-row").first().locator("summary").click();
