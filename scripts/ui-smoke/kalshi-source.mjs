@@ -294,8 +294,8 @@ try {
     assert.equal(await card.getByRole("checkbox",{name:/I am 21/}).isChecked(),false,"Cancel retained eligibility confirmation");
     assert.equal(await card.getByRole("link",{name:"Continue to Kalshi ↗"}).count(),0);
     await revealControl(card.getByRole("button",{name:"Remove from The Zone",exact:true}),"card-remove");
-    assert.equal(hideCalls.length,1);assert.equal(hideCalls[0].p_hidden,true);
     await card.getByRole("button",{name:"Restore to The Zone",exact:true}).waitFor();
+    assert.equal(hideCalls.length,1);assert.equal(hideCalls[0].p_hidden,true);
     assert.equal(mine.source_link,canonical,"removal lost original source");
     await card.getByRole("button",{name:"Restore to The Zone",exact:true}).click();
     await card.getByRole("button",{name:"Remove from The Zone",exact:true}).waitFor();
