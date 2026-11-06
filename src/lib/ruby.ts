@@ -73,6 +73,7 @@ export type RubySlip = {
   legs: string[];
   note: string;
   photo_path: string | null;
+  source_link?: string | null;
   sportsbook: string | null;
   reported_odds: number | null;
   created_at: string;
@@ -99,6 +100,7 @@ export type RubyHomeState = {
     revision: number;
     legs: string[];
     photo_path: string | null;
+    source_link?: string | null;
   }[];
   admin?: boolean;
 };

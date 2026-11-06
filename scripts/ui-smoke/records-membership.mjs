@@ -132,6 +132,35 @@ await open("/membership: a failed status check never says the member is on Free,
   if (/couldn.t check your membership/i.test(await text(page))) fail("failure message stays after a successful retry");
 });
 
+// Truthful availability copy across account states; no entitlement changes.
+for (const [name, signedIn, access, status] of [
+  ["signed out", false, {}, 200],
+  ["ordinary member", true, { allowed: true, admin: false, member_code: "S" }, 200],
+  ["status error", true, {}, 500],
+  ["admin", true, { allowed: true, admin: true, member_code: "S" }, 200],
+])
+  await open(`/membership: truthful record and support copy (${name})`, {
+    signedIn, routes: { "**/rest/v1/rpc/membership_status": json(access, status) },
+  }, async ({ page, fail }) => {
+    await page.goto(BASE + "/membership", { waitUntil: "networkidle" });
+    if (process.env.UI_SMOKE_NEGATIVE === "record-promise")
+      await page.evaluate(() => { const p = document.createElement("p"); p.textContent = "the public official record"; document.body.append(p); });
+    const t = await text(page);
+    if (/public\s+official record/i.test(t)) fail("promises public official history");
+    if (!/records are currently restricted to administrators/i.test(t)) fail("missing record access limitation");
+    if (!access.allowed && !/monitored\s+request destination has not yet been confirmed/i.test(t)) fail("missing honest support contact status");
+    await page.screenshot({ path: `/tmp/trust-membership-${name.replaceAll(" ", "-")}.png`, fullPage: true });
+  });
+
+for (const path of ["/history", "/performance"])
+  for (const [name, signedIn, admin] of [["signed out", false, false], ["member", true, false], ["admin", true, true]])
+    await open(`${path}: unchanged ${name} access`, { signedIn, routes: { "**/rest/v1/rpc/is_admin": json(admin) } }, async ({ page, fail }) => {
+      await page.goto(BASE + path, { waitUntil: "networkidle" });
+      if (admin) {
+        if (/Records are private/.test(await text(page))) fail("admin record access denied");
+      } else if (!/Records are private/.test(await text(page))) fail("restricted record is exposed");
+    });
+
 // ---------- Controls: named and keyboard-reachable ----------
 for (const [path, signedIn] of [["/membership", true], ["/membership", false], ["/nhl/records", false]])
   await open(`${path}${signedIn ? " signed in" : ""}: controls are named and reachable by keyboard`, { signedIn }, async ({ page, fail }) => {

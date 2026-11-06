@@ -1,0 +1,58 @@
+name: Feed health presentation
+on:
+  pull_request:
+    paths:
+      - "src/lib/feed-health.ts"
+      - "src/components/feed-health.tsx"
+      - "tests/feed-health.test.ts"
+      - "scripts/ui-smoke/feed-health.mjs"
+      - ".github/workflows/feed-health.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --import tsx --test tests/feed-health.test.ts
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - name: Prepare browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Synthetic positive and intended negative cases
+        run: |
+          node scripts/ui-smoke/stub.mjs &
+          LIVE_SCORES_DISABLED=1 npx next start -H 127.0.0.1 -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
+          curl -fsS -o /dev/null http://127.0.0.1:3100/
+          node scripts/ui-smoke/feed-health.mjs
+          if UI_SMOKE_NEGATIVE=false-coverage node scripts/ui-smoke/feed-health.mjs /tmp/feed-health-negative-evidence > /tmp/feed-health-negative.log 2>&1; then
+            cat /tmp/feed-health-negative.log
+            exit 1
+          fi
+          cat /tmp/feed-health-negative.log
+          grep -q 'false multisport coverage promise' /tmp/feed-health-negative.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: feed-health-synthetic-evidence
+          path: |
+            /tmp/feed-health-evidence
+            /tmp/feed-health-negative-evidence
+            /tmp/feed-health-negative.log

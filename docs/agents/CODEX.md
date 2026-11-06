@@ -110,3 +110,21 @@ All 350 tests on this main-based branch, typecheck and production build pass. Th
 Mike instructed “Ok knock those out” for all outstanding review/integration/NBA readiness/deployment tasks. Integration branch codex/multisport-release combines #167@3a343d9, #168@5db79f98 and #169@90e3f88 in a single release so users do not receive a partially integrated app. Original #168 findings are addressed and source-reviewed; original #167 fixes are deployed and verified with hashes/actual NBA noon requests. Unapplied anniversary migration renumbered190000 to avoid sports_display170000 collision. Private Corner/NHL readiness mounts and real-app flow test are integrated; gate remains off. Server-only NBA journal-to-Zone transaction preserves all original publication guards; source-evidence candidates are reviewed independently, never filled from synthetic fixtures. NHL editorial serialization correction preserves source implementation under exact-body hash guards, adds a per-family transaction lock, author/profile/age checks, real newlines and actor restoration.
 
 Combined380 tests, all new SQL suites, typecheck and production build passed locally before final browser CI. Current package remains prepared until pinned remote byte verification, full CI, peer acceptance and production readback. Vercel connector cannot access the project team; use the existing Git-connected release and GitHub deployment status plus actual production URL verification, not another team's credentials. Simulator paused; no model/official approval or bankroll changes.
+
+## November 5, 2026 — TRUST-PIPELINES-01 started
+
+Current main checked at `6cadc283608b655fc4321ab7144bec7533fbfea6`.
+ACK/claim: issue #65 comment 6667554607. Branch `codex/trust-pipelines-01`.
+First scoped packet prepares T1 truthful record-access copy and T2 support-contact acceptance;
+adds membership and direct restricted-record browser fixtures to the existing CI script.
+528 repository tests and TypeScript passed. Final build/browser evidence belongs on the draft PR;
+no live verification is claimed. See `docs/product/trust-pipelines-review.md` for per-item status.
+P1/P2/P3/D1 remain incomplete; this is a start, not completion of the entire checklist.
+Story #215/#216/integration and Kalshi incoming-link work remain separate and preserved.
+No merge, deployment, migration, live job/data change, publication, role or spend changes.
+
+First-packet validation update: final production build passed. Browser execution blocked at
+Chromium startup (SIGABRT / sandbox Operation not permitted); no UI pass/screenshots claimed.
+Git push lacked credentials; connector tree upload was denied by automatic approval review
+for insufficient explicit upload authorization. No remote branch/PR created and no retry/bypass.
+Owner must explicitly authorize publishing this draft before another upload attempt.

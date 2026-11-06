@@ -134,13 +134,17 @@ export default function FeedHealth() {
                 !feedAlerts(rows, checkedAt).length &&
                 !researchDeadline(latestResearch, checkedAt) && (
                   <p>
-                    Required feeds and research publication checks are current.
+                    The six listed NFL feed checks and research publication
+                    timing checks are current.
                   </p>
                 )}
               <p>
                 Checked {time(new Date(checkedAt).toISOString())}. This
-                dashboard checks publication timing; it does not confirm every
-                game was researched.
+                dashboard checks NFL job records and publication timing. It does
+                not verify NBA, NHL or college pipeline health, fresh provider
+                quotes, complete game coverage or successful settlement.
+                Carried-forward runs retain the earlier retrieval time; a recent
+                check is not a new quote.
               </p>
             </div>
           </Panel>
