@@ -303,7 +303,7 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
             <small>Published research, reasons and risks.</small>
           </Link>
         ) : null}
-        <Link href="/parlays" className="vq-tonight-card" aria-label={draft ? `Continue your lay — ${draft} selected. Pick up where you left off.` : "My lays — your saved lays and the leg library"}>
+        <Link href="/parlays" className="vq-tonight-card" aria-label={draft ? `Continue your lay · ${draft} selected — Pick up where you left off.` : "My lays — your saved lays and the leg library"}>
           {skybox ? <Layers aria-hidden="true" /> : null}
           <b>{draft ? `Continue your lay · ${draft} selected` : "My lays"}</b>
           <small>
@@ -313,7 +313,7 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
           </small>
         </Link>
         {signedIn === false ? (
-          <Link href="/membership" className="vq-tonight-card" aria-label="The Zone — sign in for member discussion">
+          <Link href="/membership" className="vq-tonight-card" aria-label="The Zone · sign in — member discussion">
             {skybox ? <Users aria-hidden="true" /> : null}
             <b>The Zone · sign in</b>
             <small>Member discussion is for signed-in members.</small>
