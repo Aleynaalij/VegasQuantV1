@@ -1,0 +1,71 @@
+/* Lobby arena decoration (lobby-arena-decor.tsx). Decorative only: aria-hidden, no pointer events,
+   painted behind the hero's live content. Static (no animation). */
+
+/* The hero becomes the positioning context only when the decor is mounted in it. */
+.vq-lobby-skybox:has(> .vq-arena-decor) {
+  position: relative;
+  isolation: isolate;
+}
+.vq-arena-decor {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* Hanging ace pennants: clear of the headline at every width (text is centred; the pennants sit in
+   the outer gutters and scale with the viewport). */
+.vq-pennant {
+  position: absolute;
+  top: -10px;
+  width: clamp(30px, 8.6vw, 82px);
+  height: auto;
+  aspect-ratio: 120 / 260;
+  filter: drop-shadow(0 6px 8px #000c) drop-shadow(0 0 14px #0d4d3355);
+}
+.vq-pennant-left {
+  left: clamp(0px, 1.2vw, 18px);
+  transform: rotate(1.5deg);
+  transform-origin: 50% 0;
+}
+.vq-pennant-right {
+  right: clamp(0px, 1.2vw, 18px);
+  transform: rotate(-1.5deg);
+  transform-origin: 50% 0;
+}
+
+/* Warm rafter light falling behind each pennant, blending them into the arena photo. */
+.vq-arena-rafter {
+  position: absolute;
+  top: -40px;
+  width: clamp(90px, 26vw, 260px);
+  height: clamp(140px, 40vw, 360px);
+  background: radial-gradient(50% 55% at 50% 0%, #ffd98a33, #ffd98a0d 55%, transparent 75%);
+  filter: blur(2px);
+}
+/* Inside the hero's edges: anything past them would widen the page. */
+.vq-arena-rafter-left {
+  left: 0;
+}
+.vq-arena-rafter-right {
+  right: 0;
+}
+
+/* The skyline: full width of the lobby column, fading in from the arena above and out into the
+   footer below, with a soft screen blend so its night sky merges with the arena photo. */
+.vq-arena-skyline {
+  width: 100%;
+  margin: 8px 0 -40px;
+  background-position: center bottom;
+  background-repeat: no-repeat;
+  background-size: cover;
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 28%, #000 80%, transparent 100%),
+    linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 28%, #000 80%, transparent 100%),
+    linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
+  mask-composite: intersect;
+  pointer-events: none;
+}
