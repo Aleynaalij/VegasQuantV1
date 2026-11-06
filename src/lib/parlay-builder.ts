@@ -47,7 +47,7 @@ export function legStatType(leg: PublishedLeg): LegStatFilter {
   return "all";
 }
 
-/** The filter and the displayed stamp must use exactly the same approval check. */
+/** Historical form/price screen, not model approval. Legacy export retained for consumers. */
 export function vqApprovedLeg(
   leg: PublishedLeg,
   form?: LegForm,
@@ -144,7 +144,7 @@ export function selectionError(
   now = Date.now(),
 ): string | null {
   if (!canBuildWith(next, now))
-    return "This leg is closed or unavailable for a new parlay.";
+    return "This leg is closed or unavailable for a new lay.";
   if (
     chosen.some(
       (r) => r.leg_key === next.leg_key || legFamily(r) === legFamily(next),

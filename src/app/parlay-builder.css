@@ -237,3 +237,27 @@
     max-width: 100px;
   }
 }
+
+.workshop-views {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.workshop-views a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #84704466;
+  border-radius: 10px;
+}
+.workshop-views a[aria-current="page"] {
+  border-color: #c6a652;
+  color: #e6c56e;
+}
+
+/* Keep the highlighted saved card renderable; long, offscreen library cards still defer paint. */
+.workshop-saved > .workshop-just-saved {
+  content-visibility: visible;
+}

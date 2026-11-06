@@ -1,12 +1,36 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { breakEven, checkLeg, formLine, stamped, statUnit, verdict, type BookPrice, type LegForm } from "@/lib/leg-rules";
-import { isAdmin, legBooks, legForms, legPrices, useLegDataVersion, wireAuthInvalidation } from "@/lib/leg-data";
+import {
+  breakEven,
+  checkLeg,
+  formLine,
+  stamped,
+  statUnit,
+  verdict,
+  type BookPrice,
+  type LegForm,
+} from "@/lib/leg-rules";
+import {
+  isAdmin,
+  legBooks,
+  legForms,
+  legPrices,
+  useLegDataVersion,
+  wireAuthInvalidation,
+} from "@/lib/leg-data";
 
 type Price = { first: number; last: number };
 /** Latest prospective shadow-model forecast for a leg (administrators only). */
-type Estimate = { probability: number; push: number; direction: string; line: number; odds: number | null; blockers: number; at: string };
+type Estimate = {
+  probability: number;
+  push: number;
+  direction: string;
+  line: number;
+  odds: number | null;
+  blockers: number;
+  at: string;
+};
 export type FormData = {
   forms: Record<string, LegForm>;
   prices: Record<string, Price>;
@@ -18,7 +42,13 @@ export type FormData = {
 
 /** Recent form, tracked prices and (for administrators) rule checks for a set of leg keys. */
 export function useLegForms(keys: string[]): FormData {
-  const [data, setData] = useState<FormData>({ forms: {}, prices: {}, estimates: {}, books: {}, admin: false });
+  const [data, setData] = useState<FormData>({
+    forms: {},
+    prices: {},
+    estimates: {},
+    books: {},
+    admin: false,
+  });
   const id = keys.join(",");
   // One app-wide refresh clock and batched, cached loaders (lib/leg-data): every card on screen
   // shares one query per table instead of each card polling for its own legs.
@@ -38,10 +68,15 @@ export function useLegForms(keys: string[]): FormData {
         isAdmin.get().catch(() => false),
       ]);
       if (!live) return;
-      const m = admin ? await supabase.rpc("admin_leg_model_estimates", { p_keys: list }) : null;
+      const m = admin
+        ? await supabase.rpc("admin_leg_model_estimates", { p_keys: list })
+        : null;
       if (!live) return;
       const present = <T,>(x: Map<string, T | undefined>) =>
-        Object.fromEntries([...x].filter(([, v]) => v !== undefined)) as Record<string, T>;
+        Object.fromEntries([...x].filter(([, v]) => v !== undefined)) as Record<
+          string,
+          T
+        >;
       setData({
         forms: present(forms),
         prices: present(prices),
@@ -96,11 +131,37 @@ export default function LegFormLine({
   // Rules judge the price printed at publication; a quote tracked later never stands in for it.
   const published = price;
   if (!form && !books.length && !data.admin) return null;
-  const be = published !== null && Math.abs(published) >= 100 ? breakEven(published) : null;
+  const be =
+    published !== null && Math.abs(published) >= 100
+      ? breakEven(published)
+      : null;
   const rate = form ? (form.cleared / form.sample) * 100 : null;
-  const tone = rate === null || be === null || form!.sample < 5 ? "" : rate >= be + 5 ? "good" : "bad";
-  const checks = data.admin ? checkLeg({ price: published, lastPrice: tracked?.last, form, market, matchup, pickOfDay }) : [];
-  const approved = !settled && stamped({ price: published, lastPrice: tracked?.last, form, market, matchup, pickOfDay });
+  const tone =
+    rate === null || be === null || form!.sample < 5
+      ? ""
+      : rate >= be + 5
+        ? "good"
+        : "bad";
+  const checks = data.admin
+    ? checkLeg({
+        price: published,
+        lastPrice: tracked?.last,
+        form,
+        market,
+        matchup,
+        pickOfDay,
+      })
+    : [];
+  const approved =
+    !settled &&
+    stamped({
+      price: published,
+      lastPrice: tracked?.last,
+      form,
+      market,
+      matchup,
+      pickOfDay,
+    });
   return (
     <div className={`leg-form ${tone}`}>
       {approved && <VqStamp />}
@@ -121,23 +182,36 @@ export default function LegFormLine({
           ))}
         </p>
       )}
-      {data.admin && data.estimates[legKey] && (() => {
-        const e = data.estimates[legKey];
-        const win = (e.probability / (1 - e.push)) * 100;
-        return (
-          <p className="leg-model">
-            <b>Model (shadow) {Math.round(win)}%</b> · {e.direction === "under" ? "u" : "o"}
-            {e.line}
-            {e.odds !== null && ` ${e.odds > 0 ? "+" : ""}${e.odds}`}
-            {e.odds !== null && Math.abs(e.odds) >= 100 && ` · needs ${Math.round(breakEven(e.odds))}%`} · {e.blockers} blocker
-            {e.blockers === 1 ? "" : "s"} · research only
-          </p>
-        );
-      })()}
+      {data.admin &&
+        data.estimates[legKey] &&
+        (() => {
+          const e = data.estimates[legKey];
+          const win = (e.probability / (1 - e.push)) * 100;
+          return (
+            <p className="leg-model">
+              <b>Model (shadow) {Math.round(win)}%</b> ·{" "}
+              {e.direction === "under" ? "u" : "o"}
+              {e.line}
+              {e.odds !== null && ` ${e.odds > 0 ? "+" : ""}${e.odds}`}
+              {e.odds !== null &&
+                Math.abs(e.odds) >= 100 &&
+                ` · needs ${Math.round(breakEven(e.odds))}%`}{" "}
+              · {e.blockers} blocker
+              {e.blockers === 1 ? "" : "s"} · research only
+            </p>
+          );
+        })()}
       {data.admin && (
         <details className="leg-rules">
           <summary>
-            Rules · <b className={`rule-${verdict(checks)}`}>{verdict(checks) === "pass" ? "all pass" : verdict(checks) === "fail" ? `${checks.filter((c) => c.status === "fail").length} failed` : "incomplete"}</b>
+            Rules ·{" "}
+            <b className={`rule-${verdict(checks)}`}>
+              {verdict(checks) === "pass"
+                ? "all pass"
+                : verdict(checks) === "fail"
+                  ? `${checks.filter((c) => c.status === "fail").length} failed`
+                  : "incomplete"}
+            </b>
           </summary>
           <ul>
             {checks.map((c) => (
@@ -152,16 +226,16 @@ export default function LegFormLine({
   );
 }
 
-/** The small stamp of approval on a recommended leg (see `stamped` in lib/leg-rules). */
+/** Descriptive historical screen; never a model or official approval. */
 export function VqStamp({ compact = false }: { compact?: boolean }) {
   return (
     <span
       className={`vq-stamp${compact ? " compact" : ""}`}
-      title="Vegas Quant approved: passes every rule and recent form beats the price by 15+ points"
-      aria-label="Vegas Quant approved"
+      title="Recent form and published-price screen only. Historical results are not a forecast, official pick, or model approval."
+      aria-label="Recent form screen; historical observations only"
     >
-      <span aria-hidden="true">✓</span>
-      {!compact && <>VQ APPROVED</>}
+      <span aria-hidden="true">◷</span>
+      {!compact && <>RECENT FORM</>}
     </span>
   );
 }

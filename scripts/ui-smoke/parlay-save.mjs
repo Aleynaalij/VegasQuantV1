@@ -164,24 +164,24 @@ for (const width of [390, 1280]) {
   await continueApp.click();
   await refresh.waitFor({ state: "hidden" });
   await page
-    .getByRole("button", { name: "+ Add to parlay", exact: true })
+    .getByRole("button", { name: "+ Add to lay", exact: true })
     .first()
     .waitFor();
   await page
-    .getByRole("button", { name: "+ Create parlay", exact: true })
+    .getByRole("button", { name: "Build a lay", exact: true })
     .click();
   await page
-    .getByLabel("Parlay name", { exact: true })
+    .getByLabel("Lay name", { exact: true })
     .fill("My newest sample");
   const add = page.getByRole("button", {
-    name: "+ Add to parlay",
+    name: "+ Add to lay",
     exact: true,
   });
   await add.nth(0).click();
   await add.nth(0).click();
   await page.locator(".workshop-card").last().scrollIntoViewIfNeeded();
   const save = page.getByRole("button", {
-    name: "Save my parlay",
+    name: "Save lay",
     exact: true,
   });
   const box = await save.boundingBox();
@@ -199,7 +199,7 @@ for (const width of [390, 1280]) {
   }
   await save.click();
   const prompt = page.getByRole("dialog", {
-    name: "Parlay saved",
+    name: "Lay saved",
     exact: true,
   });
   await prompt.waitFor();
@@ -207,9 +207,9 @@ for (const width of [390, 1280]) {
   assert.equal(shares, 0);
   assert.equal(await prompt.getByRole("checkbox").isChecked(), false);
   await prompt
-    .getByRole("button", { name: "View My parlays", exact: true })
+    .getByRole("button", { name: "View My lays", exact: true })
     .click();
-  // My parlays opens its own workspace, outside The Zone.
+  // My lays opens its own workspace, outside The Zone.
   await page.waitForURL(/\/parlays\?saved=/);
   const first = page.locator(".workshop-saved > details").first();
   await first.waitFor();
@@ -219,19 +219,19 @@ for (const width of [390, 1280]) {
   assert.equal(shares, 0);
   // Repeat save in the Parlay tab, opt in to sharing, retain the dialog on failure.
   await page
-    .getByRole("button", { name: "+ Create parlay", exact: true })
+    .getByRole("button", { name: "Build a lay", exact: true })
     .click();
-  await page.getByLabel("Parlay name", { exact: true }).fill("Shared sample");
+  await page.getByLabel("Lay name", { exact: true }).fill("Shared sample");
   await page
-    .getByRole("button", { name: "+ Add to parlay", exact: true })
+    .getByRole("button", { name: "+ Add to lay", exact: true })
     .nth(4)
     .click();
   await page
-    .getByRole("button", { name: "+ Add to parlay", exact: true })
+    .getByRole("button", { name: "+ Add to lay", exact: true })
     .nth(4)
     .click();
   await page
-    .getByRole("button", { name: "Save my parlay", exact: true })
+    .getByRole("button", { name: "Save lay", exact: true })
     .click();
   await prompt.waitFor();
   await prompt.getByRole("checkbox").check();
@@ -259,15 +259,15 @@ for (const width of [390, 1280]) {
     /Shared sample/,
   );
   await page
-    .getByRole("button", { name: "+ Create parlay", exact: true })
+    .getByRole("button", { name: "Build a lay", exact: true })
     .click();
-  await page.getByLabel("Parlay name", { exact: true }).fill("Kalshi sample");
+  await page.getByLabel("Lay name", { exact: true }).fill("Kalshi sample");
   await page
-    .getByRole("button", { name: "+ Add to parlay", exact: true })
+    .getByRole("button", { name: "+ Add to lay", exact: true })
     .nth(10)
     .click();
   await page
-    .getByRole("button", { name: "+ Add to parlay", exact: true })
+    .getByRole("button", { name: "+ Add to lay", exact: true })
     .nth(10)
     .click();
   await save.click();
@@ -299,10 +299,10 @@ for (const width of [390, 1280]) {
   // Returning from an external tool leaves the saved card available to reuse.
   const kalshiSaved = page.locator(".workshop-saved > details").first();
   await kalshiSaved
-    .getByRole("button", { name: "Reuse / edit a copy", exact: true })
+    .getByRole("button", { name: "Edit a copy", exact: true })
     .click();
   const draft = page.getByRole("region", {
-    name: "Your parlay draft",
+    name: "Your lay draft",
     exact: true,
   });
   assert.equal(
@@ -315,7 +315,7 @@ for (const width of [390, 1280]) {
     .click();
   await page.reload();
   await page
-    .getByRole("region", { name: "Your parlay draft", exact: true })
+    .getByRole("region", { name: "Your lay draft", exact: true })
     .waitFor();
   assert.equal(
     await draft.getByRole("button", { name: /^Remove / }).count(),
@@ -332,14 +332,14 @@ for (const width of [390, 1280]) {
   await page
     .locator(".workshop-saved > details")
     .first()
-    .getByRole("button", { name: "Reuse / edit a copy", exact: true })
+    .getByRole("button", { name: "Edit a copy", exact: true })
     .click();
   await draft
     .getByRole("button", { name: /^Remove / })
     .first()
     .click();
   await page
-    .getByRole("button", { name: "+ Add to parlay", exact: true })
+    .getByRole("button", { name: "+ Add to lay", exact: true })
     .nth(0)
     .click();
   await save.click();
@@ -359,19 +359,19 @@ for (const width of [390, 1280]) {
   );
   for (const title of ["Done sample", "Repeat sample", "Expired sample"]) {
     await page
-      .getByRole("button", { name: "+ Create parlay", exact: true })
+      .getByRole("button", { name: "Build a lay", exact: true })
       .click();
-    await page.getByLabel("Parlay name", { exact: true }).fill(title);
+    await page.getByLabel("Lay name", { exact: true }).fill(title);
     await page
-      .getByRole("button", { name: "+ Add to parlay", exact: true })
+      .getByRole("button", { name: "+ Add to lay", exact: true })
       .nth(title === "Done sample" ? 6 : title === "Repeat sample" ? 2 : 8)
       .click();
     await page
-      .getByRole("button", { name: "+ Add to parlay", exact: true })
+      .getByRole("button", { name: "+ Add to lay", exact: true })
       .nth(title === "Done sample" ? 6 : title === "Repeat sample" ? 2 : 8)
       .click();
     await page
-      .getByRole("button", { name: "Save my parlay", exact: true })
+      .getByRole("button", { name: "Save lay", exact: true })
       .click();
     await prompt.waitFor();
     if (title === "Done sample") {
@@ -394,11 +394,11 @@ for (const width of [390, 1280]) {
       assert.match(await prompt.innerText(), /already saved/);
       assert.match(await prompt.innerText(), /Older sample parlay/);
       await prompt
-        .getByRole("button", { name: "View My parlays", exact: true })
+        .getByRole("button", { name: "View My lays", exact: true })
         .click();
       await page.goto(base + "/feed?view=legs");
       await page
-        .getByRole("button", { name: "+ Create parlay", exact: true })
+        .getByRole("button", { name: "Build a lay", exact: true })
         .waitFor();
       await page.goto(base + "/feed?view=parlays");
       await page
@@ -417,7 +417,7 @@ for (const width of [390, 1280]) {
         .getByRole("button", { name: "Open with Gambly ↗", exact: true })
         .click();
       await prompt.getByRole("alert").waitFor();
-      assert.match(await prompt.innerText(), /parlay has closed/);
+      assert.match(await prompt.innerText(), /lay has closed/);
       assert.equal(await gambly.isVisible(), false);
       await prompt
         .getByRole("button", { name: "Kalshi ↗", exact: true })
@@ -425,7 +425,7 @@ for (const width of [390, 1280]) {
       assert.equal(await kalshi.isVisible(), false);
       assert.equal(kalshiChecks, 1);
       await prompt
-        .getByRole("button", { name: "View My parlays", exact: true })
+        .getByRole("button", { name: "View My lays", exact: true })
         .click();
     }
   }

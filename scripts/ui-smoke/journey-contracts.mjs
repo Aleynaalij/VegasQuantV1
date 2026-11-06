@@ -106,9 +106,9 @@ for (const width of [360, 390, 1280]) {
   const card = page.locator(`#my-parlay-${OLD}`);
   await card.waitFor();
   assert.equal(await card.getAttribute("open"), "");
-  const draft = page.getByRole("region", { name: "Your parlay draft", exact: true });
+  const draft = page.getByRole("region", { name: "Your lay draft", exact: true });
   await draft.waitFor();
-  assert.equal(await page.getByLabel("Parlay name", { exact: true }).inputValue(), "Sample recovered journey");
+  assert.equal(await page.getByLabel("Lay name", { exact: true }).inputValue(), "Sample recovered journey");
   assert.equal(await draft.getByRole("button", { name: /^Remove / }).count(), 2);
   await page.getByText(/1 closed or unavailable selections were left out of your recovered draft/).waitFor();
   assert.doesNotMatch(await page.locator("body").innerText(), /OTHER ACCOUNT PRIVATE DRAFT/);
@@ -118,13 +118,13 @@ for (const width of [360, 390, 1280]) {
   await page.goBack({ waitUntil: "networkidle" });
   await draft.waitFor();
   assert.equal(await draft.getByRole("button", { name: /^Remove / }).count(), 2);
-  assert.equal(await page.getByLabel("Parlay name", { exact: true }).inputValue(), "Sample recovered journey");
+  assert.equal(await page.getByLabel("Lay name", { exact: true }).inputValue(), "Sample recovered journey");
   // A delayed failed write must keep the draft; successful retry is confirmed once.
   f.mode = "server-error";
-  const save = page.getByRole("button", { name: "Save my parlay", exact: true });
+  const save = page.getByRole("button", { name: "Save lay", exact: true });
   await save.click();
-  await page.getByRole("alert").filter({ hasText: /Sample save failed/ }).or(page.getByRole("dialog", { name: "Parlay saved", exact: true })).waitFor();
-  assert.equal(await page.getByRole("dialog", { name: "Parlay saved", exact: true }).isVisible(), false, "false success after a failed save");
+  await page.getByRole("alert").filter({ hasText: /Sample save failed/ }).or(page.getByRole("dialog", { name: "Lay saved", exact: true })).waitFor();
+  assert.equal(await page.getByRole("dialog", { name: "Lay saved", exact: true }).isVisible(), false, "false success after a failed save");
   assert.equal(await draft.getByRole("button", { name: /^Remove / }).count(), 2);
   f.mode = "ok";
   f.createDelay = 300;
@@ -132,7 +132,7 @@ for (const width of [360, 390, 1280]) {
   // Exercise actual browser input, allowing React to commit the disabled state between events.
   // Same-stack programmatic dispatch bypasses the user interaction boundary.
   await save.dblclick();
-  const dialog = page.getByRole("dialog", { name: "Parlay saved", exact: true });
+  const dialog = page.getByRole("dialog", { name: "Lay saved", exact: true });
   await dialog.waitFor();
   assert.equal(f.creates - before, 1, "duplicate click sent a second create request");
   assert.equal(f.mine.length, 1, "existing exact combination must not duplicate");
@@ -144,7 +144,7 @@ for (const width of [360, 390, 1280]) {
   // A missing or RLS-denied ID must never manufacture a saved card.
   const missing = "66666666-6666-4666-8666-666666666666";
   await page.goto(`${BASE}/parlays?saved=${missing}`, { waitUntil: "networkidle" });
-  await page.getByRole("heading", { name: "My parlays", exact: true }).waitFor();
+  await page.getByRole("heading", { name: "My lays", exact: true }).waitFor();
   assert.equal(await page.locator(`#my-parlay-${missing}`).count(), 0);
   console.log(`ok journey contracts ${width}px: legacy route, exact ID, account draft, missing selection, round trip, failure/retry, duplicate guard, private save, missing ID`);
   await ctx.close();

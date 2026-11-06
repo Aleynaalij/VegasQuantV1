@@ -330,8 +330,11 @@ export default function ResearchFeed() {
       >
         <header className="feed-head">
           <div>
-            <h1>The Zone</h1>
-            <p>Research, injury news and legs we like.</p>
+            <h1>Published research</h1>
+            <p>
+              Vegas Quant’s picks with their case, risks and observed price: the Pick of the Day,
+              legs we like and parlays. Member talk lives in The Zone.
+            </p>
           </div>
           <Link href="/saved" className="text-link">
             Saved legs →
@@ -376,7 +379,7 @@ export default function ResearchFeed() {
             see member research updates.
           </p>
         )}
-        {loading && <p role="status">Entering The Zone…</p>}
+        {loading && <p role="status">Loading published research…</p>}
         {!loading && (
           <>
             <div className="feed-stream">
@@ -705,7 +708,7 @@ export default function ResearchFeed() {
 }
 
 /**
- * A collapsed release in The Zone. Its cards (and their data loading) mount only once it is
+ * A collapsed release in published research. Its cards (and their data loading) mount only once it is
  * opened: closed <details> content still renders in React, so every collapsed drop used to build
  * full cards and query for them.
  */

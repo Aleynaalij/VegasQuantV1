@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import ResearchFeed from "@/components/research-feed";
-export const metadata = { title: "The Zone | Vegas Quant" };
+export const metadata = { title: "Published research | Vegas Quant" };
 export default async function Page({
   searchParams,
 }: {
@@ -21,7 +21,7 @@ export default async function Page({
     );
   }
   return (
-    <Suspense fallback={<p role="status">Loading The Zone…</p>}>
+    <Suspense fallback={<p role="status">Loading published research…</p>}>
       <ResearchFeed />
     </Suspense>
   );

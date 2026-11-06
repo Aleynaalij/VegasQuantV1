@@ -7,7 +7,9 @@ const { chromium } = await import(
 
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const pages = [
-  { path: "/", expect: ["Next kickoff", "21+"] },
+  // "/" is the neutral lobby; the NFL desk (next kickoff, game rows) is /nfl.
+  { path: "/", expect: ["Every game. One clear read.", "VQ Tonight", "21+"] },
+  { path: "/nfl", expect: ["Next kickoff", "21+"] },
   { path: "/feed", expect: ["The Zone", "Join the conversation"] },
   { path: "/feed?view=injury", expect: ["The Zone"] },
   { path: "/feed?view=parlays", expect: ["Sample Sunday sleeper parlay", "3-leg parlay"] },
@@ -24,7 +26,8 @@ const pages = [
 ];
 const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
-  { path: "/", expect: ["Next kickoff"] },
+  { path: "/", expect: ["Every game. One clear read."] },
+  { path: "/nfl", expect: ["Next kickoff"] },
   { path: "/community", expect: ["The Zone", "For you", "VIP lays", "SampleMember", "Sample post body."] },
   { path: "/history", expect: ["Records are private."] },
 ];
@@ -114,14 +117,25 @@ for (const [list, auth, isAdmin] of [
       if (errors.length)
         failures.push(`${label}: page error · ${errors[0].slice(0, 200)}`);
       if (path === "/") {
-        // The next-kickoff card leads Home, open and visible; the simulator stays off Home until it ships.
+        // The neutral lobby: no sport selected, no NFL-only claims, no simulator teaser.
+        const lobby = await page.evaluate(() => ({
+          selected: document.querySelectorAll("nav.sport-switch a[aria-current=page]").length,
+          edge: document.body.innerText.includes("MINIMUM EDGE"),
+          teaser: /Swipe left for Simulator|Simulator\s*Coming soon/.test(document.body.innerText),
+        }));
+        if (lobby.selected) failures.push(`${label}: a sport chip is selected on the lobby`);
+        if (lobby.edge) failures.push(`${label}: NFL-only MINIMUM EDGE claim on the lobby`);
+        if (lobby.teaser) failures.push(`${label}: lobby shows the simulator teaser`);
+      }
+      if (path === "/nfl") {
+        // The next-kickoff card leads the NFL desk, open and visible; the simulator stays off until it ships.
         const kickoff = await page.evaluate(() => {
           const card = document.querySelector(".home-brief");
           return !!card && !card.closest("details") && card.getBoundingClientRect().height > 0;
         });
-        if (!kickoff) failures.push(`${label}: next-kickoff card not shown on Home`);
+        if (!kickoff) failures.push(`${label}: next-kickoff card not shown on the NFL desk`);
         const teaser = await page.evaluate(() => /Swipe left for Simulator|Simulator\s*Coming soon/.test(document.body.innerText));
-        if (teaser) failures.push(`${label}: Home still shows the simulator teaser`);
+        if (teaser) failures.push(`${label}: the NFL desk still shows the simulator teaser`);
         // Game rows open with a chevron, not a "Tap to expand" label.
         const rows = await page.evaluate(() => [...document.querySelectorAll(".vq-game-row > summary")].map((s) => ({ chevron: !!s.querySelector(".vq-expand-chevron"), label: /tap to expand/i.test(s.innerText) })));
         if (rows.some((r) => !r.chevron || r.label)) failures.push(`${label}: game rows lack the chevron or still say "Tap to expand"`);

@@ -1020,3 +1020,20 @@ html[data-theme] body a.ruby-primary {
 .ruby-submit-message { padding:0 16px 12px; }
 .ruby-submit-drawer > summary:focus-visible { outline:2px solid #f0dca4; outline-offset:-4px; border-radius:20px; }
 @media(prefers-reduced-motion:reduce) { .ruby-submit-chevron { transition:none; } }
+/* Consumer pages show contributors one role-gated action instead of the full submission form. */
+html body a.ruby-submit-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #b69b4e88;
+  border-radius: 999px;
+  color: #f4dc99;
+  font-weight: 700;
+  text-decoration: none;
+}
+html body a.ruby-submit-shortcut:focus-visible {
+  outline: 2px solid #f4dc99;
+  outline-offset: 2px;
+}

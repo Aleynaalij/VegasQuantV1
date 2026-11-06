@@ -3,6 +3,10 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import {
+  resolveWorkshopAccess,
+  type WorkshopAccess,
+} from "@/lib/parlay-workshop-access";
 import { homeWeekStart } from "@/lib/home-week";
 import {
   canBuildWith,
@@ -37,7 +41,30 @@ export default function ParlayWorkshop({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const routeSaved = useSearchParams().get("saved") || "";
+  const params = useSearchParams();
+  const [hashSaved, setHashSaved] = useState("");
+  useEffect(() => {
+    const update = () =>
+      setHashSaved(
+        /^#my-parlay-([a-f0-9-]{36})$/i.exec(window.location.hash)?.[1] || "",
+      );
+    update();
+    window.addEventListener("hashchange", update);
+    window.addEventListener("popstate", update);
+    return () => {
+      window.removeEventListener("hashchange", update);
+      window.removeEventListener("popstate", update);
+    };
+  }, []);
+  const routeSaved = params.get("saved") || hashSaved;
+  const routeBuild = params.get("build") === "1";
+  const requestedSaved = useRef(routeSaved);
+  requestedSaved.current = routeSaved;
+  const buildRequested = useRef(routeBuild);
+  buildRequested.current = routeBuild;
+  const retryLoad = useRef<() => void>(() => {});
+  const accessReady = useRef(false);
+  const [accessState, setAccessState] = useState<WorkshopAccess>("checking");
   const [savedId, setSavedId] = useState("");
   const [savedPrompt, setSavedPrompt] = useState<MemberParlay | null>(null);
   const owner = useRef("");
@@ -45,6 +72,7 @@ export default function ParlayWorkshop({
   const [reusedSave, setReusedSave] = useState(false);
   const [shareChecked, setShareChecked] = useState(false);
   const saveDialog = useRef<HTMLDialogElement>(null);
+  const buildButton = useRef<HTMLButtonElement>(null);
   const [rows, setRows] = useState<PublishedLeg[]>([]);
   const [saved, setSaved] = useState<MemberParlay[]>([]);
   const [chosen, setChosen] = useState<PublishedLeg[]>([]);
@@ -64,7 +92,7 @@ export default function ParlayWorkshop({
     const timer = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(timer);
   }, []);
-  const [title, setTitle] = useState("My parlay");
+  const [title, setTitle] = useState("My lay");
   const epoch = useRef(0);
   const builder = useRef<HTMLElement>(null);
   const focusedRoute = useRef("");
@@ -74,13 +102,14 @@ export default function ParlayWorkshop({
       const n = ++epoch.current;
       setLoading(true);
       setDraftReady(false);
-      setTitle("My parlay");
+      setTitle("My lay");
       setOpen(false);
       setChosen([]);
       setSaved([]);
       setSavedId("");
       focusedRoute.current = "";
       setSavedPrompt(null);
+      setBusy(false);
       setPromptVersion(0);
       saveDialog.current?.close();
       setSharing(null);
@@ -88,107 +117,200 @@ export default function ParlayWorkshop({
       setNotice("");
       setRows([]);
       setError("");
-      owner.current = "";
-      const [catalog, mine, session] = await Promise.all([
-        supabase.rpc("published_leg_catalog", {
-          p_since: homeWeekStart(new Date()),
-        }),
-        supabase
-          .from("member_parlays")
-          .select("id,title,legs,created_at,expires_at,community_post_id")
-          .order("created_at", { ascending: false })
-          .order("id", { ascending: false })
-          .limit(50),
-        supabase.auth.getSession(),
-      ]);
-      if (!live || n !== epoch.current) return;
-      if (catalog.error || mine.error)
-        setError("Your leg library could not load. Sign in and try again.");
-      else {
-        setRows(weeklyLegs(catalog.data || []));
-        owner.current = session.data.session?.user.id || "";
-        let recent = routeSaved;
-        try {
-          recent ||= owner.current
-            ? sessionStorage.getItem(`vq-parlay-recent:${owner.current}`) || ""
-            : "";
-        } catch {
-          /* Storage can be disabled; the saved-card URL still works. */
-        }
-        const list = [...(mine.data || [])].sort(
-          (a, b) =>
-            Date.parse(b.created_at) - Date.parse(a.created_at) ||
-            b.id.localeCompare(a.id),
+      accessReady.current = false;
+      setAccessState("checking");
+      try {
+        const access = await resolveWorkshopAccess(
+          () => supabase.auth.getSession(),
+          () =>
+            supabase
+              .rpc("membership_status")
+              .abortSignal(AbortSignal.timeout(20000)),
         );
-        if (recent && !list.some((p) => p.id === recent)) {
-          const extra = await supabase
+        if (!live || n !== epoch.current) return;
+        owner.current = access.owner;
+        setAccessState(access.state);
+        if (access.state !== "ready" && access.state !== "denied") {
+          if (access.state === "failed") setError(access.message);
+          setLoading(false);
+          return;
+        }
+        const signal = AbortSignal.timeout(20000);
+        const [catalog, mine] = await Promise.all([
+          access.state === "ready"
+            ? supabase
+                .rpc("published_leg_catalog", {
+                  p_since: homeWeekStart(new Date()),
+                })
+                .abortSignal(signal)
+            : Promise.resolve({ data: [], error: null }),
+          supabase
             .from("member_parlays")
             .select("id,title,legs,created_at,expires_at,community_post_id")
-            .eq("id", recent)
-            .maybeSingle();
-          if (!live || n !== epoch.current) return;
-          if (extra.data) list.push(extra.data);
-        }
-        const pinned = list.find((p) => p.id === recent);
-        setSaved(
-          pinned ? [pinned, ...list.filter((p) => p.id !== recent)] : list,
-        );
-        if (pinned) setSavedId(pinned.id);
-        try {
-          const raw =
-            owner.current &&
-            sessionStorage.getItem(`vq-parlay-draft:${owner.current}`);
-          const draft = raw ? JSON.parse(raw) : null;
-          if (
-            draft &&
-            Array.isArray(draft.keys) &&
-            draft.keys.every((k: unknown) => typeof k === "string")
-          ) {
-            const restored = reusableSelections(
-              draft.keys,
-              weeklyLegs(catalog.data || []),
-            );
-            setChosen(restored.legs);
-            setTitle(
-              typeof draft.title === "string"
-                ? draft.title.slice(0, 80)
-                : "My parlay",
-            );
-            setOpen(restored.legs.length > 0);
-            if (restored.skipped)
+            .order("created_at", { ascending: false })
+            .order("id", { ascending: false })
+            .limit(50)
+            .abortSignal(signal),
+        ]);
+        if (!live || n !== epoch.current) return;
+        if (catalog.error || mine.error) {
+          setAccessState("failed");
+          setError(
+            "Your leg library or saved lays could not load. Please retry.",
+          );
+        } else {
+          setRows(weeklyLegs(catalog.data || []));
+          let recent = requestedSaved.current;
+          try {
+            recent ||= owner.current
+              ? sessionStorage.getItem(`vq-parlay-recent:${owner.current}`) ||
+                ""
+              : "";
+          } catch {
+            /* Storage can be disabled; the saved-card URL still works. */
+          }
+          const list = [...(mine.data || [])].sort(
+            (a, b) =>
+              Date.parse(b.created_at) - Date.parse(a.created_at) ||
+              b.id.localeCompare(a.id),
+          );
+          if (recent && !list.some((p) => p.id === recent)) {
+            const extra = await supabase
+              .from("member_parlays")
+              .select("id,title,legs,created_at,expires_at,community_post_id")
+              .eq("id", recent)
+              .abortSignal(signal)
+              .maybeSingle();
+            if (!live || n !== epoch.current) return;
+            if (extra.error)
               setNotice(
-                `${restored.skipped} closed or unavailable selections were left out of your recovered draft. Saved cards are unchanged.`,
+                "The requested saved lay could not load. Retry to check it again.",
+              );
+            else if (extra.data) list.push(extra.data);
+            else if (requestedSaved.current)
+              setNotice(
+                "This saved lay is missing or unavailable to this account.",
               );
           }
-        } catch {
-          /* Browser recovery is optional; saved cards live in your account. */
+          const pinned = list.find((p) => p.id === recent);
+          setSaved(
+            pinned ? [pinned, ...list.filter((p) => p.id !== recent)] : list,
+          );
+          if (pinned) setSavedId(pinned.id);
+          try {
+            const raw =
+              access.state === "ready" &&
+              owner.current &&
+              sessionStorage.getItem(`vq-parlay-draft:${owner.current}`);
+            const draft = raw ? JSON.parse(raw) : null;
+            if (
+              draft &&
+              Array.isArray(draft.keys) &&
+              draft.keys.every((k: unknown) => typeof k === "string")
+            ) {
+              const restored = reusableSelections(
+                draft.keys,
+                weeklyLegs(catalog.data || []),
+              );
+              setChosen(restored.legs);
+              setTitle(
+                typeof draft.title === "string"
+                  ? draft.title.slice(0, 80)
+                  : "My lay",
+              );
+              setOpen(restored.legs.length > 0);
+              if (restored.skipped)
+                setNotice(
+                  `${restored.skipped} closed or unavailable selections were left out of your recovered draft. Saved cards are unchanged.`,
+                );
+            }
+          } catch {
+            /* Browser recovery is optional; saved cards live in your account. */
+          }
+          if (buildRequested.current && access.state === "ready") setOpen(true);
+          accessReady.current = access.state === "ready";
+          setDraftReady(access.state === "ready");
         }
-        setDraftReady(true);
+        setLoading(false);
+      } catch {
+        if (!live || n !== epoch.current) return;
+        setAccessState("failed");
+        setError(
+          "Your leg library could not load. Check your connection and retry.",
+        );
+        setLoading(false);
       }
-      setLoading(false);
     }
+    retryLoad.current = () => {
+      void load();
+    };
     void load();
     // Refresh the library without discarding a member's in-progress combination.
     const refreshCatalog = async () => {
-      if (document.visibilityState !== "visible") return;
+      if (document.visibilityState !== "visible" || !accessReady.current)
+        return;
       const n = epoch.current;
-      const result = await supabase.rpc("published_leg_catalog", {
-        p_since: homeWeekStart(new Date()),
-      });
-      if (!live || n !== epoch.current) return;
-      if (result.error)
-        setError(
-          "The leg library could not refresh. Showing the last loaded observations; saving rechecks every leg.",
-        );
-      else setRows(weeklyLegs(result.data || []));
+      try {
+        const access = await supabase
+          .rpc("membership_status")
+          .abortSignal(AbortSignal.timeout(20000));
+        if (!live || n !== epoch.current) return;
+        if (access.error || typeof access.data?.allowed !== "boolean")
+          throw Error("Access check failed");
+        if (!access.data.allowed) {
+          void load();
+          return;
+        }
+        const result = await supabase
+          .rpc("published_leg_catalog", {
+            p_since: homeWeekStart(new Date()),
+          })
+          .abortSignal(AbortSignal.timeout(20000));
+        if (!live || n !== epoch.current) return;
+        if (result.error)
+          setError(
+            "The leg library could not refresh. Showing the last loaded observations; saving rechecks every leg.",
+          );
+        else {
+          setRows(weeklyLegs(result.data || []));
+          setError("");
+        }
+      } catch {
+        if (live && n === epoch.current)
+          setError(
+            "The leg library could not refresh. Showing the last loaded observations; saving rechecks every leg.",
+          );
+      }
     };
     const refreshTimer = setInterval(() => void refreshCatalog(), 60000);
     window.addEventListener("focus", refreshCatalog);
     // Supabase repeats SIGNED_IN when a tab regains focus or another tab signs in. Reload (which
     // clears the draft and closes the save dialog) only when the account actually changes.
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "INITIAL_SESSION" || event === "TOKEN_REFRESHED") return;
-      if ((session?.user.id || "") !== owner.current) void load();
+      if (event === "INITIAL_SESSION") return;
+      const nextOwner = session?.user.id || "";
+      if (nextOwner === owner.current) return;
+      // Invalidate pending reads/writes immediately; defer auth calls outside the auth lock.
+      ++epoch.current;
+      owner.current = nextOwner;
+      accessReady.current = false;
+      setDraftReady(false);
+      setRows([]);
+      setSaved([]);
+      setChosen([]);
+      setSavedPrompt(null);
+      setOpen(false);
+      setNotice("");
+      setError("");
+      setBusy(false);
+      setSharing(null);
+      setSharedPost(null);
+      saveDialog.current?.close();
+      setLoading(true);
+      setAccessState("checking");
+      setTimeout(() => {
+        if (live) void load();
+      }, 0);
     });
     return () => {
       live = false;
@@ -231,10 +353,17 @@ export default function ParlayWorkshop({
     start();
   }
   function start() {
+    if (!accessReady.current) return;
     setOpen(true);
     setTimeout(
       () =>
-        builder.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        builder.current?.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        }),
       0,
     );
   }
@@ -254,16 +383,18 @@ export default function ParlayWorkshop({
     setOpen(true);
   }
   async function save() {
-    if (busy || chosen.length < 2) return;
+    if (busy || !accessReady.current || chosen.length < 2) return;
     setBusy(true);
     setError("");
     setNotice("");
     const n = epoch.current;
     try {
-      const result = await supabase.rpc("create_member_parlay", {
-        p_title: title.trim(),
-        p_leg_keys: chosen.map((r) => r.leg_key),
-      });
+      const result = await supabase
+        .rpc("create_member_parlay", {
+          p_title: title.trim(),
+          p_leg_keys: chosen.map((r) => r.leg_key),
+        })
+        .abortSignal(AbortSignal.timeout(20000));
       if (n !== epoch.current) return;
       if (result.error) {
         setError(
@@ -316,11 +447,11 @@ export default function ParlayWorkshop({
       setSavedPrompt(confirmed);
       setPromptVersion((v) => v + 1);
       setShareChecked(false);
-      setNotice(`Saved “${confirmed.title}” to My parlays.`);
+      setNotice(`Saved “${confirmed.title}” to My lays.`);
       setChosen([]);
       setOpen(false);
       // Stay on this page: replacing to another route would unmount the workshop and its
-      // "Parlay saved" prompt.
+      // "Lay saved" prompt.
       const here =
         pathname === "/parlays"
           ? "/parlays?"
@@ -332,28 +463,33 @@ export default function ParlayWorkshop({
         { scroll: false },
       );
     } catch {
-      if (n === epoch.current) setError("Could not save. Please retry.");
+      if (n === epoch.current)
+        setError(
+          "Save could not be confirmed. Check My lays before retrying; retrying the same combination keeps one saved card.",
+        );
     } finally {
-      setBusy(false);
+      if (n === epoch.current) setBusy(false);
     }
   }
   async function share(parlay: MemberParlay) {
-    if (sharing) return false;
+    if (sharing || !accessReady.current) return false;
     const n = epoch.current;
     setSharing(parlay.id);
     setError("");
     setNotice("");
     setSharedPost(null);
     try {
-      const result = await supabase.rpc("share_member_parlay", {
-        p_parlay: parlay.id,
-      });
+      const result = await supabase
+        .rpc("share_member_parlay", {
+          p_parlay: parlay.id,
+        })
+        .abortSignal(AbortSignal.timeout(20000));
       if (n !== epoch.current) return false;
       if (result.error || !result.data)
         throw Error(
           plain(
             result.error?.message,
-            "Could not share your parlay. Please retry.",
+            "Could not share your lay. Please retry.",
           ),
         );
       setSaved((current) =>
@@ -367,7 +503,7 @@ export default function ParlayWorkshop({
           : current,
       );
       setSharedPost(result.data);
-      setNotice("Your Vegas Quant parlay card is posted to Community.");
+      setNotice("Your Vegas Quant lay card is posted to Community.");
       window.dispatchEvent(new Event("vq-community-changed"));
       return true;
     } catch (error) {
@@ -387,6 +523,53 @@ export default function ParlayWorkshop({
     if (promptVersion && !saveDialog.current?.open)
       saveDialog.current?.showModal();
   }, [promptVersion]);
+  useEffect(() => {
+    if (routeBuild && accessState === "ready" && !loading) setOpen(true);
+  }, [routeBuild, accessState, loading]);
+  useEffect(() => {
+    if (
+      !routeSaved ||
+      (!accessReady.current && accessState !== "denied") ||
+      loading
+    )
+      return;
+    let active = true;
+    const n = epoch.current;
+    setSavedId(routeSaved);
+    if (saved.some((p) => p.id === routeSaved)) return;
+    void (async () => {
+      try {
+        const result = await supabase
+          .from("member_parlays")
+          .select("id,title,legs,created_at,expires_at,community_post_id")
+          .eq("id", routeSaved)
+          .abortSignal(AbortSignal.timeout(20000))
+          .maybeSingle();
+        if (!active || n !== epoch.current) return;
+        if (result.error)
+          setNotice(
+            "The requested saved lay could not load. Retry to check it again.",
+          );
+        else if (!result.data)
+          setNotice(
+            "This saved lay is missing or unavailable to this account.",
+          );
+        else
+          setSaved((current) => [
+            result.data!,
+            ...current.filter((p) => p.id !== routeSaved),
+          ]);
+      } catch {
+        if (active && n === epoch.current)
+          setNotice(
+            "The requested saved lay could not load. Retry to check it again.",
+          );
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [routeSaved, loading, saved, accessState]);
   useEffect(() => {
     if (
       mode !== "parlays" ||
@@ -409,11 +592,12 @@ export default function ParlayWorkshop({
     )
       return false;
     saveDialog.current?.close();
+    buildButton.current?.focus();
     return true;
   }
   async function openSavedDestination() {
     if (!savedPrompt || Date.parse(savedPrompt.expires_at) <= Date.now()) {
-      setError("This parlay has closed. You can still view it in My parlays.");
+      setError("This lay has closed. You can still view it in My lays.");
       return false;
     }
     if (!(await continueAfterSave())) return false;
@@ -434,7 +618,7 @@ export default function ParlayWorkshop({
     }
   }
   const showCatalog = mode === "catalog" || open;
-  // Recent form and tracked prices, for the stamp of approval on recommended legs.
+  // Historical form/price screen; independent of model qualification.
   const legForms = useLegForms(showCatalog ? rows.map((r) => r.leg_key) : []);
   const approvedKeys = new Set(
     rows
@@ -459,12 +643,19 @@ export default function ParlayWorkshop({
       className={`parlay-workshop${open ? " workshop-building" : ""}`}
       aria-label="Published legs and parlay builder"
     >
+      <nav className="workshop-views" aria-label="Your lays">
+        <Link
+          href="/parlays"
+          aria-current={pathname === "/parlays" ? "page" : undefined}
+        >
+          My lays
+        </Link>
+        <Link href="/parlays/tailed">Tailed</Link>
+      </nav>
       <div className="workshop-head">
         <div>
           <h2>
-            {mode === "catalog"
-              ? "This week’s published legs"
-              : "Make it your parlay"}
+            {mode === "catalog" ? "This week’s published legs" : "Build a lay"}
           </h2>
           <p>
             {mode === "catalog"
@@ -472,15 +663,21 @@ export default function ParlayWorkshop({
               : "Pick your own combination from the weekly leg library."}
           </p>
         </div>
-        <button className="btn" onClick={start}>
-          + Create parlay
+        <button
+          className="btn"
+          ref={buildButton}
+          onClick={start}
+          disabled={accessState !== "ready" || loading}
+        >
+          Build a lay
         </button>
       </div>
       <p className="workshop-note">
         Published research is not automatically recommended. “Recommended · 3%+
-        edge” needs a current, approved model edge. The ✓ VQ APPROVED stamp
-        means the leg passes every selection rule and its recent form beats the
-        price’s break-even by 15+ points; it is not a model edge or a guarantee.
+        edge” needs a current, approved model edge. “Recent form” describes a
+        historical form-and-price screen, not model approval, an official pick,
+        or a forecast. Past results do not guarantee future outcomes. This
+        library currently supports published NFL full-game player-stat legs.
       </p>
       {loading && <p role="status">Loading your leg library…</p>}
       {error && !open && (
@@ -488,7 +685,30 @@ export default function ParlayWorkshop({
           {error}
         </p>
       )}
+      {accessState === "signed-out" && (
+        <p>
+          Sign in to build a lay and see your private saved lays. Saving keeps a
+          combination in your account; sharing to The Zone is optional.{" "}
+          <Link href="/membership">Sign in or check membership →</Link>
+        </p>
+      )}
+      {accessState === "denied" && (
+        <p>
+          Your account does not currently have research access.{" "}
+          <Link href="/membership">Check account access →</Link>
+        </p>
+      )}
+      {error && !loading && (
+        <button className="secondary" onClick={() => retryLoad.current()}>
+          Retry library
+        </button>
+      )}
       {notice && <p role="status">{notice}</p>}
+      {notice.includes("Retry to check") && !loading && (
+        <button className="secondary" onClick={() => retryLoad.current()}>
+          Retry saved lay
+        </button>
+      )}
       {sharedPost && (
         <Link href={`/community?post=${sharedPost}`}>
           View your community post →
@@ -498,10 +718,12 @@ export default function ParlayWorkshop({
         <section
           className="workshop-draft"
           ref={builder}
-          aria-label="Your parlay draft"
+          aria-label="Your lay draft"
         >
           <div className="workshop-head">
-            <h3>Your parlay · {chosen.length} leg{chosen.length === 1 ? "" : "s"}</h3>
+            <h3>
+              Your lay · {chosen.length} leg{chosen.length === 1 ? "" : "s"}
+            </h3>
             <button
               className="secondary"
               disabled={busy}
@@ -516,7 +738,7 @@ export default function ParlayWorkshop({
             can be correlated.
           </p>
           <label>
-            Parlay name
+            Lay name
             <input
               maxLength={80}
               value={title}
@@ -553,10 +775,12 @@ export default function ParlayWorkshop({
         </section>
       )}
       {open && (
-        <aside className="workshop-save-tray" aria-label="Save your parlay">
+        <aside className="workshop-save-tray" aria-label="Save your lay">
           <div>
-            <strong>{chosen.length} leg{chosen.length === 1 ? "" : "s"} selected</strong>
-            <small>{title.trim() || "Name your parlay above"}</small>
+            <strong>
+              {chosen.length} leg{chosen.length === 1 ? "" : "s"} selected
+            </strong>
+            <small>{title.trim() || "Name your lay above"}</small>
           </div>
           <button
             className="secondary"
@@ -569,7 +793,7 @@ export default function ParlayWorkshop({
             disabled={busy || chosen.length < 2 || !title.trim()}
             onClick={() => void save()}
           >
-            {busy ? "Saving…" : "Save my parlay"}
+            {busy ? "Saving…" : "Save lay"}
           </button>
           {error && <p role="alert">{error}</p>}
         </aside>
@@ -577,9 +801,15 @@ export default function ParlayWorkshop({
       <dialog
         ref={saveDialog}
         className="entry-dialog workshop-save-dialog"
+        onCancel={(event) => {
+          event.preventDefault();
+          if (sharing) return;
+          saveDialog.current?.close();
+          buildButton.current?.focus();
+        }}
         aria-labelledby="parlay-saved-title"
       >
-        <h2 id="parlay-saved-title">Parlay saved</h2>
+        <h2 id="parlay-saved-title">Lay saved</h2>
         {savedPrompt && (
           <>
             {reusedSave && (
@@ -590,7 +820,7 @@ export default function ParlayWorkshop({
             )}
             <p>
               <strong>{savedPrompt.title}</strong> · {savedPrompt.legs.length}{" "}
-              legs. It’s first in My parlays.
+              legs. It’s first in My lays.
             </p>
             {savedPrompt.community_post_id ? (
               <p role="status">Your Vegas Quant card is posted to Community.</p>
@@ -606,7 +836,7 @@ export default function ParlayWorkshop({
               </label>
             )}
             <p className="workshop-note">
-              Community posts use your Vegas Quant parlay card.
+              Community posts use your Vegas Quant lay card.
             </p>
             {error && <p role="alert">{error}</p>}
             <div className="workshop-actions">
@@ -624,7 +854,7 @@ export default function ParlayWorkshop({
                 disabled={sharing !== null}
                 onClick={() => void viewSaved()}
               >
-                {sharing ? "Posting…" : "View My parlays"}
+                {sharing ? "Posting…" : "View My lays"}
               </button>
               <button
                 className="secondary"
@@ -637,97 +867,99 @@ export default function ParlayWorkshop({
           </>
         )}
       </dialog>
-      {(mode === "parlays" || savedId) && (
-        <section className="workshop-saved" id="my-parlays">
-          <h2>My parlays</h2>
-          <p className="workshop-note">Most recently saved first.</p>
-          <p className="workshop-note">
-            Private saved combinations. Saving does not place a wager or add to
-            your tail record.
-          </p>
-          {!saved.length && !loading && (
-            <p>Your saved parlays will appear here.</p>
-          )}
-          {(mode === "parlays"
-            ? saved
-            : saved.filter((p) => p.id === savedId)
-          ).map((p) => (
-            <details
-              key={p.id}
-              id={`my-parlay-${p.id}`}
-              tabIndex={-1}
-              open={p.id === savedId ? true : undefined}
-              className={`workshop-leg${p.id === savedId ? " workshop-just-saved" : ""}`}
-            >
-              <summary>
-                {p.id === savedId && (
-                  <span className="workshop-new">Just saved</span>
-                )}
-                <strong>{p.title}</strong> · {p.legs.length} legs
-                {Date.parse(p.expires_at) <= Date.now() ? " · Closed" : ""}
-              </summary>
-              <CasinoCard
-                data={{
-                  variant: "parlay",
-                  eyebrow: "Your saved parlay",
-                  title: p.title,
-                  market: `${p.legs.length} selections`,
-                  legs: p.legs.map((leg) => ({
-                    name: leg.name,
-                    market: cleanMarket(leg.market),
-                  })),
-                  publishedAt: p.created_at,
-                  footnote:
-                    "Your saved selections. Not a wager confirmation. Combined odds unknown.",
-                }}
-              />
-              <button
-                className="btn"
-                disabled={busy || loading}
-                onClick={() => reuse(p)}
+      {(accessState === "ready" || accessState === "denied") &&
+        !loading &&
+        (mode === "parlays" || savedId) && (
+          <section className="workshop-saved" id="my-parlays">
+            <h2>My lays</h2>
+            <p className="workshop-note">Most recently saved first.</p>
+            <p className="workshop-note">
+              Private saved combinations. Saving does not place a wager or add
+              to your tail record.
+            </p>
+            {!saved.length && !loading && (
+              <p>Your saved lays will appear here.</p>
+            )}
+            {(mode === "parlays"
+              ? saved
+              : saved.filter((p) => p.id === savedId)
+            ).map((p) => (
+              <details
+                key={p.id}
+                id={`my-parlay-${p.id}`}
+                tabIndex={-1}
+                open={p.id === savedId ? true : undefined}
+                className={`workshop-leg${p.id === savedId ? " workshop-just-saved" : ""}`}
               >
-                Reuse / edit a copy
-              </button>
-              <p className="workshop-note">
-                Remove legs, clear selections or add more below. Saving a
-                changed combination keeps this original.
-              </p>
-              <ul>
-                {p.legs.map((r) => (
-                  <li key={r.leg_key}>{parlayCopyLine(r)}</li>
-                ))}
-              </ul>
-              <p>
-                Combined odds unknown. Every leg must hit. Your selection is not
-                a Vegas Quant recommendation.
-              </p>
-              {p.community_post_id ? (
-                <Link href={`/community?post=${p.community_post_id}`}>
-                  View community card →
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  className="primary"
-                  disabled={sharing !== null}
-                  onClick={() => void share(p)}
-                >
-                  {sharing === p.id ? "Posting…" : "Post to Community"}
-                </button>
-              )}
-              {Date.parse(p.expires_at) > Date.now() && (
-                <GamblyLink
-                  url="https://gambly.com"
-                  selection={parlayCopy(p.legs)}
-                  kalshiLegKeys={p.legs.map((r) => r.leg_key)}
-                  label="Copy parlay & open Gambly ↗"
+                <summary>
+                  {p.id === savedId && (
+                    <span className="workshop-new">Just saved</span>
+                  )}
+                  <strong>{p.title}</strong> · {p.legs.length} legs
+                  {Date.parse(p.expires_at) <= Date.now() ? " · Closed" : ""}
+                </summary>
+                <CasinoCard
+                  data={{
+                    variant: "parlay",
+                    eyebrow: "Your saved lay",
+                    title: p.title,
+                    market: `${p.legs.length} selections`,
+                    legs: p.legs.map((leg) => ({
+                      name: leg.name,
+                      market: cleanMarket(leg.market),
+                    })),
+                    publishedAt: p.created_at,
+                    footnote:
+                      "Your saved selections. Not a wager confirmation. Combined odds unknown.",
+                  }}
                 />
-              )}
-            </details>
-          ))}
-        </section>
-      )}
-      {showCatalog && !loading && (
+                <button
+                  className="btn"
+                  disabled={busy || loading || accessState !== "ready"}
+                  onClick={() => reuse(p)}
+                >
+                  Edit a copy
+                </button>
+                <p className="workshop-note">
+                  Remove legs, clear selections or add more below. Saving a
+                  changed combination keeps this original.
+                </p>
+                <ul>
+                  {p.legs.map((r) => (
+                    <li key={r.leg_key}>{parlayCopyLine(r)}</li>
+                  ))}
+                </ul>
+                <p>
+                  Combined odds unknown. Every leg must hit. Your selection is
+                  not a Vegas Quant recommendation.
+                </p>
+                {p.community_post_id ? (
+                  <Link href={`/community?post=${p.community_post_id}`}>
+                    View community card →
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    className="primary"
+                    disabled={sharing !== null || accessState !== "ready"}
+                    onClick={() => void share(p)}
+                  >
+                    {sharing === p.id ? "Posting…" : "Post to Community"}
+                  </button>
+                )}
+                {Date.parse(p.expires_at) > Date.now() && (
+                  <GamblyLink
+                    url="https://gambly.com"
+                    selection={parlayCopy(p.legs)}
+                    kalshiLegKeys={p.legs.map((r) => r.leg_key)}
+                    label="Copy lay & open Gambly ↗"
+                  />
+                )}
+              </details>
+            ))}
+          </section>
+        )}
+      {showCatalog && !loading && accessState === "ready" && (
         <>
           <label className="workshop-search">
             Find a player, market or game
@@ -769,16 +1001,31 @@ export default function ParlayWorkshop({
                   ? "btn workshop-approved-filter"
                   : "secondary workshop-approved-filter"
               }
+              aria-describedby="recent-form-explanation"
               aria-pressed={approvedOnly}
               onClick={() => setApprovedOnly(!approvedOnly)}
             >
-              ✓ VQ Approved
+              Recent form
             </button>
           </div>
+          <p className="workshop-note" id="recent-form-explanation">
+            Historical form-and-price screen only. This is not model approval or
+            a predicted edge.
+          </p>
           <p className="workshop-note" role="status">
             Showing {legs.length} of {rows.length} legs
-            {approvedOnly ? " · VQ Approved only" : ""}
+            {approvedOnly ? " · Recent form only" : ""}
           </p>
+          {!rows.length && (
+            <p>
+              No supported NFL player legs have been published for this week.
+            </p>
+          )}
+          {!!rows.length && !legs.length && (
+            <p>
+              No legs match these filters. Try All legs or clear your search.
+            </p>
+          )}
           <div className="workshop-legs">
             {legs.map((r) => {
               const selected = chosen.some((c) => c.leg_key === r.leg_key);
@@ -876,8 +1123,8 @@ export default function ParlayWorkshop({
                       {selected
                         ? "✓ Added · remove"
                         : available
-                          ? "+ Add to parlay"
-                          : r.result || "Closed for new parlays"}
+                          ? "+ Add to lay"
+                          : r.result || "Closed for new lays"}
                     </button>
                     {available && parlayCopyLine(r) && (
                       <GamblyLink
@@ -892,12 +1139,6 @@ export default function ParlayWorkshop({
               );
             })}
           </div>
-          {!legs.length && (
-            <p>
-              No legs match these filters. Try another stat type or turn off VQ
-              Approved.
-            </p>
-          )}
         </>
       )}
     </section>

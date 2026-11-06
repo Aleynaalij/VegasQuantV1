@@ -93,16 +93,32 @@ export default function NotificationCenter() {
     setLoading(true);
     setNotice("");
     const last = append ? rows.at(-1) : null;
-    const r = await supabase.rpc("notification_inbox", {
-      p_type: type || null,
-      p_search: query,
-      p_unread: unread,
-      p_before: last?.updated_at || null,
-      p_id: last?.id || null,
-    });
+    let r;
+    try {
+      r = await supabase
+        .rpc("notification_inbox", {
+          p_type: type || null,
+          p_search: query,
+          p_unread: unread,
+          p_before: last?.updated_at || null,
+          p_id: last?.id || null,
+        })
+        .abortSignal(AbortSignal.timeout(20000));
+    } catch {
+      if (generation !== epoch.current) return;
+      setLoading(false);
+      setNotice("Notifications could not load. Please retry.");
+      return;
+    }
     if (generation !== epoch.current) return;
     setLoading(false);
-    if (r.error) {
+    if (
+      r.error ||
+      !r.data ||
+      !Array.isArray(r.data.items) ||
+      typeof r.data.snapshot_at !== "string" ||
+      !Number.isFinite(Date.parse(r.data.snapshot_at))
+    ) {
       setNotice("Notifications could not load. Please retry.");
       return;
     }

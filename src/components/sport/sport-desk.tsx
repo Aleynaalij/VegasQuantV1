@@ -30,9 +30,11 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
         p_days: 7,
       });
       if (!live || n !== generation) return;
-      setError(!!r.error);
-      if (!r.error && r.data?.version === 1 && r.data.sport === sport)
-        setPage(r.data as SportPage);
+      // An answer that isn't this sport's version-1 page is a failed load, not "still loading":
+      // otherwise the desk would sit on "Loading the slate." forever.
+      const ok = !r.error && r.data?.version === 1 && r.data.sport === sport;
+      setError(!ok);
+      if (ok) setPage(r.data as SportPage);
     }
     void load();
     const timer = setInterval(load, 60000);
@@ -64,7 +66,11 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
         games={games}
         action={sport === "ncaab" ? "See the lines" : "Choose player props"}
         emptyTitle={
-          page ? `No ${info.name} games this week.` : "Loading the slate."
+          page
+            ? `No ${info.name} games this week.`
+            : error
+              ? `The ${info.name} schedule isn’t available right now.`
+              : "Loading the slate."
         }
       />
       <LiveNow sport={sport} />
@@ -97,7 +103,11 @@ export default function SportDesk({ sport }: { sport: NewSport }) {
         faces={faces}
         quoteTimes={quoteTimes}
         empty={
-          page ? `No ${info.name} games scheduled this week.` : "Loading games…"
+          page
+            ? `No ${info.name} games scheduled this week.`
+            : error
+              ? "Games will show here once the schedule loads."
+              : "Loading games…"
         }
       >
         {(g) => (
