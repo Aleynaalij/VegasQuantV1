@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { ArrowRight, Grid2X2, Plus, Diamond } from "lucide-react";
 import { Shell } from "./ui";
 import VqTonight from "./vq-tonight";
+import LobbyIntelligence from "./lobby-intelligence";
 import HomeRecordCard from "./home-record";
 import SectionBoundary from "./section-boundary";
 import CommunityStories from "./community-stories";
@@ -111,7 +112,7 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
         <VqTonight nflGames={nflGames} presentation="skybox" />
       </SectionBoundary>
 
-      {/* Claude's isolated Intelligence component mounts here after its handoff. */}
+      <LobbyIntelligence />
       <LobbyArenaSkyline src={LOBBY_SKYLINE.src} />
       <SectionBoundary name="Track record">
         <HomeRecordCard />

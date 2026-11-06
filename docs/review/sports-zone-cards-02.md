@@ -19,7 +19,7 @@ Prices and observed times remain publisher-supplied text. The creation timestamp
 
 Shared switcher keeps the original Link targets, active sport contract, NHL invitation hold and swipe attributes. Home uses its Sports rooms rather than a duplicate row. Zone filters, composer sport and Slots pool selection are distinct local controls. Stories retain a separate row at narrow widths. No viewer/timing/privacy change here.
 
-Codex owns shared shell/lobby/Tonight integration. Claude owns isolated Intelligence and story viewer changes; their integration and final combined review await exact handoff. Elo owns record redesign. Existing record content/losses/access rules are unchanged; its mount is relocated below the skyline. Build a lay and Slots remain accessible beneath it.
+Codex owns shared shell/lobby/Tonight integration. Claude owns isolated Intelligence and story viewer changes; Intelligence e84457d is integrated from its exact handoff; story integration and final combined review await that handoff. Elo owns record redesign. Existing record content/losses/access rules are unchanged; its mount is relocated below the skyline. Build a lay and Slots remain accessible beneath it.
 
 ## Verification status
 

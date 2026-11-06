@@ -32,6 +32,13 @@ jobs:
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
           node scripts/ui-smoke/zone-publication-cards.mjs
           LOBBY_COMBINED=1 node scripts/ui-smoke/lobby-destinations.mjs
+          node scripts/ui-smoke/lobby-intelligence.mjs
+          if UI_SMOKE_NEGATIVE=working-link node scripts/ui-smoke/lobby-intelligence.mjs > /tmp/intelligence-negative.log 2>&1; then
+            echo 'ERROR: unavailable Intelligence action was accepted'
+            exit 1
+          fi
+          cat /tmp/intelligence-negative.log
+          grep -q 'cards are not actions' /tmp/intelligence-negative.log
           if UI_SMOKE_NEGATIVE=card-palette UI_ARTIFACT_DIR=artifacts/palette-negative node scripts/ui-smoke/zone-publication-cards.mjs > /tmp/palette-negative.log 2>&1; then
             echo 'ERROR: broken publication palette was accepted'
             exit 1

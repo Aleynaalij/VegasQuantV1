@@ -117,12 +117,18 @@ for (const [list, auth, isAdmin] of [
       if (errors.length)
         failures.push(`${label}: page error · ${errors[0].slice(0, 200)}`);
       if (path === "/") {
-        // The neutral lobby: no sport selected, no NFL-only claims, no simulator teaser.
-        const lobby = await page.evaluate(() => ({
-          selected: document.querySelectorAll("nav.sport-switch a[aria-current=page]").length,
-          edge: document.body.innerText.includes("MINIMUM EDGE"),
-          teaser: /Swipe left for Simulator|Simulator\s*Coming soon/.test(document.body.innerText),
-        }));
+        // The neutral lobby: no sport selected, no NFL-only claims, no simulator teaser. The one
+        // allowed mention is VQ Intelligence's labelled, non-interactive "Coming soon" card (Mike,
+        // LOBBY-POLISH-02); the old swipe teaser and any other simulator promo stay banned.
+        const lobby = await page.evaluate(() => {
+          const all = document.body.innerText;
+          const intel = document.querySelector(".vq-intel")?.innerText || "";
+          return {
+            selected: document.querySelectorAll("nav.sport-switch a[aria-current=page]").length,
+            edge: all.includes("MINIMUM EDGE"),
+            teaser: /Swipe left for Simulator/.test(all) || /Simulator\s*Coming soon/.test(all.replace(intel, "")),
+          };
+        });
         if (lobby.selected) failures.push(`${label}: a sport chip is selected on the lobby`);
         if (lobby.edge) failures.push(`${label}: NFL-only MINIMUM EDGE claim on the lobby`);
         if (lobby.teaser) failures.push(`${label}: lobby shows the simulator teaser`);
