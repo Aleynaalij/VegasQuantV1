@@ -1,0 +1,82 @@
+/* Your lays → Tailed. Plain list, one tap target per tailed pick, honest empty/error states. */
+.vq-tailed {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+}
+.vq-tailed-head h1 {
+  margin: 0;
+}
+.vq-tailed-head p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+.vq-tailed-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+html body .vq-tailed-tabs a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid #b69b4e55;
+  border-radius: 999px;
+  color: inherit;
+  text-decoration: none;
+}
+html body .vq-tailed-tabs a[aria-current="page"] {
+  border-color: #e7cf86;
+  background: #e7cf8622;
+  font-weight: 700;
+}
+.vq-tailed-group h2 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.vq-tailed-group h2 small {
+  color: var(--muted);
+  font-weight: 500;
+}
+.vq-tailed-group ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html body a.vq-tailed-item {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #b69b4e44;
+  border-radius: 14px;
+  color: inherit;
+  text-decoration: none;
+}
+a.vq-tailed-item small {
+  color: var(--muted);
+}
+.vq-tailed-status {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.vq-tailed-status.is-win {
+  color: #6fd39a;
+}
+.vq-tailed-status.is-loss {
+  color: #f08a8a;
+}
+.vq-tailed-empty {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 16px;
+  border: 1px dashed #b69b4e55;
+  border-radius: 14px;
+}
+.vq-tailed-empty p {
+  margin: 0;
+}

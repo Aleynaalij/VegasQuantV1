@@ -237,7 +237,7 @@ export default function AskVegas() {
             <div className="ask-vegas-answer">
               <strong>Make yourself at home.</strong>
               <p>
-                Ask about The Zone, Community, your tailed-pick Records or NBA.
+                Ask about published research, The Zone, your tailed picks or NBA.
                 I use built-in answers, not live AI. I can quote an NBA rule
                 (“What is R-12?”), the published record and today’s published
                 pick, with the source, but I don’t give betting advice.

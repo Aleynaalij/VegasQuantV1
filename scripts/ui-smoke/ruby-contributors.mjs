@@ -323,8 +323,14 @@ for (const { width, photoOnly } of [
           body: storedSlip,
         }),
   );
-  // The contributor drawer is on the NFL desk (/nfl); "/" is the neutral lobby.
+  // Consumer pages carry no submission form: the NFL desk shows a contributor only a role-gated
+  // Submit a Lay action, which opens the form in the contributor area (VIP lays).
   await go(page, base + "/nfl");
+  const shortcut = page.getByRole("link", { name: "Submit a Lay" });
+  await shortcut.waitFor();
+  assert.equal(await shortcut.getAttribute("href"), "/community?view=vip#submit-lay");
+  assert.equal(await page.locator(".ruby-submit-drawer").count(), 0, "no submission form on the NFL desk");
+  await go(page, base + "/community?view=vip");
   const submissionDrawer = page.locator(".ruby-submit-drawer");
   await submissionDrawer.waitFor();
   assert.equal(await submissionDrawer.getAttribute("open"), null);
@@ -384,7 +390,8 @@ for (const { width, photoOnly } of [
     await page.getByAltText("Your original screenshot preview").waitFor();
   } else {
     await page.getByText("Add details · optional", { exact: true }).click();
-    await page.getByLabel("Sport", { exact: true }).selectOption("NBA");
+    // Scoped to the form: the contributor area (The Zone) has its own Sport filter.
+    await page.locator(".ruby-modal").getByLabel("Sport", { exact: true }).selectOption("NBA");
     await page.getByLabel("Card title").fill("Sample Ruby drop");
     await page
       .getByLabel("Your legs")

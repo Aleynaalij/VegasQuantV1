@@ -22,7 +22,7 @@ export const helpTopics: HelpTopic[] = [
       "new app",
     ],
     answer:
-      "Home shows the next kickoff, game research, Pick of the Day and the separate Hail Mary feature. The Zone is the main analyst feed and research hub. Community is for member slips and discussion. Records opens with your tailed picks; Account manages profile, access, notifications and deletion. NBA is coming soon.",
+      "Home shows every sport and tonight’s games. Each sport desk (NFL, NBA, NHL, college basketball) has its slate, game research and props. Published research holds the Pick of the Day, the separate Hail Mary and the legs we like. The Zone is for member posts, stories and contributor lays. Your lays has the lays you saved (My lays) and the picks and parlays you tailed (Tailed). Account manages profile, access, notifications and deletion.",
     href: "/feed",
     link: "Start in The Zone",
   },
@@ -127,7 +127,7 @@ export const helpTopics: HelpTopic[] = [
       "free picks",
     ],
     answer:
-      "The Zone contains published picks and analyst updates; Community is for member posts, comments and follows. Signed-in members can save and tail published picks and view their personal Records. Premium unlocks detailed research. New accounts receive a 14-day Premium trial with no card or automatic charge; current paid plans and access status appear in Account. NBA selections have their own Zone with observed prices and source-backed cases. No daily pick, outcome or profit is promised.",
+      "Published research contains Vegas Quant’s picks and analyst updates; The Zone is for member posts, comments and follows. Signed-in members can save and tail published picks; tailed picks and parlays appear in Your lays → Tailed. Premium unlocks detailed research. New accounts receive a 14-day Premium trial with no card or automatic charge; current paid plans and access status appear in Account. NBA selections have their own Zone with observed prices and source-backed cases. No daily pick, outcome or profit is promised.",
     href: "/membership",
     link: "Compare access options",
   },
@@ -146,7 +146,7 @@ export const helpTopics: HelpTopic[] = [
       "region",
     ],
     answer:
-      "Community is where members post tickets, discuss games and follow each other. Manage your username, optional photo and profile visibility under Account settings. Your email, bets and balance stay private. The Zone contains Vegas Quant research. Tail a published pick before kickoff to add it to your personal Records; verified outcomes appear there without assumed wager amounts.",
+      "The Zone is where members post tickets, discuss games and follow each other. Manage your username, optional photo and profile visibility under Account settings. Your email, bets and balance stay private. Published research contains Vegas Quant’s picks. Tail a published pick before kickoff to add it to Your lays → Tailed; verified outcomes appear there without assumed wager amounts.",
     href: "/community",
     link: "Open Community",
   },
@@ -273,7 +273,7 @@ export const helpTopics: HelpTopic[] = [
       "get started",
     ],
     answer:
-      "Vegas Quant is a sports research and community platform operated by JourneyBuilt, LLC. Home highlights the next kickoff, Pick of the Day and a separate Hail Mary. The Zone holds analyst research and Legs we like. Community lets members share slips and discuss games. Records shows the picks you tail and retains the published history. Use the NFL/NBA switch at the top; NBA analyst selections appear in the NBA Zone. It is research, not a sportsbook.",
+      "Vegas Quant is a sports research and community platform operated by JourneyBuilt, LLC. Home shows every sport and tonight’s games; each sport has its own desk. Published research holds the Pick of the Day, a separate Hail Mary and the legs we like. The Zone lets members share slips and discuss games. Your lays → Tailed shows the picks and parlays you tail. Use the sport switch at the top; NBA analyst selections appear in the NBA desk. It is research, not a sportsbook.",
     href: "/",
     link: "Explore Vegas Quant",
   },
@@ -300,7 +300,7 @@ export const helpTopics: HelpTopic[] = [
       "start my run",
     ],
     answer:
-      "Sign in and tap I’m tailing on a published pick before kickoff. Records → My tailed picks shows its verified published outcome: win, loss, push, void or pending. Existing tails are included. You can cancel a tail before kickoff; once started it stays on your record, including losses. Saving or copying a pick is separate from tailing. No wager, stake or profit is assumed.",
+      "Sign in and tap I’m tailing on a published pick before kickoff. Your lays → Tailed shows its verified published outcome: win, loss, push, void or pending. Existing tails are included. You can cancel a tail before kickoff; once started it stays on your record, including losses. Saving or copying a pick is separate from tailing. No wager, stake or profit is assumed.",
     href: "/history",
     link: "Open my Records",
   },
@@ -310,7 +310,7 @@ export const helpTopics: HelpTopic[] = [
     category: "Find your way",
     phrases: ["home", "homepage", "home screen", "full slip", "official slip"],
     answer:
-      "Home shows the next kickoff, current game research, Pick of the Day and the separate Hail Mary feature. The Zone holds the research updates and picks. Records tracks your tailed picks and preserves the published history.",
+      "Home shows every sport and tonight’s games. The sport desks hold the slate and game research; published research holds the Pick of the Day, the separate Hail Mary and the legs we like. Your lays → Tailed tracks the picks and parlays you tail.",
     href: "/",
     link: "Open Home",
   },
@@ -432,7 +432,7 @@ export const helpTopics: HelpTopic[] = [
       "formula",
     ],
     answer:
-      "The old challenge bankroll controls have been retired from Home. My tailed picks in Records tracks followed selections and verified outcomes without assuming a stake, balance or profit. Previous recorded wagers remain accessible separately in Records. Vegas Quant cannot see your sportsbook balance and does not manage betting funds.",
+      "The old challenge bankroll controls have been retired from Home. Your lays → Tailed tracks followed selections and verified outcomes without assuming a stake, balance or profit. Vegas Quant cannot see your sportsbook balance and does not manage betting funds.",
     href: "/history",
     link: "Open personal Records",
   },

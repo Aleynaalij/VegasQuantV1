@@ -31,8 +31,8 @@ Remediation references: [anonymous definer advisory](https://supabase.com/docs/g
 
 ## Product and release decisions
 
-- **Mike:** designate a support owner and actual monitored inbox. No email address, working intake, response time, refund promise or revised legal commitment was invented.
-- **Mike:** decide where a member tails collection belongs. Existing My lays is private saved combinations, not a tail-history page. Remove false Home destination promises pending the product decision; do not expose admin history as consumer records.
+- **Mike:** support owner/monitored inbox remain unassigned. Claude reports the decision to say direct contact is unavailable for now. No email address, working intake, response time, refund promise or revised legal commitment was invented.
+- Claude later reported a Mike decision to create a separate `/parlays/tailed` draft route, preserving My lays as private saved combinations. That new route needs combined access/account/error acceptance; it must not expose admin history. The workshop adds return navigation for review. No production availability or entitlement change is inferred.
 - Real checkout/payment/entitlement, consumer record access and authenticated live member notification delivery remain **not verified**. Synthetic inbox recovery is not delivery evidence.
 - #223 remains intact. No migration, production settings/data/schedules/access, provider spend, merge or deployment was changed by this investigation.
 

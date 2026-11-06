@@ -201,7 +201,7 @@ export const productPages = {
       ],
       [
         "Account access",
-        "Use Forgot password on Account. Check your spam folder and use the newest reset email. Never share a password, authentication code or payment-card number in Community or with another member.",
+        "Use Forgot password on Account. Check your spam folder and use the newest reset email. Never share a password, authentication code or payment-card number in The Zone or with another member.",
       ],
       [
         "Billing",
@@ -209,15 +209,15 @@ export const productPages = {
       ],
       [
         "Community safety",
-        "Use Report on the post concerned and provide a brief reason. Your report is sent to the platform moderation queue. Block member hides that member’s posts and comments from your feed; manage blocks at the top of Community. Server-side rules filter selected harmful phrases and guaranteed-return claims, but cannot detect every harmful post. Do not publish another person’s private information when reporting abuse.",
+        "Use Report on the post concerned and provide a brief reason. Your report is sent to the platform moderation queue. Block member hides that member’s posts and comments from your feed; manage blocks at the top of The Zone. Server-side rules filter selected harmful phrases and guaranteed-return claims, but cannot detect every harmful post. Do not publish another person’s private information when reporting abuse.",
       ],
       [
         "Privacy and account deletion",
         "Signed-in members can permanently delete their account in Account using their current password and typed DELETE confirmation. Successful deletion removes account data and cancels linked recurring memberships without a refund. Save any personal records first; a dedicated data-export flow is not available. If deletion fails after billing cancellation, your account remains and the form explains how to retry.",
       ],
       [
-        "Contact JourneyBuilt",
-        "A public, monitored support email has not yet been supplied for this product. Direct support, privacy requests and refund-request intake will be linked here as soon as that inbox is confirmed. Do not post private requests in Community.",
+        "Contacting us (not available yet)",
+        "Direct contact isn’t available yet: a monitored support address hasn’t been set up for this product, so there is no email, form or response time to offer today. It will be added here once it is. Until then, the help above covers account access, billing and safety. Please don’t post private requests in The Zone.",
       ],
     ],
   },

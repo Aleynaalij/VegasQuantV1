@@ -71,7 +71,7 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
           href="/parlays?build=1"
           icon={<span className="vq-lobby-diamond" aria-hidden="true">+</span>}
           title="Build a lay"
-          body="Start a new lay from the current legs. Nothing is placed or shared unless you choose to."
+          body="Start a new lay from the current NFL player legs. Nothing is placed or shared unless you choose to."
         />
         <LobbyTool
           href="/slots"

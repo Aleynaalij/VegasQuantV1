@@ -643,6 +643,15 @@ export default function ParlayWorkshop({
       className={`parlay-workshop${open ? " workshop-building" : ""}`}
       aria-label="Published legs and parlay builder"
     >
+      <nav className="workshop-views" aria-label="Your lays">
+        <Link
+          href="/parlays"
+          aria-current={pathname === "/parlays" ? "page" : undefined}
+        >
+          My lays
+        </Link>
+        <Link href="/parlays/tailed">Tailed</Link>
+      </nav>
       <div className="workshop-head">
         <div>
           <h2>
