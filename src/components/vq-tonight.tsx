@@ -181,7 +181,7 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
         style={skybox ? undefined : { display: "contents" }}
       >
         <header className="vq-tonight-head">
-          <h2 id="vq-tonight-title">
+          <h2 id="vq-tonight-title" aria-label="VQ Tonight">
             {skybox ? (
               <>
                 <BrandMark />

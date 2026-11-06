@@ -26,12 +26,19 @@ const nba = Array.from({ length: 5 }, (_, i) => ({
 }));
 await mkdir(out, { recursive: true });
 const metrics = [];
+let activePage;
+let activeWidth;
+let stage = "starting";
+const navigationEvents = [];
+const pageErrors = [];
 try {
   for (const [width, height] of [
     [360, 800],
     [390, 844],
     [1280, 900],
   ]) {
+    activeWidth = width;
+    stage = "creating context";
     const ctx = await browser.newContext({
       viewport: { width, height },
       reducedMotion: "reduce",
@@ -41,7 +48,8 @@ try {
     let loadingGate;
     const privateRequests = [];
     await ctx.route("**/rest/v1/**", async (route) => {
-      const path = new URL(route.request().url()).pathname;
+      const url = new URL(route.request().url());
+      const path = url.pathname;
       if (
         /\/(community_feed|community_activity|community_stories|community_profiles|member_parlays|published_leg_catalog)$/.test(
           path,
@@ -49,6 +57,15 @@ try {
       )
         privateRequests.push(path);
       if (path.endsWith("nba_games")) {
+        // The lobby reads a list; the game destination reads one exact slug with
+        // maybeSingle(). Return that actual fixture rather than an invalid five-row result.
+        const requestedSlug = url.searchParams.get("slug");
+        if (requestedSlug?.startsWith("eq.")) {
+          return route.fulfill({
+            json:
+              nba.find((game) => game.slug === requestedSlug.slice(3)) ?? null,
+          });
+        }
         if (state === "loading") await loadingGate;
         if (state === "failed")
           return route.fulfill({
@@ -72,6 +89,14 @@ try {
       return route.fulfill({ json: [] });
     });
     const page = await ctx.newPage();
+    activePage = page;
+    page.on("framenavigated", (frame) => {
+      if (frame === page.mainFrame())
+        navigationEvents.push({ width, stage, url: frame.url() });
+    });
+    page.on("pageerror", (error) =>
+      pageErrors.push({ width, stage, message: error.message }),
+    );
     page.setDefaultTimeout(15000);
     await page.clock.setFixedTime(now);
     const open = async () => {
@@ -84,7 +109,14 @@ try {
         .waitFor();
       await page.locator(".vq-brand-opening").waitFor({ state: "hidden" });
     };
+    stage = "initial lobby title";
     await open();
+    // Verify the styled title before any navigation as well as on Back. A name
+    // regression must not masquerade as a browser-history failure.
+    await page
+      .getByRole("heading", { name: "VQ Tonight", exact: true })
+      .waitFor();
+    stage = "initial schedule and fold";
     await page
       .getByRole("button", { name: "Show all 5 games", exact: true })
       .waitFor();
@@ -132,6 +164,7 @@ try {
     );
     metrics.push(layout);
     await page.screenshot({ path: `${out}/${width}-arena-ready.png` });
+    stage = "sport targets and focus";
     const desks = page.getByRole("navigation", { name: "Sport desks" });
     await page.keyboard.press("Tab");
     for (const [key, name] of [
@@ -161,6 +194,7 @@ try {
         "keyboard focus must be visible",
       );
     }
+    stage = "all sports and schedule expansion";
     await page.getByRole("link", { name: "All sports", exact: true }).click();
     assert.equal(
       new URL(page.url()).hash,
@@ -206,11 +240,33 @@ try {
         .getAttribute("href"),
       "/membership",
     );
+    stage = "open exact game";
+    const returnUrl = page.url();
     const game = page.locator(".vq-tonight-game").first();
     const href = await game.getAttribute("href");
+    const selected = nba.find(
+      (fixture) => href === `/nba/games/${fixture.slug}`,
+    );
+    assert.ok(selected, "game link must identify an actual fixture");
     await game.click();
     await page.waitForURL(new URL(href, base).href);
+    // The destination must finish rendering its actual game, not only push a URL.
+    await page
+      .getByRole("heading", {
+        name: `${selected.away_team} @ ${selected.home_team}`,
+        exact: true,
+      })
+      .waitFor();
+    stage = "Back restores exact lobby URL";
     await page.goBack();
+    await page.waitForURL(returnUrl);
+    stage = "Back restores lobby content";
+    await page
+      .getByRole("heading", {
+        name: "Your sports research starts here.",
+        exact: true,
+      })
+      .waitFor();
     await page
       .getByRole("heading", { name: "VQ Tonight", exact: true })
       .waitFor();
@@ -219,6 +275,7 @@ try {
       "/",
       "Back returns to the neutral lobby",
     );
+    stage = "empty schedule";
     state = "empty";
     await open();
     await page
@@ -230,6 +287,7 @@ try {
       "empty state must not invent fixtures",
     );
     await page.screenshot({ path: `${out}/${width}-arena-empty.png` });
+    stage = "failed schedule";
     state = "failed";
     await open();
     await page
@@ -237,11 +295,13 @@ try {
       .filter({ hasText: "NBA games could not load." })
       .waitFor();
     await page.screenshot({ path: `${out}/${width}-arena-failed.png` });
+    stage = "retry schedule";
     state = "ready";
     await page.getByRole("button", { name: "Retry", exact: true }).click();
     await page
       .getByRole("button", { name: "Show all 5 games", exact: true })
       .waitFor();
+    stage = "loading schedule";
     state = "loading";
     loadingGate = new Promise((resolve) => {
       releaseLoading = resolve;
@@ -268,6 +328,72 @@ try {
     `${out}/layout-metrics.json`,
     JSON.stringify(metrics, null, 2),
   );
+} catch (error) {
+  // Preserve evidence before closing Chromium, including the actual URL and
+  // accessible names. A timeout alone cannot distinguish history, rendering and naming.
+  const prefix = `${out}/${activeWidth ?? "unknown"}-failure`;
+  const captureErrors = [];
+  const save = async (name, run) => {
+    try {
+      await run();
+    } catch (failure) {
+      captureErrors.push(`${name}: ${String(failure)}`);
+    }
+  };
+  if (activePage && !activePage.isClosed()) {
+    await save("viewport screenshot", () =>
+      activePage.screenshot({ path: `${prefix}.png`, timeout: 5000 }),
+    );
+    await save("DOM", async () =>
+      writeFile(`${prefix}.html`, await activePage.content()),
+    );
+    await save("ARIA snapshot", async () =>
+      writeFile(
+        `${prefix}-aria.txt`,
+        await activePage.locator("body").ariaSnapshot({ timeout: 5000 }),
+      ),
+    );
+    await save("heading diagnostics", async () =>
+      writeFile(
+        `${prefix}-headings.json`,
+        JSON.stringify(
+          await activePage.locator("h1, h2, h3").evaluateAll((headings) =>
+            headings.map((heading) => ({
+              id: heading.id,
+              text: heading.textContent,
+              renderedText: heading.innerText,
+              ariaLabel: heading.getAttribute("aria-label"),
+              ariaLabelledBy: heading.getAttribute("aria-labelledby"),
+              display: getComputedStyle(heading).display,
+              visibility: getComputedStyle(heading).visibility,
+              rect: heading.getBoundingClientRect().toJSON(),
+            })),
+          ),
+          null,
+          2,
+        ),
+      ),
+    );
+  }
+  const diagnostic = {
+    width: activeWidth,
+    stage,
+    url: activePage?.url(),
+    error: String(error),
+    stack: error?.stack,
+    navigationEvents,
+    pageErrors,
+    captureErrors,
+  };
+  await writeFile(`${prefix}.json`, JSON.stringify(diagnostic, null, 2));
+  await writeFile(
+    `${out}/layout-metrics.json`,
+    JSON.stringify(metrics, null, 2),
+  );
+  console.error(
+    `FAIL arena lobby at ${activeWidth}px during ${stage}: ${activePage?.url()}. Evidence: ${prefix}.*`,
+  );
+  throw error;
 } finally {
   await browser.close();
 }
