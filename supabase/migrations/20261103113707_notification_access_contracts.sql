@@ -34,7 +34,19 @@ do $$declare definition text;old text;begin
  select pg_get_functiondef('public.claim_social_notification_deliveries()'::regprocedure) into definition;
  old:='and (n.actor_id is null or private.age_eligible(n.recipient_id))';
  if position(old in definition)=0 then raise exception 'Claim contract changed; review integration';end if;
- execute replace(definition,old,old||' and (n.type<>''pick'' or private.pick_notification_recipient_allowed(n.recipient_id))');
+ definition:=replace(definition,old,old||' and (n.type<>''pick'' or private.pick_notification_recipient_allowed(n.recipient_id))');
+ old:='select array_agg(id) into jobs';
+ if position(old in definition)=0 then raise exception 'Claim scheduling contract changed; review integration';end if;
+ -- Suppression/expiry above runs first. Defer only unowned or expired leases;
+ -- preserve attempts and ownership of active leases and permit later eligibility recovery.
+ definition:=replace(definition,old,$backoff$
+ update private.notification_deliveries d set due_at=now()+interval '5 minutes'
+ from public.notifications n where d.notification_id=n.id
+ and (d.state='pending' or(d.state='leased' and d.lease_until<now()))
+ and d.due_at<=now() and d.attempts<5 and n.type='pick'
+ and private.pick_notification_recipient_allowed(n.recipient_id) is distinct from true;
+ select array_agg(id) into jobs$backoff$);
+ execute definition;
  select pg_get_functiondef('public.social_notification_delivery_allowed(uuid,uuid)'::regprocedure) into definition;
  old:='and n.type<>all(p.disabled_types)';
  if position(old in definition)=0 then raise exception 'Dispatch contract changed; review integration';end if;

@@ -53,7 +53,9 @@ insert into private.memberships values('${a}',null,now()-interval '1 day',now()+
 insert into private.admin_users values('${c}');set app.uid='${a}';set app.session='00000000-0000-4000-8000-000000000011';`);
 const attr=()=>db.query("select proacl,prosecdef,provolatile,proconfig from pg_proc where oid='public.social_notification_delivery_allowed(uuid,uuid)'::regprocedure");
 const before=(await attr()).rows;
-await db.exec(sql('supabase/migrations/20261103113707_notification_access_contracts.sql'));
+let prepared=sql('supabase/migrations/20261103113707_notification_access_contracts.sql');
+if(process.env.NOTIFICATION_NEGATIVE==='no-backoff') prepared=prepared.replace(/ update private.notification_deliveries d set due_at=now\(\)\+interval '5 minutes'[\s\S]*?is distinct from true;/,'');
+await db.exec(prepared);
 const emit=async(type,key,user=a)=>(await db.query(`select private.emit_notification($1,null,$2,$3,null,null,null,'Synthetic fixture',$4) id`,[user,type,key,type==='pick'?'/nba/games/synthetic':'/membership'])).rows[0].id;
 const inbox=async(user=a)=>{await db.exec(`set app.uid='${user}';set role authenticated;`);try{return (await db.query('select notification_inbox() data')).rows[0].data.items;}finally{await db.exec('reset role');}};
 const valid=async()=>db.exec(`update private.memberships set expires_at=now()+interval '1 day';delete from private.age_checks where user_id='${a}';insert into private.age_checks values('${a}','verified',1);`);
@@ -80,13 +82,32 @@ await t.test('queue claim and final dispatch recheck current protected-content e
  await db.exec(`update private.notification_deliveries set due_at=now()-interval '1 second';update private.memberships set expires_at=now()-interval '1 second';`);
  let jobs=(await db.query('select claim_social_notification_deliveries() jobs')).rows[0].jobs;
  assert.equal(jobs.some(x=>x.notification_id===id),false);
- await valid();jobs=(await db.query('select claim_social_notification_deliveries() jobs')).rows[0].jobs;const job=jobs.find(x=>x.notification_id===id);assert.ok(job);
+ const due=async()=>(await db.query(`select exists(select 1 from private.notification_deliveries where (state='pending' or(state='leased' and lease_until<now())) and due_at<=now() and (attempts<5 or state='leased')) due`)).rows[0].due;
+ assert.equal(await due(),false,'ineligible queue must stop immediate dispatcher wakeups');
+ await db.query('select claim_social_notification_deliveries()');assert.equal(await due(),false);
+ await valid();
+ assert.equal((await db.query('select claim_social_notification_deliveries() jobs')).rows[0].jobs.some(x=>x.notification_id===id),false,'recovery respects retry time');
+ await db.exec(`update private.notification_deliveries set due_at=now()-interval '1 second' where notification_id='${id}'`);
+ jobs=(await db.query('select claim_social_notification_deliveries() jobs')).rows[0].jobs;const job=jobs.find(x=>x.notification_id===id);assert.ok(job);
  assert.equal((await db.query('select social_notification_delivery_allowed($1,$2) ok',[job.id,job.lease])).rows[0].ok,true);
  await db.exec(`update public.notification_preferences set push_enabled=false where user_id='${a}';`);
  assert.equal((await db.query('select social_notification_delivery_allowed($1,$2) ok',[job.id,job.lease])).rows[0].ok,false);
  await db.exec(`update public.notification_preferences set push_enabled=true where user_id='${a}';`);
  await db.exec(`delete from private.age_checks where user_id='${a}';`);
  assert.equal((await db.query('select social_notification_delivery_allowed($1,$2) ok',[job.id,job.lease])).rows[0].ok,false);await valid();
+ // Reclaimable ineligible leases defer without consuming attempts; active leases retain ownership.
+ await db.exec(`update private.notification_deliveries set due_at=now()-interval '1 second',lease_until=now()-interval '1 second' where id='${job.id}';update private.memberships set expires_at=now()-interval '1 second';`);
+ const attempts=(await db.query('select attempts from private.notification_deliveries where id=$1',[job.id])).rows[0].attempts;
+ const mixedNotice=await emit('security','mixed-eligible');
+ await db.query("update private.notification_deliveries set due_at=now()-interval '1 second' where notification_id=$1",[mixedNotice]);
+ const mixed=(await db.query('select claim_social_notification_deliveries() jobs')).rows[0].jobs;
+ assert.ok(mixed.some(x=>x.notification_id===mixedNotice));assert.equal(mixed.some(x=>x.notification_id===id),false);
+ const deferred=(await db.query('select attempts,due_at>now() deferred from private.notification_deliveries where id=$1',[job.id])).rows[0];
+ assert.equal(deferred.attempts,attempts);assert.equal(deferred.deferred,true);
+ await db.exec(`update public.notifications set created_at=now()-interval '8 days' where id='${id}';update private.notification_deliveries set due_at=now()-interval '1 second' where id='${job.id}';`);
+ await db.query('select claim_social_notification_deliveries()');
+ assert.equal((await db.query('select state from private.notification_deliveries where id=$1',[job.id])).rows[0].state,'suppressed');
+ await valid();
 });
 await t.test('preexisting security/account mutes cannot erase inbox notices; external consent stays intact',async()=>{
  // Additional review-only regressions against the existing #200 dependency.
