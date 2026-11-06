@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdirSync, readFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
@@ -36,6 +36,7 @@ posts.push(
   {
     ...posts[0],
     id: "manual",
+    created_at: "2026-10-30T16:00:00Z",
     title: "Manual owner post",
     body: "Cash it",
     card: null,
@@ -44,6 +45,7 @@ posts.push(
   {
     ...posts[1],
     id: "threes",
+    created_at: "2026-10-30T16:00:00Z",
     title: "3-point volume",
     card: "nba-threes:2026-10-31",
     legs: [],
@@ -89,6 +91,10 @@ try {
       },
       { uid, version },
     );
+    await ctx.route("**/rest/v1/community_profiles**", r => {
+      const profile = { user_id: uid, username: "SampleMember", display_name: "Sample member", avatar: "/icons/icon-192.png", region: "Sample", visible: true };
+      return r.fulfill({ json: (r.request().headers()["accept"] || "").includes("vnd.pgrst.object") ? profile : [profile] });
+    });
     await ctx.route("**/rest/v1/rpc/community_feed", (r) => {
       const p = JSON.parse(r.request().postData() || "{}");
       return r.fulfill({
@@ -189,6 +195,8 @@ try {
       bytes = readFileSync(file);
     assert.equal(bytes.readUInt32BE(16), 1080);
     assert.equal(bytes.readUInt32BE(20), 1350);
+    writeFileSync(`${out}/${width}-downloaded-card.png`, bytes);
+    await first.locator("svg").screenshot({ path: `${out}/${width}-matching-feed-card.png` });
     await first
       .getByRole("button", { name: "Open with Gambly ↗", exact: true })
       .click();
