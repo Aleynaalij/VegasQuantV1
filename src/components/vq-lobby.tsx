@@ -6,6 +6,8 @@ import { Shell } from "./ui";
 import VqTonight from "./vq-tonight";
 import HomeRecordCard from "./home-record";
 import SectionBoundary from "./section-boundary";
+import CommunityStories from "./community-stories";
+import { LOBBY_SKYLINE, LobbyArenaPennants, LobbyArenaSkyline } from "./lobby-arena-decor";
 import { NhlChipHold } from "./frank-anniversary-gate";
 import { liveSports, SPORTS, type Sport } from "@/lib/sports";
 import type { Game } from "@/lib/domain";
@@ -52,6 +54,7 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
     <Shell active="lobby">
       <LegacyHashForward />
       <section className="vq-lobby-skybox" aria-labelledby="vq-lobby-title">
+        <LobbyArenaPennants />
         <h1 id="vq-lobby-title">
           Your sports research <br />
           starts here.
@@ -98,6 +101,8 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
         </Link>
       </section>
 
+      <CommunityStories placement="lobby" />
+
       <SectionBoundary name="VQ Tonight">
         <VqTonight nflGames={nflGames} presentation="skybox" />
       </SectionBoundary>
@@ -121,6 +126,7 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
       <SectionBoundary name="Track record">
         <HomeRecordCard />
       </SectionBoundary>
+      <LobbyArenaSkyline src={LOBBY_SKYLINE.src} />
     </Shell>
   );
 }

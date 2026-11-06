@@ -161,7 +161,15 @@ function page(sport, access) {
   p.access = access;
   return p;
 }
-const session = () =>
+// These sports journeys use an established synthetic member with completed onboarding.
+// Only the explicit update case below starts without the device acknowledgement.
+const session = ({ needsUpdate = false } = {}) => {
+  const uid = "00000000-0000-0000-0000-000000000001";
+  sessionStorage.setItem("vq-prompt-shown", "fixture");
+  localStorage.setItem(`vq-phone-later:${uid}`, String(Date.now() + 7 * 86400000));
+  localStorage.setItem(`vq-push-prompt:${uid}`, String(Date.now() + 7 * 86400000));
+  if (needsUpdate) localStorage.removeItem(`vq-app-refresh:${uid}`);
+  else localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
   localStorage.setItem(
     "sb-127-auth-token",
     JSON.stringify({
@@ -171,16 +179,47 @@ const session = () =>
       expires_at: Math.floor(Date.now() / 1000) + 86400 * 400,
       refresh_token: "smoke",
       user: {
-        id: "00000000-0000-0000-0000-000000000001",
+        id: uid,
         aud: "authenticated",
         role: "authenticated",
         email: "smoke@example.com",
         app_metadata: {},
-        user_metadata: {},
+        user_metadata: { vq_welcome_version: 1 },
         created_at: "2026-10-01T00:00:00Z",
       },
     }),
   );
+};
+async function readyForSports(p, needsUpdate = false) {
+  await p.locator(".vq-brand-opening").waitFor({ state: "hidden" });
+  if (needsUpdate) {
+    const notice = p.getByRole("dialog", {
+      name: "Get the new gold Vegas Quant app",
+      exact: true,
+    });
+    await notice.waitFor();
+    const next = notice.getByRole("button", {
+      name: "Continue to Vegas Quant",
+      exact: true,
+    });
+    assert.ok(await next.isDisabled(), "the update requires acknowledgement");
+    await notice.getByRole("checkbox").check();
+    await next.click();
+    await notice.waitFor({ state: "hidden" });
+    assert.equal(
+      await p.evaluate(() => localStorage.getItem(
+        "vq-app-refresh:00000000-0000-0000-0000-000000000001",
+      )),
+      "gold-2026-10-22-v2",
+      "Continue must persist the real update acknowledgement",
+    );
+  }
+  assert.equal(
+    await p.locator("dialog[open]").count(),
+    0,
+    "sports must be usable without forcing a dialog closed",
+  );
+}
 for (const width of [390, 1280])
   for (const signedIn of [false, true])
     for (const sport of ["nhl", "ncaab"]) {
@@ -253,9 +292,7 @@ for (const width of [390, 1280])
       const errors = [];
       p.on("pageerror", (e) => errors.push(e.message));
       await p.goto(`${base}/${sport}`, { waitUntil: "networkidle" });
-      await p.evaluate(() =>
-        document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
-      );
+      await readyForSports(p);
       await p.locator(`.home-brief[data-sport=${sport}] .vq-matchup`).waitFor();
       assert.match(
         await p.locator(".home-brief").innerText(),
@@ -385,9 +422,7 @@ for (const width of [390, 1280])
     const p = await ctx.newPage();
     await p.clock.install({ time: fixedNow });
     await p.goto(`${base}/${sport}`, { waitUntil: "networkidle" });
-    await p.evaluate(() =>
-      document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
-    );
+    await readyForSports(p);
     await p.locator(".vq-ml-face").waitFor();
     unavailable = true;
     await p.clock.fastForward(120001);
@@ -407,7 +442,8 @@ for (const width of [390, 1280]) {
     viewport: { width, height: 900 },
     reducedMotion: "reduce",
   });
-  await ctx.addInitScript(session);
+  const needsUpdate = width === 390;
+  await ctx.addInitScript(session, { needsUpdate });
   let calls = 0;
   await ctx.route("**/rest/v1/rpc/sports_home", (r) => {
     calls++;
@@ -425,9 +461,7 @@ for (const width of [390, 1280]) {
   });
   const p = await ctx.newPage();
   await p.goto(base + "/ncaab", { waitUntil: "networkidle" });
-  await p.evaluate(() =>
-    document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
-  );
+  await readyForSports(p, needsUpdate);
   assert.equal(await p.locator(".vq-game-row").count(), 32);
   assert.equal(await p.locator(".sport-market-group").count(), 0);
   assert.equal(calls, 1, "no duplicate INITIAL_SESSION load");
@@ -439,6 +473,8 @@ for (const width of [390, 1280]) {
     await p.getByRole("button", { name: /Show more games/ }).click();
   assert.equal(await p.locator(".vq-game-row").count(), 380);
   await p.getByText("Home 379", { exact: true }).waitFor();
+  assert.equal(await p.locator("dialog[open]").count(), 0,
+    "the acknowledged update must not reopen during repeated Show more clicks");
   assert.ok(
     await p.evaluate(
       () => document.documentElement.scrollWidth - innerWidth <= 1,

@@ -100,7 +100,10 @@ const text = async (page) => tonight(page).innerText();
 for (const width of [360, 390, 1280])
   await open(`@${width} signed out: today's games on the ET day, with routes and states`, { width, collegeFailsOnce: true }, async ({ page, fail }) => {
     const t0 = await text(page);
-    if (!/Today · Tue, Oct 13 · Eastern time/.test(t0)) fail(`day label is not Oct 13 ET (${t0.split("\n").slice(0, 2).join(" | ")})`);
+    // Compare semantic text, not CSS-transformed innerText. Keep the exact ET day constraint.
+    const dayLabel = (await tonight(page).locator(".vq-tonight-head > p").first().textContent())?.replace(/\s+/g, " ").trim();
+    if (dayLabel !== "Today · Tue, Oct 13 · ET") fail(`day label is not Oct 13 ET (${dayLabel})`);
+    if (await tonight(page).locator('[data-skybox-face="overview"]').count() !== 1 || await tonight(page).locator('[data-skybox-face]').count() !== 1) fail("the lobby must render only its one real overview face");
     if (await tonight(page).getByText(/Tue, Oct 13/).count() !== 1) fail("day label repeated or missing");
     const game = tonight(page).getByRole("link", { name: /AwayN1 at HomeN1/i });
     if ((await game.count()) !== 1) fail("10:30 PM ET game is not listed for today");

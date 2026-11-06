@@ -1,8 +1,22 @@
 /* The arena is decoration only. All rooms, schedules and controls remain live HTML.
    Scope the atmosphere to Home, leaving sport desks and their working chrome untouched. */
 .screen-lobby .main-wrap {
-  background: #030706 url("/lobby/arena-skybox.webp") center 72px / 100% auto
-    no-repeat;
+  position: relative;
+  isolation: isolate;
+  background: #030706;
+}
+/* Keep the arena's rafters and stands, but fade out its baked-in skyline. The dedicated
+   responsive Vegas panorama below the live content is the only visible skyline. */
+.screen-lobby .main-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 72px 0 auto;
+  aspect-ratio: 2 / 3;
+  z-index: -1;
+  background: url("/lobby/arena-skybox.webp") center top / 100% 100% no-repeat;
+  -webkit-mask-image: linear-gradient(#000 0%, #000 74%, transparent 87%);
+  mask-image: linear-gradient(#000 0%, #000 74%, transparent 87%);
+  pointer-events: none;
 }
 .screen-lobby main {
   max-width: 1120px;
@@ -415,9 +429,10 @@ a.vq-lobby-tool small {
     box-shadow: none;
     font-size: 12px;
   }
-  .screen-lobby .main-wrap {
-    background-position: center 105px;
-    background-size: 100% 1100px;
+  .screen-lobby .main-wrap::before {
+    top: 105px;
+    height: 1100px;
+    aspect-ratio: auto;
   }
   .screen-lobby main {
     padding-inline: 8px;

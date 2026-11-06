@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { ChevronRight, Layers, Search, Users } from "lucide-react";
 import BrandMark from "./brand-mark";
+import SkyboxFace from "./skybox-face";
 import { useCallback, useEffect, useMemo, useRef, useState, useId } from "react";
 import { supabase } from "@/lib/supabase";
 import { SPORTS, type Sport } from "@/lib/sports";
@@ -179,10 +180,7 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
       className={`vq-tonight${skybox ? " vq-tonight-skybox" : ""}`}
       aria-labelledby="vq-tonight-title"
     >
-      <div
-        className="vq-tonight-board"
-        style={skybox ? undefined : { display: "contents" }}
-      >
+      <SkyboxFace faceId="overview" presentation={presentation}>
         {skybox ? <SkyboxEnclosure /> : null}
         <header className="vq-tonight-head">
           <h2 id="vq-tonight-title" aria-label="VQ Tonight">
@@ -195,7 +193,7 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
               "VQ Tonight"
             )}
           </h2>
-          <p>Today · {day.label} · Eastern time</p>
+          <p>Today · {day.label} · {skybox ? "ET" : "Eastern time"}</p>
           {lastChecked && !skybox ? (
             <p className="vq-tonight-checked">
               Schedules checked {clock(lastChecked)}. Times and statuses are as
@@ -292,8 +290,8 @@ export default function VqTonight({ nflGames, presentation = "standard" }: { nfl
             ) : null}
           </div>
         )}
-        {skybox && lastChecked ? <p className="vq-tonight-checked vq-tonight-screen-note">Schedules checked {clock(lastChecked)}. Times and statuses are as the league data reported them then.</p> : null}
-      </div>
+        {skybox && lastChecked ? <p className="vq-tonight-checked vq-tonight-screen-note">Schedules checked {clock(lastChecked)} · League times and statuses at that check.</p> : null}
+      </SkyboxFace>
       {skybox ? (
         <h3 className="vq-lobby-section-title">Your next move</h3>
       ) : null}
