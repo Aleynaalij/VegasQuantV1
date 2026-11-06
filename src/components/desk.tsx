@@ -982,7 +982,7 @@ function MatchupWorkspace({
                     </Link>
                   </p>
                 ))}
-                <Link href="/">View current research →</Link>
+                <Link href="/feed?view=latest">View current research →</Link>
               </details>
             )}
           </div>

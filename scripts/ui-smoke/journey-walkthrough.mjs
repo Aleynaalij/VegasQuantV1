@@ -126,7 +126,7 @@ for (const width of [360, 390, 1280]) {
     const log = { id: `in-${width}`, width, signedIn: true, steps: [], findings: [] };
     const { ctx, page, errors, saved, shares } = await session(width, true);
     try {
-      await page.goto(BASE + "/", { waitUntil: "networkidle" });
+      await page.goto(BASE + "/nfl", { waitUntil: "networkidle" }); // the NFL desk (/ is the lobby)
       await closeDialogs(page);
       await step(log, page, "home", "Landing");
       const row = page.locator("details.vq-game-row").first();
@@ -162,7 +162,7 @@ for (const width of [360, 390, 1280]) {
       if (!back.actions.some((a) => /Build your lay · 1 selected/.test(a))) log.findings.push("Back from research hides the lay in progress until a game is reopened.");
 
       // Two games open: Back returns to the game actually entered, not the last one opened.
-      await page.goto(BASE + "/", { waitUntil: "networkidle" });
+      await page.goto(BASE + "/nfl", { waitUntil: "networkidle" }); // the NFL desk (/ is the lobby)
       const rowA = page.locator(`#home-game-${SLUG}`), rowB = page.locator(`#home-game-${SLUG_B}`);
       if (!(await rowA.evaluate((d) => d.open))) await rowA.locator("summary").click();
       await rowB.locator("summary").click();
@@ -202,7 +202,7 @@ for (const width of [360, 390, 1280]) {
       if (!zone.actions.some((a) => /\/parlays|your lay|build/i.test(a))) log.findings.push("The Zone has no route to the member's lay in progress or saved lays.");
 
       // Builder from the lay in progress.
-      await page.goto(BASE + "/", { waitUntil: "networkidle" });
+      await page.goto(BASE + "/nfl", { waitUntil: "networkidle" }); // the NFL desk (/ is the lobby)
       await page.waitForTimeout(500);
       if (!(await page.getByRole("link", { name: /Build your lay · 1 selected/ }).count())) await row.locator("summary").click();
       await page.getByRole("link", { name: /Build your lay · 1 selected/ }).first().click();
@@ -265,7 +265,7 @@ for (const width of [360, 390, 1280]) {
         sessionStorage.setItem(`vq-parlay-draft:${a}`, JSON.stringify({ title: "A", keys: ["journey:0"] }));
         sessionStorage.setItem(`vq-parlay-draft:${b}`, JSON.stringify({ title: "B", keys: ["journey:1", "journey:3"] }));
       }, { a: UID, b: UID_B });
-      await page.goto(BASE + "/", { waitUntil: "networkidle" });
+      await page.goto(BASE + "/nfl", { waitUntil: "networkidle" }); // the NFL desk (/ is the lobby)
       await closeDialogs(page);
       const lay = (n) => page.getByRole("link", { name: new RegExp(`Build your lay · ${n} selected`) });
       if (!(await lay(1).count())) log.findings.push("Account A's lay in progress is not shown before any game is opened.");
@@ -297,7 +297,7 @@ for (const width of [360, 390, 1280]) {
     const log = { id: `out-${width}`, width, signedIn: false, steps: [], findings: [] };
     const { ctx, page, errors } = await session(width, false);
     try {
-      await page.goto(BASE + "/", { waitUntil: "networkidle" });
+      await page.goto(BASE + "/nfl", { waitUntil: "networkidle" }); // the NFL desk (/ is the lobby)
       await step(log, page, "home", "Landing, signed out");
       await page.locator("details.vq-game-row").first().locator("summary").click();
       await page.waitForTimeout(600);

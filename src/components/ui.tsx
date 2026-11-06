@@ -269,7 +269,7 @@ export function Shell({
                 {
                   lobby: "Home",
                   home: `${SPORTS[sport].label} desk`,
-                  game: "The Zone",
+                  game: "NFL games",
                   community: "The Zone",
                   slots: "VQ Slots",
                   feed: "The Zone",

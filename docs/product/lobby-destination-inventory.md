@@ -75,8 +75,9 @@ no `sports_home` for NHL/NCAAB, and returns `null` for unknown RPCs.
 | Destination | Finding (synthetic) | Owner | Action |
 |---|---|---|---|
 | `/nba` | “No NBA games this week.” empty state renders | C | Reuse |
-| `/nhl`, `/ncaab` | stuck on “Loading the slate… Loading games…” when the slate RPC returns null; no failed/empty distinction for a malformed/null answer | C | Fix (loading vs empty vs failed distinct) |
-| `/matchups` | search, week, slot filters, sort, upcoming toggle render; **h1 “THE ZONE · GAMES”** conflicts with Zone = member talk | C | Fix (terminology) |
+| `/nhl`, `/ncaab` | stuck on “Loading the slate…” when the slate RPC returned null/wrong-sport; a real error still showed “Loading” above the Retry | C | **Done (C3-1):** loading / no games / unavailable + Retry distinct (`sport-desk.tsx`; synthetic 4/4) |
+| `/matchups` | search, week, slot filters, sort, upcoming toggle render; h1/title/breadcrumb said “The Zone · Games” | C | **Done (C3-1):** “NFL games” |
+| `/feed?view=…` (published research) | the research feed is still branded “The Zone” (page title, `ResearchFeed` copy) while The Zone = member talk | C | Fix (C3-2, needs `research-feed.tsx` claim) |
 | `/matchups/<slug>`, `/games/<slug>` | game workspace; not exercised without data | C | Not run (needs game fixture) |
 | `/feed` | redirects to `/community` (no query kept) | C | Reuse; never label as research |
 | Sport `…/records` | 200 with headings | C | Reuse (check access copy §8) |
@@ -125,13 +126,15 @@ copy not yet reviewed against #139. Owner C · Action: review copy (no broad-cov
 
 | Where | Finding | Owner | Action |
 |---|---|---|---|
-| `how-it-works.tsx` (“Where things live”) | says Home = next kickoff + Pick of the Day; calls `/feed` “The Zone: game research” and `/community` “Community” — the old Zone-vs-Community contradiction | C | Fix (lobby / NFL desk / The Zone = member talk) |
-| `leg-actions.tsx` “Tailing adds this parlay to Home”; `parlay-card.tsx` “See your tailed parlays on Home →” | promise a Home section that the current Home does not render | C/X | Verify where tails show; relabel/route (coordinate with X2) |
-| `ask-vegas.tsx` “View Pick of the Day & Hail Mary” → `/` | destination no longer shows those picks | C | Verify and route to the real surface |
-| `desk.tsx` “View current research →” → `/` | research lives on the sport desks | C | → `/nfl` |
+| `how-it-works.tsx` (“Where things live”) | said Home = next kickoff + Pick of the Day; called `/feed` “The Zone: game research” and `/community` “Community” | C | **Done (C3-1):** Home / NFL desk / Published research (`/feed?view=latest`) / The Zone = member talk |
+| `leg-actions.tsx` “Tailing adds this parlay to Home”; `parlay-card.tsx` “See your tailed parlays on Home →” | **verified: no member page renders tailed parlays** — `ForYou` (holding `TailedParlays`) is imported on the desk but never mounted; `MyTailRecord` is only on admin-only `/history`. Already false on main | M/X/C | **Decision:** where do tailed parlays live (`/parlays`, the NFL desk, or the lobby)? Then relabel |
+| `ask-vegas.tsx` “View Pick of the Day & Hail Mary” → `/` | Home never rendered those picks; they live in published research | C | **Done (C3-1):** → `/feed?view=latest` |
+| `desk.tsx` “View current research →” → `/` | published research lives at `/feed?view=latest` | C | **Done (C3-1):** → `/feed?view=latest` |
 | Story rail signed out | shows “Stories unavailable · Retry” to visitors (no member data leaks) | C4 | Decide honest signed-out rail state (coordinate; #223 component) |
 
 ## Owner decisions (so far)
+
+0. **Tailed parlays** — members currently have no page that shows them (see above). Where should they live?
 
 1. **Support contact** — no monitored address/intake exists; page must not imply one.
 2. **`/saved`** — keep as a member destination (and link it), or leave unlinked?

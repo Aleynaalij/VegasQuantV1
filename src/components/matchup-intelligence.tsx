@@ -415,7 +415,7 @@ export default function MatchupIntelligence({
             <h1>
               {row
                 ? `${row.game.away_abbreviation || row.game.away_team} @ ${row.game.home_abbreviation || row.game.home_team}`
-                : "The Zone · Games"}
+                : "NFL games"}
             </h1>
             <p>
               {row
