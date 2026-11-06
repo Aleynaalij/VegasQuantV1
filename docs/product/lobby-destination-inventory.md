@@ -121,6 +121,16 @@ copy not yet reviewed against #139. Owner C · Action: review copy (no broad-cov
 | `/methodology`, `/about`, `/faq`, `/privacy`, `/terms`, `/responsible-play` | all 200 with content | C | Copy review for Zone/Community terminology |
 | `/support` | 200 | M | **Decision:** monitored support contact still missing — no address/intake invented |
 
+## Found while implementing C2 (queued for C3, files to be claimed)
+
+| Where | Finding | Owner | Action |
+|---|---|---|---|
+| `how-it-works.tsx` (“Where things live”) | says Home = next kickoff + Pick of the Day; calls `/feed` “The Zone: game research” and `/community` “Community” — the old Zone-vs-Community contradiction | C | Fix (lobby / NFL desk / The Zone = member talk) |
+| `leg-actions.tsx` “Tailing adds this parlay to Home”; `parlay-card.tsx` “See your tailed parlays on Home →” | promise a Home section that the current Home does not render | C/X | Verify where tails show; relabel/route (coordinate with X2) |
+| `ask-vegas.tsx` “View Pick of the Day & Hail Mary” → `/` | destination no longer shows those picks | C | Verify and route to the real surface |
+| `desk.tsx` “View current research →” → `/` | research lives on the sport desks | C | → `/nfl` |
+| Story rail signed out | shows “Stories unavailable · Retry” to visitors (no member data leaks) | C4 | Decide honest signed-out rail state (coordinate; #223 component) |
+
 ## Owner decisions (so far)
 
 1. **Support contact** — no monitored address/intake exists; page must not imply one.
@@ -129,5 +139,5 @@ copy not yet reviewed against #139. Owner C · Action: review copy (no broad-cov
 
 ## Status
 
-C1 inventory: **draft complete for Home + chrome + one hop**; per-game/matchup detail rows need a game
+C1 inventory: **draft complete for Home + chrome + one hop**; C2 lobby + `/nfl` + redirects implemented (synthetic self-test 11/11, negative control caught); per-game/matchup detail rows need a game
 fixture (not run). Route contract posted to #65 for X4.

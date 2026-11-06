@@ -4,13 +4,13 @@ import { homeGameFrom, homeGamePath } from "../src/lib/journey.ts";
 
 const slugs = ["sample-sea-den-2026-10-15", "sample-hou-jax-2026-10-18"];
 
-test("research links back to the game's row on Home", () => {
-  assert.equal(homeGamePath("sample-sea-den-2026-10-15"), "/?game=sample-sea-den-2026-10-15#home-games");
+test("research links back to the game's row on the NFL desk", () => {
+  assert.equal(homeGamePath("sample-sea-den-2026-10-15"), "/nfl?game=sample-sea-den-2026-10-15#home-games");
 });
 
 test("a malformed slug never builds a game URL", () => {
   for (const bad of ["", "../x", "a b", "A-B", "x?y=1", "-lead", "a".repeat(121)])
-    assert.equal(homeGamePath(bad), "/#home-games", bad);
+    assert.equal(homeGamePath(bad), "/nfl#home-games", bad);
 });
 
 test("Home opens only a listed game", () => {

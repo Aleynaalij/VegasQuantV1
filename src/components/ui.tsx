@@ -100,6 +100,8 @@ export function Shell({
 }) {
   // A sport that isn't live yet wears the NFL chrome.
   const sport = SPORTS[requested]?.live ? requested : "nfl";
+  // The neutral lobby (/) belongs to no sport: no chip is selected and no sport-only claims show.
+  const lobby = active === "lobby";
   const home = SPORTS[sport].home;
   const community =
     sport === "nfl" ? "/community" : `/community?sport=${sport}`;
@@ -118,7 +120,7 @@ export function Shell({
   const nflHref = (
     {
       community: "/community",
-      home: "/",
+      home: SPORTS.nfl.home,
       game: "/matchups",
       feed: "/feed",
       history: "/history",
@@ -154,7 +156,7 @@ export function Shell({
         Skip to content
       </a>
       <aside className="sidebar">
-        <Link className="brand" href={home}>
+        <Link className="brand" href="/">
           <span className="logo">
             <BrandMark />
           </span>
@@ -166,9 +168,9 @@ export function Shell({
         <span className="nav-label">YOUR RESEARCH DESK</span>
         <nav aria-label="Main navigation">
           <Link
-            aria-current={active === "home" ? "page" : undefined}
-            className={active === "home" ? "active" : ""}
-            href={home}
+            aria-current={lobby ? "page" : undefined}
+            className={lobby ? "active" : ""}
+            href="/"
           >
             <LayoutDashboard size={18} />
             Home
@@ -214,7 +216,7 @@ export function Shell({
             Account
           </Link>
         </nav>
-        {!(sport === "nba" && active === "home") && (
+        {!lobby && !(sport === "nba" && active === "home") && (
           <div className="sidebar-rule">
             <ShieldCheck size={23} />
             <h3>
@@ -256,7 +258,7 @@ export function Shell({
       </aside>
       <div className="main-wrap">
         <header className="topbar">
-          <Link href={home} className="mobile-brand">
+          <Link href="/" className="mobile-brand">
             <BrandMark />
             VEGAS QUANT
           </Link>
@@ -265,10 +267,8 @@ export function Shell({
             <b>
               {(
                 {
-                  home:
-                    sport === "nfl"
-                      ? "Sports desk"
-                      : `${SPORTS[sport].label} desk`,
+                  lobby: "Home",
+                  home: `${SPORTS[sport].label} desk`,
                   game: "The Zone",
                   community: "The Zone",
                   slots: "VQ Slots",
@@ -288,7 +288,7 @@ export function Shell({
             </b>
           </div>
           <div className="top-actions">
-            {sport === "nfl" && active !== "community" && <LetsSweat />}
+            {sport === "nfl" && !lobby && active !== "community" && <LetsSweat />}
             <InstallApp />
             <UpdateInbox />
             <span className="desktop">Research desk</span>
@@ -305,29 +305,29 @@ export function Shell({
               <Link
                 key={key}
                 href={chipHref(key)}
-                aria-current={sport === key ? "page" : undefined}
+                aria-current={!lobby && sport === key ? "page" : undefined}
                 aria-label={SPORTS[key].name}
-                className={sport === key ? "selected" : ""}
+                className={!lobby && sport === key ? "selected" : ""}
                 data-sport={key}
               >
                 {SPORTS[key].label}
               </Link>
             );
             // Frank's surprise is NHL itself: its chip waits for his invitation status.
-            return key === "nhl" && sport !== "nhl" ? (
+            return key === "nhl" && (lobby || sport !== "nhl") ? (
               <NhlChipHold key={key}>{chip}</NhlChipHold>
             ) : (
               chip
             );
           })}
-          {active === "home" || active === "community" ? (
+          {lobby || active === "home" || active === "community" ? (
             <CommunityStories />
           ) : sport === "nba" ? (
             <span>{active === "feed" ? "Legs we like" : "NBA research"}</span>
           ) : null}
         </nav>
         <main id="main-content" tabIndex={-1}>
-          {active === "home" ? <FrankNhlFeedback /> : null}
+          {lobby || active === "home" ? <FrankNhlFeedback /> : null}
           {children}
           <footer className="vq-footer">
             <p>
@@ -366,9 +366,9 @@ export function Shell({
         <nav className="mobile-nav" aria-label="Main navigation">
           <TabScrub />
           <Link
-            aria-current={active === "home" ? "page" : undefined}
-            className={active === "home" ? "active" : ""}
-            href={home}
+            aria-current={lobby ? "page" : undefined}
+            className={lobby ? "active" : ""}
+            href="/"
           >
             <LayoutDashboard size={19} />
             Home
