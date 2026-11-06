@@ -448,7 +448,9 @@ await open("lease expiry and resume resync before displaying content", { freeze:
     const elapsed=await r.request().frame().evaluate(()=>performance.now());
     return r.fulfill({json:{version:1,server_now:new Date(Date.UTC(2026,9,14,2)+elapsed).toISOString()}});
   });
-  await viewer(page).getByRole("button",{name:"Retry story time"}).click();
+  // Exercise bounded automatic recovery; a transient Retry control can disappear once
+  // another in-flight resume sample succeeds, so it is not a stable click target.
+  await page.clock.fastForward(30000);
   await viewer(page).getByText("SampleAlpha post 1").waitFor();
 });
 
