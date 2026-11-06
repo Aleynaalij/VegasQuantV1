@@ -108,3 +108,20 @@ difference [−0.040, 0.246]; total 7.6261 vs 7.5984, CI [−0.034, 0.088]. No s
 - Next step before any v0.2.21: a separately frozen diagnostic of (a) the within-band cell mix (lead
   and field) at opportunities, and (b) the late-half play mix (kneels, spikes, incompletions,
   out-of-bounds) that decides how many continuing running plays occur. No change is proposed yet.
+
+## Second diagnostic (frozen in `late_mix_diagnostic.py` before it ran)
+`diagnostics/late-mix-0.2.20.json`, same samples.
+- **Fewer late snaps in the second half.** Q4 121–300 s, per game, sim vs source: runs 2.92 vs
+  3.36, completions 2.12 vs 2.61, incompletions 1.07 vs 1.58. Simulated late clocks burn faster per
+  play (consistent with the earlier 24.4 s vs 21.6 s overall gap).
+- **The loop:** a no-call continuing play commits a long non-followed runoff. The lower call rate
+  (0.214 vs 0.246) adds runoff, which removes snaps and therefore opportunities. It compounds.
+- **Situations are similar** within the last-120 s bands: the lead and field mix differs by a few
+  points, with somewhat more "behind" in the sim. That does not explain a lower call rate by itself.
+- **End-of-half kneels too frequent:** at ≤10 s, h1 0.497 vs 0.196 and h2 0.422 vs 0.085 per game.
+  ("other" at ≤10 s in the sim includes `end_period` actions the source does not count as plays, so
+  it is not compared.)
+- **Open question for v0.2.21:** why calls per running decision fall below the source rate of the
+  cells the decisions read. The next step is a frozen check that replays the source's own running
+  opportunities through `timeout_rates`. If the cells reproduce 0.246 there, the gap comes from the
+  sim's state distribution; if not, from the lookup. Then a single-change v0.2.21 protocol.
