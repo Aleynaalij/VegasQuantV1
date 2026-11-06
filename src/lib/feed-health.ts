@@ -4,7 +4,8 @@ export type FeedRun = {
   created_at: string;
   details?: Record<string, unknown>;
 };
-/** Job evidence only. fetched_at is retrieval time, never a provider quote timestamp.
+/** Job evidence only. NFL props fetched_at is a legacy batch-attempt clock.
+ * Only version-2 event_fetched_at records successful per-event ingestion evidence.
  * Callers supply the existing job threshold; this helper does not choose a sport cadence.
  */
 export function feedRunHealth(
@@ -41,23 +42,27 @@ export function feedRunHealth(
               : raw === "ok"
                 ? "ok"
                 : "unknown";
-  const fetched =
-    typeof row?.details?.fetched_at === "string"
-      ? Date.parse(row.details.fetched_at)
-      : NaN;
+  const validEvidenceTime = (value: unknown) => {
+    const at = typeof value === "string" ? Date.parse(value) : NaN;
+    return validClock && Number.isFinite(at) && Number.isFinite(runAt) && at <= runAt && at <= now
+      ? at : null;
+  };
+  const details = row?.details;
+  const attemptedAt = validEvidenceTime(details?.attempted_at ??
+    (row?.provider === "The Odds API props" ? details?.fetched_at : null));
+  const events = details?.event_fetch_state_version === 2 &&
+    details.event_fetched_at && typeof details.event_fetched_at === "object" && !Array.isArray(details.event_fetched_at)
+    ? details.event_fetched_at as Record<string, unknown> : {};
+  const eventFetchedAt: Record<string, number> = Object.fromEntries(Object.entries(events).flatMap(([event, value]) => {
+    const at = validEvidenceTime(value);
+    return at === null ? [] : [[event, at]];
+  }));
   return {
     state,
     timeState,
     runAt: Number.isFinite(runAt) ? runAt : null,
-    // Reject invalid, future and impossible retrieval-after-run timestamps. No fallback to now.
-    fetchedAt:
-      validClock &&
-      Number.isFinite(fetched) &&
-      Number.isFinite(runAt) &&
-      fetched <= runAt &&
-      fetched <= now
-        ? fetched
-        : null,
+    attemptedAt,
+    eventFetchedAt,
   };
 }
 
