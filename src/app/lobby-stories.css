@@ -79,3 +79,17 @@ html body .lobby-community-stories :is(button, a):focus-visible {
     padding: 6px;
   }
 }
+
+/* Explicitly opted-in admin preview. The normal compact story row is unchanged. */
+.story-preview-notice {
+  margin: 0;
+  padding: 8px;
+  color: #e7cf86;
+  font-size: 12px;
+  line-height: 1.4;
+}
+.story-preview-exit {
+  margin-left: 8px;
+  color: inherit;
+  text-decoration: underline;
+}

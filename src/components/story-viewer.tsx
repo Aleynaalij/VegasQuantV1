@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Pause, Play, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
+import type { StoryPreview } from "@/lib/story-preview";
 import { time } from "@/lib/domain";
 import { SPORTS } from "@/lib/sports";
 import { useStoryClock } from "@/lib/use-story-clock";
@@ -80,10 +81,14 @@ type State =
  */
 export default function StoryViewer({
   startPostId,
+  preview,
+  previewRevoked = false,
   onClose,
   onRead,
 }: {
   startPostId: string;
+  preview?: StoryPreview;
+  previewRevoked?: boolean;
   onClose: () => void;
   onRead: (seen: string[]) => void;
 }) {
@@ -129,9 +134,14 @@ export default function StoryViewer({
     [onClose],
   );
 
+  useEffect(() => {
+    if (preview && previewRevoked) close();
+  }, [preview, previewRevoked, close]);
+
   // Browser Back closes the viewer: it adds one history entry (#story) on open, through the native
   // pushState the app router integrates with, and closes when that entry is popped.
   useEffect(() => {
+    if (closed.current) return;
     if (window.location.hash !== "#story") {
       window.history.pushState(
         window.history.state,
@@ -150,7 +160,7 @@ export default function StoryViewer({
   // Open as a modal (focus stays inside; Escape is handled below so it closes exactly once).
   useEffect(() => {
     const d = dialog.current;
-    if (d && !d.open) d.showModal();
+    if (d && !d.open && !closed.current) d.showModal();
     return () => {
       if (d?.open) d.close();
     };
@@ -167,15 +177,23 @@ export default function StoryViewer({
       if (!live || generation !== session.current.generation) return;
       session.current.viewerId = viewerId;
       if (!viewerId) return close();
+      if (preview) {
+        const access = await supabase.rpc("is_admin");
+        if (!live || generation !== session.current.generation) return;
+        if (preview.viewerId !== viewerId || access.error || access.data !== true) return close();
+      }
       try {
-        seen.current = JSON.parse(
+        seen.current = preview ? [] : JSON.parse(
           localStorage.getItem(`vq-community-read:${viewerId}`) || "[]",
         );
         if (!Array.isArray(seen.current)) seen.current = [];
       } catch {
         seen.current = [];
       }
-      const [detail, feed] = await Promise.all([
+      const [detail, feed] = preview ? [
+        { data: preview.posts.find((post) => post.id === startPostId) ?? null, error: null },
+        { data: preview.posts, error: null },
+      ] : await Promise.all([
         supabase.rpc("community_post", { p_id: startPostId }),
         supabase.rpc("community_feed", {
           p_sport: "all",
@@ -238,7 +256,7 @@ export default function StoryViewer({
       live = false;
       session.current.generation++;
     };
-  }, [startPostId, close, clock.version, clock.getNow]);
+  }, [startPostId, preview, close, clock.version, clock.getNow]);
 
   // Account revocation stays subscribed even while clock synchronization is pending/failed.
   useEffect(
@@ -252,6 +270,18 @@ export default function StoryViewer({
       }),
     [close],
   );
+
+  useEffect(() => {
+    if (!preview) return;
+    const auth = supabase.auth.onAuthStateChange((event) => {
+      if (event === "INITIAL_SESSION") return;
+      session.current.generation++;
+      setState({ kind: "loading" });
+      setCursor(null);
+      close();
+    });
+    return () => auth.data.subscription.unsubscribe();
+  }, [preview, close]);
 
   const [focusTick, setFocusTick] = useState(0);
   // Each move (Previous/Next) is a new arrival, even back onto a post checked before.
@@ -273,7 +303,13 @@ export default function StoryViewer({
     const generation = session.current.generation;
     const key = `${currentId}|${focusTick}|${arrival}|${clock.version}`;
     void (async () => {
-      const r = await supabase.rpc("community_post", { p_id: currentId });
+      let r: { data: unknown; error: unknown };
+      if (preview) {
+        const access = await supabase.rpc("is_admin");
+        if (!live || n !== checkSeq.current || generation !== session.current.generation) return;
+        if (access.error || access.data !== true || session.current.viewerId !== preview.viewerId) return close();
+        r = { data: preview.posts.find((post) => post.id === currentId) ?? null, error: null };
+      } else r = await supabase.rpc("community_post", { p_id: currentId });
       if (
         !live ||
         n !== checkSeq.current ||
@@ -304,7 +340,7 @@ export default function StoryViewer({
       live = false;
     };
     // focusTick re-checks the post on screen when the window regains focus.
-  }, [state.kind, currentId, focusTick, arrival, clock.version, clock.getNow]);
+  }, [state.kind, currentId, focusTick, arrival, clock.version, clock.getNow, preview, close]);
 
   const status =
     currentId &&
@@ -360,7 +396,7 @@ export default function StoryViewer({
   currentPhoto.current = photoKey;
   const photoLoaded = photoKey !== null && photoLoadedFor === photoKey;
   useEffect(() => {
-    if (!post || !cursor) return;
+    if (preview || !post || !cursor) return;
     const displayed = textShown || photoLoaded;
     if (!displayed) return;
     const frame = requestAnimationFrame(() => {
@@ -386,7 +422,7 @@ export default function StoryViewer({
       }
     });
     return () => cancelAnimationFrame(frame);
-  }, [post, cursor, textShown, photoLoaded, onRead]);
+  }, [post, cursor, textShown, photoLoaded, onRead, preview]);
 
   const go = useCallback((to: StoryCursor | null) => {
     if (!to) return;
@@ -578,6 +614,9 @@ export default function StoryViewer({
     if (!next && active === nextButton.current) prevButton.current?.focus();
   }, [prev, next]);
 
+  // Revocation removes every name/content immediately, before the close effect runs.
+  if (preview && previewRevoked) return null;
+
   return (
     <dialog
       ref={dialog}
@@ -623,7 +662,7 @@ export default function StoryViewer({
               <>
                 <b>{post.author_name}</b>
                 <small>
-                  {SPORTS[post.sport].label} · {time(post.created_at)}
+                  {preview ? "Test story" : `${SPORTS[post.sport].label} · ${time(post.created_at)}`}
                   {group && group.posts.length > 1
                     ? ` · ${index + 1} of ${group.posts.length}`
                     : ""}
@@ -720,7 +759,7 @@ export default function StoryViewer({
           ) : post ? (
             <article className="story-post" key={post.id}>
               <span className="story-label">
-                Member post · not Vegas Quant research
+                {preview ? "Test story · not posted by this member" : "Member post · not Vegas Quant research"}
               </span>
               {post.title.trim() ? <h2>{post.title}</h2> : null}
               {post.body.trim() ? (
@@ -745,7 +784,7 @@ export default function StoryViewer({
                   openable={false}
                 />
               ) : null}
-              <div
+              {!preview ? <div
                 className="story-actions"
                 data-story-no-tap
                 onFocus={() => setActionFocus(true)}
@@ -788,7 +827,7 @@ export default function StoryViewer({
                   to Gambly; a member’s text or screenshot can’t be matched to
                   one.
                 </p>
-              </div>
+              </div> : null}
             </article>
           ) : status === "gone" ? (
             <p role="alert">This post is no longer available.</p>
