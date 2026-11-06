@@ -12,7 +12,8 @@ type Tailed = {
   name: string;
   market: string;
   matchup: string;
-  release_id: string;
+  // Null for official picks: they are not part of a candidate release.
+  release_id: string | null;
   result: string | null;
   expires_at: string;
 };
@@ -43,8 +44,13 @@ const status = (r: Tailed, now: number) =>
     : Date.parse(r.expires_at) > now
       ? `Open · locks ${time(r.expires_at)}`
       : "Awaiting the verified result";
-const href = (r: Tailed) =>
-  `/feed?view=${PARLAY.has(r.kind) ? "parlays" : "legs"}&release=${encodeURIComponent(r.release_id)}#release-${encodeURIComponent(r.release_id)}`;
+const href = (r: Tailed) => {
+  const view = PARLAY.has(r.kind) ? "parlays" : "legs";
+  // An official pick has no release to open, so it lands on the view that lists it.
+  if (!r.release_id) return `/feed?view=${view}`;
+  const id = encodeURIComponent(r.release_id);
+  return `/feed?view=${view}&release=${id}#release-${id}`;
+};
 
 /**
  * Your lays → Tailed: the published parlays and picks this member tailed, kept separate from lays
@@ -54,9 +60,16 @@ const href = (r: Tailed) =>
 export default function TailedLays() {
   const [state, setState] = useState<State>({ kind: "loading" });
   const epoch = useRef(0);
-  const load = useCallback(async () => {
+  // The state the reader currently sees, for deciding whether a background refresh keeps it.
+  const shown = useRef(state);
+  shown.current = state;
+  // `background`: a refresh while the list is showing (back on the tab, a tail changed) keeps the
+  // rows and scroll position until the new answer arrives, and keeps them if that refresh fails.
+  // A first load or an account change always starts clean.
+  const load = useCallback(async (background = false) => {
     const n = ++epoch.current;
-    setState({ kind: "loading" });
+    const keep = background && shown.current.kind === "ready";
+    if (!keep) setState({ kind: "loading" });
     try {
       const s = await bounded(supabase.auth.getSession());
       if (n !== epoch.current) return;
@@ -90,17 +103,17 @@ export default function TailedLays() {
       const found = new Set(rows.map((r) => r.leg_key));
       setState({ kind: "ready", rows, missing: keys.filter((k) => !found.has(k)).length });
     } catch {
-      if (n === epoch.current) setState({ kind: "error" });
+      if (n === epoch.current && !keep) setState({ kind: "error" });
     }
   }, []);
   useEffect(() => {
     void load();
     // A different account never sees this one's tails: clear first, then reload for the new one.
     const stop = onUserChange(() => void load());
-    const refresh = () => void load();
+    const refresh = () => void load(true);
     // Back on the page: re-read, so results that settled meanwhile appear.
     const visible = () => {
-      if (document.visibilityState === "visible") void load();
+      if (document.visibilityState === "visible") void load(true);
     };
     window.addEventListener("vq-saved-changed", refresh);
     document.addEventListener("visibilitychange", visible);

@@ -17,6 +17,8 @@ const PUBLISHED = {
   s1: leg("s1", "SINGLE", "Sample pick", "WIN", past),
   b1: leg("b1", "SINGLE", "Account B pick", null, soon),
   e1: leg("e1", "PARLAY", "Sample locking parlay", null, new Date(Date.now() + 60000).toISOString()),
+  // Official picks are not part of a candidate release: the view returns release_id null.
+  o1: { ...leg("o1", "OFFICIAL", "Sample official pick", null, soon), release_id: null },
 };
 const TAILS = { [A]: ["p1", "p2", "s1"], [B]: ["b1"] };
 
@@ -143,6 +145,33 @@ await open("an account switch shows only the new account's tails", {}, async ({ 
   const text = await main(page).innerText();
   if (/Sample Sunday parlay|Sample pick/.test(text)) fail("account A's tails still shown after switching to B");
   if (!/Account B pick/.test(text)) fail("account B's tail not shown");
+});
+
+await open("an official pick (no release) links to the Legs view, never release=null", { tails: ["o1", "s1"] }, async ({ page, fail }) => {
+  const item = main(page).getByRole("link", { name: /Sample official pick/ });
+  await item.waitFor();
+  const h = await item.getAttribute("href");
+  if (h !== "/feed?view=legs") fail(`official pick href ${h}`);
+  const s = await main(page).getByRole("link", { name: /Sample pick/ }).getAttribute("href");
+  if (!/release=r-s1#release-r-s1$/.test(s || "")) fail(`release pick href ${s}`);
+});
+
+await open("back on the tab: the list stays while it refreshes, and stays if the refresh fails", {}, async ({ page, fail }) => {
+  await main(page).getByText("Sample Sunday parlay").waitFor();
+  await page.evaluate(() => {
+    window.__sawLoading = false;
+    new MutationObserver(() => {
+      if (/Loading your tailed picks/.test(document.querySelector("section.vq-tailed")?.textContent || "")) window.__sawLoading = true;
+    }).observe(document.body, { subtree: true, childList: true, characterData: true });
+  });
+  let reads = 0;
+  await page.route("**/rest/v1/leg_tails*", (r) => (reads++, r.fulfill({ status: 500, json: { message: "synthetic failure" } })));
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await page.waitForTimeout(1500);
+  if (!reads) fail("no refresh on visibility");
+  if (await page.evaluate(() => window.__sawLoading)) fail("list replaced by Loading during a background refresh");
+  if (!(await main(page).getByText("Sample Sunday parlay").count())) fail("rows dropped after a failed background refresh");
+  if (await main(page).getByRole("alert").count()) fail("error replaced the rows after a failed background refresh");
 });
 
 await browser.close();
