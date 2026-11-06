@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other,transition
 
-MODEL_ID='vq-empirical-game/0.2.11'
+MODEL_ID='vq-empirical-game/0.2.20'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -169,7 +169,10 @@ def fit(paths):
         if digest in seen_sources or game_ids & seen_games:raise ValueError('duplicate training source/game')
         seen_sources.add(digest);seen_games.update(game_ids)
         sources.append(dict(file=Path(path).name,sha256=hashlib.sha256(data).hexdigest(),source_url='https://github.com/nflverse/nflverse-data/releases/download/pbp/'+Path(path).name))
-        fit_timeouts(rows,timeout_tables,timeout_coverage)
+        # v0.2.20 (RUNNING_CLOCK_PROTOCOL.md): running/stopped categorical cells from one shared definition.
+        from .timeout_cells import tabulate_rows
+        running_cells,stopped_cells,cell_coverage=tabulate_rows(rows)
+        timeout_coverage.update(cell_coverage)
         for i,r,event in training_events(rows):
             counts['event_attempts']+=1
             if event!='compound_timeout':counts['rows']+=1
@@ -256,7 +259,7 @@ def fit(paths):
                 counts['excluded:'+str(e)]+=1
                 if event!='original':counts['excluded:'+event+':'+str(e)]+=1
     if not templates:raise ValueError('No training templates')
-    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),stop_clock=dict(runoff_tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(runoff_tables.items())},tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(stop_tables.items())},coverage=dict(stop_coverage),minimum_context=30),timeout_model=dict(tables={k:dict(v) for k,v in sorted(timeout_tables.items())},coverage=dict(timeout_coverage),minimum_context=30),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
+    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),stop_clock=dict(runoff_tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(runoff_tables.items())},tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(stop_tables.items())},coverage=dict(stop_coverage),minimum_context=30),timeout_model=dict(design='running-clock-cells/0.2.20',running={k:dict(n=v['n'],offense=v['offense'],defense=v['defense']) for k,v in sorted(running_cells.items()) if v['n']},stopped={k:dict(n=v['n'],offense=v['offense'],defense=v['defense']) for k,v in sorted(stopped_cells.items()) if v['n']},coverage=dict(sorted(timeout_coverage.items())),minimum_context=30),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
     return model
 
 class Sampler:
@@ -267,29 +270,37 @@ class Sampler:
         for ctx,entries in model['buckets'].items():
             keys=sorted(entries,key=int);weights=[entries[k] for k in keys]
             self.tables[ctx]=(keys,weights,sum(weights))
-    def timeout_probability(self,s,role):
-        model=self.model['timeout_model']
-        for depth,key in enumerate(timeout_contexts(s,role)):
-            cell=model['tables'].get(key)
-            if cell and cell['opportunities']>=model['minimum_context']:
-                calls=cell.get('timeouts',0);n=cell['opportunities']
-                if not 0<=calls<=n:raise ValueError('invalid timeout counts')
-                self.fallbacks['timeout_context_depth:'+str(depth)]+=1
-                return calls/n
-        self.fallbacks['unsupported_timeout_context']+=1
-        raise ValueError('no empirical timeout opportunity context: '+role)
+    def timeout_rates(self,s,family,key_state=None):
+        """(p_offense, p_defense) from the first supported categorical cell (RUNNING_CLOCK_PROTOCOL.md).
 
-    def timeout_decision(self,s):
+        `key_state` is the pre-play state for the running family; the stopped family keys on `s`."""
+        from .timeout_cells import chain,eligibility,stop_band,stopped_band,MIN
+        model=self.model['timeout_model'];k=key_state or s
+        elig=eligibility(k)
+        if elig is None:return 0.0,0.0
+        band=stop_band(k) if family=='running' else stopped_band(k)
+        cells=model[family];exact=len(chain(family,band,k,elig))-len([c for c in chain(family,band,k,elig) if c.startswith(('le','normal@h','normal@all'))])
+        for depth,key in enumerate(chain(family,band,k,elig)):
+            cell=cells.get(key)
+            if not cell or cell['n']<max(MIN,model['minimum_context']):continue
+            n,co,cd=cell['n'],cell.get('offense',0),cell.get('defense',0)
+            if co<0 or cd<0 or co+cd>n:raise ValueError('invalid timeout counts')
+            self.fallbacks[f'timeout_cell:{family}:depth{depth}']+=1
+            if depth>=exact:self.fallbacks['coarsened_timeout_cell']+=1
+            if '~role' in key:self.fallbacks['role_marginal_timeout_cell']+=1
+            po=co/n if elig in ('both','offense') else 0.0
+            pd=cd/n if elig in ('both','defense') else 0.0
+            return po,pd
+        self.fallbacks['unsupported_timeout_context']+=1
+        raise ValueError('no empirical timeout opportunity cell: '+family)
+
+    def timeout_decision(self,s,family='stopped',key_state=None):
         if s.phase!='scrimmage' or s.clock<=0 or not self.model.get('timeout_model'):return None
-        po=self.timeout_probability(s,'offense') if getattr(s,s.possession+'_timeouts') else 0.0
-        pd=self.timeout_probability(s,'defense') if getattr(s,other(s.possession)+'_timeouts') else 0.0
-        if po+pd>1:
-            self.fallbacks['unsupported_competing_timeout_context']+=1
-            raise ValueError('inconsistent competing timeout probabilities')
+        po,pd=self.timeout_rates(s,family,key_state)
         u=self.rng.random()
         if u<po+pd:
             role='offense' if u<po else 'defense'
-            self.fallbacks['separate_timeout:'+role]+=1
+            self.fallbacks[f'separate_timeout:{family}:{role}']+=1
             return Action('timeout',elapsed=0,timeout_side=s.possession if role=='offense' else other(s.possession))
         return None
 
@@ -328,7 +339,8 @@ class Sampler:
         if sum(table.values())<model['minimum_context']:self.fallbacks['thin_stop_duration_context']+=1
         dt=self.rng.choices([v for v,n in legal],weights=[n for v,n in legal],k=1)[0]
         stopped=replace(a,elapsed=dt);after=transition(s,stopped).after
-        called=self.timeout_decision(after)
+        # Running-clock decision keyed by the pre-play state: no projected post-play clock.
+        called=self.timeout_decision(after,family='running',key_state=s)
         if called:
             self.fallbacks['coupled_stops']+=1
             self.fallbacks['avoided_runoff_seconds']+=a.elapsed-dt

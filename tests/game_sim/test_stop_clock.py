@@ -3,15 +3,14 @@ from dataclasses import replace
 from research.game_sim.model import Sampler,stop_contexts,timeout_contexts
 from research.game_sim.state import State,Action,transition
 from test_batch import fixture
+from cells_helper import cell_model
 
 class StopClockTests(unittest.TestCase):
     def model(self,s,kind='run',prob=1,durations=None):
         m=fixture();m['stop_clock']=dict(minimum_context=30,tables={stop_contexts(s,kind)[-1]:durations or {'6':40}})
         # Constant source-backed test probabilities; synthetic unit fixture only.
-        m['timeout_model']=dict(minimum_context=30,tables={})
-        for clock in (5,20,90,200):
-            for role in ('offense','defense'):
-                for key in timeout_contexts(replace(s,clock=clock),role):m['timeout_model']['tables'][key]=dict(opportunities=40,timeouts=int(40*prob) if role=='offense' else 0)
+        states=[replace(s,clock=clock,period=p) for clock in (5,20,90,200) for p in (2,4)]
+        m['timeout_model']=cell_model(states,running=(40,int(40*prob),0),stopped=(40,int(40*prob),0))
         return m
     def test_stopped_gap_committed_before_timeout_no_clock_refund(self):
         s=State(period=4,clock=100);a=Action('run',elapsed=35,yards=4)

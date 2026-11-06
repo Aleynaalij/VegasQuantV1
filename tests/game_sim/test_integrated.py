@@ -129,7 +129,8 @@ class IntegratedTests(unittest.TestCase):
         from research.game_sim.model import timeout_contexts
         for o,d in ((0,0),(0,1),(1,0),(1,1)):
             s=State(period=4,clock=5,home_timeouts=o,away_timeouts=d)
-            model=fixture();model['timeout_model']=dict(minimum_context=30,tables={timeout_contexts(s,r)[-1]:dict(opportunities=30,timeouts=15 if o and d else 30) for r in ('offense','defense')})
+            from cells_helper import cell_model
+            model=fixture();model['timeout_model']=cell_model([s],stopped=(30,15,15) if o and d else (30,30 if o else 0,30 if d else 0))
             a=Sampler(model,17).draw(s)
             if o and d:self.assertEqual(a.kind,'timeout');self.assertIn(a.timeout_side,('home','away'))
             elif o:self.assertEqual((a.kind,a.timeout_side),('timeout','home'))
@@ -197,8 +198,10 @@ class IntegratedTests(unittest.TestCase):
             data=gzip.decompress(raw)
             self.assertEqual(hashlib.sha256(data).hexdigest(),expected['canonical_sha256'])
             payloads[filename]=json.loads(data)
+        # The package's own archived runtime, not the live files: the engine has moved on (v0.2.20).
+        runtime=payloads['runtime-source.json.gz']['sources']
         for name, digest in manifest['implementation_sha256'].items():
-            self.assertEqual(hashlib.sha256((root/'research/game_sim'/name).read_bytes()).hexdigest(),digest)
+            self.assertEqual(hashlib.sha256(runtime[name].encode()).hexdigest(),digest)
         batch=payloads['batch.json.gz']
         self.assertEqual(batch['runs'],dict(requested=10000,actual=10000,failed=0))
         self.assertEqual(manifest['model_sha256'],batch['artifact_sha256'])
