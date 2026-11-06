@@ -13,7 +13,10 @@ const browser = await chromium.launch({
 });
 const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const out = process.env.UI_ARTIFACT_DIR || "artifacts/lobby-stories";
-const now = Date.parse("2026-10-14T02:00:00Z");
+// Keep relative fixture times deterministic within this run without replacing
+// performance.now(). Story clock validation requires a truly monotonic clock;
+// Playwright 1.56's full clock shim can move it backward while dispatching timers.
+const now = Date.now();
 const A = "00000000-0000-4000-8000-000000000001",
   B = "00000000-0000-4000-8000-000000000002";
 const id = (n) => `10000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
@@ -297,7 +300,6 @@ async function run(
   });
   const page = await ctx.newPage();
   page.setDefaultTimeout(15000);
-  await page.clock.setFixedTime(new Date(now));
   const errors = [];
   const networkEvents = [];
   for (const type of ["request", "response", "requestfinished", "requestfailed"])
@@ -363,6 +365,13 @@ async function run(
       "the lobby must be usable without forcibly dismissing a dialog",
     );
     await check({ page, ctx, state });
+    const trace = await diagnostics();
+    for (const request of trace.browser.requests || [])
+      if (request.received)
+        assert.ok(
+          request.received.monotonic >= request.sent.monotonic,
+          `native monotonic time must not move backward during ${request.path}`,
+        );
     assert.deepEqual(errors, [], "no browser errors");
     assert.ok(
       await page.evaluate(
