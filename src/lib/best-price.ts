@@ -78,6 +78,8 @@ export function selectionKey(
  * policy; undated, future-stamped or older snapshots are left out.
  */
 export function bookQuotes(rows: QuoteRow[], now: number, maxAgeMs: number) {
+  if (!Number.isFinite(now) || !Number.isFinite(maxAgeMs) || maxAgeMs < 0)
+    return new Map<string, Map<string, BookQuote>>();
   const latest = new Map<string, { r: QuoteRow; t: number; at: string }>();
   for (const r of rows) {
     const book = r.payload?.book || "";

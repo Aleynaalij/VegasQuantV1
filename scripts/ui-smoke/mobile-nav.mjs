@@ -167,6 +167,8 @@ for (const [width, height, sel] of [[390, 844, ".mobile-nav"], [1280, 900, ".sid
   console.log(`${failures.length > before ? "FAIL" : "ok  "} ${label} (${visited.join(" → ")}, then back)`);
 }
 
+const RESEARCH_FEED = "/feed?view=latest";
+const RESEARCH_SUBTITLE = "Research, injury news and legs we like.";
 // Empty and failing data. Empty: every table read returns [] (RPCs keep their documented object
 // shapes from the stub). Failing: every REST call, RPCs included, returns HTTP 500. The page must still
 // render a shell with readable content, no uncaught error and no sideways scroll.
@@ -174,12 +176,24 @@ for (const [mode, fulfill] of [
   ["empty data", (route) => route.request().url().includes("/rest/v1/rpc/") ? route.fallback() : route.fulfill({ contentType: "application/json", body: "[]" })],
   ["failing data", (route) => route.fulfill({ status: 500, contentType: "application/json", body: '{"message":"synthetic failure"}' })],
 ])
-  for (const path of ["/", "/feed", "/matchups", "/community", "/nhl"]) {
+  // The research feed is /feed?view=latest: bare /feed redirects to The Zone (/community).
+  for (const path of ["/", RESEARCH_FEED, "/matchups", "/community", "/nhl"]) {
     const label = `${path} @390 ${mode}`;
     const before = failures.length;
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
     await ctx.route("**/rest/v1/**", fulfill);
     const { page, errors } = await open(ctx, path, label);
+    if (path === RESEARCH_FEED) {
+      // Prove ResearchFeed itself rendered: no redirect, and its own subtitle is on screen.
+      const at = new URL(page.url());
+      if (at.pathname + at.search !== RESEARCH_FEED) note(label, `redirected to ${at.pathname + at.search}; ResearchFeed not exercised`);
+      if (!(await page.getByText(RESEARCH_SUBTITLE).first().isVisible().catch(() => false))) note(label, "ResearchFeed subtitle not shown");
+      // Failing data must surface the feed's error with Retry, not a blank or silent page.
+      if (mode === "failing data") {
+        const shown = await page.getByRole("button", { name: /retry/i }).first().waitFor({ state: "visible", timeout: 30000 }).then(() => true, () => false);
+        if (!shown) note(label, "no Retry after the feed's requests failed");
+      }
+    }
     await layout(page, label, true);
     if (errors.length) note(label, `page error · ${errors[0].slice(0, 160)}`);
     await ctx.close();

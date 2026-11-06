@@ -22,6 +22,14 @@ import CasinoCard, { CasinoCardDownload } from "./casino-card";
 import { cleanMarket, type CasinoCardData } from "@/lib/casino-card";
 import { useLegForms, VqStamp } from "./leg-form";
 
+/** A dropped connection surfaces as a raw fetch error; members get a plain retry message instead. */
+const NETWORK_ERROR = /Failed to fetch|NetworkError|Load failed|fetch failed/i;
+function plain(message: string | undefined, fallback: string) {
+  if (!message) return fallback;
+  return NETWORK_ERROR.test(message)
+    ? "Connection dropped before this finished. Check your connection and retry."
+    : message;
+}
 export default function ParlayWorkshop({
   mode,
 }: {
@@ -259,8 +267,10 @@ export default function ParlayWorkshop({
       if (n !== epoch.current) return;
       if (result.error) {
         setError(
-          result.error.message ||
+          plain(
+            result.error.message,
             "Could not save. Check that every leg is still open.",
+          ),
         );
         return;
       }
@@ -341,7 +351,10 @@ export default function ParlayWorkshop({
       if (n !== epoch.current) return false;
       if (result.error || !result.data)
         throw Error(
-          result.error?.message || "Could not share your parlay. Please retry.",
+          plain(
+            result.error?.message,
+            "Could not share your parlay. Please retry.",
+          ),
         );
       setSaved((current) =>
         current.map((p) =>
@@ -360,9 +373,10 @@ export default function ParlayWorkshop({
     } catch (error) {
       if (n === epoch.current)
         setError(
-          error instanceof Error
-            ? error.message
-            : "Could not share. Please retry.",
+          plain(
+            error instanceof Error ? error.message : undefined,
+            "Could not share. Please retry.",
+          ),
         );
       return false;
     } finally {
@@ -487,7 +501,7 @@ export default function ParlayWorkshop({
           aria-label="Your parlay draft"
         >
           <div className="workshop-head">
-            <h3>Your parlay · {chosen.length} legs</h3>
+            <h3>Your parlay · {chosen.length} leg{chosen.length === 1 ? "" : "s"}</h3>
             <button
               className="secondary"
               disabled={busy}
@@ -541,7 +555,7 @@ export default function ParlayWorkshop({
       {open && (
         <aside className="workshop-save-tray" aria-label="Save your parlay">
           <div>
-            <strong>{chosen.length} legs selected</strong>
+            <strong>{chosen.length} leg{chosen.length === 1 ? "" : "s"} selected</strong>
             <small>{title.trim() || "Name your parlay above"}</small>
           </div>
           <button
@@ -841,8 +855,11 @@ export default function ParlayWorkshop({
                     <Link
                       href={
                         r.leg_key.startsWith("candidate:")
-                          ? `/feed#release-${r.leg_key.split(":")[1]}`
-                          : "/records"
+                          ? // A bare /feed redirects to the Zone; the Latest view keeps every release.
+                            `/feed?view=latest&release=${encodeURIComponent(r.leg_key.split(":")[1])}#release-${encodeURIComponent(r.leg_key.split(":")[1])}`
+                          : r.game_id
+                            ? `/matchups/game/${encodeURIComponent(r.game_id)}`
+                            : "/matchups"
                       }
                     >
                       Original publication →

@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import StoryViewer from "./story-viewer";
 import { supabase } from "@/lib/supabase";
 
 import {
@@ -65,18 +67,50 @@ export default function CommunityStories() {
     };
   }, []);
   const unread = unreadStories(members, seen);
-  function markRead(postId: string) {
+  // The viewer opens on tap; a post is read only once the viewer has displayed it.
+  const [open, setOpen] = useState<string | null>(null);
+  const opener = useRef<HTMLButtonElement | null>(null);
+  const saveRead = useCallback((next: string[]) => {
     if (!viewer.current) return;
-    const next = [
-      ...new Set([...readStories(viewer.current), ...seen, postId]),
-    ].slice(-2000);
-    setSeen(next);
+    const merged = [...new Set([...readStories(viewer.current), ...next])].slice(-2000);
+    setSeen(merged);
     try {
-      localStorage.setItem(storyReadKey(viewer.current), JSON.stringify(next));
+      localStorage.setItem(storyReadKey(viewer.current), JSON.stringify(merged));
     } catch {
       /* Keep this visit responsive if storage is disabled. */
     }
-  }
+  }, []);
+  const origin = useRef<string | null>(null);
+  useEffect(() => {
+    // Remember the exact page URL (including its own #hash) before the viewer adds #story.
+    if (open && window.location.hash !== "#story")
+      origin.current = window.location.pathname + window.location.search + window.location.hash;
+    // Browser Forward onto a closed viewer's #story entry: a closed viewer cannot be restored from
+    // the URL, so step straight back to the page's own entry (exact URL, #hash included). Reopening
+    // then reuses that forward slot, so open/Back/Forward cycles never accumulate entries.
+    const tidy = () => {
+      if (open || window.location.hash !== "#story") return;
+      if (origin.current) window.history.back();
+      else window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+    };
+    // Only on real Back/Forward navigation: right after a close, the viewer's own history.back()
+    // is still in flight and the URL still ends in #story, so acting here would step back twice.
+    window.addEventListener("popstate", tidy);
+    return () => window.removeEventListener("popstate", tidy);
+  }, [open]);
+  // A page loaded (or reloaded) with a leftover #story shows no viewer: drop the hash in place.
+  useEffect(() => {
+    if (window.location.hash === "#story")
+      window.history.replaceState(window.history.state, "", window.location.pathname + window.location.search);
+  }, []);
+  const closeViewer = useCallback(() => {
+    setOpen(null);
+    // Return focus to the ring that opened the viewer, or the rail if that ring is now read.
+    requestAnimationFrame(() => {
+      const target = opener.current?.isConnected ? opener.current : document.querySelector<HTMLElement>(".community-stories button, .community-stories a");
+      target?.focus();
+    });
+  }, []);
   return (
     <div className="community-story-wrap" data-no-tab-swipe>
       <span className="story-divider" aria-hidden="true">
@@ -84,12 +118,18 @@ export default function CommunityStories() {
       </span>
       <div className="community-stories" aria-label="Recent community posts">
         {unread.map((member) => (
-          <Link
+          <button
+            type="button"
             className="community-story"
             key={member.post_id}
-            onClick={() => markRead(member.post_id)}
-            href={`/community?sport=${member.sport}&post=${member.post_id}#post-${member.post_id}`}
-            aria-label={`Open ${member.username}'s latest community post`}
+            onClick={(e) => {
+              opener.current = e.currentTarget;
+              if (window.location.hash !== "#story")
+                origin.current = window.location.pathname + window.location.search + window.location.hash;
+              setOpen(member.post_id);
+            }}
+            aria-haspopup="dialog"
+            aria-label={`Open ${member.username}'s recent community posts`}
           >
             <span className="story-ring">
               {member.avatar ? (
@@ -99,7 +139,7 @@ export default function CommunityStories() {
               )}
             </span>
             <small>{member.username}</small>
-          </Link>
+          </button>
         ))}
         {!unread.length ? (
           <Link className="story-empty" href="/community">
@@ -111,6 +151,13 @@ export default function CommunityStories() {
           </Link>
         ) : null}
       </div>
+      {/* Rendered on <body>, outside the sport strip and its link styles. */}
+      {open
+        ? createPortal(
+            <StoryViewer startPostId={open} onClose={closeViewer} onRead={saveRead} />,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

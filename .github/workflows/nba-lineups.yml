@@ -1,0 +1,63 @@
+name: NBA lineup acceptance
+on:
+  pull_request:
+    paths:
+      - "src/lib/nba-lineups*"
+      - "src/components/nba-*"
+      - "src/components/sport/sport-slate.tsx"
+      - "src/app/api/nba/lineups/**"
+      - "src/app/nba-lineups.css"
+      - "tests/nba-lineups*"
+      - "scripts/ui-smoke/nba-lineups.mjs"
+      - ".github/workflows/nba-lineups.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  lineups:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --import tsx --test tests/nba-lineups.test.ts tests/nba-lineups-server.test.ts
+      - run: npm run typecheck
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - name: Prepare browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
+      - name: Start synthetic app
+        run: |
+          node scripts/ui-smoke/stub.mjs &
+          LIVE_SCORES_DISABLED=1 npx next start -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
+          curl -fsS -o /dev/null http://127.0.0.1:3100/
+      - name: Game lineup UI and intended negative rejection
+        run: |
+          node scripts/ui-smoke/nba-lineups.mjs
+          if UI_SMOKE_NEGATIVE=missing-out node scripts/ui-smoke/nba-lineups.mjs /tmp/nba-lineups-negative-evidence > /tmp/nba-lineups-negative.log 2>&1; then
+            cat /tmp/nba-lineups-negative.log
+            exit 1
+          fi
+          cat /tmp/nba-lineups-negative.log
+          grep -q 'Out warning missing from collapsed game' /tmp/nba-lineups-negative.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nba-lineup-synthetic-evidence
+          path: |
+            /tmp/nba-lineups-evidence
+            /tmp/nba-lineups-negative.log
+            /tmp/nba-lineups-negative-evidence

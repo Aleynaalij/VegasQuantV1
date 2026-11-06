@@ -26,6 +26,7 @@ import {
 } from "@/lib/best-price";
 import { easternTime, type SlateGame } from "@/lib/sport-slate";
 import SportBrief from "./sport/sport-brief";
+import NbaLineups, { NbaAvailabilitySummary } from "./nba-lineups";
 import SportSlate from "./sport/sport-slate";
 import LiveNow from "./sport/live-now";
 
@@ -225,6 +226,16 @@ export default function NbaHome() {
       ) : null}
       <SportSlate
         games={games}
+        summaryExtra={(g) => (
+          <NbaAvailabilitySummary
+            game={{
+              away: g.away.abbreviation,
+              home: g.home.abbreviation,
+              start: g.start,
+              tbd: g.tbd,
+            }}
+          />
+        )}
         faces={faces}
         onOpen={() => setOpened(true)}
         empty={loaded ? "No NBA games scheduled this week." : "Loading games…"}
@@ -238,6 +249,14 @@ export default function NbaHome() {
           if (notice)
             return (
               <div className="sport-markets">
+                <NbaLineups
+                  game={{
+                    away: g.away.abbreviation,
+                    home: g.home.abbreviation,
+                    start: g.start,
+                    tbd: g.tbd,
+                  }}
+                />
                 <p role="status">{notice}</p>
                 {open}
               </div>
@@ -247,6 +266,14 @@ export default function NbaHome() {
           const props = playerLines(quotes[g.id]);
           return (
             <div className="sport-markets">
+              <NbaLineups
+                game={{
+                  away: g.away.abbreviation,
+                  home: g.home.abbreviation,
+                  start: g.start,
+                  tbd: g.tbd,
+                }}
+              />
               <h3 className="sport-markets-title">Vegas Quant selections</h3>
               {selections.length ? (
                 <>

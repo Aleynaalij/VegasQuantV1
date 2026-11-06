@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { NbaLineupsProvider } from "./nba-lineups";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
@@ -9,7 +10,7 @@ import NbaTeamLogo from "./nba-team-logo";
 import { NbaGameDetails } from "./nba-game-board";
 import { Shell } from "./ui";
 import "@/app/nba-game-detail.css";
-export default function NbaGameDetail({ slug }: { slug: string }) {
+function NbaGameDetailContent({ slug }: { slug: string }) {
   const [game, setGame] = useState<NbaGame | null>(null),
     [allowed, setAllowed] = useState(false),
     [loading, setLoading] = useState(true),
@@ -169,5 +170,13 @@ export default function NbaGameDetail({ slug }: { slug: string }) {
         )}
       </div>
     </Shell>
+  );
+}
+
+export default function NbaGameDetail(props: { slug: string }) {
+  return (
+    <NbaLineupsProvider>
+      <NbaGameDetailContent {...props} />
+    </NbaLineupsProvider>
   );
 }

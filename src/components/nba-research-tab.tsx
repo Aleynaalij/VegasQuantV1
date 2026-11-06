@@ -4,6 +4,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import { noAccess, type Access } from "@/lib/membership";
+import NbaLineups from "./nba-lineups";
 import { nbaNickname, nbaWhen } from "@/lib/nba-home";
 import {
   doubleDoubleWatch,
@@ -24,6 +25,9 @@ type Game = {
   id: string;
   away_team: string;
   home_team: string;
+  away_abbreviation: string | null;
+  home_abbreviation: string | null;
+  tipoff_tbd: boolean;
   tipoff: string;
   season: number | null;
 };
@@ -67,7 +71,9 @@ async function loadSlate(member: boolean): Promise<Slate> {
   const now = Date.now();
   const upcoming = await supabase
     .from("nba_games")
-    .select("id,away_team,home_team,tipoff,season")
+    .select(
+      "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,season",
+    )
     .eq("season_type", 2)
     .gte("tipoff", new Date(now - 4 * HOUR).toISOString())
     .lte("tipoff", new Date(now + 36 * HOUR).toISOString())
@@ -299,6 +305,16 @@ export default function NbaResearchTab() {
                       ET
                     </span>
                   </p>
+                  {access.allowed ? (
+                    <NbaLineups
+                      game={{
+                        away: g.away_abbreviation,
+                        home: g.home_abbreviation,
+                        start: g.tipoff,
+                        tbd: g.tipoff_tbd,
+                      }}
+                    />
+                  ) : null}
                   {access.allowed
                     ? [g.away_team, g.home_team].map((team) => {
                         const list = (slate.injuries.get(team) || []).filter(
@@ -318,7 +334,7 @@ export default function NbaResearchTab() {
                                     {i.injury ? `, ${i.injury}` : ""})
                                   </span>
                                 ))
-                              : "no injuries reported"}
+                              : "no recent ESPN injury observations received; not player clearance"}
                           </p>
                         );
                       })

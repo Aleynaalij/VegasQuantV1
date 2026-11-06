@@ -1,0 +1,134 @@
+import { PGlite } from '@electric-sql/pglite';
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const db = new PGlite();
+const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+const [a,b,c,p,q] = [1,2,3,4,5].map(id);
+const sql = path => fs.readFileSync(`supabase/migrations/${path}`,'utf8');
+const RUBY_VISIBLE = "create function private.ruby_visible(p_user uuid) returns boolean language sql stable security definer set search_path='' as $$select private.age_member_allowed() and private.community_member_allowed(p_user) and not exists(select 1 from private.community_restrictions where user_id=p_user)$$;";
+const VIEW = "create or replace view public.ruby_cards with(security_invoker=true) as\nselect s.id,s.user_id,s.brand,s.theme,s.submission_day,coalesce(r.sport,s.sport) sport,coalesce(r.title,s.title) title,coalesce(r.legs,s.legs) legs,coalesce(r.note,s.note) note,case when r.id is null then s.photo_path else r.photo_path end photo_path,case when r.id is null then s.sportsbook else r.sportsbook end sportsbook,case when r.id is null then s.reported_odds else r.reported_odds end reported_odds,s.created_at,coalesce(r.revision,0) revision,r.created_at edited_at,\ncoalesce(v.hidden,false) hidden,case when rr.revision=coalesce(r.revision,0) then rr.outcome else null end reported_result\nfrom public.ruby_submissions s left join lateral(select * from public.ruby_card_revisions where submission_id=s.id order by revision desc limit 1) r on true\nleft join lateral(select * from public.ruby_visibility_events where submission_id=s.id order by created_at desc,id desc limit 1) v on true\nleft join lateral(select * from public.ruby_result_reports where submission_id=s.id order by reported_at desc,id desc limit 1) rr on true\nwhere not coalesce(v.hidden,false) or (select public.is_admin());";
+try {
+await db.exec(`create role anon; create role authenticated; create role service_role;
+ create schema auth; create schema private;
+ create function auth.uid() returns uuid language sql as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
+ create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,encrypted_password text,banned_until timestamptz);
+ create function public.is_admin() returns boolean language sql as $$select false$$;
+ -- Explicit fixture seam: tests exercise age denial through the actual new RPC/trigger.
+ create function private.age_member_allowed() returns boolean language sql as $$select auth.uid() is not null and coalesce(current_setting('test.age',true),'on')<>'off'$$;
+ create function private.age_eligible(uuid) returns boolean language sql as $$select coalesce(current_setting('test.age',true),'on')<>'off'$$;
+ create table private.account_erasure_jobs(user_id uuid,expires_at timestamptz);
+ create table public.community_profiles(user_id uuid,username text,avatar text,visible boolean);
+ create table public.game_comments(id uuid,user_id uuid,body text);
+ create table public.push_subscriptions(id uuid primary key default gen_random_uuid(),user_id uuid,endpoint text,p256dh text,auth text);
+ create table public.app_updates(id uuid primary key,title text,body text,created_at timestamptz default now());
+ create table public.app_update_reads(user_id uuid,update_id uuid,read_at timestamptz);
+ grant usage on schema public,private,auth to authenticated;
+ grant usage on schema public,auth to anon;
+ insert into auth.users(id,email,email_confirmed_at) values('${a}','a@example.test',now()),('${b}','b@example.test',now()),('${c}','c@example.test',now());
+ insert into public.community_profiles values('${a}','SampleAuthor','ruby',true),('${b}','SampleReader','ruby',true),('${c}','SampleOther','ruby',true);
+ select set_config('test.uid','${a}',false);`);
+await db.exec(sql('20261014025802_community_social_feed.sql'));
+await db.exec(sql('20261014041536_launch_safety_controls.sql'));
+await db.exec(`insert into public.community_posts(id,user_id,sport,kind,title,body) values('${p}','${a}','nfl','talk','Sample','Sample discussion');select set_config('test.uid','${c}',false);insert into public.community_posts(id,user_id,sport,kind,title,body) values('${q}','${c}','nfl','talk','Sample second','Sample second discussion');`);
+await db.exec(sql('20261017015506_social_notification_system.sql').replace(/^select cron.schedule.*$/gm,''));
+await db.exec(sql('20261103181103_community_typed_reactions.sql'));
+
+const [k,h]=[6,7].map(id);
+await db.exec(`reset role;
+ create table public.ruby_submissions(id uuid primary key,user_id uuid,brand text,theme text,submission_day date default current_date,sport text,title text,legs jsonb default '[]',note text default '',photo_path text,sportsbook text,reported_odds integer,created_at timestamptz default now());
+ create table public.ruby_card_revisions(id uuid primary key default gen_random_uuid(),submission_id uuid references public.ruby_submissions on delete cascade,revision integer,sport text,title text,legs jsonb,note text,photo_path text,sportsbook text,reported_odds integer,created_at timestamptz default now());
+ create table public.ruby_visibility_events(id uuid primary key default gen_random_uuid(),submission_id uuid references public.ruby_submissions on delete cascade,hidden boolean,created_at timestamptz default now());
+ create table public.ruby_result_reports(id uuid primary key default gen_random_uuid(),submission_id uuid references public.ruby_submissions on delete cascade,revision integer,outcome text,reported_at timestamptz default now());
+ insert into public.ruby_submissions(id,user_id,brand,theme,sport,title) values('${k}','${a}','OmaticsZone','orbit','NFL','Sample lay'),('${h}','${a}','OmaticsZone','orbit','NFL','Sample hidden lay');
+ insert into public.ruby_visibility_events(submission_id,hidden) values('${h}',true);`);
+await db.exec(VIEW);
+await db.exec(RUBY_VISIBLE);
+// As in production: members read their own community profile (the post-comment trigger runs as them).
+await db.exec(`reset role;alter table public.community_profiles enable row level security;grant select on public.community_profiles to authenticated;
+ create policy own_profile_read on public.community_profiles for select to authenticated using(user_id=(select auth.uid()));`);
+await db.exec(process.env.VQ_COMMENT_MIGRATION ? fs.readFileSync(process.env.VQ_COMMENT_MIGRATION,'utf8') : sql('20261104031500_ruby_card_comments.sql'));
+const as = async user => db.exec(`reset role;set role authenticated;select set_config('test.uid','${user}',false);`);
+const owner = async statement => { await db.exec('reset role'); return db.exec(statement); };
+const list = async (card=k) => (await db.query('select public.ruby_card_comments($1) data',[card])).rows[0].data;
+const counts = async ids => (await db.query('select public.ruby_card_comment_counts($1::uuid[]) data',[ids])).rows[0].data;
+const add = async (body,parent=null,card=k) => (await db.query('select public.add_ruby_card_comment($1,$2,$3) data',[card,body,parent])).rows[0].data;
+const del = async cid => (await db.query('select public.delete_ruby_card_comment($1) data',[cid])).rows[0].data;
+const gap = async user => owner(`update public.ruby_card_comments set created_at=created_at-interval '1 minute' where user_id='${user}';update public.community_post_comments set created_at=created_at-interval '1 minute' where user_id='${user}';`);
+await as(b);
+assert.deepEqual(await list(),[]);
+assert.deepEqual(await counts([k,h,id(99)]),{[k]:0},'hidden and missing cards get no count');
+let c1=await add('  Sample first take  ');
+assert.equal(c1.body,'Sample first take');assert.equal(c1.author_name,'SampleReader');assert.equal(c1.user_id,b);assert.equal(c1.card_id,k);
+await assert.rejects(add('Too soon'),/Wait ten seconds/);
+await gap(b);
+// The ten-second gap is shared with post comments.
+await db.query('insert into public.community_post_comments(post_id,user_id,body) values($1,$2,$3)',[p,b,'Sample post comment']);
+await as(b);await assert.rejects(add('After a post comment'),/Wait ten seconds/);
+await gap(b);
+// ...and the reverse: a post comment right after a lay comment waits too.
+await as(b);const lf=await add('Lay first');
+await assert.rejects(db.query('insert into public.community_post_comments(post_id,user_id,body) values($1,$2,$3)',[p,b,'Post right after']),/Wait ten seconds/);
+await gap(b);
+await as(b);await db.query('insert into public.community_post_comments(post_id,user_id,body) values($1,$2,$3)',[p,b,'Post after the gap']);
+await as(b);await del(lf.id);
+await gap(b);
+await as(c);const r1=await add('Sample reply',c1.id);assert.equal(r1.parent_id,c1.id);
+let l=await list();assert.equal(l.length,2);assert.equal(l[0].id,r1.id,'newest first');
+assert.deepEqual(await counts([k]),{[k]:2});
+await gap(c);
+await as(c);
+await assert.rejects(add(''),/1 to 1000/);
+await assert.rejects(add('x'.repeat(1001)),/1 to 1000/);
+await assert.rejects(add('This is a guaranteed profit lock'),/harmful content/);
+await assert.rejects(add('Hidden lay',null,h),/Card unavailable/);
+await assert.rejects(add('Missing lay',null,id(99)),/Card unavailable/);
+await owner(`insert into public.ruby_submissions(id,user_id,brand,theme,sport,title) values('${id(8)}','${a}','OmaticsZone','orbit','NFL','Sample other lay');`);
+await as(c);await assert.rejects(add('Cross-lay reply',c1.id,id(8)),/Comment unavailable/);
+await assert.rejects(add('Reply to nothing',id(98)),/Comment unavailable/);
+// Profile required, exactly as for post comments.
+await owner(`update public.community_profiles set visible=false where user_id='${c}';`);
+await as(c);await assert.rejects(add('No profile'),/community profile/);
+await owner(`update public.community_profiles set visible=true where user_id='${c}';`);
+// Blocks: a blocked author's comments disappear from the list and counts; the blocked member cannot comment on a blocked contributor's lay.
+await owner(`insert into public.member_blocks(user_id,target_user_id) values('${b}','${c}');`);
+await as(b);l=await list();assert.deepEqual(l.map(x=>x.id),[c1.id],'blocked author hidden');assert.deepEqual(await counts([k]),{[k]:1});
+await owner('delete from public.member_blocks');
+await owner(`insert into public.member_blocks(user_id,target_user_id) values('${a}','${b}');`);
+await as(b);assert.equal(await list(),null);assert.deepEqual(await counts([k]),{});await assert.rejects(add('Blocked'),/Card unavailable/);
+await owner('delete from public.member_blocks');
+// Member gate.
+await owner(`insert into private.community_restrictions(user_id,reason) values('${b}','Sample restriction');`);
+await as(b);await assert.rejects(add('Restricted'),/unavailable/);
+await owner('delete from private.community_restrictions');
+await owner(`update auth.users set banned_until=now()+interval '1 day' where id='${b}';`);
+await as(b);await assert.rejects(add('Banned'),/unavailable/);
+await owner(`update auth.users set banned_until=null where id='${b}';insert into private.account_erasure_jobs values('${b}',now()+interval '1 day');`);
+await as(b);await assert.rejects(add('Erasing'),/unavailable/);
+await owner('delete from private.account_erasure_jobs');
+await as(b);await db.exec("select set_config('test.age','off',false)");
+assert.equal(await list(),null);assert.equal(await counts([k]),null);await assert.rejects(add('Underage'),/unavailable/);
+await db.exec("select set_config('test.age','on',false)");
+await as('');assert.equal(await list(),null);await assert.rejects(add('No actor'),/unavailable/);
+// Only the author (or an admin) removes; replies survive their parent's removal.
+await as(c);await assert.rejects(del(c1.id),/Comment unavailable/);
+await as(b);assert.equal(await del(c1.id),true);
+l=await list();assert.equal(l.length,1);assert.equal(l[0].parent_id,null);
+await owner(`create or replace function public.is_admin() returns boolean language sql as $$select auth.uid()='${a}'::uuid$$;`);
+await as(a);assert.equal(await del(r1.id),true);assert.deepEqual(await list(),[]);
+await owner(`create or replace function public.is_admin() returns boolean language sql as $$select false$$;`);
+// No direct table access and nothing for visitors.
+await as(b);
+await assert.rejects(db.query('select count(*) from public.ruby_card_comments'),/permission denied/);
+await assert.rejects(db.query('insert into public.ruby_card_comments(card_id,user_id,author_name,body) values($1,$2,$3,$4)',[k,b,'x','x']),/permission denied/);
+await db.exec('reset role;set role anon');
+await assert.rejects(list(),/permission denied/);
+await assert.rejects(add('Visitor'),/permission denied/);
+await assert.rejects(counts([k]),/permission denied/);
+// Hiding the lay hides its discussion; deleting it removes the comments.
+await gap(b);await as(b);await add('Before hiding');
+await owner(`insert into public.ruby_visibility_events(submission_id,hidden) values('${k}',true);`);
+await as(b);assert.equal(await list(),null);await gap(b);await as(b);await assert.rejects(add('After hiding'),/Card unavailable/);
+await owner(`delete from public.ruby_submissions where id='${k}';`);
+assert.equal(Number((await db.query('select count(*) n from public.ruby_card_comments')).rows[0].n),0);
+console.log('Lay comments: add/list/reply/count, shared ten-second gap, length and harmful-content screen, profile, blocks both ways, member gate, author/admin removal, hidden/missing/cross-lay, visitor and direct-table denial, hide and cascade PASS');
+} finally { await db.close(); }

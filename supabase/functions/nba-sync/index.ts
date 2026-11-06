@@ -134,26 +134,32 @@ Deno.serve(async (req: Request) => {
         .sort((a, b) => Date.parse(a.commence_time) - Date.parse(b.commence_time));
       const limit = Number(settings.max_prop_events) > 0 ? Number(settings.max_prop_events) : 15;
       const dueEvents = eligible
-        .filter((e) => propEventDue(Date.parse(e.commence_time), fetched[e.id] ? Date.parse(fetched[e.id]) : null, now))
-        .slice(0, limit);
-      let failed = 0;
-      for (const e of dueEvents) {
+        .filter((e) => propEventDue(Date.parse(e.commence_time), fetched[e.id] ? Date.parse(fetched[e.id]) : null, now));
+      const attemptedEvents = dueEvents.slice(0, limit);
+      const budgetDeferred = dueEvents.length - attemptedEvents.length;
+      let failed = 0, empty = 0;
+      for (const e of attemptedEvents) {
         try {
           const data: OddsEvent = await json(
             `https://api.the-odds-api.com/v4/sports/basketball_nba/events/${e.id}/odds?apiKey=${encodeURIComponent(key)}&markets=${markets.join(",")}&bookmakers=${BOOKMAKERS.join(",")}&oddsFormat=american`,
           );
-          propQuotes += (await ingest({ provider: "The Odds API NBA props",
-            observations: await fingerprint(priceObservations([data], fixtures, "prop", markets, Date.now())) })).inserted;
+          const observations = await fingerprint(priceObservations([data], fixtures, "prop", markets, Date.now()));
+          propQuotes += (await ingest({ provider: "The Odds API NBA props", observations })).inserted;
+          // A valid deduplicated quote can insert zero rows; only normalization determines emptiness.
+          if (!observations.length) empty++;
           // Only a stored fetch counts: a failed ingest leaves the event due for the next run.
           fetched[e.id] = new Date(now).toISOString();
         } catch {
           failed++;
         }
       }
-      await recordRun("The Odds API NBA props", failed ? "partial" : eligible.length ? "ok" : "no upcoming events", {
-        markets, market_key: marketKey, books: BOOK_TITLES, eligible_events: eligible.length, fetched_events: dueEvents.length - failed,
-        failed, inserted_quotes: propQuotes, event_fetched_at: fetched, horizon_hours: PROPS_HORIZON / 3600000,
-        fetched_at: dueEvents.length ? new Date(now).toISOString() : last.details?.fetched_at ?? null,
+      await recordRun("The Odds API NBA props", failed || empty || budgetDeferred ? "partial" : !eligible.length ? "no upcoming events" : !dueEvents.length ? "not due" : "ok", {
+        markets, market_key: marketKey, books: BOOK_TITLES, eligible_events: eligible.length,
+        due_events: dueEvents.length, not_due_events: eligible.length - dueEvents.length,
+        attempted_events: attemptedEvents.length, fetched_events: attemptedEvents.length - failed,
+        budget_deferred_events: budgetDeferred, failed, empty,
+        inserted_quotes: propQuotes, event_fetched_at: fetched, horizon_hours: PROPS_HORIZON / 3600000,
+        fetched_at: attemptedEvents.length ? new Date(now).toISOString() : last.details?.fetched_at ?? null,
         credits_remaining: credits.remaining, credits_used: credits.used,
       });
     }

@@ -3,6 +3,7 @@
 type StatusType = { name?: string; completed?: boolean; detail?: string; shortDetail?: string };
 type Summary = {
   header?: {
+    id?: string | number;
     competitions?: {
       status?: { type?: StatusType };
       competitors?: { homeAway: string; score?: string; team?: { displayName?: string }; linescores?: unknown[] }[];
@@ -35,6 +36,8 @@ const STATS = ["points", "rebounds", "assists", "steals", "blocks", "turnovers"]
 const THREES = "threePointFieldGoalsMade-threePointFieldGoalsAttempted";
 
 export function resultPayload(data: Summary, game: Game, sourceHash: string) {
+  if (data.header?.id != null && String(data.header.id) !== game.provider_id)
+    return "NBA provider event mismatch";
   const comp = data.header?.competitions?.[0];
   const status = comp?.status?.type;
   const base = { provider_id: game.provider_id, status: status?.name ?? null };

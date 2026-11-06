@@ -1,0 +1,121 @@
+.nba-lineups {
+  margin: 12px 0;
+  padding: 15px;
+  border: 1px solid var(--line, #343a40);
+  border-radius: 12px;
+  background: var(--surface, #10151b);
+  min-width: 0;
+}
+.nba-lineups > header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.nba-lineups h3,
+.nba-lineups h4 {
+  margin: 0 0 10px;
+}
+.nba-lineups h3 {
+  font-size: 17px;
+}
+.nba-lineups button {
+  background: transparent;
+  color: inherit;
+  border: 1px solid var(--line, #343a40);
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  min-height: 40px;
+}
+.nba-lineup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px;
+  margin-top: 16px;
+}
+.nba-lineup-team h4 span {
+  display: block;
+  margin-top: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted, #aab2bf);
+}
+.nba-lineup-team h4 .nba-lineup-confirmed {
+  color: #85e8bd;
+  font-weight: 700;
+}
+.nba-lineup-team ol,
+.nba-lineup-team ul {
+  padding: 0;
+  list-style: none;
+  margin: 0;
+}
+.nba-lineup-team li {
+  margin: 7px 0;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.nba-lineup-team li small {
+  color: var(--muted, #aab2bf);
+  display: inline-block;
+  min-width: 22px;
+}
+.nba-lineup-team h5 {
+  font-size: 13px;
+  margin: 18px 0 8px;
+}
+.nba-lineup-team p,
+.nba-lineup-stamp,
+.nba-lineup-note {
+  font-size: 12px;
+  color: var(--muted, #aab2bf);
+  line-height: 1.5;
+}
+.nba-lineups > a {
+  display: inline-block;
+  font-size: 13px;
+  margin-top: 7px;
+}
+.nba-availability-out {
+  color: #ffc4ba;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+  display: block;
+  overflow-wrap: anywhere;
+}
+.nba-availability-note {
+  color: var(--muted, #aab2bf);
+  font-size: 12px;
+  line-height: 1.5;
+  display: block;
+}
+.nba-availability-out small,
+.nba-availability-note small {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted, #aab2bf);
+  margin-top: 3px;
+}
+.vq-game-row summary .nba-availability-out,
+.vq-game-row summary .nba-availability-note {
+  padding-top: 8px;
+}
+@media (max-width: 520px) {
+  .nba-lineup-grid {
+    grid-template-columns: 1fr;
+  }
+  .nba-lineup-team + .nba-lineup-team {
+    border-top: 1px solid var(--line, #343a40);
+    padding-top: 15px;
+  }
+  .nba-lineups {
+    padding: 12px;
+  }
+  .nba-lineups > header h3 {
+    font-size: 15px;
+  }
+}

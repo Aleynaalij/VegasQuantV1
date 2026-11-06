@@ -1,0 +1,117 @@
+/* VQ Tonight: Home's daily view. Factual schedule first, then the lay and the Zone. */
+.vq-tonight {
+  display: grid;
+  gap: 14px;
+  margin: 0 0 18px;
+  padding: 18px 16px;
+  border: 1px solid #b69b4e55;
+  border-radius: 20px;
+  background: #0d1116;
+  color: #e9e5da;
+}
+.vq-tonight-head h2 {
+  margin: 0;
+  color: #f4dc99;
+  font-size: 1.35rem;
+  letter-spacing: .02em;
+}
+.vq-tonight-head p {
+  margin: 2px 0 0;
+  color: #b7c2bb;
+  font-size: .85rem;
+}
+.vq-tonight-sport h3 {
+  margin: 4px 0 6px;
+  color: #b7c2bb;
+  font-size: .72rem;
+  letter-spacing: .14em;
+}
+.vq-tonight-sport ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+html body .vq-tonight a.vq-tonight-game {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 2px 10px;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 1px solid #ffffff14;
+  border-radius: 12px;
+  background: #141b21;
+  color: #f2efe6 !important;
+  text-decoration: none;
+}
+html body .vq-tonight a.vq-tonight-game:focus-visible {
+  outline: 2px solid #f4dc99;
+  outline-offset: 2px;
+}
+.vq-tonight-teams {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.vq-tonight-teams small {
+  color: #8f9a94;
+}
+.vq-tonight-when {
+  color: #d9c58f;
+  font-size: .85rem;
+  white-space: nowrap;
+}
+.vq-tonight-when b {
+  color: #f2efe6;
+}
+.vq-tonight-go {
+  grid-column: 1 / -1;
+  color: #9aa59f;
+  font-size: .75rem;
+}
+.vq-tonight-more,
+.vq-tonight-alert button {
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid #b69b4e55;
+  border-radius: 10px;
+  background: transparent;
+  color: #f4dc99;
+  font-weight: 700;
+}
+.vq-tonight-alert,
+.vq-tonight-empty,
+.vq-tonight-note {
+  margin: 0;
+  color: #b7c2bb;
+}
+.vq-tonight-next {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+html body .vq-tonight a.vq-tonight-card {
+  display: grid;
+  gap: 2px;
+  min-height: 64px;
+  padding: 10px 12px;
+  border: 1px solid #b69b4e33;
+  border-radius: 12px;
+  background: #11161c;
+  color: #f4dc99 !important;
+  text-decoration: none;
+}
+.vq-tonight-card small {
+  color: #b7c2bb;
+  font-size: .75rem;
+  line-height: 1.4;
+}
+@media (max-width: 359px) {
+  .vq-tonight-next { grid-template-columns: 1fr; }
+}
+.vq-tonight-head p.vq-tonight-checked {
+  margin-top: 4px;
+  font-size: .75rem;
+  color: #9aa59f;
+}

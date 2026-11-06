@@ -143,13 +143,15 @@ export type OddsEvent = {
 };
 
 /** The NBA game an Odds API event is for: same teams, tip within an hour. */
-export const gameForEvent = <G extends Fixture>(e: Pick<OddsEvent, "home_team" | "away_team" | "commence_time">, games: G[]) =>
-  games.find(
+export const gameForEvent = <G extends Fixture>(e: Pick<OddsEvent, "home_team" | "away_team" | "commence_time">, games: G[]) => {
+  const matches = games.filter(
     (g) =>
       g.home_team === canonicalTeam(e.home_team) &&
       g.away_team === canonicalTeam(e.away_team) &&
       Math.abs(Date.parse(g.tipoff) - Date.parse(e.commence_time)) < 3600000,
   );
+  return matches.length === 1 ? matches[0] : undefined;
+};
 
 const validProp = (x: { name: string; price: number; point?: number; description?: string }) =>
   ["Over", "Under"].includes(x.name) &&
