@@ -619,8 +619,9 @@ export default function Membership() {
             </p>
             <p>
               Full matchup analysis, injury and weather research, target boards,
-              market history and research exports are included. Administrator
-              tools remain restricted to administrators.
+              market history and research exports are included. Official history,
+              performance and tailed-pick records are currently restricted to administrators.
+              Administrator tools remain restricted to administrators.
             </p>
           </div>
         </Panel>
@@ -636,14 +637,14 @@ export default function Membership() {
             <h3>Free Community</h3>
             <p>
               Published picks and research cards, decision alerts, Community
-              profiles, share cards, personal tailed-pick records and the public
-              official record—including losses and passes.
+              profiles and share cards. Official history, performance and
+              tailed-pick records are currently restricted to administrators.
             </p>
             <h3>Premium research · $5/month or $20 for the 2026 season</h3>
             <p>
               Full every-game matchup analysis, potential target boards, injury
               and weather research, market history, timestamped analysis
-              versions, and detailed official process reviews and exports.
+              versions and research exports.
             </p>
             <p>
               No daily pick is promised. If no qualifying edge exists, the
@@ -717,8 +718,9 @@ export default function Membership() {
             </p>
             <p>
               You are buying sports analysis and tracking, not a wager or entry
-              into a prize pool. No outcome is guaranteed. Billing questions and
-              refund requests should be directed to the platform administrator.
+              into a prize pool. No outcome is guaranteed. See Help & Support
+              for the current billing and refund contact status; a monitored
+              request destination has not yet been confirmed.
               Cancellation stops future monthly renewals; it is separate from a
               refund request.
             </p>

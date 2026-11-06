@@ -112,7 +112,7 @@ await open("a failed save keeps the previous reaction, and Retry sends the same 
   await page.getByText("Your reaction didn’t save; it’s unchanged.").waitFor().catch(() => fail("failure not reported"));
   if ((await pressed(page, "Thinking")) !== "false") fail("failed reaction is shown as saved");
   if (!/2/.test(await likeCount(page)) && (await likeCount(page)).trim() !== "") fail("post total changed although the save failed");
-  await page.getByRole("button", { name: "Retry" }).click();
+  await page.getByRole("group", { name: "Reactions", exact: true }).getByRole("alert").getByRole("button", { name: "Retry", exact: true }).click();
   await page.waitForFunction(() => document.querySelector('[aria-label^="Thinking,"]')?.getAttribute("aria-pressed") === "true", null, { timeout: 5000 }).catch(() => fail("Retry did not save Thinking"));
   if (JSON.stringify(writes()) !== JSON.stringify(["thinking", "thinking"])) fail(`retry sent ${JSON.stringify(writes())}, expected the same desired value twice`);
 });

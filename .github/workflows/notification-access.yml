@@ -1,0 +1,40 @@
+name: Notification access safeguards
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/*notification_access_contracts.sql"
+      - "tests/sql/notification-access-contracts.mjs"
+      - "tests/notification-access-contracts.test.ts"
+      - ".github/workflows/notification-access.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  notification-access:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Positive contracts and exact intended backoff rejection
+        run: |
+          mkdir -p /tmp/notification-access-evidence
+          node --test --test-reporter=tap tests/sql/notification-access-contracts.mjs > /tmp/notification-access-evidence/positive.log 2>&1
+          cat /tmp/notification-access-evidence/positive.log
+          set +e
+          NOTIFICATION_NEGATIVE=no-backoff node --test --test-reporter=tap tests/sql/notification-access-contracts.mjs > /tmp/notification-access-evidence/no-backoff.log 2>&1
+          negative_status=$?
+          set -e
+          cat /tmp/notification-access-evidence/no-backoff.log
+          test "$negative_status" -ne 0
+          grep -Fq 'ineligible queue must stop immediate dispatcher wakeups' /tmp/notification-access-evidence/no-backoff.log
+          grep -Eq '^# fail [1-9][0-9]*$' /tmp/notification-access-evidence/no-backoff.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: notification-access-synthetic-evidence
+          path: /tmp/notification-access-evidence

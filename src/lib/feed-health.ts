@@ -4,6 +4,68 @@ export type FeedRun = {
   created_at: string;
   details?: Record<string, unknown>;
 };
+/** Job evidence only. NFL props fetched_at is a legacy batch-attempt clock.
+ * Only version-2 event_fetched_at records successful per-event ingestion evidence.
+ * Callers supply the existing job threshold; this helper does not choose a sport cadence.
+ */
+export function feedRunHealth(
+  row: FeedRun | undefined,
+  now: number,
+  maxAgeMs: number,
+) {
+  const runAt = row ? Date.parse(row.created_at) : NaN;
+  const validClock =
+    Number.isFinite(now) && Number.isFinite(maxAgeMs) && maxAgeMs > 0;
+  const timeState = !row
+    ? "missing"
+    : !validClock || !Number.isFinite(runAt)
+      ? "invalid"
+      : runAt > now
+        ? "future"
+        : now - runAt > maxAgeMs
+          ? "stale"
+          : "current";
+  const raw = row?.status.trim().toLowerCase();
+  const state = !row
+    ? "missing"
+    : raw === "error" || raw === "failed"
+      ? "failed"
+      : raw === "partial"
+        ? "partial"
+        : raw === "no upcoming events"
+          ? "no_events"
+          : raw === "not due" ||
+              (raw === "ok" && row.details?.carried_forward === true)
+            ? "not_due"
+            : raw === "skipped"
+              ? "skipped"
+              : raw === "ok"
+                ? "ok"
+                : "unknown";
+  const validEvidenceTime = (value: unknown) => {
+    const at = typeof value === "string" ? Date.parse(value) : NaN;
+    return validClock && Number.isFinite(at) && Number.isFinite(runAt) && at <= runAt && at <= now
+      ? at : null;
+  };
+  const details = row?.details;
+  const attemptedAt = validEvidenceTime(details?.attempted_at ??
+    (row?.provider === "The Odds API props" ? details?.fetched_at : null));
+  const events = details?.event_fetch_state_version === 2 &&
+    details.event_fetched_at && typeof details.event_fetched_at === "object" && !Array.isArray(details.event_fetched_at)
+    ? details.event_fetched_at as Record<string, unknown> : {};
+  const eventFetchedAt: Record<string, number> = Object.fromEntries(Object.entries(events).flatMap(([event, value]) => {
+    const at = validEvidenceTime(value);
+    return at === null ? [] : [[event, at]];
+  }));
+  return {
+    state,
+    timeState,
+    runAt: Number.isFinite(runAt) ? runAt : null,
+    attemptedAt,
+    eventFetchedAt,
+  };
+}
+
 export function feedAlerts(rows: FeedRun[], now: number) {
   const required = [
     "ESPN",
@@ -29,10 +91,17 @@ export function feedAlerts(rows: FeedRun[], now: number) {
       )
       .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0];
     if (!latest) return [{ provider, reason: "No verified refresh recorded" }];
-    if (now - Date.parse(latest.created_at) > 30 * 60000)
-      return [{ provider, reason: "Refresh older than 30 minutes" }];
+    const health = feedRunHealth(latest, now, 30 * 60000);
+    const stale = health.timeState === "stale";
     if (!["ok", "no upcoming events"].includes(latest.status))
-      return [{ provider, reason: latest.status }];
+      return [
+        {
+          provider,
+          reason:
+            latest.status + (stale ? "; refresh older than 30 minutes" : ""),
+        },
+      ];
+    if (stale) return [{ provider, reason: "Refresh older than 30 minutes" }];
     return [];
   });
 }

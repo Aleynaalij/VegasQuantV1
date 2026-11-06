@@ -100,6 +100,7 @@ for (const width of [360, 390, 1280]) {
   page.setDefaultTimeout(15000);
   // The legacy route must retain the exact saved ID and focus its card.
   await page.goto(`${BASE}/community?build=1&saved=${OLD}`, { waitUntil: "networkidle" });
+  await page.waitForURL(url => url.pathname === "/parlays" && url.searchParams.get("saved") === OLD);
   assert.equal(new URL(page.url()).pathname, "/parlays");
   assert.equal(new URL(page.url()).searchParams.get("saved"), OLD);
   const card = page.locator(`#my-parlay-${OLD}`);
