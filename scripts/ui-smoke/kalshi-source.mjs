@@ -21,6 +21,7 @@ try {
     let mine = null;
     let lost = true;
     const submissions = [];
+    const hideCalls = [];
     let outbound = 0;
     let photoMode = false; let photoDeletes = 0;
     await ctx.addInitScript((uid) => {
@@ -126,6 +127,11 @@ try {
           });
         }
         return r.fulfill({ json: p.p_id });
+      }
+      if (path.endsWith("/rpc/hide_ruby")) {
+        const p=r.request().postDataJSON();hideCalls.push(p);
+        assert.equal(p.p_submission,mine.id);mine={...mine,hidden:p.p_hidden};
+        return r.fulfill({json:null});
       }
       if (path.endsWith("/rpc/edit_ruby_link")) {
         const p = r.request().postDataJSON();
@@ -257,6 +263,46 @@ try {
       path: `${out}/${width}-link-only-edited.png`,
       fullPage: true,
     });
+    // Element/full-page captures can composite fixed navigation across a tall card.
+    // Reproduce that capture above, then use ordinary scrolling and unforced clicks;
+    // viewport images plus hit testing prove the actual card controls are reachable.
+    const interactionEvidence=[];
+    const revealControl=async(control,label)=>{
+      await control.scrollIntoViewIfNeeded();
+      const box=await control.boundingBox();
+      const nav=await page.locator(".mobile-nav").boundingBox();
+      if(box){
+        const safeBottom=nav?.y??page.viewportSize().height;
+        await page.mouse.wheel(0,box.y+box.height/2-Math.max(120,safeBottom/2));
+        await page.waitForTimeout(150);
+      }
+      const proof=await control.evaluate(el=>{
+        const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;
+        const hit=document.elementFromPoint(x,y);
+        const nav=document.querySelector(".mobile-nav")?.getBoundingClientRect();
+        return {x:r.x,y:r.y,width:r.width,height:r.height,centerHit:!!hit&&(hit===el||el.contains(hit)),inViewport:r.top>=0&&r.bottom<=innerHeight,aboveNavigation:!nav||nav.height===0||r.bottom<=nav.top-8};
+      });
+      assert.ok(proof.inViewport&&proof.centerHit&&proof.aboveNavigation,`${label} covered or outside viewport`);
+      await page.screenshot({path:`${out}/${width}-${label}-viewport.png`,fullPage:false});
+      interactionEvidence.push({control:label,...proof});
+      await control.click(); // ordinary actionability/hit-target checks; never force
+    };
+    await revealControl(card.locator(".ruby-source-link").getByRole("button",{name:"Cancel",exact:true}),"card-cancel");
+    assert.equal(await card.getByRole("link",{name:"Continue to Kalshi ↗"}).count(),0);
+    assert.equal(await card.getByRole("checkbox",{name:/I am 21/}).count(),0);
+    await card.getByRole("button",{name:"Open source on Kalshi ↗"}).click();
+    assert.equal(await card.getByRole("checkbox",{name:/I am 21/}).isChecked(),false,"Cancel retained eligibility confirmation");
+    assert.equal(await card.getByRole("link",{name:"Continue to Kalshi ↗"}).count(),0);
+    await revealControl(card.getByRole("button",{name:"Remove from The Zone",exact:true}),"card-remove");
+    assert.equal(hideCalls.length,1);assert.equal(hideCalls[0].p_hidden,true);
+    await card.getByRole("button",{name:"Restore to The Zone",exact:true}).waitFor();
+    assert.equal(mine.source_link,canonical,"removal lost original source");
+    await card.getByRole("button",{name:"Restore to The Zone",exact:true}).click();
+    await card.getByRole("button",{name:"Remove from The Zone",exact:true}).waitFor();
+    assert.equal(hideCalls.length,2);assert.equal(hideCalls[1].p_hidden,false);
+    assert.equal(outbound,1,"Cancel/Remove navigated externally");
+    await fs.writeFile(`${out}/${width}-card-controls.json`,JSON.stringify({width,controls:interactionEvidence,cancelClearedEligibility:true,removeRestoreSequence:hideCalls.map(p=>p.p_hidden),sourceRetained:mine.source_link===canonical,outbound},null,2));
+    console.log(`${width}px card Cancel/Remove/Restore ordinary clicks passed; controls clear of fixed navigation`);
     await page.goto(base + "/", { waitUntil: "networkidle" });
     await page.locator(".ruby-submit-drawer summary").click();
     await page.getByRole("button", { name: "Submit today’s lay", exact: true }).click();
