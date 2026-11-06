@@ -132,12 +132,17 @@ copy not yet reviewed against #139. Owner C · Action: review copy (no broad-cov
 | `desk.tsx` “View current research →” → `/` | published research lives at `/feed?view=latest` | C | **Done (C3-1):** → `/feed?view=latest` |
 | Story rail signed out | shows “Stories unavailable · Retry” to visitors (no member data leaks) | C4 | Decide honest signed-out rail state (coordinate; #223 component) |
 
-## Owner decisions (so far)
+## Owner decisions (Mike, Nov 6)
 
-0. **Tailed parlays** — members currently have no page that shows them (see above). Where should they live?
-
-1. **Support contact** — no monitored address/intake exists; page must not imply one.
-2. **Contributor composer** — on the lobby, or only on `/nfl` and the Zone?
+1. **Tailed parlays → Your lays → Tailed** (`/parlays/tailed`): **done** in #225. Own-row tails plus
+   publications the member can already read; no schema/policy change. All “on Home” / “in Records”
+   tail promises now point there. Tab link on `/parlays` requested from Codex (their file).
+2. **Support:** contact stays unavailable until Mike supplies a monitored address and owner. **Done:**
+   no address, form, owner, response time or refund promise; section says direct contact isn’t
+   available yet.
+3. **Contributor form:** **done:** off consumer pages; role-gated **Submit a Lay** on the NFL desk opens
+   the existing drawer in the contributor area (`/community?view=vip#submit-lay`). Permissions and
+   submission unchanged.
 
 ## Status
 
