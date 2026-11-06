@@ -46,6 +46,7 @@ jobs:
           UI_SMOKE_URL: http://127.0.0.1:3100
           RECORD_SCREENSHOTS: artifacts/record-presentation/positive
         run: |
+          set -euo pipefail
           mkdir -p artifacts/record-presentation
           node scripts/ui-smoke/stub.mjs > artifacts/record-presentation/stub.log 2>&1 &
           npx next start -p 3100 > artifacts/record-presentation/app.log 2>&1 &

@@ -57,6 +57,8 @@ try {
       await ctx.addInitScript(
         ({ uid, signedIn }) => {
           localStorage.setItem("vq-theme", "dark");
+          // Model an already-onboarded visit so unrelated optional prompts do not cover evidence.
+          sessionStorage.setItem("vq-prompt-shown", "profile");
           localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
           localStorage.setItem(
             `vq-push-prompt:${uid}`,
@@ -119,6 +121,13 @@ try {
         else {
           await card.waitFor({ state: "visible" });
           await card.scrollIntoViewIfNeeded();
+          await page.screenshot({
+            path: path.join(
+              out,
+              `inspection-${route === "/" ? "lobby" : "nfl"}-${state}-${width}.png`,
+            ),
+            fullPage: true,
+          });
           if (process.env.RECORD_NEGATIVE === "loss")
             await card
               .locator("dd")
@@ -142,7 +151,9 @@ try {
             "Past results don’t guarantee future ones.",
           ])
             assert.ok(
-              text.includes(required),
+              text
+                .toLocaleLowerCase("en-US")
+                .includes(required.toLocaleLowerCase("en-US")),
               `${required}: ${state} ${route} ${width}`,
             );
           assert.ok(

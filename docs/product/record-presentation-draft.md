@@ -41,3 +41,7 @@ Chromium launch fails with `socket() failed: Operation not permitted`, including
 - Final TypeScript, production webpack build, formatting, browser-script syntax and `git diff --check`: passed.
 - React review: no new data effect, hook, event listener, dependency or client fetching; semantic heading/definition list and explicit loss labels retained. CSS is route/component scoped, with no added `!important` rules. All existing official/research/personal classifications remain in place.
 - Browser execution, screenshots and negative controls: pending the isolated CI workflow. Combined-head acceptance and live verification remain separate. Local browser execution remains blocked as documented above.
+
+## Hosted fixture correction
+
+The first dedicated run (42280780650, head 90228f0) failed on a case-sensitive `Record` text check against CSS-uppercase rendered labels. The logging pipeline also lacked `pipefail`, so its positive step incorrectly reported success; the job failed in the negative-control step. The fixture now compares label text case-insensitively and preserves pipeline failures. A pre-assertion screenshot is retained, and optional onboarding prompts are pre-acknowledged in synthetic browser storage. Application source is unchanged. That failed run is preserved; no browser acceptance is claimed from it.
