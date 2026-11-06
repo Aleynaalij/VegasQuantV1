@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import StoryViewer from "./story-viewer";
 import { useStoryClock } from "@/lib/use-story-clock";
 import { supabase } from "@/lib/supabase";
+import "@/app/lobby-stories.css";
 
 import {
   type CommunityActivity,
@@ -14,7 +15,11 @@ import {
 } from "@/lib/community-stories";
 
 /** Story presentation expires after 24 hours; the underlying community post remains. */
-export default function CommunityStories() {
+export default function CommunityStories({
+  placement = "sport-strip",
+}: {
+  placement?: "sport-strip" | "lobby";
+}) {
   const [members, setMembers] = useState<CommunityActivity[]>([]);
   const [failed, setFailed] = useState(false);
   // Stories are for signed-in members: a visitor never gets a stories Retry, only the Zone link.
@@ -153,11 +158,21 @@ export default function CommunityStories() {
       target?.focus();
     });
   }, []);
+  // Home gives signed-in members a dedicated rail below the sport rooms. Visitors
+  // see neither a member preview nor an empty story row; all existing read gates stay above.
+  if (placement === "lobby" && !signedIn) return null;
   return (
-    <div className="community-story-wrap" data-no-tab-swipe>
-      <span className="story-divider" aria-hidden="true">
-        |
-      </span>
+    <div
+      className={`community-story-wrap${placement === "lobby" ? " lobby-community-stories" : ""}`}
+      role={placement === "lobby" ? "region" : undefined}
+      aria-label={placement === "lobby" ? "Recent member stories" : undefined}
+      data-no-tab-swipe
+    >
+      {placement !== "lobby" ? (
+        <span className="story-divider" aria-hidden="true">
+          |
+        </span>
+      ) : null}
       <div className="community-stories" aria-label="Recent community posts">
         {unread.map((member) => (
           <button
@@ -202,7 +217,7 @@ export default function CommunityStories() {
           </Link>
         ) : null}
       </div>
-      {/* Rendered on <body>, outside the sport strip and its link styles. */}
+      {/* Rendered on <body>, outside either rail and its link styles. */}
       {open
         ? createPortal(
             <StoryViewer

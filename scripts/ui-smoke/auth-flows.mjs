@@ -113,7 +113,7 @@ await scenario("slow access check (loading)", { setup: (ctx) => membership(ctx, 
   if (!(await has("Loading published research"))) fail("no loading state while access is checked");
   if (await has(ACCESS_NOTE)) fail("shows the sign-in note before access is known");
   if (await has(MEMBER_POST)) fail("shows member research before access is known");
-  await page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.toLowerCase().includes(t.toLowerCase()); }, MEMBER_POST, { timeout: 15000 }).catch(() => fail("member research never appeared after access was granted"));
+  await page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.replace(/\s+/g, " ").toLowerCase().includes(t.toLowerCase()); }, MEMBER_POST, { timeout: 15000 }).catch(() => fail("member research never appeared after access was granted"));
 });
 
 await scenario("membership denied", { setup: (ctx) => membership(ctx, denied) }, async ({ go, has, fail }) => {
@@ -197,7 +197,7 @@ await scenario("access check fails, then retry", {
   // Probe: fire the feed's background triggers too. With Retry disabled (UI_SMOKE_NEGATIVE=retry) this
   // case must still fail, which shows recovery is attributable to the click alone.
   await page.evaluate(() => { window.dispatchEvent(new Event("focus")); document.dispatchEvent(new Event("visibilitychange")); });
-  await page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.toLowerCase().includes(t.toLowerCase()); }, MEMBER_POST, { timeout: 15000 }).catch(() => fail("Retry did not recover"));
+  await page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.replace(/\s+/g, " ").toLowerCase().includes(t.toLowerCase()); }, MEMBER_POST, { timeout: 15000 }).catch(() => fail("Retry did not recover"));
   if (await has("Research access could not be checked")) fail("error message stays after a successful retry");
 });
 
@@ -239,13 +239,13 @@ await scenario("dropped request, then retry", {
   if (!cleared) fail("error message stays after a successful retry (waited 15 s)");
 });
 
-const shows = (page, t) => page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.toLowerCase().includes(t.toLowerCase()); }, t, { timeout: 15000 }).then(() => true, () => false);
+const shows = (page, t) => page.waitForFunction((t) => { document.querySelectorAll("*").forEach((e) => { if (getComputedStyle(e).contentVisibility === "auto") e.style.contentVisibility = "visible"; }); return document.body.innerText.replace(/\s+/g, " ").toLowerCase().includes(t.toLowerCase()); }, t, { timeout: 15000 }).then(() => true, () => false);
 
 // Signed-in navigation through the phone nav's required tabs. A missing tab fails; it is never
 // replaced by loading the route directly.
 await scenario("signed-in navigation: Zone, Slots, Account, Home", {}, async ({ page, go, fail }) => {
   await go("/");
-  for (const [href, name, expect] of [["/community", "The Zone", "The Zone"], ["/slots", "VQ Slots", "Slots"], ["/membership", "Account", "Your account."], ["/", "Home", "Every game. One clear read."]]) {
+  for (const [href, name, expect] of [["/community", "The Zone", "The Zone"], ["/slots", "VQ Slots", "Slots"], ["/membership", "Account", "Your account."], ["/", "Home", "Your sports research starts here."]]) {
     // One-time prompts open after load and are excluded by the fixture member's saved choices; close any left.
     await page.waitForTimeout(1000);
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));

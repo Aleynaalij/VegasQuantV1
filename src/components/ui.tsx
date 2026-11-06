@@ -325,7 +325,7 @@ export function Shell({
               chip
             );
           })}
-          {lobby || active === "home" || active === "community" ? (
+          {active === "home" || active === "community" ? (
             <CommunityStories />
           ) : sport === "nba" ? (
             <span>{active === "feed" ? "Legs we like" : "NBA research"}</span>

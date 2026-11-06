@@ -8,6 +8,7 @@ import {
   type WorkshopAccess,
 } from "@/lib/parlay-workshop-access";
 import { homeWeekStart } from "@/lib/home-week";
+import { confirmParlaySave } from "@/lib/parlay-save-confirmation";
 import {
   canBuildWith,
   reusableSelections,
@@ -82,6 +83,12 @@ export default function ParlayWorkshop({
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const saveInFlight = useRef<number | null>(null);
+  const [pendingSave, setPendingSave] = useState<{
+    id: string;
+    title: string;
+    keys: string[];
+  } | null>(null);
   const [sharing, setSharing] = useState<string | null>(null);
   const [sharedPost, setSharedPost] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -93,6 +100,11 @@ export default function ParlayWorkshop({
     return () => clearInterval(timer);
   }, []);
   const [title, setTitle] = useState("My lay");
+  const currentDraft = useRef({
+    title,
+    keys: chosen.map((leg) => leg.leg_key),
+  });
+  currentDraft.current = { title, keys: chosen.map((leg) => leg.leg_key) };
   const epoch = useRef(0);
   const builder = useRef<HTMLElement>(null);
   const focusedRoute = useRef("");
@@ -110,6 +122,8 @@ export default function ParlayWorkshop({
       focusedRoute.current = "";
       setSavedPrompt(null);
       setBusy(false);
+      setPendingSave(null);
+      saveInFlight.current = null;
       setPromptVersion(0);
       saveDialog.current?.close();
       setSharing(null);
@@ -303,6 +317,8 @@ export default function ParlayWorkshop({
       setNotice("");
       setError("");
       setBusy(false);
+      setPendingSave(null);
+      saveInFlight.current = null;
       setSharing(null);
       setSharedPost(null);
       saveDialog.current?.close();
@@ -383,73 +399,106 @@ export default function ParlayWorkshop({
     setOpen(true);
   }
   async function save() {
-    if (busy || !accessReady.current || chosen.length < 2) return;
+    if (
+      saveInFlight.current !== null ||
+      !accessReady.current ||
+      (!pendingSave && (chosen.length < 2 || !title.trim()))
+    )
+      return;
+    const n = epoch.current;
+    saveInFlight.current = n;
     setBusy(true);
     setError("");
     setNotice("");
-    const n = epoch.current;
+    let submitted = pendingSave;
     try {
-      const result = await supabase
-        .rpc("create_member_parlay", {
-          p_title: title.trim(),
-          p_leg_keys: chosen.map((r) => r.leg_key),
-        })
-        .abortSignal(AbortSignal.timeout(20000));
+      if (!submitted) {
+        const draft = { title, keys: chosen.map((r) => r.leg_key) };
+        const result = await supabase
+          .rpc("create_member_parlay", {
+            p_title: draft.title.trim(),
+            p_leg_keys: draft.keys,
+          })
+          .abortSignal(AbortSignal.timeout(20000));
+        if (n !== epoch.current) return;
+        if (result.error) {
+          setError(
+            plain(
+              result.error.message,
+              "Could not save. Check that every leg is still open.",
+            ),
+          );
+          return;
+        }
+        if (typeof result.data !== "string" || !result.data)
+          throw Error("Save returned no confirmation ID");
+        submitted = { id: result.data, ...draft };
+        // Keep the returned ID even when a read fails. Retry confirms this card without
+        // another create request, and never treats a received write as confirmed success.
+        setPendingSave(submitted);
+        try {
+          if (owner.current)
+            sessionStorage.setItem(
+              `vq-parlay-recent:${owner.current}`,
+              submitted.id,
+            );
+        } catch {
+          /* The in-memory confirmation retry works without browser storage. */
+        }
+      }
+      const id = submitted.id;
+      const { confirmed, saved: readback } = await confirmParlaySave(
+        id,
+        (signal) =>
+          supabase
+            .from("member_parlays")
+            .select("id,title,legs,created_at,expires_at,community_post_id")
+            .eq("id", id)
+            .abortSignal(signal)
+            .single(),
+        (signal) =>
+          supabase
+            .from("member_parlays")
+            .select("id,title,legs,created_at,expires_at,community_post_id")
+            .order("created_at", { ascending: false })
+            .order("id", { ascending: false })
+            .limit(50)
+            .abortSignal(signal),
+      );
       if (n !== epoch.current) return;
-      if (result.error) {
+      if (!confirmed) {
         setError(
-          plain(
-            result.error.message,
-            "Could not save. Check that every leg is still open.",
-          ),
+          "Save received, but confirmation could not load. Your draft is kept. Retry confirmation to check this saved lay without saving again.",
         );
         return;
       }
-      const [readback, confirmation] = await Promise.all([
-        supabase
-          .from("member_parlays")
-          .select("id,title,legs,created_at,expires_at,community_post_id")
-          .order("created_at", { ascending: false })
-          .order("id", { ascending: false })
-          .limit(50),
-        supabase
-          .from("member_parlays")
-          .select("id,title,legs,created_at,expires_at,community_post_id")
-          .eq("id", result.data)
-          .single(),
-      ]);
-      if (n !== epoch.current) return;
-      if (confirmation.error || !confirmation.data) {
-        setError(
-          "Save received, but confirmation could not load. Refresh before trying again.",
-        );
-        return;
-      }
-      const confirmed = confirmation.data;
+      setPendingSave(null);
       setReusedSave(
         saved.some((p) => p.id === confirmed.id) ||
-          confirmed.title !== title.trim(),
+          confirmed.title !== submitted.title.trim(),
       );
-      setSaved([
+      setSaved((current) => [
         confirmed,
-        ...(readback.data || saved).filter((p) => p.id !== confirmed.id),
+        ...(readback || current).filter((p) => p.id !== confirmed.id),
       ]);
-      try {
-        if (owner.current)
-          sessionStorage.setItem(
-            `vq-parlay-recent:${owner.current}`,
-            confirmed.id,
-          );
-      } catch {
-        /* The direct saved-card route remains available. */
-      }
       setSavedId(confirmed.id);
       setSavedPrompt(confirmed);
       setPromptVersion((v) => v + 1);
       setShareChecked(false);
-      setNotice(`Saved “${confirmed.title}” to My lays.`);
-      setChosen([]);
-      setOpen(false);
+      const submittedKeys = submitted.keys;
+      const unchanged =
+        currentDraft.current.title === submitted.title &&
+        currentDraft.current.keys.length === submittedKeys.length &&
+        currentDraft.current.keys.every((key, i) => key === submittedKeys[i]);
+      setNotice(
+        `Saved “${confirmed.title}” to My lays.${unchanged ? "" : " Your current draft is kept."}`,
+      );
+      // Members can edit a name during saving or change the draft before retrying a
+      // confirmation. Only clear the exact draft that this request saved.
+      if (unchanged) {
+        setChosen([]);
+        setOpen(false);
+      }
       // Stay on this page: replacing to another route would unmount the workshop and its
       // "Lay saved" prompt.
       const here =
@@ -465,10 +514,15 @@ export default function ParlayWorkshop({
     } catch {
       if (n === epoch.current)
         setError(
-          "Save could not be confirmed. Check My lays before retrying; retrying the same combination keeps one saved card.",
+          submitted
+            ? "Save received, but confirmation could not load. Your draft is kept. Retry confirmation to check this saved lay without saving again."
+            : "Save could not be confirmed. Check My lays before retrying; retrying the same combination keeps one saved card.",
         );
     } finally {
-      if (n === epoch.current) setBusy(false);
+      if (n === epoch.current) {
+        saveInFlight.current = null;
+        setBusy(false);
+      }
     }
   }
   async function share(parlay: MemberParlay) {
@@ -790,10 +844,12 @@ export default function ParlayWorkshop({
           </button>
           <button
             className="btn"
-            disabled={busy || chosen.length < 2 || !title.trim()}
+            disabled={
+              busy || (!pendingSave && (chosen.length < 2 || !title.trim()))
+            }
             onClick={() => void save()}
           >
-            {busy ? "Saving…" : "Save lay"}
+            {busy ? "Saving…" : pendingSave ? "Retry confirmation" : "Save lay"}
           </button>
           {error && <p role="alert">{error}</p>}
         </aside>

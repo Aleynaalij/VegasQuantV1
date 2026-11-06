@@ -21,7 +21,7 @@ function fixture() {
     quote_observed_at: null, published_at: new Date().toISOString(), expires_at: expires, result: null,
     why: "Sample workload", risk: "Sample rotation", copy_text: `Sample Player ${i} 20+ rushing yards`,
   }));
-  return { legs, expires, mine: [], creates: 0, mode: "ok", confirmFails: false, createDelay: 0, shareMode: "ok", shares: 0, phantom: null };
+  return { legs, expires, mine: [], creates: 0, mode: "ok", confirmFails: false, holdConfirmation: false, holdList: false, heldConfirmation: [], heldList: [], createDelay: 0, shareMode: "ok", shares: 0, phantom: null };
 }
 
 async function setup(ctx, f) {
@@ -48,7 +48,21 @@ async function setup(ctx, f) {
       if (u.searchParams.has("id")) {
         if (f.confirmFails) return route.fulfill({ status: 500, json: { message: "synthetic confirmation failure" } });
         data = f.mine.find((p) => `eq.${p.id}` === u.searchParams.get("id")) || (f.phantom && `eq.${f.phantom.id}` === u.searchParams.get("id") ? f.phantom : null);
-      } else data = f.mine;
+        if (f.holdConfirmation) {
+          return new Promise((resolve) => f.heldConfirmation.push(async () => {
+            await route.fulfill({ json: data }).catch(() => {}); // An aborted request may already be closed.
+            resolve();
+          }));
+        }
+      } else {
+        data = f.mine;
+        if (f.holdList && f.creates) {
+          return new Promise((resolve) => f.heldList.push(async () => {
+            await route.fulfill({ json: data }).catch(() => {});
+            resolve();
+          }));
+        }
+      }
     }
     if (path.endsWith("create_member_parlay")) {
       f.creates++;
@@ -103,6 +117,7 @@ async function scenario(name, run) {
   if (errors.length) fail(`page error · ${errors[0].slice(0, 160)}`);
   console.log(`${failures.length > before ? "FAIL" : "ok  "} ${name}`);
   await ctx.close();
+  for (const release of [...f.heldConfirmation, ...f.heldList]) await release();
 }
 
 // Draft two legs under a title; returns the locators the cases need.
@@ -163,6 +178,90 @@ await scenario("saved but confirmation cannot load: honest message, no duplicate
   if (!/Unconfirmed save/.test(await cards.first().innerText())) fail("the saved parlay is missing from My lays");
 });
 
+// Use Playwright's browser clock rather than waiting twenty real seconds. Held network
+// responses deliberately outlive cancellation so stale results are exercised too.
+async function waitForHeld(reads) {
+  for (let i = 0; i < 200 && !reads.length; i++) await new Promise((resolve) => setTimeout(resolve, 10));
+  if (!reads.length) throw Error("expected held post-save read was not started");
+}
+
+await scenario("confirmation timeout keeps draft and retries the saved ID without another write", async ({ page, f, fail }) => {
+  const d = await draft(page, "Bounded confirmation");
+  await page.clock.install();
+  f.holdConfirmation = true;
+  await d.save.click();
+  await waitForHeld(f.heldConfirmation);
+  await page.clock.fastForward(20001);
+  const retry = page.getByRole("button", { name: "Retry confirmation", exact: true });
+  await retry.waitFor();
+  if (!(await retry.isEnabled())) fail("confirmation deadline did not release Saving");
+  if (await d.saved.isVisible()) fail("timeout showed an unconfirmed success dialog");
+  if ((await d.draftLegs()) !== 2) fail("timeout lost the selected draft legs");
+  if ((await page.getByLabel("Lay name", { exact: true }).inputValue()) !== "Bounded confirmation") fail("timeout lost the draft name");
+  if (!/confirmation could not load/.test(await alertText(page))) fail("timeout did not explain uncertain confirmation");
+  f.holdConfirmation = false;
+  await retry.click();
+  await d.saved.waitFor();
+  if (f.creates !== 1 || f.mine.length !== 1) fail("confirmation retry performed a duplicate create");
+  await f.heldConfirmation.shift()();
+  if (f.shares !== 0) fail("confirmation retry shared without permission");
+});
+
+await scenario("list timeout still shows the independently confirmed saved card", async ({ page, f, fail }) => {
+  const d = await draft(page, "Confirmed without list");
+  await page.clock.install();
+  f.holdList = true;
+  const exactRead = page.waitForResponse((response) => response.url().includes("/member_parlays?") && new URL(response.url()).searchParams.has("id"));
+  await d.save.click();
+  await exactRead;
+  await waitForHeld(f.heldList);
+  await page.clock.fastForward(20001);
+  await d.saved.waitFor();
+  if (!/Confirmed without list/.test(await d.saved.innerText())) fail("list timeout discarded the confirmed card");
+  if (f.creates !== 1) fail("list timeout repeated the save");
+  await f.heldList.shift()();
+});
+
+await scenario("confirmation retry preserves a newer draft instead of clearing it", async ({ page, f, fail }) => {
+  const d = await draft(page, "Original submitted draft");
+  f.confirmFails = true;
+  await d.save.click();
+  const retry = page.getByRole("button", { name: "Retry confirmation", exact: true });
+  await retry.waitFor();
+  await page.getByLabel("Lay name", { exact: true }).fill("Newer unsaved draft");
+  await page.getByRole("button", { name: "Clear selections", exact: true }).click();
+  const add = page.getByRole("button", { name: "+ Add to lay", exact: true });
+  await add.nth(2).click();
+  await add.nth(2).click();
+  f.confirmFails = false;
+  await retry.click();
+  await d.saved.waitFor();
+  if (!/Original submitted draft/.test(await d.saved.innerText())) fail("retry confirmed the wrong draft");
+  await d.saved.getByRole("button", { name: "Done", exact: true }).click();
+  if ((await d.draftLegs()) !== 2) fail("confirmation erased the newer draft legs");
+  if ((await page.getByLabel("Lay name", { exact: true }).inputValue()) !== "Newer unsaved draft") fail("confirmation erased the newer draft name");
+  if (f.creates !== 1) fail("confirmation retry wrote the newer draft instead of reading the old card");
+});
+
+await scenario("late confirmation after sign-out cannot restore the old account's save or draft", async ({ page, f, fail }) => {
+  const d = await draft(page, "Old account pending save");
+  f.holdConfirmation = true;
+  await d.save.click();
+  await waitForHeld(f.heldConfirmation);
+  await page.evaluate(() => {
+    localStorage.removeItem("sb-127-auth-token");
+    const ch = new BroadcastChannel("sb-127-auth-token");
+    ch.postMessage({ event: "SIGNED_OUT", session: null });
+    ch.close();
+  });
+  await page.getByText(/Sign in to build a lay/).waitFor();
+  await f.heldConfirmation.shift()();
+  if (await d.saved.isVisible()) fail("late confirmation reopened another account's save dialog");
+  if (await page.getByRole("region", { name: "Your lay draft", exact: true }).count()) fail("late confirmation restored the signed-out draft");
+  if (await page.getByRole("button", { name: "Retry confirmation", exact: true }).count()) fail("pending confirmation survived sign-out");
+  if (f.creates !== 1) fail("account invalidation sent another create");
+});
+
 await scenario("double tap on Save: one parlay, one success dialog", async ({ page, f, fail }) => {
   const d = await draft(page, "Double tap");
   f.createDelay = 800; // a slow save, so the second tap lands while the first is in flight
@@ -172,7 +271,7 @@ await scenario("double tap on Save: one parlay, one success dialog", async ({ pa
   if (f.mine.length !== 1) fail(`double tap stored ${f.mine.length} parlays`);
   if ((await page.getByRole("dialog", { name: "Lay saved", exact: true }).count()) !== 1) fail("more than one success dialog");
   if (/already saved/i.test(await d.saved.innerText())) fail('first save of a new parlay says "already saved"');
-  console.log(`     (create requests sent: ${f.creates})`);
+  if (f.creates !== 1) fail(`double tap sent ${f.creates} create requests, expected 1`);
 });
 
 await scenario("share interrupted (connection dropped), then retry", async ({ page, f, fail }) => {

@@ -1,154 +1,602 @@
-/* The neutral lobby: a casino skybox over the four sport desks. Static light (no animation), so it
-   never moves under the reader or costs battery; content and controls sit above the decoration. */
-.vq-lobby-skybox {
+/* The arena is decoration only. All rooms, schedules and controls remain live HTML.
+   Scope the atmosphere to Home, leaving sport desks and their working chrome untouched. */
+.screen-lobby .main-wrap {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
-  display: grid;
-  gap: 12px;
-  margin: 0 0 18px;
-  padding: 22px 16px 18px;
-  border: 1px solid #b69b4e66;
-  border-radius: 22px;
-  color: #ede7d6;
-  background:
-    radial-gradient(120% 70% at 50% -10%, #2a2410 0%, transparent 60%),
-    linear-gradient(180deg, #11161c 0%, #0a0d11 100%);
+  background: #030706;
 }
-/* Marquee bulbs along the top edge and a low skyline glow: pure CSS, decorative only. */
-.vq-lobby-lights {
+/* Keep the arena's rafters and stands, but fade out its baked-in skyline. The dedicated
+   responsive Vegas panorama below the live content is the only visible skyline. */
+.screen-lobby .main-wrap::before {
+  content: "";
   position: absolute;
-  inset: 0;
+  inset: 72px 0 auto;
+  aspect-ratio: 2 / 3;
   z-index: -1;
+  background: url("/lobby/arena-skybox.webp") center top / 100% 100% no-repeat;
+  -webkit-mask-image: linear-gradient(#000 0%, #000 74%, transparent 87%);
+  mask-image: linear-gradient(#000 0%, #000 74%, transparent 87%);
   pointer-events: none;
-  background:
-    radial-gradient(circle, #f4dc99 0 1.6px, transparent 2.4px) 8px 8px / 22px 22px repeat-x,
-    linear-gradient(0deg, #f4dc9914 0%, transparent 38%);
-  opacity: 0.75;
 }
-.vq-lobby-eyebrow {
+.screen-lobby main {
+  max-width: 1120px;
+  margin-inline: auto;
+}
+.screen-lobby .vq-footer {
+  margin-top: 90px;
+  background: #050909db;
+}
+.vq-lobby-skybox {
+  display: grid;
+  gap: 16px;
+  margin: 0 auto 30px;
+  padding: 18px 20px 0;
+  text-align: center;
+}
+html[data-theme] body .vq-lobby-skybox h1 {
   margin: 0;
-  color: #d8be72;
-  font-size: 0.72rem;
+  color: #f7df9a !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 4.5vw, 3.8rem);
   font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
-.vq-lobby-skybox h1 {
-  margin: 0;
-  color: #f8e7b4;
-  font-size: clamp(1.7rem, 7vw, 2.6rem);
-  line-height: 1.08;
-  letter-spacing: 0.01em;
+  font-style: italic;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+  text-shadow: 0 3px 20px #000;
 }
 .vq-lobby-lede {
-  max-width: 62ch;
   margin: 0;
-  color: #c3ccc6;
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-/* Phones: a compact 2×2 so tonight's games stay near the top; desktop: four across. */
-.vq-lobby-desks {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-  margin-top: 4px;
-}
-@media (max-width: 639px) {
-  html body a.vq-lobby-desk {
-    padding: 12px;
-  }
-  a.vq-lobby-desk small {
-    font-size: 0.78rem;
-  }
-  .vq-lobby-go {
-    font-size: 0.8rem;
-  }
-}
-@media (min-width: 1100px) {
-  .vq-lobby-desks {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-html body .vq-lobby a.vq-lobby-desk,
-html body a.vq-lobby-desk {
-  display: grid;
-  gap: 4px;
-  min-height: 44px;
-  padding: 14px;
-  border: 1px solid #b69b4e55;
-  border-radius: 16px;
-  color: #ede7d6;
-  text-decoration: none;
-  background: #0d1116e6;
-}
-a.vq-lobby-desk b {
-  color: #f4dc99;
-  font-size: 1.05rem;
-}
-a.vq-lobby-desk small {
-  color: #b7c2bb;
-  font-size: 0.85rem;
+  color: #c3c9bf;
+  font-size: 0.87rem;
   line-height: 1.4;
 }
-.vq-lobby-go {
+html[data-theme] body .vq-lobby-section-title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 8px 0 0;
+  color: #f4d88d !important;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.vq-lobby-section-title::before,
+.vq-lobby-section-title::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c49a45);
+}
+.vq-lobby-section-title::after {
+  transform: rotate(180deg);
+}
+.vq-lobby-desks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+html body a.vq-lobby-desk {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 68px;
+  padding: 12px;
+  border: 1px solid #e2bd64;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #33372dba, #111612e8 55%, #090c09);
+  box-shadow:
+    inset 0 1px #fff0bd75,
+    inset 0 -1px #b67b29a0,
+    0 6px 16px #0009;
+  color: #f9edcb;
+  text-decoration: none;
+}
+html[data-theme] body a.vq-lobby-desk b {
+  color: #f6edce !important;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+.vq-lobby-desk-label {
+  display: none;
+}
+a.vq-lobby-desk small,
+.vq-tonight-brand-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.vq-lobby-sport-icon {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  color: #f1c766;
+}
+html body .vq-lobby-all-sports {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 48px;
+  padding: 8px 16px;
+  border: 1px solid #6ac99a;
+  border-radius: 12px;
+  background: linear-gradient(110deg, #123e2e, #061e14 55%, #0b3224);
+  box-shadow:
+    inset 0 1px #b4ffb950,
+    0 4px 18px #0008;
+  color: #f5efd9;
+  font-weight: 700;
+  text-decoration: none;
+}
+.vq-lobby-all-sports svg {
+  color: #f5d589;
+}
+html body a.vq-lobby-desk:hover,
+html body .vq-lobby-all-sports:hover {
+  filter: brightness(1.2);
+}
+html body a.vq-lobby-desk:focus-visible,
+html body .vq-lobby-all-sports:focus-visible,
+html body a.vq-lobby-tool:focus-visible,
+html body .vq-tonight-skybox :is(a, button):focus-visible {
+  outline: 3px solid #ffe8a5;
+  outline-offset: 3px;
+}
+/* The jumbotron frame is CSS, not an image containing fake fixtures. */
+html body .vq-tonight.vq-tonight-skybox {
+  display: grid;
+  gap: 20px;
+  margin: 0 0 22px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  scroll-margin-top: 90px;
+}
+/* A hanging, tapered enclosure, with separate planes rather than a gold card border.
+   Only the decorative side walls stretch with an expanded schedule. The top, projecting
+   lower beam and lit underside keep their physical proportions at every content height. */
+.vq-tonight-skybox .vq-tonight-board {
+  --skybox-cap: clamp(44px, 8vw, 100px);
+  --skybox-beam: clamp(29px, 5vw, 64px);
+  --skybox-base: clamp(39px, 7vw, 88px);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  gap: 10px;
+  padding: clamp(26px, 3.8vw, 48px) 14%
+    calc(var(--skybox-base) + var(--skybox-beam) * 0.55);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  filter: drop-shadow(0 22px 16px #000c);
+}
+.vq-tonight-skybox .vq-tonight-board > :not(.vq-jumbotron-casing) {
+  position: relative;
+  z-index: 1;
+}
+.vq-jumbotron-casing {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  user-select: none;
+}
+.vq-jumbotron-defs {
+  position: absolute;
+}
+.vq-jumbotron-casing > svg:not(.vq-jumbotron-defs) {
+  position: absolute;
+  width: 100%;
+  overflow: visible;
+}
+.vq-jumbotron-body {
+  top: 12px;
+  bottom: calc(var(--skybox-base) * 0.66);
+  height: calc(100% - 12px - var(--skybox-base) * 0.66);
+}
+.vq-jumbotron-top {
+  top: 0;
+  height: var(--skybox-cap);
+}
+.vq-jumbotron-bottom {
+  bottom: calc(var(--skybox-base) * 0.55);
+  height: var(--skybox-beam);
+}
+.vq-jumbotron-underside {
+  bottom: 0;
+  height: var(--skybox-base);
+}
+.vq-tonight-skybox .vq-tonight-head::before,
+.vq-tonight-skybox .vq-tonight-head::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 19%;
+  height: 42px;
+  pointer-events: none;
+  background: repeating-linear-gradient(65deg, #14b675 0 5px, #052c1b 6px 12px);
+  opacity: 0.85;
+  clip-path: polygon(0 0, 72% 0, 100% 100%, 28% 100%);
+}
+.vq-tonight-skybox .vq-tonight-head::before {
+  left: 0;
+  transform: skewX(18deg);
+  mask-image: linear-gradient(90deg, #000 30%, transparent);
+}
+.vq-tonight-skybox .vq-tonight-head::after {
+  right: 0;
+  transform: scaleX(-1) skewX(18deg);
+  mask-image: linear-gradient(90deg, #000 30%, transparent);
+}
+.vq-tonight-skybox .vq-tonight-head {
+  text-align: center;
+}
+html[data-theme] body .vq-tonight-skybox h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #9d763c;
+  color: #f7e7b4 !important;
+  font-size: clamp(1.45rem, 3.5vw, 2.6rem);
+  font-style: italic;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+.vq-tonight-skybox h2 .vq-mark {
+  width: 74px;
+  height: 48px;
+}
+.vq-tonight-skybox .vq-tonight-head > p {
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #ebd697;
+  font-size: 0.8rem;
+}
+.vq-tonight-skybox .vq-tonight-head p.vq-tonight-checked {
+  margin: 5px auto 0;
+  max-width: 66ch;
+  color: #aeb8ab;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+.vq-tonight-skybox .vq-tonight-games,
+.vq-tonight-skybox .vq-tonight-sport ul {
+  display: grid;
+  gap: 6px;
+}
+.vq-tonight-skybox .vq-tonight-sport h3 {
+  display: none;
+}
+html body .vq-tonight-skybox a.vq-tonight-game {
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  gap: 6px 12px;
+  min-height: 60px;
+  padding: 10px 12px;
+  border: 1px solid #a6a8884d;
+  border-radius: 10px;
+  background: linear-gradient(115deg, #282c24ad, #111612);
+  box-shadow: inset 0 1px #ffffff08;
+}
+.vq-tonight-sport-badge {
+  padding: 4px 3px;
+  border: 1px solid #dabd72;
+  border-radius: 6px;
+  color: #f5e6b8;
+  font-size: 0.73rem;
+  font-weight: 700;
+  text-align: center;
+}
+.vq-tonight-skybox .vq-tonight-teams {
+  text-align: center;
+  font-size: 0.93rem;
+  line-height: 1.3;
+}
+.vq-tonight-skybox .vq-tonight-when {
+  padding-left: 10px;
+  border-left: 1px solid #b795534d;
+  font-size: 0.77rem;
+}
+.vq-tonight-day { display: block; }
+.vq-tonight-skybox .vq-tonight-sport-badge { position: relative; }
+.vq-tonight-skybox .vq-tonight-sport-badge::after {
+  content: ""; position: absolute; top: -2px; bottom: -2px; right: -7px;
+  border-right: 1px solid #b795534d;
+}
+.vq-tonight-skybox .vq-tonight-screen-note {
+  margin: 0; color: #aeb8ab; font-size: .7rem; line-height: 1.4; text-align: center;
+}
+.vq-tonight-skybox .vq-tonight-go {
+  display: none;
+}
+html body .vq-tonight-skybox .vq-tonight-more {
+  justify-self: center;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-top: 4px;
-  color: #e7cf86;
-  font-size: 0.85rem;
-  font-weight: 700;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 10px 32px;
+  border: 1px solid #ffe7a0;
+  border-radius: 12px;
+  color: #161106;
+  background: linear-gradient(160deg, #ffedb4, #e6ad3d 70%, #c58c2e);
+  box-shadow:
+    inset 0 1px #fff4c4,
+    0 3px 12px #d5a74b26;
+  font-size: 0.9rem;
 }
-a.vq-lobby-desk:hover,
-a.vq-lobby-desk:focus-visible {
-  border-color: #e7cf86;
-  background: #151b22;
+.vq-tonight-skybox .vq-tonight-next {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
-a.vq-lobby-desk:focus-visible,
-a.vq-lobby-tool:focus-visible {
-  outline: 2px solid #f4dc99;
-  outline-offset: 2px;
+html body .vq-tonight-skybox a.vq-tonight-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-content: center;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 15px;
+  border: 1px solid #56cba1;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #123e30e8, #06120f 70%);
+  box-shadow: inset 0 1px #9cf6b843;
+}
+.vq-tonight-skybox .vq-tonight-card svg {
+  grid-row: 1 / 3;
+  width: 30px;
+  height: 30px;
+  color: #f2d184;
+}
+html[data-theme] body .vq-tonight-skybox .vq-tonight-card b {
+  color: #f7f1dc !important;
+  font-size: 0.95rem;
+}
+.vq-tonight-skybox .vq-tonight-card small {
+  font-size: 0.72rem;
 }
 .vq-lobby-tools {
   display: grid;
-  gap: 10px;
-  margin: 0 0 18px;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 0 12px;
+  margin-bottom: 24px;
 }
 html body a.vq-lobby-tool {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
-  min-height: 44px;
+  min-height: 64px;
   padding: 14px 16px;
-  border: 1px solid #b69b4e44;
-  border-radius: 16px;
-  color: #ede7d6;
+  border: 1px solid #c1b27b8a;
+  border-radius: 14px;
+  background: linear-gradient(120deg, #222c20eb, #101610);
+  color: #f1dfaa;
   text-decoration: none;
-  background: #0d1116;
 }
-a.vq-lobby-tool b {
+html[data-theme] body a.vq-lobby-tool b {
   display: block;
-  color: #f4dc99;
+  color: #f4e8c9 !important;
 }
 a.vq-lobby-tool small {
   display: block;
-  color: #b7c2bb;
-  font-size: 0.85rem;
+  color: #bac5b9;
+  font-size: 0.78rem;
   line-height: 1.4;
+  margin-top: 3px;
 }
 .vq-lobby-tool-icon {
   display: grid;
   place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  color: #f4dc99;
-  background: #1a1f26;
+  color: #f2d184;
 }
-.vq-lobby-diamond {
-  font-size: 1.1rem;
-  line-height: 1;
+.vq-lobby-tool-icon svg {
+  width: 28px;
+  height: 28px;
+}
+@media (max-width: 639px) {
+  /* The sport/story rail remains functional; room buttons below are the primary sport entry. */
+  html[data-theme] body .screen-lobby .sport-switch {
+    gap: 8px;
+    min-height: 52px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+  }
+  html[data-theme] body .screen-lobby .sport-switch > a {
+    width: auto;
+    min-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 6px;
+    border-radius: 6px;
+    border: 0;
+    background: none;
+    box-shadow: none;
+    font-size: 12px;
+  }
+  .screen-lobby .main-wrap::before {
+    top: 105px;
+    height: 1100px;
+    aspect-ratio: auto;
+  }
+  .screen-lobby main {
+    padding-inline: 8px;
+  }
+  .vq-lobby-skybox {
+    gap: 10px;
+    margin-bottom: 19px;
+    padding: 6px 8px 0;
+  }
+  html[data-theme] body .vq-lobby-skybox h1 {
+    font-size: clamp(1.8rem, 7.6vw, 2.8rem);
+  }
+  .vq-lobby-lede {
+    font-size: 0.7rem;
+  }
+  html[data-theme] body .vq-lobby-section-title {
+    gap: 10px;
+    margin-top: 3px;
+    font-size: 0.68rem;
+    letter-spacing: 0.22em;
+  }
+  .vq-lobby-desks {
+    gap: 6px;
+  }
+  html body a.vq-lobby-desk {
+    flex-direction: column;
+    gap: 4px;
+    min-height: 59px;
+    padding: 7px 4px;
+    border-radius: 9px;
+  }
+  .vq-lobby-sport-icon {
+    width: 23px;
+    height: 23px;
+    flex-basis: 23px;
+  }
+  html[data-theme] body a.vq-lobby-desk b {
+    font-size: 0.73rem;
+  }
+  .vq-lobby-desk-name {
+    display: none;
+  }
+  .vq-lobby-desk-label {
+    display: inline;
+  }
+  html body .vq-lobby-all-sports {
+    min-height: 44px;
+    padding: 5px 10px;
+    font-size: 0.82rem;
+    border-radius: 9px;
+  }
+  html body .vq-tonight.vq-tonight-skybox {
+    gap: 17px;
+    padding: 0 4px;
+    scroll-margin-top: 78px;
+  }
+  .vq-tonight-skybox .vq-tonight-board {
+    --skybox-cap: 44px;
+    --skybox-beam: 29px;
+    --skybox-base: 39px;
+    gap: 8px;
+    padding: 22px 14% 56px;
+  }
+  .vq-tonight-skybox .vq-tonight-head::before,
+  .vq-tonight-skybox .vq-tonight-head::after {
+    width: 19%;
+    height: 28px;
+  }
+  html[data-theme] body .vq-tonight-skybox h2 {
+    gap: 7px;
+    margin-bottom: 6px;
+    font-size: clamp(1.2rem, 5.7vw, 1.5rem);
+    letter-spacing: 0.09em;
+    padding-bottom: 8px;
+  }
+  .vq-tonight-skybox h2 .vq-mark {
+    width: 48px;
+    height: 32px;
+  }
+  .vq-tonight-skybox .vq-tonight-head > p {
+    font-size: 0.68rem;
+  }
+  .vq-tonight-skybox .vq-tonight-head p.vq-tonight-checked {
+    font-size: 0.69rem;
+    line-height: 1.35;
+  }
+  html body .vq-tonight-skybox a.vq-tonight-game {
+    grid-template-columns: 42px minmax(0, 1fr) 64px;
+    gap: 6px;
+    min-height: 53px;
+    padding: 7px 6px;
+    border-radius: 8px;
+  }
+  .vq-tonight-sport-badge {
+    padding: 4px 2px;
+    font-size: 0.65rem;
+  }
+  .vq-tonight-skybox .vq-tonight-teams {
+    font-size: 0.75rem;
+  }
+  .vq-tonight-skybox .vq-tonight-when {
+    padding-left: 6px;
+    font-size: 0.66rem;
+    white-space: normal;
+    text-align: right;
+  }
+  html body .vq-tonight-skybox .vq-tonight-more {
+    min-height: 44px;
+    margin-top: 3px;
+    padding: 8px 24px;
+    font-size: 0.8rem;
+    border-radius: 9px;
+  }
+  .vq-tonight-skybox .vq-tonight-alert,
+  .vq-tonight-skybox .vq-tonight-empty,
+  .vq-tonight-skybox .vq-tonight-note {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+  .vq-tonight-skybox .vq-tonight-next {
+    gap: 6px;
+  }
+  html body .vq-tonight-skybox a.vq-tonight-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    text-align: center;
+    gap: 6px;
+    padding: 12px 5px;
+    border-radius: 10px;
+  }
+  .vq-tonight-skybox .vq-tonight-card svg {
+    width: 25px;
+    height: 25px;
+  }
+  html[data-theme] body .vq-tonight-skybox .vq-tonight-card b {
+    font-size: 0.75rem;
+    line-height: 1.3;
+  }
+  .vq-tonight-skybox .vq-tonight-card small {
+    font-size: 0.7rem;
+    line-height: 1.4;
+  }
+  .vq-lobby-tools {
+    gap: 8px;
+    padding: 0 4px;
+  }
+  html body a.vq-lobby-tool {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    padding: 12px 9px;
+    border-radius: 10px;
+  }
+  a.vq-lobby-tool > svg {
+    display: none;
+  }
+  a.vq-lobby-tool b {
+    font-size: 0.8rem;
+  }
+  a.vq-lobby-tool small {
+    font-size: 0.7rem;
+  }
+  .vq-lobby-tool-icon svg {
+    width: 20px;
+    height: 20px;
+  }
 }

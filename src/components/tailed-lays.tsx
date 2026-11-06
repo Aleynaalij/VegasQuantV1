@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import { time } from "@/lib/domain";
+import { publishedSelectionPath } from "@/lib/published-selection";
 
 /** A published pick or parlay the member tailed (their own leg_tails row + its publication). */
 type Tailed = {
@@ -44,13 +45,6 @@ const status = (r: Tailed, now: number) =>
     : Date.parse(r.expires_at) > now
       ? `Open · locks ${time(r.expires_at)}`
       : "Awaiting the verified result";
-const href = (r: Tailed) => {
-  const view = PARLAY.has(r.kind) ? "parlays" : "legs";
-  // An official pick has no release to open, so it lands on the view that lists it.
-  if (!r.release_id) return `/feed?view=${view}`;
-  const id = encodeURIComponent(r.release_id);
-  return `/feed?view=${view}&release=${id}#release-${id}`;
-};
 
 /**
  * Your lays → Tailed: the published parlays and picks this member tailed, kept separate from lays
@@ -220,7 +214,7 @@ function TailedGroup({ title, rows, now }: { title: string; rows: Tailed[]; now:
       <ul>
         {rows.map((r) => (
           <li key={r.leg_key}>
-            <Link href={href(r)} className="vq-tailed-item">
+            <Link href={publishedSelectionPath(r.leg_key)} className="vq-tailed-item">
               <b>{r.name}</b>
               <small>
                 {r.matchup} · {r.market}

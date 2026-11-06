@@ -8,8 +8,17 @@ import GamblyLink from "./gambly-link";
 import RuleChips from "./rule-chips";
 import { citedRules } from "@/lib/nba-rules";
 import { readGamePublications } from "@/lib/game-picks";
+import {
+  readPublishedSelection,
+  readPublicationSession,
+  publishedTicketAction,
+  readPublishedTicketLegs,
+  type PublishedTicketLeg,
+} from "@/lib/published-selection";
 type Leg = {
   leg_key: string;
+  release_id: string | null;
+  leg_index: number | null;
   name: string;
   market: string;
   matchup: string;
@@ -29,10 +38,17 @@ type Leg = {
 export default function PublishedLegBoard({
   savedOnly = false,
   gameId,
+  selectionKey,
 }: {
   savedOnly?: boolean;
   gameId?: string;
+  selectionKey?: string;
 }) {
+  const exact = selectionKey !== undefined;
+  const [ticketLegs, setTicketLegs] = useState<PublishedTicketLeg[] | null>(
+    null,
+  );
+  const [ticketUnavailable, setTicketUnavailable] = useState(false);
   const [rows, setRows] = useState<Leg[]>([]),
     [filter, setFilter] = useState("ALL"),
     [search, setSearch] = useState(""),
@@ -47,8 +63,11 @@ export default function PublishedLegBoard({
     async function load() {
       const n = ++epoch;
       try {
-        const s = await supabase.auth.getSession();
+        const s = exact
+          ? await readPublicationSession(() => supabase.auth.getSession())
+          : await supabase.auth.getSession();
         if (!live || n !== epoch) return;
+        if (s.error) throw s.error;
         if (!s.data.session) {
           if (live) {
             setFailed(false);
@@ -89,15 +108,42 @@ export default function PublishedLegBoard({
             a.data.map((r) => r.leg_key),
           );
         }
-        const r = gameId
+        const r = exact
           ? {
-              data: await readGamePublications<Leg>((from, to) =>
-                q.range(from, to),
+              data: await readPublishedSelection<Leg>(selectionKey!, (signal) =>
+                q.eq("leg_key", selectionKey!).limit(1).abortSignal(signal),
               ),
               error: null,
             }
-          : await q.limit(1000);
+          : gameId
+            ? {
+                data: await readGamePublications<Leg>((from, to) =>
+                  q.range(from, to),
+                ),
+                error: null,
+              }
+            : await q.limit(1000);
+        if (!live || n !== epoch) return;
+        let leaves: PublishedTicketLeg[] | null = null;
+        let unavailable = false;
+        const target = exact ? r.data?.[0] : null;
+        if (target && ["PARLAY", "HAIL_MARY"].includes(target.kind)) {
+          try {
+            leaves = await readPublishedTicketLegs(target, (signal) =>
+              supabase
+                .from("candidate_releases")
+                .select("id,candidates")
+                .eq("id", target.release_id!)
+                .limit(1)
+                .abortSignal(signal),
+            );
+          } catch {
+            unavailable = true;
+          }
+        }
         if (live && n === epoch) {
+          setTicketLegs(leaves);
+          setTicketUnavailable(unavailable);
           setFailed(!!r.error);
           if (!r.error) setRows(r.data || []);
           setNotice(
@@ -105,9 +151,11 @@ export default function PublishedLegBoard({
               ? "Records could not load. Please retry."
               : r.data?.length
                 ? ""
-                : gameId
-                  ? "No picks have been published for this game yet."
-                  : "No published selections yet.",
+                : exact
+                  ? "This published selection is unavailable. Your tail is kept; no other pick has been substituted."
+                  : gameId
+                    ? "No picks have been published for this game yet."
+                    : "No published selections yet.",
           );
         }
       } catch {
@@ -131,7 +179,11 @@ export default function PublishedLegBoard({
       ++epoch;
       if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
         setRows([]);
+        setTicketLegs(null);
+        setTicketUnavailable(false);
         setSignedIn(null);
+        setFailed(false);
+        setNotice("Loading publication snapshots…");
       }
       setTimeout(refresh, 0);
     });
@@ -142,7 +194,7 @@ export default function PublishedLegBoard({
       if (timer) clearInterval(timer);
       window.removeEventListener("focus", refreshGame);
     };
-  }, [savedOnly, gameId, retry]);
+  }, [savedOnly, gameId, selectionKey, exact, retry]);
   const visible = rows.filter(
     (r) =>
       (filter === "ALL" || r.kind === filter) &&
@@ -151,22 +203,27 @@ export default function PublishedLegBoard({
         .includes(search.toLowerCase()),
   );
   return (
-    <section className="published-board">
+    <section
+      className="published-board"
+      aria-label={exact ? "Published selection" : undefined}
+    >
       <h2>
-        {savedOnly
-          ? "Your saved legs"
-          : gameId
-            ? "All picks for this game"
-            : "Every published selection"}
+        {exact
+          ? "Published selection"
+          : savedOnly
+            ? "Your saved legs"
+            : gameId
+              ? "All picks for this game"
+              : "Every published selection"}
       </h2>
       <p>
         Original publication snapshots stay on record. Singles, Pick of the Day
         and Hail Mary tickets are shown separately. Unverified outcomes stay
         ungraded.
       </p>
-      {signedIn === null ? (
+      {signedIn === null && !failed ? (
         <p role="status">Loading publication snapshots…</p>
-      ) : !signedIn ? (
+      ) : signedIn === false ? (
         <p role="status">
           {notice}{" "}
           <Link className="text-link" href="/membership">
@@ -175,37 +232,41 @@ export default function PublishedLegBoard({
         </p>
       ) : (
         <>
-          <input
-            aria-label="Search published selections"
-            placeholder="Search player, team or matchup"
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setLimit(30);
-            }}
-          />
-          <div className="board-filters">
-            {[
-              "ALL",
-              "SINGLE",
-              "PICK_OF_DAY",
-              "HAIL_MARY",
-              "OFFICIAL",
-              "RESEARCH",
-            ].map((f) => (
-              <button
-                key={f}
-                aria-pressed={filter === f}
-                onClick={() => {
-                  setFilter(f);
+          {!exact && (
+            <>
+              <input
+                aria-label="Search published selections"
+                placeholder="Search player, team or matchup"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
                   setLimit(30);
                 }}
-              >
-                {f.replaceAll("_", " ")}
-              </button>
-            ))}
-          </div>
-          {!notice && (
+              />
+              <div className="board-filters">
+                {[
+                  "ALL",
+                  "SINGLE",
+                  "PICK_OF_DAY",
+                  "HAIL_MARY",
+                  "OFFICIAL",
+                  "RESEARCH",
+                ].map((f) => (
+                  <button
+                    key={f}
+                    aria-pressed={filter === f}
+                    onClick={() => {
+                      setFilter(f);
+                      setLimit(30);
+                    }}
+                  >
+                    {f.replaceAll("_", " ")}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+          {!exact && !notice && (
             <p>
               {visible.length} publication snapshots ·{" "}
               {visible.filter((r) => r.result && r.result_source).length}{" "}
@@ -229,7 +290,11 @@ export default function PublishedLegBoard({
             <p role="status">No selections match this search or filter.</p>
           )}
           {visible.slice(0, limit).map((r) => (
-            <article className="leg-record" key={r.leg_key}>
+            <article
+              className="leg-record"
+              key={r.leg_key}
+              data-leg-key={r.leg_key}
+            >
               <div className="record-meta">
                 <span>{r.kind.replaceAll("_", " ")}</span>
                 <strong>
@@ -240,6 +305,39 @@ export default function PublishedLegBoard({
                 {r.name} · {r.market}
               </h3>
               <p>{r.matchup}</p>
+              {exact && ticketLegs && (
+                <section aria-label="Published ticket legs">
+                  <h4>Every leg of this published ticket</h4>
+                  <ol>
+                    {ticketLegs.map((leg, index) => (
+                      <li key={index}>
+                        <b>
+                          {leg.name} · {leg.market}
+                        </b>
+                        {leg.matchup && <p>{leg.matchup}</p>}
+                        {leg.why && <p>{leg.why}</p>}
+                        {leg.risk && (
+                          <p>
+                            <strong>Could lose:</strong> {leg.risk}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              )}
+              {exact && ticketUnavailable && (
+                <p role="status">
+                  The original ticket’s individual legs are unavailable right
+                  now. This is its publication summary.{" "}
+                  <button
+                    className="text-link"
+                    onClick={() => setRetry((n) => n + 1)}
+                  >
+                    Retry ticket details
+                  </button>
+                </p>
+              )}
               <b>{r.quote || "Price not verified"}</b>
               <PriceFreshness at={r.quote_observed_at} />
               <RuleChips rules={citedRules(r.why, r.risk)} />
@@ -250,7 +348,7 @@ export default function PublishedLegBoard({
                 })}{" "}
                 ET · <span title={r.leg_key}>Ref {r.leg_key.slice(-8)}</span>
               </small>
-              <details>
+              <details open={exact || undefined}>
                 <summary>Case & loss risk</summary>
                 <p>{r.why}</p>
                 <p>
@@ -270,15 +368,23 @@ export default function PublishedLegBoard({
                 legKey={r.leg_key}
                 expired={Date.parse(r.expires_at) <= Date.now()}
               />
-              {r.gambly_url && Date.parse(r.expires_at) > Date.now() && (
-                <GamblyLink
-                  url={r.gambly_url}
-                  kalshiLegKeys={[r.leg_key]}
-                  selection={
-                    r.copy_text || `${r.name} ${r.market} · ${r.matchup}`
-                  }
-                />
-              )}
+              {r.gambly_url &&
+                Date.parse(r.expires_at) > Date.now() &&
+                (!exact ||
+                  !["PARLAY", "HAIL_MARY"].includes(r.kind) ||
+                  ticketLegs) && (
+                  <GamblyLink
+                    url={r.gambly_url}
+                    {...(exact && ticketLegs
+                      ? publishedTicketAction(ticketLegs)
+                      : {
+                          kalshiLegKeys: [r.leg_key],
+                          selection:
+                            r.copy_text ||
+                            `${r.name} ${r.market} · ${r.matchup}`,
+                        })}
+                  />
+                )}
               {r.game_id && (
                 <Link href={`/sweat/${r.game_id}`}>Open game discussion →</Link>
               )}

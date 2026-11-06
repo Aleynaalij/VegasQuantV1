@@ -1,11 +1,13 @@
 "use client";
 import Link from "next/link";
 import { useEffect, type ReactNode } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Grid2X2, Plus, Diamond } from "lucide-react";
 import { Shell } from "./ui";
 import VqTonight from "./vq-tonight";
 import HomeRecordCard from "./home-record";
 import SectionBoundary from "./section-boundary";
+import CommunityStories from "./community-stories";
+import { LOBBY_SKYLINE, LobbyArenaPennants, LobbyArenaSkyline } from "./lobby-arena-decor";
 import { NhlChipHold } from "./frank-anniversary-gate";
 import { liveSports, SPORTS, type Sport } from "@/lib/sports";
 import type { Game } from "@/lib/domain";
@@ -28,7 +30,11 @@ const DESK: Record<Sport, string> = {
 function LegacyHashForward() {
   useEffect(() => {
     const forward = () => {
-      if (window.location.pathname !== "/" || window.location.hash !== "#home-games") return;
+      if (
+        window.location.pathname !== "/" ||
+        window.location.hash !== "#home-games"
+      )
+        return;
       window.location.replace(`/nfl${window.location.search}#home-games`);
     };
     forward();
@@ -48,45 +54,70 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
     <Shell active="lobby">
       <LegacyHashForward />
       <section className="vq-lobby-skybox" aria-labelledby="vq-lobby-title">
-        <div className="vq-lobby-lights" aria-hidden="true" />
-        <p className="vq-lobby-eyebrow">The Vegas Quant skybox</p>
-        <h1 id="vq-lobby-title">Every game. One clear read.</h1>
+        <LobbyArenaPennants />
+        <h1 id="vq-lobby-title">
+          Your sports research <br />
+          starts here.
+        </h1>
         <p className="vq-lobby-lede">
-          Sports research, the picks we like with the reasons and risks, and a member community kept
-          separate from published research. Pick a desk to start.
+          Research with reasons and risks, across every sport.
         </p>
+        <h2 className="vq-lobby-section-title">Sports rooms</h2>
         <nav className="vq-lobby-desks" aria-label="Sport desks">
           {liveSports().map((key) => {
             const tile = (
-              <Link key={key} href={SPORTS[key].home} className="vq-lobby-desk" data-sport={key}>
-                <b>{SPORTS[key].name}</b>
-                <small>{DESK[key]}</small>
-                <span className="vq-lobby-go">
-                  Open desk <ArrowRight size={15} aria-hidden="true" />
-                </span>
+              <Link
+                key={key}
+                href={SPORTS[key].home}
+                className="vq-lobby-desk"
+                data-sport={key}
+                aria-label={`Open ${key === "ncaab" ? "NCAAB college basketball" : SPORTS[key].name} desk`}
+                aria-describedby={`vq-lobby-desk-${key}-description`}
+              >
+                <LobbySportIcon sport={key} />
+                <b>
+                  <span className="vq-lobby-desk-name">{SPORTS[key].name}</span>
+                  <span className="vq-lobby-desk-label" aria-hidden="true">
+                    {SPORTS[key].label}
+                  </span>
+                </b>
+                <small id={`vq-lobby-desk-${key}-description`}>
+                  {DESK[key]}
+                </small>
               </Link>
             );
             // NHL keeps the same invitation hold as its sport chip.
-            return key === "nhl" ? <NhlChipHold key={key}>{tile}</NhlChipHold> : tile;
+            return key === "nhl" ? (
+              <NhlChipHold key={key}>{tile}</NhlChipHold>
+            ) : (
+              tile
+            );
           })}
         </nav>
+        {/* Keep hash entries in the App Router's history so Back from a game restores Home. */}
+        <Link className="vq-lobby-all-sports" href="#vq-tonight">
+          <Grid2X2 size={20} aria-hidden="true" /> All sports{" "}
+          <ArrowRight size={17} aria-hidden="true" />
+        </Link>
       </section>
 
+      <CommunityStories placement="lobby" />
+
       <SectionBoundary name="VQ Tonight">
-        <VqTonight nflGames={nflGames} />
+        <VqTonight nflGames={nflGames} presentation="skybox" />
       </SectionBoundary>
 
       {/* VQ Tonight carries My lays (or "Continue your lay") and The Zone (or its sign-in). */}
       <section className="vq-lobby-tools" aria-label="More from Vegas Quant">
         <LobbyTool
           href="/parlays?build=1"
-          icon={<span className="vq-lobby-diamond" aria-hidden="true">+</span>}
+          icon={<Plus aria-hidden="true" />}
           title="Build a lay"
           body="Start a new lay from the current NFL player legs. Nothing is placed or shared unless you choose to."
         />
         <LobbyTool
           href="/slots"
-          icon={<span className="vq-lobby-diamond" aria-hidden="true">♦</span>}
+          icon={<Diamond aria-hidden="true" />}
           title="VQ Slots"
           body="Spin up a random set of legs from the current board, for fun. Not a recommendation."
         />
@@ -95,11 +126,22 @@ export default function VqLobby({ nflGames }: { nflGames: Game[] }) {
       <SectionBoundary name="Track record">
         <HomeRecordCard />
       </SectionBoundary>
+      <LobbyArenaSkyline src={LOBBY_SKYLINE.src} />
     </Shell>
   );
 }
 
-function LobbyTool({ href, icon, title, body }: { href: string; icon: ReactNode; title: string; body: string }) {
+function LobbyTool({
+  href,
+  icon,
+  title,
+  body,
+}: {
+  href: string;
+  icon: ReactNode;
+  title: string;
+  body: string;
+}) {
   return (
     <Link href={href} className="vq-lobby-tool">
       <span className="vq-lobby-tool-icon">{icon}</span>
@@ -109,5 +151,38 @@ function LobbyTool({ href, icon, title, body }: { href: string; icon: ReactNode;
       </span>
       <ArrowRight size={16} aria-hidden="true" />
     </Link>
+  );
+}
+
+/** Small vector room signs, not team logos or claims about a scheduled game. */
+function LobbySportIcon({ sport }: { sport: Sport }) {
+  return (
+    <svg
+      className="vq-lobby-sport-icon"
+      viewBox="0 0 32 32"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      {sport === "nfl" ? (
+        <g transform="rotate(38 16 16)">
+          <ellipse cx="16" cy="16" rx="8" ry="13" />
+          <path d="M16 9v14M12 12h8M12 16h8M12 20h8M10 7h12M10 25h12" />
+        </g>
+      ) : sport === "nhl" ? (
+        <>
+          <path d="m25 4-13 20H4v4h10L28 6" />
+          <ellipse cx="25" cy="27" rx="4" ry="2" />
+        </>
+      ) : (
+        <>
+          <circle cx="16" cy="16" r="13" />
+          <path d="M3 16h26M16 3v26M7 6c12 6 12 14 0 20M25 6c-12 6-12 14 0 20" />
+        </>
+      )}
+    </svg>
   );
 }
