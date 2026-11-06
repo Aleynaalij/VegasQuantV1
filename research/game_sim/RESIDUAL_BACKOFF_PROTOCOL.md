@@ -32,6 +32,14 @@ unsupported.
 Unchanged: families, opportunity definitions, amendment A1, keys, chains, minimum 30, coarsening
 order, eligibility rules, fail-closed lookups, every other engine table, the gates.
 
+## Amendment A1 (before any fit, 2026-11-06)
+The support audit on residual cells left 180 of about 39,000 source opportunities unresolved: 78
+running and 102 stopped, all at a chain's terminal coarsened floor (`le300@h1|h2`, `le120@h1`)
+whose residual fell below 30. A terminal floor below 30 resolved nobody, so the only opportunities
+that reach it are those leftovers. It now takes its full v0.2.20 count, which keeps family and
+eligibility unchanged. Exact conservation still holds everywhere except these leftovers and
+`~role`. The audit is re-run on this definition and must show zero unresolved.
+
 ## Acceptance (unchanged)
 10,000 runs, seed 1701, old OT, all nine checks at the existing tolerances, zero failed or
 unsupported runs, and saved-model reload. Plus a new unit test: replaying the training

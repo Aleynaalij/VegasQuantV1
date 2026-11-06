@@ -114,6 +114,70 @@ def add_coarse(table, family):
     return table
 
 
+COARSE_RANK = {'le30': 0, 'le120': 1, 'le300': 2, 'normal@h1': 0, 'normal@h2': 0, 'normal@all': 1, 'normal@all~role': 9}
+
+
+def key_rank(key):
+    """A global order consistent with every lookup chain (RESIDUAL_BACKOFF_PROTOCOL.md)."""
+    band, rest = key.split('|', 1)
+    base = band.split('@')[0] if band.startswith('le') else band
+    if base in COARSE_RANK:
+        return 4 + COARSE_RANK[base]
+    parts = rest.split('|')
+    if len(parts) == 3:
+        return 0
+    if len(parts) == 2:
+        lead = parts[1]
+        return 1 if (any(ch.isdigit() for ch in lead) or lead == 'tied') else 2
+    return 3
+
+
+def residual_cells(ops, family):
+    """v0.2.21 residual cells: each key counts only the opportunities that reach it unresolved, so a
+    lookup that walks the chain to the first key with n >= MIN reads exactly the opportunities that
+    resolved there. `normal@all~role` keeps its v0.2.20 marginal definition (declared exception).
+    Returns (cells, number of opportunities left unresolved)."""
+    by_key = defaultdict(list)
+    for i, (path, _, _) in enumerate(ops):
+        for key in dict.fromkeys(path):
+            by_key[key].append(i)
+    resolved = [False] * len(ops)
+    cells = {}
+    for key in sorted(by_key, key=lambda k: (key_rank(k), k)):
+        if '~role' in key:
+            role = key.split('|')[1]
+            cell = Counter()
+            for i, (_, outcome, meta) in enumerate(ops):
+                if meta and meta[0].startswith('normal@q') and meta[1] in ('both', role):
+                    cell['n'] += 1
+                    cell[role] += int(outcome == role)
+        else:
+            cell = Counter()
+            for i in by_key[key]:
+                if not resolved[i]:
+                    cell['n'] += 1
+                    cell[ops[i][1]] += 1
+        cells[key] = cell
+        if cell['n'] >= MIN:
+            for i in by_key[key]:
+                resolved[i] = True
+    # Amendment A1: a chain's terminal floor whose residual is below MIN resolved nobody, so nothing
+    # reads it except the leftovers; it takes its full (v0.2.20) count instead. Counted in coverage.
+    terminal = {path[-1] for path, _, _ in ops}
+    for key in sorted(terminal):
+        if '~role' in key or cells[key]['n'] >= MIN:
+            continue
+        full = Counter()
+        for i in by_key[key]:
+            full['n'] += 1
+            full[ops[i][1]] += 1
+        if any(not resolved[i] for i in by_key[key]) and full['n'] >= MIN:
+            cells[key] = full
+            for i in by_key[key]:
+                resolved[i] = True
+    return cells, resolved.count(False)
+
+
 def chain(family, band, s, elig):
     """Full lookup order for one opportunity: exact keys, then pre-declared coarsened floors."""
     return keys(band, s, elig) + coarse_floors(family, band, elig)
@@ -154,7 +218,7 @@ def tabulate(path):
 
 def tabulate_rows(rows):
     """(running cells, stopped cells, coverage) from source rows, coarsened floors included."""
-    running, stopped = defaultdict(Counter), defaultdict(Counter)
+    running_ops, stopped_ops = [], []
     coverage = Counter()
     consumed = set()  # snap rows whose pre-snap decision a no-call running play consumed
     running_timeouts = set()  # timeout rows attributed to a running play
@@ -184,9 +248,7 @@ def tabulate_rows(rows):
             running_timeouts.add(i if row.get('timeout') == '1' else i + 1)
         else:
             consumed.add(cont)
-        for key in keys(stop_band(s), s, elig):
-            running[key]['n'] += 1
-            running[key][outcome] += 1
+        running_ops.append((chain('running', stop_band(s), s, elig), outcome, None))
         coverage['running_opportunities:' + elig] += 1
         coverage['running_calls:' + outcome] += 1
     for i, row, event in training_events(rows):
@@ -215,14 +277,15 @@ def tabulate_rows(rows):
         if elig is None:
             continue
         outcome = caller if timeout else 'none'
-        for key in keys(stopped_band(s), s, elig):
-            stopped[key]['n'] += 1
-            stopped[key][outcome] += 1
+        band = stopped_band(s)
+        stopped_ops.append((chain('stopped', band, s, elig), outcome, (band, elig)))
         coverage['stopped_opportunities:' + elig] += 1
         coverage['stopped_calls:' + str(outcome)] += 1
 
-    add_coarse(running, 'running')
-    add_coarse(stopped, 'stopped')
+    running, unresolved_r = residual_cells(running_ops, 'running')
+    stopped, unresolved_s = residual_cells(stopped_ops, 'stopped')
+    coverage['residual_unresolved:running'] = unresolved_r
+    coverage['residual_unresolved:stopped'] = unresolved_s
     return running, stopped, coverage
 
 
