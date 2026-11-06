@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other,transition
 
-MODEL_ID='vq-empirical-game/0.2.20'
+MODEL_ID='vq-empirical-game/0.2.21'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -259,7 +259,7 @@ def fit(paths):
                 counts['excluded:'+str(e)]+=1
                 if event!='original':counts['excluded:'+event+':'+str(e)]+=1
     if not templates:raise ValueError('No training templates')
-    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),stop_clock=dict(runoff_tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(runoff_tables.items())},tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(stop_tables.items())},coverage=dict(stop_coverage),minimum_context=30),timeout_model=dict(design='running-clock-cells/0.2.20',running={k:dict(n=v['n'],offense=v['offense'],defense=v['defense']) for k,v in sorted(running_cells.items()) if v['n']},stopped={k:dict(n=v['n'],offense=v['offense'],defense=v['defense']) for k,v in sorted(stopped_cells.items()) if v['n']},coverage=dict(sorted(timeout_coverage.items())),minimum_context=30),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
+    model=dict(model_id=MODEL_ID,status='SHADOW_ONLY',sources=sources,training_seasons=[2022],templates=templates,buckets={k:{str(i):n for i,n in Counter(v).items()} for k,v in sorted(buckets.items())},coverage=dict(counts),stop_clock=dict(runoff_tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(runoff_tables.items())},tables={k:{str(dt):n for dt,n in sorted(v.items())} for k,v in sorted(stop_tables.items())},coverage=dict(stop_coverage),minimum_context=30),timeout_model=dict(design='running-clock-cells/0.2.21-residual',running={k:dict(n=v['n'],offense=v['offense'],defense=v['defense']) for k,v in sorted(running_cells.items()) if v['n']},stopped={k:dict(n=v['n'],offense=v['offense'],defense=v['defense']) for k,v in sorted(stopped_cells.items()) if v['n']},coverage=dict(sorted(timeout_coverage.items())),minimum_context=30),minimum_context=30,censoring={kind:survival_table(obs) for kind,obs in sorted(observations.items())},limitations=['League-level baseline; no current team strength','No current roster or availability inference','No fitted current player workload','Clock gaps reflect historical pre-snap timing','Live-ball compound penalties remain excluded','Pooled survival correction assumes comparable field-position gain distributions','No probability calibration or edge approval'])
     return model
 
 class Sampler:
