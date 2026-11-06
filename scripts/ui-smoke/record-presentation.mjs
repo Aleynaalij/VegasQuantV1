@@ -36,6 +36,16 @@ const sample = (visible) => ({
   since: "2026-10-03T16:00:00Z",
   visible,
 });
+async function capturePage(page, filename) {
+  // Full-page evidence starts at the top, rather than painting fixed navigation at a scrolled offset.
+  await page.evaluate(() => {
+    if (document.activeElement instanceof HTMLElement)
+      document.activeElement.blur();
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  });
+  await page.waitForFunction(() => scrollY === 0);
+  await page.screenshot({ path: path.join(out, filename), fullPage: true });
+}
 let cases = 0;
 try {
   for (const width of [360, 390, 1280]) {
@@ -121,12 +131,11 @@ try {
         else {
           await card.waitFor({ state: "visible" });
           await card.scrollIntoViewIfNeeded();
-          await page.screenshot({
+          await card.screenshot({
             path: path.join(
               out,
-              `inspection-${route === "/" ? "lobby" : "nfl"}-${state}-${width}.png`,
+              `inspection-card-${route === "/" ? "lobby" : "nfl"}-${state}-${width}.png`,
             ),
-            fullPage: true,
           });
           if (process.env.RECORD_NEGATIVE === "loss")
             await card
@@ -198,13 +207,10 @@ try {
               "Full record keyboard reachable",
             );
           }
-          await page.screenshot({
-            path: path.join(
-              out,
-              `${route === "/" ? "lobby" : "nfl"}-${state}-${width}.png`,
-            ),
-            fullPage: true,
-          });
+          await capturePage(
+            page,
+            `${route === "/" ? "lobby" : "nfl"}-${state}-${width}.png`,
+          );
           await card.screenshot({
             path: path.join(
               out,
@@ -251,10 +257,7 @@ try {
           assert.equal(await resultFilter.inputValue(), "Losses");
           await resultFilter.selectOption("All");
           assert.equal(await resultFilter.inputValue(), "All");
-          await page.screenshot({
-            path: path.join(out, `history-admin-${width}.png`),
-            fullPage: true,
-          });
+          await capturePage(page, `history-admin-${width}.png`);
         } else {
           await page
             .getByText("Records are private.", { exact: true })
