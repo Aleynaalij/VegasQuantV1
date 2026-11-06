@@ -390,7 +390,8 @@ for (const { width, photoOnly } of [
     await page.getByAltText("Your original screenshot preview").waitFor();
   } else {
     await page.getByText("Add details · optional", { exact: true }).click();
-    await page.getByLabel("Sport", { exact: true }).selectOption("NBA");
+    // Scoped to the form: the contributor area (The Zone) has its own Sport filter.
+    await page.locator(".ruby-modal").getByLabel("Sport", { exact: true }).selectOption("NBA");
     await page.getByLabel("Card title").fill("Sample Ruby drop");
     await page
       .getByLabel("Your legs")
