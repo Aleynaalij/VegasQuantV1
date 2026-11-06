@@ -46,3 +46,23 @@ unsupported runs, and saved-model reload. Plus a new unit test: replaying the tr
 opportunities through the fitted cells conserves calls exactly, except where `~role` is used. Before
 the fit, a source support audit on the residual cells must show zero unresolved opportunities.
 A failure is preserved; no retuning.
+
+## Result (2026-11-06, appended after the run; nothing above was changed)
+Package `artifacts/v0.2.21`, built from `0a27776`. `verify_package`: 6 files and 23 implementation
+hashes verified against the source. 10,000 / 10,000 complete, 0 failed, 0 unsupported.
+- Scoring gates PASS: total 44.2292, TD 4.9102, FG 3.3270, punts 7.8895. FG attempts 3.9044, late
+  FG 0.4595 and late decisions 1.8224 PASS.
+- **FAIL** late timeout-followed continuing plays **3.7703** vs 4.4834 (v0.2.20: 3.5521; v0.2.11:
+  1.995).
+- **FAIL** timeouts **7.0657** vs 7.7823, tolerance 0.389 (v0.2.20: 6.9025; v0.2.11: 7.3488).
+- Preserved as a failure. No retuning.
+
+Source replay through the fitted cells (`diagnostics/cell-replay-0.2.21.txt`): depths 0–2 now
+conserve exactly. The remaining differences sit in the terminal and coarsened levels (depth 4:
+−13.7 calls, depth 6: +22.2), about 9 calls net out of 1,215, against 90 in v0.2.20. The cell
+estimator is no longer the main gap. The remaining shortfall is the late-snap/runoff loop
+documented in the v0.2.20 diagnostics. A v0.2.21 follow-up must target that mechanism under its
+own frozen protocol.
+
+2023 already-inspected CRPS, context only: margin 8.1630 vs 8.0656, CI [−0.042, 0.230]; total
+7.6278 vs 7.5984. No superiority shown.
