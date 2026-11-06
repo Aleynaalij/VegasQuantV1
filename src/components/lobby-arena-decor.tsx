@@ -89,7 +89,10 @@ function Pennant({ side }: { side: "left" | "right" }) {
   );
 }
 
-export function LobbyArenaSkyline({ src, ratio = 3.2 }: { src?: string; ratio?: number }) {
+/** Elo's footer artwork (2172×724, black upper sky), reserved path; shipped by #227, not here. */
+export const LOBBY_SKYLINE = { src: "/lobby/vegas-carnival-footer.webp", ratio: 2172 / 724 } as const;
+
+export function LobbyArenaSkyline({ src, ratio = LOBBY_SKYLINE.ratio }: { src?: string; ratio?: number }) {
   if (!src) return null;
   return (
     <div

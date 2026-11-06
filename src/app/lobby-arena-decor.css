@@ -13,6 +13,14 @@
   overflow: visible;
   pointer-events: none;
 }
+/* Phones: keep the panorama's height and crop around the wheel and tower (just right of centre). */
+@media (max-width: 639px) {
+  .vq-arena-skyline {
+    aspect-ratio: 1.6 !important;
+    background-position: 54% bottom;
+    background-size: auto 100%;
+  }
+}
 
 /* Hanging ace pennants: clear of the headline at every width (text is centred; the pennants sit in
    the outer gutters and scale with the viewport). */
@@ -61,11 +69,19 @@
   background-repeat: no-repeat;
   background-size: cover;
   mix-blend-mode: screen;
-  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 28%, #000 80%, transparent 100%),
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 24%, #000 93%, transparent 100%),
     linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
   -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(180deg, transparent 0%, #000 28%, #000 80%, transparent 100%),
+  mask-image: linear-gradient(180deg, transparent 0%, #000 24%, #000 93%, transparent 100%),
     linear-gradient(90deg, transparent 0%, #000 6%, #000 94%, transparent 100%);
   mask-composite: intersect;
   pointer-events: none;
+}
+/* Phones: keep the panorama's height and crop around the wheel and tower (just right of centre). */
+@media (max-width: 639px) {
+  .vq-arena-skyline {
+    aspect-ratio: 1.6 !important;
+    background-position: 54% bottom;
+    background-size: auto 100%;
+  }
 }
