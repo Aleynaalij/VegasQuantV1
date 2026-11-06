@@ -206,17 +206,15 @@ async function run(
       });
     if (path.endsWith("nba_games"))
       return route.fulfill({
-        json: [
-          {
-            id: "story-game",
-            slug: "sample-story-game",
-            away_team: "Sample Away",
-            home_team: "Sample Home",
-            tipoff: "2026-10-14T02:30:00Z",
-            status: "STATUS_SCHEDULED",
-            tipoff_tbd: false,
-          },
-        ],
+        json: Array.from({ length: 5 }, (_, i) => ({
+          id: `story-game-${i}`,
+          slug: `sample-story-game-${i}`,
+          away_team: `Sample Away ${i}`,
+          home_team: `Sample Home ${i}`,
+          tipoff: new Date(now + (30 + i * 15) * 60000).toISOString(),
+          status: "STATUS_SCHEDULED",
+          tipoff_tbd: false,
+        })),
       });
     return route.fulfill({ json: [] });
   });
@@ -363,6 +361,14 @@ try {
           ].every((image) => image.complete && image.naturalWidth > 0),
         );
         await page.locator(".vq-tonight-game").first().waitFor();
+        assert.equal(
+          await page.locator(".vq-tonight-game").count(),
+          3,
+          "show three scheduled games initially",
+        );
+        await page
+          .getByRole("button", { name: "Show all 5 games", exact: true })
+          .waitFor();
         const geometry = await page.evaluate(() => {
           const rect = (selector) => {
             const r = document.querySelector(selector).getBoundingClientRect();
@@ -412,6 +418,11 @@ try {
           geometry.firstGame.bottom <= geometry.fixedNav.top,
           `the first scheduled game must fit above fixed navigation with populated stories: game bottom ${geometry.firstGame.bottom}px, navigation top ${geometry.fixedNav.top}px`,
         );
+        if (width === 390) {
+          await page.locator(".vq-tonight-board").screenshot({
+            path: `${out}/390-signed-in-populated-enclosure.png`,
+          });
+        }
         const strip = rail(page).locator(".community-stories");
         assert.ok(
           await strip.evaluate((node) => node.scrollWidth > node.clientWidth),
@@ -556,7 +567,7 @@ try {
     "signed-out-no-private-reads",
     { signedIn: false },
     async ({ page, state }) => {
-      await page.locator(".vq-tonight-game").waitFor();
+      await page.locator(".vq-tonight-game").first().waitFor();
       assert.equal(await rail(page).count(), 0);
       assert.equal(state.privateCalls.length, 0);
       assert.equal(await page.locator(".community-story").count(), 0);
