@@ -498,8 +498,9 @@ export default function StoryViewer({
           {clock.now === null ? (
             <p role="status">
               {clock.failed
-                ? "Story time could not be verified. Close and reopen to retry."
+                ? "Story time could not be verified. Retrying shortly."
                 : "Checking story time…"}
+              {clock.failed ? <button type="button" onClick={clock.retry}>Retry story time</button> : null}
             </p>
           ) : state.kind === "loading" ? (
             <p role="status">Loading post…</p>

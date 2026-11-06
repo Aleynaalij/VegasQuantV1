@@ -134,5 +134,14 @@ export function useStoryClock(created: readonly string[] = []) {
     }, delay);
     return () => clearTimeout(timer);
   }, [version, tick, key, getNow]);
-  return { now: getNow(), version, failed, getNow };
+  // Retry only while visible, with a bounded frequency; never display stale time.
+  useEffect(() => {
+    if (!failed) return;
+    const timer = setTimeout(() => {
+      if (document.visibilityState === "visible") syncRef.current();
+    }, 30000);
+    return () => clearTimeout(timer);
+  }, [failed, version]);
+  const retry = useCallback(() => syncRef.current(), []);
+  return { now: getNow(), version, failed, getNow, retry };
 }

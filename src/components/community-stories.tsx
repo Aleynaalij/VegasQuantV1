@@ -24,6 +24,8 @@ export default function CommunityStories() {
     let live = true;
     const load = async () => {
       const version = ++generation.current;
+      // Do not show cached identity metadata while authorization is rechecked.
+      setMembers([]);
       const session = await supabase.auth.getSession();
       if (!live || version !== generation.current) return;
       viewer.current = session.data.session?.user.id || null;
@@ -33,12 +35,20 @@ export default function CommunityStories() {
         setFailed(false);
         return;
       }
-      const result = await supabase.rpc("community_activity");
+      let result;
+      try {
+        result = await supabase.rpc("community_activity");
+      } catch {
+        if (live && version === generation.current) setFailed(true);
+        return;
+      }
       if (!live || version !== generation.current) return;
       setFailed(Boolean(result.error));
       setMembers(result.error ? [] : result.data || []);
     };
     const refresh = () => {
+      generation.current++;
+      setMembers([]);
       if (document.visibilityState === "visible") void load();
     };
     void load();
@@ -49,6 +59,8 @@ export default function CommunityStories() {
     };
     window.addEventListener("storage", syncRead);
     window.addEventListener("focus", refresh);
+    window.addEventListener("pageshow", refresh);
+    document.addEventListener("visibilitychange", refresh);
     window.addEventListener("vq-community-changed", refresh);
     const auth = supabase.auth.onAuthStateChange(() => {
       generation.current++;
@@ -63,6 +75,8 @@ export default function CommunityStories() {
       clearInterval(timer);
       window.removeEventListener("storage", syncRead);
       window.removeEventListener("focus", refresh);
+      window.removeEventListener("pageshow", refresh);
+      document.removeEventListener("visibilitychange", refresh);
       window.removeEventListener("vq-community-changed", refresh);
       auth.data.subscription.unsubscribe();
     };
@@ -170,6 +184,11 @@ export default function CommunityStories() {
             <small>{member.username}</small>
           </button>
         ))}
+        {clock.failed ? (
+          <button type="button" className="story-empty" onClick={clock.retry}>
+            Stories unavailable · Retry
+          </button>
+        ) : null}
         {!unread.length ? (
           <Link className="story-empty" href="/community">
             {failed || clock.failed || clock.now === null

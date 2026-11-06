@@ -440,12 +440,84 @@ await open("lease expiry and resume resync before displaying content", { freeze:
   // Revoke the clock endpoint: the current lease expires, with no new trusted anchor.
   await ctx.route("**/rest/v1/rpc/community_story_clock*", r => r.fulfill({ status: 500, json: { message: "Synthetic outage" } }));
   await page.clock.fastForward(300000);
-  await viewer(page).getByText("Story time could not be verified. Close and reopen to retry.").waitFor();
+  await viewer(page).getByText("Story time could not be verified. Retrying shortly.").waitFor();
   if (await viewer(page).locator(".story-post").count()) fail("expired clock lease exposed content");
   await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
   if (await viewer(page).locator(".story-post").count()) fail("resume restored content without a trusted clock");
+  await ctx.route("**/rest/v1/rpc/community_story_clock*", async r => {
+    const elapsed=await r.request().frame().evaluate(()=>performance.now());
+    return r.fulfill({json:{version:1,server_now:new Date(Date.UTC(2026,9,14,2)+elapsed).toISOString()}});
+  });
+  await viewer(page).getByRole("button",{name:"Retry story time"}).click();
+  await viewer(page).getByText("SampleAlpha post 1").waitFor();
 });
 
+await open("initial clock failure recovers through explicit retry", { clockFailure: true }, async ({ page, fail, ctx }) => {
+  await page.getByRole("button", { name: "Stories unavailable · Retry" }).waitFor();
+  await ctx.route("**/rest/v1/rpc/community_story_clock*", r => r.fulfill({ json: { version: 1, server_now: "2026-10-14T02:00:00Z" } }));
+  await page.getByRole("button", { name: "Stories unavailable · Retry" }).click();
+  await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).waitFor();
+  if ((await read(page)).length) fail("clock recovery read an unopened story");
+});
+await open("resume hides rail metadata pending or denied activity authorization", {}, async ({ page, fail, ctx }) => {
+  await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).waitFor();
+  let release; const pending = new Promise(resolve => { release=resolve; });
+  await ctx.route("**/rest/v1/rpc/community_activity*", async r => { await pending; return r.fulfill({json: []}); });
+  await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
+  await page.waitForTimeout(100);
+  if (await page.locator(".community-story").count()) fail("cached private metadata returned before activity authorization");
+  release(); await page.waitForTimeout(150);
+  if (await page.locator(".community-story").count()) fail("denied activity restored cached private metadata");
+});
+await open("renewed clock does not bypass delayed or denied current post authorization", {}, async ({page, fail, ctx}) => {
+ await page.getByRole("button", { name: /SampleAlpha's recent community posts/ }).click();
+ await viewer(page).getByText("SampleAlpha post 1").waitFor();
+ let release; const pending = new Promise(resolve => { release=resolve; });
+ await ctx.route("**/rest/v1/rpc/community_post*", async r => {await pending; return r.fulfill({json:null});});
+ await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
+ await page.waitForTimeout(100);
+ if (await viewer(page).locator(".story-post").count()) fail("renewed clock bypassed pending authorization");
+ release(); await page.waitForTimeout(150);
+ if (await viewer(page).locator(".story-post").count()) fail("denied current post returned after clock renewal");
+});
+
+await open("loaded photo taps advance once; full photo control never advances", {}, async ({page, fail, ctx}) => {
+ await ctx.route("**/storage/v1/object/sign/community-photos/**", r => r.request().method()==="GET" ? r.fulfill({contentType:"image/png",body:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=","base64")}) : r.fallback());
+ await page.getByRole("button", {name:/SampleBravo's recent community posts/}).click();
+ await viewer(page).getByRole("button", {name:"Open full photo"}).waitFor();
+ const popupEvent=ctx.waitForEvent("page");
+ await viewer(page).getByRole("button", {name:"Open full photo"}).click();
+ const popup=await popupEvent; await popup.close();
+ if((await showing(page))!=="(photo)") fail("full photo control navigated story");
+ await tapAt(page,"right");await viewer(page).getByText("SampleBravo post 4").waitFor();
+ if(!/2 of 2/.test(await viewer(page).innerText())) fail("loaded photo tap navigated more than once");
+});
+for(const event of ["SIGNED_OUT","SIGNED_IN"]) await open(`delayed old-account detail is discarded after ${event}`, {plan:()=>[1200,posts[0]]}, async ({page,fail,ctx})=>{
+ await page.getByRole("button",{name:/SampleAlpha's recent community posts/}).click();
+ await page.waitForTimeout(100);
+ const other=await ctx.newPage();await other.goto(BASE+"/methodology");
+ await other.evaluate(({event,uid})=>{
+  const session=event==="SIGNED_OUT"?null:{access_token:"other",refresh_token:"other",expires_at:Math.floor(Date.now()/1000)+86400,token_type:"bearer",user:{id:uid,aud:"authenticated",role:"authenticated",app_metadata:{},user_metadata:{}}};
+  if(session)localStorage.setItem("sb-127-auth-token",JSON.stringify(session));else localStorage.removeItem("sb-127-auth-token");
+  new BroadcastChannel("sb-127-auth-token").postMessage({event,session});
+ },{event,uid:B});
+ await page.waitForTimeout(1500);
+ if(await page.locator("dialog.story-viewer[open]").count()) fail("old account viewer survived identity change");
+ if((await read(page)).length) fail("late detail wrote old-account read state");
+ const otherReads=await page.evaluate(uid=>JSON.parse(localStorage.getItem(`vq-community-read:${uid}`)||"[]"),B);
+ if(otherReads.length) fail("late detail polluted new-account read state");
+});
+
+await open("delayed old-account clock cannot restore the viewer after sign-out", {}, async({page,fail,ctx})=>{
+ let release;const pending=new Promise(resolve=>{release=resolve;});
+ await ctx.route("**/rest/v1/rpc/community_story_clock*",async r=>{await pending;return r.fulfill({json:{version:1,server_now:"2026-10-14T02:00:00Z"}}).catch(()=>{});});
+ await page.getByRole("button",{name:/SampleAlpha's recent community posts/}).click();
+ const other=await ctx.newPage();await other.goto(BASE+"/methodology");
+ await other.evaluate(()=>{localStorage.removeItem("sb-127-auth-token");new BroadcastChannel("sb-127-auth-token").postMessage({event:"SIGNED_OUT",session:null});});
+ release();await page.waitForTimeout(250);
+ if(await page.locator("dialog.story-viewer[open]").count())fail("late old-account clock restored viewer");
+ if((await read(page)).length)fail("late old-account clock wrote read state");
+});
 await browser.close();
 if (failures.length) {
   console.error(`\n${failures.length} story viewer failure(s):\n- ${failures.join("\n- ")}`);
