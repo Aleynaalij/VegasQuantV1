@@ -43,7 +43,7 @@ dialog.story-viewer::backdrop {
 }
 .story-viewer-frame {
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   width: min(100%, 560px);
   height: 100%;
   margin: 0 auto;
@@ -62,14 +62,18 @@ dialog.story-viewer::backdrop {
   border-radius: 2px;
   background: #ffffff33;
 }
-.story-segments li.done,
-.story-segments li.current {
+.story-segments li.done {
   background: #e8ca7d;
+}
+/* The current post's segment fills as its time runs (--story-progress, 0 to 1). */
+.story-segments li.current {
+  background: linear-gradient(90deg, #e8ca7d 0 calc(var(--story-progress, 0) * 100%), #ffffff33 0);
 }
 .story-viewer-meta {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 4px 10px;
 }
 .story-viewer-meta b {
   font-size: 1rem;
@@ -78,8 +82,16 @@ dialog.story-viewer::backdrop {
   color: #b7c2bb;
   font-size: .8rem;
 }
-.story-viewer-meta .story-close {
+/* Previous, Next, Pause and Close: one compact, always-visible cluster on the right. */
+.story-controls {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 4px;
   margin-left: auto;
+}
+.story-viewer-meta .story-close,
+.story-viewer-meta .story-control {
   display: grid;
   place-items: center;
   width: 44px;
@@ -148,31 +160,6 @@ dialog.story-viewer::backdrop {
   display: grid;
   gap: 12px;
 }
-.story-nav {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.story-nav button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  min-height: 48px;
-  padding: 0 12px;
-  border: 1px solid #b69b4e55;
-  border-radius: 12px;
-  background: #11161c;
-  color: #f4dc99;
-  font-weight: 700;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-.story-nav button:disabled {
-  color: #6f7772;
-  border-color: #ffffff1a;
-}
 @media (prefers-reduced-motion: no-preference) {
   .story-segments li { transition: background .2s; }
 }
@@ -201,4 +188,23 @@ dialog.story-viewer .story-actions a.story-discussion:focus-visible {
   align-self: flex-start;
   width: auto;
   min-height: 44px;
+}
+.story-viewer-meta .story-control:disabled {
+  color: #6f7772;
+  border-color: #ffffff1a;
+}
+.story-viewer-meta .story-control[aria-pressed="true"] {
+  border-color: #e8ca7d;
+  color: #e8ca7d;
+}
+.story-viewer-meta .story-control:focus-visible,
+.story-viewer-meta .story-close:focus-visible {
+  outline: 2px solid #f4dc99;
+  outline-offset: 2px;
+}
+/* Narrow phones: tighter gaps so name, time and the four controls fit. */
+@media (max-width: 380px) {
+  .story-controls {
+    gap: 2px;
+  }
 }
