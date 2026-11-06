@@ -83,6 +83,7 @@ async function run(
     clockOffset: 0,
     detailGate: null,
     privateCalls: [],
+    routeEvents: [],
   };
   const rows = (owner) =>
     owner === B
@@ -90,6 +91,65 @@ async function run(
       : state.phase === "expiry"
         ? [nearExpiry]
         : [...posts, expired];
+  // Test-only evidence: distinguish a route that started from a response the app
+  // received, and retain visibility/rail changes without reading auth tokens.
+  await ctx.addInitScript(() => {
+    const trace = (window.__storyDiagnostics = { events: [], requests: [] });
+    const stamp = () => ({
+      monotonic: performance.now(),
+      wall: Date.now(),
+      visibility: document.visibilityState,
+      focused: document.hasFocus(),
+    });
+    const event = (type, detail = {}) => {
+      trace.events.push({ type, ...stamp(), ...detail });
+      if (trace.events.length > 300) trace.events.shift();
+    };
+    for (const type of ["focus", "blur", "pageshow", "pagehide"])
+      window.addEventListener(type, () => event(type));
+    document.addEventListener("visibilitychange", () => event("visibilitychange"));
+    const fetch = window.fetch.bind(window);
+    window.fetch = async (...args) => {
+      const path = new URL(args[0] instanceof Request ? args[0].url : String(args[0]), location.href).pathname;
+      if (!/\/(community_activity|community_feed|community_post|community_story_clock)$/.test(path))
+        return fetch(...args);
+      const request = { path, sent: stamp(), received: null, status: null };
+      trace.requests.push(request);
+      try {
+        const response = await fetch(...args);
+        request.received = stamp();
+        request.status = response.status;
+        // Inspect a clone asynchronously, never consume or delay the app's body.
+        void response.clone().json().then(
+          (body) => {
+            request.body = path.endsWith("community_story_clock")
+              ? { version: body?.version, server_now: body?.server_now }
+              : { rows: Array.isArray(body) ? body.length : null };
+          },
+          (error) => { request.bodyError = String(error); },
+        );
+        return response;
+      } catch (error) {
+        request.error = String(error);
+        throw error;
+      }
+    };
+    let previous = "";
+    const observeRail = () => {
+      const rail = document.querySelector(".lobby-community-stories");
+      const state = JSON.stringify({
+        mounted: Boolean(rail),
+        rings: rail?.querySelectorAll("button.community-story").length ?? 0,
+        fallback: rail?.querySelector(".story-empty")?.textContent ?? null,
+      });
+      if (state !== previous) {
+        previous = state;
+        event("rail", JSON.parse(state));
+      }
+    };
+    new MutationObserver(observeRail).observe(document, { childList: true, subtree: true, characterData: true });
+    event("init");
+  });
   await ctx.addInitScript(
     ({ token, a, b, updatePrompt }) => {
       if (token)
@@ -122,25 +182,38 @@ async function run(
     )
       state.privateCalls.push(path);
     if (path.endsWith("community_story_clock")) {
-      if (state.clockFailure)
-        return route.fulfill({
+      const event = { path, started: performance.now(), phase: "started" };
+      state.routeEvents.push(event);
+      if (state.clockFailure) {
+        event.phase = "fulfilling-failure";
+        await route.fulfill({
           status: 500,
           json: { message: "Synthetic clock failure" },
         });
+        event.phase = "fulfilled-failure";
+        event.finished = performance.now();
+        return;
+      }
+      event.phase = "reading-browser-time";
       const elapsed = await route
         .request()
         .frame()
         .evaluate(() => performance.now())
         .catch(() => 0);
-      return route.fulfill({
-        json: {
-          version: 1,
-          server_now: new Date(now + state.clockOffset + elapsed).toISOString(),
-        },
+      event.browserMonotonic = elapsed;
+      event.serverNow = new Date(now + state.clockOffset + elapsed).toISOString();
+      event.phase = "fulfilling";
+      await route.fulfill({
+        json: { version: 1, server_now: event.serverNow },
       });
+      event.phase = "fulfilled";
+      event.finished = performance.now();
+      return;
     }
-    if (path.endsWith("community_activity"))
-      return route.fulfill({
+    if (path.endsWith("community_activity")) {
+      const event = { path, started: performance.now(), phase: "fulfilling" };
+      state.routeEvents.push(event);
+      await route.fulfill({
         json: state.owner
           ? rows(state.owner).map((p, i) => ({
               post_id: p.id,
@@ -151,6 +224,10 @@ async function run(
             }))
           : [],
       });
+      event.phase = "fulfilled";
+      event.finished = performance.now();
+      return;
+    }
     if (path.endsWith("community_feed"))
       return route.fulfill({ json: state.owner ? rows(state.owner) : [] });
     if (path.endsWith("community_post")) {
@@ -222,6 +299,28 @@ async function run(
   page.setDefaultTimeout(15000);
   await page.clock.setFixedTime(new Date(now));
   const errors = [];
+  const networkEvents = [];
+  for (const type of ["request", "response", "requestfinished", "requestfailed"])
+    page.on(type, (value) => {
+      const request = type === "response" ? value.request() : value;
+      const path = new URL(request.url()).pathname;
+      if (/\/(community_activity|community_feed|community_post|community_story_clock)$/.test(path))
+        networkEvents.push({
+          type,
+          path,
+          at: performance.now(),
+          ...(type === "response" ? { status: value.status() } : {}),
+          ...(type === "requestfailed" ? { failure: request.failure() } : {}),
+        });
+    });
+  const diagnostics = async () => ({
+    routeEvents: state.routeEvents,
+    networkEvents,
+    browser: await page.evaluate(() => ({
+      ...window.__storyDiagnostics,
+      final: { monotonic: performance.now(), wall: Date.now(), visibility: document.visibilityState, focused: document.hasFocus() },
+    })).catch((error) => ({ error: String(error) })),
+  });
   page.on("pageerror", (error) => errors.push(error.message));
   try {
     await page.goto(base + "/?stories=fixture");
@@ -271,6 +370,10 @@ async function run(
       ),
       "no horizontal page overflow",
     );
+    await writeFile(
+      `${out}/${width}-${name}-diagnostics.json`,
+      JSON.stringify(await diagnostics(), null, 2),
+    );
     console.log(`PASS ${name} at ${width}px`);
   } catch (error) {
     await page
@@ -291,6 +394,7 @@ async function run(
           error: String(error),
           errors,
           privateCalls: state.privateCalls,
+          diagnostics: await diagnostics(),
         },
         null,
         2,
