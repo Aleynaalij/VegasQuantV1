@@ -10,13 +10,13 @@ LOBBY-DESTINATIONS-01; review draft only. No production, permission, migration, 
 
 ## Exact peer-file correction proposal
 
-`docs/review/lobby-tailed-corrections.patch` is **prepared, not applied** pending Claude's exact three-file transfer ACK (issue #65 comment 6687722984). It targets the current lobby/Tailed implementation:
+`docs/review/lobby-tailed-corrections.patch` is **unapplied and superseded** by Claude's own correction at `dec70fb677ce6ed34737a2a281df5462c183a3e5` (issue #65 comment 6687975289). It targets the current lobby/Tailed implementation:
 
 1. Reuse the tested route helper; forward both initially loaded and subsequently changed legacy hashes, retaining query values and using replacement to avoid a Back loop.
 2. Keep Tailed reads bounded, show failed session checks as request failures, update idle/resumed cutoff labels without inventing results, and distinguish unavailable/partial publication details without asserting an unverified membership cause.
 3. Extend the existing Tailed harness with real valid-profile fixtures, a cutoff clock case and partial missing-publication case. Keep its account-isolation negative control and avoid programmatic dialog dismissal.
 
-The proposed TSX and browser script pass syntax checks. Full type/build/browser proof requires application to the combined draft after coordination; syntax/helper tests are not that proof.
+The proposed patch passed syntax checks but was never applied. The combined draft instead uses Claude's corrected implementation and updated Tailed tests. Actual combined browser/type/build evidence, not the proposal helper tests, determines readiness.
 
 ## Acceptance required on the final combined head
 

@@ -41,7 +41,7 @@ async function verifyCombinedRoutes() {
     await ctx.route("**/rest/v1/**", async (route) => {
       const path = new URL(route.request().url()).pathname;
       if (
-        /\/(community_feed|community_stories|member_parlays|published_leg_catalog)$/.test(
+        /\/(community_feed|community_activity|community_stories|community_profiles|member_parlays|published_leg_catalog)$/.test(
           path,
         )
       )
@@ -139,6 +139,11 @@ async function verifyCombinedRoutes() {
     );
     await page.goForward();
     await page.waitForURL(/\/nfl\?from=existing#home-games/);
+    assert.equal(
+      privateRequests.length,
+      0,
+      "signed-out lobby and sport navigation must not request member activity or identities",
+    );
     await page.goto(base + "/community?build=1");
     await page.waitForURL(/\/parlays/);
     await page.getByText(/Sign in to build a lay/).waitFor();
