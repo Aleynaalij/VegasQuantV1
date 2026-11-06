@@ -467,7 +467,13 @@ await open("lease expiry and resume resync before displaying content", { freeze:
   const failedRenewal = page.waitForResponse(r => r.url().includes("/rpc/community_story_clock") && r.status() === 500);
   await page.evaluate(() => window.dispatchEvent(new Event("pageshow")));
   await (await failedRenewal).finished();
-  await page.waitForFunction(count => window.__clockRequests.length >= count + 2 && window.__clockRequests.slice(count, count + 2).every(r => r.status === 500), startedBeforeResume);
+  // Poll from Node: page.waitForFunction's animation-frame polling must not depend
+  // on the page clock that this test deliberately paused.
+  const renewalDeadline = Date.now() + 12000;
+  while (!(await page.evaluate(count => window.__clockRequests.length >= count + 2 && window.__clockRequests.slice(count, count + 2).every(r => r.status === 500), startedBeforeResume))) {
+    if (Date.now() >= renewalDeadline) throw new Error("Both resume clock failures did not settle before retry time travel");
+    await new Promise(resolve => setTimeout(resolve, 25));
+  }
   await viewer(page).getByText("Story time could not be verified. Retrying shortly.").waitFor();
   // Passive effects register the bounded retry after committing the unavailable state.
   await page.waitForTimeout(100);
