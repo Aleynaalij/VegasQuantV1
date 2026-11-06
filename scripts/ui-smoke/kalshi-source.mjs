@@ -22,6 +22,7 @@ try {
     let lost = true;
     const submissions = [];
     let outbound = 0;
+    let photoMode = false; let photoDeletes = 0;
     await ctx.addInitScript((uid) => {
       sessionStorage.setItem("vq-prompt-shown", "fixture");
       localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -58,6 +59,11 @@ try {
         body: "<title>Synthetic Kalshi destination</title><p>No trading occurs.</p>",
       });
     });
+    await ctx.route("**/api/community/photo?*", r => r.fulfill({json:{path: `${uid}/${new URL(r.request().url()).searchParams.get("post")}.jpg`}}));
+    await ctx.route("**/storage/v1/**", r => {
+      if(r.request().method()==="DELETE") photoDeletes++;
+      return r.fulfill({json:{signedURL:"/synthetic-photo.jpg"}});
+    });
     await ctx.route("**/rest/v1/**", async (r) => {
       const path = new URL(r.request().url()).pathname;
       if (path.endsWith("/rpc/ruby_home"))
@@ -93,7 +99,7 @@ try {
         submissions.push(p);
         assert.equal(p.p_source_link, canonical);
         assert.deepEqual(p.p_legs, []);
-        assert.equal(p.p_photo, null);
+        if(photoMode) assert.match(p.p_photo, /\.jpg$/); else assert.equal(p.p_photo, null);
         assert.equal(p.p_odds, null);
         mine = {
           id: p.p_id,
@@ -105,7 +111,7 @@ try {
           title: p.p_title,
           legs: [],
           note: "",
-          photo_path: null,
+          photo_path: p.p_photo,
           source_link: canonical,
           sportsbook: null,
           reported_odds: null,
@@ -254,6 +260,25 @@ try {
     await page.goto(base + "/", { waitUntil: "networkidle" });
     await page.locator(".ruby-submit-drawer summary").click();
     await page.getByRole("button", { name: "Submit today’s lay", exact: true }).click();
+    // Committed screenshot-plus-source insert with a lost response takes the stored-card recovery path.
+    photoMode = true; lost = true;
+    await modal.getByLabel("Paste Kalshi link").fill(canonical);
+    await modal.locator('input[type=file]').setInputFiles({name:"synthetic.png",mimeType:"image/png",buffer:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=","base64")});
+    await modal.getByRole("button", {name:"Publish to The Zone"}).click();
+    await modal.waitFor({state:"hidden"});
+    const recoveredId=submissions.at(-1).p_id;
+    assert.ok(mine.photo_path, "recovery discarded stored image");
+    assert.equal(photoDeletes,0,"recovery deleted stored image");
+    await page.getByRole("button", {name:"Submit today’s lay",exact:true}).click();
+    assert.equal(await modal.getByLabel("Paste Kalshi link").inputValue(),"","reopening retained old source");
+    assert.equal(await modal.locator('input[type=file]').inputValue(),"","reopening retained old photo");
+    // A fresh source-only submission must receive a new identifier.
+    photoMode=false;
+    await modal.getByLabel("Paste Kalshi link").fill(canonical);
+    await modal.getByRole("button", {name:"Publish to The Zone"}).click();
+    await modal.waitFor({state:"hidden"});
+    assert.notEqual(submissions.at(-1).p_id,recoveredId,"reopening retained pending ID");
+    await page.getByRole("button", {name:"Submit today’s lay",exact:true}).click();
     await modal.getByLabel("Paste Kalshi link").fill(canonical);
     const beforeSignOut = submissions.length;
     await page.evaluate(() => new BroadcastChannel("sb-127-auth-token").postMessage({ event: "SIGNED_OUT", session: null }));

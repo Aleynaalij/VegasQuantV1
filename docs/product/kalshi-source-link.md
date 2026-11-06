@@ -88,3 +88,9 @@ Release requires separate owner approval, then schema/RPC/view migration before 
 followed by grant/definition/legacy-client and authorized real-session readback. No migration is
 applied by this draft. Roll back the app first if needed and retain additive source data and
 source-preserving legacy edits; do not erase originals or silently remove published source links.
+
+## Independent review follow-up
+
+The SQL normalizer now parses the entire query after the first question mark, matching URLSearchParams rather than truncating additional question marks. Shared adversarial inputs execute against the client parser, direct submission, and direct edit. Stored screenshot recovery now clears the previous source. The browser fixture checks stored-image retention and fresh source/photo/identifier on reopening.
+
+The composed fixture now includes the verified-admin correction, actual age/session definitions, null and false admin denial, age denial, and active account-erasure denial. Source-aware submission explicitly rejects active erasure jobs. No hosted schema is applied. Final-head browser evidence remains pending until CI completes.

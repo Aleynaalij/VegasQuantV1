@@ -1,0 +1,8 @@
+[
+  "https://kalshi.com/markets/kxmvecrosscategory/combo/sample-combo?marketTicker=FIRST&x=1?&marketTicker=SECOND",
+  "https://kalshi.com/markets/kxmvecrosscategory/combo/sample-combo?marketTicker=FIRST?&marketTicker=SECOND",
+  "https://kalshi.com/markets/kxmvecrosscategory/combo/sample-combo?marketTicker=FIRST&event=OTHER",
+  "https://kalshi.com/markets/kxmvecrosscategory/combo/sample-combo?marketTicker=FIRST&MarketTicker=OTHER",
+  "https://kalshi.com/markets/kxmvecrosscategory/combo/sample-combo?marketTicker=FIRST?SECOND",
+  "https://kalshi.com/markets/kxmvecrosscategory/combo/sample-combo?marketTicker=FIRST&x=?&eventTicker=SECOND"
+]

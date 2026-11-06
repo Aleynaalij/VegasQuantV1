@@ -7,7 +7,7 @@ begin
  if p is null or length(p)=0 or length(p)>2048 or p ~ '[[:space:][:cntrl:]%]' or strpos(p,chr(92))>0 then return null;end if;
  if p !~ '^https://(www\.)?kalshi\.com/markets/kxmvecrosscategory/combo/[A-Za-z0-9_-]{1,200}(\?[^#]*)?(#.*)?$' then return null;end if;
  clean:=split_part(p,'#',1);
- query:=split_part(clean,'?',2);
+ query:=substring(clean from strpos(clean,'?')+1);
  foreach part in array string_to_array(query,'&') loop
   key:=split_part(part,'=',1);
   if position('ticker' in lower(key))>0 or lower(key) in ('market','event') then
@@ -44,7 +44,7 @@ do $$declare d text; next text; old text;begin
  if position(old in d)=0 then raise exception 'Submission idempotency contract changed';end if;
  next:=replace(d,'FUNCTION private.submit_ruby(','FUNCTION private.submit_ruby_link(');
  next:=replace(next,'p_odds integer)','p_odds integer, p_source_link text)');
- next:=replace(next,'begin',E'begin\n p_source_link:=private.normalize_kalshi_source_link(p_source_link);\n if p_source_link is null then raise exception ''Invalid Kalshi source link'';end if;');
+ next:=replace(next,'begin',E'begin\n p_source_link:=private.normalize_kalshi_source_link(p_source_link);\n if p_source_link is null then raise exception ''Invalid Kalshi source link'';end if;\n if exists(select 1 from private.account_erasure_jobs where user_id=auth.uid() and expires_at>now()) then raise exception ''Account deletion in progress'';end if;');
  next:=replace(next,old,'existing.source_link is not distinct from p_source_link and '||old);
  old:='note,photo_path,sportsbook,reported_odds)';
  if position(old in next)=0 then raise exception 'Submission insertion changed';end if;

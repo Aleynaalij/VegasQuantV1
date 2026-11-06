@@ -38,3 +38,8 @@ test("reject malformed, encoded, ambiguous and arbitrary external destinations",
   ])
     assert.equal(normalize(value), null, String(value));
 });
+
+import fs from "node:fs";
+test("shared adversarial query corpus rejects ambiguous source identity", () => {
+ for (const raw of JSON.parse(fs.readFileSync("tests/kalshi-source-adversarial.json", "utf8"))) assert.equal(normalize(raw), null, raw);
+});

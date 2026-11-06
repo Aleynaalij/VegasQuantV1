@@ -535,6 +535,7 @@ function Composer({
           setOpen(false);
           setMessage("Your lay is published in The Zone.");
           setFile(null);
+          setSourceInput("");
           pending.current = null;
           onPublished();
           return;
