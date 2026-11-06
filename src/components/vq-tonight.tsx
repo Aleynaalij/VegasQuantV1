@@ -1,5 +1,7 @@
 "use client";
 import Link from "next/link";
+import { Layers, Search, Users } from "lucide-react";
+import BrandMark from "./brand-mark";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { SPORTS, type Sport } from "@/lib/sports";
@@ -36,7 +38,9 @@ const clock = (t: number) =>
  * existing page, the lay in progress and the Zone. Built only from readers Home already uses; it
  * does not rank games or claim research exists for a game.
  */
-export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
+export default function VqTonight({ nflGames, presentation = "standard" }: { nflGames: Game[]; presentation?: "standard" | "skybox" }) {
+  const skybox = presentation === "skybox";
+  const previewLimit = skybox ? 3 : SHOWN;
   const [now, setNow] = useState(() => Date.now());
   const day = useMemo(() => tonightWindow(now), [now]);
   const [loads, setLoads] = useState<Record<Exclude<Sport, "nfl">, Load>>({
@@ -163,89 +167,156 @@ export default function VqTonight({ nflGames }: { nflGames: Game[] }) {
   });
   const lastChecked = checked.length ? Math.min(...checked) : null;
   const loading = (["nba", "nhl", "ncaab"] as const).some((s) => loads[s].state === "loading");
-  const shown = all ? rows : rows.slice(0, SHOWN);
+  const shown = all ? rows : rows.slice(0, previewLimit);
   const bySport = ORDER.map((s) => [s, shown.filter((g) => g.sport === s)] as const).filter(([, g]) => g.length);
 
   return (
-    <section className="vq-tonight" aria-labelledby="vq-tonight-title">
-      <header className="vq-tonight-head">
-        <h2 id="vq-tonight-title">VQ Tonight</h2>
-        <p>Today · {day.label} · Eastern time</p>
-        {lastChecked ? (
-          <p className="vq-tonight-checked">
-            Schedules checked {clock(lastChecked)}. Times and statuses are as the league data
-            reported them then.
+    <section
+      id="vq-tonight"
+      className={`vq-tonight${skybox ? " vq-tonight-skybox" : ""}`}
+      aria-labelledby="vq-tonight-title"
+    >
+      <div
+        className="vq-tonight-board"
+        style={skybox ? undefined : { display: "contents" }}
+      >
+        <header className="vq-tonight-head">
+          <h2 id="vq-tonight-title">
+            {skybox ? (
+              <>
+                <BrandMark />
+                <span className="vq-tonight-brand-text">VQ </span>Tonight
+              </>
+            ) : (
+              "VQ Tonight"
+            )}
+          </h2>
+          <p>Today · {day.label} · Eastern time</p>
+          {lastChecked ? (
+            <p className="vq-tonight-checked">
+              Schedules checked {clock(lastChecked)}. Times and statuses are as
+              the league data reported them then.
+            </p>
+          ) : null}
+        </header>
+
+        {stale.length ? (
+          <p className="vq-tonight-alert" role="alert">
+            Couldn’t refresh {stale.map((s) => SPORTS[s].label).join(", ")}:
+            showing games as last checked, which may be out of date.{" "}
+            <button
+              type="button"
+              onClick={() => stale.forEach((s) => void load(s))}
+            >
+              Retry
+            </button>
           </p>
         ) : null}
-      </header>
 
-      {stale.length ? (
-        <p className="vq-tonight-alert" role="alert">
-          Couldn’t refresh {stale.map((s) => SPORTS[s].label).join(", ")}: showing games as last
-          checked, which may be out of date.{" "}
-          <button type="button" onClick={() => stale.forEach((s) => void load(s))}>
-            Retry
-          </button>
-        </p>
-      ) : null}
-
-      {failed.length ? (
-        <p className="vq-tonight-alert" role="alert">
-          {failed.map((s) => SPORTS[s].label).join(", ")} games could not load.{" "}
-          <button type="button" onClick={() => failed.forEach((s) => void load(s))}>
-            Retry
-          </button>
-        </p>
-      ) : null}
-
-      {!rows.length ? (
-        <p className="vq-tonight-empty" role="status">
-          {loading ? "Loading today’s games…" : failed.length ? "No other games to show right now." : "No games are scheduled today."}
-        </p>
-      ) : (
-        <div className="vq-tonight-games">
-          {bySport.map(([sport, games]) => (
-            <div key={sport} className="vq-tonight-sport">
-              <h3>{SPORTS[sport].label}</h3>
-              <ul>
-                {games.map((g) => {
-                  const status = statusLabel(g.status);
-                  return (
-                    <li key={`${g.sport}:${g.id}`}>
-                      <Link href={g.href} className="vq-tonight-game" aria-label={`${g.away} at ${g.home}, ${status ?? startLabel(g)}. Open the game page`}>
-                        <span className="vq-tonight-teams">
-                          {g.away} <small>@</small> {g.home}
-                        </span>
-                        <span className="vq-tonight-when">{status ? <b>{status}</b> : startLabel(g)}</span>
-                        <span className="vq-tonight-go" aria-hidden="true">Game page →</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
-          {rows.length > SHOWN ? (
-            <button type="button" className="vq-tonight-more" aria-expanded={all} onClick={() => setAll((v) => !v)}>
-              {all ? "Show fewer games" : `Show all ${rows.length} games`}
+        {failed.length ? (
+          <p className="vq-tonight-alert" role="alert">
+            {failed.map((s) => SPORTS[s].label).join(", ")} games could not
+            load.{" "}
+            <button
+              type="button"
+              onClick={() => failed.forEach((s) => void load(s))}
+            >
+              Retry
             </button>
-          ) : null}
-          {loading ? <p className="vq-tonight-note" role="status">Still loading some sports…</p> : null}
-        </div>
-      )}
+          </p>
+        ) : null}
 
+        {!rows.length ? (
+          <p className="vq-tonight-empty" role="status">
+            {loading
+              ? "Loading today’s games…"
+              : failed.length
+                ? "No other games to show right now."
+                : "No games are scheduled today."}
+          </p>
+        ) : (
+          <div className="vq-tonight-games">
+            {bySport.map(([sport, games]) => (
+              <div key={sport} className="vq-tonight-sport">
+                <h3>{SPORTS[sport].label}</h3>
+                <ul>
+                  {games.map((g) => {
+                    const status = statusLabel(g.status);
+                    return (
+                      <li key={`${g.sport}:${g.id}`}>
+                        <Link
+                          href={g.href}
+                          className="vq-tonight-game"
+                          aria-label={`${g.away} at ${g.home}, ${status ?? startLabel(g)}. Open the game page`}
+                        >
+                          {skybox ? (
+                            <span className="vq-tonight-sport-badge">
+                              {SPORTS[sport].label}
+                            </span>
+                          ) : null}
+                          <span className="vq-tonight-teams">
+                            {g.away} <small>@</small> {g.home}
+                          </span>
+                          <span className="vq-tonight-when">
+                            {status ? <b>{status}</b> : startLabel(g)}
+                          </span>
+                          <span className="vq-tonight-go" aria-hidden="true">
+                            Game page →
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+            {rows.length > previewLimit ? (
+              <button
+                type="button"
+                className="vq-tonight-more"
+                aria-expanded={all}
+                onClick={() => setAll((v) => !v)}
+              >
+                {all ? "Show fewer games" : `Show all ${rows.length} games`}
+              </button>
+            ) : null}
+            {loading ? (
+              <p className="vq-tonight-note" role="status">
+                Still loading some sports…
+              </p>
+            ) : null}
+          </div>
+        )}
+      </div>
+      {skybox ? (
+        <h3 className="vq-lobby-section-title">Your next move</h3>
+      ) : null}
       <div className="vq-tonight-next">
+        {skybox ? (
+          <Link href="/feed?view=latest" className="vq-tonight-card">
+            <Search aria-hidden="true" />
+            <b>Research</b>
+            <small>Published research, reasons and risks.</small>
+          </Link>
+        ) : null}
         <Link href="/parlays" className="vq-tonight-card">
+          {skybox ? <Layers aria-hidden="true" /> : null}
           <b>{draft ? `Continue your lay · ${draft} selected` : "My lays"}</b>
-          <small>{draft ? "Pick up where you left off." : "Your saved lays and the leg library."}</small>
+          <small>
+            {draft
+              ? "Pick up where you left off."
+              : "Your saved lays and the leg library."}
+          </small>
         </Link>
         {signedIn === false ? (
           <Link href="/membership" className="vq-tonight-card">
+            {skybox ? <Users aria-hidden="true" /> : null}
             <b>The Zone · sign in</b>
             <small>Member discussion is for signed-in members.</small>
           </Link>
         ) : (
           <Link href="/community" className="vq-tonight-card">
+            {skybox ? <Users aria-hidden="true" /> : null}
             <b>The Zone</b>
             <small>Member talk, kept separate from published research.</small>
           </Link>

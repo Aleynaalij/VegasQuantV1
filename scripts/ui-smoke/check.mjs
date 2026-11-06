@@ -8,7 +8,7 @@ const { chromium } = await import(
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const pages = [
   // "/" is the neutral lobby; the NFL desk (next kickoff, game rows) is /nfl.
-  { path: "/", expect: ["Every game. One clear read.", "VQ Tonight", "21+"] },
+  { path: "/", expect: ["Your sports research starts here.", "VQ Tonight", "21+"] },
   { path: "/nfl", expect: ["Next kickoff", "21+"] },
   { path: "/feed", expect: ["The Zone", "Join the conversation"] },
   { path: "/feed?view=injury", expect: ["The Zone"] },
@@ -26,7 +26,7 @@ const pages = [
 ];
 const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
-  { path: "/", expect: ["Every game. One clear read."] },
+  { path: "/", expect: ["Your sports research starts here."] },
   { path: "/nfl", expect: ["Next kickoff"] },
   { path: "/community", expect: ["The Zone", "For you", "VIP lays", "SampleMember", "Sample post body."] },
   { path: "/history", expect: ["Records are private."] },
@@ -156,7 +156,7 @@ for (const [list, auth, isAdmin] of [
       if (recordsTabs !== (isAdmin ? 1 : 0))
         failures.push(`${label}: ${recordsTabs} Records tab(s) in the menu`);
       for (const t of expect)
-        if (!state.text.toLowerCase().includes(t.toLowerCase()))
+        if (!state.text.replace(/\s+/g, " ").toLowerCase().includes(t.toLowerCase()))
           failures.push(`${label}: missing "${t}"`);
       console.log(`${failures.length > before ? "FAIL" : "ok  "} ${label}`);
     }

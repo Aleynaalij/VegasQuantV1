@@ -81,6 +81,10 @@ async function open(name, { width = 390, signedIn = false, draft = null, empty =
     await page.goto(BASE + path, { waitUntil: nbaCalls ? "load" : "networkidle" });
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
     await page.locator(".vq-tonight").waitFor();
+    // Home now previews three real games. This suite checks the full schedule; the
+    // lobby-mobile suite separately verifies the initial preview and first fold.
+    const more = page.locator(".vq-tonight").getByRole("button", { name: /^Show all \d+ games$/ });
+    if (await more.count()) await more.click();
     await run({ page, fail });
     if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) fail("sideways scroll");
   } catch (e) {

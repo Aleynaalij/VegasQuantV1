@@ -4,6 +4,10 @@ on:
     paths:
       - 'src/**'
       - 'scripts/ui-smoke/lobby-destinations.mjs'
+      - 'scripts/ui-smoke/tailed-lays.mjs'
+      - 'scripts/ui-smoke/lobby-mobile.mjs'
+      - 'scripts/ui-smoke/save-share-recovery.mjs'
+      - 'public/lobby/**'
       - '.github/workflows/lobby-destinations.yml'
   workflow_dispatch:
 permissions:
@@ -37,6 +41,22 @@ jobs:
           LIVE_SCORES_DISABLED=1 npx next start -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
           node scripts/ui-smoke/tailed-lays.mjs
+          node scripts/ui-smoke/lobby-mobile.mjs
+          if UI_SMOKE_NEGATIVE=oversized-intro UI_ARTIFACT_DIR=artifacts/lobby-mobile-negative node scripts/ui-smoke/lobby-mobile.mjs > /tmp/lobby-mobile-negative.log 2>&1; then
+            cat /tmp/lobby-mobile-negative.log
+            echo 'ERROR: oversized intro negative passed unexpectedly'
+            exit 1
+          fi
+          cat /tmp/lobby-mobile-negative.log
+          grep -q 'first schedule row must be fully above' /tmp/lobby-mobile-negative.log
+          if UI_SMOKE_NEGATIVE=wrong-destination node scripts/ui-smoke/tailed-lays.mjs > /tmp/tailed-destination-negative.log 2>&1; then
+            cat /tmp/tailed-destination-negative.log
+            echo 'ERROR: wrong publication negative passed unexpectedly'
+            exit 1
+          fi
+          cat /tmp/tailed-destination-negative.log
+          grep -q 'exact publication did not render at the clicked destination' /tmp/tailed-destination-negative.log
+          node scripts/ui-smoke/save-share-recovery.mjs
           if UI_SMOKE_NEGATIVE=other-account node scripts/ui-smoke/tailed-lays.mjs > /tmp/tailed-negative.log 2>&1; then
             cat /tmp/tailed-negative.log
             echo 'ERROR: other-account tailed negative passed unexpectedly'
