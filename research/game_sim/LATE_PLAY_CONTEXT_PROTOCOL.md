@@ -34,3 +34,33 @@ and runoff tables, all other contexts and rules, and the gates.
 10,000 runs, seed 1701, old OT, all nine checks at the existing tolerances, zero failed or
 unsupported runs, and saved-model reload. Reported alongside: fallback counts and the two frozen
 diagnostics re-run on the new package. A failure is preserved; no retuning.
+
+## Result (2026-11-07, appended after the run; nothing above was changed)
+Package `artifacts/v0.2.23`, built from `915fbaa`. `verify_package`: 6 files and 25 implementation
+hashes verified against the source. 10,000 / 10,000 complete, 0 failed, 0 unsupported samples.
+**All nine unchanged checks PASS:**
+
+| check | sim | source | tolerance | |
+|---|---:|---:|---:|---|
+| total | 44.7862 | 43.7638 | gate | PASS |
+| touchdowns | 5.0143 | 4.8524 | gate | PASS |
+| field goals | 3.2714 | 3.3321 | gate | PASS |
+| punts | 7.7713 | 8.1181 | gate | PASS |
+| timeouts | 7.6400 | 7.7823 | 0.389 | PASS |
+| FG attempts | 3.8560 | 3.9188 | 0.322 | PASS |
+| late FG attempts | 0.4400 | 0.4871 | 0.110 | PASS |
+| late decisions | 1.7567 | 2.0996 | 0.375 | PASS |
+| late timeout-followed continuing plays | 4.2462 | 4.4834 | 0.327 | PASS |
+
+- Saved-model self-check (`diagnostics/reproduction-0.2.23-selfcheck.json`): the refit model hash
+  matches, and the reloaded 10,000-run batch differs only in `generated_at` and `runtime_seconds`.
+- Counters: 2,833 `last300_normal_fallback` draws; 14,869 warning-censored gaps resampled and 379
+  unresolved (kept and counted); 50,169 thin-context samples (existing behaviour, disclosed).
+- 2023 already-inspected CRPS, context only: margin 8.1822 vs 8.0656, CI [−0.033, 0.262]; total
+  7.6492 vs 7.5984. No superiority shown. This is not a gate, and it reminds us the league baseline
+  is not a forecast.
+
+**Status against TEAM_LAYER_PROTOCOL §0:** v0.2.23 meets the nine checks, 10,000 / 10,000 with zero
+unsupported samples, and saved-model reproduction. §0 also requires an **independent audit**. I built
+this package, so my own checks are a self-check, not that audit. It is a §0 *candidate*, not the
+selected base. §0 is not filled in until an independent audit per `AUDIT_PLAN.md` passes.

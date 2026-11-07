@@ -1,0 +1,25 @@
+{
+  "scope": "Self-check reproduction of v0.2.23 by its builder (Claude); not the independent audit TEAM_LAYER_PROTOCOL 0 requires",
+  "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "refit": {
+    "model_sha256": "63906f6b7bbbf911bed5b159da84ab815fa4d867bf59c9b8671ad6dbccac6d89",
+    "refit_model_sha256": "63906f6b7bbbf911bed5b159da84ab815fa4d867bf59c9b8671ad6dbccac6d89",
+    "matches": true
+  },
+  "reload_batch": {
+    "runs": {
+      "requested": 10000,
+      "actual": 10000,
+      "failed": 0
+    },
+    "seed": 1701,
+    "overtime": "old",
+    "stored_canonical_sha256": "be7a507b658d7e2008d3e312bb9e1e7d8ce15dcdcea837125b91dabf9677be12",
+    "rerun_canonical_sha256": "93511a6b9e207fa6a2347b6b7538da4fb70039b07002a8f6f6bf315baaab06ed",
+    "differing_fields": [
+      "generated_at",
+      "runtime_seconds"
+    ],
+    "all_other_fields_identical": true
+  }
+}
