@@ -186,7 +186,7 @@ for (const [mode, fulfill] of [
     await ctx.route("**/rest/v1/**", fulfill);
     if (mode === "empty data") await ctx.route("**/rest/v1/rpc/sports_slate", route => {
       const sport = route.request().postDataJSON().p_sport;
-      return route.fulfill({json:{version:1,sport,access:false,games:[],facts:[],markets:[],selections:[],results:[]}});
+      return route.fulfill({json:{version:1,sport,access:true,games:[],facts:[],markets:[],selections:[],results:[]}});
     });
     const { page, errors } = await open(ctx, path, label);
     if (path === RESEARCH_HUB || path === RESEARCH_ENTRY) {
