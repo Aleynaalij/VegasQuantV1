@@ -100,7 +100,7 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true, ex
     reducedMotion: "reduce",
   });
   await ctx.addInitScript(
-    ({ uid, version, theme, signedIn, expired }) => {
+    ({ uid, version, theme, signedIn, expired, fixtureNow }) => {
       sessionStorage.setItem("vq-prompt-shown", "fixture");
       localStorage.setItem("vq-theme", theme);
       if (document.documentElement)
@@ -113,7 +113,7 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true, ex
             access_token: "smoke",
             refresh_token: "smoke",
             token_type: "bearer",
-            expires_at: Math.floor(Date.now() / 1000) + (expired ? -60 : 86400),
+            expires_at: Math.floor(fixtureNow / 1000) + (expired ? -60 : 86400),
             user: {
               id: uid,
               aud: "authenticated",
@@ -125,7 +125,7 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true, ex
         );
       }
     },
-    { uid, version, theme, signedIn, expired },
+    { uid, version, theme, signedIn, expired, fixtureNow: now },
   );
   let state = mode;
   const requests = { access: 0, protected: 0, refresh: 0, dropped: 0 };
