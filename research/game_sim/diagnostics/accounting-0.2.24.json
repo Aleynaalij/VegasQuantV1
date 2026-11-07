@@ -1,0 +1,442 @@
+{
+  "scope": "ACCOUNTING_ONLY",
+  "package": "research/game_sim/artifacts/v0.2.24",
+  "runs": {
+    "actual": 10000,
+    "failed": 0,
+    "requested": 10000
+  },
+  "model_sha256": "f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d",
+  "play_context_paths": {
+    "last300_normal": {
+      "drop:distance+lead": 454,
+      "drop:down+distance+lead": 39,
+      "drop:lead": 939,
+      "exact": 1396
+    },
+    "late": {
+      "drop:distance": 29094,
+      "drop:down+distance": 142506,
+      "exact": 45376,
+      "floor:coarse_lead": 108382,
+      "floor:coarse_lead+goal_zone": 2252,
+      "pooled_half:coarse_lead": 265
+    },
+    "normal": {
+      "drop:distance+lead": 24288,
+      "drop:down+distance+lead": 1497,
+      "drop:lead": 84789,
+      "exact": 1229810,
+      "floor:phase+clock+zone": 168
+    }
+  },
+  "play_context_draws": 1671255,
+  "play_context_length": {
+    "3": 1704,
+    "4": 278147,
+    "5": 114822,
+    "6": 1276582
+  },
+  "band_labels": {
+    "band_preserved_samples": 327875,
+    "band_half_preserved_samples": 327610,
+    "band_half_pooled_fallback": 265,
+    "last300_normal_fallback": 2828
+  },
+  "two_minute_warning": {
+    "two_minute_warning_snapped": 19233,
+    "two_minute_warning_seconds_restored": 322949,
+    "warning_censored_resampled": 14860,
+    "warning_censored_unresolved": 378
+  },
+  "terminal_full_count_keys": {
+    "running": [
+      "le300@h1|defense",
+      "le300@h1|offense",
+      "le300@h2|defense",
+      "le300@h2|offense"
+    ],
+    "stopped": [
+      "le120@h1|both",
+      "le120@h1|offense",
+      "le300@h2|both",
+      "le300@h2|defense",
+      "le300@h2|offense"
+    ]
+  },
+  "terminal_full_count_lookups": 15533,
+  "terminal_full_count_by_key": {
+    "running:le300@h1|defense": 1293,
+    "running:le300@h1|offense": 2304,
+    "running:le300@h2|defense": 2179,
+    "running:le300@h2|offense": 660,
+    "stopped:le120@h1|both": 668,
+    "stopped:le120@h1|offense": 2915,
+    "stopped:le300@h2|both": 2943,
+    "stopped:le300@h2|defense": 816,
+    "stopped:le300@h2|offense": 1755
+  },
+  "terminal_floor_lookups": {
+    "timeout_terminal_floor:running:le300@h1|both": 2080,
+    "timeout_terminal_floor:running:le300@h1|defense": 1293,
+    "timeout_terminal_floor:running:le300@h1|offense": 2304,
+    "timeout_terminal_floor:running:le300@h2|both": 3359,
+    "timeout_terminal_floor:running:le300@h2|defense": 2179,
+    "timeout_terminal_floor:running:le300@h2|offense": 660,
+    "timeout_terminal_floor:stopped:le120@h1|both": 668,
+    "timeout_terminal_floor:stopped:le120@h1|offense": 2915,
+    "timeout_terminal_floor:stopped:le300@h2|both": 2943,
+    "timeout_terminal_floor:stopped:le300@h2|defense": 816,
+    "timeout_terminal_floor:stopped:le300@h2|offense": 1755,
+    "timeout_terminal_floor:stopped:normal@all~role|both": 2517,
+    "timeout_terminal_floor:stopped:normal@all~role|offense": 5964
+  },
+  "clipping": {
+    "elapsed_clipped_to_clock": 36728,
+    "spot_clamped": 2937,
+    "yards_clamped_to_field": 16131,
+    "runoff_clipped_to_clock": 1325,
+    "penalty_half_distance": 1166
+  },
+  "other_paths": {
+    "avoided_runoff_seconds": 549227,
+    "band_half_pooled_fallback": 265,
+    "band_half_preserved_samples": 327610,
+    "band_preserved_samples": 327875,
+    "censoring_non_td": 5318,
+    "censoring_restored_td": 12070,
+    "coarsened_timeout_cell": 35608,
+    "coupled_stops": 42780,
+    "elapsed_clipped_to_clock": 36728,
+    "last300_normal_fallback": 2828,
+    "missing_eligible_stop_duration": 1824,
+    "penalty_half_distance": 1166,
+    "role_marginal_timeout_cell": 8481,
+    "role_marginal_timeout_cell:both": 2517,
+    "runoff_clipped_to_clock": 1325,
+    "source_stop_runoff_replaced": 25851,
+    "spot_clamped": 2937,
+    "stop_clock_candidates": 184216,
+    "thin_context_support": 50190,
+    "thin_runoff_context": 1268,
+    "thin_stop_duration_context": 47650,
+    "two_minute_warning_seconds_restored": 322949,
+    "two_minute_warning_snapped": 19233,
+    "warning_censored_resampled": 14860,
+    "warning_censored_unresolved": 378,
+    "yards_clamped_to_field": 16131
+  },
+  "timeout_cell_depths": {
+    "timeout_cell:running:depth0": 93654,
+    "timeout_cell:running:depth1": 55276,
+    "timeout_cell:running:depth2": 6086,
+    "timeout_cell:running:depth3": 15501,
+    "timeout_cell:running:depth4": 6404,
+    "timeout_cell:running:depth6": 5471,
+    "timeout_cell:stopped:depth0": 1246593,
+    "timeout_cell:stopped:depth1": 80890,
+    "timeout_cell:stopped:depth2": 21377,
+    "timeout_cell:stopped:depth3": 24585,
+    "timeout_cell:stopped:depth4": 4480,
+    "timeout_cell:stopped:depth5": 6288,
+    "timeout_cell:stopped:depth6": 12965
+  },
+  "reconciliation": {
+    "checks": {
+      "band_preserved + last300_normal_fallback == old clock_preserved": {
+        "new": 330703,
+        "old": null,
+        "ok": false
+      },
+      "band_half_pooled + last300_normal_fallback == old half_pooled": {
+        "new": 3093,
+        "old": null,
+        "ok": false
+      },
+      "band_half_preserved == old half_preserved": {
+        "new": 327610,
+        "old": null,
+        "ok": false
+      }
+    },
+    "shared_counters_changed": {
+      "avoided_runoff_seconds": [
+        548746,
+        549227
+      ],
+      "band_half_pooled_fallback": [
+        266,
+        265
+      ],
+      "band_half_preserved_samples": [
+        327650,
+        327610
+      ],
+      "band_preserved_samples": [
+        327916,
+        327875
+      ],
+      "censoring_non_td": [
+        5324,
+        5318
+      ],
+      "censoring_restored_td": [
+        12077,
+        12070
+      ],
+      "coarsened_timeout_cell": [
+        35461,
+        35608
+      ],
+      "coupled_stops": [
+        42791,
+        42780
+      ],
+      "elapsed_clipped_to_clock": [
+        36726,
+        36728
+      ],
+      "last300_normal_fallback": [
+        2833,
+        2828
+      ],
+      "missing_eligible_stop_duration": [
+        1826,
+        1824
+      ],
+      "penalty_half_distance": [
+        1161,
+        1166
+      ],
+      "play_context:last300_normal:drop:distance+lead": [
+        453,
+        454
+      ],
+      "play_context:last300_normal:drop:down+distance+lead": [
+        40,
+        39
+      ],
+      "play_context:last300_normal:exact": [
+        1401,
+        1396
+      ],
+      "play_context:late:drop:distance": [
+        29099,
+        29094
+      ],
+      "play_context:late:drop:down+distance": [
+        142511,
+        142506
+      ],
+      "play_context:late:exact": [
+        45396,
+        45376
+      ],
+      "play_context:late:floor:coarse_lead": [
+        108390,
+        108382
+      ],
+      "play_context:late:floor:coarse_lead+goal_zone": [
+        2254,
+        2252
+      ],
+      "play_context:late:pooled_half:coarse_lead": [
+        266,
+        265
+      ],
+      "play_context:normal:drop:distance+lead": [
+        24255,
+        24288
+      ],
+      "play_context:normal:drop:lead": [
+        84774,
+        84789
+      ],
+      "play_context:normal:exact": [
+        1229845,
+        1229810
+      ],
+      "play_context_length:3": [
+        1705,
+        1704
+      ],
+      "play_context_length:4": [
+        278129,
+        278147
+      ],
+      "play_context_length:5": [
+        114812,
+        114822
+      ],
+      "play_context_length:6": [
+        1276642,
+        1276582
+      ],
+      "role_marginal_timeout_cell": [
+        8381,
+        8481
+      ],
+      "runoff_clipped_to_clock": [
+        1326,
+        1325
+      ],
+      "separate_timeout:running:defense": [
+        24210,
+        24194
+      ],
+      "separate_timeout:running:offense": [
+        18581,
+        18586
+      ],
+      "separate_timeout:stopped:defense": [
+        12851,
+        12858
+      ],
+      "separate_timeout:stopped:offense": [
+        20758,
+        20771
+      ],
+      "source_stop_runoff_replaced": [
+        25847,
+        25851
+      ],
+      "spot_clamped": [
+        2940,
+        2937
+      ],
+      "stop_clock_candidates": [
+        184250,
+        184216
+      ],
+      "thin_context_support": [
+        50169,
+        50190
+      ],
+      "thin_runoff_context": [
+        1271,
+        1268
+      ],
+      "thin_stop_duration_context": [
+        47660,
+        47650
+      ],
+      "timeout_cell:running:depth0": [
+        93693,
+        93654
+      ],
+      "timeout_cell:running:depth1": [
+        55283,
+        55276
+      ],
+      "timeout_cell:running:depth2": [
+        6096,
+        6086
+      ],
+      "timeout_cell:running:depth3": [
+        15473,
+        15501
+      ],
+      "timeout_cell:running:depth4": [
+        6398,
+        6404
+      ],
+      "timeout_cell:running:depth6": [
+        5481,
+        5471
+      ],
+      "timeout_cell:stopped:depth0": [
+        1246678,
+        1246593
+      ],
+      "timeout_cell:stopped:depth1": [
+        81016,
+        80890
+      ],
+      "timeout_cell:stopped:depth2": [
+        21390,
+        21377
+      ],
+      "timeout_cell:stopped:depth3": [
+        24564,
+        24585
+      ],
+      "timeout_cell:stopped:depth4": [
+        4457,
+        4480
+      ],
+      "timeout_cell:stopped:depth5": [
+        6264,
+        6288
+      ],
+      "timeout_cell:stopped:depth6": [
+        12861,
+        12965
+      ],
+      "timeout_terminal_floor:running:le300@h1|both": [
+        2082,
+        2080
+      ],
+      "timeout_terminal_floor:running:le300@h1|defense": [
+        1292,
+        1293
+      ],
+      "timeout_terminal_floor:running:le300@h1|offense": [
+        2301,
+        2304
+      ],
+      "timeout_terminal_floor:running:le300@h2|both": [
+        3366,
+        3359
+      ],
+      "timeout_terminal_floor:running:le300@h2|defense": [
+        2176,
+        2179
+      ],
+      "timeout_terminal_floor:running:le300@h2|offense": [
+        662,
+        660
+      ],
+      "timeout_terminal_floor:stopped:le120@h1|offense": [
+        2910,
+        2915
+      ],
+      "timeout_terminal_floor:stopped:le300@h2|both": [
+        2941,
+        2943
+      ],
+      "timeout_terminal_floor:stopped:le300@h2|defense": [
+        813,
+        816
+      ],
+      "timeout_terminal_floor:stopped:le300@h2|offense": [
+        1739,
+        1755
+      ],
+      "timeout_terminal_floor:stopped:normal@all~role|both": [
+        2449,
+        2517
+      ],
+      "timeout_terminal_floor:stopped:normal@all~role|offense": [
+        5932,
+        5964
+      ],
+      "two_minute_warning_seconds_restored": [
+        323005,
+        322949
+      ],
+      "warning_censored_resampled": [
+        14869,
+        14860
+      ],
+      "warning_censored_unresolved": [
+        379,
+        378
+      ],
+      "yards_clamped_to_field": [
+        16121,
+        16131
+      ]
+    },
+    "retired_in_new": []
+  }
+}
