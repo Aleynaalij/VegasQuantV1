@@ -52,6 +52,33 @@ posts.push(
     body: "Research only, not picks",
   },
 );
+const sheetPost = {
+  ...posts[1],
+  id: "5937fd42-e301-4fd5-92b6-abbe3f0d3de0",
+  title: "NBA Matchup Cheat Sheet · New York Knicks @ Cleveland Cavaliers",
+  body: [
+    "Nov 7 · 8:00 PM ET · Rocket Arena",
+    "",
+    "FANDUEL SNAPSHOTS",
+    "Spread · Cleveland Cavaliers +4.5 (-104) | New York Knicks -4.5 (-118) · 9:31 AM ET",
+    "Total · Over 224.5 (-104) | Under 224.5 (-118) · 9:31 AM ET",
+    "",
+    "https://vegasquant.app/nba/games/ny-cle-20261107",
+  ].join("\n"),
+  legs: [],
+  created_at: "2026-10-29T17:00:00Z",
+};
+const fixtureSheetSvg = [
+  '<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1290" viewBox="0 0 1200 1290">',
+  '<rect width="1200" height="1290" fill="#08120f"/>',
+  '<g fill="#a3f4c4" font-family="Arial" font-size="48">',
+  '<text x="64" y="106">NBA MATCHUP CHEAT SHEET</text>',
+  '<text x="64" y="390">Team form</text>',
+  '<text x="64" y="695">Player research</text>',
+  '<text x="64" y="1180">Official availability</text>',
+  '</g></svg>',
+].join("");
+posts.push(sheetPost);
 try {
   for (const width of [360, 390, 1280]) {
     const ctx = await browser.newContext({
@@ -104,6 +131,18 @@ try {
     await ctx.route("**/rest/v1/rpc/frank_anniversary", (r) =>
       r.fulfill({ json: { state: "hidden" } }),
     );
+    let sheetReads = 0, allowSheet = true;
+    await ctx.route(`**/api/nba/matchup-sheet/${sheetPost.id}`, (r) => {
+      sheetReads++;
+      assert.equal(r.request().headers().authorization, "Bearer smoke");
+      if (!allowSheet) return r.fulfill({status: 403, json: {error: "Research access is required for the full matchup sheet."}});
+      return r.fulfill({json: {
+        title: "New York Knicks at Cleveland Cavaliers",
+        summary: "Cleveland had not submitted.",
+        sources: [{label:"NBA injury report",href:"https://official.nba.com/"}],
+        svg: fixtureSheetSvg,
+      }});
+    });
     const p = await ctx.newPage(),
       errors = [];
     p.on("console", (m) => {
@@ -115,6 +154,7 @@ try {
     await p.evaluate(() => document.fonts.ready);
     await p.locator(".vq-brand-opening").waitFor({ state: "hidden" });
     assert.equal(await p.locator(".zone-publication").count(), 4);
+    assert.equal(sheetReads, 0, "offscreen matchup sheets must load lazily");
     if (process.env.UI_SMOKE_NEGATIVE === "card-palette")
       await p.locator('.zone-publication .publication-headline').first().evaluate(e => e.setAttribute('fill', '#ff858e'));
     const out = process.env.UI_ARTIFACT_DIR || "artifacts/sports-zone-design";
@@ -231,10 +271,53 @@ try {
         () => document.documentElement.scrollWidth <= innerWidth + 1,
       ),
     );
+    const sheet = p.locator(`#post-${sheetPost.id}`);
+    assert.equal(await sheet.locator(".zone-publication").count(), 0);
+    const preview = sheet.getByRole("link", { name: "Open matchup cheat sheet" });
+    await preview.scrollIntoViewIfNeeded();
+    const inlineSheet = preview.getByRole("img", {
+      name: "Vegas Quant matchup cheat sheet for New York Knicks at Cleveland Cavaliers",
+    });
+    await inlineSheet.waitFor();
+    await inlineSheet.evaluate((image) => image.decode());
+    assert.equal(sheetReads, 1, "the sheet must load before opening the post");
+    assert.equal(
+      await inlineSheet.evaluate(async (image) => (await fetch(image.src)).text()),
+      fixtureSheetSvg,
+      "the feed must display the complete sheet returned by the protected endpoint",
+    );
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    await preview.screenshot({ path: `${out}/${width}-matchup-preview.png` });
+    await preview.click();
+    const board = p.locator(".nba-sheet-scroll img");
+    await board.waitFor();
+    assert.equal(
+      await board.evaluate(async (image) => (await fetch(image.src)).text()),
+      fixtureSheetSvg,
+    );
+    await p.getByRole("link", {name:"NBA injury report ↗"}).waitFor();
+    assert.equal(await p.getByRole("link", {name:"NBA injury report ↗"}).getAttribute("href"), "https://official.nba.com/");
+    await p.getByRole("button", {name:"Zoom to read"}).click();
+    assert.ok((await board.boundingBox()).width >= 1200);
+    assert.ok(await p.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1));
+    const sheetDownload = p.waitForEvent("download");
+    await p.getByRole("link", {name:"Download PNG"}).click();
+    const sheetBytes = readFileSync(await (await sheetDownload).path());
+    assert.equal(sheetBytes.readUInt32BE(16), 2400);
+    assert.equal(sheetBytes.readUInt32BE(20), 2580);
+    await p.screenshot({ path: `${out}/${width}-matchup-sheet.png` });
+    if (width === 390) {
+      allowSheet = false;
+      await p.goto(base + "/community", { waitUntil: "networkidle" });
+      await preview.scrollIntoViewIfNeeded();
+      await preview.getByText("Sheet unavailable in the feed.").waitFor();
+      assert.equal(await preview.locator("img").count(), 0);
+      assert.equal(await preview.getAttribute("href"), `/nba/matchup-sheet/${sheetPost.id}`);
+    }
     assert.deepEqual(errors, []);
     await ctx.close();
     console.log(
-      `PASS publication cards ${width}px: labelled sports with restrained accents, full paginated content, bounded text, copy, 1080x1350 download, Gambly age gate and unchanged manual/threes`,
+      `PASS publication cards ${width}px: labelled sports with restrained accents, full paginated content, bounded text, copy, 1080x1350 download, Gambly age gate, inline matchup sheet, and unchanged manual/threes`,
     );
   }
 } finally {
