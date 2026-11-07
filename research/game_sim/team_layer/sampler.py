@@ -37,12 +37,17 @@ class TeamSampler(Sampler):
         hit = self._cache.get(key)
         if hit is None:
             entries = dict(zip(table[0], table[1]))
-            new, counts = adjust(entries, self.model['templates'], **c, context=ctx)
+            log = []
+            new, counts = adjust(entries, self.model['templates'], **c, context=ctx, log=log)
             weights = [new[k] for k in table[0]]
-            hit = (table[0], weights, sum(weights)), counts
+            # v0.3.1: keep each dropped tilt's side, context and target shift as evidence.
+            evidence = [f"team:evidence:{x['status']}|{s.possession}|{x['context']}|{x['target_shift']:.6f}" for x in log]
+            hit = (table[0], weights, sum(weights)), counts, evidence
             self._cache[key] = hit
         # Reported through the per-game fallbacks as team:* (no RNG involved).
         self.fallbacks['team:adjusted_draws'] += 1
         for k, v in hit[1].items():
             self.fallbacks[f'team:{k}'] += v
+        for k in hit[2]:
+            self.fallbacks[k] += 1
         return hit[0]

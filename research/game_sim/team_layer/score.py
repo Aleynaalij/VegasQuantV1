@@ -38,12 +38,61 @@ def normal_cdf(x):
     return 0.5 * (1 + math.erf(x / math.sqrt(2)))
 
 
-def load_shards(folder):
+EXPECTED_GAMES = 272
+RUNS = 2000
+MC_BOOT = 200
+MC_SEED = 20261107
+
+
+def load_shards(folder, targets=None):
+    """Shards, failing closed (v0.3.1) on any hash, coverage or run-count problem."""
+    import hashlib
     index = json.loads((Path(folder) / 'shards.json').read_text())
     rows = []
     for shard in sorted(index, key=int):
-        rows += json.loads(gzip.decompress((Path(folder) / f'shard-{int(shard):02d}.json.gz').read_bytes()))
-    return sorted(rows, key=lambda r: r['index']), index
+        body = gzip.decompress((Path(folder) / f'shard-{int(shard):02d}.json.gz').read_bytes())
+        if hashlib.sha256(body).hexdigest() != index[shard]['sha256']:
+            raise ValueError(f'shard {shard} hash does not match shards.json')
+        part = json.loads(body)
+        if len(part) != index[shard]['games']:
+            raise ValueError(f'shard {shard} game count mismatch')
+        rows += part
+    rows = sorted(rows, key=lambda r: r['index'])
+    ids, idx = [r['game_id'] for r in rows], [r['index'] for r in rows]
+    if len(rows) != EXPECTED_GAMES or len(set(ids)) != len(ids) or idx != list(range(EXPECTED_GAMES)):
+        raise ValueError('shards do not cover 272 unique games with indices 0..271')
+    if targets is not None and ids != list(targets):
+        raise ValueError('shard games do not match the target list')
+    for r in rows:
+        for arm in ('A', 'D'):
+            runs = r['arms'][arm]['runs']
+            if runs != dict(requested=RUNS, actual=RUNS, failed=0):
+                raise ValueError(f"{r['game_id']} arm {arm} incomplete or failed: {runs}")
+    return rows, index
+
+
+def _crps_counts(values, counts, y):
+    """CRPS of a discrete distribution (sorted support values with counts), O(k)."""
+    import numpy as np
+    n = counts.sum()
+    p = counts / n
+    first = float((np.abs(values - y) * p).sum())
+    # E|X - X'| = 2 * sum_{i<j} p_i p_j (v_j - v_i), via cumulative sums.
+    cum_p = np.cumsum(p)
+    cum_pv = np.cumsum(p * values)
+    pair = float(2 * (p[1:] * (values[1:] * cum_p[:-1] - cum_pv[:-1])).sum())
+    return first - 0.5 * pair
+
+
+def mc_se(dist, y, rng):
+    """Run-level bootstrap SE of one game's CRPS, P(cell), from its stored distribution."""
+    import numpy as np
+    values = np.array([b['lo'] for b in dist['bins']], dtype=float)
+    counts = np.array([b['count'] for b in dist['bins']], dtype=float)
+    draws = rng.multinomial(int(counts.sum()), counts / counts.sum(), size=MC_BOOT).astype(float)
+    vals = [_crps_counts(values, d, y) for d in draws]
+    m = sum(vals) / len(vals)
+    return math.sqrt(sum((v - m) ** 2 for v in vals) / (len(vals) - 1))
 
 
 def market_sd(games_rows):
@@ -61,8 +110,10 @@ def interval(vals):
     return [s[int(.025 * (len(s) - 1))], s[int(.975 * (len(s) - 1))]]
 
 
-def evaluate(folder, games_path, training_path):
-    rows, index = load_shards(folder)
+def evaluate(folder, games_path, training_path, targets=None):
+    import numpy as np
+    rows, index = load_shards(folder, targets)
+    mc_rng = np.random.default_rng(MC_SEED)
     with open(games_path, newline='', encoding='utf-8-sig') as f:
         games = list(csv.DictReader(f))
     sched = {r['game_id']: r for r in games if r.get('game_type') == 'REG'}
@@ -82,9 +133,11 @@ def evaluate(folder, games_path, training_path):
             n = s['runs']['actual']
             failures[arm] = failures.get(arm, 0) + s['runs']['failed']
             p = s['home_win'] / n + 0.5 * s['tie'] / n
-            out[arm] = dict(brier=(p - win) ** 2, p_home=p, mc_se=s['mc_se'])
+            se = dict(s['mc_se'], p_home=math.sqrt(max(p * (1 - p), 0) / n))
+            out[arm] = dict(brier=(p - win) ** 2, p_home=p, mc_se=se)
             for m in ('margin', 'total'):
                 d = s[m]
+                se[f'{m}_crps'] = mc_se(d, y[m], mc_rng)
                 out[arm][m] = dict(crps=crps(d, y[m]), inside80=d['quantiles']['p10'] <= y[m] <= d['quantiles']['p90'], mean=d['mean'])
         out['B'] = dict(brier=(base_win - win) ** 2)
         for m in ('margin', 'total'):
@@ -130,7 +183,7 @@ def evaluate(folder, games_path, training_path):
     decision_b = dict(considered=decision_a['passed'], **b,
                       statistical_criteria_met=decision_a['passed'] and all(b.values()),
                       owner_approval='required separately; never implied by this report')
-    se = {arm: dict(margin_mean=mean(lambda g: g[arm]['mc_se']['margin_mean']), total_mean=mean(lambda g: g[arm]['mc_se']['total_mean'])) for arm in ('A', 'D')}
+    se = {arm: {k: mean(lambda g, k=k: g[arm]['mc_se'][k]) for k in ('margin_mean', 'total_mean', 'p_home', 'margin_crps', 'total_crps')} for arm in ('A', 'D')}
     return dict(scope='RESEARCH EVALUATION ONLY; no approval, forecast, publication or member release',
                 games=n, failures=failures, market=dict(sd_margin=sd_m, sd_total=sd_t, residual_games=n_sd,
                 note='Assumed normal on nflverse retrospective closing lines; not verified timestamped prices'),
@@ -145,6 +198,7 @@ if __name__ == '__main__':
     p.add_argument('--games', required=True)
     p.add_argument('--training', required=True)
     a = p.parse_args()
-    r = evaluate(a.folder, a.games, a.training)
+    effects = json.loads(gzip.decompress((Path(a.folder) / 'effects.json.gz').read_bytes()))
+    r = evaluate(a.folder, a.games, a.training, targets=[e['target'] for e in effects['effects']])
     (Path(a.folder) / 'evaluation.json.gz').write_bytes(gzip.compress(canonical(r), mtime=0))
     print(json.dumps({k: r[k] for k in ('games', 'failures', 'market', 'summary', 'paired', 'decision_A', 'decision_B', 'mean_mc_se')}, indent=1))

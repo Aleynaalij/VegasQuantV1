@@ -115,3 +115,71 @@ class Scorer(unittest.TestCase):
         xs = [mu - 12 + i * step for i in range(int(24 / step))]
         num = sum((normal_cdf((x - mu) / sd) - (x >= y)) ** 2 * step for x in xs)
         self.assertAlmostEqual(normal_crps(mu, sd, y), num, places=3)
+
+
+class CorrectionV031(unittest.TestCase):
+    """TEAM_LAYER_CORRECTION_PROTOCOL.md (Elo review 6706784974)."""
+
+    def row(self, **kw):
+        base = dict(play_type='run', penalty='0', penalty_yards='', touchdown='0', td_team='', posteam='BUF',
+                    interception='0', fumble_lost='0', fumble='0', complete_pass='0', sack='0')
+        base.update(kw)
+        return base
+
+    def test_gain_population_matches_engine_classification(self):
+        from research.game_sim.team_layer.data import gain_exclusion
+        # Positives: plain run, complete pass, incomplete pass, sack, declined (non-enforced) penalty.
+        for r in (self.row(), self.row(play_type='pass', complete_pass='1'), self.row(play_type='pass'),
+                  self.row(play_type='pass', sack='1'), self.row(penalty='1', penalty_yards='0')):
+            self.assertIsNone(gain_exclusion(r), r)
+        # Negatives: enforced penalty on run/pass, recovered fumble, lost fumble, interception, defensive TD.
+        cases = [(self.row(penalty='1', penalty_yards='10'), 'penalty'),
+                 (self.row(play_type='pass', penalty='1', penalty_yards='-5'), 'penalty'),
+                 (self.row(fumble='1'), 'fumble_recovered'),
+                 (self.row(fumble='1', fumble_lost='1'), 'turnover'),
+                 (self.row(play_type='pass', interception='1'), 'turnover'),
+                 (self.row(touchdown='1', td_team='MIA'), 'defensive_touchdown')]
+        for r, why in cases:
+            self.assertEqual(gain_exclusion(r), why, r)
+
+    def test_scorer_fails_closed(self):
+        import hashlib, tempfile
+        from research.game_sim.team_layer import score
+        from research.game_sim.batch import canonical
+        d = Path(tempfile.mkdtemp())
+        ok = dict(requested=2000, actual=2000, failed=0)
+        rows = [dict(game_id=f'g{i:03d}', index=i, arms=dict(A=dict(runs=ok), D=dict(runs=ok))) for i in range(272)]
+        def write(rows, tamper=False):
+            body = canonical(rows)
+            (d / 'shard-00.json.gz').write_bytes(gzip.compress(body))
+            digest = hashlib.sha256(body + (b'x' if tamper else b'')).hexdigest()
+            (d / 'shards.json').write_text(json.dumps({'0': dict(games=len(rows), sha256=digest)}))
+        write(rows)
+        self.assertEqual(len(score.load_shards(d)[0]), 272)
+        write(rows, tamper=True)
+        with self.assertRaises(ValueError):
+            score.load_shards(d)
+        write(rows[:-1])
+        with self.assertRaises(ValueError):
+            score.load_shards(d)
+        bad = [dict(r) for r in rows]
+        bad[5] = dict(bad[5], arms=dict(A=dict(runs=ok), D=dict(runs=dict(requested=2000, actual=1999, failed=1))))
+        write(bad)
+        with self.assertRaises(ValueError):
+            score.load_shards(d)
+        write(rows)
+        with self.assertRaises(ValueError):
+            score.load_shards(d, targets=[f'x{i}' for i in range(272)])
+
+    def test_fast_crps_matches_reference(self):
+        import numpy as np
+        from research.game_sim.batch import distribution
+        from research.game_sim.evaluate import crps
+        from research.game_sim.team_layer.score import _crps_counts
+        rng = random.Random(5)
+        vals = [rng.randint(-30, 40) for _ in range(500)]
+        d = distribution(vals)
+        v = np.array([b['lo'] for b in d['bins']], float)
+        c = np.array([b['count'] for b in d['bins']], float)
+        for y in (-7, 0, 3, 17, 44):
+            self.assertAlmostEqual(_crps_counts(v, c, y), crps(d, y), places=9)

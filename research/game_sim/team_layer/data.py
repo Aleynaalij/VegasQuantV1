@@ -2,9 +2,9 @@
 
 Evidence plays (section 2): REG scrimmage `run`/`pass` rows with a down, distance, posteam and
 defteam; kneels and spikes are their own play types and never enter. `pass` includes sacks;
-scrambles are runs as recorded. Gain plays are the subset in G_run or G_pass (section 3): rows
-with an interception or a lost fumble map to fixed kinds in the engine and are left out of the
-gain ridge but kept in the pass-rate ridge.
+scrambles are runs as recorded. Gain plays are the subset in G_run or G_pass (section 3), decided by
+`gain_exclusion` in the engine's own classification order (v0.3.1). Excluded rows stay in the
+pass-rate ridge.
 
 Plays are aggregated per game so each target can re-weight exactly:
 - gain[(offense, defense, kind)] = [plays, sum of signed yards]
@@ -17,6 +17,7 @@ import io
 from collections import defaultdict
 from pathlib import Path
 
+from ..model import enforced_penalty
 from .effects import band
 from .eligibility import exclusions, kickoff
 
@@ -35,6 +36,23 @@ def _int(value):
     if f != int(f):
         raise ValueError('non-integer')
     return int(f)
+
+
+def gain_exclusion(row):
+    """Why a scrimmage run/pass row is outside G_run or G_pass, or None if it is in G.
+
+    v0.3.1 (TEAM_LAYER_CORRECTION_PROTOCOL.md): follows `model.fit`'s classification order, so the
+    gain ridge sees exactly the plays the engine tilts. Enforced penalties, defensive touchdowns,
+    interceptions, lost fumbles and recovered fumbles belong to the fixed group F."""
+    if enforced_penalty(row):
+        return 'penalty'
+    if row.get('touchdown') == '1' and row.get('td_team') and row['td_team'] != row.get('posteam'):
+        return 'defensive_touchdown'
+    if row.get('interception') == '1' or row.get('fumble_lost') == '1':
+        return 'turnover'
+    if row.get('fumble') == '1':
+        return 'fumble_recovered'
+    return None
 
 
 def load(games_path, pbp_paths):
@@ -71,8 +89,9 @@ def load(games_path, pbp_paths):
             cell[0] += 1
             cell[1] += kind == 'pass'
             counts['rate_plays'] += 1
-            if r.get('interception') == '1' or r.get('fumble_lost') == '1':
-                counts['gain_excluded:turnover'] += 1
+            excluded = gain_exclusion(r)
+            if excluded:
+                counts[f'gain_excluded:{excluded}'] += 1
                 continue
             g = gain[gid][(o, d, kind)]
             g[0] += 1

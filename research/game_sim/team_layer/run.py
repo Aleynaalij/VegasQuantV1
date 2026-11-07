@@ -108,11 +108,12 @@ def main():
     index = json.loads(index_path.read_text()) if index_path.exists() else {}
     todo = [x for x in shards if str(x[1]) not in index]
     if index and todo != shards:
-        # Resume: a completed shard must reproduce its recorded hash before the run continues.
-        first = next(x for x in shards if str(x[1]) in index)
-        _, rows = run_shard(first)
-        if hashlib.sha256(canonical(rows)).hexdigest() != index[str(first[1])]['sha256']:
-            raise SystemExit('resumed shard does not reproduce its checkpoint hash')
+        # Resume (v0.3.1): every completed shard must reproduce its recorded hash first.
+        done = [x for x in shards if str(x[1]) in index]
+        with ProcessPoolExecutor(PROCESSES) as pool:
+            for shard, rows in pool.map(run_shard, done):
+                if hashlib.sha256(canonical(rows)).hexdigest() != index[str(shard)]['sha256']:
+                    raise SystemExit(f'resumed shard {shard} does not reproduce its checkpoint hash')
     with ProcessPoolExecutor(PROCESSES) as pool:
         for shard, rows in pool.map(run_shard, todo):
             body = canonical(rows)
