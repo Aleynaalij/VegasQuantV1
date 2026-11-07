@@ -1,6 +1,6 @@
 /* The turning VQ Skybox. Faces reuse the approved board, enclosure and row styles from
    vq-lobby.css; this file only adds the controls, the stage and the prism. */
-.vq-spin {
+.vq-skybox {
   display: grid;
   gap: 10px;
   min-width: 0;
@@ -83,7 +83,7 @@ html body :is(.vq-spin-pick, .vq-spin-arrow, .vq-spin-open):focus-visible {
   perspective: 1600px;
   perspective-origin: 50% 40%;
 }
-.vq-spin.is-dragging .vq-spin-stage {
+.vq-skybox.is-dragging .vq-spin-stage {
   cursor: grabbing;
   user-select: none;
 }
@@ -95,8 +95,8 @@ html body :is(.vq-spin-pick, .vq-spin-arrow, .vq-spin-open):focus-visible {
   transform-style: preserve-3d;
   transition: transform 0.55s cubic-bezier(0.2, 0.8, 0.25, 1);
 }
-.vq-spin.is-dragging .vq-spin-prism,
-.vq-spin.is-snap .vq-spin-prism {
+.vq-skybox.is-dragging .vq-spin-prism,
+.vq-skybox.is-snap .vq-spin-prism {
   transition: none;
 }
 .vq-spin-face {
@@ -118,13 +118,13 @@ html body :is(.vq-spin-pick, .vq-spin-arrow, .vq-spin-open):focus-visible {
 .vq-spin-face:not([data-front]) {
   opacity: 0.55;
 }
-.vq-spin.is-snap .vq-spin-face:not([data-front]) {
+.vq-skybox.is-snap .vq-spin-face:not([data-front]) {
   opacity: 0;
 }
 .vq-spin-face {
   transition: opacity 0.55s ease;
 }
-.vq-spin.is-dragging .vq-spin-face:not([data-front]) {
+.vq-skybox.is-dragging .vq-spin-face:not([data-front]) {
   opacity: 0.8;
 }
 .vq-tonight-skybox .vq-tonight-head > p.vq-spin-index {

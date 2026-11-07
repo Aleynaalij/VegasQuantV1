@@ -121,7 +121,7 @@ export default function SkyboxSpin({ day, faceState, onRetry, enclosure, overvie
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
       const a = (e.target as Element | null)?.closest?.('a[href="#vq-tonight"]');
-      if (a && !a.closest(".vq-spin")) {
+      if (a && !a.closest(".vq-skybox")) {
         setSnap(true);
         setChoice("overview");
         remember("overview");
@@ -285,7 +285,7 @@ export default function SkyboxSpin({ day, faceState, onRetry, enclosure, overvie
 
   return (
     <div
-      className={`vq-spin${dragging ? " is-dragging" : ""}${snap || reduced ? " is-snap" : ""}`}
+      className={`vq-skybox${dragging ? " is-dragging" : ""}${snap || reduced ? " is-snap" : ""}`}
       data-spin-mode={mode}
       data-spin-faces={faces.join(",")}
     >
