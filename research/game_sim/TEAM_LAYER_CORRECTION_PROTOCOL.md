@@ -176,3 +176,40 @@ above 0, so nothing qualifies.
 - The pilot deviation is disclosed in `CHRONOLOGY.md`.
 - Only run/pass mix and gain are team-adjusted.
 - Research only: `approval: false`, no forecasts, picks, member use, merge or deploy.
+
+## Reporting follow-up (Elo review 6708959141; Monte Carlo reporting only, appended after review)
+Elo verified the gain correction and found no new scientific blocker. Two reporting items were
+missing or wrong:
+1. **Per-metric Monte Carlo SE completed.** The same 200 multinomial resamples already drawn for the
+   CRPS SE (same RNG order, so CRPS SEs are unchanged) now also give per-game Monte Carlo SEs for:
+   - the 80% coverage indicator, for margin and total
+   - P(home)
+   - the home-win Brier score
+
+   These are Monte Carlo uncertainty only, reported separately from the game-level bootstrap
+   intervals.
+2. **Tie-adjusted P(home) SE corrected.** Each run scores 1, 0.5 or 0, so the variance is
+   `P(win) + 0.25·P(tie) − p²`, not `p(1 − p)`. The old values were slightly conservative. A
+   regression test with nonzero ties is added.
+
+Both evaluations were regenerated. Every field other than `mc_se` / `mean_mc_se` is byte-identical,
+so the metrics, bootstrap intervals and both decisions are unchanged. The CRPS and mean SEs are
+unchanged too.
+
+| package | previous canonical SHA256 (as Elo reproduced) | regenerated |
+|---|---|---|
+| original | `9e525eb4…5b94` | `51ea86ef…` |
+| disjoint | `f79448d0…ff03` | `1c4686dc…` |
+
+Mean Monte Carlo SE per game, arm D, original / disjoint:
+
+| metric | original | disjoint |
+|---|---:|---:|
+| Brier | 0.0095 | 0.0095 |
+| P(home) | 0.0105 | 0.0105 |
+| margin coverage indicator | 0.018 | 0.014 |
+| total coverage indicator | 0.013 | 0.010 |
+| margin CRPS | 0.163 | 0.164 |
+| total CRPS | 0.162 | 0.161 |
+
+No refit, simulation, reseeding, threshold or metric change.

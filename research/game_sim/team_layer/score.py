@@ -84,15 +84,53 @@ def _crps_counts(values, counts, y):
     return first - 0.5 * pair
 
 
-def mc_se(dist, y, rng):
-    """Run-level bootstrap SE of one game's CRPS, P(cell), from its stored distribution."""
+def _quantile_counts(values, counts, p):
+    """evaluate/batch.distribution's interpolated quantile, on (sorted support, counts)."""
+    import numpy as np
+    n = int(counts.sum())
+    rank = p * (n - 1)
+    lo, hi = math.floor(rank), math.ceil(rank)
+    cum = np.cumsum(counts)
+    v_lo = values[int(np.searchsorted(cum, lo + 1))]
+    v_hi = values[int(np.searchsorted(cum, hi + 1))]
+    return v_lo + (v_hi - v_lo) * (rank - lo)
+
+
+def mc_se(dist, y, rng, win=None):
+    """Run-level bootstrap Monte Carlo SEs for one game's market, from its stored distribution.
+
+    One set of MC_BOOT multinomial resamples per (game, arm, market), in the same order as v0.3.1,
+    so the CRPS SE is unchanged. v0.3.1 reporting follow-up (Elo 6708959141): the same resamples
+    also give the SE of the 80% coverage indicator and, for the margin, of P(home) and the Brier
+    score. These are Monte Carlo uncertainty only, separate from the game-level bootstrap.
+    """
     import numpy as np
     values = np.array([b['lo'] for b in dist['bins']], dtype=float)
     counts = np.array([b['count'] for b in dist['bins']], dtype=float)
     draws = rng.multinomial(int(counts.sum()), counts / counts.sum(), size=MC_BOOT).astype(float)
-    vals = [_crps_counts(values, d, y) for d in draws]
-    m = sum(vals) / len(vals)
-    return math.sqrt(sum((v - m) ** 2 for v in vals) / (len(vals) - 1))
+    stats = {'crps': [], 'inside80': []}
+    if win is not None:
+        stats.update(p_home=[], brier=[])
+    for d in draws:
+        stats['crps'].append(_crps_counts(values, d, y))
+        stats['inside80'].append(float(_quantile_counts(values, d, .1) <= y <= _quantile_counts(values, d, .9)))
+        if win is not None:
+            n = d.sum()
+            ph = (d[values > 0].sum() + 0.5 * d[values == 0].sum()) / n
+            stats['p_home'].append(ph)
+            stats['brier'].append((ph - win) ** 2)
+
+    def sd(v):
+        m = sum(v) / len(v)
+        return math.sqrt(sum((x - m) ** 2 for x in v) / (len(v) - 1))
+    return {k: sd(v) for k, v in stats.items()}
+
+
+def p_home_se(home_win, tie, n):
+    """Analytic SE of tie-adjusted P(home): each run scores 1, 0.5 or 0 (Elo 6708959141)."""
+    p = home_win / n + 0.5 * tie / n
+    second = home_win / n + 0.25 * tie / n
+    return math.sqrt(max(second - p * p, 0.0) / n)
 
 
 def market_sd(games_rows):
@@ -133,11 +171,16 @@ def evaluate(folder, games_path, training_path, targets=None):
             n = s['runs']['actual']
             failures[arm] = failures.get(arm, 0) + s['runs']['failed']
             p = s['home_win'] / n + 0.5 * s['tie'] / n
-            se = dict(s['mc_se'], p_home=math.sqrt(max(p * (1 - p), 0) / n))
+            se = dict(s['mc_se'], p_home=p_home_se(s['home_win'], s['tie'], n))
             out[arm] = dict(brier=(p - win) ** 2, p_home=p, mc_se=se)
             for m in ('margin', 'total'):
                 d = s[m]
-                se[f'{m}_crps'] = mc_se(d, y[m], mc_rng)
+                boot = mc_se(d, y[m], mc_rng, win if m == 'margin' else None)
+                se[f'{m}_crps'] = boot['crps']
+                se[f'{m}_inside80'] = boot['inside80']
+                if m == 'margin':
+                    se['p_home_bootstrap'] = boot['p_home']
+                    se['brier'] = boot['brier']
                 out[arm][m] = dict(crps=crps(d, y[m]), inside80=d['quantiles']['p10'] <= y[m] <= d['quantiles']['p90'], mean=d['mean'])
         out['B'] = dict(brier=(base_win - win) ** 2)
         for m in ('margin', 'total'):
@@ -183,7 +226,7 @@ def evaluate(folder, games_path, training_path, targets=None):
     decision_b = dict(considered=decision_a['passed'], **b,
                       statistical_criteria_met=decision_a['passed'] and all(b.values()),
                       owner_approval='required separately; never implied by this report')
-    se = {arm: {k: mean(lambda g, k=k: g[arm]['mc_se'][k]) for k in ('margin_mean', 'total_mean', 'p_home', 'margin_crps', 'total_crps')} for arm in ('A', 'D')}
+    se = {arm: {k: mean(lambda g, k=k: g[arm]['mc_se'][k]) for k in ('margin_mean', 'total_mean', 'p_home', 'p_home_bootstrap', 'brier', 'margin_crps', 'total_crps', 'margin_inside80', 'total_inside80')} for arm in ('A', 'D')}
     return dict(scope='RESEARCH EVALUATION ONLY; no approval, forecast, publication or member release',
                 games=n, failures=failures, market=dict(sd_margin=sd_m, sd_total=sd_t, residual_games=n_sd,
                 note='Assumed normal on nflverse retrospective closing lines; not verified timestamped prices'),

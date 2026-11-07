@@ -195,3 +195,38 @@ class Streams(unittest.TestCase):
             self.assertFalse(s & seen)
             seen |= s
         self.assertEqual(seed_base(5, 'original'), 1706)
+
+
+class McFollowUp(unittest.TestCase):
+    """Elo 6708959141: tie-aware P(home) SE; coverage and Brier MC SE from the same resamples."""
+
+    def test_p_home_se_with_ties(self):
+        import math
+        from research.game_sim.team_layer.score import p_home_se
+        n, w, t = 2000, 900, 100
+        p = (w + 0.5 * t) / n
+        expect = math.sqrt(((w + 0.25 * t) / n - p * p) / n)
+        self.assertAlmostEqual(p_home_se(w, t, n), expect, places=15)
+        self.assertLess(p_home_se(w, t, n), math.sqrt(p * (1 - p) / n))
+        self.assertAlmostEqual(p_home_se(w, 0, n), math.sqrt(p_win := w / n) * 0 + math.sqrt(w / n * (1 - w / n) / n), places=15)
+
+    @unittest.skipUnless(__import__('importlib').util.find_spec('numpy'), 'numpy not installed (reporting-only MC SE)')
+    def test_crps_se_unchanged_and_new_fields_present(self):
+        import numpy as np
+        from research.game_sim.batch import distribution
+        from research.game_sim.team_layer import score
+        rng = random.Random(9)
+        d = distribution([rng.randint(-21, 28) for _ in range(2000)])
+        new = score.mc_se(d, 3, np.random.default_rng(1), win=1.0)
+        # The v0.3.1 CRPS-only computation, same draws.
+        g = np.random.default_rng(1)
+        v = np.array([b['lo'] for b in d['bins']], float)
+        c = np.array([b['count'] for b in d['bins']], float)
+        draws = g.multinomial(int(c.sum()), c / c.sum(), size=score.MC_BOOT).astype(float)
+        old = [score._crps_counts(v, x, 3) for x in draws]
+        m = sum(old) / len(old)
+        self.assertAlmostEqual(new['crps'], (sum((x - m) ** 2 for x in old) / (len(old) - 1)) ** 0.5, places=12)
+        self.assertEqual(set(new), {'crps', 'inside80', 'p_home', 'brier'})
+        q = score._quantile_counts(v, c, 0.1)
+        self.assertEqual(q, d['quantiles']['p10'])
+        self.assertEqual(score._quantile_counts(v, c, 0.9), d['quantiles']['p90'])
