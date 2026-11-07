@@ -1,4 +1,7 @@
 import assert from "node:assert/strict";
+import sharp from "sharp";
+// This fixture tests a loaded daily card; failure/retry has dedicated acceptance.
+const threesPng = await sharp({ create: { width: 1080, height: 1350, channels: 3, background: "#07090d" } }).png().toBuffer();
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
@@ -143,6 +146,7 @@ try {
         svg: fixtureSheetSvg,
       }});
     });
+    await ctx.route("**/api/nba/threes-card/**", r => r.fulfill({ contentType: "image/png", body: threesPng }));
     const p = await ctx.newPage(),
       errors = [];
     p.on("console", (m) => {
@@ -262,6 +266,8 @@ try {
     await dialog.locator("a[href='https://gambly.com']").waitFor();
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
     assert.equal(await p.locator("#post-manual .zone-publication").count(), 0);
+    await p.locator("#post-threes .zone-card img").scrollIntoViewIfNeeded();
+    await p.waitForFunction(() => { const img = document.querySelector("#post-threes .zone-card img"); return img?.complete && img.naturalWidth === 1080; });
     assert.equal(
       await p.locator("#post-threes .zone-card img").getAttribute("src"),
       "/api/nba/threes-card/2026-10-31",
