@@ -41,6 +41,7 @@ import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { isPublicationCard } from "@/lib/zone-publication-card";
 import { nbaMatchupSheetSlug } from "@/lib/nba-matchup-sheet";
+import NbaMatchupSheetPreview from "./nba-matchup-sheet-preview";
 import "./nba-matchup-sheet.css";
 import ZonePublicationCard from "./zone-publication-card";
 import ReactionPicker, { useTypedReactions, type TypedReactions } from "./reaction-picker";
@@ -1690,9 +1691,11 @@ export default function CommunityFeed() {
                         </figure>
                       ) : nbaMatchupSheetSlug(p) ? (
                         <div>
-                          <Link className="zone-matchup-sheet-open" href={`/nba/matchup-sheet/${p.id}`}>
-                            Open matchup cheat sheet
-                          </Link>
+                          <NbaMatchupSheetPreview
+                            key={`${uid}:${p.id}`}
+                            id={p.id}
+                            userId={uid}
+                          />
                           <details className="zone-matchup-sheet-original">
                             <summary>Original research and sources</summary>
                             <p className="zone-post-body"><RichText text={p.body} /></p>
