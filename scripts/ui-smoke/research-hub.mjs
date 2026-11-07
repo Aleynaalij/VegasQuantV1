@@ -341,9 +341,10 @@ try {
   for (const signedIn of [false, true]) {
     const { ctx, page, requests } = await setup(390, "light", "denied", signedIn);
     await page.goto(base + dossier);
-    await page.getByRole("heading", { name: "Open your research access" }).waitFor();
+    await page.getByRole("heading", { name: signedIn ? "Research access is required" : "Open your research access", exact: true }).waitFor();
     assert.equal(await page.locator(".rh-finding").count(), 0);
     assert.equal(requests.protected, 0, "denied/signed-out hub does not request protected research");
+    console.log(`PASS canonical hub ${signedIn ? "denied member" : "signed-out visitor"}`);
     await ctx.close();
   }
   {
@@ -355,6 +356,7 @@ try {
     setState("ready"); releaseAccess();
     await page.locator(".rh-finding").first().waitFor();
     assert.ok(requests.protected > 0);
+    console.log("PASS canonical hub delayed access");
     await ctx.close();
   }
   {
@@ -362,6 +364,7 @@ try {
     await page.goto(base + dossier);
     await page.locator(".rh-finding").first().waitFor();
     assert.ok(requests.refresh > 0, "expired hub session refreshes before research appears");
+    console.log("PASS canonical hub expired session refresh");
     await ctx.close();
   }
   for (const mode of ["access-failure", "dropped-source"]) {
@@ -382,6 +385,7 @@ try {
     const recovered = await page.getByText("Wind 15 mph in the saved forecast.", { exact: true }).waitFor({ timeout: 15000 }).then(() => true, () => false);
     assert.ok(recovered && requests[counter] > before, "hub auth/source recovery requires the Retry action");
     assert.equal(await page.getByText("Partial coverage", { exact: true }).count(), 0);
+    console.log(`PASS canonical hub ${mode} Retry attribution`);
     await ctx.close();
   }
   console.log("PASS canonical hub auth: signed out, denied, pending, allowed, expired refresh, access retry and dropped-source retry");
