@@ -1,10 +1,7 @@
 import type { NextConfig } from "next";
+import { isFearTesterDiagnosticPreview } from "./src/preview/fear-tester-diagnostic-environment";
 
-const diagnostic =
-  process.env.VERCEL_ENV === "preview" &&
-  process.env.VQ_FEAR_TESTER_DIAGNOSTIC === "1";
-
-const config: NextConfig = diagnostic
+const config: NextConfig = isFearTesterDiagnosticPreview()
   ? { pageExtensions: ["preview.tsx", "tsx", "ts", "jsx", "js"] }
   : {};
 
