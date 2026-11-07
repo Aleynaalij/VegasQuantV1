@@ -1,4 +1,4 @@
-// Synthetic incoming source-link acceptance. No real post, external account or trade.
+// Synthetic temporary-pause acceptance. No real post, external account or trade.
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
 const { chromium } = await import(
@@ -12,18 +12,38 @@ const out = process.argv[2] || "/tmp/kalshi-source-evidence";
 await fs.mkdir(out, { recursive: true });
 const browser = await chromium.launch(
   process.env.PLAYWRIGHT_EXECUTABLE
-    ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE }
+    ? {
+        executablePath: process.env.PLAYWRIGHT_EXECUTABLE,
+        args: ["--no-sandbox", "--disable-dev-shm-usage"],
+      }
     : {},
 );
 try {
   for (const width of [390, 1280]) {
     const ctx = await browser.newContext({ viewport: { width, height: 900 } });
-    let mine = null;
+    let mine = {
+      id: "11111111-1111-4111-8111-111111111111",
+      user_id: uid,
+      brand: "The GOAT",
+      theme: "diamond",
+      submission_day: "2026-11-05",
+      sport: "NFL",
+      title: "Retained source-only lay",
+      legs: [],
+      note: "",
+      photo_path: null,
+      source_link: canonical,
+      sportsbook: null,
+      reported_odds: null,
+      created_at: new Date().toISOString(),
+      revision: 0,
+    };
     let lost = true;
     const submissions = [];
     const hideCalls = [];
-    let outbound = 0;
-    let photoMode = false; let photoDeletes = 0;
+    const forbiddenRequests = [];
+    let photoMode = false;
+    let photoDeletes = 0;
     await ctx.addInitScript((uid) => {
       sessionStorage.setItem("vq-prompt-shown", "fixture");
       localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -53,17 +73,23 @@ try {
         },
       });
     }, uid);
-    await ctx.route("https://kalshi.com/**", (r) => {
-      outbound++;
-      return r.fulfill({
-        contentType: "text/html",
-        body: "<title>Synthetic Kalshi destination</title><p>No trading occurs.</p>",
-      });
-    });
-    await ctx.route("**/api/community/photo?*", r => r.fulfill({json:{path: `${uid}/${new URL(r.request().url()).searchParams.get("post")}.jpg`}}));
-    await ctx.route("**/storage/v1/**", r => {
-      if(r.request().method()==="DELETE") photoDeletes++;
-      return r.fulfill({json:{signedURL:"/synthetic-photo.jpg"}});
+    await ctx.route(
+      /https?:\/\/[^/]*kalshi\.com\/|\/api\/kalshi(?:[/?]|$)|\/rpc\/[^/?]*kalshi/i,
+      (r) => {
+        forbiddenRequests.push(r.request().url());
+        return r.fulfill({ status: 503, json: { code: "KALSHI_PAUSED" } });
+      },
+    );
+    await ctx.route("**/api/community/photo?*", (r) =>
+      r.fulfill({
+        json: {
+          path: `${uid}/${new URL(r.request().url()).searchParams.get("post")}.jpg`,
+        },
+      }),
+    );
+    await ctx.route("**/storage/v1/**", (r) => {
+      if (r.request().method() === "DELETE") photoDeletes++;
+      return r.fulfill({ json: { signedURL: "/synthetic-photo.jpg" } });
     });
     await ctx.route("**/rest/v1/**", async (r) => {
       const path = new URL(r.request().url()).pathname;
@@ -96,11 +122,24 @@ try {
               : [],
         });
       if (path.endsWith("/rpc/submit_ruby_link")) {
+        forbiddenRequests.push(path);
+        return r.fulfill({
+          status: 503,
+          json: { message: "Kalshi is temporarily unavailable." },
+        });
+      }
+      if (path.endsWith("/rpc/submit_ruby")) {
         const p = r.request().postDataJSON();
         submissions.push(p);
-        assert.equal(p.p_source_link, canonical);
-        assert.deepEqual(p.p_legs, []);
-        if(photoMode) assert.match(p.p_photo, /\.jpg$/); else assert.equal(p.p_photo, null);
+        assert.equal(p.p_source_link, undefined);
+        if (photoMode) assert.deepEqual(p.p_legs, []);
+        else
+          assert.deepEqual(p.p_legs, [
+            "Sample A 20+ points",
+            "Sample B 5+ rebounds",
+          ]);
+        if (photoMode) assert.match(p.p_photo, /\.jpg$/);
+        else assert.equal(p.p_photo, null);
         assert.equal(p.p_odds, null);
         mine = {
           id: p.p_id,
@@ -110,10 +149,10 @@ try {
           submission_day: "2026-11-05",
           sport: p.p_sport,
           title: p.p_title,
-          legs: [],
+          legs: p.p_legs,
           note: "",
           photo_path: p.p_photo,
-          source_link: canonical,
+          source_link: null,
           sportsbook: null,
           reported_odds: null,
           created_at: new Date().toISOString(),
@@ -129,9 +168,11 @@ try {
         return r.fulfill({ json: p.p_id });
       }
       if (path.endsWith("/rpc/hide_ruby")) {
-        const p=r.request().postDataJSON();hideCalls.push(p);
-        assert.equal(p.p_submission,mine.id);mine={...mine,hidden:p.p_hidden};
-        return r.fulfill({json:null});
+        const p = r.request().postDataJSON();
+        hideCalls.push(p);
+        assert.equal(p.p_submission, mine.id);
+        mine = { ...mine, hidden: p.p_hidden };
+        return r.fulfill({ json: null });
       }
       if (path.endsWith("/rpc/edit_ruby_link")) {
         const p = r.request().postDataJSON();
@@ -149,191 +190,257 @@ try {
     });
     const page = await ctx.newPage();
     page.setDefaultTimeout(15000);
-    await page.goto(base + "/community?view=vip", { waitUntil: "networkidle" }); // Submit a Lay lives in the contributor area
+    const assertPaused = async () => {
+      assert.equal(
+        await page.locator('a[href*="kalshi.com"]').count(),
+        0,
+        "paused Kalshi outbound link present",
+      );
+      assert.equal(
+        await page
+          .getByRole("button", { name: /Kalshi|Copy shared source/i })
+          .count(),
+        0,
+        "paused Kalshi action present",
+      );
+      assert.deepEqual(
+        forbiddenRequests,
+        [],
+        "paused Kalshi made a network or matching RPC request",
+      );
+    };
+    const assertRetained = async (card) => {
+      await card.waitFor();
+      // A visible card can still sit beneath the document-load welcome overlay.
+      // Wait for its real dismissal so assertions and captures match what users see.
+      await page.locator(".vq-brand-opening").waitFor({ state: "hidden" });
+      assert.equal(
+        await card
+          .locator(".ruby-source-link p")
+          .filter({ hasText: "Kalshi is temporarily unavailable." })
+          .count(),
+        1,
+        "source-only card lost its unavailable explanation",
+      );
+      assert.ok(
+        (await card.innerText()).includes(mine.title),
+        "source-only card lost its title",
+      );
+      assert.equal(
+        await card
+          .locator(
+            ".ruby-source-link a, .ruby-source-link button, .ruby-source-link input",
+          )
+          .count(),
+        0,
+      );
+      assert.ok(
+        !(await card.innerText()).includes(canonical),
+        "paused source locator exposed",
+      );
+      await assertPaused();
+    };
+    const retainedId = mine.id;
+    await page.goto(base + "/community?view=vip&ruby=" + retainedId, {
+      waitUntil: "networkidle",
+    });
     await page.evaluate(() =>
       document.querySelectorAll("dialog[open]").forEach((d) => d.close()),
     );
-    await page.locator(".ruby-submit-drawer summary").click();
-    await page
-      .getByRole("button", { name: "Submit today’s lay", exact: true })
-      .click();
-    const modal = page.getByRole("dialog", { name: "Make your daily lay." });
-    await modal
-      .getByLabel("Paste Kalshi link")
-      .fill("https://kalshi.com.evil.example/markets/x?marketTicker=bad");
-    await modal.getByRole("button", { name: "Publish to The Zone" }).click();
+    const card = page
+      .locator(`article.ruby-card[id="ruby-${retainedId}"]`)
+      .first();
+    await assertRetained(card);
     assert.equal(
-      submissions.length,
+      await card.locator(".ruby-gambly").count(),
       0,
-      "unsafe host reached submission boundary",
+      "source-only card has misleading Gambly action",
     );
-    await modal
-      .getByLabel("Paste Kalshi link")
-      .fill(canonical + "&utm_source=sample&action=buy#fragment");
-    await modal
-      .getByText(/Contributor-shared Kalshi link · Preview:/)
-      .waitFor();
-    assert.equal(submissions.length, 0, "pasting automatically published");
-    assert.equal(outbound, 0, "pasting navigated externally");
-    await modal.getByRole("button", { name: "Remove Kalshi link" }).click();
-    assert.equal(await modal.getByLabel("Paste Kalshi link").inputValue(), "");
-    await modal.getByLabel("Paste Kalshi link").fill(canonical);
-    await modal.getByRole("button", { name: "Close submission" }).click();
-    assert.equal(submissions.length, 0, "cancel published a post");
-    await page
-      .getByRole("button", { name: "Submit today’s lay", exact: true })
+    await card
+      .getByRole("button", { name: "Copy this lay", exact: true })
       .click();
+    const copied = await page.evaluate(() => window.__copied);
+    assert.ok(copied.includes(retainedId), "internal card sharing lost");
+    assert.ok(
+      !/kalshi.com|marketTicker|SYNTHETIC-YES/.test(copied),
+      "copy leaked paused source locator",
+    );
+    await card.getByRole("button", { name: "Edit card", exact: true }).click();
+    assert.equal(
+      await card.locator('input[name="source_link"]').count(),
+      0,
+      "admin source input still exposed",
+    );
+    await card
+      .locator('input[name="title"]')
+      .fill("Source retained after edit");
+    await card.getByRole("button", { name: "Save changes" }).click();
+    await card
+      .getByText("Source retained after edit", { exact: true })
+      .waitFor();
+    assert.equal(
+      mine.source_link,
+      canonical,
+      "admin edit erased stored source",
+    );
+    await assertRetained(card);
+    await card
+      .getByRole("button", { name: "Remove from The Zone", exact: true })
+      .click();
+    await card
+      .getByRole("button", { name: "Restore to The Zone", exact: true })
+      .click();
+    // Click completion does not await the asynchronous RPC and refreshed card.
+    await card
+      .getByRole("button", { name: "Remove from The Zone", exact: true })
+      .waitFor();
+    assert.deepEqual(
+      hideCalls.map((p) => p.p_hidden),
+      [true, false],
+    );
+    assert.equal(mine.source_link, canonical, "hide/restore erased source");
+    await page.screenshot({
+      path: `${out}/${width}-retained-detail.png`,
+      fullPage: true,
+    });
+    await page.goto(base + "/community", { waitUntil: "networkidle" });
+    const zone = page.locator(`article.zone-lay[id="lay-${retainedId}"]`);
+    await assertRetained(zone);
+    assert.equal(
+      await zone
+        .getByRole("button", { name: /Copy shared source|Copy legs/ })
+        .count(),
+      0,
+    );
+    assert.ok(
+      (
+        await zone.getByRole("link", { name: /Full card/ }).getAttribute("href")
+      ).includes(retainedId),
+    );
+    await page.screenshot({
+      path: `${out}/${width}-retained-zone.png`,
+      fullPage: true,
+    });
+    await zone.getByRole("link", { name: /Full card/ }).click();
+    await card.waitFor();
+    if (process.env.UI_SMOKE_NEGATIVE === "outbound-control")
+      await card.evaluate((el, href) => {
+        const a = document.createElement("a");
+        a.href = href;
+        a.textContent = "Injected outbound regression";
+        el.append(a);
+      }, canonical);
+    if (process.env.UI_SMOKE_NEGATIVE === "missing-source")
+      await card.locator(".ruby-source-link").evaluate((el) => el.remove());
+    await assertRetained(card);
+    await page.goto(base + "/community?view=vip", { waitUntil: "networkidle" });
+    await page.locator(".ruby-submit-drawer summary").click();
+    const open = page.getByRole("button", {
+      name: "Submit today’s lay",
+      exact: true,
+    });
+    await open.click();
+    const modal = page.getByRole("dialog", { name: "Make your daily lay." });
+    const assertComposerPaused = async () => {
+      assert.equal(await modal.getByLabel("Paste Kalshi link").count(), 0);
+      assert.equal(await modal.locator('input[name="source_link"]').count(), 0);
+      assert.equal(
+        await modal
+          .getByText(/Contributor-shared Kalshi link · Preview:/)
+          .count(),
+        0,
+      );
+      await assertPaused();
+    };
+    await assertComposerPaused();
+    await modal.getByRole("button", { name: "Publish to The Zone" }).click();
+    await modal.getByText(/Add at least two legs/).waitFor();
+    assert.equal(submissions.length, 0, "empty composer submitted");
+    await modal.getByText("Add details · optional", { exact: true }).click();
+    await modal
+      .getByLabel("Your legs")
+      .fill("Sample A 20+ points\nSample B 5+ rebounds");
     await modal.getByRole("button", { name: "Publish to The Zone" }).click();
     await modal.getByText("Synthetic lost response after commit").waitFor();
     await modal.getByRole("button", { name: "Publish to The Zone" }).click();
     await modal.waitFor({ state: "hidden" });
     assert.equal(submissions.length, 2);
-    assert.equal(
-      submissions[0].p_id,
-      submissions[1].p_id,
-      "lost-response retry changed id",
-    );
-    await page.goto(base + "/community?view=vip&ruby=" + mine.id, {
-      waitUntil: "networkidle",
+    assert.equal(submissions[0].p_id, submissions[1].p_id, "retry changed id");
+    await open.click();
+    await assertComposerPaused();
+    // Text fields may retain a draft; explicitly clear them for screenshot-only acceptance.
+    const details = modal.locator("details").filter({ hasText: "Add details" });
+    if (
+      (await details.count()) &&
+      (await details.getAttribute("open")) === null
+    )
+      await modal.getByText("Add details · optional", { exact: true }).click();
+    await modal.getByLabel("Your legs").fill("");
+    photoMode = true;
+    lost = true;
+    await modal.locator("input[type=file]").setInputFiles({
+      name: "synthetic.png",
+      mimeType: "image/png",
+      buffer: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
+        "base64",
+      ),
     });
-    // Pin by immutable card ID: an admin edit deliberately changes its title.
-    const card = page.locator(`article.ruby-card[id="ruby-${mine.id}"]`).first();
-    await card
-      .getByText("Contributor-shared Kalshi link", { exact: true })
-      .waitFor();
+    await modal.getByRole("button", { name: "Publish to The Zone" }).click();
+    await modal.waitFor({ state: "hidden" });
+    assert.ok(mine.photo_path, "recovery discarded stored image");
+    assert.equal(photoDeletes, 0, "recovery deleted stored image");
+    assert.notEqual(
+      submissions.at(-1).p_id,
+      submissions[0].p_id,
+      "new submission reused old id",
+    );
+    await open.click();
     assert.equal(
-      await card.locator(".ruby-gambly").count(),
-      0,
-      "link-only card has a misleading Gambly action",
+      await modal.locator("input[type=file]").inputValue(),
+      "",
+      "reopening retained photo",
     );
-    await card.getByRole("button", { name: "Copy this lay" }).click();
-    assert.match(
-      await page.evaluate(() => window.__copied),
-      /marketTicker=SYNTHETIC-YES/,
+    await assertComposerPaused();
+    const beforeSignOut = submissions.length;
+    await page.evaluate(() =>
+      new BroadcastChannel("sb-127-auth-token").postMessage({
+        event: "SIGNED_OUT",
+        session: null,
+      }),
     );
-    await card
-      .getByRole("button", { name: "Open source on Kalshi ↗" })
-      .click();
+    await modal.waitFor({ state: "hidden" });
     assert.equal(
-      await card.getByRole("link", { name: "Continue to Kalshi ↗" }).count(),
-      0,
+      submissions.length,
+      beforeSignOut,
+      "account change submitted a draft",
     );
-    await card.getByRole("checkbox", { name: /I am 21/ }).check();
-    const link = card.getByRole("link", { name: "Continue to Kalshi ↗" });
-    assert.equal(await link.getAttribute("href"), canonical);
-    assert.equal(await link.getAttribute("rel"), "noopener noreferrer");
-    const next = ctx.waitForEvent("page");
-    await link.click();
-    const popup = await next;
-    await popup.waitForLoadState();
-    assert.equal(await popup.evaluate(() => window.opener), null);
-    await popup.close();
-    assert.equal(outbound, 1, "unexpected navigation count");
-    await card.getByRole("button", { name: "Edit card", exact: true }).click();
-    assert.equal(
-      await card.locator("input[name=source_link]").inputValue(),
-      canonical,
-    );
-    await card.locator("input[name=title]").fill("Source retained after edit");
-    await card.getByRole("button", { name: "Save changes" }).click();
-    await card
-      .getByText("Source retained after edit", { exact: true })
-      .waitFor();
-    if (process.env.UI_SMOKE_NEGATIVE === "missing-source")
-      await page.evaluate(() =>
-        document
-          .querySelectorAll(".ruby-source-link")
-          .forEach((el) => el.remove()),
-      );
-    assert.ok(
-      await page.locator(".ruby-source-link").count(),
-      "link-only source disappeared from the card",
-    );
+    await assertPaused();
     assert.ok(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth + 1,
       ),
       "horizontal overflow",
     );
-    // The launch overlay is intentionally noninteractive; wait for its normal dismissal so
-    // the evidence shows the actual card, rather than the brief welcome animation.
-    await page.locator(".vq-brand-opening").waitFor({ state: "detached" });
-    await card.screenshot({ path: `${out}/${width}-card-detail.png` });
-    await page.screenshot({
-      path: `${out}/${width}-link-only-edited.png`,
-      fullPage: true,
-    });
-    // Element/full-page captures can composite fixed navigation across a tall card.
-    // Reproduce that capture above, then use ordinary scrolling and unforced clicks;
-    // viewport images plus hit testing prove the actual card controls are reachable.
-    const interactionEvidence=[];
-    const revealControl=async(control,label)=>{
-      await control.scrollIntoViewIfNeeded();
-      const box=await control.boundingBox();
-      const nav=await page.locator(".mobile-nav").boundingBox();
-      if(box){
-        const safeBottom=nav?.y??page.viewportSize().height;
-        await page.mouse.wheel(0,box.y+box.height/2-Math.max(120,safeBottom/2));
-        await page.waitForTimeout(150);
-      }
-      const proof=await control.evaluate(el=>{
-        const r=el.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;
-        const hit=document.elementFromPoint(x,y);
-        const nav=document.querySelector(".mobile-nav")?.getBoundingClientRect();
-        return {x:r.x,y:r.y,width:r.width,height:r.height,centerHit:!!hit&&(hit===el||el.contains(hit)),inViewport:r.top>=0&&r.bottom<=innerHeight,aboveNavigation:!nav||nav.height===0||r.bottom<=nav.top-8};
-      });
-      assert.ok(proof.inViewport&&proof.centerHit&&proof.aboveNavigation,`${label} covered or outside viewport`);
-      await page.screenshot({path:`${out}/${width}-${label}-viewport.png`,fullPage:false});
-      interactionEvidence.push({control:label,...proof});
-      await control.click(); // ordinary actionability/hit-target checks; never force
-    };
-    await revealControl(card.locator(".ruby-source-link").getByRole("button",{name:"Cancel",exact:true}),"card-cancel");
-    assert.equal(await card.getByRole("link",{name:"Continue to Kalshi ↗"}).count(),0);
-    assert.equal(await card.getByRole("checkbox",{name:/I am 21/}).count(),0);
-    await card.getByRole("button",{name:"Open source on Kalshi ↗"}).click();
-    assert.equal(await card.getByRole("checkbox",{name:/I am 21/}).isChecked(),false,"Cancel retained eligibility confirmation");
-    assert.equal(await card.getByRole("link",{name:"Continue to Kalshi ↗"}).count(),0);
-    await revealControl(card.getByRole("button",{name:"Remove from The Zone",exact:true}),"card-remove");
-    await card.getByRole("button",{name:"Restore to The Zone",exact:true}).waitFor();
-    assert.equal(hideCalls.length,1);assert.equal(hideCalls[0].p_hidden,true);
-    assert.equal(mine.source_link,canonical,"removal lost original source");
-    await card.getByRole("button",{name:"Restore to The Zone",exact:true}).click();
-    await card.getByRole("button",{name:"Remove from The Zone",exact:true}).waitFor();
-    assert.equal(hideCalls.length,2);assert.equal(hideCalls[1].p_hidden,false);
-    assert.equal(outbound,1,"Cancel/Remove navigated externally");
-    await fs.writeFile(`${out}/${width}-card-controls.json`,JSON.stringify({width,controls:interactionEvidence,cancelClearedEligibility:true,removeRestoreSequence:hideCalls.map(p=>p.p_hidden),sourceRetained:mine.source_link===canonical,outbound},null,2));
-    console.log(`${width}px card Cancel/Remove/Restore ordinary clicks passed; controls clear of fixed navigation`);
-    await page.goto(base + "/community?view=vip", { waitUntil: "networkidle" }); // Submit a Lay lives in the contributor area
-    await page.locator(".ruby-submit-drawer summary").click();
-    await page.getByRole("button", { name: "Submit today’s lay", exact: true }).click();
-    // Committed screenshot-plus-source insert with a lost response takes the stored-card recovery path.
-    photoMode = true; lost = true;
-    await modal.getByLabel("Paste Kalshi link").fill(canonical);
-    await modal.locator('input[type=file]').setInputFiles({name:"synthetic.png",mimeType:"image/png",buffer:Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=","base64")});
-    await modal.getByRole("button", {name:"Publish to The Zone"}).click();
-    await modal.waitFor({state:"hidden"});
-    const recoveredId=submissions.at(-1).p_id;
-    assert.ok(mine.photo_path, "recovery discarded stored image");
-    assert.equal(photoDeletes,0,"recovery deleted stored image");
-    await page.getByRole("button", {name:"Submit today’s lay",exact:true}).click();
-    assert.equal(await modal.getByLabel("Paste Kalshi link").inputValue(),"","reopening retained old source");
-    assert.equal(await modal.locator('input[type=file]').inputValue(),"","reopening retained old photo");
-    // A fresh source-only submission must receive a new identifier.
-    photoMode=false;
-    await modal.getByLabel("Paste Kalshi link").fill(canonical);
-    await modal.getByRole("button", {name:"Publish to The Zone"}).click();
-    await modal.waitFor({state:"hidden"});
-    assert.notEqual(submissions.at(-1).p_id,recoveredId,"reopening retained pending ID");
-    await page.getByRole("button", {name:"Submit today’s lay",exact:true}).click();
-    await modal.getByLabel("Paste Kalshi link").fill(canonical);
-    const beforeSignOut = submissions.length;
-    await page.evaluate(() => new BroadcastChannel("sb-127-auth-token").postMessage({ event: "SIGNED_OUT", session: null }));
-    await modal.waitFor({ state: "hidden" });
-    assert.equal(submissions.length, beforeSignOut, "account change submitted a draft");
-
+    await fs.writeFile(
+      `${out}/${width}-pause-results.json`,
+      JSON.stringify(
+        {
+          width,
+          retainedSource: canonical,
+          sourceHidden: true,
+          internalCopyPreserved: true,
+          forbiddenRequests,
+          submissions: submissions.length,
+          photoDeletes,
+        },
+        null,
+        2,
+      ),
+    );
     await ctx.close();
     console.log(
-      `${width}px Kalshi source preview/remove/cancel/retry/card/copy/eligibility/open/edit passed`,
+      `${width}px Kalshi pause, retained cards, admin preservation, copy privacy, typed retry and screenshot recovery passed`,
     );
   }
 } finally {

@@ -30,6 +30,11 @@ import {
 } from "@/lib/ruby";
 import CommunityPhoto from "./community-photo";
 import KalshiSourceLink from "./kalshi-source-link";
+import {
+  KALSHI_ENABLED,
+  KALSHI_PAUSED_MESSAGE,
+  actionableKalshiSource,
+} from "@/lib/kalshi-availability";
 import { normalizeKalshiSourceLink } from "@/lib/kalshi-source-link";
 import GamblyLink from "./gambly-link";
 import {
@@ -64,7 +69,7 @@ export function RubyCard({
           slip.title,
           ...slip.legs,
           slip.note,
-          source
+          actionableKalshiSource(source)
             ? `Contributor-shared Kalshi source: ${source} (not a verified ticket)`
             : null,
           `Contributor opinion · ${location.origin}${rubyLink(slip.id)}`,
@@ -242,7 +247,10 @@ function AdminCardEditor({
           crypto.randomUUID(),
           data.session.access_token,
         );
-      const rawSource = String(f.get("source_link") || "");
+      // A hidden input must not clear an existing immutable source during ordinary edits.
+      const rawSource = KALSHI_ENABLED
+        ? String(f.get("source_link") || "")
+        : slip.source_link || "";
       const source = rawSource ? normalizeKalshiSourceLink(rawSource) : null;
       if (rawSource && !source)
         throw new Error("Use a valid supported Kalshi combo link.");
@@ -328,14 +336,18 @@ function AdminCardEditor({
               inputMode="text"
             />
           </label>
-          <label>
-            Kalshi source link · optional
-            <input
-              name="source_link"
-              defaultValue={slip.source_link || ""}
-              maxLength={2048}
-            />
-          </label>
+          {KALSHI_ENABLED ? (
+            <label>
+              Kalshi source link · optional
+              <input
+                name="source_link"
+                defaultValue={slip.source_link || ""}
+                maxLength={2048}
+              />
+            </label>
+          ) : slip.source_link ? (
+            <p>{KALSHI_PAUSED_MESSAGE} The existing source is retained.</p>
+          ) : null}
           <label>
             Replace screenshot · optional
             <input
@@ -385,7 +397,7 @@ function Composer({
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [sourceInput, setSourceInput] = useState("");
-  const source = normalizeKalshiSourceLink(sourceInput);
+  const source = actionableKalshiSource(sourceInput);
   const [pasteHelp, setPasteHelp] = useState(false);
   function choosePhoto(f: File | null) {
     if (f && f.size > MAX_SELECTED_PHOTO_BYTES) {
@@ -476,11 +488,15 @@ function Composer({
     let path: string | null = null;
     try {
       const legs = rubyLegs(text);
+      if (!KALSHI_ENABLED && sourceInput)
+        throw new Error(KALSHI_PAUSED_MESSAGE);
       if (sourceInput && !source)
         throw new Error("Use a valid supported Kalshi combo link.");
       if (legs.length < 2 && !file && !source)
         throw new Error(
-          "Add at least two legs, upload a screenshot, or paste a Kalshi link.",
+          KALSHI_ENABLED
+            ? "Add at least two legs, upload a screenshot, or paste a Kalshi link."
+            : "Add at least two legs or upload a screenshot.",
         );
       if (legs.length > 20 || legs.some((l) => l.length > 180))
         throw new Error("Use up to 20 legs, each under 181 characters.");
@@ -641,22 +657,25 @@ function Composer({
               }}
             >
               <p>
-                Paste a supported Kalshi combo link or upload your screenshot,
-                then publish. No title, description or typed legs needed. Up to
-                three slips per Eastern day.
+                {KALSHI_ENABLED
+                  ? "Paste a supported Kalshi combo link, upload your screenshot, or add typed legs."
+                  : "Upload your screenshot or add at least two typed legs."}{" "}
+                Then publish. Up to three slips per Eastern day.
               </p>
-              <label>
-                Paste Kalshi link
-                <input
-                  aria-label="Paste Kalshi link"
-                  value={sourceInput}
-                  maxLength={2048}
-                  disabled={busy}
-                  onChange={(e) => setSourceInput(e.target.value)}
-                  placeholder="https://kalshi.com/markets/kxmvecrosscategory/combo/…?marketTicker=…"
-                />
-              </label>
-              {sourceInput ? (
+              {KALSHI_ENABLED ? (
+                <label>
+                  Paste Kalshi link
+                  <input
+                    aria-label="Paste Kalshi link"
+                    value={sourceInput}
+                    maxLength={2048}
+                    disabled={busy}
+                    onChange={(e) => setSourceInput(e.target.value)}
+                    placeholder="https://kalshi.com/markets/kxmvecrosscategory/combo/…?marketTicker=…"
+                  />
+                </label>
+              ) : null}
+              {KALSHI_ENABLED && sourceInput ? (
                 <div style={{ overflowWrap: "anywhere" }}>
                   {source ? (
                     <p>

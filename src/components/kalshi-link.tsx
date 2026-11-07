@@ -1,6 +1,7 @@
 "use client";
 import { useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { KALSHI_ENABLED } from "@/lib/kalshi-availability";
 import { supabase } from "@/lib/supabase";
 type Match = { key: string; label: string; url: string | null; status: string };
 export default function KalshiLink({
@@ -31,7 +32,7 @@ export default function KalshiLink({
     [checked, setChecked] = useState(false),
     [copied, setCopied] = useState(false);
   async function check() {
-    if (busy || disabled) return;
+    if (!KALSHI_ENABLED || busy || disabled) return;
     // Copy inside the tap itself: browsers only allow clipboard writes from a user gesture.
     setCopied(false);
     if (copyText)
@@ -89,6 +90,7 @@ export default function KalshiLink({
       setBusy(false);
     }
   }
+  if (!KALSHI_ENABLED) return null;
   const modal = (
     <dialog ref={dialog} className="entry-dialog" aria-labelledby={title}>
       <h2 id={title}>Open selections on Kalshi</h2>

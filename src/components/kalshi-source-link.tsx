@@ -1,5 +1,9 @@
 "use client";
 import { useState } from "react";
+import {
+  KALSHI_ENABLED,
+  KALSHI_PAUSED_MESSAGE,
+} from "@/lib/kalshi-availability";
 import { normalizeKalshiSourceLink } from "@/lib/kalshi-source-link";
 
 /** No unfurl, account connection, clipboard read or automatic navigation. */
@@ -12,13 +16,33 @@ export default function KalshiSourceLink({
   const [show, setShow] = useState(false);
   const url = normalizeKalshiSourceLink(source);
   if (!url) return null;
+  if (!KALSHI_ENABLED)
+    return (
+      <div className="ruby-source-link">
+        <p>
+          <b>Contributor-shared Kalshi link</b> · Not a verified ticket,
+          executed position or VQ endorsement.
+        </p>
+        <p>
+          {KALSHI_PAUSED_MESSAGE} The original shared link is retained with this
+          card.
+        </p>
+      </div>
+    );
   return (
-    <div className="ruby-source-link" style={{ overflowWrap: "anywhere", display: "grid", gap: 12 }}>
+    <div
+      className="ruby-source-link"
+      style={{ overflowWrap: "anywhere", display: "grid", gap: 12 }}
+    >
       <p>
         <b>Contributor-shared Kalshi link</b> · Not a verified ticket, executed
         position or VQ endorsement.
       </p>
-      <button className="secondary" type="button" onClick={() => setShow((v) => !v)}>
+      <button
+        className="secondary"
+        type="button"
+        onClick={() => setShow((v) => !v)}
+      >
         Open source on Kalshi ↗
       </button>
       {show ? (
@@ -34,7 +58,12 @@ export default function KalshiSourceLink({
             <span>I am 21+ and meet Kalshi’s eligibility requirements.</span>
           </label>
           {confirmed ? (
-            <a className="secondary" href={url} target="_blank" rel="noopener noreferrer">
+            <a
+              className="secondary"
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Continue to Kalshi ↗
             </a>
           ) : null}

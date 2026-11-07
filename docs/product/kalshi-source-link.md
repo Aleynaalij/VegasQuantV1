@@ -1,5 +1,7 @@
 # Incoming contributor Kalshi links — prepared, not released
 
+Current app preparation: Kalshi is temporarily paused. See [the pause and release runbook](kalshi-pause.md). The implementation below is preserved for history and a separately approved re-enablement; code presence is not live availability.
+
 Task KALSHI-LINK-POST, handoff issue #65 comment 6658794191.
 Baseline main `6cadc283608b655fc4321ab7144bec7533fbfea6`; independent branch
 `codex/kalshi-link-post`. Story #221 and other draft work remain separate.

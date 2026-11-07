@@ -24,8 +24,9 @@ const sabotage = (ctx) => NEGATIVE && ctx.addInitScript((mode) => {
 }, NEGATIVE);
 
 const MEMBER_POST = "Sample Seahawks–Broncos injury update"; // stub research_feed_posts row (members only)
-// The research feed proper; bare /feed redirects to The Zone, and the "Latest" view shows every post.
-const FEED = "/feed?view=latest";
+// Exercise the retained publication feed through a legacy release fragment.
+// Plain latest now opens the event lounge; its redirect is asserted separately below.
+const FEED = "/feed?view=latest#release-auth-fixture";
 const ACCESS_NOTE = "Sign in or manage research access";
 const user = { id: "00000000-0000-0000-0000-000000000001", aud: "authenticated", role: "authenticated",
   // An established member: the first-visit welcome (src/components/welcome.tsx VERSION) was already seen.
@@ -259,6 +260,14 @@ await scenario("signed-in navigation: Zone, Slots, Account, Home", {}, async ({ 
 });
 
 // Research is not a nav tab; check its direct route separately.
+await scenario("latest research opens the event lounge", {}, async ({ page, go, fail }) => {
+  await go("/feed?view=latest");
+  if (!(await page.waitForURL((u) => u.pathname === "/research", { timeout: 15000 }).then(() => true, () => false))) {
+    fail("latest research did not redirect to /research");
+  }
+  if (!(await shows(page, "The research lounge"))) fail("redirected research lounge did not render");
+});
+
 await scenario("research route (direct, not a nav tab)", {}, async ({ page, go, fail }) => {
   await go("/matchups");
   if (!(await shows(page, "Seahawks"))) fail('/matchups missing "Seahawks"');
