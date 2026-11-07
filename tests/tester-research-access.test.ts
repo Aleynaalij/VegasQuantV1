@@ -60,6 +60,24 @@ test("sealed testers can read only bounded projected research using an eligible 
       "select o.*, o.recorded_at::text as cursor from public.tester_observation_page($1,$2,$3,$4,now(),$5,$6) o",
       [feature, sport, game, section, cursor, after],
     );
+  const asOperator = async <T>(operation: () => Promise<T>) => {
+    await db.exec("set session authorization tester_migrator");
+    try {
+      return await operation();
+    } finally {
+      await db.exec("set session authorization postgres");
+    }
+  };
+  const assertNoOperationContext = async () =>
+    assert.equal(
+      Number(
+        await first(
+          "select count(*) value from private.tester_operation_context",
+        ),
+      ),
+      0,
+      "operator reason must not survive the call",
+    );
   const seal = (at = cutoff, reason = "Fixture snapshot") =>
     first<string>("select private.seal_tester_batch($1,$2,$3) value", [
       batch,
@@ -120,6 +138,7 @@ test("sealed testers can read only bounded projected research using an eligible 
   try {
     await db.exec(`
       create role anon; create role authenticated; create role service_role;
+      create role tester_migrator nosuperuser bypassrls;
       create schema auth; create schema private;
       grant usage on schema auth, private to anon, authenticated, service_role;
       create function auth.jwt() returns jsonb language sql stable as $$
@@ -218,7 +237,47 @@ test("sealed testers can read only bounded projected research using an eligible 
     await db.exec(
       migration("20261014180409_existing_accounts_complimentary_premium.sql"),
     );
-    await db.exec(testerSql);
+    await db.exec(`
+      grant usage, create on schema private, public to tester_migrator;
+      grant usage on schema auth to tester_migrator;
+      grant select, references on auth.users to tester_migrator;
+      grant select on auth.sessions, private.account_erasure_jobs, public.games, public.nba_games,
+        public.source_observations, public.nba_observations to tester_migrator;
+      grant execute on function private.age_member_allowed() to tester_migrator;
+    `);
+    await asOperator(async () => {
+      // Match the hosted SQL connection's role attributes, not Supabase's exact runner.
+      assert.deepEqual(
+        await first(
+          "select jsonb_build_object('same_role', current_user=session_user, 'superuser', rolsuper, 'bypassrls', rolbypassrls) value from pg_roles where rolname=current_user",
+        ),
+        { same_role: true, superuser: false, bypassrls: true },
+      );
+      await assert.rejects(
+        db.exec(`
+          create function private.repro_tester_reason() returns void
+          language plpgsql security invoker set search_path = ''
+          set vq.tester_operation_reason = '' as $$ begin return; end $$;
+        `),
+        (error: unknown) => {
+          assert.ok(error instanceof Error);
+          assert.equal((error as Error & { code?: string }).code, "42501");
+          assert.equal(
+            error.message,
+            'permission denied to set parameter "vq.tester_operation_reason"',
+          );
+          return true;
+        },
+      );
+      await db.exec(testerSql);
+      assert.equal(
+        Number(
+          await first("select count(*) value from private.tester_batches"),
+        ),
+        0,
+      );
+      await assertNoOperationContext();
+    });
 
     for (let n = 1; n <= 14; n++) {
       await db.query(
@@ -300,8 +359,60 @@ test("sealed testers can read only bounded projected research using an eligible 
       [id(14)],
     );
     await db.query("insert into private.admin_users values ($1)", [id(12)]);
-    await assert.rejects(seal(cutoff, ""), /requires a reason/);
-    assert.equal(Number(await seal()), 12);
+    await asOperator(async () => {
+      await assert.rejects(seal(cutoff, ""), /requires a reason/);
+      await assert.rejects(seal(cutoff, "x".repeat(241)), /requires a reason/);
+      await assert.rejects(
+        seal(new Date(Date.now() + 60_000).toISOString()),
+        /historical cutoff/,
+      );
+      await db.exec("begin");
+      try {
+        assert.equal(Number(await seal()), 12);
+        await assertNoOperationContext();
+        await db.exec("savepoint invalid_canary");
+        await assert.rejects(
+          configure(["research"], id(2)),
+          /Canary must be an account/,
+        );
+        await db.exec("rollback to savepoint invalid_canary");
+        await assertNoOperationContext();
+        await configure(["research"], null);
+        await configure([], null);
+        await assertNoOperationContext();
+        await db.exec("commit");
+      } catch (error) {
+        await db.exec("rollback");
+        throw error;
+      }
+    });
+    const configureSql = statement(
+      testerSql,
+      /create function private\.configure_tester_batch\([\s\S]*?end \$\$;/,
+    );
+    const withoutCleanup = configureSql.replace(
+      "delete from private.tester_operation_context where transaction_id = pg_catalog.pg_current_xact_id();",
+      "",
+    );
+    assert.notEqual(
+      withoutCleanup,
+      configureSql,
+      "cleanup mutation must change the operator",
+    );
+    await db.exec("begin");
+    try {
+      await db.exec(
+        withoutCleanup.replace("create function", "create or replace function"),
+      );
+      await configure(["research"], null);
+      await assert.rejects(
+        assertNoOperationContext,
+        /operator reason must not survive the call/,
+      );
+    } finally {
+      await db.exec("rollback");
+    }
+    await assertNoOperationContext();
     await db.query("delete from auth.sessions where id=$1", [id(110)]);
     // This account was nonanonymous at the snapshot, so exercise the live record predicate.
     await db.query("update auth.users set is_anonymous=true where id=$1", [
@@ -523,6 +634,17 @@ test("sealed testers can read only bounded projected research using an eligible 
       ),
       /requires a reason/,
     );
+    await db.exec(
+      "select set_config('vq.tester_operation_reason', 'Forged audit reason', false)",
+    );
+    await assert.rejects(
+      db.query(
+        "update private.tester_batches set enabled_features='{}' where name=$1",
+        [batch],
+      ),
+      /requires a reason/,
+    );
+    await db.exec("select set_config('vq.tester_operation_reason', '', false)");
     await assert.rejects(
       db.exec("truncate private.tester_batch_accounts"),
       /history is retained/,
@@ -533,6 +655,16 @@ test("sealed testers can read only bounded projected research using an eligible 
     );
 
     await role(9);
+    await assert.rejects(
+      db.query(
+        "insert into private.tester_operation_context(reason) values ('spoofed')",
+      ),
+      /permission denied/,
+    );
+    await assert.rejects(
+      db.query("select private.begin_tester_operation('spoofed')"),
+      /permission denied/,
+    );
     await assert.rejects(
       db.query("select * from private.tester_batch_audit"),
       /permission denied/,
@@ -546,7 +678,10 @@ test("sealed testers can read only bounded projected research using an eligible 
       await assert.rejects(configure([], null), /permission denied/);
     }
     await db.exec("reset role");
-    await revoke(1, true, "Revoke fixture account");
+    await asOperator(async () => {
+      await revoke(1, true, "Revoke fixture account");
+      await assertNoOperationContext();
+    });
     const countAudit = () =>
       first<string>("select count(*) value from private.tester_batch_audit");
     const beforeReplay = await countAudit();
@@ -703,7 +838,10 @@ test("sealed testers can read only bounded projected research using an eligible 
     await role(9);
     await denied("deleted account with stale JWT");
     await db.exec("reset role");
-    await configure([], null, true, "Fixture rollback");
+    await asOperator(async () => {
+      await configure([], null, true, "Fixture rollback");
+      await assertNoOperationContext();
+    });
     await role(1);
     await denied("disabled tester batch");
     for (const n of [13, 14]) {
@@ -736,7 +874,7 @@ test("sealed testers can read only bounded projected research using an eligible 
           entry.reason === "Fixture snapshot" &&
           entry.operation === "tester_batch_accounts.insert" &&
           entry.before_state === null &&
-          entry.actor,
+          entry.actor === "tester_migrator",
       ),
     );
     assert.ok(

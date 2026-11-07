@@ -30,11 +30,32 @@ create table private.tester_batch_audit (
   before_state jsonb,
   after_state jsonb
 );
+-- An owner operation supplies one reason to its triggers in the same transaction.
+-- Each operator function deletes its context before returning. On failure the
+-- operation and its context roll back together.
+create table private.tester_operation_context (
+  transaction_id xid8 primary key default pg_catalog.pg_current_xact_id(),
+  reason text not null check (length(reason) between 1 and 240)
+);
+alter table private.tester_operation_context enable row level security;
 alter table private.tester_batches enable row level security;
 alter table private.tester_batch_accounts enable row level security;
 alter table private.tester_batch_audit enable row level security;
-revoke all on private.tester_batches, private.tester_batch_accounts, private.tester_batch_audit
+revoke all on private.tester_batches, private.tester_batch_accounts, private.tester_batch_audit,
+  private.tester_operation_context
   from public, anon, authenticated, service_role;
+
+create function private.begin_tester_operation(p_reason text)
+returns void language plpgsql security invoker set search_path = '' as $$
+declare
+  reason text := nullif(btrim(p_reason), '');
+begin
+  if reason is null or length(reason) > 240 then
+    raise exception 'Tester operation requires a reason of 1–240 characters';
+  end if;
+  insert into private.tester_operation_context(reason) values (reason);
+end $$;
+revoke all on function private.begin_tester_operation(text) from public, anon, authenticated, service_role;
 
 -- Audit uses an opaque grant identifier. Account deletion removes its mapping to a user.
 create function private.audit_tester_batch()
@@ -42,7 +63,7 @@ returns trigger language plpgsql security definer set search_path = '' as $$
 declare
   prior jsonb := case when tg_op <> 'INSERT' then to_jsonb(old) end;
   next_state jsonb := case when tg_op <> 'DELETE' then to_jsonb(new) end;
-  reason text := nullif(btrim(current_setting('vq.tester_operation_reason', true)), '');
+  reason text;
   removed_user uuid;
 begin
   if prior is not distinct from next_state then return null; end if;
@@ -54,6 +75,9 @@ begin
   end if;
   if removed_user is not null and not exists (select 1 from auth.users where id = removed_user) then
     reason := 'Auth account deletion';
+  else
+    select c.reason into reason from private.tester_operation_context c
+      where c.transaction_id = pg_catalog.pg_current_xact_id_if_assigned();
   end if;
   if reason is null or length(reason) > 240 then
     raise exception 'Tester operation requires a reason of 1–240 characters';
@@ -150,15 +174,14 @@ create trigger keep_tester_audit_history before update or delete or truncate on 
 
 -- Owner-operated. A replay with the same cutoff preserves the sealed roster and revocations.
 create function private.seal_tester_batch(p_name text, p_cutoff timestamptz, p_reason text)
-returns bigint language plpgsql security invoker set search_path = ''
-set vq.tester_operation_reason = '' as $$
+returns bigint language plpgsql security invoker set search_path = '' as $$
 declare
   batch private.tester_batches;
 begin
   if p_cutoff is null or not isfinite(p_cutoff) or p_cutoff > statement_timestamp() then
     raise exception 'Explicit historical cutoff required';
   end if;
-  perform set_config('vq.tester_operation_reason', coalesce(p_reason, ''), true);
+  perform private.begin_tester_operation(p_reason);
   insert into private.tester_batches(name, cutoff)
     values (p_name, p_cutoff) on conflict (name) do nothing;
   select * into strict batch from private.tester_batches where name = p_name for update;
@@ -172,6 +195,7 @@ begin
       on conflict on constraint tester_batch_accounts_pkey do nothing;
     update private.tester_batches set sealed_at = statement_timestamp() where name = p_name;
   end if;
+  delete from private.tester_operation_context where transaction_id = pg_catalog.pg_current_xact_id();
   return (select count(*) from private.tester_batch_accounts a where a.batch = p_name);
 end $$;
 revoke all on function private.seal_tester_batch(text, timestamptz, text)
@@ -180,29 +204,29 @@ revoke all on function private.seal_tester_batch(text, timestamptz, text)
 create function private.configure_tester_batch(
   p_name text, p_features text[], p_canary_only boolean, p_canary_user uuid, p_reason text
 )
-returns void language plpgsql security invoker set search_path = ''
-set vq.tester_operation_reason = '' as $$
+returns void language plpgsql security invoker set search_path = '' as $$
 begin
-  perform set_config('vq.tester_operation_reason', coalesce(p_reason, ''), true);
+  perform private.begin_tester_operation(p_reason);
   update private.tester_batches
   set enabled_features = p_features, canary_only = p_canary_only, canary_user_id = p_canary_user
   where name = p_name and sealed_at is not null;
   if not found then raise exception 'Unknown or unsealed tester batch'; end if;
+  delete from private.tester_operation_context where transaction_id = pg_catalog.pg_current_xact_id();
 end $$;
 revoke all on function private.configure_tester_batch(text, text[], boolean, uuid, text)
   from public, anon, authenticated, service_role;
 
 create function private.set_tester_revoked(p_name text, p_user uuid, p_revoked boolean, p_reason text)
-returns void language plpgsql security invoker set search_path = ''
-set vq.tester_operation_reason = '' as $$
+returns void language plpgsql security invoker set search_path = '' as $$
 begin
   if p_revoked is null then raise exception 'Tester revocation state required'; end if;
-  perform set_config('vq.tester_operation_reason', coalesce(p_reason, ''), true);
+  perform private.begin_tester_operation(p_reason);
   update private.tester_batch_accounts a
   set revoked_at = case when p_revoked then coalesce(a.revoked_at, statement_timestamp()) end
   from private.tester_batches b
   where a.batch = b.name and b.name = p_name and a.user_id = p_user and b.sealed_at is not null;
   if not found then raise exception 'Tester grant not found in a sealed batch'; end if;
+  delete from private.tester_operation_context where transaction_id = pg_catalog.pg_current_xact_id();
 end $$;
 revoke all on function private.set_tester_revoked(text, uuid, boolean, text)
   from public, anon, authenticated, service_role;
