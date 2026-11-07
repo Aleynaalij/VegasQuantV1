@@ -132,7 +132,7 @@ def key_rank(key):
     return 3
 
 
-def residual_cells(ops, family):
+def residual_cells(ops, family, full_keys=None):
     """v0.2.21 residual cells: each key counts only the opportunities that reach it unresolved, so a
     lookup that walks the chain to the first key with n >= MIN reads exactly the opportunities that
     resolved there. `normal@all~role` keeps its v0.2.20 marginal definition (declared exception).
@@ -173,6 +173,8 @@ def residual_cells(ops, family):
             full[ops[i][1]] += 1
         if any(not resolved[i] for i in by_key[key]) and full['n'] >= MIN:
             cells[key] = full
+            if full_keys is not None:
+                full_keys.add(key)  # accounting only (ACCOUNTING_PROTOCOL.md)
             for i in by_key[key]:
                 resolved[i] = True
     return cells, resolved.count(False)
@@ -216,7 +218,7 @@ def tabulate(path):
     return running, stopped, coverage, digest
 
 
-def tabulate_rows(rows):
+def tabulate_rows(rows, full_keys=None):
     """(running cells, stopped cells, coverage) from source rows, coarsened floors included."""
     running_ops, stopped_ops = [], []
     coverage = Counter()
@@ -282,8 +284,9 @@ def tabulate_rows(rows):
         coverage['stopped_opportunities:' + elig] += 1
         coverage['stopped_calls:' + str(outcome)] += 1
 
-    running, unresolved_r = residual_cells(running_ops, 'running')
-    stopped, unresolved_s = residual_cells(stopped_ops, 'stopped')
+    full_keys = full_keys if full_keys is not None else {}
+    running, unresolved_r = residual_cells(running_ops, 'running', full_keys.setdefault('running', set()))
+    stopped, unresolved_s = residual_cells(stopped_ops, 'stopped', full_keys.setdefault('stopped', set()))
     coverage['residual_unresolved:running'] = unresolved_r
     coverage['residual_unresolved:stopped'] = unresolved_s
     return running, stopped, coverage

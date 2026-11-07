@@ -50,6 +50,11 @@ def game(model,seed,*,both_possessions=True,max_events=1200,trace=False,workload
             replacements_before=sampler.fallbacks['source_stop_runoff_replaced']
             a,queued_timeout,decision_read_state=sampler.couple_stop(s,a)
             coupling=dict(original_elapsed=original.elapsed,committed_elapsed=a.elapsed,source_followed_timeout=getattr(sampler,'last_source_followed_timeout',False),timeout_queued=queued_timeout is not None,runoff_replaced=sampler.fallbacks['source_stop_runoff_replaced']>replacements_before)
+        # Accounting (ACCOUNTING_PROTOCOL.md): boundary paths applied inside state.transition.
+        if s.period in (2,4,5) and s.clock>120 and s.clock-a.elapsed<120:
+            sampler.fallbacks['two_minute_warning_snapped']+=1
+            sampler.fallbacks['two_minute_warning_seconds_restored']+=120-(s.clock-a.elapsed)
+        if a.kind=='penalty' and s.phase=='scrimmage' and (a.yards>=s.yardline or -a.yards>=100-s.yardline):sampler.fallbacks['penalty_half_distance']+=1
         event=transition(s,a);kinds[a.kind]+=1
         late=s.phase=='scrimmage' and s.period in (2,4) and s.clock<=30 and s.yardline<=35
         if a.kind in ('field_goal','blocked_field_goal'):

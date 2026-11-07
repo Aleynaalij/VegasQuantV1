@@ -17,7 +17,7 @@ class IntegratedTests(unittest.TestCase):
         sampler=Sampler(model,17)
         self.assertEqual(sampler.draw(s).kind,'field_goal')
         self.assertEqual(sampler.fallbacks['thin_context_support'],1)
-        self.assertEqual(sampler.fallbacks['clock_preserved_samples'],1)
+        self.assertEqual(sampler.fallbacks['band_preserved_samples'],1)
         self.assertTrue(all('last10' in key for key in context_options(s)[0]))
 
     def test_missing_late_clock_support_does_not_silently_use_normal(self):
@@ -99,7 +99,7 @@ class IntegratedTests(unittest.TestCase):
         model['buckets'][pooled[-1]]={'1':100}
         sampler=Sampler(model,17)
         self.assertEqual(sampler.draw(s).kind,'kneel')
-        self.assertEqual(sampler.fallbacks['half_pooled_fallback'],1)
+        self.assertEqual(sampler.fallbacks['band_half_pooled_fallback'],1)
         del model['buckets'][pooled[-1]]
         with self.assertRaises(ValueError):Sampler(model,17).draw(s)
 

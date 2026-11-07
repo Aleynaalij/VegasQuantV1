@@ -41,6 +41,29 @@ def context_options(s):
     return primary,primary[-1:],[]
 
 
+def context_labels(s):
+    """Accounting only (ACCOUNTING_PROTOCOL.md): context key -> (branch, path), first definition wins."""
+    phase,down,distance,field,clock,coarse=bucket(s)
+    field=field if phase=='scrimmage' else '_'
+    zone=field.split(':')[0];labels={}
+    def add(branch,items):
+        for path,key in items:labels.setdefault('|'.join(key),(branch,path))
+    def normal(branch,c):
+        k=(phase,c,field,str(down),distance,coarse)
+        add(branch,[('exact',k),('drop:lead',k[:5]),('drop:distance+lead',k[:4]),('drop:down+distance+lead',k[:3]),('floor:phase+clock+zone',(phase,c,zone))])
+    if clock!='normal':
+        margin=getattr(s,s.possession+'_score')-getattr(s,other(s.possession)+'_score')
+        size=abs(margin)
+        fine=coarse+('1-3' if size<=3 else '4-8' if size<=8 else '9+') if margin else coarse
+        hc=clock+('@h1' if s.period==2 else '@h2')
+        k=(phase,hc,field,fine,str(down),distance)
+        add('late',[('exact',k),('drop:distance',k[:5]),('drop:down+distance',k[:4]),('floor:coarse_lead',(phase,hc,field,coarse)),('floor:coarse_lead+goal_zone',(phase,hc,zone,coarse)),
+                    ('pooled_half:coarse_lead',(phase,clock,field,coarse)),('pooled_half:coarse_lead+goal_zone',(phase,clock,zone,coarse))])
+        if clock=='last300':normal('last300_normal','normal')
+    else:normal('normal',clock)
+    return labels
+
+
 def contexts(s):
     primary,_,pooled=context_options(s)
     return list(dict.fromkeys(primary+pooled))
@@ -292,12 +315,14 @@ class Sampler:
         if elig is None:return 0.0,0.0
         band=stop_band(k) if family=='running' else stopped_band(k)
         cells=model[family];exact=len(chain(family,band,k,elig))-len([c for c in chain(family,band,k,elig) if c.startswith(('le','normal@h','normal@all'))])
-        for depth,key in enumerate(chain(family,band,k,elig)):
+        path=chain(family,band,k,elig)
+        for depth,key in enumerate(path):
             cell=cells.get(key)
             if not cell or cell['n']<max(MIN,model['minimum_context']):continue
             n,co,cd=cell['n'],cell.get('offense',0),cell.get('defense',0)
             if co<0 or cd<0 or co+cd>n:raise ValueError('invalid timeout counts')
             self.fallbacks[f'timeout_cell:{family}:depth{depth}']+=1
+            if key==path[-1]:self.fallbacks[f'timeout_terminal_floor:{family}:{key}']+=1
             if depth>=exact:self.fallbacks['coarsened_timeout_cell']+=1
             if '~role' in key:self.fallbacks['role_marginal_timeout_cell']+=1
             po=co/n if elig in ('both','offense') else 0.0
@@ -326,6 +351,7 @@ class Sampler:
                 if sum(table.values())<model['minimum_context']:self.fallbacks['thin_runoff_context']+=1
                 dt=self.rng.choices([dt for dt,n in legal],weights=[n for dt,n in legal],k=1)[0]
                 self.fallbacks['source_stop_runoff_replaced']+=1
+                if dt>s.clock:self.fallbacks['runoff_clipped_to_clock']+=1
                 return replace(a,elapsed=min(dt,s.clock))
         self.fallbacks['unsupported_nonfollowed_runoff']+=1
         raise ValueError('no empirical non-followed runoff support')
@@ -393,12 +419,16 @@ class Sampler:
                     chosen=(ctx,table,supported(ctx));break
         if chosen is None:raise ValueError('no empirical context with budget-eligible actions: '+s.phase)
         ctx,source_table,table=chosen
-        self.fallbacks[len(ctx.split('|'))]+=1
-        if bucket(s)[4]=='last300' and 'last300' not in ctx:self.fallbacks['last300_normal_fallback']+=1
+        # Accounting (ACCOUNTING_PROTOCOL.md): string keys only, so run_batch keeps them.
+        branch,path=context_labels(s)[ctx]
+        self.fallbacks[f'play_context:{branch}:{path}']+=1
+        self.fallbacks[f'play_context_length:{len(ctx.split("|"))}']+=1
+        fallback=bucket(s)[4]=='last300' and 'last300' not in ctx
+        if fallback:self.fallbacks['last300_normal_fallback']+=1
         if source_table[2]<self.model['minimum_context']:self.fallbacks['thin_context_support']+=1
-        if bucket(s)[4]!='normal':
-            self.fallbacks['clock_preserved_samples']+=1
-            self.fallbacks['half_pooled_fallback' if '@h' not in ctx else 'half_preserved_samples']+=1
+        if bucket(s)[4]!='normal' and not fallback:
+            self.fallbacks['band_preserved_samples']+=1
+            self.fallbacks['band_half_pooled_fallback' if '@h' not in ctx else 'band_half_preserved_samples']+=1
         key=self.rng.choices(table[0],weights=table[1],k=1)[0];data=dict(self.model['templates'][int(key)])
         if data['kind']=='timeout':data['timeout_side']=timeout_caller(data)
         self.last_source_followed_timeout=data.pop('source_followed_timeout',None)
@@ -419,12 +449,16 @@ class Sampler:
             else:
                 data['yards']=gain
                 self.fallbacks['censoring_restored_td' if gain==s.yardline else 'censoring_non_td']+=1
+        if data.get('elapsed',0)>s.clock:self.fallbacks['elapsed_clipped_to_clock']+=1
         data['elapsed']=min(data.get('elapsed',0),s.clock)
         if data.get('receiving_side')=='same':data['receiving_side']=s.possession
         if 'spot' in data:
             # Template spot stores observed net progress; map it to today's field position.
             spot=s.yardline-data['spot'];data['spot']=max(0,min(99,spot))
+            if data['spot']!=spot:self.fallbacks['spot_clamped']+=1
         if data['kind'] in ('run','pass_complete','sack','kneel','fumble_recovered'):
-            data['yards']=max(s.yardline-100,min(s.yardline,data['yards']))
+            clamped=max(s.yardline-100,min(s.yardline,data['yards']))
+            if clamped!=data['yards']:self.fallbacks['yards_clamped_to_field']+=1
+            data['yards']=clamped
         if s.phase=='safety_kick':data['kind']='kickoff'
         return Action(**data)
