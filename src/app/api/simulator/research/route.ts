@@ -4,8 +4,8 @@ import path from "node:path";
 import { gunzipSync } from "node:zlib";
 import { requestUser } from "@/lib/billing-server";
 import { parseResearchRun } from "@/lib/game-sim/research";
-import manifest from "../../../../../research/game_sim/artifacts/v0.1.1/manifest.json";
-import calibration from "../../../../../research/game_sim/artifacts/v0.1.1/calibration-summary.json";
+import manifest from "../../../../../research/game_sim/artifacts/v0.2.10/manifest.json";
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const reply = (body: object, status = 200) =>
@@ -23,20 +23,18 @@ export async function GET(req: Request) {
     const admin = await auth.db.rpc("is_admin");
     if (admin.error || admin.data !== true)
       return reply({ error: "Admin research access required." }, 403);
-    const bytes = await readFile(
-      path.join(
-        process.cwd(),
-        "research/game_sim/artifacts/v0.1.1/research-render.json.gz",
-      ),
-    );
-    if (
-      createHash("sha256").update(bytes).digest("hex") !==
-      manifest.research_artifacts["research-render.json.gz"]
-    )
-      throw new Error("Artifact integrity");
-    const run = JSON.parse(
-      gunzipSync(bytes, { maxOutputLength: 2_000_000 }).toString("utf8"),
-    );
+    const readVerified = async (name: "replay.json.gz" | "calibration.json.gz") => {
+      const bytes = await readFile(path.join(process.cwd(), "research/game_sim/artifacts/v0.2.10", name));
+      if (createHash("sha256").update(bytes).digest("hex") !== manifest.files[name].sha256)
+        throw new Error("Artifact integrity");
+      const raw = gunzipSync(bytes, { maxOutputLength: 2_000_000 });
+      if (createHash("sha256").update(raw).digest("hex") !== manifest.files[name].canonical_sha256)
+        throw new Error("Canonical artifact integrity");
+      return JSON.parse(raw.toString("utf8"));
+    };
+    const [run, calibration] = await Promise.all([readVerified("replay.json.gz"), readVerified("calibration.json.gz")]);
+    if (run.artifact_sha256 !== manifest.model_sha256 || calibration.model_artifact_sha256 !== manifest.model_sha256)
+      throw new Error("Model identity mismatch");
     if (!parseResearchRun(run).ok) throw new Error("Artifact contract");
     return reply({ run, calibration });
   } catch {
