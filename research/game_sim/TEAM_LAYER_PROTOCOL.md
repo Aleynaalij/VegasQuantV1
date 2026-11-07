@@ -290,3 +290,91 @@ go-ahead.
 ## 8. Not in scope
 Player workloads, weather, QB-specific effects (absorbed by the team effect and disclosed),
 2025/2026 forecasts, database writes, notifications, member UI.
+
+## Result (2026-11-07, appended after the run and scoring; nothing above was changed)
+Run `artifacts/team-0.3.0`, code `98d71ba`, scorer `972876d` (committed before any 2024 outcome
+was read), shards committed at `5f53b34` before scoring.
+
+**Inputs**
+- 2024 play-by-play `23370d5d…0c06` and `games.csv` `9150a9d8…0f00`, both retrieved
+  2026-11-07T09:39:57Z.
+- The generated exclusion list is **empty**. The canceled 2022 BUF–CIN week-17 game is absent from
+  both sources (271 REG games in 2022 in each), not present without a result, so it never becomes
+  evidence. The example in section 1 does not occur in these sources.
+- Evidence: 100,823 pass-rate plays and 98,834 gain plays. 1,989 turnover plays are kept in the
+  rate ridge and left out of the gain ridge; 374 rows were excluded for missing fields.
+- Every target passed `check_cutoff`. `rate_degenerate` occurred 0 times.
+- Rate-cell fallback levels, in play-target units: level 0: 17,973,850; level 1: 338,081;
+  level 2: 4,203.
+
+**Coefficients across 544 possession sides**
+
+| effect | min | median | max |
+|---|---:|---:|---:|
+| `a_o` | −1.115 | −0.038 | 1.368 |
+| `b_d` | −0.738 | 0.013 | 0.719 |
+| `g_o` | −0.328 | −0.023 | 0.409 |
+| `h_d` | −0.230 | −0.002 | 0.250 |
+
+**Runs**
+- 272 games × 2,000 runs × arms A and D: 1,088,000 simulated games, **0 failed**.
+- 5,329 s wall-clock on 4 processes, 8 shards with their SHA256 in `shards.json`.
+- A spot re-run of game 0 reproduced its shard result exactly.
+- Mean Monte Carlo SE of each game's simulated mean is about 0.29 points (margin and total, both
+  arms).
+- Arm D mapping counts, in draw units:
+  - adjusted draws: 82,593,276
+  - `split_degenerate`: 4,787,844
+  - `tilt_degenerate`: 3,610,364
+  - `tilt_unattainable`: 1,507,861
+- Arm C SDs from 2022–2023 (543 games): margin 12.273, total 13.191.
+- Seed note: run j of game i uses seed 1701 + i + j, so neighbouring games share most of their run
+  seeds within each arm. A and D stay exactly paired, but Monte Carlo noise is correlated across
+  games. This is disclosed, not corrected.
+
+**Metrics** (272 games)
+
+| arm | margin CRPS | total CRPS | Brier (home win) | 80% cov. margin | 80% cov. total |
+|---|---:|---:|---:|---:|---:|
+| A (zero coefficients) | 8.1247 | 7.2807 | 0.2502 | 75.7% | 80.5% |
+| B (historical baseline) | 8.0824 | 7.4017 | 0.2497 | 73.5% | 83.1% |
+| C (assumed market normal) | 7.0447 | 6.9918 | 0.2013 | 77.9% | 84.6% |
+| **D (team layer)** | **7.4832** | **7.3297** | **0.2186** | **78.3%** | **80.1%** |
+
+Paired differences, bootstrap 10,000 resamples, seed 20261028, 95% percentile:
+
+| difference | mean | 95% CI |
+|---|---:|---|
+| D−A margin CRPS | −0.642 | [−1.014, −0.269] |
+| D−A total CRPS | +0.049 | [−0.283, +0.377] |
+| D−A Brier | −0.0316 | [−0.0479, −0.0145] |
+| D−C margin CRPS | +0.439 | [+0.150, +0.736] |
+| D−C total CRPS | +0.338 | [+0.108, +0.570] |
+| D−C Brier | +0.0173 | [+0.0046, +0.0297] |
+| D−B margin CRPS | −0.599 | [−1.002, −0.193] |
+| D−B total CRPS | −0.072 | [−0.412, +0.266] |
+
+**Decision (A), research acceptance: PASSED.**
+- D−A margin CRPS is below 0, with a CI that excludes 0.
+- D−A total CRPS has a CI that includes 0.
+- D's 80% coverage is 78.3% for margin and 80.1% for total, both within ±5 points.
+
+Passing (A) only allows the team layer to become the base for the player protocol.
+
+**Decision (B), member/market qualification: FAILED on all three statistical criteria.** D is
+shown to be worse than the assumed market reference C on:
+- margin CRPS (CI entirely above 0)
+- total CRPS (CI entirely above 0)
+- home-win Brier (CI entirely above 0)
+
+So (B) does not pass, whatever the owner decides. Nothing is tuned on 2024, and no metric or
+threshold was added after outcomes were read.
+
+**Limits**
+- C is an assumed normal on nflverse's retrospective closing lines, not verified timestamped
+  prices.
+- The team layer moves only run/pass mix and gain within the stage-2 play table. Clock, timeouts,
+  kicking and turnovers stay league-level.
+- QB-specific effects are absorbed into team effects.
+- These are research results only: `approval: false`, no forecasts, picks, member use, merge or
+  deploy.
