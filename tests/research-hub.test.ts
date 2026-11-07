@@ -596,10 +596,9 @@ test("partial-coverage notices follow the selected sport", () => {
     "NCAAB schedule or research source unavailable. Retry to check this sport.",
     "NHL schedule or research source unavailable. Retry to check this sport.",
     "Membership status unavailable.",
+    "Some NFL research sources could not load. Available sections are partial; retry.",
   ];
-  assert.deepEqual(sportErrors(errors, "nfl"), [
-    "Membership status unavailable.",
-  ]);
+  assert.deepEqual(sportErrors(errors, "nfl"), [errors[2], errors[3]]);
   assert.deepEqual(sportErrors(errors, "nhl"), [errors[1], errors[2]]);
   assert.deepEqual(sportErrors(errors, "all"), errors);
 });

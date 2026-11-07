@@ -139,12 +139,11 @@ export function filterEvents(
 export function sportErrors(errors: string[], sport: HubFilters["sport"]) {
   if (sport === "all") return errors;
   return errors.filter((e) => {
-    const named = /^([A-Z]+) /.exec(e)?.[1]?.toLowerCase();
-    return (
-      !named ||
-      !["nfl", "nba", "nhl", "ncaab"].includes(named) ||
-      named === sport
+    // A notice belongs to a sport when it names one anywhere (e.g. "Some NFL research sources…").
+    const named = (e.match(/\b(NFL|NBA|NHL|NCAAB)\b/g) || []).map((s) =>
+      s.toLowerCase(),
     );
+    return !named.length || named.includes(sport);
   });
 }
 export function eventFinding(
