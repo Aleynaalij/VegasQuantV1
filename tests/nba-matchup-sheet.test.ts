@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  nbaMatchupPreview,
   nbaMatchupSheetSlug,
   nbaSheetAvailability,
 } from "../src/lib/nba-matchup-sheet";
@@ -113,41 +112,4 @@ test("single SVG marks unavailable data and escapes source text", () => {
   assert.match(svg, /Arena &amp; &lt;Test&gt;/);
   assert.match(svg, /No verified quote/);
   assert.match(svg, /Cleveland had not submitted/);
-});
-
-test("Zone preview uses only recorded tip and exact two-sided FanDuel lines", () => {
-  const body = [
-    "Nov 7 · 8:00 PM ET · Rocket Arena",
-    "",
-    "FANDUEL SNAPSHOTS",
-    "Spread · Cleveland Cavaliers +4.5 (-104) | New York Knicks -4.5 (-118) · 9:31 AM ET",
-    "Total · Over 224.5 (-104) | Under 224.5 (-118) · 9:31 AM ET",
-    "",
-    post.body,
-  ].join("\n");
-  assert.deepEqual(nbaMatchupPreview({ ...post, body }), {
-    teams: [
-      { name: "New York Knicks", abbreviation: "ny" },
-      { name: "Cleveland Cavaliers", abbreviation: "cle" },
-    ],
-    tip: "Nov 7 · 8:00 PM ET",
-    spread: { value: "NY -4.5 / CLE +4.5", observed: "9:31 AM ET" },
-    total: { value: "224.5", observed: "9:31 AM ET" },
-  });
-  assert.equal(
-    nbaMatchupPreview({
-      ...post,
-      body: body.replace("Cleveland Cavaliers +4.5", "Other +4.5"),
-    }).spread,
-    null,
-  );
-  assert.equal(
-    nbaMatchupPreview({
-      ...post,
-      body: body.replace("Under 224.5", "Under 225.5"),
-    }).total,
-    null,
-  );
-  assert.equal(nbaMatchupPreview(post).tip, null);
-  assert.equal(nbaMatchupPreview({ ...post, card: null, body }).teams, null);
 });

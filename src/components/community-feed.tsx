@@ -1691,7 +1691,11 @@ export default function CommunityFeed() {
                         </figure>
                       ) : nbaMatchupSheetSlug(p) ? (
                         <div>
-                          <NbaMatchupSheetPreview post={p} />
+                          <NbaMatchupSheetPreview
+                            key={`${uid}:${p.id}`}
+                            id={p.id}
+                            userId={uid}
+                          />
                           <details className="zone-matchup-sheet-original">
                             <summary>Original research and sources</summary>
                             <p className="zone-post-body"><RichText text={p.body} /></p>
