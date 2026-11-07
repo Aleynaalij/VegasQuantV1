@@ -47,6 +47,13 @@ async function verifyCombinedRoutes() {
       )
         privateRequests.push(path);
       let data = [];
+      if (/\/rpc\/desk_data(?:_compact)?$/.test(path))
+        data = {
+          games: [], challenges: [], stages: [], markets: [], analyses: [],
+          picks: [], entries: [], closings: [], results: [], reviews: [],
+          transactions: [], audit: [], free_core: true,
+          access: { allowed: false, admin: false, member_code: null },
+        };
       if (path.endsWith("membership_status"))
         data = { allowed: false, admin: false };
       if (path.endsWith("community_story_clock"))
@@ -81,11 +88,22 @@ async function verifyCombinedRoutes() {
     );
     await page.screenshot({ path: `${out}/${width}-neutral-lobby.png` });
     for (const sport of ["nfl", "nba", "nhl", "ncaab"]) {
+      const deskRefresh = sport === "nfl"
+        ? page.waitForResponse((r) => new URL(r.url()).pathname === "/rest/v1/rpc/desk_data_compact")
+        : null;
       await page.locator(`.vq-lobby-desks a[data-sport="${sport}"]`).click();
       await page.waitForURL(new RegExp("/" + sport + "(?:[?#]|$)"));
       await page
         .locator(`.sport-switch a[data-sport="${sport}"][aria-current="page"]`)
         .waitFor();
+      if (deskRefresh) {
+        const desk = await (await deskRefresh).json();
+        assert.equal(desk.access.allowed, false, "signed-out desk fixture must deny member access");
+        for (const field of ["games", "challenges", "picks", "results"])
+          assert.ok(Array.isArray(desk[field]), `desk refresh requires ${field} array`);
+        // Let the client apply its refresh before asserting the destination header.
+        await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      }
       assert.equal(
         (await page.locator(".breadcrumb b").textContent())?.trim(),
         `${sport.toUpperCase()} desk`,
