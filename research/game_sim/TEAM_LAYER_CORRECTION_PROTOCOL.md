@@ -108,3 +108,71 @@ scored.
      no 2024 target result was viewed before scoring; and final metric computation in `score.py`.
    - The pilot timing and outputs are recorded verbatim in
      `artifacts/team-0.3.1/CHRONOLOGY.md`.
+
+## Result (2026-11-07, appended after both runs were scored; nothing above was changed)
+**Packages.** Code `caaf1b5`, plus `349e574`, which only adds the `--stream` option.
+- `artifacts/team-0.3.1` (original stream): shards `121eb9f`, evaluation `f4e487f`.
+- `artifacts/team-0.3.1-disjoint`: shards `0e190ba`, evaluation in this commit.
+- `artifacts/team-0.3.0` is preserved as superseded.
+
+**Inputs.**
+- Gain plays: 96,585, down from 98,834. Exactly the 2,249 rows Elo identified moved to F:
+  - enforced penalties: 1,437
+  - recovered fumbles: 868
+  - turnovers: 1,772
+  - defensive touchdowns: 161
+- The pass-rate population is unchanged at 100,823 plays.
+- Every target passed `check_cutoff`.
+
+**Runs.**
+- Both runs: 272 games × 2,000 runs × arms A and D, **0 failures**. Each run's scorer passed every
+  fail-closed check.
+- **Determinism:** arm A of the original-stream run is **identical to v0.3.0 for 272 of 272
+  games**.
+- **Monte Carlo SE per game, arm D:**
+  - margin CRPS about 0.16, total CRPS about 0.16
+  - P(home) about 0.011
+  - simulated mean about 0.29
+
+| run | arm | margin CRPS | total CRPS | Brier | cov80 margin | cov80 total |
+|---|---|---:|---:|---:|---:|---:|
+| original | A | 8.1247 | 7.2807 | 0.2502 | 75.7% | 80.5% |
+| original | **D** | **7.5290** | **7.3093** | **0.2214** | **77.9%** | **79.8%** |
+| disjoint | A | 8.1173 | 7.2692 | 0.2506 | 74.3% | 80.9% |
+| disjoint | **D** | **7.5056** | **7.3165** | **0.2214** | **79.0%** | **80.1%** |
+| both | B | 8.0824 | 7.4017 | 0.2497 | 73.5% | 83.1% |
+| both | C | 7.0447 | 6.9918 | 0.2013 | 77.9% | 84.6% |
+
+Paired bootstrap, 10,000 resamples, seed 20261028:
+
+| difference | original: mean [95% CI] | disjoint: mean [95% CI] |
+|---|---|---|
+| D−A margin CRPS | −0.596 [−0.964, −0.233] | −0.612 [−0.987, −0.241] |
+| D−A total CRPS | +0.029 [−0.305, +0.359] | +0.047 [−0.281, +0.375] |
+| D−A Brier | −0.0287 [−0.0452, −0.0117] | −0.0293 [−0.0457, −0.0121] |
+| D−C margin CRPS | +0.484 [+0.195, +0.780] | +0.461 [+0.176, +0.746] |
+| D−C total CRPS | +0.318 [+0.088, +0.551] | +0.325 [+0.097, +0.558] |
+| D−C Brier | +0.0201 [+0.0075, +0.0324] | +0.0201 [+0.0076, +0.0322] |
+| D−B margin CRPS | −0.553 [−0.950, −0.154] | −0.577 [−0.976, −0.174] |
+| D−B total CRPS | −0.092 [−0.436, +0.246] | −0.085 [−0.427, +0.252] |
+
+**Decision (A), research acceptance: passes in both runs, so it is ESTABLISHED under addendum A1.**
+In each run:
+- D−A margin CRPS is below 0, with a CI that excludes 0.
+- The D−A total CRPS CI includes 0.
+- D's 80% coverage is within ±5 points.
+
+The disjoint streams leave the conclusion unchanged. This permits only what the protocol permits:
+the corrected team layer may serve as the base for a separately frozen player protocol, after
+independent review of this packet.
+
+**Decision (B), member/market qualification: FAILS in both runs.** D is shown to be worse than
+the assumed market reference on margin CRPS, total CRPS and home-win Brier. Every CI lies entirely
+above 0, so nothing qualifies.
+
+**Limits (unchanged):**
+- C is an assumed normal on retrospective closing lines, not verified prices.
+- The reschedule exclusion cannot fire on these inputs (A1 §3).
+- The pilot deviation is disclosed in `CHRONOLOGY.md`.
+- Only run/pass mix and gain are team-adjusted.
+- Research only: `approval: false`, no forecasts, picks, member use, merge or deploy.
