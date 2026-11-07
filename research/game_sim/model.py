@@ -305,6 +305,9 @@ class Sampler:
         for ctx,entries in model['buckets'].items():
             keys=sorted(entries,key=int);weights=[entries[k] for k in keys]
             self.tables[ctx]=(keys,weights,sum(weights))
+    def play_table(self,s,ctx,table):
+        """Stage-2 play table hook (TEAM_LAYER_PROTOCOL §3). The base returns it unchanged and draws nothing."""
+        return table
     def timeout_rates(self,s,family,key_state=None):
         """(p_offense, p_defense) from the first supported categorical cell (RUNNING_CLOCK_PROTOCOL.md).
 
@@ -441,13 +444,14 @@ class Sampler:
         if bucket(s)[4]!='normal' and not fallback:
             self.fallbacks['band_preserved_samples']+=1
             self.fallbacks['band_half_pooled_fallback' if '@h' not in ctx else 'band_half_preserved_samples']+=1
+        base_table=table;table=self.play_table(s,ctx,table)
         key=self.rng.choices(table[0],weights=table[1],k=1)[0];data=dict(self.model['templates'][int(key)])
         if data['kind']=='timeout':data['timeout_side']=timeout_caller(data)
         self.last_source_followed_timeout=data.pop('source_followed_timeout',None)
         origin=data.pop('td_from',None)
         if data.pop('warning_censored',False) and s.period in (2,4,5) and s.clock-data.get('elapsed',0)>120:
             # The censored gap is a lower bound here: draw a non-censored same-kind gap at least as long.
-            pool=[(t['elapsed'],w) for k,w in zip(table[0],table[1]) for t in (self.model['templates'][int(k)],)
+            pool=[(t['elapsed'],w) for k,w in zip(base_table[0],base_table[1]) for t in (self.model['templates'][int(k)],)
                   if t['kind']==data['kind'] and not t.get('warning_censored') and t.get('elapsed',0)>=data.get('elapsed',0)]
             if pool:
                 pool.sort()

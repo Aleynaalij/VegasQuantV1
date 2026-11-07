@@ -23,8 +23,8 @@ def distribution(values):
     bins=Counter(values)
     return dict(n=n,mean=sum(values)/n,quantiles={f'p{int(p*100)}':q(p) for p in (.05,.1,.25,.5,.75,.9,.95)},bins=[dict(lo=k,hi=k,count=v) for k,v in sorted(bins.items())])
 
-def game(model,seed,*,both_possessions=True,max_events=1200,trace=False,workload_context=None,prepared_tables=None):
-    sampler=Sampler(model,seed,prepared_tables);receiver=sampler.rng.choice(('home','away'))
+def game(model,seed,*,both_possessions=True,max_events=1200,trace=False,workload_context=None,prepared_tables=None,sampler_factory=None):
+    sampler=(sampler_factory or Sampler)(model,seed,prepared_tables);receiver=sampler.rng.choice(('home','away'))
     s=State(possession='away' if receiver=='home' else 'home',phase='kickoff',down=None,distance=None,yardline=65,second_half_receiver='away' if receiver=='home' else 'home',ot_both_possessions=both_possessions)
     allocator=Allocator(workload_context,seed ^ 0x51A7) if workload_context else None
     queued_timeout=None;decision_read_state=None;previous_late_play=False
