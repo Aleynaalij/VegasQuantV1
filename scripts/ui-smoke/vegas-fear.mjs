@@ -223,8 +223,21 @@ async function openFromLobby(page, width) {
   });
   await page.locator(".vq-brand-opening").waitFor({ state: "hidden" });
   await fear.waitFor();
-  if (width)
+  if (width) {
+    await section.evaluate((element) =>
+      element.scrollIntoView({ block: "center", behavior: "instant" }),
+    );
+    assert.ok(
+      await fear.evaluate((element) => {
+        const { x, y, width, height } = element.getBoundingClientRect();
+        return element.contains(
+          document.elementFromPoint(x + width / 2, y + height / 2),
+        );
+      }),
+      "the lobby Fear card is unobstructed in the screenshot",
+    );
     await section.screenshot({ path: `${out}/${width}-lobby-dark.png` });
+  }
   await fear.click();
   await page.waitForURL(base + "/vegas-fear");
   await page.getByRole("heading", { name: "Market pressure" }).waitFor();
