@@ -377,3 +377,186 @@ test("NFL prose source links use the same no-credentials boundary as every other
   );
   assert.deepEqual(rows[0].sources, ["https://example.com/safe"]);
 });
+
+test("the hub reader retains older injuries across refresh with bounded, isolated queries", async (t) => {
+  const start = new Date("2026-11-06T12:00:00Z");
+  t.mock.timers.enable({ apis: ["Date"], now: start });
+  stubReads(t, {});
+  const hour = 3600000;
+  const receipt = new Date(+start - 47 * hour).toISOString();
+  const observed = new Date(+start - 48 * hour).toISOString();
+  const injury = {
+    id: "injury-old",
+    game_id: "game-a",
+    kind: "injury",
+    provider: "Provider A",
+    source: "https://example.com/report",
+    recorded_at: receipt,
+    observed_at: observed,
+    payload: { team: "Boston", player: "Sample Guard", status: "Out" },
+  };
+  const games = [
+    { id: "game-a", slug: "a", away_team: "Boston", home_team: "Detroit" },
+    { id: "game-b", slug: "b", away_team: "Miami", home_team: "Atlanta" },
+  ];
+  const kickoff = new Date(+start + 24 * hour).toISOString();
+  let nbaRows = [
+    injury,
+    {
+      ...injury,
+      id: "other-game",
+      game_id: "game-b",
+      payload: { team: "Miami", player: "Other Player", status: "Out" },
+    },
+    {
+      ...injury,
+      id: "too-old",
+      recorded_at: new Date(+start - 8 * 24 * hour).toISOString(),
+      payload: { team: "Boston", player: "Expired Player", status: "Out" },
+    },
+  ];
+  let failGameB = false;
+  const injuryQueries: {
+    table: string;
+    game: string;
+    since: string;
+    limit: number;
+    order: string[];
+  }[] = [];
+  t.mock.method(supabase, "from", (table: string) => {
+    const filters = new Map<string, unknown>();
+    const order: string[] = [];
+    let max = 0;
+    const chain = {
+      select: () => chain,
+      eq: (name: string, value: string) => {
+        filters.set(name, value);
+        return chain;
+      },
+      in: (name: string, value: string[]) => {
+        filters.set(name, value);
+        return chain;
+      },
+      gte: (name: string, value: string) => {
+        filters.set(name, value);
+        return chain;
+      },
+      lt: () => chain,
+      order: (name: string, options?: { ascending?: boolean }) => {
+        order.push(name + ":" + options?.ascending);
+        return chain;
+      },
+      limit: (n: number) => {
+        max = n;
+        return chain;
+      },
+      then: (resolve: (r: { data: unknown[]; error: unknown }) => void) => {
+        let data: unknown[] = [];
+        let error: unknown = null;
+        if (table === "nba_games")
+          data = games.map((g) => ({ ...g, tipoff: kickoff }));
+        if (table === "games") data = [{ ...games[0], kickoff }];
+        if (filters.get("kind") === "injury") {
+          const game = String(filters.get("game_id"));
+          const since = String(filters.get("recorded_at"));
+          injuryQueries.push({ table, game, since, limit: max, order });
+          if (table === "nba_observations") {
+            data = nbaRows
+              .filter((row) => row.game_id === game && row.recorded_at >= since)
+              .sort(
+                (a, b) =>
+                  b.recorded_at.localeCompare(a.recorded_at) ||
+                  b.id.localeCompare(a.id),
+              )
+              .slice(0, max);
+            if (failGameB && game === "game-b") error = { message: "offline" };
+          }
+        }
+        return Promise.resolve({ data, error }).then(resolve);
+      },
+    };
+    return chain;
+  });
+
+  const search = (
+    r: Awaited<ReturnType<typeof readResearchHub>>,
+    player: string,
+    sport = "nba",
+  ) =>
+    filterEvents(
+      r.events,
+      r.findings,
+      hubFilters(new URLSearchParams({ sport, topic: "injuries", q: player })),
+    ).map((e) => e.key);
+  const early = await readResearchHub();
+  assert.deepEqual(search(early, "Sample Guard"), ["nba:game-a"]);
+  assert.equal(
+    early.findings.find((f) => f.id === injury.id)?.title,
+    "Reported availability",
+  );
+  assert.deepEqual(search(early, "Sample Guard", "nfl"), []);
+  assert.deepEqual(search(early, "Other Player"), ["nba:game-b"]);
+  assert.deepEqual(search(early, "Expired Player"), []);
+
+  t.mock.timers.tick(2 * hour);
+  for (let i = 0; i < 2; i++) {
+    const later = await readResearchHub();
+    assert.deepEqual(search(later, "Sample Guard"), ["nba:game-a"]);
+    const retained = later.findings.find((f) => f.id === injury.id);
+    assert.equal(retained?.title, "Older reported availability");
+    assert.equal(retained?.recordedAt, receipt);
+    assert.equal(retained?.sourceAt, observed);
+    assert.deepEqual(retained?.sources, [injury.source]);
+  }
+
+  failGameB = true;
+  nbaRows = [
+    ...nbaRows,
+    {
+      ...injury,
+      id: "newer",
+      provider: "Provider B",
+      recorded_at: new Date().toISOString(),
+      payload: { ...injury.payload, status: "Available" },
+    },
+    {
+      ...injury,
+      id: "missing-player",
+      payload: { team: "Boston", player: "", status: "Out" },
+    },
+    ...Array.from({ length: 100 }, (_, i) => ({
+      ...injury,
+      id: `extra-${i}`,
+      payload: { team: "Boston", player: `Player ${i}`, status: "Out" },
+    })),
+  ];
+  const latest = await readResearchHub();
+  assert.deepEqual(search(latest, "Sample Guard"), ["nba:game-a"]);
+  assert.deepEqual(search(latest, "Other Player"), []);
+  assert.equal(
+    latest.findings.some((f) => f.id === injury.id),
+    false,
+  );
+  assert.match(
+    latest.findings.find((f) => f.id === "newer")?.text || "",
+    /Available/,
+  );
+  assert.equal(
+    latest.findings.some((f) => f.id === "missing-player"),
+    false,
+  );
+  assert.match(latest.errors.join(" "), /NBA injury reports are incomplete/);
+  assert.equal(latest.truncated, true);
+  assert.equal(injuryQueries.length, 12);
+  assert.ok(
+    injuryQueries.every(
+      (q) =>
+        q.limit === 101 &&
+        q.since >= new Date(+start - 7 * 24 * hour).toISOString() &&
+        q.order.join() === "recorded_at:false,id:false" &&
+        (q.table === "nba_observations"
+          ? ["game-a", "game-b"].includes(q.game)
+          : q.table === "source_observations" && q.game === "game-a"),
+    ),
+  );
+});

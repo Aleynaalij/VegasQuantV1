@@ -9,6 +9,7 @@ const uid = "00000000-0000-4000-8000-000000000001",
   now = Date.parse("2026-11-06T18:00:00Z"),
   at = new Date(now).toISOString(),
   old = new Date(now - 30 * 3600000).toISOString(),
+  injuryReceipt = new Date(now - 49 * 3600000).toISOString(),
   kickoff = new Date(now + 3600000).toISOString();
 const version = readFileSync(
   "src/components/app-refresh-notice.tsx",
@@ -227,8 +228,9 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true, ex
   await ctx.route("**/rest/v1/market_snapshots?**", (r) =>
     r.fulfill({ json: [] }),
   );
-  await ctx.route("**/rest/v1/nba_observations?**", (r) =>
-    r.fulfill({
+  await ctx.route("**/rest/v1/nba_observations?**", (r) => {
+    const query = new URL(r.request().url()).searchParams;
+    return r.fulfill({
       json:
         state === "missing"
           ? []
@@ -272,17 +274,20 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true, ex
                 kind: "injury",
                 provider: "ESPN",
                 source: "https://example.com/nba-injury",
-                observed_at: old,
-                recorded_at: at,
+                observed_at: injuryReceipt,
+                recorded_at: injuryReceipt,
                 payload: {
                   team: "Boston",
                   player: "Sample Guard",
                   status: "Out",
                 },
               },
-            ],
-    }),
-  );
+            ].filter((row) => query.get("kind") === "eq.injury"
+              ? row.kind === "injury" && query.get("game_id") === `eq.${row.game_id}` &&
+                row.recorded_at >= (query.get("recorded_at") || "").slice(4)
+              : row.kind !== "injury"),
+    });
+  });
   await ctx.route("**/api/nba/lineups", (r) => {
     const day = new Intl.DateTimeFormat("en-CA", {
       timeZone: "America/New_York",
@@ -499,6 +504,24 @@ try {
       path: `${out}/390-lineup-status.png`,
       fullPage: true,
     });
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await setup(390);
+    await page.goto(base + "/research?sport=nba&topic=injuries&q=Sample+Guard");
+    await page.locator(".rh-event").click();
+    const retained = page.getByText("Older reported availability", { exact: true });
+    await retained.waitFor();
+    const reread = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return url.pathname.endsWith("/nba_observations") && url.searchParams.get("kind") === "eq.injury";
+    });
+    await page.locator(".rh-refresh").click();
+    await reread;
+    await retained.waitFor();
+    assert.match(await page.locator(".rh-dossier").innerText(), /Sample Guard: Out/);
+    assert.match(await page.locator(".rh-dossier").innerText(), /Current status is unverified/);
+    console.log("PASS Research player search and Refresh retain the 49-hour injury with an older-evidence label");
     await ctx.close();
   }
   {
