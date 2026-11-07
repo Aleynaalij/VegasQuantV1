@@ -102,3 +102,16 @@ class ZeroCoefficientPath(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class Scorer(unittest.TestCase):
+    def test_normal_crps_closed_form(self):
+        import math
+        from research.game_sim.team_layer.score import normal_crps
+        self.assertAlmostEqual(normal_crps(0, 1, 0), 2 / math.sqrt(2 * math.pi) - 1 / math.sqrt(math.pi), places=12)
+        # Numerical integral of (F(x) - 1{x >= y})^2 for N(3, 2) at y = 5.
+        from research.game_sim.team_layer.score import normal_cdf
+        y, mu, sd, step = 5.0, 3.0, 2.0, 0.001
+        xs = [mu - 12 + i * step for i in range(int(24 / step))]
+        num = sum((normal_cdf((x - mu) / sd) - (x >= y)) ** 2 * step for x in xs)
+        self.assertAlmostEqual(normal_crps(mu, sd, y), num, places=3)
