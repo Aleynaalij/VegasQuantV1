@@ -114,7 +114,10 @@ export function filterEvents(
   f: HubFilters,
 ) {
   const q = f.query.trim().toLocaleLowerCase();
-  return events.filter((e) => {
+  const covered = (e: ResearchEvent) =>
+    f.topic !== "all" &&
+    findings.some((x) => x.eventKey === e.key && x.topic === f.topic);
+  const kept = events.filter((e) => {
     const own = findings.filter((x) => x.eventKey === e.key);
     return (
       (f.sport === "all" || e.sport === f.sport) &&
@@ -124,6 +127,23 @@ export function filterEvents(
         `${e.away} ${e.home} ${e.venue || ""} ${own.map((x) => `${x.title} ${x.text}`).join(" ")}`
           .toLocaleLowerCase()
           .includes(q))
+    );
+  });
+  // A chosen topic never hides an event, but events with that topic's reports come first (stable, so
+  // kickoff order is kept within each group).
+  return f.topic === "all"
+    ? kept
+    : [...kept.filter(covered), ...kept.filter((e) => !covered(e))];
+}
+/** Source notices for the sport in view; notices that name no sport always show. */
+export function sportErrors(errors: string[], sport: HubFilters["sport"]) {
+  if (sport === "all") return errors;
+  return errors.filter((e) => {
+    const named = /^([A-Z]+) /.exec(e)?.[1]?.toLowerCase();
+    return (
+      !named ||
+      !["nfl", "nba", "nhl", "ncaab"].includes(named) ||
+      named === sport
     );
   });
 }

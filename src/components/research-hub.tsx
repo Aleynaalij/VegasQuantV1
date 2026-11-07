@@ -21,6 +21,7 @@ import {
   hubFilters,
   hubHref,
   filterEvents,
+  sportErrors,
   eventHref,
   sourceAge,
   type Finding,
@@ -314,6 +315,7 @@ export default function ResearchHub() {
       () => filterEvents(data?.events || [], data?.findings || [], filters),
       [data, filters.sport, filters.topic, filters.date, filters.query],
     ),
+    errors = sportErrors(data?.errors || [], filters.sport),
     selected = data?.events.find((e) => e.key === filters.event);
   return (
     <Shell active="feed">
@@ -355,17 +357,32 @@ export default function ResearchHub() {
             ))}
           </div>
           <div className="rh-search-row">
-            <label className="rh-search">
-              <Search size={18} aria-hidden="true" />
-              <span className="sr-only">Search teams, players or events</span>
-              <input
-                type="search"
-                placeholder="Search teams, players or events"
-                maxLength={100}
-                value={filters.query}
-                onChange={(e) => update({ query: e.target.value })}
-              />
-            </label>
+            <form
+              className="rh-search"
+              role="search"
+              onSubmit={(e) => {
+                // Results already filter as you type; the button closes the keyboard and jumps to them.
+                e.preventDefault();
+                (document.activeElement as HTMLElement | null)?.blur();
+                document
+                  .getElementById("rh-results")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              <label>
+                <Search size={18} aria-hidden="true" />
+                <span className="sr-only">Search teams, players or events</span>
+                <input
+                  type="search"
+                  enterKeyHint="search"
+                  placeholder="Search teams, players or events"
+                  maxLength={100}
+                  value={filters.query}
+                  onChange={(e) => update({ query: e.target.value })}
+                />
+              </label>
+              <button type="submit">Search</button>
+            </form>
             <label className="rh-date">
               Event date{" "}
               <input
@@ -428,10 +445,10 @@ export default function ResearchHub() {
         )}
         {data && !loading && (
           <>
-            {!!data.errors.length && (
+            {!!errors.length && (
               <div className="rh-warning" role="alert">
                 <b>Partial coverage</b>
-                {data.errors.map((e, i) => (
+                {errors.map((e, i) => (
                   <p key={i}>{e}</p>
                 ))}
                 <button type="button" onClick={() => setRetry((n) => n + 1)}>
@@ -468,7 +485,7 @@ export default function ResearchHub() {
               )
             ) : (
               <>
-                <div className="rh-list-heading">
+                <div className="rh-list-heading" id="rh-results">
                   <div>
                     <span className="rh-kicker">The event ledger</span>
                     <h2>
@@ -494,7 +511,8 @@ export default function ResearchHub() {
                             (filters.topic === "all" ||
                               f.topic === filters.topic),
                         ),
-                        count = new Set(own.map((i) => i.topic)).size;
+                        count = new Set(own.map((i) => i.topic)).size,
+                        topic = filters.topic !== "all" ? filters.topic : null;
                       return (
                         <Link
                           className="rh-event"
@@ -514,13 +532,32 @@ export default function ResearchHub() {
                           <p className="rh-venue">
                             {e.venue || "Venue to be confirmed"}
                           </p>
+                          {topic && !data.denied && (
+                            <ul className="rh-preview">
+                              {own.length ? (
+                                own
+                                  .slice(0, 3)
+                                  .map((f) => <li key={f.id}>{f.title}</li>)
+                              ) : (
+                                <li className="rh-muted">
+                                  No {TOPIC_NAMES[topic].toLowerCase()} linked
+                                  yet. This does not mean there is nothing to
+                                  report.
+                                </li>
+                              )}
+                            </ul>
+                          )}
                           <div className="rh-event-bottom">
                             <span>
                               {data.denied
                                 ? "Schedule preview"
-                                : count
-                                  ? `${count} research ${count === 1 ? "topic" : "topics"} available`
-                                  : "Research coverage pending"}
+                                : topic
+                                  ? own.length
+                                    ? `${own.length} ${TOPIC_NAMES[topic].toLowerCase()} ${own.length === 1 ? "item" : "items"}`
+                                    : "Coverage pending"
+                                  : count
+                                    ? `${count} research ${count === 1 ? "topic" : "topics"} available`
+                                    : "Research coverage pending"}
                             </span>
                             <span>
                               Open dossier{" "}
@@ -534,14 +571,14 @@ export default function ResearchHub() {
                 ) : (
                   <div className="rh-state">
                     <h3>
-                      {data.errors.length
+                      {errors.length
                         ? "No matching events in the available sources"
                         : data.events.length
                           ? "No events match these filters"
                           : "No upcoming events returned"}
                     </h3>
                     <p>
-                      {data.errors.length
+                      {errors.length
                         ? "Some sources could not load. Retry before treating this as a complete schedule."
                         : "Try another sport, topic or date. No research has been invented to fill this view."}
                     </p>
