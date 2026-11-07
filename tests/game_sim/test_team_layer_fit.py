@@ -230,3 +230,34 @@ class McFollowUp(unittest.TestCase):
         q = score._quantile_counts(v, c, 0.1)
         self.assertEqual(q, d['quantiles']['p10'])
         self.assertEqual(score._quantile_counts(v, c, 0.9), d['quantiles']['p90'])
+
+
+class McNumericRegression(unittest.TestCase):
+    """Elo 6709559434 (optional hardening): numeric checks of coverage and Brier MC SE against an
+    independent expanded-sample computation on the same resamples."""
+
+    @unittest.skipUnless(__import__('importlib').util.find_spec('numpy'), 'numpy not installed (reporting-only MC SE)')
+    def test_coverage_and_brier_se_match_expanded_samples(self):
+        import math
+        import numpy as np
+        from research.game_sim.batch import distribution
+        from research.game_sim.team_layer import score
+        rng = random.Random(21)
+        values = [rng.choice([-3, -1, 0, 0, 1, 2, 3, 7, 10, -7]) for _ in range(400)]
+        d = distribution(values)
+        for y, win in ((3, 1.0), (0, 0.5), (-7, 0.0)):
+            got = score.mc_se(d, y, np.random.default_rng(5), win=win)
+            g = np.random.default_rng(5)
+            v = np.array([b['lo'] for b in d['bins']], float)
+            c = np.array([b['count'] for b in d['bins']], float)
+            draws = g.multinomial(int(c.sum()), c / c.sum(), size=score.MC_BOOT)
+            cover, brier = [], []
+            for dr in draws:
+                sample = sorted(x for x, k in zip(v, dr) for _ in range(int(k)))
+                q = distribution(sample)['quantiles']
+                cover.append(float(q['p10'] <= y <= q['p90']))
+                p = (sum(x > 0 for x in sample) + 0.5 * sum(x == 0 for x in sample)) / len(sample)
+                brier.append((p - win) ** 2)
+            sd = lambda a: math.sqrt(sum((x - sum(a) / len(a)) ** 2 for x in a) / (len(a) - 1))
+            self.assertAlmostEqual(got['inside80'], sd(cover), places=12)
+            self.assertAlmostEqual(got['brier'], sd(brier), places=12)
