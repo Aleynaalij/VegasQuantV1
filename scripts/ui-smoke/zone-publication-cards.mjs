@@ -56,7 +56,15 @@ const sheetPost = {
   ...posts[1],
   id: "5937fd42-e301-4fd5-92b6-abbe3f0d3de0",
   title: "NBA Matchup Cheat Sheet · New York Knicks @ Cleveland Cavaliers",
-  body: "Research only.\nhttps://vegasquant.app/nba/games/ny-cle-20261107",
+  body: [
+    "Nov 7 · 8:00 PM ET · Rocket Arena",
+    "",
+    "FANDUEL SNAPSHOTS",
+    "Spread · Cleveland Cavaliers +4.5 (-104) | New York Knicks -4.5 (-118) · 9:31 AM ET",
+    "Total · Over 224.5 (-104) | Under 224.5 (-118) · 9:31 AM ET",
+    "",
+    "https://vegasquant.app/nba/games/ny-cle-20261107",
+  ].join("\n"),
   legs: [],
   created_at: "2026-10-31T17:00:00Z",
 };
@@ -113,7 +121,15 @@ try {
     await ctx.route("**/rest/v1/rpc/frank_anniversary", (r) =>
       r.fulfill({ json: { state: "hidden" } }),
     );
+    let sheetReads = 0;
+    await ctx.route("https://a.espncdn.com/i/teamlogos/nba/500/*.png", (r) =>
+      r.fulfill({
+        contentType: "image/png",
+        body: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==", "base64"),
+      }),
+    );
     await ctx.route(`**/api/nba/matchup-sheet/${sheetPost.id}`, (r) => {
+      sheetReads++;
       assert.equal(r.request().headers().authorization, "Bearer smoke");
       return r.fulfill({json: {
         title: "New York Knicks at Cleveland Cavaliers",
@@ -251,7 +267,16 @@ try {
     );
     const sheet = p.locator(`#post-${sheetPost.id}`);
     assert.equal(await sheet.locator(".zone-publication").count(), 0);
-    await sheet.getByRole("link", { name:"Open matchup cheat sheet" }).click();
+    const preview = sheet.getByRole("link", { name: "Open matchup cheat sheet" });
+    await preview.waitFor();
+    await preview.getByText("Knicks", { exact: true }).waitFor();
+    await preview.getByText("Cavaliers", { exact: true }).waitFor();
+    await preview.getByText("Nov 7 · 8:00 PM ET", { exact: true }).waitFor();
+    await preview.getByText("NY -4.5 / CLE +4.5", { exact: true }).waitFor();
+    await preview.getByText("224.5", { exact: true }).waitFor();
+    assert.equal(sheetReads, 0, "the preview must not fetch protected sheet data");
+    await preview.screenshot({ path: `${out}/${width}-matchup-preview.png` });
+    await preview.click();
     const board = p.locator(".nba-sheet-scroll img");
     await board.waitFor();
     await p.getByRole("link", {name:"NBA injury report ↗"}).waitFor();
