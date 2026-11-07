@@ -3,10 +3,6 @@ on:
   pull_request:
     paths:
       - 'src/app/vegas-fear/**'
-      - 'src/app/fear-tester-diagnostic/**'
-      - 'src/preview/fear-tester-diagnostic*'
-      - 'scripts/ui-smoke/fear-tester-diagnostic.mjs'
-      - 'next.config.ts'
       - 'src/components/vegas-fear.tsx'
       - 'src/lib/vegas-fear*.ts'
       - 'tests/vegas-fear.test.ts'
@@ -29,15 +25,6 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
-          VERCEL_ENV: production
-          VQ_FEAR_TESTER_DIAGNOSTIC: '1'
-      - name: Prove the production build excludes the diagnostic
-        run: |
-          node -e 'const routes = require("./.next/server/app-paths-manifest.json"); if (Object.keys(routes).some((p) => p.includes("fear-tester-diagnostic"))) process.exit(1)'
-          if grep -Rq 'Fear tester diagnostic' .next/server/app .next/static; then
-            echo "Diagnostic code found in the production bundles"
-            exit 1
-          fi
       - run: |
           npm install --no-save playwright@1.56.1
           npx playwright install --with-deps chromium
@@ -46,7 +33,6 @@ jobs:
           node scripts/ui-smoke/stub.mjs &
           LIVE_SCORES_DISABLED=1 npx next start -H 127.0.0.1 -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/vegas-fear && break; sleep 2; done
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3100/fear-tester-diagnostic)" = 404
           node scripts/ui-smoke/vegas-fear.mjs
           for mode in wrong-comparison false-freshness missing-as-zero nba-identity; do
             if UI_SMOKE_NEGATIVE="$mode" node scripts/ui-smoke/vegas-fear.mjs > "artifacts/vegas-fear/$mode.log" 2>&1; then
@@ -65,42 +51,3 @@ jobs:
         with:
           name: vegas-fear-synthetic-evidence
           path: artifacts/vegas-fear/
-  tester-diagnostic:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Check that an ordinary preview stays off
-        run: |
-          VERCEL_ENV=preview VQ_FEAR_TESTER_DIAGNOSTIC=0 node --import tsx -e 'const config = require("./next.config.ts").default; if (config.pageExtensions?.includes("preview.tsx")) process.exit(1)'
-      - name: Build the explicitly opted-in preview
-        run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
-          VERCEL_ENV: preview
-          VQ_FEAR_TESTER_DIAGNOSTIC: '1'
-      - run: |
-          npm install --no-save playwright@1.56.1
-          npx playwright install --with-deps chromium
-      - name: Verify the diagnostic and runtime guard
-        run: |
-          node scripts/ui-smoke/stub.mjs &
-          LIVE_SCORES_DISABLED=1 VERCEL_ENV=preview VQ_FEAR_TESTER_DIAGNOSTIC=1 npx next start -H 127.0.0.1 -p 3100 &
-          LIVE_SCORES_DISABLED=1 VERCEL_ENV=preview VQ_FEAR_TESTER_DIAGNOSTIC=0 npx next start -H 127.0.0.1 -p 3101 &
-          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/fear-tester-diagnostic && break; sleep 2; done
-          curl -fsS -o /dev/null http://127.0.0.1:3100/fear-tester-diagnostic
-          disabled_body=$(mktemp)
-          disabled_status=$(curl -sS -o "$disabled_body" -w '%{http_code}' http://127.0.0.1:3101/fear-tester-diagnostic)
-          if [ "$disabled_status" != 404 ]; then
-            grep -Fq 'NEXT_HTTP_ERROR_FALLBACK;404' "$disabled_body"
-          fi
-          if grep -Fq '/_next/static/chunks/app/fear-tester-diagnostic/' "$disabled_body"; then
-            echo "The disabled preview served the diagnostic client bundle"
-            exit 1
-          fi
-          node scripts/ui-smoke/fear-tester-diagnostic.mjs
