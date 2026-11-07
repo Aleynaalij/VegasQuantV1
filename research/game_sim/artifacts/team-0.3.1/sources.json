@@ -1,10 +1,34 @@
 {
-  "scope": "TEAM_LAYER_PROTOCOL v0.3.0 execution inputs (section 4)",
+  "scope": "TEAM_LAYER_PROTOCOL v0.3.1 correctness rerun inputs (same bytes as v0.3.0)",
   "sources": [
-    {"file": "play_by_play_2022.csv.gz", "source_url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2022.csv.gz", "sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4", "note": "pinned base training source"},
-    {"file": "play_by_play_2023.csv.gz", "source_url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2023.csv.gz", "sha256": "4649804ee0f0a40b41e51ec75a1ce921949d7fab5459213488656b92f78560e8", "note": "already-inspected calibration source"},
-    {"file": "play_by_play_2024.csv.gz", "source_url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2024.csv.gz", "sha256": "23370d5d10f8104d80d46a1fc5e61f4f6f5a3263fe96fe2dd629913cfcb08c06", "bytes": 19362351, "retrieved_at": "2026-11-07T09:39:57Z", "note": "first download of 2024 play-by-play by Claude"},
-    {"file": "games.csv", "source_url": "https://raw.githubusercontent.com/nflverse/nfldata/master/data/games.csv", "sha256": "9150a9d87f64755ba34fc730cd6aaea2a4b98e246257e05d1d5e41d9b2640f00", "bytes": 2188943, "retrieved_at": "2026-11-07T09:39:57Z", "note": "schedule, kickoffs, results and nflverse closing lines"}
+    {
+      "file": "play_by_play_2022.csv.gz",
+      "source_url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2022.csv.gz",
+      "sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+      "note": "pinned base training source"
+    },
+    {
+      "file": "play_by_play_2023.csv.gz",
+      "source_url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2023.csv.gz",
+      "sha256": "4649804ee0f0a40b41e51ec75a1ce921949d7fab5459213488656b92f78560e8",
+      "note": "already-inspected calibration source"
+    },
+    {
+      "file": "play_by_play_2024.csv.gz",
+      "source_url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2024.csv.gz",
+      "sha256": "23370d5d10f8104d80d46a1fc5e61f4f6f5a3263fe96fe2dd629913cfcb08c06",
+      "bytes": 19362351,
+      "retrieved_at": "2026-11-07T09:39:57Z",
+      "note": "first download of 2024 play-by-play by Claude"
+    },
+    {
+      "file": "games.csv",
+      "source_url": "https://raw.githubusercontent.com/nflverse/nfldata/3b867ba53860b501669d4dcf755b05e430f874e9/data/games.csv",
+      "sha256": "9150a9d87f64755ba34fc730cd6aaea2a4b98e246257e05d1d5e41d9b2640f00",
+      "bytes": 2188943,
+      "retrieved_at": "2026-11-07T09:39:57Z",
+      "note": "schedule, kickoffs, results and nflverse closing lines; immutable commit URL (Codex 5812134489); the moving master URL now serves different bytes"
+    }
   ],
-  "exposure": "Before the paired run only schema headers, the generated exclusion list, a one-target effects timing check and a 100-run smoke of game 0 (no outcomes) were looked at. 2024 outcomes are first read by score.py after all shards finish."
+  "exposure": "Automated processing: the loader reads the complete 2024 schedule rows (including final results, to generate exclusions) and the full 2024 play-by-play (to build evidence) before scoring. Human inspection: no 2024 target result was viewed before final scoring; see CHRONOLOGY.md for the one-target timing check and the 100-run pilot run while the 1,000-seed A3 test was in progress. Final metric computation: score.py, committed before scoring."
 }

@@ -76,3 +76,35 @@ and the A-pass is not recovered by tuning.
 
 No player protocol, approval, forecasts, picks, member use, merge, deploy, database writes or
 notifications.
+
+## Addendum A1 (2026-11-07, before any v0.3.1 result exists): Codex review 5812134489
+Frozen while the original-stream v0.3.1 run is still in progress, before any of its shards are
+scored.
+
+1. **Disjoint-stream sensitivity run (Codex P1).** The original stream reuses seeds across
+   adjacent games: run j of game i uses 1701 + i + j. An arm therefore uses only 2,271 unique seeds
+   for 544,000 runs, which the game-level bootstrap does not model.
+   - A second v0.3.1 run, `artifacts/team-0.3.1-disjoint`, uses **disjoint per-game streams**: run
+     j of game i uses seed `1701 + 2000·i + j`. A and D stay paired on every seed.
+   - Everything else is identical: same code, effects, runs, metrics, bootstrap and rules.
+   - **Combination rule:**
+     - Decision (A) counts as established only if it passes in **both** the original-stream and
+       the disjoint-stream run. Otherwise (A) is reported as **not established**.
+     - Decision (B) is reported for both runs and passes only if it passes in both.
+     - Both runs are reported in full, whatever they show. Neither is chosen after seeing results.
+2. **Immutable schedule URL (Codex P2).** `games.csv` is pinned to nflverse/nfldata commit
+   `3b867ba53860b501669d4dcf755b05e430f874e9`, which Codex verified serves the hashed bytes. The
+   moving `master` URL no longer does.
+3. **Reschedule exclusion limit (Codex P2).** The pinned `games.csv` has no `status` or
+   `game_status` column. The code's reschedule, cancel and suspend test therefore cannot fire on
+   these inputs. This is documented as a verification limit: kickoffs are taken as recorded, and
+   the 24-hour rule uses the recorded kickoff.
+   - The rule is not changed here. Any change needs a separate research protocol.
+   - Canceled or unfinished games are still excluded, by missing results or a missing END GAME row.
+4. **Exposure wording (Codex P2).** "Outcomes first read by score.py" was inaccurate. The loader
+   programmatically processes the complete 2024 schedule rows, including results, to generate
+   exclusions, and the full 2024 play-by-play to build evidence, before scoring.
+   - The accurate statement separates three things: automated processing; human inspection, where
+     no 2024 target result was viewed before scoring; and final metric computation in `score.py`.
+   - The pilot timing and outputs are recorded verbatim in
+     `artifacts/team-0.3.1/CHRONOLOGY.md`.
