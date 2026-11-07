@@ -40,6 +40,8 @@ import { ago, initials, richParts, zoneFeed } from "@/lib/zone-feed";
 import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { isPublicationCard } from "@/lib/zone-publication-card";
+import { nbaMatchupSheetSlug } from "@/lib/nba-matchup-sheet";
+import "./nba-matchup-sheet.css";
 import ZonePublicationCard from "./zone-publication-card";
 import ReactionPicker, { useTypedReactions, type TypedReactions } from "./reaction-picker";
 import { nextReaction } from "@/lib/community-reaction-contracts";
@@ -1686,6 +1688,16 @@ export default function CommunityFeed() {
                             </a>
                           </figcaption>
                         </figure>
+                      ) : nbaMatchupSheetSlug(p) ? (
+                        <div>
+                          <Link className="zone-matchup-sheet-open" href={`/nba/matchup-sheet/${p.id}`}>
+                            Open matchup cheat sheet
+                          </Link>
+                          <details className="zone-matchup-sheet-original">
+                            <summary>Original research and sources</summary>
+                            <p className="zone-post-body"><RichText text={p.body} /></p>
+                          </details>
+                        </div>
                       ) : isPublicationCard(p) ? (
                         <ZonePublicationCard post={p} />
                       ) : (
