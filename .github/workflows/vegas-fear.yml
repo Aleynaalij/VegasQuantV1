@@ -1,0 +1,52 @@
+name: Vegas Fear draft acceptance
+on:
+  pull_request:
+    paths:
+      - 'src/app/vegas-fear/**'
+      - 'src/components/vegas-fear.tsx'
+      - 'src/lib/vegas-fear*.ts'
+      - 'tests/vegas-fear.test.ts'
+      - 'scripts/ui-smoke/vegas-fear.mjs'
+      - '.github/workflows/vegas-fear.yml'
+permissions:
+  contents: read
+jobs:
+  market-pressure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --import tsx --test tests/vegas-fear.test.ts
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify draft and negative controls
+        run: |
+          node scripts/ui-smoke/stub.mjs &
+          LIVE_SCORES_DISABLED=1 npx next start -H 127.0.0.1 -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/vegas-fear && break; sleep 2; done
+          node scripts/ui-smoke/vegas-fear.mjs
+          for mode in wrong-comparison false-freshness missing-as-zero; do
+            if UI_SMOKE_NEGATIVE="$mode" node scripts/ui-smoke/vegas-fear.mjs > "artifacts/vegas-fear/$mode.log" 2>&1; then
+              echo "Negative control passed unexpectedly: $mode"
+              exit 1
+            fi
+            case "$mode" in
+              wrong-comparison) grep -q 'wrong event or market is excluded' "artifacts/vegas-fear/$mode.log";;
+              false-freshness) grep -q 'receipt cannot establish freshness' "artifacts/vegas-fear/$mode.log";;
+              missing-as-zero) grep -q 'missing evidence stays unavailable' "artifacts/vegas-fear/$mode.log";;
+            esac
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: vegas-fear-synthetic-evidence
+          path: artifacts/vegas-fear/

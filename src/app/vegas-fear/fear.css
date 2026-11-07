@@ -1,0 +1,72 @@
+.fear-page {
+  max-width: 76rem;
+  margin-inline: auto;
+  padding: clamp(1rem, 3vw, 2.5rem);
+  color: var(--text, inherit);
+}
+.fear-hero,
+.fear-panel,
+.fear-quote {
+  border: 1px solid var(--line, #b9a77b);
+  border-radius: 1rem;
+  padding: clamp(1rem, 3vw, 1.75rem);
+}
+.fear-hero {
+  background: #10342b;
+  color: #f7eed9;
+}
+.fear-hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 4rem);
+}
+.fear-kicker {
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.fear-panel {
+  margin-top: 1rem;
+  background: var(--panel, transparent);
+}
+.fear-controls,
+.fear-grid,
+.fear-quote dl {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+.fear-controls label {
+  display: grid;
+  gap: 0.375rem;
+  min-width: 0;
+}
+.fear-controls select,
+.fear-controls button {
+  min-height: 44px;
+  width: 100%;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line, #b9a77b);
+  padding: 0.5rem;
+  color: inherit;
+  background: var(--panel, Canvas);
+}
+.fear-controls button {
+  align-self: end;
+  cursor: pointer;
+}
+.fear-page :focus-visible {
+  outline: 2px solid #b89a57;
+  outline-offset: 3px;
+}
+.fear-quote {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.fear-quote dd {
+  margin-inline-start: 0;
+  margin-block: 0.25rem;
+}
+.fear-page li {
+  margin-block: 0.5rem;
+  overflow-wrap: anywhere;
+}
