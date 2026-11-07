@@ -94,13 +94,13 @@ const browser = await chromium.launch({
   headless: true,
   args: ["--no-sandbox"],
 });
-async function setup(width, theme = "light", mode = "ready", signedIn = true) {
+async function setup(width, theme = "light", mode = "ready", signedIn = true, expired = false) {
   const ctx = await browser.newContext({
     viewport: { width, height: 900 },
     reducedMotion: "reduce",
   });
   await ctx.addInitScript(
-    ({ uid, version, theme, signedIn }) => {
+    ({ uid, version, theme, signedIn, expired }) => {
       sessionStorage.setItem("vq-prompt-shown", "fixture");
       localStorage.setItem("vq-theme", theme);
       if (document.documentElement)
@@ -113,7 +113,7 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true) {
             access_token: "smoke",
             refresh_token: "smoke",
             token_type: "bearer",
-            expires_at: Math.floor(Date.now() / 1000) + 86400,
+            expires_at: Math.floor(Date.now() / 1000) + (expired ? -60 : 86400),
             user: {
               id: uid,
               aud: "authenticated",
@@ -125,14 +125,44 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true) {
         );
       }
     },
-    { uid, version, theme, signedIn },
+    { uid, version, theme, signedIn, expired },
   );
   let state = mode;
-  await ctx.route("**/rest/v1/rpc/membership_status", (r) =>
-    r.fulfill({
-      json: { allowed: state !== "denied", admin: false, member_code: null },
-    }),
-  );
+  const requests = { access: 0, protected: 0, refresh: 0, dropped: 0 };
+  let releaseAccess;
+  const accessGate = new Promise((resolve) => { releaseAccess = resolve; });
+  ctx.on("request", (r) => {
+    if (/\/rest\/v1\/(analysis_versions|research_feed_posts|nba_observations)\?/.test(r.url())) requests.protected++;
+  });
+  await ctx.route("**/auth/v1/token**", (r) => {
+    requests.refresh++;
+    return r.fulfill({ json: {
+      access_token: "smoke-refreshed", refresh_token: "smoke-refreshed",
+      token_type: "bearer", expires_in: 86400,
+      expires_at: Math.floor(Date.now() / 1000) + 86400,
+      user: { id: uid, aud: "authenticated", role: "authenticated", app_metadata: {}, user_metadata: { vq_welcome_version: 1 } },
+    } });
+  });
+  await ctx.route("**/rest/v1/rpc/membership_status", async (r) => {
+    requests.access++;
+    if (state === "pending") await accessGate;
+    return r.fulfill(state === "access-failure"
+      ? { status: 500, json: { message: "Synthetic access failure" } }
+      : { json: { allowed: state !== "denied", admin: false, member_code: null } });
+  });
+  if (mode === "access-failure" || mode === "dropped-source") {
+    await ctx.addInitScript((negative) => {
+      for (const type of ["focus", "visibilitychange"])
+        for (const target of [window, document]) target.addEventListener(type, (e) => e.stopImmediatePropagation(), true);
+      const interval = window.setInterval;
+      window.setInterval = (fn, ms, ...args) => ms >= 10000 ? 0 : interval(fn, ms, ...args);
+      if (negative) window.addEventListener("click", (e) => {
+        if (/Retry unavailable sources/.test(e.target.closest?.("button")?.innerText || "")) {
+          e.stopImmediatePropagation(); e.preventDefault();
+        }
+      }, true);
+    }, process.env.UI_SMOKE_NEGATIVE === "auth-retry");
+  }
   await ctx.route("**/rest/v1/games?**", (r) =>
     r.fulfill(
       state === "failure"
@@ -181,9 +211,10 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true) {
           },
     );
   });
-  await ctx.route("**/rest/v1/analysis_versions?**", (r) =>
-    r.fulfill({ json: state === "missing" ? [] : [analysis] }),
-  );
+  await ctx.route("**/rest/v1/analysis_versions?**", (r) => {
+    requests.dropped++;
+    return state === "dropped-source" ? r.abort("failed") : r.fulfill({ json: state === "missing" ? [] : [analysis] });
+  });
   await ctx.route("**/rest/v1/research_feed_posts?**", (r) =>
     r.fulfill({ json: state === "missing" ? [] : [news, wrong] }),
   );
@@ -303,9 +334,57 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true) {
     errors = [];
   await page.clock.setFixedTime(new Date(now));
   page.on("pageerror", (e) => errors.push(e.message));
-  return { ctx, page, errors, setState: (v) => (state = v) };
+  return { ctx, page, errors, requests, releaseAccess, setState: (v) => (state = v) };
 }
 try {
+  const dossier = "/research?event=nfl%3Anfl-1";
+  for (const signedIn of [false, true]) {
+    const { ctx, page, requests } = await setup(390, "light", "denied", signedIn);
+    await page.goto(base + dossier);
+    await page.getByRole("heading", { name: "Open your research access" }).waitFor();
+    assert.equal(await page.locator(".rh-finding").count(), 0);
+    assert.equal(requests.protected, 0, "denied/signed-out hub does not request protected research");
+    await ctx.close();
+  }
+  {
+    const { ctx, page, requests, releaseAccess, setState } = await setup(390, "light", "pending");
+    await page.goto(base + dossier, { waitUntil: "domcontentloaded" });
+    await page.getByText("Checking schedule and research access.", { exact: true }).waitFor();
+    assert.equal(await page.locator(".rh-finding").count(), 0);
+    assert.equal(requests.protected, 0, "pending hub does not request protected research");
+    setState("ready"); releaseAccess();
+    await page.locator(".rh-finding").first().waitFor();
+    assert.ok(requests.protected > 0);
+    await ctx.close();
+  }
+  {
+    const { ctx, page, requests } = await setup(390, "light", "ready", true, true);
+    await page.goto(base + dossier);
+    await page.locator(".rh-finding").first().waitFor();
+    assert.ok(requests.refresh > 0, "expired hub session refreshes before research appears");
+    await ctx.close();
+  }
+  for (const mode of ["access-failure", "dropped-source"]) {
+    const { ctx, page, requests, setState } = await setup(390, "light", mode);
+    await page.goto(base + dossier);
+    await page.getByText("Partial coverage", { exact: true }).waitFor();
+    if (mode === "access-failure") {
+      assert.equal(await page.locator(".rh-finding").count(), 0);
+      assert.equal(requests.protected, 0, "failed hub access check fails closed");
+    } else assert.equal(await page.getByText("Wind 15 mph in the saved forecast.", { exact: true }).count(), 0);
+    const counter = mode === "access-failure" ? "access" : "dropped";
+    const before = requests[counter];
+    setState("ready");
+    await page.waitForTimeout(1500);
+    assert.equal(requests[counter], before, "hub recovery waits for Retry rather than background refresh");
+    await page.getByRole("button", { name: "Retry unavailable sources" }).click();
+    await page.evaluate(() => { window.dispatchEvent(new Event("focus")); document.dispatchEvent(new Event("visibilitychange")); });
+    const recovered = await page.getByText("Wind 15 mph in the saved forecast.", { exact: true }).waitFor({ timeout: 15000 }).then(() => true, () => false);
+    assert.ok(recovered && requests[counter] > before, "hub auth/source recovery requires the Retry action");
+    assert.equal(await page.getByText("Partial coverage", { exact: true }).count(), 0);
+    await ctx.close();
+  }
+  console.log("PASS canonical hub auth: signed out, denied, pending, allowed, expired refresh, access retry and dropped-source retry");
   for (const width of [360, 390, 1280])
     for (const theme of ["light", "dark"]) {
       const { ctx, page, errors } = await setup(width, theme);

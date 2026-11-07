@@ -41,7 +41,7 @@ jobs:
           LIVE_SCORES_DISABLED=1 npx next start -H 127.0.0.1 -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
           node scripts/ui-smoke/research-hub.mjs
-          for mode in wrong-event false-freshness failure-as-empty; do
+          for mode in wrong-event false-freshness failure-as-empty auth-retry; do
             if UI_SMOKE_NEGATIVE="$mode" UI_ARTIFACT_DIR="artifacts/research-negative-$mode" node scripts/ui-smoke/research-hub.mjs > "/tmp/research-$mode.log" 2>&1; then
               cat "/tmp/research-$mode.log"
               echo "ERROR: research negative control $mode passed unexpectedly"
@@ -52,6 +52,7 @@ jobs:
               wrong-event) grep -q 'wrong-event research is rejected' "/tmp/research-$mode.log";;
               false-freshness) grep -q 'publication is not proof of source freshness' "/tmp/research-$mode.log";;
               failure-as-empty) grep -q 'failure shown as unavailable, not empty' "/tmp/research-$mode.log";;
+              auth-retry) grep -q 'hub auth/source recovery requires the Retry action' "/tmp/research-$mode.log";;
             esac
           done
       - uses: actions/upload-artifact@v4
