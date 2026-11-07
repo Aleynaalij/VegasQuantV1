@@ -1,0 +1,68 @@
+.nba-sheet-view {
+  width: min(100%, 1200px);
+  margin: 0 auto;
+  min-width: 0;
+  padding: 1rem 0 2rem;
+}
+.nba-sheet-view h1 {
+  margin: 0.55rem 0;
+}
+.nba-sheet-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin: 0.6rem 0;
+}
+.nba-sheet-controls h2 {
+  flex: 1 1 15rem;
+  margin: 0;
+  font-size: 1.1rem;
+}
+.nba-sheet-controls button,
+.nba-sheet-controls a,
+.nba-sheet-sources a,
+.zone-matchup-sheet-open {
+  display: inline-block;
+  color: #a3f4c4;
+  background: #11271d;
+  border: 1px solid #3b7254;
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.55rem;
+  font: inherit;
+  text-decoration: none;
+}
+.nba-sheet-scroll {
+  overflow-x: auto;
+  border: 1px solid #365549;
+  border-radius: 0.7rem;
+  background: #08120f;
+}
+.nba-sheet-scroll img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.nba-sheet-scroll.is-zoomed img {
+  min-width: 1200px;
+}
+.nba-sheet-sources {
+  margin-top: 1rem;
+}
+.nba-sheet-sources h2 {
+  font-size: 1.15rem;
+}
+.nba-sheet-sources div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+.zone-matchup-sheet-open {
+  font-weight: 700;
+}
+.zone-matchup-sheet-original {
+  margin: 0.6rem 0;
+}
+.zone-matchup-sheet-original summary {
+  cursor: pointer;
+}
