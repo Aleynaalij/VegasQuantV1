@@ -13,7 +13,7 @@ import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
 import RubyHub from "./ruby-cards";
 import KalshiSourceLink from "./kalshi-source-link";
-import { normalizeKalshiSourceLink } from "@/lib/kalshi-source-link";
+import { actionableKalshiSource } from "@/lib/kalshi-availability";
 import { rubyBrands, type RubySlip } from "@/lib/ruby";
 import CommunityPhoto from "./community-photo";
 import CommunityParlayCard from "./community-parlay-card";
@@ -556,7 +556,7 @@ function ZoneLay({
   async function copy() {
     try {
       await navigator.clipboard.writeText(
-        [lay.brand + " · " + lay.title, ...lay.legs, normalizeKalshiSourceLink(lay.source_link)].filter(Boolean).join("\n"),
+        [lay.brand + " · " + lay.title, ...lay.legs, actionableKalshiSource(lay.source_link)].filter(Boolean).join("\n"),
       );
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
@@ -645,11 +645,11 @@ function ZoneLay({
           </span>
         )}
         <span className="zone-lay-actions">
-          {lay.legs.length || normalizeKalshiSourceLink(lay.source_link) ? (
+          {lay.legs.length || actionableKalshiSource(lay.source_link) ? (
             <button
               type="button"
               className="zone-copy"
-              aria-label={copied ? "Copied" : lay.source_link ? "Copy shared source" : "Copy legs"}
+              aria-label={copied ? "Copied" : actionableKalshiSource(lay.source_link) ? "Copy shared source" : "Copy legs"}
               onClick={() => void copy()}
             >
               {copied ? (

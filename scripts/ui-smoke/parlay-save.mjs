@@ -67,6 +67,10 @@ for (const width of [390, 1280]) {
   await page.route("**/rest/v1/**", async (route) => {
     const u = new URL(route.request().url()),
       path = u.pathname;
+    if (/\/rpc\/[^/]*kalshi/i.test(path)) {
+      kalshiRequests.push(route.request().url());
+      return route.fulfill({ status: 503, json: { code: "KALSHI_PAUSED" } });
+    }
     let data = [];
     if (route.request().method() === "OPTIONS")
       return route.fulfill({ status: 204 });
@@ -132,22 +136,22 @@ for (const width of [390, 1280]) {
     }
     return route.fulfill({ json: data });
   });
-  let kalshiChecks = 0;
-  await page.route("**/api/kalshi", async (route) => {
-    kalshiChecks++;
-    const { keys } = route.request().postDataJSON();
-    assert.deepEqual(keys, ["fixture:10", "fixture:11"]);
-    await route.fulfill({
-      json: {
-        results: keys.map((key, i) => ({
-          key,
-          label: `Sample Kalshi ${i}`,
-          status: i ? "NO_MATCH" : "MATCH",
-          url: i ? null : "https://kalshi.com/markets/sample",
-        })),
-      },
-    });
-  });
+  const kalshiRequests = [];
+  await ctx.route(
+    /https?:\/\/[^/]*kalshi\.com\/|\/api\/kalshi(?:[/?]|$)|\/rpc\/[^/?]*kalshi/i,
+    (route) => {
+      kalshiRequests.push(route.request().url());
+      return route.fulfill({ status: 503, json: { code: "KALSHI_PAUSED" } });
+    },
+  );
+  const assertKalshiPaused = async () => {
+    assert.equal(
+      await page.getByRole("button", { name: /Kalshi/i }).count(),
+      0,
+    );
+    assert.equal(await page.locator('a[href*="kalshi.com"]').count(), 0);
+    assert.deepEqual(kalshiRequests, [], "paused Kalshi made a request");
+  };
   await page.goto(base + "/feed?view=legs");
   // A fresh member must acknowledge the app refresh before using the workshop.
   const refresh = page.getByRole("dialog", {
@@ -167,12 +171,8 @@ for (const width of [390, 1280]) {
     .getByRole("button", { name: "+ Add to lay", exact: true })
     .first()
     .waitFor();
-  await page
-    .getByRole("button", { name: "Build a lay", exact: true })
-    .click();
-  await page
-    .getByLabel("Lay name", { exact: true })
-    .fill("My newest sample");
+  await page.getByRole("button", { name: "Build a lay", exact: true }).click();
+  await page.getByLabel("Lay name", { exact: true }).fill("My newest sample");
   const add = page.getByRole("button", {
     name: "+ Add to lay",
     exact: true,
@@ -218,9 +218,7 @@ for (const width of [390, 1280]) {
   assert.equal(await first.getAttribute("open"), "");
   assert.equal(shares, 0);
   // Repeat save in the Parlay tab, opt in to sharing, retain the dialog on failure.
-  await page
-    .getByRole("button", { name: "Build a lay", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Build a lay", exact: true }).click();
   await page.getByLabel("Lay name", { exact: true }).fill("Shared sample");
   await page
     .getByRole("button", { name: "+ Add to lay", exact: true })
@@ -230,9 +228,7 @@ for (const width of [390, 1280]) {
     .getByRole("button", { name: "+ Add to lay", exact: true })
     .nth(4)
     .click();
-  await page
-    .getByRole("button", { name: "Save lay", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Save lay", exact: true }).click();
   await prompt.waitFor();
   await prompt.getByRole("checkbox").check();
   shareFails = true;
@@ -258,9 +254,7 @@ for (const width of [390, 1280]) {
     await page.locator(".workshop-saved > details").first().innerText(),
     /Shared sample/,
   );
-  await page
-    .getByRole("button", { name: "Build a lay", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Build a lay", exact: true }).click();
   await page.getByLabel("Lay name", { exact: true }).fill("Kalshi sample");
   await page
     .getByRole("button", { name: "+ Add to lay", exact: true })
@@ -273,28 +267,16 @@ for (const width of [390, 1280]) {
   await save.click();
   await prompt.waitFor();
   await prompt.getByRole("checkbox").check();
+  await assertKalshiPaused();
+  // The native share/save path remains usable without an external destination.
   shareFails = true;
-  await prompt.getByRole("button", { name: "Kalshi ↗", exact: true }).click();
+  await prompt.getByRole("button", { name: "Done", exact: true }).click();
   await prompt.getByRole("alert").waitFor();
-  assert.equal(kalshiChecks, 0, "failed share keeps destination closed");
+  assert.ok(await prompt.isVisible());
+  await assertKalshiPaused();
   shareFails = false;
-  await prompt.getByRole("button", { name: "Kalshi ↗", exact: true }).click();
-  const kalshi = page.getByRole("dialog", {
-    name: "Open selections on Kalshi",
-    exact: true,
-  });
-  await kalshi
-    .getByText("No exact available Kalshi match.", { exact: true })
-    .waitFor();
-  assert.equal(await prompt.isVisible(), false);
-  assert.equal(await kalshi.getByRole("link").count(), 0);
-  await kalshi.getByRole("checkbox").check();
-  assert.equal(
-    await kalshi.getByRole("link").getAttribute("href"),
-    "https://kalshi.com/markets/sample",
-  );
-  assert.match(await kalshi.innerText(), /does not create a combined/);
-  await kalshi.getByRole("button", { name: "Close", exact: true }).click();
+  await prompt.getByRole("button", { name: "Done", exact: true }).click();
+  await prompt.waitFor({ state: "hidden" });
   assert.equal(shares, 4);
   // Returning from an external tool leaves the saved card available to reuse.
   const kalshiSaved = page.locator(".workshop-saved > details").first();
@@ -370,9 +352,7 @@ for (const width of [390, 1280]) {
       .getByRole("button", { name: "+ Add to lay", exact: true })
       .nth(title === "Done sample" ? 6 : title === "Repeat sample" ? 2 : 8)
       .click();
-    await page
-      .getByRole("button", { name: "Save lay", exact: true })
-      .click();
+    await page.getByRole("button", { name: "Save lay", exact: true }).click();
     await prompt.waitFor();
     if (title === "Done sample") {
       // Coming back to the tab (say, from Gambly) makes Supabase repeat SIGNED_IN; the saved
@@ -419,20 +399,17 @@ for (const width of [390, 1280]) {
       await prompt.getByRole("alert").waitFor();
       assert.match(await prompt.innerText(), /lay has closed/);
       assert.equal(await gambly.isVisible(), false);
-      await prompt
-        .getByRole("button", { name: "Kalshi ↗", exact: true })
-        .click();
-      assert.equal(await kalshi.isVisible(), false);
-      assert.equal(kalshiChecks, 1);
+      await assertKalshiPaused();
       await prompt
         .getByRole("button", { name: "View My lays", exact: true })
         .click();
     }
   }
+  await assertKalshiPaused();
   await page.screenshot({ path: `/tmp/vq-parlay-save-${width}.png` });
   await ctx.close();
 }
 await browser.close();
 console.log(
-  "Parlay save: persistent bar, newest/highlighted card, optional sharing, share retry, Gambly/Kalshi, reuse/edit, clear, reload recovery and original preservation passed at phone/desktop widths.",
+  "Parlay save: persistent bar, newest/highlighted card, optional sharing, share retry, Gambly, Kalshi pause, reuse/edit, clear, reload recovery and original preservation passed at phone/desktop widths.",
 );

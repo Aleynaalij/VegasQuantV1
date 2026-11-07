@@ -1,17 +1,23 @@
-name: Incoming Kalshi source links
+name: Temporary Kalshi pause
 on:
   pull_request:
     paths:
       [
         "src/lib/*kalshi*",
-        "src/components/kalshi-source-link.tsx",
+        "src/components/*kalshi*",
+        "src/app/api/kalshi/**",
+        "src/components/parlay-workshop.tsx",
         "src/components/ruby-cards.tsx",
         "src/components/community-feed.tsx",
         "src/lib/ruby.ts",
         "tests/*kalshi*",
         "tests/sql/ruby-kalshi-source.mjs",
-        "supabase/migrations/*ruby_kalshi_source_link.sql",
+        "tests/sql/kalshi-pause.mjs",
+        "supabase/rollback/*kalshi*.sql",
+        "supabase/migrations/*kalshi*.sql",
         "scripts/ui-smoke/kalshi-source.mjs",
+        "scripts/ui-smoke/ruby-contributors.mjs",
+        "scripts/ui-smoke/parlay-save.mjs",
         ".github/workflows/kalshi-source.yml",
       ]
   workflow_dispatch:
@@ -37,15 +43,19 @@ jobs:
         run: |
           npm install --no-save playwright@1.56.1
           browser_path=$(command -v google-chrome || command -v chromium || true)
-          if [ -n "$browser_path" ]; then echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"; else npx playwright install --with-deps chromium; fi
-      - name: Incoming link positive and intended missing-source rejection
+          if [ -n "$browser_path" ]; then echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"; echo "CHROMIUM_PATH=$browser_path" >> "$GITHUB_ENV"; else npx playwright install --with-deps chromium; fi
+      - name: Pause acceptance and intended regression rejection
         run: |
           node scripts/ui-smoke/stub.mjs &
           LIVE_SCORES_DISABLED=1 npx next start -H 127.0.0.1 -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
           node scripts/ui-smoke/kalshi-source.mjs
           if UI_SMOKE_NEGATIVE=missing-source node scripts/ui-smoke/kalshi-source.mjs /tmp/kalshi-source-negative-evidence > /tmp/kalshi-missing-source.log 2>&1; then cat /tmp/kalshi-missing-source.log; exit 1; fi
-          grep -q 'link-only source disappeared' /tmp/kalshi-missing-source.log
+          grep -q 'source-only card lost its unavailable explanation' /tmp/kalshi-missing-source.log
+          if UI_SMOKE_NEGATIVE=outbound-control node scripts/ui-smoke/kalshi-source.mjs /tmp/kalshi-outbound-negative-evidence > /tmp/kalshi-outbound.log 2>&1; then cat /tmp/kalshi-outbound.log; exit 1; fi
+          grep -q 'paused Kalshi outbound link present' /tmp/kalshi-outbound.log
+          node scripts/ui-smoke/ruby-contributors.mjs
+          node scripts/ui-smoke/parlay-save.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -54,3 +64,6 @@ jobs:
             /tmp/kalshi-source-evidence
             /tmp/kalshi-source-negative-evidence
             /tmp/kalshi-missing-source.log
+            /tmp/kalshi-outbound-negative-evidence
+            /tmp/kalshi-outbound.log
+            /tmp/vq-parlay-save-*.png

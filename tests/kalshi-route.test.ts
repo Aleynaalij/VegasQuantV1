@@ -84,7 +84,7 @@ test("Kalshi route reads authoritative legs and never substitutes another target
     throw Error("Unexpected fetch " + u);
   };
   try {
-    const { POST } = await import("../src/app/api/kalshi/route");
+    const { lookupKalshi: POST } = await import("../src/lib/kalshi-lookup");
     const req = (auth = true, origin = "https://vegasquant.app") =>
       new Request("https://vegasquant.app/api/kalshi", {
         method: "POST",
@@ -184,7 +184,7 @@ test("Typed legs match one exact open market across the series and never guess b
     throw Error("Unexpected fetch " + u);
   };
   try {
-    const { POST } = await import("../src/app/api/kalshi/route");
+    const { lookupKalshi: POST } = await import("../src/lib/kalshi-lookup");
     const res = await POST(
       new Request("https://vegasquant.app/api/kalshi", {
         method: "POST",
@@ -294,7 +294,7 @@ test("Typed props find their series in Kalshi's sports catalog and link one exac
     throw Error("Unexpected fetch " + u);
   };
   try {
-    const { POST } = await import("../src/app/api/kalshi/route");
+    const { lookupKalshi: POST } = await import("../src/lib/kalshi-lookup");
     const res = await POST(
       new Request("https://vegasquant.app/api/kalshi", {
         method: "POST",
