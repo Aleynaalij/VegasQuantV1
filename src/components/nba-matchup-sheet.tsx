@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { onUserChange } from "@/lib/auth-user";
 import type { NbaSheetResponse } from "@/lib/nba-matchup-sheet";
-import { supabase } from "@/lib/supabase";
+import {
+  fetchNbaMatchupSheet,
+  matchupSheetImageUrl,
+} from "@/lib/nba-matchup-sheet-client";
 import { Shell } from "./ui";
 import "./nba-matchup-sheet.css";
 
@@ -35,27 +38,9 @@ export default function NbaMatchupSheet({ id }: { id: string }) {
     });
     async function load() {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const data = await fetchNbaMatchupSheet(id, abort.signal);
         if (abort.signal.aborted) return;
-        if (!session) throw Error("Sign in to open the full matchup sheet.");
-        const response = await fetch(
-          `/api/nba/matchup-sheet/${encodeURIComponent(id)}`,
-          {
-            headers: { Authorization: `Bearer ${session.access_token}` },
-            signal: abort.signal,
-          },
-        );
-        const data = (await response.json()) as NbaSheetResponse & {
-          error?: string;
-        };
-        if (abort.signal.aborted) return;
-        if (!response.ok)
-          throw Error(data.error || "Matchup sheet unavailable.");
-        image = URL.createObjectURL(
-          new Blob([data.svg], { type: "image/svg+xml;charset=utf-8" }),
-        );
+        image = matchupSheetImageUrl(data.svg);
         setSheet({
           title: data.title,
           summary: data.summary,
