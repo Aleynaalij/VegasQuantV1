@@ -130,7 +130,7 @@ def build(source, calibration, output, *, runs=10000, seed=1701):
     files = dict(model=model, batch=batch, gate=gate, calibration=calibration_report,
                  replay=render(batch) if not batch['runs']['failed'] else dict(status='BLOCKED_INCOMPLETE_SIMULATION'))
     implementation = [Path(__file__), *[Path(__file__).with_name(x) for x in (
-        'model.py','state.py','batch.py','evaluate.py','render.py','workload.py','timeout_cells.py','INTEGRATED_BUILD_PROTOCOL.md','FIELD_CONTEXT_PROTOCOL.md','LATE_SCORE_PROTOCOL.md','HALF_CONTEXT_PROTOCOL.md','TIMEOUT_BUDGET_PROTOCOL.md','TIMEOUT_SUPPORT_PROTOCOL.md','LAST300_PROTOCOL.md','COMPOUND_TIMEOUT_PROTOCOL.md','TWO_STAGE_TIMEOUT_PROTOCOL.md','STOP_CLOCK_PROTOCOL.md','COMPETING_TIMEOUT_PROTOCOL.md','RELOAD_PROTOCOL.md','PHANTOM_STOP_PROTOCOL.md','RUNNING_CLOCK_PROTOCOL.md','RESIDUAL_BACKOFF_PROTOCOL.md','TWO_MINUTE_WARNING_PROTOCOL.md')]]
+        'model.py','state.py','batch.py','evaluate.py','render.py','workload.py','timeout_cells.py','INTEGRATED_BUILD_PROTOCOL.md','FIELD_CONTEXT_PROTOCOL.md','LATE_SCORE_PROTOCOL.md','HALF_CONTEXT_PROTOCOL.md','TIMEOUT_BUDGET_PROTOCOL.md','TIMEOUT_SUPPORT_PROTOCOL.md','LAST300_PROTOCOL.md','COMPOUND_TIMEOUT_PROTOCOL.md','TWO_STAGE_TIMEOUT_PROTOCOL.md','STOP_CLOCK_PROTOCOL.md','COMPETING_TIMEOUT_PROTOCOL.md','RELOAD_PROTOCOL.md','PHANTOM_STOP_PROTOCOL.md','RUNNING_CLOCK_PROTOCOL.md','RESIDUAL_BACKOFF_PROTOCOL.md','TWO_MINUTE_WARNING_PROTOCOL.md','LATE_PLAY_CONTEXT_PROTOCOL.md')]]
     # Archive the exact runtime with the package so verify_package can check it without the branch.
     files['runtime-source'] = dict(sources={p.name: p.read_text() for p in implementation})
     file_manifest = {}

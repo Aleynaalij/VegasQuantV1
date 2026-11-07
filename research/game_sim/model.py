@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other,transition
 
-MODEL_ID='vq-empirical-game/0.2.22'
+MODEL_ID='vq-empirical-game/0.2.23'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -15,7 +15,7 @@ def bucket(s):
     distance_bin=str(distance) if distance<=3 else '4-6' if distance<=6 else '7-10' if distance<=10 else '11+'
     field_bin=next(str(edge) for edge in (5,10,20,40,60,80,100) if s.yardline<=edge)
     if s.phase=='scrimmage' and distance==s.yardline:field_bin+=':goal'
-    return (s.phase,s.down or 0,distance_bin,field_bin,('last10' if s.clock<=10 else 'last30' if s.clock<=30 else 'last120' if s.clock<=120 else 'normal') if s.period in (2,4,5) else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
+    return (s.phase,s.down or 0,distance_bin,field_bin,('last10' if s.clock<=10 else 'last30' if s.clock<=30 else 'last120' if s.clock<=120 else 'last300' if s.period in (4,5) and s.clock<=300 else 'normal') if s.period in (2,4,5) else 'normal','ahead' if getattr(s,s.possession+'_score')>getattr(s,other(s.possession)+'_score') else 'behind' if getattr(s,s.possession+'_score')<getattr(s,other(s.possession)+'_score') else 'tied')
 
 def context_options(s):
     phase,down,distance,field,clock,coarse=bucket(s)
@@ -28,6 +28,12 @@ def context_options(s):
         key=(phase,half_clock,field,fine,str(down),distance)
         floors=list(dict.fromkeys('|'.join((phase,half_clock,zone,coarse)) for zone in (field,field.split(':')[0])))
         primary=list(dict.fromkeys(['|'.join(key[:n]) for n in (6,5,4)]+floors))
+        if clock=='last300':
+            # v0.2.23 (LATE_PLAY_CONTEXT_PROTOCOL.md): every last300 key needs MIN plays; otherwise
+            # exactly the v0.2.22 normal-branch contexts apply (counted in Sampler.draw).
+            nkey=(phase,'normal',field,str(down),distance,coarse)
+            normal=list(dict.fromkeys(['|'.join(nkey[:n]) for n in (6,5,4,3)]+['|'.join((phase,'normal',field.split(':')[0]))]))
+            return list(dict.fromkeys(primary+normal)),normal[-1:],[]
         pooled=list(dict.fromkeys('|'.join((phase,clock,zone,coarse)) for zone in (field,field.split(':')[0])))
         return primary,floors,pooled
     key=(phase,clock,field,str(down),distance,coarse)
@@ -388,6 +394,7 @@ class Sampler:
         if chosen is None:raise ValueError('no empirical context with budget-eligible actions: '+s.phase)
         ctx,source_table,table=chosen
         self.fallbacks[len(ctx.split('|'))]+=1
+        if bucket(s)[4]=='last300' and 'last300' not in ctx:self.fallbacks['last300_normal_fallback']+=1
         if source_table[2]<self.model['minimum_context']:self.fallbacks['thin_context_support']+=1
         if bucket(s)[4]!='normal':
             self.fallbacks['clock_preserved_samples']+=1

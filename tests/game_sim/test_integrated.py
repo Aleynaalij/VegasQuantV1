@@ -149,11 +149,21 @@ class IntegratedTests(unittest.TestCase):
                 self.assertEqual(hashlib.sha256(bundle['sources'][name].encode()).hexdigest(),digest)
             self.assertFalse(json.loads(gzip.decompress((folder/'gate.json.gz').read_bytes()))['passed'])
 
-    def test_last300_only_in_timeout_model_q4_and_ot(self):
-        from research.game_sim.model import timeout_contexts,bucket
+    def test_last300_in_timeout_model_and_q4_play_contexts(self):
+        # v0.2.23 (LATE_PLAY_CONTEXT_PROTOCOL.md): Q4/OT 121-300 s plays get their own flag;
+        # Q2 at the same clock stays normal. Fallback is exactly the v0.2.22 normal contexts.
+        from research.game_sim.model import timeout_contexts,bucket,context_options
         for q in (4,5):
             self.assertTrue(timeout_contexts(State(period=q,clock=200),'offense')[0].startswith('last300@h2|'))
-            self.assertEqual(bucket(State(period=q,clock=200))[4],'normal')
+            self.assertEqual(bucket(State(period=q,clock=200))[4],'last300')
+        self.assertEqual(bucket(State(period=2,clock=200))[4],'normal')
+        primary,floors,pooled=context_options(State(period=4,clock=200))
+        normal_primary,normal_floors,_=context_options(State(period=3,clock=200))
+        self.assertTrue(primary[0].startswith('scrimmage|last300@h2|'))
+        self.assertEqual(primary[-len(normal_primary):],normal_primary)
+        self.assertEqual(floors,normal_floors)
+        self.assertEqual(pooled,[])
+        self.assertFalse(any('last300' in k for k in floors))
         self.assertTrue(timeout_contexts(State(period=2,clock=200),'offense')[0].startswith('normal@q2|'))
         self.assertTrue(timeout_contexts(State(period=4,clock=100),'offense')[0].startswith('last120@h2|'))
 
