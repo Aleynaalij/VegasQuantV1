@@ -166,7 +166,17 @@ try {
       await page.goto(base + path);
       await inspect(page);
       if (width < 500) {
-        await page.getByRole("button", { name: "Refresh sources" }).tap();
+        await Promise.all([
+          page.waitForResponse((response) => {
+            const url = new URL(response.url());
+            return (
+              url.pathname.endsWith("/source_observations") &&
+              url.searchParams.get("kind") === "in.(odds)" &&
+              response.ok()
+            );
+          }),
+          page.getByRole("button", { name: "Refresh sources" }).tap(),
+        ]);
         await inspect(page);
       }
       await page.screenshot({
