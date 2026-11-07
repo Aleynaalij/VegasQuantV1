@@ -1,0 +1,40 @@
+{
+ "implementation_map_matches_manifest": true,
+ "implementation_entries": 29,
+ "implementation_map_matches_archived_runtime": true,
+ "model_sha256_pinned": "f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d",
+ "model_sha256_manifest": "f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d",
+ "model_file_canonical_sha256": "f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d",
+ "model_matches": true,
+ "source_sha256_pinned": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+ "source_sha256_manifest": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+ "source_file_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+ "source_matches": true,
+ "package_files_match_manifest": {
+  "model.json.gz": true,
+  "batch.json.gz": true,
+  "gate.json.gz": true,
+  "calibration.json.gz": true,
+  "replay.json.gz": true,
+  "runtime-source.json.gz": true
+ },
+ "package_unchanged_since_df43331": true,
+ "v0_2_23_packages_unchanged_since_67ce290": true,
+ "build_commit_in_pin_ancestry": true,
+ "build_commit_listed": true,
+ "package_commit_in_pin_ancestry": true,
+ "package_commit_listed": true,
+ "reviewed_head_commit_in_pin_ancestry": true,
+ "reviewed_head_commit_listed": true,
+ "pin_commit_changes_only": [
+  "research/game_sim/TEAM_LAYER_PROTOCOL.md"
+ ],
+ "flags": {
+  "approval": false,
+  "current_matchup_supported": false,
+  "team_player_coupling_enabled": false
+ },
+ "all_match": true,
+ "pin_commit": "df669c6d34bcd81b906cd9ff897d60d686d7c3b7",
+ "scope": "PROVENANCE_READBACK_ONLY"
+}

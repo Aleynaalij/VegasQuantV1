@@ -1,0 +1,384 @@
+{
+  "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "minimum": 30,
+  "coverage": {
+    "running_calls:defense": 705,
+    "running_calls:none": 3723,
+    "running_calls:offense": 510,
+    "running_no_budget": 38,
+    "running_opportunities:both": 4253,
+    "running_opportunities:defense": 389,
+    "running_opportunities:offense": 296,
+    "running_plays": 4976,
+    "stopped_calls:defense": 335,
+    "stopped_calls:none": 33390,
+    "stopped_calls:offense": 495,
+    "stopped_excluded:ambiguous timeout state": 26,
+    "stopped_opportunities:both": 32834,
+    "stopped_opportunities:defense": 778,
+    "stopped_opportunities:offense": 608,
+    "stopped_skipped:decision_consumed": 3532,
+    "stopped_skipped:running_timeout": 1215
+  },
+  "running_floors": {
+    "last10@h1|both": {
+      "n": 15,
+      "offense": 11,
+      "defense": 2,
+      "supported": false
+    },
+    "last10@h1|defense": {
+      "n": 6,
+      "offense": 0,
+      "defense": 3,
+      "supported": false
+    },
+    "last10@h1|offense": {
+      "n": 8,
+      "offense": 5,
+      "defense": 0,
+      "supported": false
+    },
+    "last10@h2|both": {
+      "n": 2,
+      "offense": 2,
+      "defense": 0,
+      "supported": false
+    },
+    "last10@h2|defense": {
+      "n": 3,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last10@h2|offense": {
+      "n": 3,
+      "offense": 2,
+      "defense": 0,
+      "supported": false
+    },
+    "last120@h1|both": {
+      "n": 1092,
+      "offense": 164,
+      "defense": 185,
+      "supported": true
+    },
+    "last120@h1|defense": {
+      "n": 37,
+      "offense": 0,
+      "defense": 3,
+      "supported": true
+    },
+    "last120@h1|offense": {
+      "n": 37,
+      "offense": 19,
+      "defense": 0,
+      "supported": true
+    },
+    "last120@h2|both": {
+      "n": 511,
+      "offense": 51,
+      "defense": 187,
+      "supported": true
+    },
+    "last120@h2|defense": {
+      "n": 181,
+      "offense": 0,
+      "defense": 30,
+      "supported": true
+    },
+    "last120@h2|offense": {
+      "n": 112,
+      "offense": 49,
+      "defense": 1,
+      "supported": true
+    },
+    "last300@h1|both": {
+      "n": 1099,
+      "offense": 24,
+      "defense": 10,
+      "supported": true
+    },
+    "last300@h1|defense": {
+      "n": 11,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last300@h1|offense": {
+      "n": 4,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last300@h2|both": {
+      "n": 1325,
+      "offense": 16,
+      "defense": 251,
+      "supported": true
+    },
+    "last300@h2|defense": {
+      "n": 70,
+      "offense": 0,
+      "defense": 8,
+      "supported": true
+    },
+    "last300@h2|offense": {
+      "n": 114,
+      "offense": 10,
+      "defense": 0,
+      "supported": true
+    },
+    "last30@h1|both": {
+      "n": 183,
+      "offense": 127,
+      "defense": 13,
+      "supported": true
+    },
+    "last30@h1|defense": {
+      "n": 47,
+      "offense": 0,
+      "defense": 4,
+      "supported": true
+    },
+    "last30@h1|offense": {
+      "n": 13,
+      "offense": 7,
+      "defense": 0,
+      "supported": false
+    },
+    "last30@h2|both": {
+      "n": 26,
+      "offense": 19,
+      "defense": 4,
+      "supported": false
+    },
+    "last30@h2|defense": {
+      "n": 34,
+      "offense": 0,
+      "defense": 4,
+      "supported": true
+    },
+    "last30@h2|offense": {
+      "n": 5,
+      "offense": 4,
+      "defense": 0,
+      "supported": false
+    }
+  },
+  "stopped_floors": {
+    "last10@h1|both": {
+      "n": 93,
+      "offense": 7,
+      "defense": 9,
+      "supported": true
+    },
+    "last10@h1|defense": {
+      "n": 121,
+      "offense": 0,
+      "defense": 19,
+      "supported": true
+    },
+    "last10@h1|offense": {
+      "n": 42,
+      "offense": 0,
+      "defense": 0,
+      "supported": true
+    },
+    "last10@h2|both": {
+      "n": 15,
+      "offense": 0,
+      "defense": 3,
+      "supported": false
+    },
+    "last10@h2|defense": {
+      "n": 52,
+      "offense": 0,
+      "defense": 11,
+      "supported": true
+    },
+    "last10@h2|offense": {
+      "n": 32,
+      "offense": 6,
+      "defense": 0,
+      "supported": true
+    },
+    "last120@h1|both": {
+      "n": 1011,
+      "offense": 39,
+      "defense": 43,
+      "supported": true
+    },
+    "last120@h1|defense": {
+      "n": 48,
+      "offense": 0,
+      "defense": 2,
+      "supported": true
+    },
+    "last120@h1|offense": {
+      "n": 63,
+      "offense": 2,
+      "defense": 0,
+      "supported": true
+    },
+    "last120@h2|both": {
+      "n": 529,
+      "offense": 21,
+      "defense": 16,
+      "supported": true
+    },
+    "last120@h2|defense": {
+      "n": 206,
+      "offense": 0,
+      "defense": 9,
+      "supported": true
+    },
+    "last120@h2|offense": {
+      "n": 247,
+      "offense": 5,
+      "defense": 0,
+      "supported": true
+    },
+    "last300@h2|both": {
+      "n": 1183,
+      "offense": 28,
+      "defense": 18,
+      "supported": true
+    },
+    "last300@h2|defense": {
+      "n": 81,
+      "offense": 0,
+      "defense": 3,
+      "supported": true
+    },
+    "last300@h2|offense": {
+      "n": 113,
+      "offense": 3,
+      "defense": 0,
+      "supported": true
+    },
+    "last30@h1|both": {
+      "n": 355,
+      "offense": 25,
+      "defense": 24,
+      "supported": true
+    },
+    "last30@h1|defense": {
+      "n": 151,
+      "offense": 0,
+      "defense": 10,
+      "supported": true
+    },
+    "last30@h1|offense": {
+      "n": 37,
+      "offense": 0,
+      "defense": 0,
+      "supported": true
+    },
+    "last30@h2|both": {
+      "n": 84,
+      "offense": 5,
+      "defense": 4,
+      "supported": true
+    },
+    "last30@h2|defense": {
+      "n": 82,
+      "offense": 0,
+      "defense": 10,
+      "supported": true
+    },
+    "last30@h2|offense": {
+      "n": 50,
+      "offense": 3,
+      "defense": 0,
+      "supported": true
+    },
+    "normal@q1|both": {
+      "n": 8447,
+      "offense": 89,
+      "defense": 29,
+      "supported": true
+    },
+    "normal@q2|both": {
+      "n": 6663,
+      "offense": 101,
+      "defense": 31,
+      "supported": true
+    },
+    "normal@q2|defense": {
+      "n": 19,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q2|offense": {
+      "n": 19,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q3|both": {
+      "n": 8426,
+      "offense": 76,
+      "defense": 26,
+      "supported": true
+    },
+    "normal@q4|both": {
+      "n": 6028,
+      "offense": 84,
+      "defense": 68,
+      "supported": true
+    },
+    "normal@q4|defense": {
+      "n": 18,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q4|offense": {
+      "n": 5,
+      "offense": 1,
+      "defense": 0,
+      "supported": false
+    }
+  },
+  "running_levels": {
+    "level1:ok": 28,
+    "level1:thin": 14,
+    "level2:ok": 52,
+    "level2:thin": 114,
+    "level3:ok": 56,
+    "level3:thin": 332
+  },
+  "stopped_levels": {
+    "level1:ok": 45,
+    "level1:thin": 10,
+    "level2:ok": 98,
+    "level2:thin": 137,
+    "level3:ok": 166,
+    "level3:thin": 480
+  },
+  "unsupported_running_floors": [
+    "last10@h1|both",
+    "last10@h1|defense",
+    "last10@h1|offense",
+    "last10@h2|both",
+    "last10@h2|defense",
+    "last10@h2|offense",
+    "last300@h1|defense",
+    "last300@h1|offense",
+    "last30@h1|offense",
+    "last30@h2|both",
+    "last30@h2|offense"
+  ],
+  "unsupported_stopped_floors": [
+    "last10@h2|both",
+    "normal@q2|defense",
+    "normal@q2|offense",
+    "normal@q4|defense",
+    "normal@q4|offense"
+  ],
+  "unresolved_running_floors": [],
+  "unresolved_stopped_floors": [],
+  "scope": "SOURCE_SUPPORT_AUDIT_ONLY; no fit, no simulation, no gate"
+}
