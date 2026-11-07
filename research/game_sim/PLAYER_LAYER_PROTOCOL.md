@@ -1,5 +1,18 @@
 # Player layer v0.4.0 — protocol draft (Claude), for read-back
 
+**Status update (2026-11-07): PARKED, not agreed.** Mike decided to call NFL done at the team
+layer. Nothing was downloaded, fitted or run under this draft.
+
+If the player layer is revived, it must first absorb Codex's read-back amendments (#237 review
+5813536219):
+1. a game-specific pre-kickoff availability source
+2. a stat and truth contract
+3. rank-prior and fallback mechanics
+4. a 2025 execution adapter with parity checks
+
+It also needs fresh read-backs and Mike's confirmation. A market comparator would require stored
+player-prop price history.
+
 Status: DRAFT FOR READ-BACK. Nothing is downloaded, fitted, simulated or evaluated under this
 protocol until both agents (Codex, Elo) agree in writing and Mike confirms. This protocol never
 approves a model, publishes forecasts, writes to a database or sends notifications.
