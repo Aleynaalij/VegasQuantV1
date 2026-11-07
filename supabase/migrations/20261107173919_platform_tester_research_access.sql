@@ -14,6 +14,7 @@ create table private.tester_batches (
 create table private.tester_batch_accounts (
   batch text not null references private.tester_batches(name),
   user_id uuid not null references auth.users(id) on delete cascade,
+  grant_id uuid not null unique default gen_random_uuid(),
   revoked_at timestamptz,
   primary key (batch, user_id)
 );
@@ -24,8 +25,10 @@ create table private.tester_batch_audit (
   batch text not null,
   at timestamptz not null default statement_timestamp(),
   actor text not null default session_user,
-  before_state jsonb not null,
-  after_state jsonb not null
+  reason text not null,
+  operation text not null,
+  before_state jsonb,
+  after_state jsonb
 );
 alter table private.tester_batches enable row level security;
 alter table private.tester_batch_accounts enable row level security;
@@ -33,41 +36,129 @@ alter table private.tester_batch_audit enable row level security;
 revoke all on private.tester_batches, private.tester_batch_accounts, private.tester_batch_audit
   from public, anon, authenticated, service_role;
 
+-- Audit uses an opaque grant identifier. Account deletion removes its mapping to a user.
 create function private.audit_tester_batch()
-returns trigger language plpgsql security invoker set search_path = '' as $$
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare
+  prior jsonb := case when tg_op <> 'INSERT' then to_jsonb(old) end;
+  next_state jsonb := case when tg_op <> 'DELETE' then to_jsonb(new) end;
+  reason text := nullif(btrim(current_setting('vq.tester_operation_reason', true)), '');
+  removed_user uuid;
 begin
-  if to_jsonb(old) is distinct from to_jsonb(new) then
-    insert into private.tester_batch_audit(batch, before_state, after_state)
-      values (new.name, to_jsonb(old), to_jsonb(new));
+  if prior is not distinct from next_state then return null; end if;
+  if tg_table_name = 'tester_batch_accounts' and tg_op = 'DELETE' then
+    removed_user := (prior->>'user_id')::uuid;
+  elsif tg_table_name = 'tester_batches' and prior->>'canary_user_id' is not null
+        and next_state->>'canary_user_id' is null then
+    removed_user := (prior->>'canary_user_id')::uuid;
   end if;
-  return new;
+  if removed_user is not null and not exists (select 1 from auth.users where id = removed_user) then
+    reason := 'Auth account deletion';
+  end if;
+  if reason is null or length(reason) > 240 then
+    raise exception 'Tester operation requires a reason of 1–240 characters';
+  end if;
+
+  if tg_table_name = 'tester_batches' then
+    if prior is not null then
+      prior := (prior - 'canary_user_id') || jsonb_build_object('canary_grant_id', (
+        select grant_id from private.tester_batch_accounts
+        where batch = prior->>'name' and user_id = (prior->>'canary_user_id')::uuid
+      ));
+    end if;
+    next_state := (next_state - 'canary_user_id') || jsonb_build_object('canary_grant_id', (
+      select grant_id from private.tester_batch_accounts
+      where batch = next_state->>'name' and user_id = (next_state->>'canary_user_id')::uuid
+    ));
+  end if;
+  insert into private.tester_batch_audit(batch, reason, operation, before_state, after_state)
+    values (
+      coalesce(next_state->>'batch', prior->>'batch', next_state->>'name'),
+      reason, tg_table_name || '.' || lower(tg_op), prior - 'user_id', next_state - 'user_id'
+    );
+  return null;
 end $$;
 revoke all on function private.audit_tester_batch() from public, anon, authenticated, service_role;
-create trigger audit_tester_batch after update on private.tester_batches
+create trigger audit_tester_batch after insert or update on private.tester_batches
+  for each row execute function private.audit_tester_batch();
+create trigger audit_tester_account after insert or update or delete on private.tester_batch_accounts
   for each row execute function private.audit_tester_batch();
 
 create function private.keep_tester_cutoff()
 returns trigger language plpgsql security invoker set search_path = '' as $$
 begin
-  if old.sealed_at is not null and
+  if tg_op = 'UPDATE' and old.sealed_at is not null and
      (new.cutoff, new.name, new.sealed_at) is distinct from (old.cutoff, old.name, old.sealed_at) then
     raise exception 'Sealed tester cohort is immutable';
+  end if;
+  if new.sealed_at is null and
+     (cardinality(new.enabled_features) > 0 or not new.canary_only or new.canary_user_id is not null) then
+    raise exception 'Tester batch must be sealed before configuration';
+  end if;
+  if new.canary_user_id is not null and (not new.canary_only or not exists (
+    select 1 from private.tester_batch_accounts where batch = new.name and user_id = new.canary_user_id
+  )) then
+    raise exception 'Canary must be an account in the sealed tester batch';
   end if;
   return new;
 end $$;
 revoke all on function private.keep_tester_cutoff() from public, anon, authenticated, service_role;
-create trigger keep_tester_cutoff before update on private.tester_batches
+create trigger keep_tester_cutoff before insert or update on private.tester_batches
   for each row execute function private.keep_tester_cutoff();
 
+create function private.keep_tester_roster()
+returns trigger language plpgsql security definer set search_path = '' as $$
+declare
+  cohort private.tester_batches;
+begin
+  if tg_op = 'INSERT' then
+    select * into strict cohort from private.tester_batches where name = new.batch for share;
+    if cohort.sealed_at is not null then raise exception 'Sealed tester roster cannot gain accounts'; end if;
+    if not exists (
+      select 1 from auth.users u where u.id = new.user_id and u.created_at <= cohort.cutoff
+        and not coalesce(u.is_anonymous, false)
+    ) then raise exception 'Account is outside the tester snapshot'; end if;
+    return new;
+  end if;
+  if tg_op = 'UPDATE' then
+    if (new.batch, new.user_id, new.grant_id) is distinct from (old.batch, old.user_id, old.grant_id) then
+      raise exception 'Tester grant identity is immutable';
+    end if;
+    return new;
+  end if;
+  if exists (select 1 from auth.users where id = old.user_id) then
+    raise exception 'Tester roster entries may only be removed by auth account deletion';
+  end if;
+  return old;
+end $$;
+revoke all on function private.keep_tester_roster() from public, anon, authenticated, service_role;
+create trigger keep_tester_roster before insert or update or delete on private.tester_batch_accounts
+  for each row execute function private.keep_tester_roster();
+
+create function private.keep_tester_history()
+returns trigger language plpgsql security invoker set search_path = '' as $$
+begin
+  raise exception 'Tester cohort history is retained';
+end $$;
+revoke all on function private.keep_tester_history() from public, anon, authenticated, service_role;
+create trigger keep_tester_batch_history before delete or truncate on private.tester_batches
+  for each statement execute function private.keep_tester_history();
+create trigger keep_tester_roster_history before truncate on private.tester_batch_accounts
+  for each statement execute function private.keep_tester_history();
+create trigger keep_tester_audit_history before update or delete or truncate on private.tester_batch_audit
+  for each statement execute function private.keep_tester_history();
+
 -- Owner-operated. A replay with the same cutoff preserves the sealed roster and revocations.
-create function private.seal_tester_batch(p_name text, p_cutoff timestamptz)
-returns bigint language plpgsql security invoker set search_path = '' as $$
+create function private.seal_tester_batch(p_name text, p_cutoff timestamptz, p_reason text)
+returns bigint language plpgsql security invoker set search_path = ''
+set vq.tester_operation_reason = '' as $$
 declare
   batch private.tester_batches;
 begin
   if p_cutoff is null or not isfinite(p_cutoff) or p_cutoff > statement_timestamp() then
     raise exception 'Explicit historical cutoff required';
   end if;
+  perform set_config('vq.tester_operation_reason', coalesce(p_reason, ''), true);
   insert into private.tester_batches(name, cutoff)
     values (p_name, p_cutoff) on conflict (name) do nothing;
   select * into strict batch from private.tester_batches where name = p_name for update;
@@ -76,14 +167,44 @@ begin
   end if;
   if batch.sealed_at is null then
     insert into private.tester_batch_accounts(batch, user_id)
-      select p_name, u.id
-      from auth.users u
-      where u.created_at <= p_cutoff and not coalesce(u.is_anonymous, false);
+      select p_name, u.id from auth.users u
+      where u.created_at <= p_cutoff and not coalesce(u.is_anonymous, false)
+      on conflict on constraint tester_batch_accounts_pkey do nothing;
     update private.tester_batches set sealed_at = statement_timestamp() where name = p_name;
   end if;
   return (select count(*) from private.tester_batch_accounts a where a.batch = p_name);
 end $$;
-revoke all on function private.seal_tester_batch(text, timestamptz)
+revoke all on function private.seal_tester_batch(text, timestamptz, text)
+  from public, anon, authenticated, service_role;
+
+create function private.configure_tester_batch(
+  p_name text, p_features text[], p_canary_only boolean, p_canary_user uuid, p_reason text
+)
+returns void language plpgsql security invoker set search_path = ''
+set vq.tester_operation_reason = '' as $$
+begin
+  perform set_config('vq.tester_operation_reason', coalesce(p_reason, ''), true);
+  update private.tester_batches
+  set enabled_features = p_features, canary_only = p_canary_only, canary_user_id = p_canary_user
+  where name = p_name and sealed_at is not null;
+  if not found then raise exception 'Unknown or unsealed tester batch'; end if;
+end $$;
+revoke all on function private.configure_tester_batch(text, text[], boolean, uuid, text)
+  from public, anon, authenticated, service_role;
+
+create function private.set_tester_revoked(p_name text, p_user uuid, p_revoked boolean, p_reason text)
+returns void language plpgsql security invoker set search_path = ''
+set vq.tester_operation_reason = '' as $$
+begin
+  if p_revoked is null then raise exception 'Tester revocation state required'; end if;
+  perform set_config('vq.tester_operation_reason', coalesce(p_reason, ''), true);
+  update private.tester_batch_accounts a
+  set revoked_at = case when p_revoked then coalesce(a.revoked_at, statement_timestamp()) end
+  from private.tester_batches b
+  where a.batch = b.name and b.name = p_name and a.user_id = p_user and b.sealed_at is not null;
+  if not found then raise exception 'Tester grant not found in a sealed batch'; end if;
+end $$;
+revoke all on function private.set_tester_revoked(text, uuid, boolean, text)
   from public, anon, authenticated, service_role;
 
 create function private.tester_feature_access(p_feature text)
