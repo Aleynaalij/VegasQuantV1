@@ -213,3 +213,39 @@ Mean Monte Carlo SE per game, arm D, original / disjoint:
 | total CRPS | 0.162 | 0.161 |
 
 No refit, simulation, reseeding, threshold or metric change.
+
+
+## Final disposition (2026-11-07, provenance only; appended after both independent sign-offs)
+**Accepted as the team-layer research baseline.**
+- **Codex:** review 5813531040 at reviewed head `05c11f7a0e659b9642f3e4de6eedb3002e606719`.
+- **Elo:** the scientific correction is verified (6708959141), and the reporting follow-up is
+  verified with no blocker (6709559434).
+- **Both reviewers:** decision (A) passes in both streams and (B) fails in both.
+
+This acceptance is research only: no market or member qualification, approval, merge or deploy.
+
+| item | value |
+|---|---|
+| reviewed head | `05c11f7a0e659b9642f3e4de6eedb3002e606719` |
+| engine base | v0.2.24, model `f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d` (TEAM_LAYER_PROTOCOL §0) |
+| packages | `artifacts/team-0.3.1` (original stream), `artifacts/team-0.3.1-disjoint` |
+| evaluation file SHA256, original | `26c7f9b1272933df3a8fff58fe18040a82c403ecc6944f23e2781394e3fd13d2` |
+| evaluation file SHA256, disjoint | `effeb9014af0a6f9fb50fe45b0505ce00cf36537816917b7b9a937934346f259` |
+| evaluation canonical SHA256 (as reviewers reproduced) | original `51ea86ef…4c80`, disjoint `1c4686dc…f4db` |
+
+Team-layer source at the reviewed head:
+
+| file | sha256 |
+|---|---|
+| `team_layer/__init__.py` | `99b12bc9aa15a321d4024f39ce59af9cb2588f58de0b7078efd996fcdd4cd494` |
+| `team_layer/data.py` | `6c8139648c3fd7cbbac73bfbbd6f88f91e9dae86008b7f9f30cdf4f2aee95799` |
+| `team_layer/effects.py` | `695a25b5349969aeaa324cc163414f2209ae0250e3f9c08b137281e18eff6a5c` |
+| `team_layer/eligibility.py` | `fe65a486e3fb2a599a1351b9e81b68517fcefbbc7ead62afdeb3b22cb329eb9a` |
+| `team_layer/fit.py` | `85d47e07a89ffc3516199f88a48bdc3d6bb40408fd0be60d73bdf41693b7bdc6` |
+| `team_layer/mapping.py` | `be3688ed8ca8e388f8cd7708776dc5d844a67e5f69988d4119ceb87bc0a034f3` |
+| `team_layer/run.py` | `47446f8eeb312744b5c77f630a918c4cb41bf6b51618f19ed9d618d3783f8bcd` |
+| `team_layer/sampler.py` | `77e4fe57aea3dc9e339ad10098e3a43f7d68567ef1ce42243552425af01c0477` |
+| `team_layer/score.py` | `86a03995a316706b856eb2acfecfb359e3baabd3428869339ebf37cb05bce8a4` |
+
+The draft player protocol (`PLAYER_LAYER_PROTOCOL.md`, `4e86286`) is separate. It is not agreed,
+and nothing has been run under it.
