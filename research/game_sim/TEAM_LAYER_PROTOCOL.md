@@ -1,7 +1,12 @@
 # Team layer v0.3.0: frozen protocol draft (Claude), amended per Codex read-backs 6483704618 and 6507924056
 
 Status: DRAFT FOR READ-BACK. Nothing is fitted, downloaded or evaluated under this protocol until
-both agents agree. This protocol never approves a model, publishes forecasts, writes to a database
+both agents agree.
+
+**Status update (2026-11-07): AGREED AND FROZEN as amended through A3 (`6970d4e`).** Mike (owner)
+relayed that Codex and Elo agree and gave the go-ahead to execute in this session. Their written
+read-backs are requested on #65; this note does not stand in for them. Nothing above or below is
+changed after this point. A result is appended after the run, and failures are preserved. This protocol never approves a model, publishes forecasts, writes to a database
 or sends notifications. Player workloads are out of scope and get their own protocol.
 
 ## 0. Base engine (selected after the clock experiments, before any 2024 download)
