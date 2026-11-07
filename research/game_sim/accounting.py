@@ -51,13 +51,21 @@ def report(folder, source, previous=None):
     if previous:
         _, p = batch_counts(previous)
         b, f = c.get('band_preserved_samples', 0), c.get('last300_normal_fallback', 0)
+        if not any(k in p for k in RETIRED):
+            # The relabel equalities only apply against a batch that still carries the retired
+            # labels (v0.2.23 itself). Across model versions counters are compared, not equated.
+            changed = {k: dict(old=p.get(k), new=c.get(k)) for k in sorted(set(p) | set(c))
+                       if isinstance(p.get(k, c.get(k)), (int, float)) and p.get(k) != c.get(k)}
+            out['reconciliation'] = dict(mode='cross_version_comparison', relabel_checks='not_applicable: the previous batch has no retired labels',
+                                         counters_changed=changed, scope='Descriptive; equality is not required across model versions')
+            return out
         checks = {
             'band_preserved + last300_normal_fallback == old clock_preserved': [b + f, p.get('clock_preserved_samples')],
             'band_half_pooled + last300_normal_fallback == old half_pooled': [c.get('band_half_pooled_fallback', 0) + f, p.get('half_pooled_fallback')],
             'band_half_preserved == old half_preserved': [c.get('band_half_preserved_samples', 0), p.get('half_preserved_samples')],
         }
         shared = {k: [p[k], c.get(k)] for k in p if isinstance(p[k], (int, float)) and k not in RETIRED and p[k] != c.get(k)}
-        out['reconciliation'] = dict(checks={k: dict(new=v[0], old=v[1], ok=v[0] == v[1]) for k, v in checks.items()},
+        out['reconciliation'] = dict(mode='relabel_reconciliation', checks={k: dict(new=v[0], old=v[1], ok=v[0] == v[1]) for k, v in checks.items()},
                                      shared_counters_changed=shared, retired_in_new=[k for k in RETIRED if k in c])
     return out
 

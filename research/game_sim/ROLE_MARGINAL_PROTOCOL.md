@@ -115,3 +115,25 @@ Package `artifacts/v0.2.24`, built from commit `ad17555` on source `0c69a71e…`
 
 This is a self-check by the builder. TEAM_LAYER_PROTOCOL §0 stays empty until an independent
 review of v0.2.24 passes and the base is pinned in a separate commit.
+
+## Reporting follow-up (Elo review 5809312645; audit tools only, appended after review)
+Elo's independent review verified the scientific fix and found no new defect. Three reporting
+tools did not yet recognise the composed floor. Each is fixed below.
+
+| Tool | Problem | Fix |
+|---|---|---|
+| `role_marginal_check.py` | Crashed reading the removed cell. | Now an importable module, run with `python3 -m research.game_sim.role_marginal_check`. It reports `stored_role_both_cell: absent` and the composed rates (0.011863 / 0.005203). The historical `diagnostics/role-marginal-source-0.2.23.json` is preserved, and the current output is in `role-marginal-source-0.2.24.json`. |
+| `timeout_cells.audit` | The unresolved-floor predicate only knew about stored cells. | A shared `key_supported` treats `~role|both` as supported when both role cells are. The current audit reports zero unresolved floors in both families (`diagnostics/timeout-support-0.2.24.json`). No both cell is recreated. |
+| `accounting.py` | Applied the relabel equalities against a batch that has no retired labels. | That case is now reported as `cross_version_comparison`, with the relabel checks marked not applicable. The changed counters are listed. `diagnostics/accounting-0.2.24.json` was regenerated. |
+
+Evidence that nothing scientific changed:
+- `fit` and `residual_cells` are untouched. A refit at the follow-up head gives the same model hash,
+  `f0b8ab26…512d`.
+- The package and its archived runtime are unchanged. Only the head copies of the audit tools
+  differ from the archive.
+
+New tests:
+- a sparse fitted-to-runtime fixture that reaches the composed floor
+- the support audit, with positive, thin-role and missing-role controls
+- both accounting modes
+- a source-gated CLI test asserting the 29,564 / 350 / 154 counts

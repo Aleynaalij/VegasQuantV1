@@ -1,0 +1,28 @@
+{
+ "normal_band_stopped_opportunities_by_eligibility_and_outcome": {
+  "both|defense": 154,
+  "both|none": 29060,
+  "both|offense": 350,
+  "defense|none": 37,
+  "offense|none": 23,
+  "offense|offense": 1
+ },
+ "both_eligible_n": 29564,
+ "both_eligible_offense_calls": 350,
+ "both_eligible_defense_calls": 154,
+ "fitted_role_offense": {
+  "n": 29588,
+  "offense": 351
+ },
+ "fitted_role_defense": {
+  "n": 29601,
+  "defense": 154
+ },
+ "stored_role_both_cell": "absent",
+ "composed_both_floor": {
+  "supported": true,
+  "p_offense": 0.011862917398945518,
+  "p_defense": 0.005202526941657376
+ },
+ "scope": "DESCRIPTIVE_SOURCE_CHECK_ONLY"
+}

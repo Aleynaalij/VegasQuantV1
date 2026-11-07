@@ -306,6 +306,28 @@ def tabulate_rows(rows, full_keys=None):
     return running, stopped, coverage
 
 
+def key_supported(table, key):
+    """Whether a lookup key is supported, as `Sampler.timeout_rates` decides it.
+
+    The v0.2.24 both-eligible role-marginal floor has no stored cell: it is supported when both
+    role cells are (ROLE_MARGINAL_PROTOCOL.md)."""
+    if key.endswith('~role|both'):
+        return all(table.get(f'normal@all~role|{r}', Counter())['n'] >= MIN for r in ('offense', 'defense'))
+    return table.get(key, Counter())['n'] >= MIN
+
+
+def unresolved_floors(table, family, bands):
+    """Floor cells that remain unsupported after the whole pre-declared chain."""
+    out = []
+    for band in bands:
+        for elig in ('both', 'offense', 'defense'):
+            exact = f'{band}|{elig}'
+            path = [exact] + coarse_floors(family, band, elig)
+            if not any(key_supported(table, k) for k in path):
+                out.append(exact)
+    return out
+
+
 def audit(path):
     running, stopped, coverage, digest = tabulate(path)
 
@@ -322,17 +344,6 @@ def audit(path):
             depth[f"level{key.count('|')}:{'ok' if c['n'] >= MIN else 'thin'}"] += 1
         return dict(sorted(depth.items()))
 
-    def resolved(table, family, bands):
-        """Floor cells that remain unsupported after the whole pre-declared chain."""
-        out = []
-        for band in bands:
-            for elig in ('both', 'offense', 'defense'):
-                exact = f'{band}|{elig}'
-                path = [exact] + coarse_floors(family, band, elig)
-                if not any(table.get(k, Counter())['n'] >= MIN for k in path):
-                    out.append(exact)
-        return out
-
     run_bands = [f'{b}@{h}' for b in ('last10', 'last30', 'last120', 'last300') for h in ('h1', 'h2')]
     stop_bands = list(STOPPED_CHAIN)
     rf, sf = floors(running), floors(stopped)
@@ -341,8 +352,8 @@ def audit(path):
                 running_levels=levels(running), stopped_levels=levels(stopped),
                 unsupported_running_floors=[k for k, v in rf.items() if not v['supported']],
                 unsupported_stopped_floors=[k for k, v in sf.items() if not v['supported']],
-                unresolved_running_floors=resolved(running, 'running', run_bands),
-                unresolved_stopped_floors=resolved(stopped, 'stopped', stop_bands),
+                unresolved_running_floors=unresolved_floors(running, 'running', run_bands),
+                unresolved_stopped_floors=unresolved_floors(stopped, 'stopped', stop_bands),
                 scope='SOURCE_SUPPORT_AUDIT_ONLY; no fit, no simulation, no gate')
 
 
