@@ -18,7 +18,21 @@ from .render import render
 from .state import State, Action, transition
 
 
-def validate_trace(events):
+def archived_kernel(runtime_sources):
+    """The rules kernel a package was built with, from its archived `state.py` (None if absent).
+
+    Each package must replay under its own rules: v0.2.22 added the two-minute warning, so older
+    replays are checked against the kernel archived with them, never the live one."""
+    source = (runtime_sources or {}).get('state.py')
+    if source is None:
+        return None
+    namespace = {'__name__': 'archived_state'}
+    exec(compile(source, 'archived_state.py', 'exec'), namespace)
+    return namespace
+
+
+def validate_trace(events, kernel=None):
+    State_, Action_, transition_ = (kernel['State'], kernel['Action'], kernel['transition']) if kernel else (State, Action, transition)
     previous = None
     for index, event in enumerate(events):
         if event['sequence'] != index:
@@ -27,7 +41,7 @@ def validate_trace(events):
             raise ValueError('replay state discontinuity')
         state = dict(event['before'])
         state['ot_completed'] = tuple(state['ot_completed'])
-        expected = asdict(transition(State(**state), Action(**event['action'])).after)
+        expected = asdict(transition_(State_(**state), Action_(**event['action'])).after)
         if canonical(expected) != canonical(event['after']):
             raise ValueError('replay differs from rules kernel')
         previous = event['after']
@@ -116,7 +130,7 @@ def build(source, calibration, output, *, runs=10000, seed=1701):
     files = dict(model=model, batch=batch, gate=gate, calibration=calibration_report,
                  replay=render(batch) if not batch['runs']['failed'] else dict(status='BLOCKED_INCOMPLETE_SIMULATION'))
     implementation = [Path(__file__), *[Path(__file__).with_name(x) for x in (
-        'model.py','state.py','batch.py','evaluate.py','render.py','workload.py','timeout_cells.py','INTEGRATED_BUILD_PROTOCOL.md','FIELD_CONTEXT_PROTOCOL.md','LATE_SCORE_PROTOCOL.md','HALF_CONTEXT_PROTOCOL.md','TIMEOUT_BUDGET_PROTOCOL.md','TIMEOUT_SUPPORT_PROTOCOL.md','LAST300_PROTOCOL.md','COMPOUND_TIMEOUT_PROTOCOL.md','TWO_STAGE_TIMEOUT_PROTOCOL.md','STOP_CLOCK_PROTOCOL.md','COMPETING_TIMEOUT_PROTOCOL.md','RELOAD_PROTOCOL.md','PHANTOM_STOP_PROTOCOL.md','RUNNING_CLOCK_PROTOCOL.md','RESIDUAL_BACKOFF_PROTOCOL.md')]]
+        'model.py','state.py','batch.py','evaluate.py','render.py','workload.py','timeout_cells.py','INTEGRATED_BUILD_PROTOCOL.md','FIELD_CONTEXT_PROTOCOL.md','LATE_SCORE_PROTOCOL.md','HALF_CONTEXT_PROTOCOL.md','TIMEOUT_BUDGET_PROTOCOL.md','TIMEOUT_SUPPORT_PROTOCOL.md','LAST300_PROTOCOL.md','COMPOUND_TIMEOUT_PROTOCOL.md','TWO_STAGE_TIMEOUT_PROTOCOL.md','STOP_CLOCK_PROTOCOL.md','COMPETING_TIMEOUT_PROTOCOL.md','RELOAD_PROTOCOL.md','PHANTOM_STOP_PROTOCOL.md','RUNNING_CLOCK_PROTOCOL.md','RESIDUAL_BACKOFF_PROTOCOL.md','TWO_MINUTE_WARNING_PROTOCOL.md')]]
     # Archive the exact runtime with the package so verify_package can check it without the branch.
     files['runtime-source'] = dict(sources={p.name: p.read_text() for p in implementation})
     file_manifest = {}

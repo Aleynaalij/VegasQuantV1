@@ -205,7 +205,8 @@ class IntegratedTests(unittest.TestCase):
         batch=payloads['batch.json.gz']
         self.assertEqual(batch['runs'],dict(requested=10000,actual=10000,failed=0))
         self.assertEqual(manifest['model_sha256'],batch['artifact_sha256'])
-        self.assertTrue(validate_trace(batch['replay']['events'])['rules_replay_verified'])
+        from research.game_sim.integrated import archived_kernel
+        self.assertTrue(validate_trace(batch['replay']['events'],archived_kernel(runtime))['rules_replay_verified'])
         self.assertFalse(manifest['approval'])
         self.assertFalse(manifest['team_player_coupling_enabled'])
         self.assertFalse(payloads['calibration.json.gz']['adopted'])

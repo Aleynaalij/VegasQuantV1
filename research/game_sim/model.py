@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other,transition
 
-MODEL_ID='vq-empirical-game/0.2.21'
+MODEL_ID='vq-empirical-game/0.2.22'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -193,6 +193,8 @@ def fit(paths):
                 if nxt['game_id']!=r['game_id']:raise ValueError('game boundary')
                 elapsed=0 if timeout else s.clock-integer(nxt['quarter_seconds_remaining']) if nxt['qtr']==r['qtr'] else 0
                 if not 0<=elapsed<=60:raise ValueError('clock gap')
+                # v0.2.22: a gap ending exactly at the two-minute warning is truncated (censored), not runoff.
+                censored=(not timeout) and s.period in (2,4) and s.clock>120 and nxt['qtr']==r['qtr'] and integer(nxt['quarter_seconds_remaining'])==120
                 kind=r['play_type'];a={};y=integer(r.get('yards_gained') or 0)
                 if timeout:
                     a=dict(kind='timeout',elapsed=0,timeout_side=caller_role)
@@ -235,11 +237,15 @@ def fit(paths):
                     if same:a['receiving_side']='same'
                 elif kind=='field_goal':a=dict(kind='field_goal',elapsed=elapsed,made=r.get('field_goal_result')=='made')
                 else:raise ValueError('unsupported source event')
+                if censored and a.get('kind')!='timeout':
+                    a['warning_censored']=True;counts['warning_censored_templates']+=1
                 if a['kind'] in ('run','pass_complete'):
                     followed=r.get('timeout')=='1' or (nxt.get('timeout')=='1' and nxt.get('play_type')=='no_play')
                     a['source_followed_timeout']=followed
-                    for key in stop_contexts(s,a['kind']):
-                        (stop_tables if followed else runoff_tables)[key][a['elapsed']]+=1
+                    if censored:stop_coverage['warning_censored_excluded']+=len(stop_contexts(s,a['kind']))>0
+                    else:
+                        for key in stop_contexts(s,a['kind']):
+                            (stop_tables if followed else runoff_tables)[key][a['elapsed']]+=1
                     if stop_contexts(s,a['kind']):
                         stop_coverage['eligible_plays']+=1
                         if followed:stop_coverage['timeout_followed_plays']+=1
@@ -390,6 +396,15 @@ class Sampler:
         if data['kind']=='timeout':data['timeout_side']=timeout_caller(data)
         self.last_source_followed_timeout=data.pop('source_followed_timeout',None)
         origin=data.pop('td_from',None)
+        if data.pop('warning_censored',False) and s.period in (2,4,5) and s.clock-data.get('elapsed',0)>120:
+            # The censored gap is a lower bound here: draw a non-censored same-kind gap at least as long.
+            pool=[(t['elapsed'],w) for k,w in zip(table[0],table[1]) for t in (self.model['templates'][int(k)],)
+                  if t['kind']==data['kind'] and not t.get('warning_censored') and t.get('elapsed',0)>=data.get('elapsed',0)]
+            if pool:
+                pool.sort()
+                data['elapsed']=self.rng.choices([e for e,w in pool],weights=[w for e,w in pool],k=1)[0]
+                self.fallbacks['warning_censored_resampled']+=1
+            else:self.fallbacks['warning_censored_unresolved']+=1
         if origin is not None and s.yardline>origin:
             curve=self.model.get('censoring',{}).get(data['kind'])
             gain=censored_gain(curve,origin,s.yardline,self.rng)

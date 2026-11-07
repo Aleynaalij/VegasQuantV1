@@ -2,7 +2,7 @@
 import argparse,gzip,hashlib,json
 from pathlib import Path
 from .batch import canonical
-from .integrated import validate_trace
+from .integrated import validate_trace,archived_kernel
 
 def verify(folder,source=None):
     root=Path(folder);m=json.loads((root/'manifest.json').read_text());payload={}
@@ -17,8 +17,8 @@ def verify(folder,source=None):
     source_hash=gate['source_sha256']
     if source_hash!=model['sources'][0]['sha256']:raise ValueError('declared training source mismatch')
     if source is not None and hashlib.sha256(Path(source).read_bytes()).hexdigest()!=source_hash:raise ValueError('training source mismatch')
-    replay=validate_trace(batch['replay']['events'])
     runtime=payload.get('runtime-source.json.gz',{}).get('sources',{})
+    replay=validate_trace(batch['replay']['events'],archived_kernel(runtime))
     for name,h in m['implementation_sha256'].items():
         raw=runtime.get(name)
         if raw is None or hashlib.sha256(raw.encode()).hexdigest()!=h:raise ValueError('archived implementation mismatch: '+name)
