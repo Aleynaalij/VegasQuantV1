@@ -190,9 +190,15 @@ The adjustment works in two steps.
 moves mass between recorded templates. The existing survival correction then runs after the draw,
 unchanged. This is disclosed as an approximation.
 
-**Zero coefficients:** when every coefficient for a game is 0, the sampler takes the **unchanged
-0.2.10.1 code path** and makes no extra RNG calls. A test checks bit-for-bit equality of full traces
-for 1,000 seeds.
+**Zero coefficients (amendment A3, 2026-11-07, before any fit):** when every coefficient for a game
+is 0, the sampler takes the **unchanged code path of the §0-pinned base**: v0.2.24, model
+`f0b8ab26…512d`, with the runtime archived in `artifacts/v0.2.24`. It makes no extra RNG calls.
+- A test checks bit-for-bit equality of full traces for 1,000 seeds (1701–2700, old OT).
+- The comparison is against the pinned package's saved `model.json.gz` run under its archived
+  runtime.
+- No other baseline may be substituted.
+- The earlier draft named the 0.2.10.1 code path, which predates the pin. Elo flagged this on #237
+  (comment 6705128172).
 
 **Clock, timeouts and kicking stay league-level** in v0.3.0. This is listed as a limitation. With a
 two-stage base (timeout decision, then play), the mapping applies only to the stage-2 play table
