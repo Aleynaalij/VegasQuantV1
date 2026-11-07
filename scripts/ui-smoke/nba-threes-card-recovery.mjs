@@ -1,6 +1,7 @@
 // Isolated real React component acceptance with synthetic network failures and text.
 import { build } from "esbuild";
 import assert from "node:assert/strict";
+import sharp from "sharp";
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
@@ -22,10 +23,12 @@ const browser = await chromium.launch(
     ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE }
     : {},
 );
-const png = Buffer.from(
-  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aN1sAAAAASUVORK5CYII=",
-  "base64",
-);
+const png = await sharp({
+  create: { width: 1080, height: 1350, channels: 3, background: "#07090d" },
+})
+  .png()
+  .toBuffer();
+
 try {
   for (const width of [360, 390, 1280]) {
     const page = await browser.newPage({ viewport: { width, height: 844 } });
