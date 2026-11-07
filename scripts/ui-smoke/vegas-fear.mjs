@@ -137,7 +137,7 @@ async function fixture(width, access = "allowed", mode = "ready") {
       });
     }
     assert.equal(q.get("kind"), "in.(odds,prop)");
-    assert.equal(q.get("limit"), "501");
+    assert.equal(q.get("limit"), "251");
     const spread = {
       ...quote(4, "FanDuel", -3, -112, nba.id),
       provider: "The Odds API NBA",
@@ -171,13 +171,21 @@ async function fixture(width, access = "allowed", mode = "ready") {
         provider: "The Odds API NBA",
       },
     ];
-    if (mode === "truncated")
-      quotes.push(
-        ...Array.from({ length: 498 }, (_, i) => ({
-          ...spread,
-          id: "duplicate-" + i,
-        })),
-      );
+    if (mode === "truncated" || mode === "page-error") {
+      const after = q.get("or")?.match(/id\.gt\.([0-9a-f-]+)/)?.[1];
+      if (mode === "page-error" && after)
+        return r.fulfill({
+          status: 403,
+          json: { message: "Quote page offline" },
+        });
+      const history = Array.from({ length: 1501 }, (_, i) => ({
+        ...quotes[i % quotes.length],
+        id: `00000000-0000-4000-8000-${String(i + 1).padStart(12, "0")}`,
+      }));
+      return r.fulfill({
+        json: history.filter((row) => !after || row.id > after).slice(0, 251),
+      });
+    }
     return r.fulfill({ json: quotes });
   });
   const pending = Promise.withResolvers();
@@ -192,6 +200,8 @@ async function fixture(width, access = "allowed", mode = "ready") {
     if (mode === "delayed") {
       pending.resolve();
       await release.promise;
+      await r.fulfill({ json: rows }).catch(() => {});
+      return;
     }
     return mode === "error"
       ? r.fulfill({ status: 503, json: { message: "Fixture source offline" } })
@@ -412,9 +422,21 @@ try {
       .getByText("Dispersion unavailable with truncated book coverage.")
       .waitFor();
     await page.getByRole("heading", { name: "Fixture Guard · Over" }).waitFor();
+    await page
+      .getByText(/Loaded 1500 snapshots across 2 markets and 2 books/)
+      .waitFor();
+    setMode("page-error");
+    await page.getByRole("button", { name: "Refresh sources" }).click();
+    await page
+      .getByText("Dispersion unavailable with incomplete quote coverage.")
+      .waitFor();
+    await page
+      .getByText(/Loaded 250 snapshots across 2 markets and 2 books/)
+      .waitFor();
+    await page.getByRole("heading", { name: "Fixture Guard · Over" }).waitFor();
     await ctx.close();
     console.log(
-      "PASS NBA event picker, mixed feeds, injury isolation, partial source failure and truncation",
+      "PASS NBA event picker, mixed feeds, injury isolation, partial page failure and truncation",
     );
   }
   {
@@ -425,6 +447,12 @@ try {
     );
     await page.goto(base + path);
     await pending;
+    const stopped = page.waitForEvent(
+      "requestfailed",
+      (request) =>
+        request.url().includes("source_observations") &&
+        new URL(request.url()).searchParams.get("kind") === "in.(odds)",
+    );
     deny();
     await page.evaluate(() => {
       const storage = "sb-127-auth-token";
@@ -438,13 +466,8 @@ try {
     await page
       .getByText("Research access is required.", { exact: false })
       .waitFor();
-    const old = page.waitForResponse(
-      (r) =>
-        r.url().includes("source_observations") &&
-        new URL(r.url()).searchParams.get("kind") === "in.(odds)",
-    );
     release();
-    await (await old).finished();
+    await stopped;
     await page.evaluate(
       () =>
         new Promise((resolve) =>

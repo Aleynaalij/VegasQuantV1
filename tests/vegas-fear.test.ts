@@ -185,9 +185,96 @@ test("reader scopes real PostgREST URLs to the selected event and separates sour
   const market = urls.find((url) =>
     url.searchParams.get("kind")?.includes("prop"),
   )!;
-  assert.equal(market.searchParams.get("limit"), "501");
-  assert.equal(market.searchParams.get("recorded_at"), "gte." + at(72 * 60));
+  assert.equal(market.searchParams.get("limit"), "251");
+  assert.deepEqual(market.searchParams.getAll("recorded_at"), [
+    "gte." + at(72 * 60),
+    "lte." + at(0),
+  ]);
+  assert.match(
+    market.searchParams.get("payload->>market") || "",
+    /player_points/,
+  );
+  assert.equal(market.searchParams.get("order"), "recorded_at.desc,id.asc");
   assert.equal(data.contextError, true);
   assert.equal(data.marketError, false);
   assert.equal(data.evidence.tapes[0].observations, 2);
+});
+
+test("quote pages retain tied rows across the old 500-row limit and freeze the receipt window", async () => {
+  const tiedReceipt = at(0).replace(".000Z", ".000001+00:00");
+  const oldReceipt = tiedReceipt.replace(".000001", ".000000");
+  const rows = Array.from({ length: 604 }, (_, index) => ({
+    ...row(
+      index + 1,
+      -2,
+      -110,
+      index % 2 ? "FanDuel" : "DraftKings",
+      index % 3 ? "spreads" : "h2h",
+    ),
+    id: `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+    recorded_at: oldReceipt,
+    payload:
+      index % 3
+        ? row(0, -2, -110, index % 2 ? "FanDuel" : "DraftKings").payload
+        : {
+            ...row(0, -2, -110, "FanDuel", "h2h").payload,
+            outcomes: [{ name: "Home", price: -110 }],
+          },
+  }));
+  const requests: URL[] = [];
+  let fail = false;
+  let cancel: AbortController | undefined;
+  const client = createClient("https://fixture.example", "fixture", {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      fetch: async (input) => {
+        const url = new URL(String(input));
+        if (url.searchParams.get("kind") === "eq.injury")
+          return Response.json([]);
+        requests.push(url);
+        const cursor = url.searchParams.get("or");
+        if (cursor) {
+          assert.ok(
+            cursor.includes(oldReceipt),
+            "keep exact microsecond tie text in cursor",
+          );
+          if (fail)
+            return Response.json({ message: "page offline" }, { status: 403 });
+          const id = cursor.match(/id\.gt\.([0-9a-f-]+)/)?.[1];
+          return Response.json(
+            rows.filter((row) => row.id > (id || "")).slice(0, 251),
+          );
+        }
+        cancel?.abort();
+        return Response.json(rows.slice(0, 251));
+      },
+    },
+  });
+  const complete = await fearDetail(event, now, client);
+  assert.equal(requests.length, 3);
+  assert.ok(
+    requests.every((r) =>
+      r.searchParams.getAll("recorded_at").includes("lte." + at(0)),
+    ),
+  );
+  assert.equal(complete.marketCoverage.rows, 604);
+  assert.equal(complete.marketCoverage.earliest, Date.parse(at(604)));
+  assert.equal(complete.marketCoverage.latest, Date.parse(at(1)));
+  assert.equal(complete.marketCoverage.markets, 2);
+  assert.equal(complete.marketCoverage.books, 2);
+  assert.equal(complete.marketError, false);
+  assert.equal(complete.marketTruncated, false);
+
+  fail = true;
+  const partial = await fearDetail(event, now, client);
+  assert.equal(partial.marketError, true);
+  assert.equal(partial.marketCoverage.rows, 250);
+  assert.ok(partial.evidence.tapes.length);
+
+  cancel = new AbortController();
+  const before = requests.length;
+  await assert.rejects(fearDetail(event, now, client, cancel.signal), {
+    name: "AbortError",
+  });
+  assert.equal(requests.length, before + 1);
 });

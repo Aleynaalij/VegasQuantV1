@@ -85,8 +85,12 @@ export default function VegasFear() {
   useEffect(() => {
     let live = true,
       generation = 0;
+    let activeRead: AbortController | undefined;
     async function load() {
       const ticket = ++generation;
+      activeRead?.abort();
+      const controller = new AbortController();
+      activeRead = controller;
       setResult(null);
       try {
         if (!supportedFearSport(sport)) return;
@@ -101,7 +105,7 @@ export default function VegasFear() {
         );
         const detail =
           access === "allowed" && event && !event.tbd
-            ? await fearDetail(event, now)
+            ? await fearDetail(event, now, undefined, controller.signal)
             : null;
         if (live && ticket === generation)
           setResult({ request, data: { ...schedule, access, detail } });
@@ -115,12 +119,14 @@ export default function VegasFear() {
     });
     return () => {
       live = false;
+      activeRead?.abort();
       stop();
     };
   }, [sport, eventId, request, retry]);
 
   const event = data?.events.find((item) => item.id === eventId);
   const detail = data?.detail;
+  const incompleteMarket = detail?.marketTruncated || detail?.marketError;
   const tapes =
     detail?.evidence.tapes.filter(
       (t) => !market || t.latest.market === market,
@@ -273,22 +279,32 @@ export default function VegasFear() {
                 {event.away} at {event.home}
               </h2>
               <p>
-                Full game · {historyHours}-hour history window · Fetch started{" "}
+                Full game · Up to {historyHours} hours requested · Fetch started{" "}
                 {when(detail.fetchedAt)}
               </p>
               <p>
+                Loaded {detail.marketCoverage.rows} snapshots across{" "}
+                {detail.marketCoverage.markets} markets and{" "}
+                {detail.marketCoverage.books} books.
+                {detail.marketCoverage.earliest !== null &&
+                detail.marketCoverage.latest !== null
+                  ? ` Observed ${when(detail.marketCoverage.earliest)} to ${when(detail.marketCoverage.latest)}.`
+                  : " No usable observation timestamps in the loaded window."}
+              </p>
+              <p>
                 First observed means the earliest eligible quote in the loaded
-                history. Markets and books may have gaps.
+                subset. Markets and books may have gaps.
               </p>
               {detail.marketError && (
                 <p role="alert">
-                  Quote source unavailable. Refresh sources to retry.
+                  Quote source unavailable. Any shown comparisons use only
+                  successfully loaded pages. Refresh sources to retry.
                 </p>
               )}
               {detail.marketTruncated && (
                 <p>
-                  Quote history reached the query limit. Earlier observations
-                  may be missing.
+                  Quote history reached the query limit. Earlier observations or
+                  markets may be missing. Movement uses only the loaded subset.
                 </p>
               )}
               {detail.evidence.excluded > 0 && (
@@ -305,8 +321,9 @@ export default function VegasFear() {
               )}
               {!tapes.length && !detail.marketError && (
                 <p>
-                  Movement unavailable. No eligible quote history for this
-                  selection.
+                  {incompleteMarket
+                    ? "Movement unavailable in the loaded subset for this selection."
+                    : "Movement unavailable. No eligible quote history for this selection."}
                 </p>
               )}
               <div className="fear-grid">
@@ -330,7 +347,14 @@ export default function VegasFear() {
                       {observations} observation{observations === 1 ? "" : "s"}
                     </p>
                     <dl>
-                      <Quote label="First observed" quote={first} />
+                      <Quote
+                        label={
+                          incompleteMarket
+                            ? "First observed in loaded subset"
+                            : "First observed"
+                        }
+                        quote={first}
+                      />
                       {observations > 1 && (
                         <Quote label="Latest observed" quote={latest} />
                       )}
@@ -361,6 +385,8 @@ export default function VegasFear() {
               </p>
               {detail.marketTruncated ? (
                 <p>Dispersion unavailable with truncated book coverage.</p>
+              ) : detail.marketError ? (
+                <p>Dispersion unavailable with incomplete quote coverage.</p>
               ) : dispersion.length ? (
                 <ul>
                   {dispersion.map(({ quotes, low, high }) => (
