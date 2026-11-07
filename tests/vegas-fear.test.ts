@@ -108,6 +108,37 @@ test("does not revive withdrawn selections or combine ambiguous provider events"
   assert.equal(fearEvidence(event, [old, other], now).ambiguous, true);
 });
 
+test("keeps both NBA collector feeds for the same event and rejects genuine mapping conflicts", () => {
+  const spread = { ...row(4, -3, -110), provider: "The Odds API NBA" };
+  const prop = {
+    ...row(4, 21.5, -110, "FanDuel", "player_points"),
+    provider: "The Odds API NBA props",
+    kind: "prop",
+  };
+  prop.payload.outcomes = [
+    { name: "Over", description: "Player A", point: 21.5, price: -110 },
+  ];
+  const result = fearEvidence(event, [spread, prop], now);
+  assert.equal(result.ambiguous, false);
+  assert.deepEqual(
+    result.tapes.map((t) => [t.latest.provider, t.latest.market]),
+    [
+      ["The Odds API NBA", "spreads"],
+      ["The Odds API NBA props", "player_points"],
+    ],
+  );
+  const conflict = {
+    ...prop,
+    payload: { ...prop.payload, event_id: "different" },
+  };
+  assert.equal(fearEvidence(event, [spread, conflict], now).ambiguous, true);
+  assert.equal(
+    fearEvidence(event, [spread, { ...prop, provider: "Other source" }], now)
+      .ambiguous,
+    true,
+  );
+});
+
 test("keeps prop player and selection distinct and excludes duplicate alternate offers", () => {
   const prop = row(4, 21.5, -110, "FanDuel", "player_points");
   prop.kind = "prop";

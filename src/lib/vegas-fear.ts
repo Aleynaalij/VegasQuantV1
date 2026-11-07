@@ -96,7 +96,13 @@ export function fearEvidence(event: FearEvent, rows: FearRow[], now: number) {
       excluded++;
       continue;
     }
-    eventIds.add(key(provider, providerEvent));
+    // The NBA collector labels game lines and props separately, but both use
+    // the same Odds API event IDs. Keep the original label on every quote.
+    const namespace =
+      event.sport === "nba" && provider === "The Odds API NBA props"
+        ? "The Odds API NBA"
+        : provider;
+    eventIds.add(key(namespace, providerEvent));
     const quotes: FearQuote[] = [];
     const choices = new Set<string>();
     let invalid = false;

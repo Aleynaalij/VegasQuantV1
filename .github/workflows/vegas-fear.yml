@@ -34,7 +34,7 @@ jobs:
           LIVE_SCORES_DISABLED=1 npx next start -H 127.0.0.1 -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/vegas-fear && break; sleep 2; done
           node scripts/ui-smoke/vegas-fear.mjs
-          for mode in wrong-comparison false-freshness missing-as-zero; do
+          for mode in wrong-comparison false-freshness missing-as-zero nba-identity; do
             if UI_SMOKE_NEGATIVE="$mode" node scripts/ui-smoke/vegas-fear.mjs > "artifacts/vegas-fear/$mode.log" 2>&1; then
               echo "Negative control passed unexpectedly: $mode"
               exit 1
@@ -42,6 +42,7 @@ jobs:
             case "$mode" in
               wrong-comparison) grep -q 'wrong event or market is excluded' "artifacts/vegas-fear/$mode.log";;
               false-freshness) grep -q 'receipt cannot establish freshness' "artifacts/vegas-fear/$mode.log";;
+              nba-identity) grep -q 'mixed NBA feeds preserve both tapes' "artifacts/vegas-fear/$mode.log";;
               missing-as-zero) grep -q 'missing evidence stays unavailable' "artifacts/vegas-fear/$mode.log";;
             esac
           done

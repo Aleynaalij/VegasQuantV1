@@ -59,15 +59,15 @@ const rows = [
   quote(1, "Wrong market", -3, -105, event.id, "spreads_q1"),
 ];
 
-async function fixture(width, theme, access = "allowed", mode = "ready") {
+async function fixture(width, access = "allowed", mode = "ready") {
   const ctx = await browser.newContext({
     viewport: { width, height: 900 },
     hasTouch: width < 500,
+    reducedMotion: "reduce",
   });
   await ctx.addInitScript(
-    ({ uid, version, theme, access, now }) => {
+    ({ uid, version, access, now }) => {
       sessionStorage.setItem("vq-prompt-shown", "fixture");
-      localStorage.setItem("vq-theme", theme);
       localStorage.setItem("vq-app-refresh:" + uid, version);
       if (access !== "signed-out")
         localStorage.setItem(
@@ -87,19 +87,112 @@ async function fixture(width, theme, access = "allowed", mode = "ready") {
           }),
         );
     },
-    { uid, version, theme, access, now },
+    { uid, version, access, now },
   );
   await ctx.route("**/rest/v1/rpc/membership_status", (r) =>
     r.fulfill({ json: { allowed: access === "allowed", admin: false } }),
   );
   await ctx.route("**/rest/v1/games?**", (r) => r.fulfill({ json: [event] }));
+  const nba = {
+    ...event,
+    id: "nba-event",
+    tipoff: event.kickoff,
+    tipoff_tbd: false,
+  };
+  await ctx.route("**/rest/v1/nba_games?**", (r) => r.fulfill({ json: [nba] }));
+  await ctx.route("**/rest/v1/nba_observations?**", (r) => {
+    const q = new URL(r.request().url()).searchParams;
+    assert.equal(q.get("game_id"), "eq.nba-event");
+    if (q.get("kind") === "eq.injury") {
+      assert.equal(q.get("limit"), "101");
+      if (mode === "partial")
+        return r.fulfill({
+          status: 403,
+          json: { message: "Fixture injury source unavailable" },
+        });
+      return r.fulfill({
+        json: [
+          {
+            ...quote(180, "fixture", -3, -110, nba.id),
+            id: "injury",
+            kind: "injury",
+            source: "https://www.espn.com/nba/injuries",
+            payload: {
+              team: nba.home_team,
+              player: "Fixture Guard",
+              status: "Questionable",
+            },
+          },
+          {
+            ...quote(10, "fixture", -3, -110, "other-game"),
+            id: "unrelated",
+            kind: "injury",
+            payload: {
+              team: nba.home_team,
+              player: "Unrelated Injury",
+              status: "Out",
+            },
+          },
+        ],
+      });
+    }
+    assert.equal(q.get("kind"), "in.(odds,prop)");
+    assert.equal(q.get("limit"), "501");
+    const spread = {
+      ...quote(4, "FanDuel", -3, -112, nba.id),
+      provider: "The Odds API NBA",
+    };
+    const prop = {
+      ...quote(3, "FanDuel", 21.5, -110, nba.id, "player_points"),
+      kind: "prop",
+      provider: "The Odds API NBA props",
+      payload: {
+        book: "FanDuel",
+        market: "player_points",
+        event_id:
+          negative === "nba-identity"
+            ? "different-provider-event"
+            : "provider-event",
+        outcomes: [
+          {
+            name: "Over",
+            description: "Fixture Guard",
+            point: 21.5,
+            price: -110,
+          },
+        ],
+      },
+    };
+    const quotes = [
+      spread,
+      prop,
+      {
+        ...quote(2, "DraftKings", -3, 105, nba.id),
+        provider: "The Odds API NBA",
+      },
+    ];
+    if (mode === "truncated")
+      quotes.push(
+        ...Array.from({ length: 498 }, (_, i) => ({
+          ...spread,
+          id: "duplicate-" + i,
+        })),
+      );
+    return r.fulfill({ json: quotes });
+  });
+  const pending = Promise.withResolvers();
+  const release = Promise.withResolvers();
   let reads = 0;
-  await ctx.route("**/rest/v1/source_observations?**", (r) => {
+  await ctx.route("**/rest/v1/source_observations?**", async (r) => {
     reads++;
     const q = new URL(r.request().url()).searchParams;
     assert.equal(q.get("game_id"), "eq.fear-event");
     if (q.get("kind") === "eq.injury") return r.fulfill({ json: [] });
     assert.equal(q.get("kind"), "in.(odds)");
+    if (mode === "delayed") {
+      pending.resolve();
+      await release.promise;
+    }
     return mode === "error"
       ? r.fulfill({ status: 503, json: { message: "Fixture source offline" } })
       : r.fulfill({ json: mode === "empty" ? [] : rows });
@@ -110,6 +203,8 @@ async function fixture(width, theme, access = "allowed", mode = "ready") {
     page,
     ctx,
     reads: () => reads,
+    pending: pending.promise,
+    release: release.resolve,
     setMode: (value) => {
       mode = value;
     },
@@ -122,7 +217,7 @@ async function fixture(width, theme, access = "allowed", mode = "ready") {
 async function inspect(page) {
   const main = page.locator(".fear-page");
   await page.getByText("Line moved from -2 to -3.", { exact: false }).waitFor();
-  if (negative)
+  if (negative && negative !== "nba-identity")
     await main.evaluate((element, mode) => {
       if (mode === "wrong-comparison") element.append("Wrong event");
       if (mode === "false-freshness")
@@ -160,9 +255,9 @@ async function inspect(page) {
 }
 
 try {
-  for (const width of [360, 390, 1280])
-    for (const theme of ["light", "dark"]) {
-      const { page, ctx } = await fixture(width, theme);
+  if (negative !== "nba-identity")
+    for (const width of [360, 390, 1280]) {
+      const { page, ctx } = await fixture(width);
       await page.goto(base + path);
       await inspect(page);
       if (width < 500) {
@@ -179,8 +274,22 @@ try {
         ]);
         await inspect(page);
       }
+      await page.locator(".vq-brand-opening").waitFor({ state: "hidden" });
+      assert.equal(
+        await page.locator("html").getAttribute("data-theme"),
+        "dark",
+      );
+      await page.getByRole("heading", { name: "Market pressure" }).waitFor();
+      await page.getByLabel("Sport", { exact: true }).waitFor();
+      await page.getByLabel("Event", { exact: true }).waitFor();
+      await page.getByLabel("Market", { exact: true }).waitFor();
+      assert.ok(
+        await page
+          .getByRole("heading", { name: "Market pressure" })
+          .boundingBox(),
+      );
       await page.screenshot({
-        path: `${out}/${width}-${theme}.png`,
+        path: `${out}/${width}-dark.png`,
         fullPage: true,
       });
       const filter = page.getByLabel("Market", { exact: true });
@@ -206,10 +315,101 @@ try {
         .getByText("Market pressure for NHL is unavailable in this draft.")
         .waitFor();
       await ctx.close();
-      console.log(`PASS market pressure ${width} ${theme}`);
+      console.log(`PASS market pressure ${width} dark`);
     }
+  {
+    const { page, ctx, setMode } = await fixture(390);
+    await page.goto(base + "/vegas-fear");
+    await page.getByLabel("Sport", { exact: true }).selectOption("nba");
+    const picker = page.getByLabel("Event", { exact: true });
+    await picker
+      .locator('option[value="nba-event"]')
+      .waitFor({ state: "attached" });
+    await picker.selectOption("nba-event");
+    await page
+      .getByRole("heading", { name: "Fixture Away at Fixture Home" })
+      .waitFor();
+    const tape = await page.locator(".fear-page").innerText();
+    assert.match(
+      tape,
+      /Fixture Guard · Over/,
+      "mixed NBA feeds preserve both tapes",
+    );
+    assert.match(
+      tape,
+      /FanDuel · Spread/i,
+      "mixed NBA feeds preserve both tapes",
+    );
+    assert.match(tape, /The Odds API NBA props source/);
+    assert.match(tape, /Fixture Guard · Fixture Home · Reported Questionable/);
+    assert.doesNotMatch(
+      tape,
+      /Unrelated Injury|Multiple provider event identities/,
+    );
+    setMode("partial");
+    await page.getByRole("button", { name: "Refresh sources" }).click();
+    await page
+      .getByText("Availability source could not load.", { exact: false })
+      .waitFor();
+    await page.getByRole("heading", { name: "Fixture Guard · Over" }).waitFor();
+    setMode("truncated");
+    await page.getByRole("button", { name: "Refresh sources" }).click();
+    await page
+      .getByText("Dispersion unavailable with truncated book coverage.")
+      .waitFor();
+    await page.getByRole("heading", { name: "Fixture Guard · Over" }).waitFor();
+    await ctx.close();
+    console.log(
+      "PASS NBA event picker, mixed feeds, injury isolation, partial source failure and truncation",
+    );
+  }
+  {
+    const { page, ctx, pending, release, deny } = await fixture(
+      390,
+      "allowed",
+      "delayed",
+    );
+    await page.goto(base + path);
+    await pending;
+    deny();
+    await page.evaluate(() => {
+      const storage = "sb-127-auth-token";
+      const session = JSON.parse(localStorage.getItem(storage));
+      session.user.id = "00000000-0000-4000-8000-000000000002";
+      session.access_token = "fixture-account-b";
+      localStorage.setItem(storage, JSON.stringify(session));
+      const channel = new BroadcastChannel(storage);
+      channel.postMessage({ event: "SIGNED_IN", session });
+    });
+    await page
+      .getByText("Research access is required.", { exact: false })
+      .waitFor();
+    const old = page.waitForResponse(
+      (r) =>
+        r.url().includes("source_observations") &&
+        new URL(r.url()).searchParams.get("kind") === "in.(odds)",
+    );
+    release();
+    await (await old).finished();
+    await page.evaluate(
+      () =>
+        new Promise((resolve) =>
+          requestAnimationFrame(() => requestAnimationFrame(resolve)),
+        ),
+    );
+    assert.equal(
+      await page.locator(".fear-quote").count(),
+      0,
+      "pending A response cannot populate B",
+    );
+    await page
+      .getByText("Research access is required.", { exact: false })
+      .waitFor();
+    await ctx.close();
+    console.log("PASS delayed A-to-B account switch");
+  }
   for (const access of ["signed-out", "denied"]) {
-    const { page, ctx, reads } = await fixture(390, "light", access);
+    const { page, ctx, reads } = await fixture(390, access);
     await page.goto(base + path);
     await page
       .getByText(
@@ -225,7 +425,6 @@ try {
   {
     const { page, ctx, reads, setMode, deny } = await fixture(
       390,
-      "light",
       "allowed",
       "error",
     );
