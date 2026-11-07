@@ -21,8 +21,7 @@
 }
 .nba-sheet-controls button,
 .nba-sheet-controls a,
-.nba-sheet-sources a,
-.zone-matchup-sheet-open {
+.nba-sheet-sources a {
   display: inline-block;
   color: #a3f4c4;
   background: #11271d;
@@ -57,12 +56,53 @@
   flex-wrap: wrap;
   gap: 0.45rem;
 }
-.zone-matchup-sheet-open {
-  font-weight: 700;
-}
 .zone-matchup-sheet-original {
   margin: 0.6rem 0;
 }
 .zone-matchup-sheet-original summary {
   cursor: pointer;
+}
+
+.zone-sheet-preview {
+  display: block;
+  overflow: hidden;
+  background: #0b1813;
+  border: 1px solid #3b7254;
+  border-top: 2px solid #72efab;
+  border-radius: 0.75rem;
+  color: #eaf6ef;
+  text-decoration: none;
+}
+.zone-sheet-preview:hover,
+.zone-sheet-preview:focus-visible {
+  border-color: #a3f4c4;
+}
+.zone-sheet-preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.zone-sheet-preview-placeholder,
+.zone-sheet-preview-unavailable {
+  display: grid;
+  place-items: center;
+  padding: 0.75rem;
+  color: #a7beb1;
+  text-align: center;
+  font-size: 0.8rem;
+}
+.zone-sheet-preview-placeholder {
+  aspect-ratio: 1200 / 1290;
+}
+.zone-sheet-preview-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  padding: 0.6rem 0.75rem;
+  background: #102019;
+  border-top: 1px solid #294438;
+  color: #a3f4c4;
+  font-size: 0.79rem;
+  font-weight: 700;
 }
