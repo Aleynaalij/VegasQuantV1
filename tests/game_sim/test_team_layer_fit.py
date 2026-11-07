@@ -184,3 +184,14 @@ class CorrectionV031(unittest.TestCase):
         c = np.array([b['count'] for b in d['bins']], float)
         for y in (-7, 0, 3, 17, 44):
             self.assertAlmostEqual(_crps_counts(v, c, y), crps(d, y), places=9)
+
+
+class Streams(unittest.TestCase):
+    def test_disjoint_streams_never_share_a_seed(self):
+        from research.game_sim.team_layer.run import seed_base, RUNS
+        seen = set()
+        for i in range(272):
+            s = set(range(seed_base(i, 'disjoint'), seed_base(i, 'disjoint') + RUNS))
+            self.assertFalse(s & seen)
+            seen |= s
+        self.assertEqual(seed_base(5, 'original'), 1706)

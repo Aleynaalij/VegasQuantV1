@@ -51,14 +51,25 @@ def summarize(results, failures):
                 mc_se=dict(margin_mean=se(margins), total_mean=se(totals)), team_counts=dict(team))
 
 
-def run_game(model, tables, index, coefficients):
+def seed_base(index, stream='original'):
+    """First seed of game `index`. original: 1701 + i (runs overlap across games);
+    disjoint (correction addendum A1): 1701 + 2000*i, so no two games share a run seed."""
+    if stream == 'original':
+        return SEED + index
+    if stream == 'disjoint':
+        return SEED + RUNS * index
+    raise ValueError('unknown stream')
+
+
+def run_game(model, tables, index, coefficients, stream='original'):
     out = {}
+    base = seed_base(index, stream)
     for arm, coeffs in (('A', dict(home=ZERO, away=ZERO)), ('D', coefficients)):
         make = factory(coeffs) if arm == 'D' else None
         results, failures = [], Counter()
         for j in range(RUNS):
             try:
-                results.append(game(model, SEED + index + j, both_possessions=False, prepared_tables=tables, sampler_factory=make))
+                results.append(game(model, base + j, both_possessions=False, prepared_tables=tables, sampler_factory=make))
             except ValueError as e:
                 failures[str(e)] += 1
         out[arm] = summarize(results, failures)
@@ -66,13 +77,13 @@ def run_game(model, tables, index, coefficients):
 
 
 def run_shard(args):
-    model_path, shard, games = args
+    model_path, shard, games, stream = args
     model = json.loads(gzip.decompress(Path(model_path).read_bytes()))
     tables = Sampler(model, SEED).tables
     rows = []
     for g in games:
         rows.append(dict(game_id=g['game_id'], index=g['index'], home=g['home'], away=g['away'],
-                         coefficients=g['coefficients'], arms=run_game(model, tables, g['index'], g['coefficients'])))
+                         coefficients=g['coefficients'], arms=run_game(model, tables, g['index'], g['coefficients'], stream)))
     return shard, rows
 
 
@@ -97,13 +108,15 @@ def main():
     p.add_argument('--games', required=True)
     p.add_argument('--pbp', nargs='+', required=True)
     p.add_argument('--out', required=True)
+    p.add_argument('--stream', choices=('original', 'disjoint'), default='original')
     a = p.parse_args()
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
     started = time.time()
     plan, effects_out, meta = prepare(a.games, a.pbp)
+    meta['stream'] = a.stream
     (out / 'effects.json.gz').write_bytes(gzip.compress(canonical(dict(meta=meta, effects=effects_out)), mtime=0))
-    shards = [(a.model, s, plan[i:i + SHARD]) for s, i in enumerate(range(0, len(plan), SHARD))]
+    shards = [(a.model, s, plan[i:i + SHARD], a.stream) for s, i in enumerate(range(0, len(plan), SHARD))]
     index_path = out / 'shards.json'
     index = json.loads(index_path.read_text()) if index_path.exists() else {}
     todo = [x for x in shards if str(x[1]) not in index]
