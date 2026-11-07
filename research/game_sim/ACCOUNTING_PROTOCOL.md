@@ -150,3 +150,17 @@ Full-batch accounting (`diagnostics/accounting-0.2.23.json`):
   - missing eligible stop durations 1,826
   - coarsened timeout cells 35,461
   - role-marginal cells 8,381
+
+Frozen diagnostics re-run on this package, using the first 1,000 certified seeds:
+`diagnostics/budget-at-opportunity-0.2.23.json`, `late-mix-0.2.23.json` and
+`late-elapsed-0.2.23.json`. They are descriptive only.
+- **Q4 121–300 s running opportunities:** 5.528 per game against 5.590 in the source.
+  Calls per opportunity are 0.195 against 0.188.
+- **Q4 ≤120 s running opportunities:** 2.887 against 3.033. Calls per opportunity are 0.344
+  against 0.387.
+- **No-timeout gaps, Q4 121–300 s:**
+  - completions 22.18 s against 23.06 s
+  - runs 30.92 s against 30.72 s
+  - sacks 26.56 s against 28.05 s
+- **Limitation still open:** kneels in the last 10 s of each half are too frequent, at 0.51 and
+  0.42 per game against 0.20 and 0.08. This is not a gate. It is reported, not tuned.
