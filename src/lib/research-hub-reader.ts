@@ -125,14 +125,41 @@ export function nbaFindings(
     const injury = r.kind === "injury",
       p = r.payload;
     if (!injury && r.kind !== "odds" && r.kind !== "prop") return [];
+    const propLines =
+      r.kind === "prop" && Array.isArray(p.outcomes)
+        ? p.outcomes.flatMap((raw: unknown) => {
+            if (!raw || typeof raw !== "object") return [];
+            const o = raw as Record<string, unknown>;
+            const player = str(o.description).trim();
+            if (
+              !player ||
+              !["Over", "Under"].includes(str(o.name)) ||
+              typeof o.point !== "number" ||
+              !Number.isFinite(o.point) ||
+              o.point < 0 ||
+              typeof o.price !== "number" ||
+              !Number.isFinite(o.price) ||
+              Math.abs(o.price) < 100
+            )
+              return [];
+            return [
+              `${player} · ${o.name} ${o.point} (${o.price > 0 ? "+" : ""}${o.price})`,
+            ];
+          })
+        : [];
+    // The collector stores multiple athletes in outcomes[].description, not payload.player.
+    // Unattributed props are not rendered as if an athlete identity were known.
+    if (r.kind === "prop" && !propLines.length) return [];
     const text = injury
       ? `${str(p.team)} · ${str(p.player) || "Player not supplied"}: ${str(p.status) || "Status not supplied"}${p.detail ? "\n" + str(p.detail) : ""}`
-      : `${str(p.book) || r.provider} · ${str(p.player)}\n${nbaOutcomes(p)
-          .map(
-            (o) =>
-              `${o.name}${o.point !== null ? " " + o.point : ""} (${o.price})`,
-          )
-          .join(" · ")}`;
+      : r.kind === "prop"
+        ? `${str(p.book) || r.provider}\n${propLines.join("\n")}`
+        : `${str(p.book) || r.provider}\n${nbaOutcomes(p)
+            .map(
+              (o) =>
+                `${o.name}${o.point !== null ? " " + o.point : ""} (${o.price})`,
+            )
+            .join(" · ")}`;
     const item = eventFinding(e, r, {
       id: r.id,
       topic: injury ? "injuries" : "markets",
@@ -279,7 +306,7 @@ export function nflFindings(
           : "context") as Finding["topic"],
       title: item.heading,
       text: item.text,
-      sources: item.sources,
+      sources: sources(...item.sources),
       sourceAt: null,
       recordedAt: item.at,
       label: "Published research" as const,

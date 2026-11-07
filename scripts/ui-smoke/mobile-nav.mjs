@@ -24,7 +24,7 @@ const sabotage = (ctx) => NEGATIVE && ctx.addInitScript((mode) => {
 
 const SHOTS = process.env.UI_SMOKE_SHOTS || "";
 const routes = [
-  "/", "/feed", "/feed?view=parlays", "/matchups", "/matchups/sample-sea-den-2026-10-15",
+  "/", "/feed", "/research", "/feed?view=archive", "/feed?view=parlays", "/matchups", "/matchups/sample-sea-den-2026-10-15",
   "/community", "/membership", "/nba", "/nhl", "/ncaab", "/slots", "/notifications",
   "/faq", "/about", "/responsible-play", "/no-such-page",
 ];
@@ -167,7 +167,9 @@ for (const [width, height, sel] of [[390, 844, ".mobile-nav"], [1280, 900, ".sid
   console.log(`${failures.length > before ? "FAIL" : "ok  "} ${label} (${visited.join(" → ")}, then back)`);
 }
 
-const RESEARCH_FEED = "/feed?view=latest";
+const RESEARCH_HUB = "/research";
+const RESEARCH_ENTRY = "/feed?view=latest";
+const RESEARCH_FEED = "/feed?view=archive";
 const RESEARCH_SUBTITLE = "Vegas Quant’s picks with their case, risks and observed price";
 // Empty and failing data. Empty: every table read returns [] (RPCs keep their documented object
 // shapes from the stub). Failing: every REST call, RPCs included, returns HTTP 500. The page must still
@@ -176,13 +178,32 @@ for (const [mode, fulfill] of [
   ["empty data", (route) => route.request().url().includes("/rest/v1/rpc/") ? route.fallback() : route.fulfill({ contentType: "application/json", body: "[]" })],
   ["failing data", (route) => route.fulfill({ status: 500, contentType: "application/json", body: '{"message":"synthetic failure"}' })],
 ])
-  // The research feed is /feed?view=latest: bare /feed redirects to The Zone (/community).
-  for (const path of ["/", RESEARCH_FEED, "/matchups", "/community", "/nhl"]) {
+  // Test the canonical hub, its old lobby entry, and the preserved legacy archive separately.
+  for (const path of ["/", RESEARCH_HUB, RESEARCH_ENTRY, RESEARCH_FEED, "/matchups", "/community", "/nhl"]) {
     const label = `${path} @390 ${mode}`;
     const before = failures.length;
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
     await ctx.route("**/rest/v1/**", fulfill);
+    if (mode === "empty data") await ctx.route("**/rest/v1/rpc/sports_slate", route => {
+      const sport = route.request().postDataJSON().p_sport;
+      return route.fulfill({json:{version:1,sport,access:false,games:[],facts:[],markets:[],selections:[],results:[]}});
+    });
     const { page, errors } = await open(ctx, path, label);
+    if (path === RESEARCH_HUB || path === RESEARCH_ENTRY) {
+      const canonical = await page.waitForURL(u => u.pathname === RESEARCH_HUB, {timeout:15000}).then(()=>true,()=>false);
+      if (!canonical) note(label,"Research entry did not resolve to the canonical hub");
+      const shown = await page.getByRole("heading",{name:/The research lounge/}).isVisible().catch(()=>false);
+      if (!shown) note(label,"Research hub heading not shown");
+      if (mode === "empty data") {
+        const empty = await page.getByRole("heading",{name:"No upcoming events returned",exact:true}).waitFor({state:"visible",timeout:30000}).then(()=>true,()=>false);
+        if (!empty) note(label,"successful empty research schedule not shown");
+      } else {
+        const partial = await page.getByText("Partial coverage",{exact:true}).waitFor({state:"visible",timeout:30000}).then(()=>true,()=>false);
+        if (!partial) note(label,"research failure disguised as an empty schedule");
+        const retry = await page.getByRole("button",{name:"Retry unavailable sources",exact:true}).isVisible().catch(()=>false);
+        if (!retry) note(label,"research source failure has no retry");
+      }
+    }
     if (path === RESEARCH_FEED) {
       // Prove ResearchFeed itself rendered: no redirect, and its own subtitle is on screen.
       const at = new URL(page.url());

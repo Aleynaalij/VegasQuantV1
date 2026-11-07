@@ -119,11 +119,7 @@ export function filterEvents(
     return (
       (f.sport === "all" || e.sport === f.sport) &&
       (!f.date || etDay(e.start) === f.date) &&
-      (f.topic === "all" ||
-        own.some((x) => x.topic === f.topic) ||
-        (f.topic === "lineups" && (e.sport === "nba" || e.sport === "nhl")) ||
-        (f.topic === "weather" && e.sport === "nfl") ||
-        own.length === 0) &&
+      // Topic scopes dossier content and coverage badges; missing reports never hide an event.
       (!q ||
         `${e.away} ${e.home} ${e.venue || ""} ${own.map((x) => `${x.title} ${x.text}`).join(" ")}`
           .toLocaleLowerCase()

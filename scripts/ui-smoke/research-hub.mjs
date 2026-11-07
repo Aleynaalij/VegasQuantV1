@@ -63,7 +63,8 @@ const analysis = {
   sections: {
     Injuries: "Sample Runner: Questionable. Report status can change.",
     Weather: "Wind 15 mph in the saved forecast.",
-    Sources: "https://example.com/briefing",
+    Sources:
+      "https://fixture:fixture@example.com/report https://example.com/briefing",
   },
   source: "https://example.com/briefing",
   created_at: old,
@@ -157,7 +158,22 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true) {
               sport,
               access: state !== "denied",
               games: state === "empty" ? [] : [game(sport)],
-              facts: [],
+              facts:
+                state === "missing"
+                  ? []
+                  : [
+                      {
+                        id: `${sport}-context`,
+                        kind: "team_context",
+                        game_id: `${sport}-1`,
+                        sport,
+                        payload: { summary: "Sample team context" },
+                        source: {
+                          url: "https://example.com/context",
+                          retrieved_at: at,
+                        },
+                      },
+                    ],
               markets: [],
               selections: [],
               results: [],
@@ -186,6 +202,39 @@ async function setup(width, theme = "light", mode = "ready", signedIn = true) {
         state === "missing"
           ? []
           : [
+              {
+                id: "nba-props",
+                game_id: nba.id,
+                kind: "prop",
+                provider: "The Odds API",
+                source: "https://example.com/props",
+                observed_at: at,
+                recorded_at: at,
+                payload: {
+                  book: "fanduel",
+                  market: "player_points",
+                  outcomes: [
+                    {
+                      description: "Jayson Tatum",
+                      name: "Over",
+                      point: 27.5,
+                      price: -110,
+                    },
+                    {
+                      description: "Jayson Tatum",
+                      name: "Under",
+                      point: 27.5,
+                      price: -115,
+                    },
+                    {
+                      description: "Cade Cunningham",
+                      name: "Over",
+                      point: 24.5,
+                      price: 105,
+                    },
+                  ],
+                },
+              },
               {
                 id: "nba-injury",
                 game_id: nba.id,
@@ -365,6 +414,65 @@ try {
     );
     await page.screenshot({
       path: `${out}/390-lineup-status.png`,
+      fullPage: true,
+    });
+    await ctx.close();
+  }
+  {
+    const { ctx, page } = await setup(390);
+    for (const player of ["Jayson Tatum", "Cade Cunningham"]) {
+      await page.goto(
+        base +
+          "/research?sport=nba&topic=markets&q=" +
+          encodeURIComponent(player),
+      );
+      await page.locator(".rh-event").waitFor();
+      assert.equal(
+        await page.locator(".rh-event").count(),
+        1,
+        "prop player is searchable",
+      );
+      await page.locator(".rh-event").click();
+      await page.locator(".rh-finding").first().waitFor();
+      const text = await page.locator(".rh-dossier").innerText();
+      for (const quote of [
+        "Jayson Tatum · Over 27.5 (-110)",
+        "Jayson Tatum · Under 27.5 (-115)",
+        "Cade Cunningham · Over 24.5 (+105)",
+      ])
+        assert.ok(text.includes(quote), "each athlete keeps their exact quote");
+    }
+    await page.goto(base + "/research?sport=nhl&topic=injuries");
+    await page.locator(".rh-event").waitFor();
+    assert.equal(
+      await page.locator(".rh-event").count(),
+      1,
+      "unrelated context never hides missing injury coverage",
+    );
+    await page.locator(".rh-event").click();
+    await page
+      .getByText("No linked injury report is available in this view.", {
+        exact: false,
+      })
+      .waitFor();
+    await page.goto(base + "/research?sport=nfl&event=nfl%3Anfl-1");
+    await page.locator(".rh-finding").first().waitFor();
+    const urls = await page
+      .locator(".rh-dossier a[href]")
+      .evaluateAll((links) => links.map((a) => a.href));
+    assert.ok(
+      urls.includes("https://example.com/briefing"),
+      "safe NFL prose source retained",
+    );
+    assert.ok(
+      urls.every((raw) => {
+        const u = new URL(raw);
+        return !u.username && !u.password;
+      }),
+      "NFL prose source credentials rejected",
+    );
+    await page.screenshot({
+      path: `${out}/390-review-regressions.png`,
       fullPage: true,
     });
     await ctx.close();

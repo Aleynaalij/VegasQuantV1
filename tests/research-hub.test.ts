@@ -285,3 +285,95 @@ test("NFL collector injuries and published legs use exact event IDs and original
   assert.equal(f.sourceAt, leg.quote_observed_at);
   assert.match(f.publicationHref!, /view=selection/);
 });
+test("collector-shaped NBA props retain every player and exact quoted outcome in search", () => {
+  const props = nbaFindings(event, [
+    {
+      id: "prop-identity",
+      game_id: event.id,
+      kind: "prop",
+      provider: "The Odds API",
+      source: "https://example.com/props",
+      observed_at: null,
+      recorded_at: "2026-11-06T20:00:00Z",
+      payload: {
+        book: "FanDuel",
+        market: "player_points",
+        outcomes: [
+          {
+            name: "Over",
+            description: "Jayson Tatum",
+            point: 27.5,
+            price: -110,
+          },
+          {
+            name: "Under",
+            description: "Jayson Tatum",
+            point: 27.5,
+            price: -115,
+          },
+          {
+            name: "Over",
+            description: "Cade Cunningham",
+            point: 24.5,
+            price: 105,
+          },
+        ],
+      },
+    },
+  ]);
+  assert.match(props[0].text, /Jayson Tatum.*Over 27\.5 \(-110\)/);
+  assert.match(props[0].text, /Jayson Tatum.*Under 27\.5 \(-115\)/);
+  assert.match(props[0].text, /Cade Cunningham.*Over 24\.5 \(\+105\)/);
+  for (const name of ["Jayson Tatum", "Cade Cunningham"])
+    assert.equal(
+      filterEvents([event], props, hubFilters(new URLSearchParams({ q: name })))
+        .length,
+      1,
+    );
+});
+test("missing selected-topic coverage stays discoverable as unrelated evidence arrives", () => {
+  for (const topic of [
+    "overview",
+    "injuries",
+    "lineups",
+    "weather",
+    "context",
+    "markets",
+  ]) {
+    const filters = hubFilters(new URLSearchParams({ sport: "nba", topic }));
+    for (const otherTopic of ["markets", "context"] as const) {
+      const unrelated = { ...finding, topic: otherTopic };
+      assert.deepEqual(filterEvents([event], [], filters), [event]);
+      assert.deepEqual(
+        filterEvents([event], [unrelated], filters),
+        [event],
+        `${topic} missing with ${otherTopic} present`,
+      );
+    }
+  }
+});
+test("NFL prose source links use the same no-credentials boundary as every other adapter", () => {
+  const rows = nflFindings(
+    { ...event, sport: "nfl", key: "nfl:" + event.id },
+    [
+      {
+        id: "a",
+        game_id: event.id,
+        version: 1,
+        title: "Briefing",
+        sections: {
+          Injuries: "Player status is uncertain.",
+          Sources:
+            "https://fixture:fixture@example.com/report https://example.com/safe",
+        },
+        projections: {},
+        raw_handoff: "",
+        source: "",
+        created_at: "2026-11-06T20:00:00Z",
+      },
+    ],
+    [],
+    [],
+  );
+  assert.deepEqual(rows[0].sources, ["https://example.com/safe"]);
+});
