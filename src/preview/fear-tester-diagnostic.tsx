@@ -98,21 +98,20 @@ export default function FearTesterDiagnostic() {
       <p>
         <Link href="/membership">Sign in or manage your session</Link>
       </p>
-      <label>
-        Sport{" "}
-        <select
-          value={sport}
-          onChange={(event) => {
-            cancel("");
-            setSport(event.target.value === "nba" ? "nba" : "nfl");
-            setEvents([]);
-            setEventId("");
-          }}
-        >
-          <option value="nfl">NFL</option>
-          <option value="nba">NBA</option>
-        </select>
-      </label>{" "}
+      <label htmlFor="diagnostic-sport">Sport</label>{" "}
+      <select
+        id="diagnostic-sport"
+        value={sport}
+        onChange={(event) => {
+          cancel("");
+          setSport(event.target.value === "nba" ? "nba" : "nfl");
+          setEvents([]);
+          setEventId("");
+        }}
+      >
+        <option value="nfl">NFL</option>
+        <option value="nba">NBA</option>
+      </select>{" "}
       <button
         type="button"
         disabled={busy}
@@ -122,23 +121,22 @@ export default function FearTesterDiagnostic() {
       </button>
       {events.length > 0 && (
         <p>
-          <label>
-            Event{" "}
-            <select
-              value={eventId}
-              onChange={(event) => {
-                cancel("");
-                setEventId(event.target.value);
-              }}
-            >
-              <option value="">Choose an event</option>
-              {events.map((event) => (
-                <option value={event.id} key={event.id}>
-                  {label(event)}
-                </option>
-              ))}
-            </select>
-          </label>{" "}
+          <label htmlFor="diagnostic-event">Event</label>{" "}
+          <select
+            id="diagnostic-event"
+            value={eventId}
+            onChange={(event) => {
+              cancel("");
+              setEventId(event.target.value);
+            }}
+          >
+            <option value="">Choose an event</option>
+            {events.map((event) => (
+              <option value={event.id} key={event.id}>
+                {label(event)}
+              </option>
+            ))}
+          </select>{" "}
           <button
             type="button"
             disabled={busy || !selected}
