@@ -55,11 +55,11 @@ assert.equal(page.markets.length,0);assert.equal(page.selections.length,0);asser
 await db.exec('reset role');await db.exec("set app.member='yes'");await db.exec("update public.sports_games set start_time=now()-interval '1 minute'");await db.exec('set role authenticated');
 page=(await db.query("select public.sports_game('nhl','sample') r")).rows[0].r;
 assert.equal(page.markets.length,0);
-// Light slate (20261107233000): facts are the newest team_context per game and team, trimmed to the
+// Light slate (20261107230653): facts are the newest team_context per game and team, trimmed to the
 // fields the research lounge reads; roster bodies and provider blobs are not shipped.
 await db.exec('reset role');
 await db.exec(readFileSync('supabase/migrations/20261107225716_sports_latest_indexes.sql','utf8'));
-await db.exec(readFileSync('supabase/migrations/20261107233000_sports_slate_light.sql','utf8'));
+await db.exec(readFileSync('supabase/migrations/20261107230653_sports_slate_light.sql','utf8'));
 await db.exec(`alter table public.sports_games disable trigger user;update public.sports_games set start_time=now()+interval '8 hours';alter table public.sports_games enable trigger user;`);
 const src=(b)=>({...source,body:b,sha256:createHash('sha256').update(b).digest('hex')});
 const ctx=(note)=>({game_id:id,kind:'team_context',payload:{team_id:null,note,injuries:[{team:{displayName:'A'},injuries:[{athlete:{displayName:'P'},status:'Out'}]}],boxscore:{huge:'x'.repeat(5000)},last_five:[1,2,3]}});
