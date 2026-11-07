@@ -156,8 +156,9 @@ export default function VegasFear() {
           aria-label="Market pressure filters"
         >
           <label>
-            Sport
+            <span id="fear-sport-label">Sport</span>
             <select
+              aria-labelledby="fear-sport-label"
               value={sport}
               onChange={(e) => update("sport", e.target.value)}
             >
@@ -171,8 +172,9 @@ export default function VegasFear() {
           {supportedFearSport(sport) && (
             <>
               <label>
-                Event
+                <span id="fear-event-label">Event</span>
                 <select
+                  aria-labelledby="fear-event-label"
                   value={eventId}
                   onChange={(e) => update("event", e.target.value)}
                 >
@@ -189,8 +191,9 @@ export default function VegasFear() {
                 </select>
               </label>
               <label>
-                Market
+                <span id="fear-market-label">Market</span>
                 <select
+                  aria-labelledby="fear-market-label"
                   value={market}
                   onChange={(e) => update("market", e.target.value)}
                 >
