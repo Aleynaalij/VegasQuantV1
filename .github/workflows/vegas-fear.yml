@@ -94,5 +94,13 @@ jobs:
           LIVE_SCORES_DISABLED=1 VERCEL_ENV=preview VQ_FEAR_TESTER_DIAGNOSTIC=0 npx next start -H 127.0.0.1 -p 3101 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/fear-tester-diagnostic && break; sleep 2; done
           curl -fsS -o /dev/null http://127.0.0.1:3100/fear-tester-diagnostic
-          test "$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3101/fear-tester-diagnostic)" = 404
+          disabled_body=$(mktemp)
+          disabled_status=$(curl -sS -o "$disabled_body" -w '%{http_code}' http://127.0.0.1:3101/fear-tester-diagnostic)
+          if [ "$disabled_status" != 404 ]; then
+            grep -Fq 'NEXT_HTTP_ERROR_FALLBACK;404' "$disabled_body"
+          fi
+          if grep -Fq '/_next/static/chunks/app/fear-tester-diagnostic/' "$disabled_body"; then
+            echo "The disabled preview served the diagnostic client bundle"
+            exit 1
+          fi
           node scripts/ui-smoke/fear-tester-diagnostic.mjs
