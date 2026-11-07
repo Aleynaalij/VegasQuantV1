@@ -5,7 +5,7 @@ from dataclasses import asdict, replace
 from pathlib import Path
 from .state import State,Action,other,transition
 
-MODEL_ID='vq-empirical-game/0.2.23'
+MODEL_ID='vq-empirical-game/0.2.24'
 def integer(value):
     f=float(value)
     if not math.isfinite(f) or f!=int(f):raise ValueError('invalid integer')
@@ -317,6 +317,18 @@ class Sampler:
         cells=model[family];exact=len(chain(family,band,k,elig))-len([c for c in chain(family,band,k,elig) if c.startswith(('le','normal@h','normal@all'))])
         path=chain(family,band,k,elig)
         for depth,key in enumerate(path):
+            if key.endswith('~role|both'):
+                # v0.2.24 (ROLE_MARGINAL_PROTOCOL.md): each eligible role's own declared marginal.
+                o,d=cells.get('normal@all~role|offense'),cells.get('normal@all~role|defense')
+                if not o or not d or min(o['n'],d['n'])<max(MIN,model['minimum_context']):continue
+                po,pd=o.get('offense',0)/o['n'],d.get('defense',0)/d['n']
+                if po<0 or pd<0 or po+pd>1:raise ValueError('invalid timeout counts')
+                self.fallbacks[f'timeout_cell:{family}:depth{depth}']+=1
+                self.fallbacks[f'timeout_terminal_floor:{family}:{key}']+=1
+                self.fallbacks['coarsened_timeout_cell']+=1
+                self.fallbacks['role_marginal_timeout_cell']+=1
+                self.fallbacks['role_marginal_timeout_cell:both']+=1
+                return po,pd
             cell=cells.get(key)
             if not cell or cell['n']<max(MIN,model['minimum_context']):continue
             n,co,cd=cell['n'],cell.get('offense',0),cell.get('defense',0)

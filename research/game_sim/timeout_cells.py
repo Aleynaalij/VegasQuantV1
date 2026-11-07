@@ -143,14 +143,28 @@ def residual_cells(ops, family, full_keys=None):
             by_key[key].append(i)
     resolved = [False] * len(ops)
     cells = {}
+
+    def role_marginal(role):
+        cell = Counter()
+        for _, outcome, meta in ops:
+            if meta and meta[0].startswith('normal@q') and meta[1] in ('both', role):
+                cell['n'] += 1
+                cell[role] += int(outcome == role)
+        return cell
+
+    if any('~role' in key for key in by_key):
+        # v0.2.24 (ROLE_MARGINAL_PROTOCOL.md): both role cells always exist; no '~role|both' cell.
+        for role in ('offense', 'defense'):
+            cells[f'normal@all~role|{role}'] = role_marginal(role)
     for key in sorted(by_key, key=lambda k: (key_rank(k), k)):
+        if key.endswith('~role|both'):
+            # Both roles are eligible: each uses its own declared marginal, composed at lookup.
+            if all(cells[f'normal@all~role|{r}']['n'] >= MIN for r in ('offense', 'defense')):
+                for i in by_key[key]:
+                    resolved[i] = True
+            continue
         if '~role' in key:
-            role = key.split('|')[1]
-            cell = Counter()
-            for i, (_, outcome, meta) in enumerate(ops):
-                if meta and meta[0].startswith('normal@q') and meta[1] in ('both', role):
-                    cell['n'] += 1
-                    cell[role] += int(outcome == role)
+            cell = cells[key]
         else:
             cell = Counter()
             for i in by_key[key]:
