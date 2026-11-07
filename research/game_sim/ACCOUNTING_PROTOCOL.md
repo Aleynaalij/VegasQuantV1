@@ -87,3 +87,66 @@ or gate changes. `artifacts/v0.2.23` stays as published and is not overwritten.
 
 No team/player coupling, model approval, forecasts, 2024 download, merge, deploy or database
 writes. TEAM_LAYER_PROTOCOL §0 stays empty until a re-audit passes.
+
+## Result (2026-11-07, appended after the run; nothing above was changed)
+Package `artifacts/v0.2.23-accounting`, built from commit `de5c072` on source `0c69a71e…`.
+Every acceptance criterion holds:
+- **Refit model hash** `63906f6b7bbbf911bed5b159da84ab815fa4d867bf59c9b8671ad6dbccac6d89`,
+  identical to v0.2.23. The `model.json.gz` bytes are identical too.
+- **Batch:** the only differing fields against `artifacts/v0.2.23` are `generated_at`,
+  `runtime_seconds` and `coverage.censoring`. No pre-existing counter changed value.
+- **Other files:**
+  - `gate.json.gz` and `calibration.json.gz` are identical.
+  - `replay.json.gz` differs only in `generated_at`.
+  - The nine gates are unchanged: 10,000 / 10,000 runs, 0 failed, 0 unsupported.
+- **`verify_package --source` passes on both packages:**
+  - v0.2.23: 6 files and 25 implementation hashes
+  - the new package: 6 files and 27 implementation hashes, since the protocol and
+    `accounting.py` are added
+- **Relabelling reconciles exactly:**
+  - band-preserved 327,916 + fallback 2,833 = old clock-preserved 330,749
+  - band-half-pooled 266 + fallback 2,833 = old half-pooled 3,099
+  - band-half-preserved 327,650 = old 327,650
+
+Full-batch accounting (`diagnostics/accounting-0.2.23.json`):
+- **Play-context draws:** 1,671,288, including draws that `state.transition` then rejected and
+  retried. By length: 6: 1,276,642; 5: 114,812; 4: 278,129; 3: 1,705.
+
+  | branch | path | draws |
+  |---|---|---:|
+  | normal | exact | 1,229,845 |
+  | normal | drop:lead | 84,774 |
+  | normal | drop:distance+lead | 24,255 |
+  | normal | drop:down+distance+lead | 1,497 |
+  | normal | floor:phase+clock+zone | 168 |
+  | late | exact | 45,396 |
+  | late | drop:distance | 29,099 |
+  | late | drop:down+distance | 142,511 |
+  | late | floor:coarse_lead | 108,390 |
+  | late | floor:coarse_lead+goal_zone | 2,254 |
+  | late | pooled_half:coarse_lead | 266 |
+  | last300_normal | exact | 1,401 |
+  | last300_normal | drop:lead | 939 |
+  | last300_normal | drop:distance+lead | 453 |
+  | last300_normal | drop:down+distance+lead | 40 |
+
+  No late draw used `pooled_half:coarse_lead+goal_zone`.
+- **Two-minute-warning snaps:** 19,233, restoring 323,005 seconds. Kept separate from
+  warning-censored resampled (14,869) and unresolved (379) gaps.
+- **Terminal full-count usage:** 15,502 lookups.
+  - Full-count keys: running `le300@h1|offense/defense` and `le300@h2|offense/defense`; stopped
+    `le120@h1|both/offense` and `le300@h2|both/offense/defense`.
+  - Per-key counts are in the diagnostic.
+- **Clipping and boundary paths:**
+  - `elapsed_clipped_to_clock` 36,726
+  - `yards_clamped_to_field` 16,121
+  - `spot_clamped` 2,940
+  - `runoff_clipped_to_clock` 1,326
+  - `penalty_half_distance` 1,161
+- **Unchanged from v0.2.23:**
+  - thin play draws 50,169
+  - thin stop-duration draws 47,660
+  - thin runoff draws 1,271
+  - missing eligible stop durations 1,826
+  - coarsened timeout cells 35,461
+  - role-marginal cells 8,381
