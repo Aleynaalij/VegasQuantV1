@@ -41,3 +41,22 @@ tables and rules, the gates and the 9th diagnostic's source counter.
 unsupported runs, and saved-model reload. Reported alongside: warning crossings per game (sim vs
 source), the censored-template count, resample and unresolved counts, and the late elapsed table
 re-run on the new package. A failure is preserved; no retuning.
+
+## Result (2026-11-07, appended after the run; nothing above was changed)
+Package `artifacts/v0.2.22`, built from `2a4a242`. `verify_package`: 6 files and 24 implementation
+hashes verified against the source. 10,000 / 10,000 complete, 0 failed, 0 unsupported.
+- Scoring gates PASS: total 44.7526, TD 5.0004, FG 3.2934, punts 7.9502. FG attempts 3.8859, late
+  FG 0.4314 and late decisions 1.7866 PASS.
+- **Timeouts PASS for the first time:** 7.4596 vs 7.7823 (difference −0.323, tolerance 0.390).
+  v0.2.21: 7.0657.
+- **FAIL** late timeout-followed continuing plays **4.0997** vs 4.4834 (difference −0.384,
+  tolerance 0.327). v0.2.21: 3.7703.
+- 8 of 9 checks pass. v0.2.22 does not meet TEAM_LAYER_PROTOCOL §0 and is preserved as a failure.
+  No retuning, reseeding or threshold change.
+- Counters: 41,284 running and 33,312 stopped timeout calls; 178,065 running decisions (17.8 per
+  game; source 18.2); 8,727 warning-censored gaps resampled and 178 unresolved (kept and counted).
+- Old packages still verify under their own archived kernels (v0.2.10.1, v0.2.11 and v0.2.21
+  replays verified).
+
+2023 already-inspected CRPS, context only: margin 8.1827 vs 8.0656, CI [−0.032, 0.265]; total
+7.6513 vs 7.5984. No superiority shown.
