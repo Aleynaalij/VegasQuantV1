@@ -96,3 +96,64 @@ class AccountingTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class DirectCounterTests(unittest.TestCase):
+    """Elo re-audit 5809217705: direct assertions for the remaining accounting counters."""
+
+    def _draw(self, s, template):
+        primary, _, _ = context_options(s)
+        model = dict(model_id=MODEL_ID, minimum_context=30, templates=[template], buckets={primary[0]: {'0': 100}})
+        sampler = Sampler(model, 3)
+        return sampler.draw(s, allow_timeout=False), sampler.fallbacks
+
+    def test_spot_clamped_both_boundaries(self):
+        s = State(period=1, clock=600, down=4, distance=10, yardline=50)
+        a, f = self._draw(s, dict(kind='punt', elapsed=5, spot=-60))
+        self.assertEqual((a.spot, f['spot_clamped']), (99, 1))
+        a, f = self._draw(s, dict(kind='punt', elapsed=5, spot=60))
+        self.assertEqual((a.spot, f['spot_clamped']), (0, 1))
+        a, f = self._draw(s, dict(kind='punt', elapsed=5, spot=10))
+        self.assertEqual((a.spot, f['spot_clamped']), (40, 0))
+
+    def test_runoff_clipped_to_clock(self):
+        from research.game_sim.model import stop_contexts
+        from research.game_sim.state import Action
+        s = State(period=4, clock=10, down=1, distance=10, yardline=75)
+        key = stop_contexts(s, 'run')[-1]
+        model = dict(model_id=MODEL_ID, minimum_context=30, templates=[], buckets={},
+                     stop_clock=dict(runoff_tables={key: {'40': 100}}, tables={}, minimum_context=30))
+        sampler = Sampler(model, 3)
+        sampler.last_source_followed_timeout = True
+        a = sampler.no_call_runoff(s, Action('run', elapsed=5, yards=2))
+        self.assertEqual((a.elapsed, sampler.fallbacks['runoff_clipped_to_clock']), (10, 1))
+        model['stop_clock']['runoff_tables'] = {key: {'6': 100}}
+        sampler = Sampler(model, 3)
+        sampler.last_source_followed_timeout = True
+        self.assertEqual(sampler.no_call_runoff(s, Action('run', elapsed=5, yards=2)).elapsed, 6)
+        self.assertEqual(sampler.fallbacks['runoff_clipped_to_clock'], 0)
+
+    def test_penalty_half_distance_counted(self):
+        model = fixture()
+        model['templates'] = model['templates'] + [dict(kind='penalty', elapsed=0, yards=99)]
+        for key, entries in model['buckets'].items():
+            if key.startswith('scrimmage'):
+                entries['5'] = 20
+        rows = [game(model, seed)['fallbacks'] for seed in range(1701, 1704)]
+        self.assertTrue(all(r.get('penalty_half_distance', 0) > 0 for r in rows))
+        self.assertEqual(sum(r.get('penalty_half_distance', 0) for r in [game(fixture(), 1701)['fallbacks']]), 0)
+
+    def test_timeout_terminal_floor_only_on_chain_terminal(self):
+        from research.game_sim.timeout_cells import chain, eligibility, stopped_band
+        s = State(period=4, clock=250, down=1, distance=10, yardline=75)
+        path = chain('stopped', stopped_band(s), s, eligibility(s))
+        model = dict(model_id=MODEL_ID, minimum_context=30, templates=[], buckets={},
+                     timeout_model=dict(minimum_context=30, running={}, stopped={path[-1]: dict(n=100, offense=5, defense=5)}))
+        sampler = Sampler(model, 1)
+        sampler.timeout_rates(s, 'stopped')
+        self.assertEqual(sampler.fallbacks[f'timeout_terminal_floor:stopped:{path[-1]}'], 1)
+        # Negative control: an earlier supported key is not a terminal-floor lookup.
+        model['timeout_model']['stopped'][path[0]] = dict(n=100, offense=1, defense=1)
+        sampler = Sampler(model, 1)
+        sampler.timeout_rates(s, 'stopped')
+        self.assertFalse(any(k.startswith('timeout_terminal_floor:') for k in sampler.fallbacks))

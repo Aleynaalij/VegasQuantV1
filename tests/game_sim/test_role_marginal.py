@@ -61,3 +61,17 @@ class RoleMarginalTests(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ElosRepro(unittest.TestCase):
+    def test_fifteen_offense_fifteen_defense(self):
+        ops = normal_ops('both', 'offense', 15) + normal_ops('both', 'defense', 15)
+        cells, unresolved = residual_cells(ops, 'stopped')
+        self.assertNotIn('normal@all~role|both', cells)
+        self.assertEqual(dict(cells['normal@all~role|offense']), {'n': 30, 'offense': 15})
+        self.assertEqual(dict(cells['normal@all~role|defense']), {'n': 30, 'defense': 15})
+        self.assertEqual(unresolved, 0)
+        model = dict(model_id=MODEL_ID, minimum_context=30, templates=[], buckets={},
+                     timeout_model=dict(minimum_context=30, running={}, stopped={k: dict(n=v['n'], offense=v['offense'], defense=v['defense']) for k, v in cells.items() if v['n']}))
+        po, pd = Sampler(model, 1).timeout_rates(State(period=1, clock=600), 'stopped')
+        self.assertEqual((po, pd), (0.5, 0.5))
