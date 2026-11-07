@@ -171,6 +171,7 @@ class CorrectionV031(unittest.TestCase):
         with self.assertRaises(ValueError):
             score.load_shards(d, targets=[f'x{i}' for i in range(272)])
 
+    @unittest.skipUnless(__import__('importlib').util.find_spec('numpy'), 'numpy not installed (reporting-only MC SE)')
     def test_fast_crps_matches_reference(self):
         import numpy as np
         from research.game_sim.batch import distribution
