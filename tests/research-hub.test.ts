@@ -7,6 +7,7 @@ import {
   hubHref,
   safeSource,
   sourceAge,
+  sportErrors,
   type Finding,
   type ResearchEvent,
 } from "../src/lib/research-hub";
@@ -646,4 +647,45 @@ test("tester-only Research uses scoped projections and leaves raw member tables 
   assert.deepEqual(requested.sort(), ["injury", "quotes"]);
   assert.equal(result.findings[0].title, "Older reported availability");
   assert.match(result.findings[0].text, /Current status is unverified/);
+});
+
+test("a chosen topic keeps every event but lists events with that topic's reports first", () => {
+  const early = {
+    ...event,
+    key: "nba:early",
+    id: "early",
+    start: "2026-11-06T23:00:00Z",
+  };
+  const late = {
+    ...event,
+    key: "nba:late",
+    id: "late",
+    start: "2026-11-07T02:00:00Z",
+  };
+  const f = hubFilters(new URLSearchParams("sport=nba&topic=injuries"));
+  const lateInjury = { ...finding, id: "late-injury", eventKey: late.key };
+  assert.deepEqual(
+    filterEvents([early, event, late], [lateInjury, finding], f).map(
+      (e) => e.key,
+    ),
+    [event.key, late.key, early.key],
+  );
+  assert.deepEqual(
+    filterEvents([early, event, late], [lateInjury, finding], {
+      ...f,
+      topic: "all",
+    }).map((e) => e.key),
+    [early.key, event.key, late.key],
+  );
+});
+test("partial-coverage notices follow the selected sport", () => {
+  const errors = [
+    "NCAAB schedule or research source unavailable. Retry to check this sport.",
+    "NHL schedule or research source unavailable. Retry to check this sport.",
+    "Membership status unavailable.",
+    "Some NFL research sources could not load. Available sections are partial; retry.",
+  ];
+  assert.deepEqual(sportErrors(errors, "nfl"), [errors[2], errors[3]]);
+  assert.deepEqual(sportErrors(errors, "nhl"), [errors[1], errors[2]]);
+  assert.deepEqual(sportErrors(errors, "all"), errors);
 });
