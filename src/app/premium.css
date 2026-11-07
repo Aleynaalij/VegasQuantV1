@@ -642,15 +642,11 @@ html[data-theme] body .top-actions .top-profile:focus-visible { outline: 3px sol
   color:#f3dc9a; font-family:var(--font-display),sans-serif; font-weight:800;
   font-size:clamp(20px,5vw,27px); letter-spacing:.18em; margin-top:30px;
 }
-.vq-opening-enhanced {
-  display:flex; align-items:center; gap:9px; margin-top:15px;
-  color:#e9d7a4; font:500 clamp(11px,3.1vw,14px)/1.5 var(--font-body),sans-serif;
-}
-.vq-opening-enhanced b { color:#e8c46a; font-size:21px; font-weight:400; }
-.vq-brand-opening small { margin-top:7px; color:#aeb2bd; font:400 11px/1.5 var(--font-body),sans-serif; }
 .vq-welcome-mark { width:110px; height:auto; margin-bottom:18px; }
 @keyframes vq-opening-exit { 0%,82% { opacity:1; } 100% { opacity:0; visibility:hidden; } }
 @media (prefers-reduced-motion:reduce) { .vq-brand-opening { animation:vq-opening-exit .25s step-end both !important; } }
+/* Installed app: the OS launch screen already showed the mark, so don't repeat it. */
+@media (display-mode:standalone), (display-mode:fullscreen) { .vq-brand-opening { display:none; } }
 
 .vq-policy { max-width:820px; margin:0 auto; padding:18px 0 30px; }
 .vq-policy header .vq-mark { width:88px; height:66px; display:block; margin-bottom:18px; }
@@ -786,7 +782,6 @@ html[data-theme] body .vq-board li b { font-variant-numeric:tabular-nums; color:
 html[data-theme] body .vq-board p, html[data-theme] body .vq-board small { font-size:13px; line-height:1.55; color:var(--muted); }
 html[data-theme] body .vq-board small { display:block; font-size:11.5px; margin-top:6px; }
 
-.vq-brand-opening .vq-opening-aws { margin-top:3px; font-size:10px; color:#aeb2bd; }
 .app-refresh-dialog { width:min(440px,calc(100vw - 32px)); max-height:calc(100dvh - 48px); overflow:auto; padding:26px; border:1px solid #b48a36; border-radius:22px; background:#0e1117; color:#f3f1ea; }
 .app-refresh-dialog::backdrop { background:#000b; }
 .app-refresh-dialog .vq-mark { width:80px; height:60px; margin-bottom:16px; }

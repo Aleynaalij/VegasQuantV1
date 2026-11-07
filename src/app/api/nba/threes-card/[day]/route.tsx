@@ -155,10 +155,27 @@ export async function GET(
   const db = createClient(supabaseUrl, publishableKey, {
     auth: { persistSession: false },
   });
-  const r = await db.rpc("nba_threes_card", { p_day: day });
+  // Upstream failures are temporary, not proof that this published card does not exist.
+  let r;
+  try {
+    r = await db.rpc("nba_threes_card", { p_day: day });
+  } catch {
+    return new Response("Card temporarily unavailable", {
+      status: 503,
+      headers: { "Cache-Control": "no-store", "Retry-After": "2" },
+    });
+  }
+  if (r.error)
+    return new Response("Card temporarily unavailable", {
+      status: 503,
+      headers: { "Cache-Control": "no-store", "Retry-After": "2" },
+    });
   const card = r.data as ThreesCard | null;
-  if (r.error || !card?.games?.length || !card.attempted?.length)
-    return new Response("No card for this day", { status: 404 });
+  if (!card?.games?.length || !card.attempted?.length)
+    return new Response("No card for this day", {
+      status: 404,
+      headers: { "Cache-Control": "no-store" },
+    });
   const [barlow, dm500, dm700] = await Promise.all([
     font("barlow-condensed-800-latin.ttf"),
     font("dm-sans-500.ttf"),

@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 import { ago, initials, richParts, zoneFeed } from "@/lib/zone-feed";
 import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
+import { NbaThreesCardPreview } from "./nba-threes-card-preview";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { isPublicationCard } from "@/lib/zone-publication-card";
 import { nbaMatchupSheetSlug } from "@/lib/nba-matchup-sheet";
@@ -1663,13 +1664,10 @@ export default function CommunityFeed() {
                             void like(p, true);
                           }}
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={`/api/nba/threes-card/${threesCardDay(p.card)}`}
-                            alt={p.body}
-                            width={1080}
-                            height={1350}
-                            loading="lazy"
+                          <NbaThreesCardPreview
+                            key={p.card}
+                            day={threesCardDay(p.card)!}
+                            body={p.body}
                           />
                           {burst === p.id ? (
                             <Heart
@@ -1680,14 +1678,6 @@ export default function CommunityFeed() {
                               onAnimationEnd={() => setBurst(null)}
                             />
                           ) : null}
-                          <figcaption>
-                            <a
-                              href={`/api/nba/threes-card/${threesCardDay(p.card)}`}
-                              download={`vegas-quant-3-point-volume-${threesCardDay(p.card)}.png`}
-                            >
-                              Download card
-                            </a>
-                          </figcaption>
                         </figure>
                       ) : nbaMatchupSheetSlug(p) ? (
                         <div>
