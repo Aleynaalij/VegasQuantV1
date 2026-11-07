@@ -268,6 +268,26 @@ test("sealed testers can read only bounded projected research using an eligible 
       /Invalid tester observation scope/,
     );
 
+    await db.exec("reset role");
+    await db.query(
+      "update private.tester_batches set enabled_features='{research,fear}' where name=$1",
+      [batch],
+    );
+    await db.query(
+      `insert into public.nba_observations values
+      ($1,$2,'injury','NBA','https://example.com/injuries',now()-interval '4 days',now()-interval '2 days',$3)`,
+      [id(305), id(202), { team: "Home", player: "A", status: "Questionable" }],
+    );
+    await role(1);
+    assert.deepEqual(
+      (await read("nba", id(202), "injury", "fear")).rows.map((x) => x.id),
+      [id(304), id(305)],
+    );
+    await assert.rejects(
+      read("nfl", id(201), "context", "fear"),
+      /Invalid tester observation scope/,
+    );
+
     for (const n of [2, 3, 4, 5, 6, 7, 8]) {
       await role(n);
       assert.equal(await status(), false, `user ${n}`);

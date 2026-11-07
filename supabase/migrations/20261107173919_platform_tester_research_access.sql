@@ -159,7 +159,8 @@ begin
      or p_as_of is null or not isfinite(p_as_of)
      or p_as_of < statement_timestamp() - interval '10 minutes'
      or p_as_of > statement_timestamp() + interval '30 seconds'
-     or (p_before is null) <> (p_after_id is null) then
+     or (p_before is null) <> (p_after_id is null)
+     or (p_section <> 'quotes' and p_before is not null) then
     raise invalid_parameter_value using message = 'Invalid tester observation scope';
   end if;
 
@@ -212,7 +213,8 @@ begin
           and (p_sport <> 'nfl' or p_feature <> 'research'
             or (o.payload->>'book' = 'FanDuel' and o.observed_at >= p_as_of - interval '6 hours'))
       end
-    order by o.recorded_at desc, o.id
+    order by case when p_feature = 'fear' and p_section = 'injury' then o.observed_at end desc nulls last,
+      o.recorded_at desc, o.id
     limit row_limit
   )
   select o.id, o.game_id, o.kind, left(o.provider, 120),
@@ -235,7 +237,8 @@ begin
         ), '[]'::jsonb))
     end
   from bounded o
-  order by o.recorded_at desc, o.id;
+  order by case when p_feature = 'fear' and p_section = 'injury' then o.observed_at end desc nulls last,
+      o.recorded_at desc, o.id;
 end $$;
 
 create function public.tester_observation_page(
