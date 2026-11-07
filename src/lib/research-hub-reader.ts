@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { testerFeatureAccess, testerObservationPage } from "./tester-research";
 import type { Analysis, Market } from "./domain";
 import { researchFacts } from "./research-facts";
 import { publicationSources } from "./game-research";
@@ -495,8 +496,14 @@ export async function readResearchHub(): Promise<HubData> {
     supabase.rpc("membership_status"),
   ]);
   data.signedIn = !!session.data.session;
-  data.denied = !!access.error || access.data?.allowed !== true;
-  if (access.error)
+  const member = !access.error && access.data?.allowed === true;
+  const tester =
+    data.signedIn && !access.error && !member
+      ? await testerFeatureAccess("research")
+      : null;
+  const testerAllowed = !tester?.error && tester?.data === true;
+  data.denied = !member && !testerAllowed;
+  if (access.error || tester?.error)
     data.errors.push(
       "Research access could not be checked. Retry to check access.",
     );
@@ -594,10 +601,10 @@ export async function readResearchHub(): Promise<HubData> {
                 source: safeSource(g.source?.url),
                 scheduleAt: null,
               });
-          if (!data.denied && page.access)
+          if (member && page.access)
             for (const e of data.events.filter((e) => e.sport === sport))
               data.findings.push(...sportFindings(e, page));
-          if (!data.denied && !page.access)
+          if (member && !page.access)
             data.errors.push(
               `${sport.toUpperCase()} protected research access was denied.`,
             );
@@ -609,7 +616,9 @@ export async function readResearchHub(): Promise<HubData> {
       }
     }),
   );
-  if (!data.denied)
+  if (testerAllowed) {
+    await readTesterResearch(data, now.getTime());
+  } else if (member) {
     await Promise.all(
       (["nfl", "nba"] as const).map(async (sport) => {
         const events = data.events.filter((e) => e.sport === sport);
@@ -749,9 +758,72 @@ export async function readResearchHub(): Promise<HubData> {
         }
       }),
     );
+  }
   data.events.sort(
     (a, b) =>
       Date.parse(a.start) - Date.parse(b.start) || a.key.localeCompare(b.key),
   );
   return data;
+}
+
+async function readTesterResearch(data: HubData, now: number) {
+  // The tester reader cannot fall back to raw member tables. Request only the
+  // published feature's event-scoped observations and signal partial coverage.
+  const events = data.events.filter(
+    (e) => (e.sport === "nfl" || e.sport === "nba") && !e.tbd,
+  );
+  const selected = events.slice(0, INJURY_EVENTS_LIMIT);
+  let incomplete = false;
+  if (selected.length < events.length) data.truncated = true;
+
+  for (let offset = 0; offset < selected.length; offset += INJURY_CONCURRENCY) {
+    await Promise.all(
+      selected.slice(offset, offset + INJURY_CONCURRENCY).map(async (e) => {
+        const sport = e.sport === "nba" ? "nba" : "nfl";
+        const sections =
+          sport === "nba"
+            ? (["quotes", "injury"] as const)
+            : (["quotes", "injury", "context"] as const);
+        const results = await Promise.allSettled(
+          sections.map((section) =>
+            testerObservationPage("research", sport, e.id, section, now),
+          ),
+        );
+        const rows: NbaObservation[] = [];
+        for (let index = 0; index < results.length; index++) {
+          const r = results[index];
+          if (r.status === "rejected") {
+            incomplete = true;
+            continue;
+          }
+          const limit = sections[index] === "quotes" ? 250 : 100;
+          const observations = r.value;
+          if (observations.length > limit) data.truncated = true;
+          rows.push(...observations.slice(0, limit));
+        }
+        const findings =
+          sport === "nba"
+            ? nbaFindings(e, rows)
+            : nflObservationFindings(e, rows);
+        for (const finding of findings) {
+          if (
+            finding.topic === "injuries" &&
+            now - Date.parse(finding.recordedAt || "") > INJURY_OLDER_MS
+          ) {
+            finding.title = "Older reported availability";
+            finding.text +=
+              "\nLast collected more than 48 hours ago. Current status is unverified.";
+          }
+        }
+        data.findings.push(...findings);
+      }),
+    );
+  }
+  data.errors.push(
+    "Tester coverage currently includes NFL and NBA observations. Other research sources may be unavailable.",
+  );
+  if (incomplete)
+    data.errors.push(
+      "Some tester observations could not load. Available reports are partial.",
+    );
 }
