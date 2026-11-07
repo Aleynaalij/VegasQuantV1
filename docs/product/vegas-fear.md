@@ -1,6 +1,6 @@
 # Vegas Fear | Market pressure
 
-The draft lives at /vegas-fear. The lobby concept stays Coming soon until release review. The historical pick-card Fear field, legacy research wish list and Intelligence records have separate semantics. This view reads existing collector evidence and has no weighted score.
+The draft links to /vegas-fear from the lobby’s Fear Index card, labeled NFL / NBA. The destination checks membership before loading protected observations. The Simulator card stays Coming soon. The historical pick-card Fear field, legacy research wish list and Intelligence records have separate semantics. This view reads existing collector evidence and has no weighted score.
 
 | Input | Coverage and evidence boundary |
 | --- | --- |

@@ -398,6 +398,85 @@ export function nflFindings(
     });
   return out;
 }
+// Keep an event-scoped allowance for injuries so quote volume and other games cannot
+// crowd out a player's last report. Bounds are reported as incomplete coverage.
+const INJURY_LOOKBACK_MS = 7 * 86400000;
+const INJURY_OLDER_MS = 48 * 3600000;
+const INJURY_EVENTS_LIMIT = 128;
+const INJURY_ROWS_LIMIT = 100;
+const INJURY_CONCURRENCY = 8;
+
+async function readInjuries(
+  sport: "nfl" | "nba",
+  events: ResearchEvent[],
+  now: number,
+  data: HubData,
+) {
+  const table = sport === "nba" ? "nba_observations" : "source_observations";
+  const since = new Date(now - INJURY_LOOKBACK_MS).toISOString();
+  const selected = events.slice(0, INJURY_EVENTS_LIMIT);
+  let incomplete = false;
+  if (selected.length < events.length) data.truncated = true;
+
+  for (let i = 0; i < selected.length; i += INJURY_CONCURRENCY) {
+    await Promise.all(
+      selected.slice(i, i + INJURY_CONCURRENCY).map(async (e) => {
+        try {
+          const result = await supabase
+            .from(table)
+            .select(
+              "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
+            )
+            .eq("game_id", e.id)
+            .eq("kind", "injury")
+            .gte("recorded_at", since)
+            .order("recorded_at", { ascending: false })
+            .order("id", { ascending: false })
+            .limit(INJURY_ROWS_LIMIT + 1);
+          if (result.error) throw result.error;
+          const rows = (result.data || []) as NbaObservation[];
+          if (rows.length > INJURY_ROWS_LIMIT) data.truncated = true;
+          const seen = new Set<string>();
+          const latest = rows.slice(0, INJURY_ROWS_LIMIT).filter((row) => {
+            if (row.game_id !== e.id || row.kind !== "injury") return false;
+            const player = str(row.payload?.player).trim().toLowerCase();
+            if (!player) {
+              incomplete = true;
+              return false;
+            }
+            const key = JSON.stringify([
+              str(row.payload.team).trim().toLowerCase(),
+              player,
+            ]);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          const findings =
+            sport === "nba"
+              ? nbaFindings(e, latest)
+              : nflObservationFindings(e, latest);
+          for (const finding of findings) {
+            const recorded = Date.parse(finding.recordedAt || "");
+            if (now - recorded > INJURY_OLDER_MS) {
+              finding.title = "Older reported availability";
+              finding.text +=
+                "\nLast collected more than 48 hours ago. Current status is unverified.";
+            }
+            data.findings.push(finding);
+          }
+        } catch {
+          incomplete = true;
+        }
+      }),
+    );
+  }
+  if (incomplete)
+    data.errors.push(
+      `${sport.toUpperCase()} injury reports are incomplete. Available reports are partial; retry to check coverage.`,
+    );
+}
+
 /** Reads existing RLS-protected stores only. Provider collection and publication remain separate. */
 export async function readResearchHub(): Promise<HubData> {
   const now = new Date(),
@@ -532,11 +611,11 @@ export async function readResearchHub(): Promise<HubData> {
   );
   if (!data.denied)
     await Promise.all(
-      ["nfl", "nba"].map(async (sport) => {
-        const ids = data.events
-          .filter((e) => e.sport === sport)
-          .map((e) => e.id);
+      (["nfl", "nba"] as const).map(async (sport) => {
+        const events = data.events.filter((e) => e.sport === sport);
+        const ids = events.map((e) => e.id);
         if (!ids.length) return;
+        const injuries = readInjuries(sport, events, now.getTime(), data);
         try {
           if (sport === "nba") {
             const r = await supabase
@@ -545,7 +624,7 @@ export async function readResearchHub(): Promise<HubData> {
                 "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
               )
               .in("game_id", ids)
-              .in("kind", ["injury", "odds", "prop"])
+              .in("kind", ["odds", "prop"])
               .gte(
                 "recorded_at",
                 new Date(now.getTime() - 48 * 3600000).toISOString(),
@@ -556,7 +635,12 @@ export async function readResearchHub(): Promise<HubData> {
             if (r.data?.length === 1000) data.truncated = true;
             for (const e of data.events.filter((e) => e.sport === sport))
               data.findings.push(
-                ...nbaFindings(e, (r.data || []) as NbaObservation[]),
+                ...nbaFindings(
+                  e,
+                  ((r.data || []) as NbaObservation[]).filter(
+                    (row) => row.kind !== "injury",
+                  ),
+                ),
               );
           } else {
             const results = await Promise.all([
@@ -590,7 +674,7 @@ export async function readResearchHub(): Promise<HubData> {
                   "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
                 )
                 .in("game_id", ids)
-                .in("kind", ["injury", "news", "weather"])
+                .in("kind", ["news", "weather"])
                 .gte(
                   "recorded_at",
                   new Date(now.getTime() - 48 * 3600000).toISOString(),
@@ -634,7 +718,9 @@ export async function readResearchHub(): Promise<HubData> {
             for (const e of data.events.filter((e) => e.sport === sport))
               data.findings.push(
                 ...nflObservationFindings(e, [
-                  ...(observations.data || []),
+                  ...(observations.data || []).filter(
+                    (row) => row.kind !== "injury",
+                  ),
                   ...(odds.data || []),
                 ] as NbaObservation[]),
                 ...publishedFindings(
@@ -658,6 +744,8 @@ export async function readResearchHub(): Promise<HubData> {
           data.errors.push(
             `${sport.toUpperCase()} research unavailable. Schedule availability does not confirm research coverage.`,
           );
+        } finally {
+          await injuries;
         }
       }),
     );

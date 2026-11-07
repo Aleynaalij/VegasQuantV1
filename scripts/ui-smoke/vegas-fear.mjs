@@ -214,6 +214,30 @@ async function fixture(width, access = "allowed", mode = "ready") {
   };
 }
 
+async function openFromLobby(page, width) {
+  await page.goto(base + "/");
+  const section = page.getByRole("region", { name: "VQ Intelligence" });
+  const fear = section.getByRole("link", {
+    name: "Fear Index, NFL and NBA market pressure",
+    exact: true,
+  });
+  await page.locator(".vq-brand-opening").waitFor({ state: "hidden" });
+  await fear.waitFor();
+  if (width)
+    await section.screenshot({ path: `${out}/${width}-lobby-dark.png` });
+  await fear.click();
+  await page.waitForURL(base + "/vegas-fear");
+  await page.getByRole("heading", { name: "Market pressure" }).waitFor();
+}
+
+async function selectFixtureEvent(page) {
+  const picker = page.getByLabel("Event", { exact: true });
+  await picker
+    .locator('option[value="fear-event"]')
+    .waitFor({ state: "attached" });
+  await picker.selectOption("fear-event");
+}
+
 async function inspect(page) {
   const main = page.locator(".fear-page");
   await page.getByText("Line moved from -2 to -3.", { exact: false }).waitFor();
@@ -255,6 +279,23 @@ async function inspect(page) {
 }
 
 try {
+  if (!negative)
+    for (const width of [360, 390, 1280]) {
+      const { page, ctx } = await fixture(width);
+      await openFromLobby(page, width);
+      await page.goBack();
+      await page.waitForURL(base + "/");
+      await page.getByRole("link", { name: /Fear Index, NFL and NBA/ }).click();
+      await page.waitForURL(base + "/vegas-fear");
+      await selectFixtureEvent(page);
+      await inspect(page);
+      await page.reload();
+      await inspect(page);
+      await ctx.close();
+      console.log(
+        `PASS lobby to Fear, allowed member, Back and reload at ${width}px`,
+      );
+    }
   if (negative !== "nba-identity")
     for (const width of [360, 390, 1280]) {
       const { page, ctx } = await fixture(width);
@@ -410,7 +451,8 @@ try {
   }
   for (const access of ["signed-out", "denied"]) {
     const { page, ctx, reads } = await fixture(390, access);
-    await page.goto(base + path);
+    await openFromLobby(page);
+    await selectFixtureEvent(page);
     await page
       .getByText(
         access === "denied"
@@ -421,6 +463,7 @@ try {
       .waitFor();
     assert.equal(reads(), 0);
     await ctx.close();
+    console.log(`PASS lobby to Fear, ${access} without protected reads`);
   }
   {
     const { page, ctx, reads, setMode, deny } = await fixture(
