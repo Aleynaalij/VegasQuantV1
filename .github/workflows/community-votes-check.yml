@@ -1,0 +1,26 @@
+name: Zone votes check
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261108170014_community_post_votes.sql'
+      - 'src/lib/zone-votes.ts'
+      - 'src/components/zone-votes.tsx'
+      - 'src/components/community-feed.tsx'
+      - 'tests/zone-votes.test.ts'
+      - 'tests/sql/community-post-votes.mjs'
+      - '.github/workflows/community-votes-check.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node --import tsx --test tests/zone-votes.test.ts
+      - run: node tests/sql/community-post-votes.mjs
