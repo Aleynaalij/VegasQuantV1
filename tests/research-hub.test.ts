@@ -9,6 +9,7 @@ import {
   sourceAge,
   sportErrors,
   searchHits,
+  snippet,
   type Finding,
   type ResearchEvent,
 } from "../src/lib/research-hub";
@@ -648,5 +649,22 @@ test("search explains what matched: report lines name their section, teams come 
     searchHits([vikings], [report], { ...f, sport: "nba" }),
     [],
     "sport filter applies",
+  );
+});
+
+test("long report lines are shortened around the match, never cutting it out", () => {
+  const long =
+    "Lorem ipsum ".repeat(30) +
+    "Justin Jefferson is questionable with a hamstring " +
+    "dolor sit ".repeat(30);
+  const s = snippet(long, "jefferson");
+  assert.match(s, /Justin Jefferson/);
+  assert.ok(s.length <= 142, String(s.length));
+  assert.ok(s.startsWith("…") && s.endsWith("…"));
+  assert.equal(snippet("short line", "line"), "short line");
+  assert.ok(
+    snippet("Jefferson " + "x".repeat(300), "jefferson").startsWith(
+      "Jefferson",
+    ),
   );
 });

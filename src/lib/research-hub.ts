@@ -148,6 +148,14 @@ export type SearchHit = {
  * (Injuries)" instead of an unexplained game. Same sport/date scope as the list; team matches first,
  * then report lines, each group in kickoff order.
  */
+/** A line of at most ~140 characters that always keeps the matched text in view. */
+export function snippet(line: string, q: string, max = 140) {
+  if (line.length <= max) return line;
+  const at = Math.max(0, line.toLocaleLowerCase().indexOf(q));
+  const start = Math.max(0, Math.min(at - 50, line.length - max));
+  const end = Math.min(line.length, start + max);
+  return `${start > 0 ? "…" : ""}${line.slice(start, end).trim()}${end < line.length ? "…" : ""}`;
+}
 export function searchHits(
   events: ResearchEvent[],
   findings: Finding[],
@@ -179,7 +187,7 @@ export function searchHits(
           key: `${e.key}|${x.id}|${line}`,
           event: e,
           topic: x.topic,
-          line: line.length > 140 ? line.slice(0, 137) + "…" : line,
+          line: snippet(line, q),
         });
       }
     }
