@@ -1,0 +1,26 @@
+name: NFL Sunday cards check
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261108020000_nfl_weekly_cards.sql'
+      - 'src/lib/nfl-weekly-cards.ts'
+      - 'src/app/api/nfl/weekly-card/**'
+      - 'scripts/nfl-weekly-cards/**'
+      - 'tests/nfl-weekly-cards.test.ts'
+      - 'tests/sql/nfl-weekly-cards.mjs'
+      - '.github/workflows/nfl-weekly-cards*.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node --import tsx --test tests/nfl-weekly-cards.test.ts
+      - run: node tests/sql/nfl-weekly-cards.mjs

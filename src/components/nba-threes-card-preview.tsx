@@ -7,15 +7,18 @@ import "./nba-threes-card-preview.css";
 export function NbaThreesCardPreview({
   day,
   body,
+  image,
 }: {
   day: string;
   body: string;
+  /** Another card image (e.g. the Sunday NFL cards); defaults to the day's 3-point volume card. */
+  image?: { src: string; alt: string; download: string };
 }) {
   const [attempt, setAttempt] = useState(0);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [retryToken, setRetryToken] = useState("");
-  const base = `/api/nba/threes-card/${day}`;
+  const base = image?.src || `/api/nba/threes-card/${day}`;
   const src = retryToken ? `${base}?retry=${retryToken}` : base;
 
   function retry() {
@@ -42,7 +45,10 @@ export function NbaThreesCardPreview({
         <img
           key={src}
           src={src}
-          alt={`3-point volume for ${day}. Full research is available below.`}
+          alt={
+            image?.alt ||
+            `3-point volume for ${day}. Full research is available below.`
+          }
           width={1080}
           height={1350}
           loading="lazy"
@@ -78,7 +84,12 @@ export function NbaThreesCardPreview({
           <p>{body}</p>
         </details>
         {loaded && (
-          <a href={src} download={`vegas-quant-3-point-volume-${day}.png`}>
+          <a
+            href={src}
+            download={
+              image?.download || `vegas-quant-3-point-volume-${day}.png`
+            }
+          >
             Download card
           </a>
         )}

@@ -40,6 +40,7 @@ import { ago, initials, richParts, zoneFeed } from "@/lib/zone-feed";
 import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { NbaThreesCardPreview } from "./nba-threes-card-preview";
 import { threesCardDay } from "@/lib/nba-threes-card";
+import { weeklyCardRef } from "@/lib/nfl-weekly-cards";
 import { isPublicationCard } from "@/lib/zone-publication-card";
 import { nbaMatchupSheetSlug } from "@/lib/nba-matchup-sheet";
 import NbaMatchupSheetPreview from "./nba-matchup-sheet-preview";
@@ -1656,7 +1657,35 @@ export default function CommunityFeed() {
                       {p.title !== "Community post" ? (
                         <h2 className="zone-post-title">{p.title}</h2>
                       ) : null}
-                      {threesCardDay(p.card) ? (
+                      {weeklyCardRef(p.card) ? (
+                        <figure
+                          className="zone-card zone-media"
+                          onDoubleClick={() => {
+                            setBurst(p.id);
+                            void like(p, true);
+                          }}
+                        >
+                          <NbaThreesCardPreview
+                            key={p.card}
+                            day={weeklyCardRef(p.card)!.day}
+                            body={p.body}
+                            image={{
+                              src: `/api/nfl/weekly-card/${encodeURIComponent(p.card!)}`,
+                              alt: `${p.title}. The full card text is available below.`,
+                              download: `vegas-quant-${p.card!.replaceAll(":", "-")}.png`,
+                            }}
+                          />
+                          {burst === p.id ? (
+                            <Heart
+                              className="zone-burst"
+                              size={96}
+                              fill="currentColor"
+                              aria-hidden="true"
+                              onAnimationEnd={() => setBurst(null)}
+                            />
+                          ) : null}
+                        </figure>
+                      ) : threesCardDay(p.card) ? (
                         <figure
                           className="zone-card zone-media"
                           onDoubleClick={() => {
