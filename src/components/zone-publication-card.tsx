@@ -38,16 +38,18 @@ export default function ZonePublicationCard({
   if (!isSport(p.sport)) return null;
   const theme = vqCardPalette(p.id);
   const label = PUBLICATION_LABELS[p.sport];
-  const { title, lines, start, height } = layout;
+  const { title, rows, start, height, editorial } = layout;
   const headline = watchers
     ? "WATCHLIST"
-    : p.legs.length
+    : editorial || p.legs.length
       ? "PUBLISHED PICKS"
       : "RESEARCH UPDATE";
   const stamp = publicationStamp(p.created_at),
     copyText = publicationCopy(p);
   const footer = watchers
     ? "Watchlist only · not official picks · check lines and inactives"
+    : editorial
+      ? "Qualitative editorial · no validated model edge · prices can change"
     : p.legs.length
       ? "Published picks · verify current line and availability"
       : "Vegas Quant publication · original analysis and sources";
@@ -147,8 +149,8 @@ export default function ZonePublicationCard({
           );
         }
       }
-      lines.forEach((line, n) =>
-        text(line, 74, start + n * 70, 56, "#e0e9df"),
+      rows.forEach((row) =>
+        text(row.text, row.x, row.y, row.size ?? 56, row.pick ? "#f5eedd" : "#e0e9df"),
       );
       text(footer, 74, height - 104, 24, "#c2cdbf");
       text("VEGASQUANT.APP", 74, height - 66, 24, theme.accent, 700);
@@ -180,7 +182,7 @@ export default function ZonePublicationCard({
         className="zone-publication-face"
         viewBox={`0 0 1080 ${height}`}
         role="img"
-        aria-label={`${p.title}. ${stamp}. ${watchers ? p.body : lines.join(" ")}`}
+        aria-label={`${p.title}. ${stamp}. ${watchers ? p.body : rows.map((row) => row.text).join(" ")}`}
       >
         <defs>
           <radialGradient
@@ -308,15 +310,15 @@ export default function ZonePublicationCard({
             ))}
           </g>
         )}
-        {lines.map((line, n) => (
+        {rows.map((row, n) => (
           <text
             key={n}
-            x="74"
-            y={start + n * 70}
-            fontSize="56"
-            fill="#e0e9df"
+            x={row.x}
+            y={row.y}
+            fontSize={row.size ?? 56}
+            fill={row.pick ? "#f5eedd" : "#e0e9df"}
           >
-            {line}
+            {row.text}
           </text>
         ))}
         <text x="74" y={height - 104} fontSize="24" fill="#c2cdbf">
@@ -387,7 +389,14 @@ export default function ZonePublicationCard({
       )}
       <details className="publication-analysis">
         <summary>Full analysis and sources</summary>
-        <p>{p.body}</p>
+        <p>{p.body.split("\n").map((line, i) => (
+          <span key={i}>
+            {i > 0 && "\n"}
+            {/^https:\/\/[^\s]+$/.test(line.trim()) ? (
+              <a href={line.trim()} target="_blank" rel="noopener noreferrer">{line.trim()}</a>
+            ) : line}
+          </span>
+        ))}</p>
         {p.legs.some((l) => !p.body.includes(l)) && (
           <ol>
             {p.legs.map((l, i) => (
