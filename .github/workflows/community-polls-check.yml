@@ -2,7 +2,7 @@ name: Zone polls check
 on:
   pull_request:
     paths:
-      - 'supabase/migrations/20261108160000_community_polls.sql'
+      - 'supabase/migrations/20261108162552_community_polls.sql'
       - 'src/lib/zone-poll.ts'
       - 'src/components/zone-poll.tsx'
       - 'src/components/community-feed.tsx'

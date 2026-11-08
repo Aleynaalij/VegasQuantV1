@@ -33,7 +33,7 @@ create policy i on public.community_posts for insert with check (user_id = auth.
 grant select, insert on public.community_posts to authenticated;`);
 await db.exec(
   fs.readFileSync(
-    "supabase/migrations/20261108160000_community_polls.sql",
+    "supabase/migrations/20261108162552_community_polls.sql",
     "utf8",
   ),
 );

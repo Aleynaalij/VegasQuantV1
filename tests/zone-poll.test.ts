@@ -90,7 +90,7 @@ test("the Zone composer offers a poll and the feed renders poll cards", () => {
     /disabled=\{busy \|\| \(!body\.trim\(\) && !photo && !poll\)\}/,
   );
   const sql = readFileSync(
-    "supabase/migrations/20261108160000_community_polls.sql",
+    "supabase/migrations/20261108162552_community_polls.sql",
     "utf8",
   );
   assert.match(
