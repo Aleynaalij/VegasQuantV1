@@ -126,3 +126,49 @@ verified. **The minimum next step** is to run the §3 possession reconstruction 
 reconciliation for 2022-23 and 2023-24, report them, and only then freeze N1. Mike confirmed the §4 minimum
 sample (300) and the §5 comparator on 2026-11-08. No feed, spending, credential, permission,
 database, workflow or shared-app change is needed.
+
+## 8. Results of the §2 and §3 checks (2026-11-08, `research/nba_sim/n0_checks.py`)
+Reports are in `research/nba_sim/diagnostics/n0-{2023,2024,2025}.json`. Source hashes (sha256):
+- play-by-play 2023 `79d035c5…0cee`, 2024 `3c9b656c…708d`, 2025 `9b89f85c…c307`;
+- box scores 2023 `1b797107…9493`, 2024 `c52a708a…49ae2`, 2025 `8e34c5b1…f4f7`.
+
+All were retrieved 2026-11-08 between 10:55 and 11:27Z. No fitting or simulation; data validation only.
+
+**Population [verified]** (the All-Star codes LEB/GIA and EAST/WEST were added to the exclusion list):
+
+| season | kept games | exceptions |
+|---|---|---|
+| 2022-23 | 1,230 | none; 1,231 IDs in total, minus the All-Star game LEB vs GIA |
+| 2023-24 | 1,231 | IND and LAL at 83 games: the In-Season Tournament final, kept and flagged neutral like the 2024-25 Cup final; All-Star EAST vs WEST excluded |
+| 2024-25 | 1,231 | MIL and OKC at 83 games (the Cup final); 3 All-Star games excluded |
+
+Every ID is explained, so the §2 rule passes.
+
+**§3 pass rules:**
+
+| rule | 2022-23 | 2023-24 | 2024-25 | result |
+|---|---|---|---|---|
+| possessions within 2 in at least 99% of games | 99.76% | 99.92% | 99.35% | **pass** |
+| games with unassigned scoring events at or below 1% | 1 game (`401469046`: 5 defensive rebounds, 2 free throws without a team) | 0 | 0 | **pass** (listed) |
+| scoring-play sum equals the final score in every game | 1,227 of 1,230 | 1,225 of 1,231 | 1,229 of 1,231 | **fail** in 11 of 3,692 games |
+| free-throw trips complete | 15 games with a gap | 8 | 7 | **fail** as written (30 games) |
+
+- **Scoring failures.** Inspected in 2024-25, these are source flag errors:
+  - In `401704638`, a free throw whose text says "makes free throw 1 of 2" is flagged `scoring_play=false`.
+  - In `401704805`, a basket stays flagged as scoring while the running score removes it.
+  - In every one of these games the final row still matches the box score, except in the 2022-23 and
+    2023-24 games the reports list.
+- **Running-score columns** are noisy from row to row (scores dip and restore around timeouts and
+  substitutions). Scoring must come from the event flags, reconciled to the final, not from row-to-row
+  score differences.
+
+**Amendment proposal (needs Codex/Elo read-back and Mike's confirmation; not applied):**
+1. **A game whose scoring flags don't reconcile to the final** is excluded from fitting and listed
+   (11 games, 0.30% overall), under the existing at-most-1% exclusion cap per season.
+2. **A game with a free-throw trip gap,** where points and possessions still reconcile, stays in the
+   possession and score fits. Only the incomplete trip is dropped from the free-throw-trip tables, and
+   it is counted. Excluding these games outright would take 2022-23 to 1.5%, over the cap.
+
+**Disposition: N0 is blocked on this amendment.** Everything else in §1–§3 is verified. If the
+amendment is accepted, N0 passes and N1 can be frozen after its read-back. If it's rejected, the
+alternative is a correction pass that rebuilds flags from the event text, under its own protocol.
