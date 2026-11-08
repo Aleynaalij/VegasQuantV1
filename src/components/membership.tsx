@@ -448,6 +448,12 @@ export default function Membership() {
             <label>
               Email
               <input name="email" type="email" autoComplete="email" required />
+              {signup && (
+                <small>
+                  We’ll email you a confirmation link. It can land in spam or
+                  junk, so check there if you don’t see it within a few minutes.
+                </small>
+              )}
             </label>
             <label>
               Password
