@@ -279,9 +279,10 @@ export default function HomeGameList({ games, focused = false }: { games: Game[]
       sub.data.subscription.unsubscribe();
     };
   }, [opened, ids, retry]);
+  // The matchup already has its source board; only desk card faces need this extra read.
   // Card faces carry the latest FanDuel moneyline and its no-vig split (members can read it).
   useEffect(() => {
-    if (!ids) return;
+    if (focused || !ids) return;
     let live = true,
       generation = 0;
     async function load() {
@@ -329,7 +330,7 @@ export default function HomeGameList({ games, focused = false }: { games: Game[]
     };
     // slate is derived from ids; the effect keys on the id list only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ids]);
+  }, [ids, focused]);
   return (
     <section
       id="home-games"
