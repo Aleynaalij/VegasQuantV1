@@ -65,28 +65,14 @@ type PublicationRow = {
   size?: number;
 };
 
-function editorialExcerpt(text: string, max: number) {
-  const firstSentence = text.split(/(?<=[.!?])\s+/, 1)[0];
-  if (firstSentence.length <= max) return firstSentence;
-  const end = text.lastIndexOf(" ", max - 1);
-  return text.slice(0, end > 0 ? end : max - 1) + "…";
-}
-
-/** Recognize the existing single-pick NBA publisher's exact body structure. */
-function editorialSections(p: PublicationPost) {
+/** Recognize the existing single-pick NBA publisher's exact quote format. */
+function editorialQuote(p: PublicationPost) {
   if (p.sport !== "nba" || p.legs.length > 1 || !isPublicationCard(p)) return null;
   const [line, why, risk, unknowns, disclosure] = p.body.split("\n\n");
   if (!line?.startsWith(p.title + " (") || !why || !risk?.startsWith("Risk: ") ||
       !unknowns?.startsWith("Unknowns: ") ||
       !disclosure?.startsWith("Qualitative editorial, not a validated model edge.")) return null;
-  const quote = /^([+-]\d+ at FanDuel), observed (.+ ET)\)$/.exec(line.slice(p.title.length + 2));
-  if (!quote) return null;
-  return {
-    price: quote[1],
-    observed: quote[2],
-    why: editorialExcerpt(why, 92),
-    risk: editorialExcerpt(risk.slice(6), 88),
-  };
+  return /^([+-]\d+ at FanDuel), observed (.+ ET)\)$/.exec(line.slice(p.title.length + 2));
 }
 
 export function publicationLayout(p: PublicationPost, watchlist = false) {
@@ -98,29 +84,24 @@ export function publicationLayout(p: PublicationPost, watchlist = false) {
   const step = 61;
   const columnWidth = 452;
   const columns = [74, 554];
-  const editorial = editorialSections(p);
-  if (editorial) {
-    rows.push({ text: editorial.price, x: 74, y: start, size: 50, pick: true });
-    rows.push({ text: `Observed ${editorial.observed}`, x: 74, y: start + 54, size: 38 });
-    const sections = [
-      { label: "WHY THIS PICK", text: editorial.why },
-      { label: "KEY RISK", text: editorial.risk },
-    ];
-    const first = start + 160;
-    sections.forEach(({ label, text }, i) => {
-      rows.push({ text: label, x: columns[i], y: first - 54, size: 32, pick: true });
-      wrapCardText(text, 48, columnWidth).forEach((line, n) => {
-        rows.push({ text: line, x: columns[i], y: first + n * 56, size: 48 });
-      });
-    });
-    return { title, rows, start, height: Math.max(920, Math.max(...rows.map((row) => row.y)) + 150), editorial: true };
-  }
-  let bodyStart = start;
-  let body = p.body;
-  if (p.legs.length > 1) {
+  const quote = editorialQuote(p);
+  const editorial = Boolean(quote);
+  if (quote) {
+    rows.push({ text: quote[1], x: 74, y: start, pick: true });
+    wrapCardText(`Observed ${quote[2]}`, 38).forEach((text, i) =>
+      rows.push({ text, x: 74, y: start + 54 + i * 44, size: 38 }),
+    );
+  } else if (p.legs.length === 1) {
+    const [leg] = p.legs;
+    if (leg !== p.title) {
+      wrapCardText(leg, 56).forEach((text, i) =>
+        rows.push({ text, x: 74, y: start + i * step, pick: true }),
+      );
+    }
+  } else if (p.legs.length > 1) {
     const split = Math.ceil(p.legs.length / 2);
     const sides = [p.legs.slice(0, split), p.legs.slice(split)];
-    const ends = sides.map((legs, column) => {
+    sides.forEach((legs, column) => {
       let y = start;
       legs.forEach((leg, i) => {
         const index = column * split + i + 1;
@@ -130,16 +111,14 @@ export function publicationLayout(p: PublicationPost, watchlist = false) {
         }
         y += 16;
       });
-      return y;
     });
-    bodyStart = Math.max(...ends) + 20;
-    const legs = new Set(p.legs);
-    body = body.split("\n").filter((line) => !legs.has(line.trim())).join("\n").trim();
-  } else {
-    const extra = p.legs.filter((leg) => !body.includes(leg));
-    body = [...extra, body].filter(Boolean).join("\n\n");
+  }
+  if (editorial || p.legs.length) {
+    const bottom = rows.reduce((last, row) => Math.max(last, row.y), start);
+    return { title, rows, start, height: Math.max(670, bottom + 170), editorial };
   }
 
+  const body = p.body;
   const single = body ? wrapCardText(body, 56) : [];
   const narrow = single.length > 6 ? wrapCardText(body, 56, columnWidth) : [];
   const midpoint = Math.ceil(narrow.length / 2);
@@ -158,7 +137,7 @@ export function publicationLayout(p: PublicationPost, watchlist = false) {
     const first = lines.findIndex(Boolean);
     if (first < 0) return;
     lines.slice(first).forEach((text, i) => {
-      if (text) rows.push({ text, x: columns[column], y: bodyStart + i * step });
+      if (text) rows.push({ text, x: columns[column], y: start + i * step });
     });
   });
   const bottom = rows.reduce((last, row) => Math.max(last, row.y), start);
