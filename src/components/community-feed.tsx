@@ -26,6 +26,7 @@ import { time } from "@/lib/domain";
 import {
   ArrowUpRight,
   BadgeCheck,
+  BarChart3,
   Check,
   Copy,
   Gem,
@@ -50,6 +51,8 @@ import ReactionPicker, { useTypedReactions, type TypedReactions } from "./reacti
 import { nextReaction } from "@/lib/community-reaction-contracts";
 import "@/app/reaction-picker.css";
 import "@/app/zone-entry.css";
+import { PollComposer, ZonePoll, useZonePolls } from "./zone-poll";
+import { emptyPoll, pollDraftProblem, pollOptions, type PollDraft } from "@/lib/zone-poll";
 type Post = {
   id: string;
   user_id: string;
@@ -769,6 +772,8 @@ export default function CommunityFeed() {
   const [targetPost, setTargetPost] = useState<string | null>(null);
   const [targetMissing, setTargetMissing] = useState(false);
   const [photo, setPhoto] = useState<File | null>(null);
+  // Optional poll attached to the next post (null = no poll).
+  const [poll, setPoll] = useState<PollDraft | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const photoInput = useRef<HTMLInputElement>(null);
   const scrolledPost = useRef<string | null>(null);
@@ -961,8 +966,13 @@ export default function CommunityFeed() {
   async function post(e: FormEvent) {
     e.preventDefault();
     if (!uid) return;
-    if (!body.trim() && !photo) return;
+    if (!body.trim() && !photo && !poll) return;
     if (busy) return;
+    const pollProblem = poll ? pollDraftProblem(poll) : null;
+    if (pollProblem) {
+      setNotice(pollProblem);
+      return;
+    }
     const generation = mutationEpoch.current;
     const postId = crypto.randomUUID();
     let uploaded: string | null = null;
@@ -981,17 +991,27 @@ export default function CommunityFeed() {
         );
       }
       if (generation !== mutationEpoch.current) return;
-      const r = await supabase.from("community_posts").insert({
-        id: postId,
-        user_id: uid,
-        sport: postSport,
-        kind: "talk",
-        title: "Community post",
-        body: body.trim() || "Shared a photo",
-        legs: [],
-        stake: null,
-        photo_path: uploaded,
-      });
+      // A post with a poll is created together with its poll in one database call.
+      const r = poll
+        ? await supabase.rpc("create_community_poll_post", {
+            p_id: postId,
+            p_sport: postSport,
+            p_body: body.trim(),
+            p_photo_path: uploaded,
+            p_question: poll.question.trim(),
+            p_options: pollOptions(poll),
+          })
+        : await supabase.from("community_posts").insert({
+            id: postId,
+            user_id: uid,
+            sport: postSport,
+            kind: "talk",
+            title: "Community post",
+            body: body.trim() || "Shared a photo",
+            legs: [],
+            stake: null,
+            photo_path: uploaded,
+          });
       if (r.error) {
         if (uploaded)
           await supabase.storage
@@ -1004,6 +1024,7 @@ export default function CommunityFeed() {
       if (generation !== mutationEpoch.current) return;
       setBody("");
       setPhoto(null);
+      setPoll(null);
       if (photoInput.current) photoInput.current.value = "";
       setNotice("Posted to Community. This does not record a wager.");
       window.dispatchEvent(new Event("vq-community-changed"));
@@ -1022,6 +1043,11 @@ export default function CommunityFeed() {
   // Typed reactions (#206): one authoritative state per post shared by Like and the emoji picker.
   const typed = useTypedReactions((id, st) =>
     setRows((all) => all.map((x) => (x.id === id ? { ...x, reactions: st.total, reacted: st.mine !== null } : x))),
+  );
+  // Poll states for the posts on screen, one batch per feed load.
+  const polls = useZonePolls(
+    rows.map((x) => x.id),
+    uid,
   );
   // VIP lays (ruby cards) keep their own reaction states; counts come from those states.
   const layReactions = useTypedReactions(() => {}, "card");
@@ -1391,6 +1417,13 @@ export default function CommunityFeed() {
                     </button>
                   </div>
                 ) : null}
+                {poll ? (
+                  <PollComposer
+                    draft={poll}
+                    onChange={setPoll}
+                    onRemove={() => setPoll(null)}
+                  />
+                ) : null}
                 <div className="zone-composer-bar">
                   <label className="zone-icon-button" title="Attach a photo">
                     <ImagePlus size={20} aria-hidden="true" />
@@ -1421,6 +1454,17 @@ export default function CommunityFeed() {
                       }}
                     />
                   </label>
+                  {poll ? null : (
+                    <button
+                      type="button"
+                      className="zone-icon-button"
+                      title="Add a poll"
+                      onClick={() => setPoll(emptyPoll())}
+                    >
+                      <BarChart3 size={20} aria-hidden="true" />
+                      <span>Poll</span>
+                    </button>
+                  )}
                   {liveSports().length > 1 ? (
                     <label className="zone-sport-pick">
                       <span className="sr-only">Sport</span>
@@ -1444,7 +1488,7 @@ export default function CommunityFeed() {
                   </Link>
                   <button
                     className="zone-post-button"
-                    disabled={busy || (!body.trim() && !photo)}
+                    disabled={busy || (!body.trim() && !photo && !poll)}
                   >
                     {busy ? "Posting…" : "Post"}
                   </button>
@@ -1750,6 +1794,20 @@ export default function CommunityFeed() {
                             />
                           ) : null}
                         </div>
+                      ) : null}
+                      {polls.states[p.id] ? (
+                        <ZonePoll
+                          state={polls.states[p.id]}
+                          busy={polls.busy === p.id}
+                          onVote={(option) =>
+                            void polls.vote(p.id, option).then((ok) => {
+                              if (ok === false)
+                                setNotice(
+                                  "Your vote didn't save. Check you're signed in with a visible profile, then retry.",
+                                );
+                            })
+                          }
+                        />
                       ) : null}
                       {isPublicationCard(p) ? null : p.kind === "slip" && p.legs.length ? (
                         <CommunityParlayCard
