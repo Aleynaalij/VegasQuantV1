@@ -25,6 +25,7 @@ import SourceStatus from "./source-status";
 import { gamePicksPath } from "@/lib/game-picks";
 import { homeGamePath } from "@/lib/journey";
 import NgsContext from "./ngs-context";
+import HomeGameList from "./home-game-list";
 function Fields({ value }: { value: unknown }) {
   if (value == null) return <p className="muted">Not supplied.</p>;
   if (Array.isArray(value))
@@ -137,6 +138,7 @@ export default function MatchupIntelligence({
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
     [signedIn, setSignedIn] = useState(false),
+    [playerResearchAllowed, setPlayerResearchAllowed] = useState(false),
     [retry, setRetry] = useState(0);
   const epoch = useRef(0);
   useEffect(() => {
@@ -155,8 +157,10 @@ export default function MatchupIntelligence({
         // Resolve the persisted session before checking access. Never infer denial from
         // the anonymous server render or from a failed research download.
         const session = await supabase.auth.getSession();
-        if (session.error)
+        if (session.error) {
+          setPlayerResearchAllowed(false);
           throw Error("Your session could not be checked. Please retry.");
+        }
         if (!live || n !== epoch.current) return;
         setSignedIn(!!session.data.session);
         const signal = AbortSignal.timeout(20000);
@@ -165,8 +169,12 @@ export default function MatchupIntelligence({
           supabase.rpc("membership_status").abortSignal(signal),
           supabase.rpc("public_research_status").abortSignal(signal),
         ]);
-        if (access.error || typeof access.data?.allowed !== "boolean")
+        if (!live || n !== epoch.current) return;
+        if (access.error || typeof access.data?.allowed !== "boolean") {
+          setPlayerResearchAllowed(false);
           throw Error("Research access could not be checked. Please retry.");
+        }
+        setPlayerResearchAllowed(!!session.data.session && access.data.allowed);
         if (directory.error)
           throw Error("The game directory could not load. Please retry.");
         if (!live || n !== epoch.current) return;
@@ -327,6 +335,7 @@ export default function MatchupIntelligence({
         initial.games.map((game) => ({ game, analysis: null, market: null })),
       );
       setDesk(initial);
+      setPlayerResearchAllowed(false);
       setSelected("");
       setLoading(true);
       setError("");
@@ -672,6 +681,9 @@ export default function MatchupIntelligence({
                 }}
               />
             </details>
+            {playerResearchAllowed && (!selected || current?.id === versions[0]?.id) && (
+              <HomeGameList key={row.game.id} games={[row.game]} focused />
+            )}
             {loading && !current ? (
               <p role="status">Loading game research…</p>
             ) : error && !current ? (
@@ -711,7 +723,7 @@ export default function MatchupIntelligence({
                             ? "RESEARCH AVAILABLE · MEMBERS"
                             : row?.research_available === undefined
                               ? "CHECKING RESEARCH"
-                              : "NOT ANALYZED")}
+                              : "BRIEFING PENDING")}
                   </Badge>
                   {current && <span>Updated {time(current.created_at)}</span>}
                 </div>
@@ -813,9 +825,7 @@ export default function MatchupIntelligence({
                     official={official.length > 0}
                   />
                 ) : (
-                  <Empty title="Not analyzed yet">
-                    No Vegas Quant analysis has been published for this game.
-                  </Empty>
+                  <p className="muted">A written analyst briefing has not been published for this game. Player research above and source snapshots below are separate from that briefing.</p>
                 )}
                 <NgsContext
                   key={`${row.game.id}-${selected}`}

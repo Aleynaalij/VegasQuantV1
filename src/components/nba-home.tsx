@@ -29,6 +29,8 @@ import SportBrief from "./sport/sport-brief";
 import NbaLineups, { NbaAvailabilitySummary } from "./nba-lineups";
 import SportSlate from "./sport/sport-slate";
 import LiveNow from "./sport/live-now";
+import { NbaGameDetails } from "./nba-game-board";
+import type { NbaGame } from "@/lib/nba-board";
 
 type Pick = {
   id: string;
@@ -61,6 +63,9 @@ const Best = ({ q }: { q: BookQuote | null }) =>
 /** NBA Home in the NFL layout: the next tip-off, then the week's games with their markets inside. */
 export default function NbaHome() {
   const [games, setGames] = useState<SlateGame[]>([]),
+    [researchGames, setResearchGames] = useState<NbaGame[]>([]),
+    [researchAllowed, setResearchAllowed] = useState(false),
+    [accountVersion, setAccountVersion] = useState(0),
     [books, setBooks] = useState<QuoteRow[]>([]),
     [loaded, setLoaded] = useState(false),
     [error, setError] = useState(false),
@@ -79,7 +84,7 @@ export default function NbaHome() {
       const r = await supabase
         .from("nba_games")
         .select(
-          "id,slug,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,venue,status",
+          "id,provider_id,slug,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,venue,status,season,season_type,away_score,home_score,source,updated_at",
         )
         .eq("season_type", 2)
         .gte("tipoff", new Date(at - 4 * 3600000).toISOString())
@@ -89,8 +94,10 @@ export default function NbaHome() {
         .limit(120);
       if (!live) return;
       setError(!!r.error);
-      if (!r.error)
+      if (!r.error) {
         setGames(((r.data || []) as NbaSlateRow[]).map(nbaSlateGame));
+        setResearchGames((r.data || []) as NbaGame[]);
+      }
       setLoaded(true);
     }
     void load();
@@ -114,6 +121,7 @@ export default function NbaHome() {
       const session = await supabase.auth.getSession();
       if (!live || n !== generation) return;
       if (!session.data.session) {
+        setResearchAllowed(false);
         setRows([]);
         setPicks([]);
         setBooks([]);
@@ -121,7 +129,7 @@ export default function NbaHome() {
         return;
       }
       const list = ids.split(",");
-      const [q, p, b] = await Promise.all([
+      const [q, p, b, access] = await Promise.all([
         supabase
           .from("nba_observations")
           .select("game_id,kind,observed_at,recorded_at,payload")
@@ -160,29 +168,38 @@ export default function NbaHome() {
               .order("observed_at", { ascending: false })
               .limit(8000)
           : Promise.resolve({ data: [] as QuoteRow[], error: null }),
+        supabase.rpc("membership_status"),
       ]);
       if (!live || n !== generation) return;
-      if (q.error || p.error) {
-        if (opened) setNotice("Markets could not load. Please retry.");
-        return;
-      }
-      setRows((q.data || []) as NbaQuoteRow[]);
-      setPicks(currentSelections((p.data || []) as Pick[]));
+      setResearchAllowed(!access.error && access.data?.allowed === true);
+      setRows(q.error ? [] : (q.data || []) as NbaQuoteRow[]);
+      setPicks(p.error ? [] : currentSelections((p.data || []) as Pick[]));
       // A failed comparison read only hides "Best"; FanDuel prices still show.
       setBooks(b.error ? [] : ((b.data || []) as QuoteRow[]));
-      setNotice("");
+      setNotice(q.error || p.error ? "Some markets or selections could not load. Please retry." : "");
     }
     void load();
     const timer = setInterval(load, 60000);
-    const auth = supabase.auth.onAuthStateChange(() => void load());
+    const refresh = () => { if (document.visibilityState !== "hidden") void load(); };
+    window.addEventListener("focus", refresh);
+    const auth = supabase.auth.onAuthStateChange(() => {
+      ++generation;
+      setResearchAllowed(false);
+      setAccountVersion((n) => n + 1);
+      setRows([]);
+      setPicks([]);
+      setBooks([]);
+      setTimeout(refresh, 0);
+    });
     return () => {
       live = false;
       clearInterval(timer);
+      window.removeEventListener("focus", refresh);
       auth.data.subscription.unsubscribe();
     };
     // games is derived from ids; the effect keys on the id list.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ids, opened]);
+  }, [ids, opened, retry]);
   useEffect(() => {
     const tick = setInterval(() => setClock(Date.now()), 60000);
     return () => clearInterval(tick);
@@ -246,7 +263,8 @@ export default function NbaHome() {
               Open the matchup →
             </Link>
           ) : null;
-          if (notice)
+          const researchGame = researchGames.find((r) => r.id === g.id);
+          if (notice.startsWith("Sign in"))
             return (
               <div className="sport-markets">
                 <NbaLineups
@@ -274,7 +292,9 @@ export default function NbaHome() {
                   tbd: g.tbd,
                 }}
               />
-              <h3 className="sport-markets-title">Vegas Quant selections</h3>
+              {notice && <p role="status">{notice} <button type="button" onClick={() => setRetry((n) => n + 1)}>Retry markets and selections</button></p>}
+              {researchGame && researchAllowed ? <NbaGameDetails key={`${researchGame.id}-${accountVersion}`} game={researchGame} now={clock} defaultOpen showLineups={false} /> : <p role="status">Game source research requires verified research access. <Link href="/membership">Check account access →</Link></p>}
+              <h3 className="sport-markets-title">Published Vegas Quant selections</h3>
               {selections.length ? (
                 <>
                   <ul className="sport-selections">
@@ -325,7 +345,7 @@ export default function NbaHome() {
                 </>
               ) : (
                 <p className="sport-empty">
-                  No published selections for this game yet.
+                  {notice ? "Published selections are unavailable right now." : "No active editorial selections for this game. Available source research is separate from official picks."}
                 </p>
               )}
               <h3 className="sport-markets-title">FanDuel lines</h3>
