@@ -1,0 +1,27 @@
+name: Zone polls check
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/20261108162552_community_polls.sql'
+      - 'supabase/migrations/20261108171847_community_poll_safety.sql'
+      - 'src/lib/zone-poll.ts'
+      - 'src/components/zone-poll.tsx'
+      - 'src/components/community-feed.tsx'
+      - 'tests/zone-poll.test.ts'
+      - 'tests/sql/community-polls.mjs'
+      - '.github/workflows/community-polls-check.yml'
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node --import tsx --test tests/zone-poll.test.ts
+      - run: node tests/sql/community-polls.mjs
