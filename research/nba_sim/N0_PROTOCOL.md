@@ -172,3 +172,7 @@ Every ID is explained, so the §2 rule passes.
 **Disposition: N0 is blocked on this amendment.** Everything else in §1–§3 is verified. If the
 amendment is accepted, N0 passes and N1 can be frozen after its read-back. If it's rejected, the
 alternative is a correction pass that rebuilds flags from the event text, under its own protocol.
+
+**Mike's confirmation (2026-11-08):** Mike approved amendments 1 and 2 above as written. They take
+effect once Codex/Elo read-back clears them. N0 then passes and N1 can be frozen after its own
+read-back. Until then nothing is fitted.
