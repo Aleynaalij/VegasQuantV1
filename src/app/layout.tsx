@@ -20,6 +20,8 @@ import "./premium.css";
 import "./lounge.css";
 import "./social.css";
 import "./notifications.css";
+import UpdateInbox from "@/components/update-inbox";
+import { RELEASE_ANNOUNCEMENT_ID } from "@/lib/release-announcement";
 import NotificationProvider from "@/components/notification-provider";
 import "./parlay-builder.css";
 import "./performance.css";
@@ -108,6 +110,7 @@ export default function RootLayout({
                 <AppRefreshNotice />
                 <Welcome />
                 <ProfileSetupGate />
+                <UpdateInbox autoOpenId={RELEASE_ANNOUNCEMENT_ID} />
                 <NotificationBootstrap />
                 <PhoneContactPrompt />
                 <DailyLuck />
