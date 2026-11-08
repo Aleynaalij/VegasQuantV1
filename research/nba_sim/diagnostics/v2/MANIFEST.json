@@ -1,0 +1,48 @@
+{
+ "retrieved_at": "2026-11-08 (play-by-play 10:32\u201311:26Z; box scores re-downloaded 19:55Z, identical hashes)",
+ "validator": "research/nba_sim/n0_checks.py v2",
+ "files": [
+  {
+   "season_end": 2023,
+   "kind": "play_by_play",
+   "url": "https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_nba_pbp/play_by_play_2023.csv",
+   "bytes": 268821938,
+   "sha256": "79d035c5c9b73a95c4122b9f73e4a08af8a92c31acddd2a4686b0be075a00cee"
+  },
+  {
+   "season_end": 2023,
+   "kind": "player_box",
+   "url": "https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_nba_player_boxscores/player_box_2023.csv",
+   "bytes": 17431336,
+   "sha256": "1b797107d4a0b2fbc98862bd283b9e807a05aa11c671b89a471b25591a589493"
+  },
+  {
+   "season_end": 2024,
+   "kind": "play_by_play",
+   "url": "https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_nba_pbp/play_by_play_2024.csv",
+   "bytes": 267123954,
+   "sha256": "3c9b656cc5195d00c6769b09237460e56435e2ac2fc33dbe3905c1f8ba84708d"
+  },
+  {
+   "season_end": 2024,
+   "kind": "player_box",
+   "url": "https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_nba_player_boxscores/player_box_2024.csv",
+   "bytes": 17930190,
+   "sha256": "c52a708ac80542baa0711f166154e0a647543036854e29aa903bd2fc27b49ae2"
+  },
+  {
+   "season_end": 2025,
+   "kind": "play_by_play",
+   "url": "https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_nba_pbp/play_by_play_2025.csv",
+   "bytes": 278232752,
+   "sha256": "9b89f85cda34d983cdaa6080317f054c5b210ad82aa48446cf201b2152d6c307"
+  },
+  {
+   "season_end": 2025,
+   "kind": "player_box",
+   "url": "https://github.com/sportsdataverse/sportsdataverse-data/releases/download/espn_nba_player_boxscores/player_box_2025.csv",
+   "bytes": 17909380,
+   "sha256": "8e34c5b1b7629dda89483356b5ec40f76a0b534aa273a5ddd8d9ef23f3e0e4f7"
+  }
+ ]
+}

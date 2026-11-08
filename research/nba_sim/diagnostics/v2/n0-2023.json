@@ -1,0 +1,521 @@
+{
+ "checks": {
+  "box_points_equal_final": {
+   "of": 1230,
+   "pass": 1227
+  },
+  "ft_trips_incomplete": {
+   "games": 16,
+   "of_trips": 31314,
+   "trips": 17
+  },
+  "games_with_unassigned_scoring": 1,
+  "games_with_unrecognised_scoring_types": 0,
+  "possession_count_difference": {
+   "0": 443,
+   "1": 621,
+   "2": 161,
+   "3": 5
+  },
+  "possessions_within_2": {
+   "games": 1225,
+   "of": 1230,
+   "share": 0.9959
+  },
+  "scoring_flags_reconcile": {
+   "of": 1230,
+   "pass": 1227
+  }
+ },
+ "denominators": {
+  "ft_trips": 31314,
+  "games": 1230
+ },
+ "failure_detail": {
+  "box_vs_final": [
+   {
+    "box": [
+     113,
+     119
+    ],
+    "final_row": [
+     89,
+     85
+    ],
+    "game": "401468786"
+   },
+   {
+    "box": [
+     124,
+     131
+    ],
+    "final_row": [
+     124,
+     129
+    ],
+    "game": "401469149"
+   },
+   {
+    "box": [
+     123,
+     139
+    ],
+    "final_row": [
+     123,
+     136
+    ],
+    "game": "401469200"
+   }
+  ],
+  "ft_trips": [
+   {
+    "game": "401468294",
+    "trips": [
+     {
+      "of": 2,
+      "period": "4",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "21"
+     }
+    ]
+   },
+   {
+    "game": "401468398",
+    "trips": [
+     {
+      "of": 2,
+      "period": "2",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "29"
+     }
+    ]
+   },
+   {
+    "game": "401468507",
+    "trips": [
+     {
+      "of": 2,
+      "period": "4",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "30"
+     }
+    ]
+   },
+   {
+    "game": "401468511",
+    "trips": [
+     {
+      "of": 2,
+      "period": "1",
+      "reason": "orphan or out-of-order attempt",
+      "seen": [
+       2
+      ],
+      "team": "20"
+     },
+     {
+      "of": 2,
+      "period": "1",
+      "reason": "orphan or out-of-order attempt",
+      "seen": [
+       2
+      ],
+      "team": "20"
+     }
+    ]
+   },
+   {
+    "game": "401468518",
+    "trips": [
+     {
+      "of": 2,
+      "period": "4",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "19"
+     }
+    ]
+   },
+   {
+    "game": "401468726",
+    "trips": [
+     {
+      "of": 2,
+      "period": "4",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "16"
+     }
+    ]
+   },
+   {
+    "game": "401468826",
+    "trips": [
+     {
+      "of": 2,
+      "period": "2",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "10"
+     }
+    ]
+   },
+   {
+    "game": "401468859",
+    "trips": [
+     {
+      "of": 2,
+      "period": "2",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "17"
+     }
+    ]
+   },
+   {
+    "game": "401468901",
+    "trips": [
+     {
+      "of": 2,
+      "period": "4",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "16"
+     }
+    ]
+   },
+   {
+    "game": "401468918",
+    "trips": [
+     {
+      "of": 2,
+      "period": "4",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "22"
+     }
+    ]
+   },
+   {
+    "game": "401469087",
+    "trips": [
+     {
+      "of": 2,
+      "period": "1",
+      "reason": "trip open at period end",
+      "seen": [
+       1
+      ],
+      "team": "12"
+     }
+    ]
+   },
+   {
+    "game": "401469186",
+    "trips": [
+     {
+      "of": 2,
+      "period": "4",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "17"
+     }
+    ]
+   },
+   {
+    "game": "401469223",
+    "trips": [
+     {
+      "of": 2,
+      "period": "2",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "15"
+     }
+    ]
+   },
+   {
+    "game": "401469240",
+    "trips": [
+     {
+      "of": 2,
+      "period": "3",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "28"
+     }
+    ]
+   },
+   {
+    "game": "401469254",
+    "trips": [
+     {
+      "of": 2,
+      "period": "1",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "8"
+     }
+    ]
+   },
+   {
+    "game": "401469377",
+    "trips": [
+     {
+      "of": 2,
+      "period": "3",
+      "reason": "new trip before completion",
+      "seen": [
+       1
+      ],
+      "team": "10"
+     }
+    ]
+   }
+  ],
+  "possessions_gt2": [
+   {
+    "away": 101,
+    "game": "401468544",
+    "home": 98
+   },
+   {
+    "away": 97,
+    "game": "401468801",
+    "home": 100
+   },
+   {
+    "away": 101,
+    "game": "401469088",
+    "home": 98
+   },
+   {
+    "away": 108,
+    "game": "401469156",
+    "home": 111
+   },
+   {
+    "away": 96,
+    "game": "401469182",
+    "home": 93
+   }
+  ],
+  "scoring_flags": [
+   {
+    "final_row": [
+     106,
+     113
+    ],
+    "flag_sum": [
+     104,
+     113
+    ],
+    "game": "401468281"
+   },
+   {
+    "final_row": [
+     132,
+     123
+    ],
+    "flag_sum": [
+     132,
+     125
+    ],
+    "game": "401468511"
+   },
+   {
+    "final_row": [
+     142,
+     116
+    ],
+    "flag_sum": [
+     142,
+     115
+    ],
+    "game": "401469046"
+   }
+  ],
+  "unassigned": [
+   {
+    "game": "401469046",
+    "types": {
+     "Free Throw - Technical": 1
+    }
+   }
+  ],
+  "unrecognised": []
+ },
+ "failures": {
+  "box_vs_final": [
+   "401468786",
+   "401469149",
+   "401469200"
+  ],
+  "ft_trips": [
+   "401468294",
+   "401468398",
+   "401468507",
+   "401468511",
+   "401468518",
+   "401468726",
+   "401468826",
+   "401468859",
+   "401468901",
+   "401468918",
+   "401469087",
+   "401469186",
+   "401469223",
+   "401469240",
+   "401469254",
+   "401469377"
+  ],
+  "possessions_gt2": [
+   "401468544",
+   "401468801",
+   "401469088",
+   "401469156",
+   "401469182"
+  ],
+  "scoring_flags": [
+   "401468281",
+   "401468511",
+   "401469046"
+  ],
+  "unassigned": [
+   "401469046"
+  ],
+  "unrecognised": []
+ },
+ "population": {
+  "all_star_excluded": [
+   "401524696"
+  ],
+  "kept": 1230,
+  "season_type_2_ids": 1231,
+  "team_game_counts": {
+   "82": 30
+  },
+  "teams": 30,
+  "teams_not_82": {}
+ },
+ "source": {
+  "box": "player_box_2023.csv",
+  "pbp": "play_by_play_2023.csv"
+ },
+ "union": {
+  "games": 26,
+  "reasons": {
+   "401468281": [
+    "scoring_flags"
+   ],
+   "401468294": [
+    "ft_trips"
+   ],
+   "401468398": [
+    "ft_trips"
+   ],
+   "401468507": [
+    "ft_trips"
+   ],
+   "401468511": [
+    "ft_trips",
+    "scoring_flags"
+   ],
+   "401468518": [
+    "ft_trips"
+   ],
+   "401468544": [
+    "possessions_gt2"
+   ],
+   "401468726": [
+    "ft_trips"
+   ],
+   "401468786": [
+    "box_vs_final"
+   ],
+   "401468801": [
+    "possessions_gt2"
+   ],
+   "401468826": [
+    "ft_trips"
+   ],
+   "401468859": [
+    "ft_trips"
+   ],
+   "401468901": [
+    "ft_trips"
+   ],
+   "401468918": [
+    "ft_trips"
+   ],
+   "401469046": [
+    "scoring_flags",
+    "unassigned"
+   ],
+   "401469087": [
+    "ft_trips"
+   ],
+   "401469088": [
+    "possessions_gt2"
+   ],
+   "401469149": [
+    "box_vs_final"
+   ],
+   "401469156": [
+    "possessions_gt2"
+   ],
+   "401469182": [
+    "possessions_gt2"
+   ],
+   "401469186": [
+    "ft_trips"
+   ],
+   "401469200": [
+    "box_vs_final"
+   ],
+   "401469223": [
+    "ft_trips"
+   ],
+   "401469240": [
+    "ft_trips"
+   ],
+   "401469254": [
+    "ft_trips"
+   ],
+   "401469377": [
+    "ft_trips"
+   ]
+  },
+  "share": 0.0211
+ },
+ "validator": "n0_checks v2"
+}

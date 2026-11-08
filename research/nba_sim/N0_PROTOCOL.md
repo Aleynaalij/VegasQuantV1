@@ -27,9 +27,11 @@ through its own validation.
 
 ## 2. Game population (2024-25)
 **[verified]** 1,234 game IDs have `season_type` 2:
-- 1,230 standard regular-season games: 28 teams with 82 games, plus MIL and OKC with 83 each.
+- 1,230 standard regular-season games (30 teams × 82 ÷ 2).
 - 1 NBA Cup championship: `401734908`, MIL @ OKC, 2024-12-17, played at a neutral site and not
-  counted in the standings. That is why MIL and OKC show 83.
+  counted in the standings. That is why MIL and OKC show 83 team-games: 28 × 82 + 2 × 83 = 2,462
+  team-games = 1,231 kept games (corrected 2026-11-08 per Elo's read-back; the earlier line said the
+  1,230 included the 83-game teams).
 - 3 All-Star exhibition games, with team codes CHK, KEN, SHQ and CAN (2, 1, 2 and 1 appearances).
 
 **Rule:** the All-Star codes are always excluded. The Cup championship is kept for engine fitting
@@ -65,8 +67,11 @@ Any unexplained ID blocks N1.
 3. **Fail closed:** any event that can't be assigned is counted by `type_text` and kept in the report,
    never dropped silently. A game with unassigned scoring events is excluded from fitting **and
    listed**. If more than 1% of games are excluded, N0 is blocked.
-4. **Overtime:** 59 overtime games in 2024-25. Each OT period is treated as a 5:00 period. Period
-   boundaries reset possession by the regulation arrow rule, taken from the first event of the period.
+4. **Overtime and period starts (corrected 2026-11-08):** 59 overtime games in 2024-25; each OT period
+   is 5:00. The NBA has no alternating-possession arrow: the opening jump ball decides who starts the
+   1st quarter, the team that lost it starts the 2nd and 3rd, the team that won it starts the 4th, and
+   every overtime period starts with a new jump ball. The validator does not rely on that rule: it
+   resets ownership at each period boundary and counts the first possession for the first team to act.
 
 ## 4. Prospective decision set (2026-27)
 These are proposed rules. Each is to be frozen in N3, but stated now so N1/N2 can't drift.
@@ -98,9 +103,14 @@ for the 139 regular-season games played up to this check:
 
 **Rules (comparator confirmed by Mike 2026-11-08; frozen in N3):**
 - **Comparator:** FanDuel spreads and totals, plus FanDuel h2h for win probability. Use the last quote
-  with `observed_at < tip` and `observed_at ≥ tip − 60 min`.
-- **Fair probabilities:** no-vig, from the two-sided prices. For the margin and total distributions,
-  use a normal centered on the line, with an SD fixed from the development seasons before T0.
+  with `observed_at < tip`, `observed_at ≥ tip − 60 min` **and `recorded_at < tip`** (we must have
+  received it before tip, not only the provider have timestamped it; corrected 2026-11-08).
+- **Fair probabilities:** no-vig, from the two-sided prices. **Withdrawn (2026-11-08):** the earlier
+  "normal centred on the line with an SD fitted from the development seasons" — there is no verified
+  historical NBA line source for those seasons, so that SD cannot be fitted. Proposed instead, for
+  read-back: (B) compares only quantities the quote states directly — margin and total point errors
+  against the spread and total lines, and win-probability log loss / Brier against the no-vig h2h
+  probability. No distributional assumption about the market is needed.
 - **Exclusions:** a game without a valid quote is excluded from (B) and counted. (B) requires a valid
   quote for at least 90% of the cohort.
 - **What this is:** a recorded observation is a quoted price, not a fill. (B) measures forecast
@@ -110,7 +120,7 @@ for the 139 regular-season games played up to this check:
 
 | data | who | when | depth |
 |---|---|---|---|
-| 2022-23, 2023-24 play-by-play | Claude | 2026-11-08 | availability probe only (byte range) |
+| 2022-23, 2023-24 play-by-play and box scores | Claude | 2026-11-08 | downloaded and parsed in full for the N0 checks (population, scoring-flag and box-score reconciliation, possession rebuild, free-throw trips). No model or outcome analysis beyond those counts. (Corrected 2026-11-08; previously listed as probe-only.) |
 | 2024-25 play-by-play and box scores | Claude | 2026-11-08 | downloaded and parsed; field coverage, game reconciliation and final-score reconciliation. No model or outcome analysis beyond those counts. |
 | 2025-26 player box scores | Claude (NBA shadow model) | Oct 2026 | **used as the shadow model's test season**, so its outcomes have been seen |
 | 2025-26 play-by-play | — | — | asset existence only |
@@ -169,10 +179,68 @@ Every ID is explained, so the §2 rule passes.
    possession and score fits. Only the incomplete trip is dropped from the free-throw-trip tables, and
    it is counted. Excluding these games outright would take 2022-23 to 1.5%, over the cap.
 
-**Disposition: N0 is blocked on this amendment.** Everything else in §1–§3 is verified. If the
+**Disposition (superseded by §9): N0 was blocked on this amendment.** Everything else in §1–§3 is verified. If the
 amendment is accepted, N0 passes and N1 can be frozen after its read-back. If it's rejected, the
 alternative is a correction pass that rebuilds flags from the event text, under its own protocol.
 
 **Mike's confirmation (2026-11-08):** Mike approved amendments 1 and 2 above as written. They take
 effect once Codex/Elo read-back clears them. N0 then passes and N1 can be frozen after its own
 read-back. Until then nothing is fitted.
+
+
+## 9. Validator v2 and revised disposition (2026-11-08, after Elo's read-back)
+Elo's read-back (#65, 6721310919 and 6721992299) reproduced five validator defects. The §8 numbers were
+produced by the defective validator, so they are **superseded** (the original reports are kept
+unchanged in `diagnostics/n0-{2023,2024,2025}.json`). The amendment proposal in §8 is withdrawn as
+framed; Mike's approval of it does not clear N0.
+
+**Validator v2** (`research/nba_sim/n0_checks.py`; tests `tests/nba_sim/test_n0_checks.py`, 14 cases:
+Elo's five synthetic cases plus positive and negative controls) fixes:
+1. an orphan or out-of-order "k of m" attempt is an incomplete trip;
+2. a trip open at End Period / End Game / end of rows is flushed as incomplete;
+3. technical free throws never become the actor or owner of a possession;
+4. a handed-over possession (after a made basket, a made last free throw or a turnover) counts once
+   any further row occurs in the period, and is dropped if the period ends first (buzzer). A first
+   attempt that counted it only when the receiving team itself acted under-counted real possessions
+   with no logged action (an inbound then a whistle) and is not used;
+5. scoring rows of unrecognised types are reported fail-closed by type and game; their points count.
+
+**Results** (`diagnostics/v2/n0-{2023,2024,2025}.json`, full IDs, reasons and denominators; source
+hashes and URLs in `diagnostics/v2/MANIFEST.json`):
+
+| check | 2022-23 (1,230) | 2023-24 (1,231) | 2024-25 (1,231) |
+|---|---|---|---|
+| possessions within 2 | 99.59% | 99.27% | 99.59% |
+| scoring flags ≠ final row | 3 | 6 | 2 |
+| box score ≠ final row | 3 | 1 | 0 |
+| unassigned / unrecognised scoring | 1 / 0 | 0 / 0 | 0 / 0 |
+| incomplete free-throw trips | 17 of 31,314 trips, in 16 games | 12 of 28,819, in 11 | 10 of 28,644, in 9 |
+| games with possessions differing by > 2 | 5 | 9 | 5 |
+| **union of all failures** | **26 (2.11%)** | **27 (2.19%)** | **16 (1.30%)** |
+| accounting failures ∪ possession > 2 | 11 (0.89%) | 16 (1.30%) | 7 (0.57%) |
+
+- The box-score failures are **not** covered by the scoring-flag failures in 2022-23 and 2023-24: in
+  `401468786` the play-by-play stops at 89–85 against a box score of 113–119 (a truncated game), and
+  in `401469149`, `401469200` and `401585363` the final row disagrees with the box score by 2–4 points.
+- Free-throw trip failures by reason across the three seasons: new trip before completion 25, trip
+  open at period end 9, orphan or out-of-order attempt 5.
+
+**Disposition: N0 is not passed.** Under the rules as written, every season fails "points reconcile in
+every game", and the union of failures exceeds the 1% exclusion cap in all three seasons. Even
+excluding only the accounting and possession failures, 2023-24 is at 1.30%. Thresholds are unchanged.
+
+**Options for read-back (nothing applied; no thresholds changed):**
+1. **Correction pass, own protocol:** rebuild scoring flags and trip sequences from the event text
+   (for example "makes free throw 1 of 2"), re-run v2, and report which failures it repairs. Truncated
+   games such as `401468786` cannot be repaired and stay excluded.
+2. **Free-throw boundary, if a trip-level drop is to be considered at all:** in every game whose only
+   failure is an incomplete trip (15, 11 and 9 games), points reconcile to the box score and
+   possessions are within 2, so possession and scoring observations are internally consistent there.
+   Clock and duration were **not** checked; that would be required before any such game is kept.
+   Sensitivity: excluding these games changes the free-throw denominator by under 0.05% of trips.
+3. **Exclusion cap:** the cap is not raised. If the correction pass leaves any season above 1%, N0
+   stays blocked and the season split (train 2022-23 and 2023-24, develop 2024-25) is revisited in
+   read-back, not silently.
+
+No fitting, simulation, forecasts, model or picks approval, merge, deployment, feed, access or
+production change.
