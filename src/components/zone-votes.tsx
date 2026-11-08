@@ -15,7 +15,8 @@ import "@/app/zone-votes.css";
 /**
  * Vote states for the posts on screen. `refresh` is any value that changes on every feed load (the
  * rows array), so other members' votes appear on each refresh and a failed read is retried. Results
- * that arrive after the account changed are discarded.
+ * that arrive after the account changed are discarded, and a read that started before or during a
+ * vote on a post never overwrites that post's newer state.
  */
 export function useZoneVotes(
   ids: string[],
@@ -26,6 +27,8 @@ export function useZoneVotes(
   const [pending, setPending] = useState<string | null>(null);
   const account = useRef(uid);
   const generation = useRef(0);
+  const mutations = useRef<Record<string, number>>({});
+  const inFlight = useRef<Set<string>>(new Set());
   const key = ids.slice(0, 100).join(",");
   useEffect(() => {
     if (account.current !== uid) {
@@ -39,6 +42,7 @@ export function useZoneVotes(
     const posts = key ? key.split(",") : [];
     const run = ++generation.current;
     if (!uid || !posts.length) return;
+    const started = { ...mutations.current };
     void supabase.rpc("community_vote_states", { p_posts: posts }).then((r) => {
       if (
         run !== generation.current ||
@@ -47,11 +51,17 @@ export function useZoneVotes(
         !Array.isArray(r.data)
       )
         return;
-      setStates(
-        Object.fromEntries(
-          r.data.filter(isVoteState).map((s) => [s.post_id, s]),
-        ),
-      );
+      const fresh = r.data.filter(isVoteState);
+      setStates((all) => {
+        const next: Record<string, VoteState> = {};
+        for (const s of fresh) {
+          const stale =
+            inFlight.current.has(s.post_id) ||
+            (mutations.current[s.post_id] ?? 0) !== (started[s.post_id] ?? 0);
+          next[s.post_id] = stale && all[s.post_id] ? all[s.post_id] : s;
+        }
+        return next;
+      });
     });
   }, [key, uid, refresh]);
   const vote = useCallback(
@@ -61,11 +71,14 @@ export function useZoneVotes(
       const owner = uid;
       const next = nextVote(prev.mine, tapped);
       setPending(post);
+      mutations.current[post] = (mutations.current[post] ?? 0) + 1;
+      inFlight.current.add(post);
       setStates((all) => ({ ...all, [post]: applyVote(prev, next) }));
       const r = await supabase.rpc("set_community_post_vote", {
         p_post: post,
         p_value: next ?? 0,
       });
+      inFlight.current.delete(post);
       if (account.current !== owner) return true; // signed out or switched: drop the stale answer
       setPending(null);
       setStates((all) => ({

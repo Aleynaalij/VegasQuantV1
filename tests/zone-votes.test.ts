@@ -56,6 +56,9 @@ test("every Zone post shows the vote control; scores reload with the feed and ig
   const hook = readFileSync("src/components/zone-votes.tsx", "utf8");
   assert.match(hook, /\[key, uid, refresh\]/);
   assert.match(hook, /if \(account\.current !== owner\) return true;/);
+  // A read that started before or during a vote keeps the post's newer state.
+  assert.match(hook, /const started = \{ \.\.\.mutations\.current \};/);
+  assert.match(hook, /inFlight\.current\.has\(s\.post_id\)/);
   const sql = readFileSync(
     "supabase/migrations/20261108170014_community_post_votes.sql",
     "utf8",
