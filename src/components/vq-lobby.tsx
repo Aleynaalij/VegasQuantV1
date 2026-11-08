@@ -144,15 +144,15 @@ function ZoneSpotlight() {
   return (
     <Link href="/community" className="vq-zone-spotlight">
       <span className="vq-zone-spotlight-icon" aria-hidden="true">
-        <MessageCircle size={30} />
+        <MessageCircle size={24} />
         <i />
       </span>
       <span className="vq-zone-spotlight-copy">
         <small>THE COMMUNITY IS LIVE</small>
         <b>Enter The Zone</b>
         <span>
-          Where Vegas Quant members talk every game: takes, research cards,
-          reactions and the weekly NFL matchup cards.
+          Talk every game with Vegas Quant members: takes, research cards
+          and reactions.
         </span>
       </span>
       <span className="vq-zone-spotlight-cta">
