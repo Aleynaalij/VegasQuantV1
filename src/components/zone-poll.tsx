@@ -13,21 +13,40 @@ import {
 } from "@/lib/zone-poll";
 import "@/app/zone-poll.css";
 
-/** Poll states for the posts on screen, loaded in one batch, plus voting with an optimistic update. */
-export function useZonePolls(ids: string[], uid: string | null) {
+/**
+ * Poll states for the posts on screen, loaded in one batch, plus voting with an optimistic update.
+ * `refresh` changes on every feed load (the rows array), so other members' votes appear on each
+ * refresh and a failed read is retried. Answers that arrive after the account changed are discarded.
+ */
+export function useZonePolls(
+  ids: string[],
+  uid: string | null,
+  refresh: unknown,
+) {
   const [states, setStates] = useState<Record<string, PollState>>({});
   const [busy, setBusy] = useState<string | null>(null);
   const key = ids.slice(0, 100).join(",");
   const generation = useRef(0);
+  const account = useRef(uid);
+  useEffect(() => {
+    if (account.current !== uid) {
+      account.current = uid;
+      generation.current++;
+      setStates({});
+      setBusy(null);
+    }
+  }, [uid]);
   useEffect(() => {
     const posts = key ? key.split(",") : [];
     const run = ++generation.current;
-    if (!uid || !posts.length) {
-      setStates({});
-      return;
-    }
+    if (!uid || !posts.length) return;
     void supabase.rpc("community_poll_states", { p_posts: posts }).then((r) => {
-      if (run !== generation.current || r.error || !Array.isArray(r.data))
+      if (
+        run !== generation.current ||
+        account.current !== uid ||
+        r.error ||
+        !Array.isArray(r.data)
+      )
         return;
       setStates(
         Object.fromEntries(
@@ -35,11 +54,12 @@ export function useZonePolls(ids: string[], uid: string | null) {
         ),
       );
     });
-  }, [key, uid]);
+  }, [key, uid, refresh]);
   const vote = useCallback(
     async (post: string, option: number) => {
       const prev = states[post];
-      if (!prev || busy) return;
+      if (!uid || !prev || busy) return;
+      const owner = uid;
       const next = prev.mine === option ? null : option;
       const counts = prev.counts.slice();
       if (prev.mine !== null) counts[prev.mine]--;
@@ -51,16 +71,14 @@ export function useZonePolls(ids: string[], uid: string | null) {
           ...prev,
           counts,
           mine: next,
-          total:
-            prev.total +
-            (next === null ? -1 : 0) +
-            (prev.mine === null ? 1 : 0),
+          total: counts.reduce((a, b) => a + b, 0),
         },
       }));
       const r = await supabase.rpc("set_community_poll_vote", {
         p_post: post,
         p_option: next,
       });
+      if (account.current !== owner) return true; // signed out or switched: drop the stale answer
       setBusy(null);
       setStates((all) => ({
         ...all,
@@ -68,7 +86,7 @@ export function useZonePolls(ids: string[], uid: string | null) {
       }));
       return !r.error;
     },
-    [states, busy],
+    [states, busy, uid],
   );
   return { states, vote, busy };
 }

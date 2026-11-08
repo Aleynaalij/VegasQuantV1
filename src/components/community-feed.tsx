@@ -1048,6 +1048,7 @@ export default function CommunityFeed() {
   const polls = useZonePolls(
     rows.map((x) => x.id),
     uid,
+    rows,
   );
   // VIP lays (ruby cards) keep their own reaction states; counts come from those states.
   const layReactions = useTypedReactions(() => {}, "card");

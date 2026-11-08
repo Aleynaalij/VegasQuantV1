@@ -202,3 +202,17 @@ await assert.rejects(
   /Too many posts/,
 );
 console.log("Community polls SQL checks passed.");
+
+// Follow-up: poll text goes through the same harmful-content / guaranteed-return check as posts.
+await db.exec(fs.readFileSync("supabase/migrations/20261108171847_community_poll_safety.sql", "utf8"));
+for (const [q, opts] of [
+  ["Best lay tonight?", ["Guaranteed profit", "Fade it"]],
+  ["Risk-free bet of the day?", ["Yes", "No"]],
+  ["Click", ["javascript:alert(1)", "b"]],
+]) {
+  const id = crypto.randomUUID();
+  await assert.rejects(create(A, id, q, opts, "harmless body"), /guaranteed-return/);
+  assert.equal((await db.query("select count(*)::int n from public.community_posts where id=$1", [id])).rows[0].n, 0);
+}
+await create(A, crypto.randomUUID(), "Who wins?", ["Profit-takers", "Fade"], "ok");
+console.log("Community poll safety checks passed.");
