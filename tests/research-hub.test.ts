@@ -564,6 +564,93 @@ test("the hub reader retains older injuries across refresh with bounded, isolate
   );
 });
 
+test("tester-only Research uses scoped projections and leaves raw member tables alone", async (t) => {
+  const now = new Date("2026-11-07T16:00:00Z");
+  t.mock.timers.enable({ apis: ["Date"], now });
+  t.mock.method(supabase.auth, "getSession", async () => ({
+    data: { session: { user: { id: "tester" } } },
+    error: null,
+  }));
+  const requested: string[] = [];
+  t.mock.method(
+    supabase,
+    "rpc",
+    async (name: string, args: Record<string, string>) => {
+      if (name === "membership_status")
+        return { data: { allowed: false }, error: null };
+      if (name === "tester_feature_access")
+        return { data: args.p_feature === "research", error: null };
+      if (name === "sports_slate")
+        return {
+          data: { version: 1, sport: args.p_sport, games: [], access: false },
+          error: null,
+        };
+      assert.equal(name, "tester_observation_page");
+      assert.equal(args.p_feature, "research");
+      assert.equal(args.p_game, "nba-game");
+      requested.push(args.p_section);
+      return {
+        data:
+          args.p_section === "injury"
+            ? [
+                {
+                  id: "reported",
+                  game_id: "nba-game",
+                  kind: "injury",
+                  provider: "Fixture",
+                  source: "https://example.com/report",
+                  observed_at: "2026-11-04T16:00:00Z",
+                  recorded_at: "2026-11-04T16:00:00Z",
+                  payload: {
+                    team: "Boston",
+                    player: "Tester Guard",
+                    status: "Out",
+                  },
+                },
+              ]
+            : [],
+        error: null,
+      };
+    },
+  );
+  t.mock.method(supabase, "from", (table: string) => {
+    assert.ok(
+      ["games", "nba_games"].includes(table),
+      `protected table called: ${table}`,
+    );
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      gte: () => chain,
+      lt: () => chain,
+      order: () => chain,
+      limit: async () => ({
+        data:
+          table === "games"
+            ? []
+            : [
+                {
+                  id: "nba-game",
+                  slug: "test",
+                  away_team: "Boston",
+                  home_team: "Detroit",
+                  tipoff: "2026-11-08T00:00:00Z",
+                  tipoff_tbd: false,
+                  status: "STATUS_SCHEDULED",
+                },
+              ],
+        error: null,
+      }),
+    };
+    return chain;
+  });
+  const result = await readResearchHub();
+  assert.equal(result.denied, false);
+  assert.deepEqual(requested.sort(), ["injury", "quotes"]);
+  assert.equal(result.findings[0].title, "Older reported availability");
+  assert.match(result.findings[0].text, /Current status is unverified/);
+});
+
 test("a chosen topic keeps every event but lists events with that topic's reports first", () => {
   const early = {
     ...event,
