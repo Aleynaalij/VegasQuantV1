@@ -95,7 +95,7 @@ async function open(name, opts, run) {
   const fail_ = (m) => failures.push(`${name}: ${m}`);
   try {
     await page.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
-    await page.locator(".vq-spin").waitFor();
+    await page.locator(".vq-skybox").waitFor();
     await run(page, { fail: fail_, calls, ctx, width });
     if (errors.length) fail_(`page errors: ${errors.join(" | ")}`);
   } catch (e) {
@@ -108,7 +108,7 @@ async function open(name, opts, run) {
   console.log(`${failures.length === before ? "PASS" : "FAIL"} ${name}`);
 }
 
-const spin = (page) => page.locator(".vq-spin");
+const spin = (page) => page.locator(".vq-skybox");
 const mode = (page) => spin(page).getAttribute("data-spin-mode");
 const frontFace = (page) => page.locator(".vq-spin-face[data-front]");
 const shot = async (page, file, el) => {
@@ -120,11 +120,11 @@ const shot = async (page, file, el) => {
   else await page.screenshot({ path: path.join(SHOTS, file), animations: "disabled" });
 };
 async function waitFaces(page, faces) {
-  await page.waitForFunction((f) => document.querySelector(".vq-spin")?.getAttribute("data-spin-faces") === f, faces.join(","));
+  await page.waitForFunction((f) => document.querySelector(".vq-skybox")?.getAttribute("data-spin-faces") === f, faces.join(","));
 }
 async function choose(page, m) {
   await page.locator(`.vq-spin-pick[data-spin-pick="${m}"]`).click();
-  await page.waitForFunction((m) => document.querySelector(".vq-spin")?.getAttribute("data-spin-mode") === m, m);
+  await page.waitForFunction((m) => document.querySelector(".vq-skybox")?.getAttribute("data-spin-mode") === m, m);
   await page.waitForTimeout(650); // let the turn settle before touching the face
 }
 /** Exactly one face is interactive and announced; every other face is inert and hidden. */
@@ -262,8 +262,8 @@ await open("gestures", { width: 390 }, async (page, { fail }) => {
   await page.waitForURL("**/nba/games/sample-nba-final");
   // Returning restores the face; turning added no history entries.
   await page.goBack();
-  await page.locator(".vq-spin").waitFor();
-  await page.waitForFunction(() => document.querySelector(".vq-spin")?.getAttribute("data-spin-mode") === "nba");
+  await page.locator(".vq-skybox").waitFor();
+  await page.waitForFunction(() => document.querySelector(".vq-skybox")?.getAttribute("data-spin-mode") === "nba");
 });
 
 // 3. Touch: horizontal swipe turns; vertical swipe scrolls the page and never turns; pinch is not a turn.
@@ -323,12 +323,12 @@ await open("keyboard", { width: 1280 }, async (page, { fail }) => {
   await waitFaces(page, ["nfl", "nba", "nhl", "ncaab"]);
   await page.locator('.vq-spin-pick[data-spin-pick="nfl"]').focus();
   await page.keyboard.press("Enter");
-  await page.waitForFunction(() => document.querySelector(".vq-spin")?.getAttribute("data-spin-mode") === "nfl");
+  await page.waitForFunction(() => document.querySelector(".vq-skybox")?.getAttribute("data-spin-mode") === "nfl");
   await page.keyboard.press("ArrowRight");
-  await page.waitForFunction(() => document.querySelector(".vq-spin")?.getAttribute("data-spin-mode") === "nba");
+  await page.waitForFunction(() => document.querySelector(".vq-skybox")?.getAttribute("data-spin-mode") === "nba");
   await page.keyboard.press("ArrowLeft");
   await page.keyboard.press("ArrowLeft");
-  await page.waitForFunction(() => document.querySelector(".vq-spin")?.getAttribute("data-spin-mode") === "ncaab");
+  await page.waitForFunction(() => document.querySelector(".vq-skybox")?.getAttribute("data-spin-mode") === "ncaab");
   const live = await page.locator(".vq-spin-live").innerText();
   if (!/NCAAB, face 4 of 4\. 1 game today/.test(live)) fail(`turn must be announced politely: "${live}"`);
   if ((await page.locator(".vq-spin-live").getAttribute("aria-live")) !== "polite") fail("live region must be polite");
@@ -433,7 +433,7 @@ await open("states-stale", { width: 390, nbaRefreshFails: true, clock: "install"
 await open("nhl-held", { width: 390, signedIn: true, held: true }, async (page, { fail }) => {
   await page.evaluate(() => sessionStorage.setItem("vq-skybox-face", "nhl"));
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.locator(".vq-spin").waitFor();
+  await page.locator(".vq-skybox").waitFor();
   await page.waitForTimeout(1500);
   await waitFaces(page, ["nfl", "nba", "ncaab"]);
   // The invitation dialog is modal; Escape dismisses it without consuming the surprise (NHL stays held).
@@ -444,7 +444,7 @@ await open("nhl-held", { width: 390, signedIn: true, held: true }, async (page, 
   const head = await frontFace(page).locator(".vq-tonight-head").innerText();
   if (!head.toUpperCase().includes("FACE 3 OF 3")) fail(`three faces while NHL is held: ${head}`);
   await page.locator(".vq-spin-arrow").last().click();
-  await page.waitForFunction(() => document.querySelector(".vq-spin")?.getAttribute("data-spin-mode") === "nfl");
+  await page.waitForFunction(() => document.querySelector(".vq-skybox")?.getAttribute("data-spin-mode") === "nfl");
   await shot(page, "face-ncaab-nhl-held-390.png");
 });
 
@@ -493,7 +493,7 @@ await open("home-intact", { width: 390 }, async (page, { fail }) => {
   if ((await page.evaluate(() => history.length)) !== h0) fail("turning the box must not add history entries");
   if (page.url() !== `${BASE}/`) fail(`turning must not change the URL: ${page.url()}`);
   await page.locator(".vq-lobby-all-sports").click();
-  await page.waitForFunction(() => document.querySelector(".vq-spin")?.getAttribute("data-spin-mode") === "overview");
+  await page.waitForFunction(() => document.querySelector(".vq-skybox")?.getAttribute("data-spin-mode") === "overview");
   if (!(await page.getByText("Your next move").count())) fail("Your next move cards stay below the board");
 });
 
