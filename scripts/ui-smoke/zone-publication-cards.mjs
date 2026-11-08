@@ -200,10 +200,13 @@ try {
       });
       assert.ok(geometry.divider < geometry.body, "divider must not strike through analysis");
       const lines = await card.locator("svg text[font-size='56']").allTextContents();
-      const columns = await card.locator("svg text[font-size='56']").evaluateAll(
-        (rows) => [...new Set(rows.map((row) => Number(row.getAttribute("x"))))],
-      );
-      assert.deepEqual(columns, [74, 554], "long Dealer analysis reads down two columns");
+      const details = card.locator("details.publication-analysis");
+      assert.equal(await details.getAttribute("open"), null);
+      assert.doesNotMatch(await card.locator("svg").textContent(), /Original analysis|Risk:|https:/);
+      await details.locator("summary").click();
+      assert.match(await details.innerText(), /Original analysis with source timestamps/);
+      assert.equal(await details.locator("a").count(), 1);
+      await details.locator("summary").click();
       const overflow = await card.locator("svg text").evaluateAll((elements) =>
         elements.filter((e) => e.textContent.trim()).flatMap((e) => {
           const b = e.getBBox();
@@ -215,7 +218,7 @@ try {
       assert.equal(await card.getByRole("button", {name: "Next card", exact: true}).count(), 0);
       assert.equal(
         lines.join("").replace(/\s/g, ""),
-        posts[0].body.replace(/\s/g, ""),
+        posts[0].legs[0].replace(/\s/g, ""),
       );
     }
     const first = p.locator(".zone-publication[data-sport=nfl]");
@@ -229,7 +232,7 @@ try {
     assert.equal(bytes.readUInt32BE(16), 1080);
     const expectedHeight = await first.locator("svg").evaluate((svg) => svg.viewBox.baseVal.height);
     assert.equal(bytes.readUInt32BE(20), expectedHeight);
-    assert.ok(expectedHeight > 1350, "long analysis extends the same image");
+    assert.ok(expectedHeight < 900, "analysis does not extend the pick image");
     const parlay = p.locator("#post-member-parlay .community-parlay-card");
     assert.equal(await parlay.locator(".vqc").count(), 1);
     assert.equal(await parlay.locator(".vqc-legs li").count(), memberLegs.length);

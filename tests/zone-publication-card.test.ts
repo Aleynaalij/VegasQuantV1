@@ -19,17 +19,17 @@ const post = {
   created_at: "2026-10-31T16:00:00Z",
   card: AUTOMATED_CARD,
 };
-test("automated cards keep all content on one card and copy only explicit legs", () => {
+test("pick cards exclude analysis and copy only explicit legs", () => {
   assert.equal(isPublicationCard(post), true);
   assert.equal(isPublicationCard({ ...post, card: null }), false);
   assert.equal(isPublicationCard({ ...post, sport: "fake" }), false);
   const card = publicationLayout(post);
-  assert.ok(card.height > 1350);
+  assert.ok(card.height < 900);
   assert.equal(
     card.rows.map((row) => row.text)
       .join("")
       .replace(/\s/g, ""),
-    [...post.legs, post.body].join("").replace(/\s/g, ""),
+    post.legs.join("").replace(/\s/g, ""),
   );
   assert.ok(card.rows.every((row) => row.y <= card.height - 170));
   assert.equal(publicationCopy(post), post.title + "\n" + post.legs[0]);
@@ -37,6 +37,20 @@ test("automated cards keep all content on one card and copy only explicit legs",
   assert.ok(wrapCardText("W".repeat(100), 32).every((l) => l.length <= 29));
 
 });
+test("research cards without picks still render their body", () => {
+  const card = publicationLayout({ ...post, legs: [] });
+  assert.equal(card.rows.map((row) => row.text).join("").replace(/\s/g, ""), post.body.replace(/\s/g, ""));
+});
+
+test("NHL pick cards preserve the stored price and timestamp without printing analysis", () => {
+  const title = "Golden Knights at Sabres: Golden Knights moneyline";
+  const leg = "Vegas Golden Knights moneyline (−113 at FanDuel, 10:37 AM ET)";
+  const body = `${leg}\n\nVegas is 11–5–2.\n\nRisk: Starting goalies are not confirmed.`;
+  const card = publicationLayout({ ...post, title, body, sport: "nhl", legs: [leg] });
+  assert.equal(card.rows.map((row) => row.text).join(" "), leg);
+  assert.ok(card.height < 900);
+});
+
 test("automation markers and legs are attached only by verified server paths", () => {
   const r = spawnSync(
     process.execPath,
@@ -100,20 +114,19 @@ test("single cards preserve long titles and never turn a publication time into a
 test("Dealer picks read down the left column before continuing at the top right", () => {
   const legs = ["Pick A", "Pick B", "Pick C", "Pick D"];
   const card = publicationLayout({ ...post, legs, body: legs.join("\n") + "\n\nOriginal notes." });
-  const [one, two, three, four, notes] = card.rows;
+  const [one, two, three, four] = card.rows;
   assert.deepEqual(card.rows.map((row) => row.text), [
-    "1. Pick A", "2. Pick B", "3. Pick C", "4. Pick D", "Original notes.",
+    "1. Pick A", "2. Pick B", "3. Pick C", "4. Pick D",
   ]);
   assert.equal(one.x, two.x);
   assert.equal(three.x, four.x);
   assert.ok(three.x > one.x);
   assert.equal(one.y, three.y);
   assert.equal(two.y, four.y);
-  assert.ok(notes.y > four.y);
   assert.ok(card.height < 1350);
 });
 
-test("single-pick editorial cards show a quote and short excerpts instead of the full article", () => {
+test("single-pick editorial cards show the quote and observation time without analysis", () => {
   const title = "Jeremiah Fears Over 14.5 points";
   const source = "https://example.com/official/injury-report";
   const body = [
@@ -127,11 +140,10 @@ test("single-pick editorial cards show a quote and short excerpts instead of the
   const card = publicationLayout(editorial);
   const face = card.rows.map((row) => row.text).join(" ");
   assert.equal(card.editorial, true);
-  assert.ok(card.height <= 1200, `Expected a compact face, received ${card.height}`);
+  assert.ok(card.height <= 900, `Expected a compact face, received ${card.height}`);
   assert.match(face, /-112 at FanDuel/);
   assert.match(face, /Observed Nov 08 12:31 PM ET/);
-  assert.match(face, /WHY THIS PICK.*KEY RISK/);
-  assert.doesNotMatch(face, /https:\/\/|Unknowns:/);
+  assert.doesNotMatch(face, /https:\/\/|Unknowns:|Risk:|Fears started/);
   assert.equal(editorial.body, body);
-  assert.equal(publicationLayout({ ...editorial, body: body.replace("observed", "published") }).editorial, undefined);
+  assert.equal(publicationLayout({ ...editorial, body: body.replace("observed", "published") }).editorial, false);
 });

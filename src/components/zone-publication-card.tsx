@@ -334,6 +334,24 @@ export default function ZonePublicationCard({
           VEGASQUANT.APP
         </text>
       </svg>
+      <details className="publication-analysis">
+        <summary>Full analysis and sources</summary>
+        <p>{p.body.split("\n").map((line, i) => (
+          <span key={i}>
+            {i > 0 && "\n"}
+            {/^https:\/\/[^\s]+$/.test(line.trim()) ? (
+              <a href={line.trim()} target="_blank" rel="noopener noreferrer">{line.trim()}</a>
+            ) : line}
+          </span>
+        ))}</p>
+        {p.legs.some((l) => !p.body.includes(l)) && (
+          <ol>
+            {p.legs.map((l, i) => (
+              <li key={i}>{l}</li>
+            ))}
+          </ol>
+        )}
+      </details>
       <div className="publication-controls">
         <button
           type="button"
@@ -387,24 +405,6 @@ export default function ZonePublicationCard({
           onFocus={(e) => e.currentTarget.select()}
         />
       )}
-      <details className="publication-analysis">
-        <summary>Full analysis and sources</summary>
-        <p>{p.body.split("\n").map((line, i) => (
-          <span key={i}>
-            {i > 0 && "\n"}
-            {/^https:\/\/[^\s]+$/.test(line.trim()) ? (
-              <a href={line.trim()} target="_blank" rel="noopener noreferrer">{line.trim()}</a>
-            ) : line}
-          </span>
-        ))}</p>
-        {p.legs.some((l) => !p.body.includes(l)) && (
-          <ol>
-            {p.legs.map((l, i) => (
-              <li key={i}>{l}</li>
-            ))}
-          </ol>
-        )}
-      </details>
     </section>
   );
 }
