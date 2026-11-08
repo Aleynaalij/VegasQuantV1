@@ -232,9 +232,6 @@ for (const width of [390, 1280]) {
     await rooms.locator('a[data-sport="nba"]').click();
     await p.waitForURL(`${base}/nba`);
     const chips = p.getByRole("navigation", { name: "Sport selection" });
-    // The NHL chip stays held until the account's anniversary status read finishes (NhlChipHold);
-    // wait for it as the sport rooms check above does, instead of racing that read.
-    await chips.locator('a[data-sport="nhl"]').waitFor();
     assert.deepEqual(await chips.locator("a[data-sport]").evaluateAll(a => a.map(x => x.dataset.sport)), ["nfl", "nba", "nhl", "ncaab"]);
     assert.equal(await chips.locator('a[aria-current="page"]').getAttribute('data-sport'), 'nba');
     await p.locator(".home-brief[data-sport=nba] .vq-matchup").waitFor();
