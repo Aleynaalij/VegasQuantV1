@@ -56,6 +56,8 @@ export default function SportMarkets({
   const stale = rows.some((m) => isStale(m, now));
   return (
     <div className="sport-markets">
+      <h2>Game research &amp; selections</h2>
+      <p className="vq-prop-note">Source lines and published selections stay attached to this matchup. A market price is not an independent model edge.</p>
       <h3 className="sport-markets-title">Vegas Quant selections</h3>
       {selections.length ? (
         <ul className="sport-selections">
@@ -98,7 +100,7 @@ export default function SportMarkets({
         </ul>
       ) : (
         <p className="sport-empty">
-          No published selections for this game yet.
+          No published selections for this game yet. {groups.length ? "The source lines below remain available as research." : "Source coverage is shown separately below."}
         </p>
       )}
       {groups.length ? (
@@ -110,6 +112,7 @@ export default function SportMarkets({
                   <span>
                     {m.player ? <b>{m.player}</b> : null}
                     {marketLine(m)}
+                    {isStale(m, now) && <small>Last-known quote · {easternTime(m.observed_at, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} ET · price may have changed</small>}
                   </span>
                   <b className="sport-odds">
                     {americanPrice(m.odds)}

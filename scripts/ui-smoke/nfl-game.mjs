@@ -157,6 +157,16 @@ for (const width of [390, 1280]) {
             ]
           : [];
     }
+    if (path.endsWith("published_legs")) {
+      assert.equal(url.searchParams.get("game_id"), `in.(${game.id})`);
+      assert.equal(url.searchParams.get("result"), "is.null");
+      assert.ok(url.searchParams.get("expires_at").startsWith("gt."));
+      data = [{ leg_key: "candidate:fixture:1", game_id: game.id,
+        name: "Sample Research Player", market: "Full game · 60+ rushing yards",
+        expires_at: new Date(Date.now() + 86400000).toISOString(), result: null,
+        quote: "Sample published price", why: "Sample research case", risk: "Sample risk",
+        copy_text: null, gambly_url: null }];
+    }
     if (path.endsWith("desk_data")) deskReads++;
     if (
       ["analysis_versions", "market_snapshots", "official_picks"].some((t) =>
@@ -310,6 +320,7 @@ for (const width of [390, 1280]) {
   );
   release();
   await p.getByText("Sample current matchup facts.", { exact: true }).waitFor();
+  await p.locator(".vq-prop-row").filter({ hasText: "Research Player" }).waitFor();
   assert.equal(deskReads, 0, "browser must never download the whole desk");
   await p.getByRole("tab", { name: "Team form", exact: true }).click();
   await p
@@ -400,6 +411,7 @@ for (const width of [390, 1280]) {
           exact: true,
         })
         .waitFor();
+      assert.equal(await p.locator(".vq-prop-row").count(), 0, "denied access cannot show player research");
       assert.equal(
         analysisReads,
         before,
@@ -415,6 +427,10 @@ for (const width of [390, 1280]) {
           .count(),
         0,
       );
+      if (scenario === "research-error" || scenario === "missing-research")
+        await p.locator(".vq-prop-row").filter({ hasText: "Research Player" }).waitFor();
+      else
+        assert.equal(await p.locator(".vq-prop-row").count(), 0, "failed access cannot show player research");
       mode = "member";
       await p
         .getByRole("button", { name: "Retry research", exact: true })

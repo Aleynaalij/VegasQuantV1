@@ -234,10 +234,12 @@ export function NbaGameDetails({
   game,
   now,
   defaultOpen = false,
+  showLineups = true,
 }: {
   game: NbaGame;
   now: number;
   defaultOpen?: boolean;
+  showLineups?: boolean;
 }) {
   const [open, setOpen] = useState(defaultOpen),
     [rows, setRows] = useState<NbaObservation[]>([]),
@@ -300,7 +302,7 @@ export function NbaGameDetails({
       <summary>Open research · lines, props & form</summary>
       {open && (
         <div>
-          <NbaLineups game={{ away: game.away_abbreviation, home: game.home_abbreviation, start: game.tipoff, tbd: game.tipoff_tbd }} />
+          {showLineups && <NbaLineups game={{ away: game.away_abbreviation, home: game.home_abbreviation, start: game.tipoff, tbd: game.tipoff_tbd }} />}
           {loading && <p role="status">Loading source snapshots…</p>}
           {error && (
             <p role="alert">
