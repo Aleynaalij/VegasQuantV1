@@ -38,10 +38,41 @@
 .publication-analysis {
   margin-top: 16px;
 }
-.publication-analysis summary {
-  cursor: pointer;
+.zone-publication .publication-analysis > summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: fit-content;
   min-height: 44px;
-  padding: 10px 0;
+  padding: 8px 12px;
+  border: 1px solid #ff66665c;
+  border-radius: 10px;
+  background: #ff4d4d12;
+  box-shadow: 0 0 12px #ff4d4d40;
+  color: #ff9292;
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.zone-publication .publication-analysis > summary::after {
+  content: "";
+  flex: 0 0 7px;
+  height: 7px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.zone-publication .publication-analysis[open] > summary::after {
+  transform: rotate(225deg);
+}
+.zone-publication .publication-analysis > summary:hover {
+  background: #ff4d4d24;
+}
+.zone-publication .publication-analysis > summary:focus-visible {
+  outline: 2px solid #ff9292;
+  outline-offset: 3px;
 }
 .publication-analysis p {
   white-space: pre-wrap;
@@ -55,6 +86,5 @@
 
 .zone-publication-face { border: 1px solid #e7cb824d; background: #10271f; }
 .publication-analysis { color: #f5eedd; font-size: 16px; line-height: 1.65; }
-.publication-analysis summary { color: #f4dc99; font-weight: 700; }
 
 .publication-time { color: #c2cdbf; font-size: 13px; line-height: 1.4; }
