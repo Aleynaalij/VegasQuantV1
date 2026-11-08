@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -12,6 +12,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { vqCardPalette } from "@/lib/vq-card-palette";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import {
@@ -59,6 +60,7 @@ export function RubyCard({
 }) {
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState("");
+  const palette = vqCardPalette(slip.id);
   const source = normalizeKalshiSourceLink(slip.source_link);
   const brand = rubyBrands.find((b) => b.theme === slip.theme) || rubyBrands[0];
   async function copy() {
@@ -85,7 +87,15 @@ export function RubyCard({
     }
   }
   return (
-    <article className={`ruby-card ruby-${brand.theme}`} id={`ruby-${slip.id}`}>
+    <article
+      className={`ruby-card ruby-${brand.theme}`}
+      id={`ruby-${slip.id}`}
+      style={{
+        "--ruby-card-accent": palette.accent,
+        "--ruby-card-glow": palette.glow,
+        "--ruby-card-base": palette.base,
+      } as CSSProperties}
+    >
       <div className="ruby-card-top">
         <span className="ruby-vq">
           VQ <span>VEGAS QUANT</span>

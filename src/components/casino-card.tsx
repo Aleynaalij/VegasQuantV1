@@ -4,10 +4,9 @@ import { Download } from "lucide-react";
 import BrandMark, { markSvg } from "./brand-mark";
 import { time } from "@/lib/domain";
 import {
-  CARD_H,
   CARD_W,
   LEG_SUITS,
-  THEMES,
+  casinoCardTheme,
   cardRank,
   drawCasinoCard,
   suitColor,
@@ -17,7 +16,7 @@ import "./casino-card.css";
 
 function Corner({ data, flip = false }: { data: CasinoCardData; flip?: boolean }) {
   const rank = cardRank(data),
-    t = THEMES[data.variant];
+    t = casinoCardTheme(data);
   return (
     <span className={`vqc-corner ${flip ? "vqc-corner-flip" : ""}`} aria-hidden="true">
       {rank === "JOKER" ? (
@@ -32,18 +31,19 @@ function Corner({ data, flip = false }: { data: CasinoCardData; flip?: boolean }
 
 /** The face of a Vegas Quant card. Controls (copy, tail, details) stay outside the card. */
 export default function CasinoCard({ data }: { data: CasinoCardData }) {
-  const t = THEMES[data.variant];
+  const t = casinoCardTheme(data);
   return (
     <article
+      data-palette={t.name}
       className={`vqc vqc-${data.variant}${data.stamp ? " vqc-stamped" : ""}`}
       style={
         {
           "--vqc-accent": t.accent,
-          "--vqc-accent-soft": t.accentSoft,
+          "--vqc-accent-soft": t.accent + "33",
           "--vqc-gold": t.gold,
-          "--vqc-felt-a": t.felt[0],
-          "--vqc-felt-b": t.felt[1],
-          "--vqc-suit": t.suitColor,
+          "--vqc-felt-a": t.glow,
+          "--vqc-felt-b": t.base,
+          "--vqc-suit": t.gold,
         } as CSSProperties
       }
       aria-label={[data.eyebrow, data.title, data.market, data.stamp].filter(Boolean).join(" · ")}
@@ -111,7 +111,7 @@ function loadMark() {
   return markImage;
 }
 
-/** "Download card": renders the same card as a 1080 × 1512 PNG, with preview, save and share. */
+/** "Download card": renders the complete card as a single PNG, with preview, save and share. */
 export function CasinoCardDownload({ data, label = "Download card" }: { data: CasinoCardData; label?: string }) {
   const [url, setUrl] = useState(""),
     [busy, setBusy] = useState(false),
@@ -125,7 +125,6 @@ export function CasinoCardDownload({ data, label = "Download card" }: { data: Ca
     try {
       const canvas = document.createElement("canvas");
       canvas.width = CARD_W;
-      canvas.height = data.exportHeight || CARD_H;
       const ctx = canvas.getContext("2d");
       if (!ctx) throw Error("Image export unavailable");
       const css = getComputedStyle(document.body);
@@ -157,7 +156,7 @@ export function CasinoCardDownload({ data, label = "Download card" }: { data: Ca
         <div className="vqc-preview">
           {/* Locally rendered PNG of the card above. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt={`${data.title} card`} width={CARD_W} height={data.exportHeight || CARD_H} />
+          <img src={url} alt={`${data.title} card`} width={CARD_W} />
           <div>
             <a className="primary" href={url} download={filename}>Save image</a>
             {typeof navigator !== "undefined" && "share" in navigator && (

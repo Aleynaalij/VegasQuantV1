@@ -134,11 +134,11 @@ export default function CommunityCard({
       if (!ctx) throw Error("Image rendering unavailable.");
       const h = canvas.height,
         base = format === "story" ? 400 : 190;
-      ctx.fillStyle = "#080f13";
+      ctx.fillStyle = "#0a0a09";
       ctx.fillRect(0, 0, 1080, h);
       const glow = ctx.createRadialGradient(840, 120, 10, 840, 120, h);
       glow.addColorStop(0, "#225e49");
-      glow.addColorStop(1, "#080f13");
+      glow.addColorStop(1, "#0a0a09");
       ctx.fillStyle = glow;
       ctx.fillRect(0, 0, 1080, h);
       ctx.strokeStyle = "#7bddb4";
@@ -210,12 +210,12 @@ export default function CommunityCard({
         ctx.fillStyle = won
           ? "#85e3bf"
           : entry?.result === "LOSS"
-            ? "#ba7171"
+            ? "#e8c46a"
             : "#203c33";
         ctx.fill();
         ctx.textAlign = "center";
         ctx.font = "bold 35px sans-serif";
-        ctx.fillStyle = won ? "#091510" : "#eef9f4";
+        ctx.fillStyle = won || entry?.result === "LOSS" ? "#091510" : "#eef9f4";
         ctx.fillText(String(i), x, base + 317);
         ctx.font = "18px sans-serif";
         ctx.fillStyle = "#b2c9be";
