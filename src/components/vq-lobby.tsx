@@ -2,7 +2,6 @@
 import Link from "next/link";
 import { useEffect, type ReactNode } from "react";
 import { ArrowRight, Grid2X2, Plus, Users, MessageCircle } from "lucide-react";
-import dynamic from "next/dynamic";
 import { Shell } from "./ui";
 import VqTonight from "./vq-tonight";
 import LobbyIntelligence from "./lobby-intelligence";
@@ -18,13 +17,7 @@ import { NhlChipHold } from "./frank-anniversary-gate";
 import { liveSports, SPORTS, type Sport } from "@/lib/sports";
 import type { Game } from "@/lib/domain";
 import "@/app/vq-lobby.css";
-import "@/app/slots/slots.css";
 
-// The slot machine sits at the bottom of Home; its code and board reads load after the page.
-const VqSlots = dynamic(() => import("./vq-slots"), {
-  ssr: false,
-  loading: () => <p className="vq-lobby-slots-loading">Loading VQ Slots…</p>,
-});
 
 // What each desk actually offers, in plain words (no counts, availability or results implied).
 const DESK: Record<Sport, string> = {
@@ -141,10 +134,6 @@ export default function VqLobby({ nflGames, nflUnavailable = false }: { nflGames
           title="The Zone"
           body="Talk tonight’s games with the Vegas Quant community: takes, research cards and reactions."
         />
-      </section>
-
-      <section className="vq-lobby-slots" aria-label="VQ Slots">
-        <VqSlots embedded />
       </section>
     </Shell>
   );

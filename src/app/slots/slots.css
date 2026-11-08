@@ -4,8 +4,7 @@
   padding: 0 12px;
   text-align: center;
 }
-.vq-slots h1,
-.vq-slots .vq-slots-title {
+.vq-slots h1 {
   font-family: var(--font-board);
   font-size: clamp(3rem, 12vw, 5rem);
   letter-spacing: 0.08em;

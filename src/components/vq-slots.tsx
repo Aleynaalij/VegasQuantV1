@@ -75,8 +75,7 @@ async function loadPool(sport: Sport, now: number): Promise<SlotLeg[]> {
   return marketSlotPool(slate, snapshots.flat(), now, nba ? "nba" : "nfl");
 }
 
-/** `embedded` renders the machine inside another page (Home), with an h2 title instead of the page h1. */
-export default function VqSlots({ embedded = false }: { embedded?: boolean } = {}) {
+export default function VqSlots() {
   // Pick the sport first; the machine only draws from that sport's current markets.
   const [sport, setSport] = useState<Sport>("nfl");
   const [pool, setPool] = useState<SlotLeg[]>([]),
@@ -186,21 +185,10 @@ export default function VqSlots({ embedded = false }: { embedded?: boolean } = {
     }
   }
   return (
-    <section
-      className={`vq-slots${embedded ? " vq-slots-embedded" : ""}`}
-      aria-labelledby="slots-title"
-    >
+    <section className="vq-slots" aria-labelledby="slots-title">
       <header>
         <span className="eyebrow">VEGAS QUANT PRESENTS</span>
-        {embedded ? (
-          <h2 id="slots-title" className="vq-slots-title">
-            VQ SLOTS
-          </h2>
-        ) : (
-          <h1 id="slots-title" className="vq-slots-title">
-            VQ SLOTS
-          </h1>
-        )}
+        <h1 id="slots-title">VQ SLOTS</h1>
         <p>Pull. Reveal. Take a wild shot.</p>
       </header>
       <div className="vq-slot-sports" role="radiogroup" aria-label="Sport">

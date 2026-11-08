@@ -166,21 +166,6 @@
   }
 }
 
-/* Slot machine at the bottom of Home. */
-.vq-lobby-slots {
-  margin-top: 36px;
-  padding-top: 12px;
-  border-top: 1px solid #b69b4e33;
-}
-.vq-lobby-slots .vq-slots {
-  margin-bottom: 40px;
-}
-.vq-lobby-slots-loading {
-  text-align: center;
-  color: #b5a26e;
-  padding: 40px 0;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .vq-zone-nav-icon i,
   .vq-zone-spotlight-icon i,
