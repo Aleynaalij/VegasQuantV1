@@ -251,6 +251,8 @@ function AccessNotice({ signedIn }: { signedIn: boolean }) {
     </div>
   );
 }
+/** Sources are collected about every 15 minutes; an open lounge follows on the same clock. */
+const AUTO_REFRESH_MS = 15 * 60_000;
 export default function ResearchHub() {
   const params = useSearchParams(),
     router = useRouter(),
@@ -261,7 +263,8 @@ export default function ResearchHub() {
     [retry, setRetry] = useState(0),
     [now, setNow] = useState(() => Date.now()),
     [eventLimit, setEventLimit] = useState(24);
-  const sequence = useRef(0);
+  const sequence = useRef(0),
+    loadedAt = useRef(0);
   useEffect(() => {
     let live = true;
     async function load() {
@@ -274,6 +277,7 @@ export default function ResearchHub() {
         if (live && request === sequence.current) {
           setData(result);
           setNow(Date.now());
+          loadedAt.current = Date.now();
         }
       } catch {
         if (live && request === sequence.current) {
@@ -301,6 +305,36 @@ export default function ResearchHub() {
     const id = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(id);
   }, []);
+  // Quiet refresh, matching the ~15-minute source collection: only while the page is visible,
+  // never while a load is running, and a failed refresh keeps what is on screen (the next one
+  // retries). No loading state, so the open dossier and scroll position stay put.
+  useEffect(() => {
+    if (loading || error) return;
+    const check = async () => {
+      if (
+        document.visibilityState !== "visible" ||
+        Date.now() - loadedAt.current < AUTO_REFRESH_MS
+      )
+        return;
+      const request = ++sequence.current;
+      try {
+        const result = await readResearchHub();
+        if (request === sequence.current) {
+          setData(result);
+          setNow(Date.now());
+          loadedAt.current = Date.now();
+        }
+      } catch {
+        if (request === sequence.current) loadedAt.current = Date.now();
+      }
+    };
+    const id = setInterval(check, 60_000);
+    document.addEventListener("visibilitychange", check);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", check);
+    };
+  }, [loading, error]);
   useEffect(() => {
     setEventLimit(24);
   }, [filters.sport, filters.topic, filters.date, filters.query]);
