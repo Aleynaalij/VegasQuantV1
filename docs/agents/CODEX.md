@@ -1,3 +1,9 @@
+# Admin operations draft · November 8, 2026
+
+ADMIN-PORTAL-01 on `codex/admin-portal-01` starts the separate operations queue and structured malfunction intake. Claim and review coordination are recorded on #65. The draft uses verified bearer sessions and database MFA authorization for queue and triage, with private ticket storage, bounded reads, retry keys, rate limits and audited status updates. The [draft contract](../product/admin-operations-portal.md) records the source inventory and the remaining health, deployment, traffic and email adapters. Activation requires separate review of the schema and rollout policy.
+
+---
+
 # Full release follow-up · October 31, 2026
 
 Release PR #170 integrates #167, latest #168 (4103bca) and #169 with their histories preserved. Original #168 audit findings are verified fixed. Final independent audit found result-read starvation and expired collapsed moneyline faces; both are corrected with separate service-only attempt scheduling, a status-preserving queue and clock-driven face expiry even on failed refresh. 384 tests, TypeScript, production build and Deno result-function check pass locally. New head browser CI and full-package peer acceptance must be read before merge; no production UI deployment is claimed here.
