@@ -112,3 +112,26 @@ test("Dealer picks read down the left column before continuing at the top right"
   assert.ok(notes.y > four.y);
   assert.ok(card.height < 1350);
 });
+
+test("single-pick editorial cards show a quote and short excerpts instead of the full article", () => {
+  const title = "Jeremiah Fears Over 14.5 points";
+  const source = "https://example.com/official/injury-report";
+  const body = [
+    title + " (-112 at FanDuel, observed Nov 08 12:31 PM ET)",
+    "Fears started the last five games. ".repeat(10).trim(),
+    "Risk: His scoring can vary with shot volume. ".repeat(8).trim(),
+    "Unknowns: Starting lineup is not yet confirmed.",
+    "Qualitative editorial, not a validated model edge. Observed prices can change.\n" + source,
+  ].join("\n\n");
+  const editorial = { ...post, title, body, legs: [title] };
+  const card = publicationLayout(editorial);
+  const face = card.rows.map((row) => row.text).join(" ");
+  assert.equal(card.editorial, true);
+  assert.ok(card.height <= 1200, `Expected a compact face, received ${card.height}`);
+  assert.match(face, /-112 at FanDuel/);
+  assert.match(face, /Observed Nov 08 12:31 PM ET/);
+  assert.match(face, /WHY THIS PICK.*KEY RISK/);
+  assert.doesNotMatch(face, /https:\/\/|Unknowns:/);
+  assert.equal(editorial.body, body);
+  assert.equal(publicationLayout({ ...editorial, body: body.replace("observed", "published") }).editorial, undefined);
+});

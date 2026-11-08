@@ -57,15 +57,64 @@ export function wrapCardText(
   }
   return lines;
 }
+type PublicationRow = {
+  text: string;
+  x: number;
+  y: number;
+  pick?: boolean;
+  size?: number;
+};
+
+function editorialExcerpt(text: string, max: number) {
+  const firstSentence = text.split(/(?<=[.!?])\s+/, 1)[0];
+  if (firstSentence.length <= max) return firstSentence;
+  const end = text.lastIndexOf(" ", max - 1);
+  return text.slice(0, end > 0 ? end : max - 1) + "…";
+}
+
+/** Recognize the existing single-pick NBA publisher's exact body structure. */
+function editorialSections(p: PublicationPost) {
+  if (p.sport !== "nba" || p.legs.length > 1 || !isPublicationCard(p)) return null;
+  const [line, why, risk, unknowns, disclosure] = p.body.split("\n\n");
+  if (!line?.startsWith(p.title + " (") || !why || !risk?.startsWith("Risk: ") ||
+      !unknowns?.startsWith("Unknowns: ") ||
+      !disclosure?.startsWith("Qualitative editorial, not a validated model edge.")) return null;
+  const quote = /^([+-]\d+ at FanDuel), observed (.+ ET)\)$/.exec(line.slice(p.title.length + 2));
+  if (!quote) return null;
+  return {
+    price: quote[1],
+    observed: quote[2],
+    why: editorialExcerpt(why, 92),
+    risk: editorialExcerpt(risk.slice(6), 88),
+  };
+}
+
 export function publicationLayout(p: PublicationPost, watchlist = false) {
   const title = wrapCardText(p.title, 60);
   const start = watchlist ? 454 : 260 + title.length * 72 + 96;
-  const rows: { text: string; x: number; y: number; pick?: boolean }[] = [];
+  const rows: PublicationRow[] = [];
   if (watchlist) return { title, rows, start, height: 1350 };
 
   const step = 61;
   const columnWidth = 452;
   const columns = [74, 554];
+  const editorial = editorialSections(p);
+  if (editorial) {
+    rows.push({ text: editorial.price, x: 74, y: start, size: 50, pick: true });
+    rows.push({ text: `Observed ${editorial.observed}`, x: 74, y: start + 54, size: 38 });
+    const sections = [
+      { label: "WHY THIS PICK", text: editorial.why },
+      { label: "KEY RISK", text: editorial.risk },
+    ];
+    const first = start + 160;
+    sections.forEach(({ label, text }, i) => {
+      rows.push({ text: label, x: columns[i], y: first - 54, size: 32, pick: true });
+      wrapCardText(text, 48, columnWidth).forEach((line, n) => {
+        rows.push({ text: line, x: columns[i], y: first + n * 56, size: 48 });
+      });
+    });
+    return { title, rows, start, height: Math.max(920, Math.max(...rows.map((row) => row.y)) + 150), editorial: true };
+  }
   let bodyStart = start;
   let body = p.body;
   if (p.legs.length > 1) {
