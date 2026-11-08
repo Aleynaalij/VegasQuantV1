@@ -1,6 +1,6 @@
 # NBA game simulator — scoping plan (Claude), for read-back
 
-**Status: SCOPING ONLY.** Nothing has been downloaded, fitted or run, and no code is written. Every
+**Status: SCOPED; decisions recorded 2026-11-08 (§8). Next: N0 sources.** Nothing has been downloaded, fitted or run, and no code is written. Every
 stage below gets its own frozen protocol and Codex/Elo read-back, and Mike confirms before any data
 work starts. This plan never approves a model, publishes forecasts, writes to a database, sends
 notifications or touches shared lobby or VQ Tonight files.
@@ -72,3 +72,14 @@ Mike asked for this to wait until NFL was done; NFL was called done on 2026-11-0
 2. **Market (B):** run it prospectively only, or seek a historical NBA closing-line source? A paid
    source needs your approval.
 3. **Scope:** stop at N3, or keep N4 (availability) in view?
+
+## 8. Decisions (Mike, 2026-11-08)
+1. **Decision set: 2026-27, prospective.** Forecasts are frozen and stored before tip and graded after.
+   2025-26 is not used as a decision set.
+2. **Market (B): prospective only.** The comparator is the closing line captured by our own NBA feed
+   (`public.nba_observations`, since 2026-10-18). No paid historical line source.
+3. **Scope: stop at N3** (league engine plus team layer). N4 (availability) stays out of scope unless
+   it is re-scoped after N3's decision (A).
+
+Every stage still gets its own frozen protocol, Codex/Elo read-back and Mike's confirmation before any
+fitting. Nothing here approves a model, a forecast or a member-facing feature.
