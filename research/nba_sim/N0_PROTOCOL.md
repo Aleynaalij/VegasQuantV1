@@ -80,8 +80,8 @@ These are proposed rules. Each is to be frozen in N3, but stated now so N1/N2 ca
   - the full distribution summary.
 - **Missing or late forecasts** count against coverage and are never imputed. Decision (A) requires at
   least 95% coverage of the cohort; below that, no decision is made and the shortfall is reported.
-- **Horizon:** one final evaluation after the regular season. **[Mike]** Set a minimum of 300 cohort
-  games; below that, report only, with no decision.
+- **Horizon:** one final evaluation after the regular season. **Minimum of 300 cohort games**
+  (Mike confirmed 2026-11-08); below that, report only, with no decision.
 - **No interim looks:** before the final evaluation, only operational completeness is checked (forecast
   stored, sources present). No metrics are computed, and nothing is tuned after T0.
 
@@ -96,7 +96,7 @@ for the 139 regular-season games played up to this check:
   42** games (week of Oct 19), **9 of 48** (Oct 26) and **49 of 49** (Nov 2, after the 10-minute
   pre-tip refresh). Early-season quotes were up to 17 hours old.
 
-**Rules, proposed for N3:**
+**Rules (comparator confirmed by Mike 2026-11-08; frozen in N3):**
 - **Comparator:** FanDuel spreads and totals, plus FanDuel h2h for win probability. Use the last quote
   with `observed_at < tip` and `observed_at ≥ tip − 60 min`.
 - **Fair probabilities:** no-vig, from the two-sided prices. For the margin and total distributions,
@@ -123,6 +123,6 @@ line is corrected to point here.
 ## 7. N0 disposition
 **Not yet passed.** Sources (§1), the 2024-25 population (§2) and the market feed facts (§5) are
 verified. **The minimum next step** is to run the §3 possession reconstruction and the §2 population
-reconciliation for 2022-23 and 2023-24, report them, and only then freeze N1. Two items need Mike: the
-§4 minimum sample, and confirmation of the §5 comparator. No feed, spending, credential, permission,
+reconciliation for 2022-23 and 2023-24, report them, and only then freeze N1. Mike confirmed the §4 minimum
+sample (300) and the §5 comparator on 2026-11-08. No feed, spending, credential, permission,
 database, workflow or shared-app change is needed.
