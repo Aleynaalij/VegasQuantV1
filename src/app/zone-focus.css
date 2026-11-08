@@ -1,0 +1,192 @@
+/* The Zone as the app's focal point (owner request, Nov 8 2026): a glowing Zone tab in both navs and a
+   glowing invitation on Home. Motion stops under prefers-reduced-motion; the glow itself stays. */
+
+/* Nav tab: green beacon on the icon and a soft pulsing aura around the tab. */
+.vq-zone-nav-icon {
+  position: relative;
+  display: inline-flex;
+  color: #8be8b8;
+  filter: drop-shadow(0 0 6px #8be8b8aa);
+}
+.vq-zone-nav-icon i {
+  position: absolute;
+  right: -5px;
+  top: -2px;
+  width: 7px;
+  height: 7px;
+  background: #8be8b8;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #8be8b8;
+  animation: vq-zone-beacon 2s ease-in-out infinite;
+}
+.sidebar nav a.vq-zone-nav,
+.mobile-nav a.vq-zone-nav {
+  position: relative;
+  color: #e9fff4;
+  font-weight: 700;
+  box-shadow:
+    0 0 0 1px #8be8b866,
+    0 0 16px #8be8b833;
+  animation: vq-zone-aura 2.6s ease-in-out infinite;
+}
+.sidebar nav a.vq-zone-nav.active,
+.mobile-nav a.vq-zone-nav.active {
+  box-shadow:
+    inset 0 0 0 1px #8be8b8,
+    0 0 22px #8be8b855;
+}
+@keyframes vq-zone-beacon {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+@keyframes vq-zone-aura {
+  50% {
+    box-shadow:
+      0 0 0 1px #8be8b8aa,
+      0 0 26px #8be8b866;
+  }
+}
+
+/* Home spotlight: the first thing under the headline. */
+.vq-zone-spotlight {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 18px;
+  margin: 22px auto 26px;
+  max-width: 920px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  border: 1px solid #8be8b8aa;
+  background:
+    radial-gradient(120% 140% at 0% 0%, #8be8b829, transparent 60%),
+    linear-gradient(135deg, #0f2a22, #0b1714 70%);
+  color: #eafff5;
+  text-align: left;
+  text-decoration: none;
+  box-shadow:
+    0 0 0 1px #8be8b833,
+    0 0 34px #8be8b84d,
+    inset 0 0 26px #8be8b81f;
+  animation: vq-zone-spotlight 3s ease-in-out infinite;
+  isolation: isolate;
+}
+.vq-zone-spotlight:hover,
+.vq-zone-spotlight:focus-visible {
+  border-color: #b8ffd9;
+  box-shadow:
+    0 0 0 2px #8be8b8,
+    0 0 48px #8be8b880;
+  outline: none;
+}
+.vq-zone-spotlight-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+  background: #8be8b81f;
+  border: 1px solid #8be8b866;
+  color: #8be8b8;
+  filter: drop-shadow(0 0 10px #8be8b8aa);
+}
+.vq-zone-spotlight-icon i {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #8be8b8;
+  box-shadow: 0 0 10px #8be8b8;
+  animation: vq-zone-beacon 2s ease-in-out infinite;
+}
+.vq-zone-spotlight-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.vq-zone-spotlight-copy small {
+  color: #8be8b8;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  font-weight: 700;
+}
+.vq-zone-spotlight-copy b {
+  font-family: var(--font-board);
+  font-size: clamp(1.7rem, 4.6vw, 2.4rem);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 18px #8be8b899;
+}
+.vq-zone-spotlight-copy > span {
+  color: #c6e9da;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.vq-zone-spotlight-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 999px;
+  background: #8be8b8;
+  color: #062018;
+  font-weight: 800;
+  white-space: nowrap;
+  box-shadow: 0 0 18px #8be8b899;
+}
+@keyframes vq-zone-spotlight {
+  50% {
+    box-shadow:
+      0 0 0 1px #8be8b866,
+      0 0 52px #8be8b873,
+      inset 0 0 30px #8be8b829;
+  }
+}
+@media (max-width: 640px) {
+  .vq-zone-spotlight {
+    grid-template-columns: auto 1fr;
+    gap: 14px;
+    padding: 16px;
+  }
+  .vq-zone-spotlight-icon {
+    width: 48px;
+    height: 48px;
+  }
+  .vq-zone-spotlight-cta {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+}
+
+/* Slot machine at the bottom of Home. */
+.vq-lobby-slots {
+  margin-top: 36px;
+  padding-top: 12px;
+  border-top: 1px solid #b69b4e33;
+}
+.vq-lobby-slots .vq-slots {
+  margin-bottom: 40px;
+}
+.vq-lobby-slots-loading {
+  text-align: center;
+  color: #b5a26e;
+  padding: 40px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vq-zone-nav-icon i,
+  .vq-zone-spotlight-icon i,
+  .sidebar nav a.vq-zone-nav,
+  .mobile-nav a.vq-zone-nav,
+  .vq-zone-spotlight {
+    animation: none;
+  }
+}

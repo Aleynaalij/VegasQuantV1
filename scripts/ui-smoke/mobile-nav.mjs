@@ -6,14 +6,14 @@
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
-// Negative controls for reviewers (UI_SMOKE_NEGATIVE): "nav-tab" hides the VQ Slots tab in both navs;
+// Negative controls for reviewers (UI_SMOKE_NEGATIVE): "nav-tab" hides The Zone tab in both navs;
 // "retry" makes every Retry button do nothing. A correct run of this script must then FAIL.
 const NEGATIVE = process.env.UI_SMOKE_NEGATIVE || "";
 const sabotage = (ctx) => NEGATIVE && ctx.addInitScript((mode) => {
   // Hidden with CSS rather than removed, so React hydration is untouched.
   if (mode === "nav-tab") document.addEventListener("DOMContentLoaded", () => {
     const s = document.createElement("style");
-    s.textContent = '.mobile-nav a[href="/slots"], .sidebar a[href="/slots"] { display: none !important; }';
+    s.textContent = '.mobile-nav a[href="/community"], .sidebar a[href="/community"] { display: none !important; }';
     document.head.append(s);
   });
   if (mode === "retry") window.addEventListener("click", (e) => {
@@ -135,7 +135,7 @@ for (const signedIn of [false, true])
 // Tab and back navigation through the phone nav and the desktop sidebar. The required tabs are a fixed
 // contract: each must be present and visible, and must navigate when tapped. A missing tab fails; it is
 // never replaced by loading the route directly.
-const REQUIRED_TABS = [["/slots", "VQ Slots"], ["/community", "The Zone"], ["/membership", "Account"], ["/", "Home"]];
+const REQUIRED_TABS = [["/community", "The Zone"], ["/membership", "Account"], ["/", "Home"]];
 for (const [width, height, sel] of [[390, 844, ".mobile-nav"], [1280, 900, ".sidebar"]]) {
   const label = `navigation @${width}`;
   const before = failures.length;
