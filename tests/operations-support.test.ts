@@ -37,38 +37,45 @@ test("operations validates exact structured input and rejects arbitrary or priva
 
 test("operations route verifies user bearer, enforces origin and keeps internal errors out of responses", async (t) => {
   let calls = 0;
-  t.mock.method(globalThis, "fetch", async (input, init) => {
-    ++calls;
-    const url = new URL(input instanceof Request ? input.url : String(input));
-    const token = new Headers(init?.headers).get("authorization");
-    if (url.pathname.endsWith("/auth/v1/user")) {
-      if (token === "Bearer invalid")
-        return Response.json(
-          { message: "internal token error" },
-          { status: 401 },
-        );
-      return Response.json({ id, email_confirmed_at: "2026-11-07T00:00:00Z" });
-    }
-    assert.ok(url.pathname.endsWith("/rpc/operations_support"));
-    assert.ok(
-      [
-        "Bearer fixture-admin",
-        "Bearer fixture-member",
-        "Bearer fixture-db-error",
-      ].includes(token ?? ""),
-    );
-    if (token === "Bearer fixture-db-error")
-      return Response.json(
-        { message: "private fixture payload" },
-        { status: 500 },
+  t.mock.method(
+    globalThis,
+    "fetch",
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      ++calls;
+      const url = new URL(input instanceof Request ? input.url : String(input));
+      const token = new Headers(init?.headers).get("authorization");
+      if (url.pathname.endsWith("/auth/v1/user")) {
+        if (token === "Bearer invalid")
+          return Response.json(
+            { message: "internal token error" },
+            { status: 401 },
+          );
+        return Response.json({
+          id,
+          email_confirmed_at: "2026-11-07T00:00:00Z",
+        });
+      }
+      assert.ok(url.pathname.endsWith("/rpc/operations_support"));
+      assert.ok(
+        [
+          "Bearer fixture-admin",
+          "Bearer fixture-member",
+          "Bearer fixture-db-error",
+        ].includes(token ?? ""),
       );
-    if (token === "Bearer fixture-member")
-      return Response.json({
-        state: "forbidden",
-        details: "private fixture payload",
-      });
-    return Response.json({ state: "ready", tickets: [] });
-  });
+      if (token === "Bearer fixture-db-error")
+        return Response.json(
+          { message: "private fixture payload" },
+          { status: 500 },
+        );
+      if (token === "Bearer fixture-member")
+        return Response.json({
+          state: "forbidden",
+          details: "private fixture payload",
+        });
+      return Response.json({ state: "ready", tickets: [] });
+    },
+  );
   assert.equal(
     (
       await POST(
