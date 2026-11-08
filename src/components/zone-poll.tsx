@@ -28,6 +28,10 @@ export function useZonePolls(
   const key = ids.slice(0, 100).join(",");
   const generation = useRef(0);
   const account = useRef(uid);
+  // Per-post mutation counters: a read that started before or during a vote on a post must not
+  // overwrite that post's newer state.
+  const mutations = useRef<Record<string, number>>({});
+  const inFlight = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (account.current !== uid) {
       account.current = uid;
@@ -40,6 +44,7 @@ export function useZonePolls(
     const posts = key ? key.split(",") : [];
     const run = ++generation.current;
     if (!uid || !posts.length) return;
+    const started = { ...mutations.current };
     void supabase.rpc("community_poll_states", { p_posts: posts }).then((r) => {
       if (
         run !== generation.current ||
@@ -48,11 +53,17 @@ export function useZonePolls(
         !Array.isArray(r.data)
       )
         return;
-      setStates(
-        Object.fromEntries(
-          r.data.filter(isPollState).map((s) => [s.post_id, s]),
-        ),
-      );
+      const fresh = r.data.filter(isPollState);
+      setStates((all) => {
+        const next: Record<string, PollState> = {};
+        for (const s of fresh) {
+          const stale =
+            inFlight.current.has(s.post_id) ||
+            (mutations.current[s.post_id] ?? 0) !== (started[s.post_id] ?? 0);
+          next[s.post_id] = stale && all[s.post_id] ? all[s.post_id] : s;
+        }
+        return next;
+      });
     });
   }, [key, uid, refresh]);
   const vote = useCallback(
@@ -65,6 +76,8 @@ export function useZonePolls(
       if (prev.mine !== null) counts[prev.mine]--;
       if (next !== null) counts[next]++;
       setBusy(post);
+      mutations.current[post] = (mutations.current[post] ?? 0) + 1;
+      inFlight.current.add(post);
       setStates((all) => ({
         ...all,
         [post]: {
@@ -78,6 +91,7 @@ export function useZonePolls(
         p_post: post,
         p_option: next,
       });
+      inFlight.current.delete(post);
       if (account.current !== owner) return true; // signed out or switched: drop the stale answer
       setBusy(null);
       setStates((all) => ({
