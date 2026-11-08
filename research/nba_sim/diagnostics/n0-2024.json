@@ -1,0 +1,134 @@
+{
+ "checks": {
+  "box_points_equal_final": {
+   "of": 1231,
+   "pass": 1230
+  },
+  "free_throw_trips_incomplete": {
+   "examples": [
+    [
+     "401585658",
+     1
+    ],
+    [
+     "401585419",
+     1
+    ],
+    [
+     "401585251",
+     1
+    ],
+    [
+     "401585131",
+     1
+    ],
+    [
+     "401585111",
+     1
+    ],
+    [
+     "401585080",
+     2
+    ],
+    [
+     "401584786",
+     1
+    ],
+    [
+     "401584791",
+     1
+    ]
+   ],
+   "games": 8
+  },
+  "games_with_unassigned_events": {
+   "count": 0,
+   "ids": []
+  },
+  "possession_count_difference": {
+   "0": 464,
+   "1": 609,
+   "2": 157,
+   "3": 1
+  },
+  "possessions_within_2": {
+   "games": 1230,
+   "of": 1231,
+   "share": 0.9992
+  },
+  "scoring_sum_equals_final": {
+   "failures": [
+    [
+     "401585411",
+     118,
+     113,
+     121,
+     113
+    ],
+    [
+     "401585412",
+     131,
+     126,
+     133,
+     126
+    ],
+    [
+     "401585413",
+     114,
+     90,
+     116,
+     93
+    ],
+    [
+     "401585387",
+     103,
+     110,
+     106,
+     110
+    ],
+    [
+     "401616465",
+     116,
+     100,
+     111,
+     100
+    ],
+    [
+     "401584717",
+     120,
+     106,
+     113,
+     106
+    ]
+   ],
+   "of": 1231,
+   "pass": 1225
+  },
+  "unassigned_events_by_type": {}
+ },
+ "pass_rules": {
+  "points_reconcile_every_game": false,
+  "possessions_within_2_in_99pct": true,
+  "unassigned_scoring_games_le_1pct": true
+ },
+ "population": {
+  "all_star_excluded": [
+   "401623259"
+  ],
+  "kept": 1231,
+  "season_type_2_ids": 1232,
+  "team_game_counts": {
+   "82": 28,
+   "83": 2
+  },
+  "teams": 30,
+  "teams_not_82": {
+   "IND": 83,
+   "LAL": 83
+  }
+ },
+ "source": {
+  "box": "t_player_box_2024.csv",
+  "pbp": "t_play_by_play_2024.csv"
+ }
+}

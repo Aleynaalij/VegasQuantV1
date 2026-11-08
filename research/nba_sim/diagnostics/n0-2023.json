@@ -1,0 +1,143 @@
+{
+ "checks": {
+  "box_points_equal_final": {
+   "of": 1230,
+   "pass": 1227
+  },
+  "free_throw_trips_incomplete": {
+   "examples": [
+    [
+     "401469377",
+     1
+    ],
+    [
+     "401469254",
+     1
+    ],
+    [
+     "401469240",
+     1
+    ],
+    [
+     "401469223",
+     1
+    ],
+    [
+     "401469186",
+     1
+    ],
+    [
+     "401469087",
+     1
+    ],
+    [
+     "401468918",
+     1
+    ],
+    [
+     "401468901",
+     1
+    ],
+    [
+     "401468859",
+     1
+    ],
+    [
+     "401468826",
+     1
+    ],
+    [
+     "401468726",
+     1
+    ],
+    [
+     "401468518",
+     1
+    ],
+    [
+     "401468507",
+     1
+    ],
+    [
+     "401468398",
+     1
+    ],
+    [
+     "401468294",
+     1
+    ]
+   ],
+   "games": 15
+  },
+  "games_with_unassigned_events": {
+   "count": 1,
+   "ids": [
+    "401469046"
+   ]
+  },
+  "possession_count_difference": {
+   "0": 449,
+   "1": 620,
+   "2": 158,
+   "3": 3
+  },
+  "possessions_within_2": {
+   "games": 1227,
+   "of": 1230,
+   "share": 0.9976
+  },
+  "scoring_sum_equals_final": {
+   "failures": [
+    [
+     "401469046",
+     142,
+     115,
+     142,
+     116
+    ],
+    [
+     "401468511",
+     132,
+     125,
+     132,
+     123
+    ],
+    [
+     "401468281",
+     104,
+     113,
+     106,
+     113
+    ]
+   ],
+   "of": 1230,
+   "pass": 1227
+  },
+  "unassigned_events_by_type": {
+   "Defensive Rebound": 5,
+   "Free Throw - 1 of 1": 1,
+   "Free Throw - Technical": 1
+  }
+ },
+ "pass_rules": {
+  "points_reconcile_every_game": false,
+  "possessions_within_2_in_99pct": true,
+  "unassigned_scoring_games_le_1pct": true
+ },
+ "population": {
+  "all_star_excluded": [
+   "401524696"
+  ],
+  "kept": 1230,
+  "season_type_2_ids": 1231,
+  "team_game_counts": {
+   "82": 30
+  },
+  "teams": 30,
+  "teams_not_82": {}
+ },
+ "source": {
+  "box": "t_player_box_2023.csv",
+  "pbp": "t_play_by_play_2023.csv"
+ }
+}

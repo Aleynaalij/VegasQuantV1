@@ -1,0 +1,104 @@
+{
+ "checks": {
+  "box_points_equal_final": {
+   "of": 1231,
+   "pass": 1231
+  },
+  "free_throw_trips_incomplete": {
+   "examples": [
+    [
+     "401705608",
+     1
+    ],
+    [
+     "401705565",
+     1
+    ],
+    [
+     "401705451",
+     1
+    ],
+    [
+     "401705182",
+     1
+    ],
+    [
+     "401705112",
+     1
+    ],
+    [
+     "401704903",
+     1
+    ],
+    [
+     "401704652",
+     1
+    ]
+   ],
+   "games": 7
+  },
+  "games_with_unassigned_events": {
+   "count": 0,
+   "ids": []
+  },
+  "possession_count_difference": {
+   "0": 475,
+   "1": 587,
+   "2": 161,
+   "3": 8
+  },
+  "possessions_within_2": {
+   "games": 1223,
+   "of": 1231,
+   "share": 0.9935
+  },
+  "scoring_sum_equals_final": {
+   "failures": [
+    [
+     "401704805",
+     114,
+     112,
+     114,
+     110
+    ],
+    [
+     "401704638",
+     104,
+     139,
+     104,
+     140
+    ]
+   ],
+   "of": 1231,
+   "pass": 1229
+  },
+  "unassigned_events_by_type": {}
+ },
+ "pass_rules": {
+  "points_reconcile_every_game": false,
+  "possessions_within_2_in_99pct": true,
+  "unassigned_scoring_games_le_1pct": true
+ },
+ "population": {
+  "all_star_excluded": [
+   "401752955",
+   "401752956",
+   "401752957"
+  ],
+  "kept": 1231,
+  "season_type_2_ids": 1234,
+  "team_game_counts": {
+   "82": 28,
+   "83": 2
+  },
+  "teams": 30,
+  "teams_not_82": {
+   "MIL": 83,
+   "OKC": 83
+  }
+ },
+ "source": {
+  "box": "t_player_box_2025.csv",
+  "pbp": "t_play_by_play_2025.csv"
+ }
+}
