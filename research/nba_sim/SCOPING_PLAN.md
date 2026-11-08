@@ -1,6 +1,6 @@
 # NBA game simulator — scoping plan (Claude), for read-back
 
-**Status: SCOPED; decisions recorded 2026-11-08 (§8). Next: N0 sources.** Nothing has been downloaded, fitted or run, and no code is written. Every
+**Status: SCOPED; decisions recorded 2026-11-08 (§8). N0 in progress.** No model is fitted or run and no code is written; data downloads and inspections are listed in `N0_PROTOCOL.md` §6. Every
 stage below gets its own frozen protocol and Codex/Elo read-back, and Mike confirms before any data
 work starts. This plan never approves a model, publishes forecasts, writes to a database, sends
 notifications or touches shared lobby or VQ Tonight files.
