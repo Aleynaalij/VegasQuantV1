@@ -26,12 +26,12 @@ test("automated cards keep all content on one card and copy only explicit legs",
   const card = publicationLayout(post);
   assert.ok(card.height > 1350);
   assert.equal(
-    card.lines
+    card.rows.map((row) => row.text)
       .join("")
       .replace(/\s/g, ""),
     [...post.legs, post.body].join("").replace(/\s/g, ""),
   );
-  assert.ok(card.start + (card.lines.length - 1) * 70 <= card.height - 170);
+  assert.ok(card.rows.every((row) => row.y <= card.height - 170));
   assert.equal(publicationCopy(post), post.title + "\n" + post.legs[0]);
   assert.equal(publicationCopy({ ...post, legs: [] }), "");
   assert.ok(wrapCardText("W".repeat(100), 32).every((l) => l.length <= 29));
@@ -92,7 +92,23 @@ test("single cards preserve long titles and never turn a publication time into a
   const title = "Long matchup title ".repeat(100);
   const card = publicationLayout({ ...post, title });
   assert.equal(card.title.join(" "), title.trim());
-  assert.ok(card.start + (card.lines.length - 1) * 70 <= card.height - 170);
+  assert.ok(card.rows.every((row) => row.y <= card.height - 170));
   assert.ok(publicationStamp(post.created_at).startsWith("Published "));
   assert.equal(publicationStamp("bad"), "Publication time unavailable");
+});
+
+test("Dealer picks read down the left column before continuing at the top right", () => {
+  const legs = ["Pick A", "Pick B", "Pick C", "Pick D"];
+  const card = publicationLayout({ ...post, legs, body: legs.join("\n") + "\n\nOriginal notes." });
+  const [one, two, three, four, notes] = card.rows;
+  assert.deepEqual(card.rows.map((row) => row.text), [
+    "1. Pick A", "2. Pick B", "3. Pick C", "4. Pick D", "Original notes.",
+  ]);
+  assert.equal(one.x, two.x);
+  assert.equal(three.x, four.x);
+  assert.ok(three.x > one.x);
+  assert.equal(one.y, three.y);
+  assert.equal(two.y, four.y);
+  assert.ok(notes.y > four.y);
+  assert.ok(card.height < 1350);
 });

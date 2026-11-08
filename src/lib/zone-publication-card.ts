@@ -59,11 +59,61 @@ export function wrapCardText(
 }
 export function publicationLayout(p: PublicationPost, watchlist = false) {
   const title = wrapCardText(p.title, 60);
-  const extra = p.legs.filter((leg) => !p.body.includes(leg));
-  const lines = watchlist ? [] : wrapCardText([...extra, p.body].join("\n\n"), 56);
   const start = watchlist ? 454 : 260 + title.length * 72 + 96;
-  const height = Math.max(1350, start + Math.max(0, lines.length - 1) * 70 + 170);
-  return { title, lines, start, height };
+  const rows: { text: string; x: number; y: number; pick?: boolean }[] = [];
+  if (watchlist) return { title, rows, start, height: 1350 };
+
+  const step = 61;
+  const columnWidth = 452;
+  const columns = [74, 554];
+  let bodyStart = start;
+  let body = p.body;
+  if (p.legs.length > 1) {
+    const split = Math.ceil(p.legs.length / 2);
+    const sides = [p.legs.slice(0, split), p.legs.slice(split)];
+    const ends = sides.map((legs, column) => {
+      let y = start;
+      legs.forEach((leg, i) => {
+        const index = column * split + i + 1;
+        for (const text of wrapCardText(`${index}. ${leg}`, 56, columnWidth)) {
+          rows.push({ text, x: columns[column], y, pick: true });
+          y += step;
+        }
+        y += 16;
+      });
+      return y;
+    });
+    bodyStart = Math.max(...ends) + 20;
+    const legs = new Set(p.legs);
+    body = body.split("\n").filter((line) => !legs.has(line.trim())).join("\n").trim();
+  } else {
+    const extra = p.legs.filter((leg) => !body.includes(leg));
+    body = [...extra, body].filter(Boolean).join("\n\n");
+  }
+
+  const single = body ? wrapCardText(body, 56) : [];
+  const narrow = single.length > 6 ? wrapCardText(body, 56, columnWidth) : [];
+  const midpoint = Math.ceil(narrow.length / 2);
+  // Prefer a paragraph break near the midpoint without making either side much taller.
+  const boundaries = narrow.flatMap((line, i) =>
+    !line && Math.abs(i - midpoint) <= 2 ? [i] : [],
+  );
+  const split = boundaries.reduce(
+    (best, index) => Math.abs(index - midpoint) < Math.abs(best - midpoint) ? index : best,
+    boundaries[0] ?? midpoint,
+  );
+  const bodyColumns = narrow.length
+    ? [narrow.slice(0, split), narrow.slice(split)]
+    : [single];
+  bodyColumns.forEach((lines, column) => {
+    const first = lines.findIndex(Boolean);
+    if (first < 0) return;
+    lines.slice(first).forEach((text, i) => {
+      if (text) rows.push({ text, x: columns[column], y: bodyStart + i * step });
+    });
+  });
+  const bottom = rows.reduce((last, row) => Math.max(last, row.y), start);
+  return { title, rows, start, height: Math.max(920, bottom + 170) };
 }
 export function publicationStamp(at: string) {
   if (!Number.isFinite(Date.parse(at))) return "Publication time unavailable";

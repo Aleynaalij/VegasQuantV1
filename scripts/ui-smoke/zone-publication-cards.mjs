@@ -200,6 +200,10 @@ try {
       });
       assert.ok(geometry.divider < geometry.body, "divider must not strike through analysis");
       const lines = await card.locator("svg text[font-size='56']").allTextContents();
+      const columns = await card.locator("svg text[font-size='56']").evaluateAll(
+        (rows) => [...new Set(rows.map((row) => Number(row.getAttribute("x"))))],
+      );
+      assert.deepEqual(columns, [74, 554], "long Dealer analysis reads down two columns");
       const overflow = await card.locator("svg text").evaluateAll((elements) =>
         elements.filter((e) => e.textContent.trim()).flatMap((e) => {
           const b = e.getBBox();

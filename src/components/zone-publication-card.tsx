@@ -38,7 +38,7 @@ export default function ZonePublicationCard({
   if (!isSport(p.sport)) return null;
   const theme = vqCardPalette(p.id);
   const label = PUBLICATION_LABELS[p.sport];
-  const { title, lines, start, height } = layout;
+  const { title, rows, start, height } = layout;
   const headline = watchers
     ? "WATCHLIST"
     : p.legs.length
@@ -147,8 +147,8 @@ export default function ZonePublicationCard({
           );
         }
       }
-      lines.forEach((line, n) =>
-        text(line, 74, start + n * 70, 56, "#e0e9df"),
+      rows.forEach((row) =>
+        text(row.text, row.x, row.y, 56, row.pick ? "#f5eedd" : "#e0e9df"),
       );
       text(footer, 74, height - 104, 24, "#c2cdbf");
       text("VEGASQUANT.APP", 74, height - 66, 24, theme.accent, 700);
@@ -180,7 +180,7 @@ export default function ZonePublicationCard({
         className="zone-publication-face"
         viewBox={`0 0 1080 ${height}`}
         role="img"
-        aria-label={`${p.title}. ${stamp}. ${watchers ? p.body : lines.join(" ")}`}
+        aria-label={`${p.title}. ${stamp}. ${watchers ? p.body : rows.map((row) => row.text).join(" ")}`}
       >
         <defs>
           <radialGradient
@@ -308,15 +308,15 @@ export default function ZonePublicationCard({
             ))}
           </g>
         )}
-        {lines.map((line, n) => (
+        {rows.map((row, n) => (
           <text
             key={n}
-            x="74"
-            y={start + n * 70}
+            x={row.x}
+            y={row.y}
             fontSize="56"
-            fill="#e0e9df"
+            fill={row.pick ? "#f5eedd" : "#e0e9df"}
           >
-            {line}
+            {row.text}
           </text>
         ))}
         <text x="74" y={height - 104} fontSize="24" fill="#c2cdbf">
