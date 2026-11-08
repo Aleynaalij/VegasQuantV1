@@ -8,6 +8,8 @@ import {
   safeSource,
   sourceAge,
   sportErrors,
+  searchHits,
+  snippet,
   type Finding,
   type ResearchEvent,
 } from "../src/lib/research-hub";
@@ -688,4 +690,68 @@ test("partial-coverage notices follow the selected sport", () => {
   assert.deepEqual(sportErrors(errors, "nfl"), [errors[2], errors[3]]);
   assert.deepEqual(sportErrors(errors, "nhl"), [errors[1], errors[2]]);
   assert.deepEqual(sportErrors(errors, "all"), errors);
+});
+
+test("search explains what matched: report lines name their section, teams come first", () => {
+  const vikings = {
+    ...event,
+    key: "nfl:min-det",
+    id: "min-det",
+    sport: "nfl" as const,
+    away: "Minnesota Vikings",
+    home: "Detroit Lions",
+  };
+  const report = {
+    ...finding,
+    id: "inj-min",
+    eventKey: vikings.key,
+    title: "Reported availability",
+    text: "Minnesota Vikings · Justin Jefferson: Questionable\nDetroit Lions · Someone Else: Out",
+  };
+  const f = hubFilters(new URLSearchParams("q=jefferson"));
+  assert.deepEqual(
+    searchHits([event, vikings], [finding, report], f).map((h) => [
+      h.event.key,
+      h.topic,
+      h.line,
+    ]),
+    [
+      [
+        vikings.key,
+        "injuries",
+        "Minnesota Vikings · Justin Jefferson: Questionable",
+      ],
+    ],
+  );
+  const team = searchHits([vikings], [report], { ...f, query: "vikings" });
+  assert.equal(team[0].topic, null);
+  assert.equal(team[0].line, "Minnesota Vikings at Detroit Lions");
+  assert.equal(team[1].topic, "injuries");
+  assert.deepEqual(
+    searchHits([vikings], [report], { ...f, query: "j" }),
+    [],
+    "one letter is too short to list",
+  );
+  assert.deepEqual(
+    searchHits([vikings], [report], { ...f, sport: "nba" }),
+    [],
+    "sport filter applies",
+  );
+});
+
+test("long report lines are shortened around the match, never cutting it out", () => {
+  const long =
+    "Lorem ipsum ".repeat(30) +
+    "Justin Jefferson is questionable with a hamstring " +
+    "dolor sit ".repeat(30);
+  const s = snippet(long, "jefferson");
+  assert.match(s, /Justin Jefferson/);
+  assert.ok(s.length <= 142, String(s.length));
+  assert.ok(s.startsWith("…") && s.endsWith("…"));
+  assert.equal(snippet("short line", "line"), "short line");
+  assert.ok(
+    snippet("Jefferson " + "x".repeat(300), "jefferson").startsWith(
+      "Jefferson",
+    ),
+  );
 });

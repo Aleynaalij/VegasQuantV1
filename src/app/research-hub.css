@@ -691,3 +691,44 @@ html[data-theme="dark"] .rh-hub .nba-lineup-team h4 .nba-lineup-confirmed {
     font-size: 10.5px;
   }
 }
+
+.rh-hits {
+  margin: 14px 0 6px;
+  border: 1px solid var(--rh-line);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.rh-hits h2 {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.rh-hits ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.rh-hits a {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border: 1px solid var(--rh-line);
+  border-radius: 6px;
+  color: var(--rh-ink);
+  text-decoration: none;
+}
+.rh-hits a:focus-visible {
+  outline: 2px solid var(--rh-ink);
+  outline-offset: 2px;
+}
+.rh-hits b {
+  font-size: 13px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.rh-hits span {
+  font-size: 11px;
+  color: var(--rh-muted);
+}
