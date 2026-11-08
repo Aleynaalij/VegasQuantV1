@@ -20,6 +20,19 @@ const request = (body: unknown, token?: string, source = origin) =>
   });
 
 test("operations validates exact structured input and rejects arbitrary or private fields", () => {
+  const page = {
+    action: "list",
+    history: false,
+    cursor: { id, before: "2026-11-08T10:00:00.000123+00:00" },
+  };
+  assert.deepEqual(parseOperationInput(page), page);
+  assert.equal(
+    parseOperationInput({
+      ...page,
+      cursor: { ...page.cursor, before: "yesterday" },
+    }),
+    null,
+  );
   assert.deepEqual(parseOperationInput(submit), submit);
   for (const value of [
     null,

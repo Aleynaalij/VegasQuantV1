@@ -38,8 +38,8 @@ type Leg = {
   why: string;
   risk: string;
 };
-export default function HomeGameList({ games }: { games: Game[] }) {
-  const [opened, setOpened] = useState(false),
+export default function HomeGameList({ games, focused = false }: { games: Game[]; focused?: boolean }) {
+  const [opened, setOpened] = useState(focused),
     [legs, setLegs] = useState<Leg[]>([]),
     [notice, setNotice] = useState(""),
     [retry, setRetry] = useState(0);
@@ -48,7 +48,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
   const [openKey, setOpenKey] = useState("");
   // Open game rows by slug. The latest one opened is kept in the URL (?game=<slug>), so browser
   // Back from a game's research page, and research's "Props & your lay", return to the same game.
-  const [openGames, setOpenGames] = useState<string[]>([]);
+  const [openGames, setOpenGames] = useState<string[]>(focused ? games.map((g) => g.slug) : []);
   const wrote = useRef<string | null>(null);
   const params = useSearchParams();
   const [copied, setCopied] = useState<Record<string, string>>({});
@@ -139,8 +139,8 @@ export default function HomeGameList({ games }: { games: Game[] }) {
     .filter(
       (g) =>
         (!g.sport || g.sport === "nfl") &&
-        Date.parse(g.kickoff) > Date.now() &&
-        Date.parse(g.kickoff) < Date.now() + 7 * 86400000,
+        (focused || (Date.parse(g.kickoff) > Date.now() &&
+        Date.parse(g.kickoff) < Date.now() + 7 * 86400000)),
     )
     .sort((a, b) => Date.parse(a.kickoff) - Date.parse(b.kickoff));
   const ids = slate
@@ -150,6 +150,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
   const slugs = slate.map((g) => g.slug).join(",");
   // Arriving with ?game=<slug> (Back, research, or the hero) opens that game and brings it into view.
   useEffect(() => {
+    if (focused) return;
     const want = homeGameFrom(`?${params.toString()}`, slugs.split(","));
     if (!want) return;
     setOpenGames((open) => (open.includes(want) ? open : [...open, want]));
@@ -159,7 +160,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
     requestAnimationFrame(() =>
       document.getElementById(`home-game-${want}`)?.scrollIntoView({ block: "start" }),
     );
-  }, [params, slugs]);
+  }, [params, slugs, focused]);
   // The lay in progress stays visible without opening a game first, and follows the account:
   // an account change clears the badge at once, then shows only the new account's own draft.
   const draftGeneration = useRef(0);
@@ -192,6 +193,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
   }, []);
   /** Keep the game the member is in (or null) in the URL, so Back returns to exactly that game. */
   function rememberGame(slug: string | null) {
+    if (focused) return;
     const url = new URL(window.location.href);
     if ((url.searchParams.get("game") || null) === slug) return;
     if (slug) url.searchParams.set("game", slug);
@@ -212,12 +214,14 @@ export default function HomeGameList({ games }: { games: Game[] }) {
   }
   useEffect(() => {
     if (!opened || !ids) return;
-    let live = true;
+    let live = true, generation = 0;
     async function load() {
+      const n = ++generation;
       setNotice("Loading props…");
       setChosen([]);
       try {
         const session = await supabase.auth.getSession();
+        if (!live || n !== generation) return;
         if (!session.data.session) {
           if (live) {
             setLegs([]);
@@ -244,26 +248,41 @@ export default function HomeGameList({ games }: { games: Game[] }) {
           .order("published_at", { ascending: false })
           .limit(1000);
         if (r.error) throw r.error;
-        if (live) {
+        if (live && n === generation) {
           setLegs(r.data || []);
           setNotice("");
         }
       } catch {
-        if (live) setNotice("Props could not load. Please retry.");
+        if (live && n === generation) {
+          setLegs([]);
+          setNotice("Props could not load. Please retry.");
+        }
       }
     }
     void load();
+    const refresh = () => {
+      if (live && document.visibilityState !== "hidden") void load();
+    };
+    const timer = setInterval(refresh, 60000);
+    window.addEventListener("focus", refresh);
     const sub = supabase.auth.onAuthStateChange(() => {
-      if (live) void load();
+      ++generation;
+      setLegs([]);
+      // Leave the auth callback before asking Supabase for a session again.
+      setTimeout(refresh, 0);
     });
     return () => {
       live = false;
+      ++generation;
+      clearInterval(timer);
+      window.removeEventListener("focus", refresh);
       sub.data.subscription.unsubscribe();
     };
   }, [opened, ids, retry]);
+  // The matchup already has its source board; only desk card faces need this extra read.
   // Card faces carry the latest FanDuel moneyline and its no-vig split (members can read it).
   useEffect(() => {
-    if (!ids) return;
+    if (focused || !ids) return;
     let live = true,
       generation = 0;
     async function load() {
@@ -311,13 +330,14 @@ export default function HomeGameList({ games }: { games: Game[] }) {
     };
     // slate is derived from ids; the effect keys on the id list only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ids]);
+  }, [ids, focused]);
   return (
     <section
       id="home-games"
       className="vq-game-list"
-      aria-label="This week's games"
+      aria-label={focused ? "Published player research for this game" : "This week's games"}
     >
+      {focused && <><h2>Player props &amp; recent form</h2><p>Published player research for this game. Recent form is historical, not a model probability. Refreshes every minute while this page is visible.</p></>}
       {draftNotice && !openKey ? <p role="status">{draftNotice}</p> : null}
       {chosen.length ? (
         <Link className="vq-btn" href="/parlays">
@@ -392,7 +412,7 @@ export default function HomeGameList({ games }: { games: Game[] }) {
                 </p>
               ) : null}
               {!notice && !legs.some((r) => r.game_id === g.id) ? (
-                <p>No published props for this game yet.</p>
+                <p>No active published props for this game. <Link href={`/matchups/${g.slug}/picks`}>View publication history →</Link></p>
               ) : null}
               {(() => {
                 const rows = legs.filter((r) => r.game_id === g.id);

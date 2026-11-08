@@ -8,7 +8,7 @@ import { time } from "@/lib/domain";
 
 type Update = { id: string; title: string; body: string; created_at: string };
 
-export default function UpdateInbox() {
+export default function UpdateInbox({ autoOpenId }: { autoOpenId?: string }) {
   const [rows, setRows] = useState<Update[]>([]);
   const [read, setRead] = useState<string[]>([]);
   const [uid, setUid] = useState<string | null>(null);
@@ -17,6 +17,9 @@ export default function UpdateInbox() {
   const [saveError, setSaveError] = useState(false);
   const [open, setOpen] = useState(false);
   const [retry, setRetry] = useState(0);
+  const [profileReady, setProfileReady] = useState(false);
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
+  const shown = useRef(new Set<string>());
   const receipts = useRef(new UpdateReadState());
   const dialog = useRef<HTMLDialogElement>(null);
   const title = useId();
@@ -48,6 +51,10 @@ export default function UpdateInbox() {
     let epoch = 0;
     function account(id: string | null) {
       if (receipts.current.account !== id) {
+        dialog.current?.close();
+        setOpen(false);
+        setLoadedFor(null);
+        setProfileReady(false);
         receipts.current.reset(id);
         setRows([]);
         setRead([]);
@@ -68,16 +75,23 @@ export default function UpdateInbox() {
           setLoadError(false);
           return;
         }
-        const [updates, reads] = await Promise.all([
-          supabase
-            .from("app_updates")
-            .select("id,title,body,created_at")
-            .order("created_at", { ascending: false })
-            .limit(50),
+        const query = supabase
+          .from("app_updates")
+          .select("id,title,body,created_at")
+          .order("created_at", { ascending: false });
+        const [updates, reads, profile] = await Promise.all([
+          autoOpenId ? query.eq("id", autoOpenId) : query.limit(50),
           supabase
             .from("app_update_reads")
             .select("update_id")
             .eq("user_id", id),
+          autoOpenId
+            ? supabase
+                .from("community_profiles")
+                .select("username,avatar")
+                .eq("user_id", id)
+                .maybeSingle()
+            : Promise.resolve(null),
         ]);
         if (!live || request !== epoch) return;
         if (updates.error || reads.error) throw updates.error || reads.error;
@@ -87,6 +101,18 @@ export default function UpdateInbox() {
             (reads.data || []).map((row) => row.update_id),
           ),
         );
+        const p = profile?.data;
+        setProfileReady(
+          !autoOpenId ||
+            Boolean(
+              !profile?.error &&
+                p &&
+                /^[A-Za-z0-9_]{3,24}$/.test(p.username || "") &&
+                !/^Member_[a-f0-9]{8}$/i.test(p.username || "") &&
+                p.avatar,
+            ),
+        );
+        setLoadedFor(id);
         setLoadError(false);
       } catch {
         if (live && request === epoch) setLoadError(true);
@@ -107,43 +133,94 @@ export default function UpdateInbox() {
       }, 0);
     });
     window.addEventListener("focus", focus);
+    window.addEventListener("vq-community-changed", focus);
     return () => {
       live = false;
       ++epoch;
       clearInterval(timer);
       window.removeEventListener("focus", focus);
+      window.removeEventListener("vq-community-changed", focus);
       auth.data.subscription.unsubscribe();
     };
-  }, [retry]);
+  }, [retry, autoOpenId]);
 
   useEffect(() => {
     if (open) void markVisibleRead(rows);
   }, [open, rows, markVisibleRead]);
 
+  // A release stays eligible for future visits, with account-wide receipts rather than
+  // a seven-day notification window or a device-only localStorage flag.
+  useEffect(() => {
+    if (
+      !autoOpenId ||
+      !uid ||
+      loadedFor !== uid ||
+      loading ||
+      !profileReady ||
+      loadError
+    )
+      return;
+    const key = `${uid}:${autoOpenId}`;
+    if (
+      shown.current.has(key) ||
+      read.includes(autoOpenId) ||
+      !rows.some((row) => row.id === autoOpenId)
+    )
+      return;
+    const readyAt = Date.now() + 2500;
+    const show = () => {
+      if (
+        Date.now() < readyAt ||
+        document.visibilityState !== "visible" ||
+        document.querySelector("dialog[open]")
+      )
+        return;
+      const el = dialog.current;
+      if (!el || shown.current.has(key)) return;
+      el.showModal();
+      shown.current.add(key);
+      setOpen(true);
+    };
+    const timer = setInterval(show, 300);
+    return () => clearInterval(timer);
+  }, [
+    autoOpenId,
+    uid,
+    loadedFor,
+    loading,
+    profileReady,
+    loadError,
+    read,
+    rows,
+  ]);
+
   const unread = rows.filter((row) => !read.includes(row.id)).length;
   return (
     <>
-      <button
-        type="button"
-        className="update-bell"
-        aria-haspopup="dialog"
-        aria-label={`App updates${unread ? `, ${unread} unread` : ""}`}
-        onClick={() => {
-          dialog.current?.showModal();
-          setOpen(true);
-        }}
-      >
-        <Bell size={20} />
-        {unread > 0 && (
-          <span className="unread-dot" aria-hidden="true">
-            {unread > 9 ? "9+" : unread}
-          </span>
-        )}
-      </button>
+      {!autoOpenId && (
+        <button
+          type="button"
+          className="update-bell"
+          aria-haspopup="dialog"
+          aria-label={`App updates${unread ? `, ${unread} unread` : ""}`}
+          onClick={() => {
+            dialog.current?.showModal();
+            setOpen(true);
+          }}
+        >
+          <Bell size={20} />
+          {unread > 0 && (
+            <span className="unread-dot" aria-hidden="true">
+              {unread > 9 ? "9+" : unread}
+            </span>
+          )}
+        </button>
+      )}
       <dialog
         className="phone-contact-dialog update-inbox"
         ref={dialog}
         aria-labelledby={title}
+        data-release-announcement={autoOpenId}
         onClose={() => setOpen(false)}
       >
         <h2 id={title}>What’s new in Vegas Quant</h2>

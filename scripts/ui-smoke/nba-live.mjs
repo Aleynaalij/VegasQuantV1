@@ -205,7 +205,7 @@ for (const width of [390, 1280]) {
       });
     });
     await ctx.route("**/rest/v1/nba_observations*", (r) =>
-      r.fulfill({ json: obs }),
+      r.fulfill({ json: obs.map((row, i) => ({ ...row, id: `snapshot-${i}`, provider: "Fixture provider", source: "https://example.com/fixture", observed_at: row.payload.provider_updated_at })) }),
     );
     await ctx.route("**/rest/v1/nba_editorial_picks*", (r) =>
       r.fulfill({ json: picks }),
@@ -254,6 +254,9 @@ for (const width of [390, 1280]) {
         .locator(".vq-game-row[data-game=g1]")
         .evaluate((d) => (d.open = true));
       await p.locator(".sport-selections li").first().waitFor();
+      await p.locator(".vq-game-row[data-game=g1] .nba-board-details").waitFor();
+      assert.equal(await p.locator('.vq-game-row[data-game=g1] [aria-label="Starting lineups and availability"]').count(), 1, "research preserves one lineup block");
+      await p.locator(".vq-game-row[data-game=g1] .nba-price-card").first().waitFor();
       const open = await p.locator(".vq-game-row[data-game=g1]").innerText();
       assert.equal(
         await p

@@ -56,7 +56,9 @@ export async function POST(req: Request) {
     // session eligibility and admin MFA before returning or mutating queue data.
     const { data, error } = await session.db.rpc("operations_support", {
       p_action: input.action,
-      p_id: "id" in input ? input.id : null,
+      p_id: input.action === "list" ? (input.cursor?.id ?? null) : input.id,
+      p_before: input.action === "list" ? (input.cursor?.before ?? null) : null,
+      p_history: input.action === "list" ? (input.history ?? false) : false,
       p_feature: input.action === "submit" ? input.feature : null,
       p_symptom: input.action === "submit" ? input.symptom : null,
       p_expected: input.action === "triage" ? input.expected : null,

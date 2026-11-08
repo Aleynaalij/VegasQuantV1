@@ -75,6 +75,7 @@ async function operation(input: OperationInput): Promise<OperationResult> {
 }
 
 export function OperationsQueue() {
+  const [history, setHistory] = useState(false);
   const [queue, setQueue] = useState<Queue | null>(null);
   const [detail, setDetail] = useState<Detail | null>(null);
   const [notice, setNotice] = useState("");
@@ -85,7 +86,7 @@ export function OperationsQueue() {
   async function run(input: OperationInput) {
     const request = ++sequence.current;
     if (input.action === "list") {
-      setQueue(null);
+      if (!input.cursor) setQueue(null);
       setDetail(null);
     } else if (input.action === "detail") setDetail(null);
     setLoading(true);
@@ -94,15 +95,23 @@ export function OperationsQueue() {
     if (request !== sequence.current) return;
     setLoading(false);
     if (result.state === "ready" && "tickets" in result) {
-      setQueue(result);
+      setQueue((previous) =>
+        input.action === "list" && input.cursor && previous
+          ? { ...result, tickets: [...previous.tickets, ...result.tickets] }
+          : result,
+      );
     } else if (result.state === "ready" && "ticket" in result) {
       setDetail(result);
       setQueue(
         (prev) =>
           prev && {
             ...prev,
-            tickets: prev.tickets.map((t) =>
-              t.id === result.ticket.id ? result.ticket : t,
+            tickets: prev.tickets.flatMap((t) =>
+              t.id !== result.ticket.id
+                ? [t]
+                : (result.ticket.status === "resolved") === history
+                  ? [result.ticket]
+                  : [],
             ),
           },
       );
@@ -125,6 +134,7 @@ export function OperationsQueue() {
       ++sequence.current;
       setQueue(null);
       setDetail(null);
+      setHistory(false);
       setLoading(false);
       setNotice("Account changed. Check access again.");
     });
@@ -148,7 +158,7 @@ export function OperationsQueue() {
         <button
           type="button"
           disabled={loading}
-          onClick={() => void run({ action: "list" })}
+          onClick={() => void run({ action: "list", history })}
         >
           {queue ? "Refresh queue" : "Check access again"}
         </button>
@@ -157,8 +167,29 @@ export function OperationsQueue() {
         <>
           <section aria-label="Support queue">
             <h2>Support queue</h2>
-            <p>Latest 50 reports. Times are UTC.</p>
-            {!queue.tickets.length && <p>No reports received.</p>}
+            <div className="vq-help-actions">
+              {[false, true].map((resolved) => (
+                <button
+                  key={String(resolved)}
+                  type="button"
+                  disabled={loading}
+                  aria-pressed={history === resolved}
+                  onClick={() => {
+                    setHistory(resolved);
+                    void run({ action: "list", history: resolved });
+                  }}
+                >
+                  {resolved ? "Resolved history" : "Open reports"}
+                </button>
+              ))}
+            </div>
+            <p>
+              {history ? "Resolved reports" : "Open reports"}, newest first.
+              Times are UTC.
+            </p>
+            {!queue.tickets.length && (
+              <p>{history ? "No resolved reports." : "No open reports."}</p>
+            )}
             <ul>
               {queue.tickets.map((ticket) => (
                 <li key={ticket.id}>
@@ -179,6 +210,18 @@ export function OperationsQueue() {
                 </li>
               ))}
             </ul>
+            {queue.next && (
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => {
+                  if (queue.next)
+                    void run({ action: "list", history, cursor: queue.next });
+                }}
+              >
+                Load older reports
+              </button>
+            )}
           </section>
           {detail && (
             <section aria-label="Report details">

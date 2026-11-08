@@ -11,7 +11,7 @@ create table private.operations_tickets (
   unique (reporter_id, request_id)
 );
 create index operations_tickets_reporter_time on private.operations_tickets(reporter_id, created_at desc);
-create index operations_tickets_recent on private.operations_tickets(created_at desc, id desc);
+create index operations_tickets_queue on private.operations_tickets((status = 'resolved'), created_at desc, id desc);
 
 create table private.operations_ticket_events (
   ticket_id uuid not null references private.operations_tickets(id) on delete cascade,
@@ -28,7 +28,8 @@ revoke all on private.operations_tickets, private.operations_ticket_events
 
 create function private.operations_support(
   p_action text, p_id uuid default null, p_feature text default null,
-  p_symptom text default null, p_expected text default null
+  p_symptom text default null, p_expected text default null,
+  p_history boolean default false, p_before timestamptz default null
 ) returns jsonb language plpgsql security definer set search_path = '' as $$
 declare
   actor uuid := auth.uid();
@@ -80,11 +81,25 @@ begin
 
   if private.is_admin() is distinct from true then return '{"state":"forbidden"}'; end if;
   if p_action = 'list' then
-    return jsonb_build_object('state','ready','tickets',coalesce((
-      select jsonb_agg(to_jsonb(t) order by t.created_at desc, t.id desc)
-      from (select id, feature, symptom, status, created_at, updated_at from private.operations_tickets
-        order by created_at desc, id desc limit 50) t
-    ),'[]'::jsonb));
+    if p_history is null or (p_id is null) <> (p_before is null) then
+      return '{"state":"invalid"}';
+    end if;
+    return (
+      with batch as (
+        select id, feature, symptom, status, created_at, updated_at
+        from private.operations_tickets
+        where (status = 'resolved') = p_history
+          and (p_before is null or (created_at, id) < (p_before, p_id))
+        order by created_at desc, id desc limit 51
+      ), page as (
+        select * from batch order by created_at desc, id desc limit 50
+      )
+      select jsonb_build_object('state','ready',
+        'tickets',coalesce((select jsonb_agg(to_jsonb(t) order by created_at desc, id desc) from page t),'[]'::jsonb),
+        'next',case when (select count(*) from batch) > 50 then
+          (select jsonb_build_object('id',id,'before',created_at) from page order by created_at, id limit 1)
+        end)
+    );
   end if;
   if p_action is null or p_action not in ('detail','triage') or p_id is null then
     return '{"state":"invalid"}';
@@ -111,11 +126,12 @@ end $$;
 
 create function public.operations_support(
   p_action text, p_id uuid default null, p_feature text default null,
-  p_symptom text default null, p_expected text default null
+  p_symptom text default null, p_expected text default null,
+  p_history boolean default false, p_before timestamptz default null
 ) returns jsonb language sql security invoker set search_path = '' as $$
-  select private.operations_support(p_action,p_id,p_feature,p_symptom,p_expected);
+  select private.operations_support(p_action,p_id,p_feature,p_symptom,p_expected,p_history,p_before);
 $$;
-revoke all on function private.operations_support(text,uuid,text,text,text),
-  public.operations_support(text,uuid,text,text,text) from public, anon, authenticated, service_role;
-grant execute on function private.operations_support(text,uuid,text,text,text),
-  public.operations_support(text,uuid,text,text,text) to authenticated;
+revoke all on function private.operations_support(text,uuid,text,text,text,boolean,timestamptz),
+  public.operations_support(text,uuid,text,text,text,boolean,timestamptz) from public, anon, authenticated, service_role;
+grant execute on function private.operations_support(text,uuid,text,text,text,boolean,timestamptz),
+  public.operations_support(text,uuid,text,text,text,boolean,timestamptz) to authenticated;
