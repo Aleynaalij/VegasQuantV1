@@ -135,6 +135,65 @@ export function filterEvents(
     ? kept
     : [...kept.filter(covered), ...kept.filter((e) => !covered(e))];
 }
+export type SearchHit = {
+  key: string;
+  event: ResearchEvent;
+  /** The dossier section that holds the match; null for a team-name match. */
+  topic: Exclude<Topic, "all"> | null;
+  /** The exact line that matched (a team pairing, or one line of a report). */
+  line: string;
+};
+/**
+ * What a search actually matched, line by line, so the reader sees "Justin Jefferson: Questionable
+ * (Injuries)" instead of an unexplained game. Same sport/date scope as the list; team matches first,
+ * then report lines, each group in kickoff order.
+ */
+/** A line of at most ~140 characters that always keeps the matched text in view. */
+export function snippet(line: string, q: string, max = 140) {
+  if (line.length <= max) return line;
+  const at = Math.max(0, line.toLocaleLowerCase().indexOf(q));
+  const start = Math.max(0, Math.min(at - 50, line.length - max));
+  const end = Math.min(line.length, start + max);
+  return `${start > 0 ? "…" : ""}${line.slice(start, end).trim()}${end < line.length ? "…" : ""}`;
+}
+export function searchHits(
+  events: ResearchEvent[],
+  findings: Finding[],
+  f: HubFilters,
+): SearchHit[] {
+  const q = f.query.trim().toLocaleLowerCase();
+  if (q.length < 2) return [];
+  const has = (s: string) => s.toLocaleLowerCase().includes(q);
+  const teams: SearchHit[] = [],
+    lines: SearchHit[] = [];
+  for (const e of events) {
+    if (f.sport !== "all" && e.sport !== f.sport) continue;
+    if (f.date && etDay(e.start) !== f.date) continue;
+    if (has(e.away) || has(e.home))
+      teams.push({
+        key: `${e.key}|team`,
+        event: e,
+        topic: null,
+        line: `${e.away} at ${e.home}`,
+      });
+    const seen = new Set<string>();
+    for (const x of findings) {
+      if (x.eventKey !== e.key) continue;
+      for (const raw of [x.title, ...x.text.split("\n")]) {
+        const line = raw.trim();
+        if (!line || !has(line) || seen.has(line)) continue;
+        seen.add(line);
+        lines.push({
+          key: `${e.key}|${x.id}|${line}`,
+          event: e,
+          topic: x.topic,
+          line: snippet(line, q),
+        });
+      }
+    }
+  }
+  return [...teams, ...lines];
+}
 /** Source notices for the sport in view; notices that name no sport always show. */
 export function sportErrors(errors: string[], sport: HubFilters["sport"]) {
   if (sport === "all") return errors;
