@@ -22,6 +22,7 @@ import {
   hubHref,
   filterEvents,
   sportErrors,
+  searchHits,
   eventHref,
   sourceAge,
   type Finding,
@@ -316,6 +317,13 @@ export default function ResearchHub() {
       [data, filters.sport, filters.topic, filters.date, filters.query],
     ),
     errors = sportErrors(data?.errors || [], filters.sport),
+    hits = useMemo(
+      () =>
+        data && !data.denied
+          ? searchHits(data.events, data.findings, filters)
+          : [],
+      [data, filters.sport, filters.date, filters.query],
+    ),
     selected = data?.events.find((e) => e.key === filters.event);
   return (
     <Shell active="feed">
@@ -427,6 +435,50 @@ export default function ResearchHub() {
             </button>
           </div>
         </section>
+        {!filters.event &&
+          filters.query.trim().length >= 2 &&
+          data &&
+          !loading && (
+            <section className="rh-hits" aria-label="Search matches">
+              <h2>
+                {hits.length
+                  ? `${hits.length} ${hits.length === 1 ? "match" : "matches"} for “${filters.query.trim()}”`
+                  : `No team or report line matches “${filters.query.trim()}”`}
+              </h2>
+              {hits.length ? (
+                <ul>
+                  {hits.slice(0, 8).map((h) => (
+                    <li key={h.key}>
+                      <Link
+                        href={hubHref(filters, {
+                          event: h.event.key,
+                          topic: h.topic || filters.topic,
+                        })}
+                      >
+                        <b>{h.line}</b>
+                        <span>
+                          {h.topic ? TOPIC_NAMES[h.topic] : "Team"} ·{" "}
+                          {SPORTS[h.event.sport].label} · {h.event.away} at{" "}
+                          {h.event.home} · {when(h.event.start, h.event.tbd)}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="rh-muted">
+                  {data.denied
+                    ? "Sign in with research access to search reports."
+                    : "Search covers team names and collected reports for the next seven days. Players without a report in this window will not appear."}
+                </p>
+              )}
+              {hits.length > 8 && (
+                <p className="rh-muted">
+                  Showing the first 8. Every matching game is listed below.
+                </p>
+              )}
+            </section>
+          )}
         {loading && (
           <div className="rh-state" role="status">
             <span className="rh-kicker">Opening the desk</span>
