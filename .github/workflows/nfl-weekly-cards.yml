@@ -1,0 +1,39 @@
+name: NFL Sunday cards
+# Sunday mornings: build the WR matchup and defense-vs-position cards from nflverse weekly stats and
+# stage them; the database posts them to the Zone from 7:00 AM ET (private.nfl_weekly_cards_post).
+# Two runs before 7:00 ET in both EST and EDT; staging replaces the set until the first card is posted.
+# Needs repository secrets SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY; without them it does nothing.
+on:
+  schedule:
+    - cron: '17 9,10 * * 0'
+  workflow_dispatch:
+    inputs:
+      day:
+        description: Sunday to stage (YYYY-MM-DD, ET); default today
+        type: string
+        default: ''
+      dry_run:
+        description: Build without staging
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: nfl-weekly-cards
+  cancel-in-progress: false
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Build and stage
+        run: npx tsx scripts/nfl-weekly-cards/run.ts ${{ inputs.day && format('--day={0}', inputs.day) || '' }} ${{ inputs.dry_run && '--dry-run' || '' }} | tee -a "$GITHUB_STEP_SUMMARY"
