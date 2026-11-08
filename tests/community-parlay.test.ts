@@ -10,6 +10,6 @@ test("seven- and twelve-leg community parlays keep every selection on one card",
     assert.equal(card.variant, "parlay");
     assert.match(card.footnote!, /not a Vegas Quant recommendation/);
     assert.equal(card.matchup, `@Member · ${count} legs`);
-    assert.equal(card.paletteKey);
+    assert.equal(card.paletteKey, "Member:2026-10-17T00:00:00Z");
   }
 });
