@@ -1,7 +1,5 @@
-// The Vegas Quant card: one playing-card design for every pick, parlay and result, on the page and
-// as a downloaded image. Each kind has its own "rank" and colors, like a deck:
-//   Pick of the Day = Ace of spades (gold) · a leg = its stat target ("50+") · a parlay = the Joker
-//   Hail Mary = the red Joker · a winning ticket = 21 · a miss = the muted club.
+import { vqCardPalette } from "./vq-card-palette";
+
 export type CardVariant = "pick" | "pod" | "parlay" | "hailmary" | "win" | "miss";
 export type CardLeg = {
   name: string;
@@ -10,8 +8,7 @@ export type CardLeg = {
   status?: "won" | "lost" | "push" | "open";
 };
 export type CasinoCardData = {
-  /** Taller image for long tickets; standard cards keep their existing dimensions. */
-  exportHeight?: number;
+  paletteKey?: string;
   variant: CardVariant;
   eyebrow: string;
   title: string;
@@ -25,27 +22,19 @@ export type CasinoCardData = {
   publishedAt: string;
 };
 
-export type CardTheme = {
-  accent: string;
-  accentSoft: string;
-  gold: string;
-  felt: [string, string];
-  suit: string;
-  suitColor: string;
+const VARIANT_SUITS: Record<CardVariant, string> = {
+  pick: "♠", pod: "♠", parlay: "★", hailmary: "★", win: "♥", miss: "♣",
 };
-const GOLD = "#e8c46a";
-export const THEMES: Record<CardVariant, CardTheme> = {
-  pick: { accent: "#6f9bff", accentSoft: "#6f9bff33", gold: GOLD, felt: ["#14234a", "#070d1c"], suit: "♠", suitColor: "#e4eaf4" },
-  pod: { accent: GOLD, accentSoft: "#e8c46a33", gold: GOLD, felt: ["#1e2240", "#08091a"], suit: "♠", suitColor: GOLD },
-  parlay: { accent: "#a78bfa", accentSoft: "#a78bfa33", gold: GOLD, felt: ["#2a1650", "#0c0620"], suit: "★", suitColor: GOLD },
-  hailmary: { accent: "#ff5d6c", accentSoft: "#ff5d6c33", gold: GOLD, felt: ["#3d0f1d", "#12040a"], suit: "★", suitColor: "#ff5d6c" },
-  win: { accent: "#1ed883", accentSoft: "#1ed88333", gold: GOLD, felt: ["#0b3a2a", "#03140e"], suit: "♥", suitColor: "#ff5d6c" },
-  miss: { accent: "#8a94a8", accentSoft: "#8a94a833", gold: "#a7b0c2", felt: ["#1c2230", "#0a0d14"], suit: "♣", suitColor: "#a7b0c2" },
-};
+export function casinoCardTheme(data: CasinoCardData) {
+  const palette = vqCardPalette(data.paletteKey ?? `${data.variant}:${data.publishedAt}:${data.title}`);
+  return { ...palette, suit: VARIANT_SUITS[data.variant] };
+}
+
 /** Suits cycle down a leg list like a dealt hand. */
 export const LEG_SUITS = ["♠", "♥", "♦", "♣"];
-const RED_SUITS = new Set(["♥", "♦"]);
-export const suitColor = (suit: string) => (RED_SUITS.has(suit) ? "#ff6b78" : "#e4eaf4");
+export const suitColor = (suit: string) =>
+  suit === "♥" || suit === "♦" ? "#e8c46a" : "#a7d2b8";
+export const LEG_RESULT_COLORS = { won: "#8fdbb1", lost: "#e8c46a", push: "#c9c4b8" };
 
 /** The card's corner rank: its stat target for a leg, a playing-card rank otherwise. */
 export function cardRank(d: Pick<CasinoCardData, "variant" | "market">) {
@@ -112,12 +101,6 @@ export function wrapText(
   return lines;
 }
 
-/** Leg rows shrink to fit: 10 legs still fit one card. */
-export function legLayout(count: number, room: number) {
-  const row = Math.max(64, Math.min(116, Math.floor(room / Math.max(count, 1))));
-  return { row, name: Math.round(row * 0.36), market: Math.round(row * 0.28) };
-}
-
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
   ctx.beginPath();
   ctx.moveTo(x + r, y);
@@ -135,19 +118,49 @@ export function drawCasinoCard(
   fonts: { display: string; body: string },
   mark?: CanvasImageSource | null,
 ) {
-  const t = THEMES[d.variant];
-  const W = CARD_W,
-    H = d.exportHeight || CARD_H;
+  const t = casinoCardTheme(d);
+  const W = CARD_W, left = 190, width = W - left * 2;
   const display = (px: number, weight = 800) => `${weight} ${px}px ${fonts.display}`;
   const body = (px: number, weight = 500) => `${weight} ${px}px ${fonts.body}`;
+  const wrap = (value: string, font: string, lineWidth = width) => {
+    ctx.font = font;
+    return wrapText((line) => ctx.measureText(line).width, value, lineWidth);
+  };
+  const titleSize = d.title.length > 34 || d.stamp ? 66 : 82;
+  const eyebrowLines = wrap(d.eyebrow.toUpperCase(), body(28, 800));
+  const titleLines = wrap(d.title, display(titleSize), d.stamp ? width - 250 : width);
+  const marketLines = d.market ? wrap(d.market, display(48, 700)) : [];
+  const matchupLines = d.matchup ? wrap(d.matchup, body(32)) : [];
+  const heroNote = d.hero?.note ? wrap(d.hero.note, body(28, 600), width - 68) : [];
+  const heroHeight = heroNote.length ? 182 + heroNote.length * 36 : 170;
+  const priceLines = d.price ? wrap(d.price, body(30, 800), width - 64) : [];
+  const priceHeight = priceLines.length ? 28 + priceLines.length * 36 : 0;
+  const footLines = d.footnote ? wrap(d.footnote, body(30)) : [];
+  const legs = (d.legs ?? []).map((leg) => {
+    const name = wrap(leg.name, display(44), width - 124);
+    const market = wrap([leg.market, leg.note].filter(Boolean).join(" · "), body(40), width - 124);
+    return { leg, name, market, height: 30 + name.length * 51 + market.length * 48 };
+  });
+  const headerEnd =
+    204 + eyebrowLines.length * 38 + titleLines.length * titleSize * 1.05 +
+    (marketLines.length ? 18 + marketLines.length * 58 : 0) +
+    (matchupLines.length ? 10 + matchupLines.length * 42 : 0) +
+    (d.hero ? 30 + heroHeight : 0) +
+    (priceLines.length ? 34 + priceHeight : 0);
+  const H = Math.max(CARD_H, Math.ceil(
+    headerEnd + (legs.length ? 40 : 0) +
+    legs.reduce((sum, row) => sum + row.height, 0) +
+    footLines.length * 38 + 250,
+  ));
+  ctx.canvas.height = H;
 
   // Table felt behind the card.
-  ctx.fillStyle = "#05070d";
+  ctx.fillStyle = "#0a0a09";
   ctx.fillRect(0, 0, W, H);
   // Card body.
   const felt = ctx.createRadialGradient(W / 2, H * 0.42, 60, W / 2, H / 2, H * 0.75);
-  felt.addColorStop(0, t.felt[0]);
-  felt.addColorStop(1, t.felt[1]);
+  felt.addColorStop(0, t.glow);
+  felt.addColorStop(1, t.base);
   roundRect(ctx, 18, 18, W - 36, H - 36, 56);
   ctx.fillStyle = felt;
   ctx.fill();
@@ -191,13 +204,13 @@ export function drawCasinoCard(
     ctx.textAlign = "center";
     if (rank === "JOKER") {
       ctx.font = display(34, 900);
-      ctx.fillStyle = t.suitColor;
+      ctx.fillStyle = t.gold;
       [..."JOKER"].forEach((ch, i) => ctx.fillText(ch, 0, i * 38));
       ctx.font = display(40, 900);
       ctx.fillText(t.suit, 0, 5 * 38 + 10);
     } else {
       ctx.font = display(rank.length > 2 ? 40 : 64, 900);
-      ctx.fillStyle = t.suitColor;
+      ctx.fillStyle = t.gold;
       ctx.fillText(rank, 0, 0);
       ctx.font = display(54, 900);
       ctx.fillText(t.suit, 0, 62);
@@ -214,22 +227,19 @@ export function drawCasinoCard(
   ctx.restore();
 
   // Content column, clear of the corners.
-  const left = 190,
-    width = W - left * 2;
   ctx.textAlign = "left";
   let y = 170;
   ctx.font = body(28, 800);
   ctx.fillStyle = t.accent;
-  for (const line of wrapText((s) => ctx.measureText(s).width, d.eyebrow.toUpperCase(), width, 2)) {
+  for (const line of eyebrowLines) {
     ctx.fillText(line, left, y);
     y += 38;
   }
   y += 34;
-  const titleSize = d.title.length > 34 || d.stamp ? 66 : 82;
   ctx.font = display(titleSize, 800);
-  ctx.fillStyle = "#f6f8fd";
+  ctx.fillStyle = "#f6f3eb";
   // Leave room for the casino stamp in the top-right corner.
-  for (const line of wrapText((s) => ctx.measureText(s).width, d.title, d.stamp ? width - 250 : width, 3)) {
+  for (const line of titleLines) {
     ctx.fillText(line, left, y + titleSize * 0.8);
     y += titleSize * 1.05;
   }
@@ -237,7 +247,7 @@ export function drawCasinoCard(
     y += 18;
     ctx.font = display(48, 700);
     ctx.fillStyle = t.accent;
-    for (const line of wrapText((s) => ctx.measureText(s).width, d.market, width, 2)) {
+    for (const line of marketLines) {
       ctx.fillText(line, left, y + 40);
       y += 58;
     }
@@ -245,90 +255,81 @@ export function drawCasinoCard(
   if (d.matchup) {
     y += 10;
     ctx.font = body(32, 500);
-    ctx.fillStyle = "#b8c3d8";
-    for (const line of wrapText((s) => ctx.measureText(s).width, d.matchup, width, 2)) {
+    ctx.fillStyle = "#cbc8bb";
+    for (const line of matchupLines) {
       ctx.fillText(line, left, y + 30);
       y += 42;
     }
   }
   if (d.hero) {
     y += 30;
-    const heroH = d.hero.note ? 214 : 170;
-    roundRect(ctx, left, y, width, heroH, 28);
+    roundRect(ctx, left, y, width, heroHeight, 28);
     ctx.fillStyle = "rgba(255,255,255,0.06)";
     ctx.fill();
     ctx.strokeStyle = t.accent + "88";
     ctx.lineWidth = 2;
     ctx.stroke();
     ctx.font = body(26, 700);
-    ctx.fillStyle = "#b8c3d8";
-    ctx.fillText(d.hero.label.toUpperCase(), left + 34, y + 48);
+    ctx.fillStyle = "#cbc8bb";
+    ctx.fillText(d.hero.label.toUpperCase(), left + 34, y + 48, width - 68);
     ctx.font = display(76, 900);
     ctx.fillStyle = t.accent;
-    ctx.fillText(d.hero.value, left + 34, y + 128);
+    ctx.fillText(d.hero.value, left + 34, y + 128, width - 68);
     if (d.hero.note) {
       ctx.font = body(28, 600);
-      ctx.fillStyle = "#dfe6f3";
-      ctx.fillText(wrapText((s) => ctx.measureText(s).width, d.hero.note, width - 68, 1)[0], left + 34, y + 182);
+      ctx.fillStyle = "#e6e2d7";
+      heroNote.forEach((line, i) => ctx.fillText(line, left + 34, y + 182 + i * 36));
     }
-    y += heroH;
+    y += heroHeight;
   }
-  if (d.price) {
+  if (priceLines.length) {
     y += 34;
     ctx.font = body(30, 800);
-    const pw = Math.min(width, ctx.measureText(d.price).width + 64);
-    roundRect(ctx, left, y, pw, 64, 32);
-    ctx.fillStyle = t.accentSoft;
+    const priceWidth = Math.max(...priceLines.map((line) => ctx.measureText(line).width)) + 64;
+    roundRect(ctx, left, y, priceWidth, priceHeight, 32);
+    ctx.fillStyle = t.accent + "33";
     ctx.fill();
     ctx.strokeStyle = t.accent;
     ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.fillStyle = "#f6f8fd";
-    ctx.fillText(wrapText((s) => ctx.measureText(s).width, d.price, width - 64, 1)[0], left + 32, y + 43);
-    y += 64;
+    ctx.fillStyle = "#f6f3eb";
+    priceLines.forEach((line, i) => ctx.fillText(line, left + 32, y + 38 + i * 36));
+    y += priceHeight;
   }
-  ctx.font = body(24, 500);
-  const footLines = d.footnote ? wrapText((s) => ctx.measureText(s).width, d.footnote, width, 2) : [];
-  if (d.legs?.length) {
-    y += 40;
-    const bottom = H - 220 - footLines.length * 32 - (footLines.length ? 20 : 0);
-    const { row, name, market } = legLayout(d.legs.length, bottom - y);
-    d.legs.forEach((leg, i) => {
-      const top = y + i * row;
-      if (top + row > bottom + 4) return;
-      if (i) {
-        ctx.strokeStyle = "rgba(255,255,255,0.08)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(left, top);
-        ctx.lineTo(left + width, top);
-        ctx.stroke();
-      }
-      const suit = LEG_SUITS[i % 4];
-      ctx.font = display(name + 4, 900);
-      ctx.fillStyle = suitColor(suit);
-      ctx.fillText(suit, left, top + row * 0.5);
-      ctx.font = display(name, 800);
-      ctx.fillStyle = "#f6f8fd";
-      ctx.fillText(wrapText((s) => ctx.measureText(s).width, leg.name, width - 150, 1)[0], left + 56, top + row * 0.45);
-      ctx.font = body(market, 500);
-      ctx.fillStyle = "#b8c3d8";
-      const sub = leg.note ? `${leg.market} · ${leg.note}` : leg.market;
-      ctx.fillText(wrapText((s) => ctx.measureText(s).width, sub, width - 150, 1)[0], left + 56, top + row * 0.8);
-      if (leg.status && leg.status !== "open") {
-        const mark = leg.status === "won" ? "✓" : leg.status === "lost" ? "✕" : "–";
-        ctx.beginPath();
-        ctx.arc(left + width - 30, top + row * 0.52, Math.min(30, row * 0.3), 0, Math.PI * 2);
-        ctx.fillStyle = leg.status === "won" ? "#1ed883" : leg.status === "lost" ? "#ff5d6c" : "#8a94a8";
-        ctx.fill();
-        ctx.font = display(Math.min(34, row * 0.34), 900);
-        ctx.fillStyle = "#06120d";
-        ctx.textAlign = "center";
-        ctx.fillText(mark, left + width - 30, top + row * 0.52 + Math.min(12, row * 0.12));
-        ctx.textAlign = "left";
-      }
-    });
-  }
+  if (legs.length) y += 40;
+  legs.forEach(({ leg, name, market, height }, i) => {
+    if (i) {
+      ctx.strokeStyle = "rgba(255,255,255,0.08)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(left, y);
+      ctx.lineTo(left + width, y);
+      ctx.stroke();
+    }
+    const suit = LEG_SUITS[i % LEG_SUITS.length];
+    ctx.font = display(44, 900);
+    ctx.fillStyle = suitColor(suit);
+    ctx.fillText(suit, left, y + 51);
+    ctx.font = display(44);
+    ctx.fillStyle = "#f6f3eb";
+    name.forEach((line, n) => ctx.fillText(line, left + 56, y + 51 + n * 51));
+    ctx.font = body(40);
+    ctx.fillStyle = "#cbc8bb";
+    market.forEach((line, n) => ctx.fillText(line, left + 56, y + 50 + name.length * 51 + n * 48));
+    if (leg.status && leg.status !== "open") {
+      const mark = leg.status === "won" ? "✓" : leg.status === "lost" ? "✕" : "–";
+      ctx.beginPath();
+      ctx.arc(left + width - 30, y + 38, 26, 0, Math.PI * 2);
+      ctx.fillStyle = LEG_RESULT_COLORS[leg.status];
+      ctx.fill();
+      ctx.font = display(32, 900);
+      ctx.fillStyle = "#06120d";
+      ctx.textAlign = "center";
+      ctx.fillText(mark, left + width - 30, y + 50);
+      ctx.textAlign = "left";
+    }
+    y += height;
+  });
 
   // Casino stamp.
   if (d.stamp) {
@@ -353,16 +354,16 @@ export function drawCasinoCard(
 
   // Footer: brand and publication time; footnote above it.
   if (footLines.length) {
-    ctx.font = body(24, 500);
-    ctx.fillStyle = "#8f9bb2";
-    footLines.forEach((line, i) => ctx.fillText(line, left, H - 205 - (footLines.length - 1 - i) * 32));
+    ctx.font = body(30, 500);
+    ctx.fillStyle = "#bdb9ad";
+    footLines.forEach((line, i) => ctx.fillText(line, left, H - 205 - (footLines.length - 1 - i) * 38));
   }
   ctx.font = display(30, 900);
   ctx.fillStyle = t.gold;
   ctx.textAlign = "center";
   ctx.fillText("VEGAS QUANT", W / 2, H - 132);
   ctx.font = body(24, 600);
-  ctx.fillStyle = "#8f9bb2";
+  ctx.fillStyle = "#bdb9ad";
   const when = stampTime(d.publishedAt);
   ctx.fillText(`vegasquant.app${when ? `  ·  ${when}` : ""}`, W / 2, H - 96);
   ctx.textAlign = "left";

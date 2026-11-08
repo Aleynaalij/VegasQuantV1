@@ -1,12 +1,7 @@
-import { isSport, type Sport } from "./sports";
+import { isSport } from "./sports";
 
 export const AUTOMATED_CARD = "vq-publication:v1";
-export const PUBLICATION_COLORS = {
-  nfl: { accent: "#c8decf", glow: "#244b3b", label: "NFL" },
-  nba: { accent: "#e7cb82", glow: "#244b3b", label: "NBA" },
-  nhl: { accent: "#b7dad5", glow: "#244b3b", label: "NHL" },
-  ncaab: { accent: "#d5d8b5", glow: "#244b3b", label: "COLLEGE" },
-} satisfies Record<Sport, { accent: string; glow: string; label: string }>;
+export const PUBLICATION_LABELS = { nfl: "NFL", nba: "NBA", nhl: "NHL", ncaab: "COLLEGE" };
 export type PublicationPost = {
   id: string;
   title: string;
@@ -62,23 +57,13 @@ export function wrapCardText(
   }
   return lines;
 }
-export function publicationPages(p: PublicationPost) {
-  const titleLines = wrapCardText(p.title, 60);
-  // Bound even unusually long titles, without dropping a word or crowding body/footer text.
-  const titles: string[][] = [];
-  for (let n = 0; n < titleLines.length; n += 3)
-    titles.push(titleLines.slice(n, n + 3));
-  const extra = p.legs.filter((l) => !p.body.includes(l));
-  const lines = wrapCardText([...extra, p.body].join("\n\n"), 56);
-  const pages: { title: string[]; lines: string[]; start: number }[] = [];
-  for (const title of titles.slice(0, -1))
-    pages.push({ title, lines: [], start: 552 });
-  const title = titles.at(-1) || [""];
-  const start = 260 + title.length * 72 + 96;
-  const capacity = Math.max(1, Math.floor((1180 - start) / 70) + 1);
-  for (let n = 0; n < lines.length; n += capacity)
-    pages.push({ title, lines: lines.slice(n, n + capacity), start });
-  return pages;
+export function publicationLayout(p: PublicationPost, watchlist = false) {
+  const title = wrapCardText(p.title, 60);
+  const extra = p.legs.filter((leg) => !p.body.includes(leg));
+  const lines = watchlist ? [] : wrapCardText([...extra, p.body].join("\n\n"), 56);
+  const start = watchlist ? 454 : 260 + title.length * 72 + 96;
+  const height = Math.max(1350, start + Math.max(0, lines.length - 1) * 70 + 170);
+  return { title, lines, start, height };
 }
 export function publicationStamp(at: string) {
   if (!Number.isFinite(Date.parse(at))) return "Publication time unavailable";

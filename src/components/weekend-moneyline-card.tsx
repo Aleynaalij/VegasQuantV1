@@ -17,7 +17,7 @@ export default function WeekendMoneylineCard() {
     return () => { clearInterval(timer); window.removeEventListener("focus", update); };
   }, []);
   const face: CasinoCardData = {
-    variant: "parlay", exportHeight: 2200, eyebrow: "12-leg moneyline · Sunday predictions",
+    variant: "parlay", eyebrow: "12-leg moneyline · Sunday predictions",
     title: card.title, matchup: "October 18 · Every Sunday matchup",
     legs: card.legs.map(l => ({ name: l.name, market: "Moneyline", note: l.matchup })),
     footnote: "One-time analyst predictions · No validated edge claimed. Every leg must win.",

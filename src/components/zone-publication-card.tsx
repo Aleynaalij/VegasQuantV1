@@ -3,13 +3,14 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { MARK_PATHS } from "./brand-mark";
 import GamblyLink from "./gambly-link";
 import {
-  PUBLICATION_COLORS,
+  PUBLICATION_LABELS,
   publicationCopy,
-  publicationPages,
+  publicationLayout,
   publicationStamp,
   watcherRows,
   type PublicationPost,
 } from "@/lib/zone-publication-card";
+import { vqCardPalette } from "@/lib/vq-card-palette";
 import { isSport } from "@/lib/sports";
 import "./zone-publication-card.css";
 
@@ -20,33 +21,24 @@ export default function ZonePublicationCard({
 }: {
   post: PublicationPost;
 }) {
-  const [page, setPage] = useState(0),
-    [copied, setCopied] = useState(false),
+  const [copied, setCopied] = useState(false),
     [error, setError] = useState(""),
     [manual, setManual] = useState(false),
     [busy, setBusy] = useState(false),
-    [exported, setExported] = useState<{ url: string; page: number } | null>(
-      null,
-    );
+    [exported, setExported] = useState("");
   const id = useId().replace(/[^a-zA-Z0-9]/g, ""),
     watchers = useMemo(() => watcherRows(p), [p]),
-    pages = useMemo(
-      () =>
-        watchers
-          ? [{ title: [p.title], lines: [], start: 454 }]
-          : publicationPages(p),
-      [p, watchers],
-    );
+    layout = useMemo(() => publicationLayout(p, !!watchers), [p, watchers]);
   useEffect(
     () => () => {
-      if (exported) URL.revokeObjectURL(exported.url);
+      if (exported) URL.revokeObjectURL(exported);
     },
     [exported],
   );
   if (!isSport(p.sport)) return null;
-  const theme = PUBLICATION_COLORS[p.sport],
-    index = Math.min(page, pages.length - 1),
-    current = pages[index];
+  const theme = vqCardPalette(p.id);
+  const label = PUBLICATION_LABELS[p.sport];
+  const { title, lines, start, height } = layout;
   const headline = watchers
     ? "WATCHLIST"
     : p.legs.length
@@ -85,20 +77,20 @@ export default function ZonePublicationCard({
       ]);
       const canvas = document.createElement("canvas");
       canvas.width = 1080;
-      canvas.height = 1350;
+      canvas.height = height;
       const c = canvas.getContext("2d");
       if (!c) throw Error("Canvas unavailable");
-      c.fillStyle = "#10271f";
-      c.fillRect(0, 0, 1080, 1350);
+      c.fillStyle = theme.base;
+      c.fillRect(0, 0, 1080, height);
       const glow = c.createRadialGradient(540, -135, 0, 540, -135, 950);
       glow.addColorStop(0, theme.glow);
-      glow.addColorStop(1, "#10271f");
+      glow.addColorStop(1, theme.base);
       c.fillStyle = glow;
-      c.fillRect(0, 0, 1080, 1350);
+      c.fillRect(0, 0, 1080, height);
       c.strokeStyle = theme.accent + "66";
       c.lineWidth = 2;
       c.beginPath();
-      c.roundRect(28, 28, 1024, 1294, 28);
+      c.roundRect(28, 28, 1024, height - 56, 28);
       c.stroke();
       c.save();
       c.translate(74, 70);
@@ -126,22 +118,22 @@ export default function ZonePublicationCard({
       c.beginPath();
       c.roundRect(800, 76, 206, 40, 20);
       c.stroke();
-      text(theme.label, 828, 103, 20, theme.accent, 700);
+      text(label, 828, 103, 20, theme.accent, 700);
       text(headline, 74, 204, 40, theme.accent, 800, body);
-      current.title.forEach((line, n) =>
+      title.forEach((line, n) =>
         text(line, 74, 260 + n * 72, 60, "#f5eedd", 700),
       );
       text(
-        `${stamp} · ${index + 1} / ${pages.length}`,
+        stamp,
         74,
-        current.start - 110,
+        start - 110,
         40,
         "#c2cdbf",
       );
       c.strokeStyle = theme.accent + "55";
       c.beginPath();
-      c.moveTo(74, current.start - 80);
-      c.lineTo(1006, current.start - 80);
+      c.moveTo(74, start - 80);
+      c.lineTo(1006, start - 80);
       c.stroke();
       if (watchers) {
         text("LINE", 74, 464, 22, theme.accent, 700);
@@ -155,18 +147,18 @@ export default function ZonePublicationCard({
           );
         }
       }
-      current.lines.forEach((line, n) =>
-        text(line, 74, current.start + n * 70, 56, "#e0e9df"),
+      lines.forEach((line, n) =>
+        text(line, 74, start + n * 70, 56, "#e0e9df"),
       );
-      text(footer, 74, 1246, 24, "#c2cdbf");
-      text("VEGASQUANT.APP", 74, 1284, 24, theme.accent, 700);
+      text(footer, 74, height - 104, 24, "#c2cdbf");
+      text("VEGASQUANT.APP", 74, height - 66, 24, theme.accent, 700);
       const blob = await new Promise<Blob>((ok, fail) =>
         canvas.toBlob(
           (b) => (b ? ok(b) : fail(Error("Export failed"))),
           "image/png",
         ),
       );
-      setExported({ url: URL.createObjectURL(blob), page: index });
+      setExported(URL.createObjectURL(blob));
     } catch (cause) {
       console.error("Vegas Quant card export failed", cause);
       setError("The card could not download. Please retry.");
@@ -178,16 +170,17 @@ export default function ZonePublicationCard({
     <section
       className="zone-publication"
       data-sport={p.sport}
-      aria-label={`${theme.label} Vegas Quant publication`}
+      data-palette={theme.name}
+      aria-label={`${label} Vegas Quant publication`}
     >
       <p className="publication-time">
         {stamp} · Publication time, not a price observation.
       </p>
       <svg
         className="zone-publication-face"
-        viewBox="0 0 1080 1350"
+        viewBox={`0 0 1080 ${height}`}
         role="img"
-        aria-label={`${p.title}. ${stamp}. Page ${index + 1} of ${pages.length}. ${watchers ? p.body : current.lines.join(" ")}`}
+        aria-label={`${p.title}. ${stamp}. ${watchers ? p.body : lines.join(" ")}`}
       >
         <defs>
           <radialGradient
@@ -198,16 +191,16 @@ export default function ZonePublicationCard({
             r="950"
           >
             <stop stopColor={theme.glow} />
-            <stop offset="1" stopColor="#10271f" />
+            <stop offset="1" stopColor={theme.base} />
           </radialGradient>
         </defs>
-        <rect width="1080" height="1350" fill="#10271f" />
-        <rect width="1080" height="1350" fill={`url(#${id})`} />
+        <rect width="1080" height={height} fill={theme.base} />
+        <rect width="1080" height={height} fill={`url(#${id})`} />
         <rect
           x="28"
           y="28"
           width="1024"
-          height="1294"
+          height={height - 56}
           rx="28"
           fill="none"
           stroke={theme.accent + "66"}
@@ -237,7 +230,7 @@ export default function ZonePublicationCard({
           fill={theme.accent}
           fontWeight="700"
         >
-          {theme.label}
+          {label}
         </text>
         <text
           x="74"
@@ -247,7 +240,7 @@ export default function ZonePublicationCard({
         >
           {headline}
         </text>
-        {current.title.map((line, n) => (
+        {title.map((line, n) => (
           <text
             key={n}
             x="74"
@@ -259,11 +252,11 @@ export default function ZonePublicationCard({
             {line}
           </text>
         ))}
-        <text x="74" y={current.start - 110} fontSize="40" fill="#c2cdbf">
-          {stamp} · {index + 1} / {pages.length}
+        <text x="74" y={start - 110} fontSize="40" fill="#c2cdbf">
+          {stamp}
         </text>
         <path
-          d={`M74 ${current.start - 80} H1006`}
+          d={`M74 ${start - 80} H1006`}
           stroke={theme.accent + "55"}
         />
         {watchers && (
@@ -315,23 +308,23 @@ export default function ZonePublicationCard({
             ))}
           </g>
         )}
-        {current.lines.map((line, n) => (
+        {lines.map((line, n) => (
           <text
             key={n}
             x="74"
-            y={current.start + n * 70}
+            y={start + n * 70}
             fontSize="56"
             fill="#e0e9df"
           >
             {line}
           </text>
         ))}
-        <text x="74" y="1246" fontSize="24" fill="#c2cdbf">
+        <text x="74" y={height - 104} fontSize="24" fill="#c2cdbf">
           {footer}
         </text>
         <text
           x="74"
-          y="1284"
+          y={height - 66}
           fontSize="24"
           fill={theme.accent}
           fontWeight="700"
@@ -339,32 +332,6 @@ export default function ZonePublicationCard({
           VEGASQUANT.APP
         </text>
       </svg>
-      {pages.length > 1 && (
-        <div
-          className="publication-controls"
-          aria-label="Publication card pages"
-        >
-          <button
-            type="button"
-            className="secondary"
-            disabled={index === 0}
-            onClick={() => setPage(index - 1)}
-          >
-            Previous card
-          </button>
-          <span aria-live="polite">
-            {index + 1} / {pages.length}
-          </span>
-          <button
-            type="button"
-            className="secondary"
-            disabled={index === pages.length - 1}
-            onClick={() => setPage(index + 1)}
-          >
-            Next card
-          </button>
-        </div>
-      )}
       <div className="publication-controls">
         <button
           type="button"
@@ -372,9 +339,7 @@ export default function ZonePublicationCard({
           disabled={busy}
           onClick={() => void download()}
         >
-          {busy
-            ? "Creating card…"
-            : `Download card${pages.length > 1 ? ` ${index + 1}` : ""}`}
+          {busy ? "Creating card…" : "Download card"}
         </button>
         {!!p.legs.length && (
           <>
@@ -397,15 +362,15 @@ export default function ZonePublicationCard({
         <div className="publication-controls">
           <a
             className="primary"
-            href={exported.url}
-            download={`vegas-quant-${p.sport}-${p.id}-${exported.page + 1}.png`}
+            href={exported}
+            download={`vegas-quant-${p.sport}-${p.id}.png`}
           >
-            Save image · Card {exported.page + 1}
+            Save image
           </a>
           <button
             type="button"
             className="secondary"
-            onClick={() => setExported(null)}
+            onClick={() => setExported("")}
           >
             Close download
           </button>

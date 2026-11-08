@@ -28,7 +28,7 @@ export async function GET(
           flexDirection: "column",
           width: "100%",
           height: "100%",
-          background: "#0b1016",
+          background: "#0a0a09",
           color: "#eef2ee",
           padding: 70,
           fontFamily: "sans-serif",

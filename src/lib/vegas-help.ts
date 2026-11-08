@@ -393,7 +393,7 @@ export const helpTopics: HelpTopic[] = [
       "share card",
     ],
     answer:
-      "Use Download card on supported published cards in The Zone. It generates watermarked Vegas Quant images in phone-sized 9:16 pages; browse the pages and choose Download this page or the available multi-page export. This is a designed card, not a long page screenshot. Member slips can be posted separately in Community. A watermark identifies the brand but cannot prevent screenshots or copying.",
+      "Use Download card on supported published cards in The Zone. It generates one watermarked Vegas Quant PNG. Longer cards grow to fit the full content. Open the preview and choose Save image. Member slips can be posted separately in Community. A watermark identifies the brand but cannot prevent screenshots or copying.",
     href: "/feed",
     link: "Download a published card",
   },

@@ -108,22 +108,12 @@ export default function WeeklyPerformance() {
     { label: "Pushes / voids", result: "OTHER", symbol: "—" },
     { label: "Pending verification", result: "PENDING", symbol: "…" },
   ];
-  const cardGroups = sections.map((s) => {
-    const legs = p.legs.filter((l) =>
-      s.result === "OTHER"
-        ? ["PUSH", "VOID"].includes(l.result)
-        : l.result === s.result,
-    );
-    if (!legs.length && s.result !== "WIN" && s.result !== "LOSS") return [];
-    return Array.from(
-      { length: Math.max(1, Math.ceil(legs.length / 6)) },
-      (_, i) => ({ ...s, page: i + 1, legs: legs.slice(i * 6, i * 6 + 6) }),
-    );
-  });
-  const cards = Array.from(
-    { length: Math.max(...cardGroups.map((g) => g.length)) },
-    (_, i) => cardGroups.flatMap((g) => (g[i] ? [g[i]] : [])),
-  ).flat();
+  const cards = sections.map((s) => ({
+    ...s,
+    legs: p.legs.filter((l) =>
+      s.result === "OTHER" ? ["PUSH", "VOID"].includes(l.result) : l.result === s.result,
+    ),
+  })).filter((s) => s.legs.length || s.result === "WIN" || s.result === "LOSS");
   const coverage = `${p.pending} bound targets pending · ${p.unresolved_publications} publications with unresolved game identity excluded · ${p.excluded_publications} watchlist/ticket/unclassified publications excluded · ${p.duplicates_removed} duplicates removed.`;
   return (
     <Panel title="Weekly platform performance">
@@ -166,22 +156,10 @@ export default function WeeklyPerformance() {
         unresolved entries stay outside the hit-rate denominator. This is not a
         parlay win rate or ROI.
       </p>
-      <div
-        tabIndex={0}
-        className="weekly-card-strip"
-        aria-label="Swipe through weekly hits and misses"
-      >
+      <article className="weekly-flashcard" aria-label="Weekly hits and misses">
+        <header><BrandMark /> VEGAS QUANT · THE RECORD</header>
         {cards.map((c) => (
-          <article
-            className={`weekly-flashcard ${c.result === "LOSS" ? "weekly-misses" : ""}`}
-            key={`${c.result}:${c.page}`}
-          >
-            <header>
-              <BrandMark /> VEGAS QUANT · THE RECORD
-            </header>
-            <p className="eyebrow">
-              {c.label} · Card {c.page}
-            </p>
+          <section className={c.result === "LOSS" ? "weekly-misses" : ""} key={c.result}>
             <h3>{c.label}</h3>
             {c.legs.length ? (
               <ol>
@@ -213,11 +191,10 @@ export default function WeeklyPerformance() {
             ) : (
               <p>No verified {c.label.toLowerCase()} in this snapshot.</p>
             )}
-            <footer>VegasQuant · Learn from the process.</footer>
-          </article>
+          </section>
         ))}
-      </div>
-      <p>Swipe to see every card →</p>
+        <footer>VegasQuant · Learn from the process.</footer>
+      </article>
       <details>
         <summary>Coverage and counting rules</summary>
         <p>{coverage}</p>
@@ -238,7 +215,7 @@ export default function WeeklyPerformance() {
             text: `${p.wins} hits · ${p.losses} misses · ${p.pushes} pushes · ${p.voids} voids. ${settled ? `${((100 * p.wins) / settled).toFixed(1)}% (${p.wins}/${settled})` : "No verified hit rate"}. Not a parlay win rate or ROI.`,
           },
           ...cards.map((c) => ({
-            heading: `${c.label} · Card ${c.page}`,
+            heading: c.label,
             text:
               c.legs
                 .map(
