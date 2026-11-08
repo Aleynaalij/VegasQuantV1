@@ -50,6 +50,7 @@ import ReactionPicker, { useTypedReactions, type TypedReactions } from "./reacti
 import { nextReaction } from "@/lib/community-reaction-contracts";
 import "@/app/reaction-picker.css";
 import "@/app/zone-entry.css";
+import { VoteControl, useZoneVotes } from "./zone-votes";
 type Post = {
   id: string;
   user_id: string;
@@ -1023,6 +1024,12 @@ export default function CommunityFeed() {
   const typed = useTypedReactions((id, st) =>
     setRows((all) => all.map((x) => (x.id === id ? { ...x, reactions: st.total, reacted: st.mine !== null } : x))),
   );
+  // Reddit-style up/down votes for the posts on screen, reloaded on every feed load.
+  const votes = useZoneVotes(
+    rows.map((x) => x.id),
+    uid,
+    rows,
+  );
   // VIP lays (ruby cards) keep their own reaction states; counts come from those states.
   const layReactions = useTypedReactions(() => {}, "card");
   // Runs on every feed load or refresh (each sets a new lays array), so a failed read is retried
@@ -1771,6 +1778,20 @@ export default function CommunityFeed() {
                         </small>
                       ) : null}
                       <div className="zone-actions">
+                        {votes.states[p.id] ? (
+                          <VoteControl
+                            state={votes.states[p.id]}
+                            busy={votes.pending === p.id}
+                            onVote={(v) =>
+                              void votes.vote(p.id, v).then((ok) => {
+                                if (ok === false)
+                                  setNotice(
+                                    "Your vote didn't save. Check you're signed in with a visible profile, then retry.",
+                                  );
+                              })
+                            }
+                          />
+                        ) : null}
                         {(() => {
                           // Lit only for a confirmed Like: with typed reactions, another emoji is
                           // not a Like; without them (API not deployed), the old any-reaction flag.
