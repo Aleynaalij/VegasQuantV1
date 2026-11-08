@@ -59,3 +59,11 @@ test("membership form guards double submits and offers a cooldown resend of the 
     /e instanceof Error \? e\.message : "Sign in failed\."/,
   );
 });
+
+test("sign-up form warns under the email field that the confirmation can land in spam", () => {
+  const src = readFileSync("src/components/membership.tsx", "utf8");
+  assert.match(
+    src,
+    /\{signup && \(\s*<small>\s*We’ll email you a confirmation link\. It can land in spam or\s*junk/,
+  );
+});
