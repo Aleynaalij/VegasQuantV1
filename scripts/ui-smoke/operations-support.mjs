@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { chromium } from "playwright";
 
 const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
@@ -8,35 +9,43 @@ const browser = await chromium.launch({
 const id = "00000000-0000-4000-8000-000000000010";
 const time = "2026-11-08T10:00:00Z";
 const errors = [];
+const appVersion = readFileSync(
+  "src/components/app-refresh-notice.tsx",
+  "utf8",
+).match(/const VERSION = "([^"]+)"/)[1];
 
 async function fixture(width, role) {
   const context = await browser.newContext({
     viewport: { width, height: 900 },
     serviceWorkers: "block",
   });
-  await context.addInitScript((access) => {
-    sessionStorage.setItem("vq-prompt-shown", "fixture");
-    if (!access) return;
-    const uid = "00000000-0000-4000-8000-000000000001";
-    localStorage.setItem(
-      `vq-push-prompt:${uid}`,
-      String(Date.now() + 86400000),
-    );
-    localStorage.setItem(
-      "sb-127-auth-token",
-      JSON.stringify({
-        access_token: access,
-        refresh_token: "fixture",
-        expires_at: Math.floor(Date.now() / 1000) + 86400,
-        user: {
-          id: uid,
-          email: "fixture@example.test",
-          user_metadata: { vq_welcome_version: 1 },
-          app_metadata: {},
-        },
-      }),
-    );
-  }, role);
+  await context.addInitScript(
+    ({ access, version }) => {
+      sessionStorage.setItem("vq-prompt-shown", "fixture");
+      if (!access) return;
+      const uid = "00000000-0000-4000-8000-000000000001";
+      localStorage.setItem(`vq-app-refresh:${uid}`, version);
+      localStorage.setItem(
+        `vq-push-prompt:${uid}`,
+        String(Date.now() + 86400000),
+      );
+      localStorage.setItem(
+        "sb-127-auth-token",
+        JSON.stringify({
+          access_token: access,
+          refresh_token: "fixture",
+          expires_at: Math.floor(Date.now() / 1000) + 86400,
+          user: {
+            id: uid,
+            email: "fixture@example.test",
+            user_metadata: { vq_welcome_version: 1 },
+            app_metadata: {},
+          },
+        }),
+      );
+    },
+    { access: role, version: appVersion },
+  );
   await context.route("**/rest/v1/**", async (route) => {
     const path = new URL(route.request().url()).pathname;
     const result = path.endsWith("age_verification_status")
@@ -45,7 +54,9 @@ async function fixture(width, role) {
         ? { allowed: true, admin: role === "admin" }
         : path.endsWith("notification_inbox")
           ? { items: [], snapshot_at: time }
-          : [];
+          : path.endsWith("community_profiles")
+            ? [{ username: "FixtureMember", avatar: "ruby" }]
+            : [];
     await route.fulfill({ json: result });
   });
   const calls = [];
