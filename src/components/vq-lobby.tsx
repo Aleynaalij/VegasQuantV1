@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, type ReactNode } from "react";
-import { ArrowRight, Grid2X2, Plus, Diamond } from "lucide-react";
+import { ArrowRight, Grid2X2, Plus, Users, MessageCircle } from "lucide-react";
 import { Shell } from "./ui";
 import VqTonight from "./vq-tonight";
 import LobbyIntelligence from "./lobby-intelligence";
@@ -17,6 +17,7 @@ import { NhlChipHold } from "./frank-anniversary-gate";
 import { liveSports, SPORTS, type Sport } from "@/lib/sports";
 import type { Game } from "@/lib/domain";
 import "@/app/vq-lobby.css";
+
 
 // What each desk actually offers, in plain words (no counts, availability or results implied).
 const DESK: Record<Sport, string> = {
@@ -67,6 +68,7 @@ export default function VqLobby({ nflGames, nflUnavailable = false }: { nflGames
         <p className="vq-lobby-lede">
           Research with reasons and risks, across every sport.
         </p>
+        <ZoneSpotlight />
         <h2 className="vq-lobby-section-title">Sports rooms</h2>
         <nav className="vq-lobby-desks" aria-label="Sport desks">
           {liveSports().map((key) => {
@@ -127,13 +129,36 @@ export default function VqLobby({ nflGames, nflUnavailable = false }: { nflGames
           body="Start a new lay from the current NFL player legs. Nothing is placed or shared unless you choose to."
         />
         <LobbyTool
-          href="/slots"
-          icon={<Diamond aria-hidden="true" />}
-          title="VQ Slots"
-          body="Spin up a random set of legs from the current board, for fun. Not a recommendation."
+          href="/community"
+          icon={<Users aria-hidden="true" />}
+          title="The Zone"
+          body="Talk tonight’s games with the Vegas Quant community: takes, research cards and reactions."
         />
       </section>
     </Shell>
+  );
+}
+
+/** The Zone is Home's focal point: a glowing invitation right under the headline. */
+function ZoneSpotlight() {
+  return (
+    <Link href="/community" className="vq-zone-spotlight">
+      <span className="vq-zone-spotlight-icon" aria-hidden="true">
+        <MessageCircle size={24} />
+        <i />
+      </span>
+      <span className="vq-zone-spotlight-copy">
+        <small>THE COMMUNITY IS LIVE</small>
+        <b>Enter The Zone</b>
+        <span>
+          Talk every game with Vegas Quant members: takes, research cards
+          and reactions.
+        </span>
+      </span>
+      <span className="vq-zone-spotlight-cta">
+        Join the conversation <ArrowRight size={18} aria-hidden="true" />
+      </span>
+    </Link>
   );
 }
 

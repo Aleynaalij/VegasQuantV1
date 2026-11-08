@@ -1,5 +1,6 @@
 import Link from "next/link";
 import "@/app/sports-switcher.css";
+import "@/app/zone-focus.css";
 import BrandMark from "./brand-mark";
 import InstallApp from "./install-app";
 import { NotificationBell as UpdateInbox } from "./notification-provider";
@@ -110,7 +111,6 @@ export function Shell({
   const home = SPORTS[sport].home;
   const community =
     sport === "nfl" ? "/community" : `/community?sport=${sport}`;
-  const feed = "/slots";
   const records =
     sport === "nfl" ? "/history" : `${SPORTS[sport].home}/records`;
   const sportSection = [
@@ -181,21 +181,14 @@ export function Shell({
             Home
           </Link>
           <Link
-            aria-current={active === "slots" ? "page" : undefined}
-            className={`feed-nav-link ${active === "slots" ? "active" : ""}`}
-            href={feed}
-          >
-            <span className="vq-slots-nav-icon" aria-hidden="true">
-              ♦<i />
-            </span>
-            VQ Slots
-          </Link>
-          <Link
             aria-current={active === "community" ? "page" : undefined}
-            className={active === "community" ? "active" : ""}
+            className={`vq-zone-nav ${active === "community" ? "active" : ""}`}
             href={community}
           >
-            <Users size={19} />
+            <span className="vq-zone-nav-icon" aria-hidden="true">
+              <Users size={19} />
+              <i />
+            </span>
             The Zone
           </Link>
           <AdminOnly>
@@ -412,21 +405,14 @@ export function Shell({
             Home
           </Link>
           <Link
-            aria-current={active === "slots" ? "page" : undefined}
-            className={`feed-nav-link ${active === "slots" ? "active" : ""}`}
-            href={feed}
-          >
-            <span className="vq-slots-nav-icon" aria-hidden="true">
-              ♦<i />
-            </span>
-            VQ Slots
-          </Link>
-          <Link
             aria-current={active === "community" ? "page" : undefined}
-            className={active === "community" ? "active" : ""}
+            className={`vq-zone-nav ${active === "community" ? "active" : ""}`}
             href={community}
           >
-            <Users size={19} />
+            <span className="vq-zone-nav-icon" aria-hidden="true">
+              <Users size={19} />
+              <i />
+            </span>
             The Zone
           </Link>
           <AdminOnly>

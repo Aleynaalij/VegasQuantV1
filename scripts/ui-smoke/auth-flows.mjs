@@ -7,14 +7,14 @@
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
-// Negative controls for reviewers (UI_SMOKE_NEGATIVE): "nav-tab" hides the VQ Slots tab in both navs;
+// Negative controls for reviewers (UI_SMOKE_NEGATIVE): "nav-tab" hides The Zone tab in both navs;
 // "retry" makes every Retry button do nothing. A correct run of this script must then FAIL.
 const NEGATIVE = process.env.UI_SMOKE_NEGATIVE || "";
 const sabotage = (ctx) => NEGATIVE && ctx.addInitScript((mode) => {
   // Hidden with CSS rather than removed, so React hydration is untouched.
   if (mode === "nav-tab") document.addEventListener("DOMContentLoaded", () => {
     const s = document.createElement("style");
-    s.textContent = '.mobile-nav a[href="/slots"], .sidebar a[href="/slots"] { display: none !important; }';
+    s.textContent = '.mobile-nav a[href="/community"], .sidebar a[href="/community"] { display: none !important; }';
     document.head.append(s);
   });
   if (mode === "retry") window.addEventListener("click", (e) => {
@@ -244,9 +244,9 @@ const shows = (page, t) => page.waitForFunction((t) => { document.querySelectorA
 
 // Signed-in navigation through the phone nav's required tabs. A missing tab fails; it is never
 // replaced by loading the route directly.
-await scenario("signed-in navigation: Zone, Slots, Account, Home", {}, async ({ page, go, fail }) => {
+await scenario("signed-in navigation: Zone, Account, Home", {}, async ({ page, go, fail }) => {
   await go("/");
-  for (const [href, name, expect] of [["/community", "The Zone", "The Zone"], ["/slots", "VQ Slots", "Slots"], ["/membership", "Account", "Your account."], ["/", "Home", "Your sports research starts here."]]) {
+  for (const [href, name, expect] of [["/community", "The Zone", "The Zone"], ["/membership", "Account", "Your account."], ["/", "Home", "Your sports research starts here."]]) {
     // One-time prompts open after load and are excluded by the fixture member's saved choices; close any left.
     await page.waitForTimeout(1000);
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
