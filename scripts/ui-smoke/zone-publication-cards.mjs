@@ -35,6 +35,15 @@ const posts = ["nfl", "nba", "nhl", "ncaab"].map((sport, i) => ({
   reacted: false,
   photo_path: null,
 }));
+// The owner's reported long WR post, reproduced locally with synthetic source URLs.
+const research = JSON.parse(readFileSync("tests/fixtures/research-publication.json", "utf8"));
+posts.push({ ...posts[0], ...research });
+const longResearch = {
+  ...posts[0], id: "long-research", legs: [],
+  title: "Long research report ".repeat(30),
+  body: "A report paragraph with original context. ".repeat(200) + "\n\nFinal caveat remains reachable.\n\nhttps://example.com/" + "W".repeat(1000),
+};
+posts.push(longResearch);
 posts.push(
   {
     ...posts[0],
@@ -162,7 +171,7 @@ try {
     await p.locator(".zone-publication").first().waitFor();
     await p.evaluate(() => document.fonts.ready);
     await p.locator(".vq-brand-opening").waitFor({ state: "hidden" });
-    assert.equal(await p.locator(".zone-publication").count(), 4);
+    assert.equal(await p.locator(".zone-publication").count(), 6);
     assert.equal(sheetReads, 0, "offscreen matchup sheets must load lazily");
     if (process.env.UI_SMOKE_NEGATIVE === "card-palette")
       await p.locator('.zone-publication .publication-headline').first().evaluate(e => e.setAttribute('fill', '#ff858e'));
@@ -177,7 +186,7 @@ try {
     }
     const colors = { green: "#8fdbb1", gold: "#f1d58e", black: "#d7c393" };
     for (const sport of ["nfl", "nba", "nhl", "ncaab"]) {
-      const card = p.locator(`.zone-publication[data-sport=${sport}]`);
+      const card = p.locator(`.zone-publication[data-sport=${sport}]:not([data-research-preview])`);
       assert.equal(
         await card.locator(".publication-headline").getAttribute("fill"),
         colors[await card.getAttribute("data-palette")],
@@ -221,7 +230,52 @@ try {
         posts[0].legs[0].replace(/\s/g, ""),
       );
     }
-    const first = p.locator(".zone-publication[data-sport=nfl]");
+    for (const report of [research, longResearch]) {
+      const card = p.locator(`#post-${report.id} .zone-publication`);
+      const face = card.locator("svg");
+      await card.scrollIntoViewIfNeeded();
+      const dimensions = await face.evaluate((svg) => ({ width: svg.viewBox.baseVal.width, height: svg.viewBox.baseVal.height }));
+      assert.deepEqual(dimensions, { width: 1080, height: 1350 });
+      assert.ok((await face.boundingBox()).height <= 675.5, "a collapsed report must not fill multiple screens");
+      assert.doesNotMatch(await face.textContent(), /https:/);
+      const overflow = await face.locator("text").evaluateAll((elements) =>
+        elements.filter((e) => e.textContent.trim()).flatMap((e) => {
+          const b = e.getBBox();
+          return b.x >= 27 && b.x + b.width <= 1054 && b.y + b.height <= 1322 ? [] : [e.textContent];
+        }),
+      );
+      assert.deepEqual(overflow, [], "research text stays inside the frame");
+      const details = card.locator("details.publication-analysis");
+      const summary = details.locator("summary");
+      assert.equal(await details.getAttribute("open"), null);
+      assert.ok((await summary.boundingBox()).height >= 44);
+      await summary.focus();
+      await p.keyboard.press("Enter");
+      assert.notEqual(await details.getAttribute("open"), null);
+      assert.equal(await details.locator(":scope > p:not(.publication-time)").textContent(), report.body);
+      assert.equal(await details.locator("h3").textContent(), report.title);
+      assert.equal(await details.locator("a").count(), report.body.split("\n").filter((line) => /^https:\/\//.test(line)).length);
+      await summary.focus();
+      await p.keyboard.press("Space");
+      assert.equal(await details.getAttribute("open"), null);
+      await card.getByRole("button", { name: "Download card", exact: true }).click();
+      const save = card.getByRole("link", { name: "Save image", exact: true });
+      await save.waitFor();
+      const download = p.waitForEvent("download");
+      await save.click();
+      const bytes = readFileSync(await (await download).path());
+      assert.equal(bytes.readUInt32BE(16), 1080);
+      assert.equal(bytes.readUInt32BE(20), 1350);
+      writeFileSync(`${out}/${width}-${report.id}-download.png`, bytes);
+      await card.getByRole("button", { name: "Close download", exact: true }).click();
+      assert.equal(await save.count(), 0);
+      // Repeated open/close must remain usable and not change the card geometry.
+      await summary.click();
+      await summary.click();
+      assert.equal(await details.getAttribute("open"), null);
+      await card.screenshot({ path: `${out}/${width}-${report.id}.png` });
+    }
+    const first = p.locator(".zone-publication[data-sport=nfl]:not([data-research-preview])");
     await first.getByRole("button", { name: /Download card/ }).click();
     const save = first.getByRole("link", { name: /Save image/ });
     await save.waitFor();

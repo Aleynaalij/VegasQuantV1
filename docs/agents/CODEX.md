@@ -1,3 +1,13 @@
+# Compact research card draft · November 9, 2026
+
+Task COMPACT-RESEARCH-CARDS. Owner requested a shorter research card consistent with existing Vegas Quant cards. Local branch `fix/compact-research-cards`, base `daddf05`. The Zone publication renderer now uses one 1080×1350 research preview: recognized WR reports show all five stored player lines, both prices and the quote observation time; other reports use a bounded one-column excerpt. Full titles, body text, injuries, caveats and source links remain in the keyboard-accessible disclosure. Existing pick/watchlist, 3-point and matchup-sheet paths remain separate. No stored report or data contract changes.
+
+Scope: `src/lib/zone-publication-card.ts`, `src/components/zone-publication-card.tsx` and `.css`, `tests/zone-publication-card.test.ts`, `tests/fixtures/research-publication.json`, `scripts/ui-smoke/zone-publication-cards.mjs`, and this status. Latest main and issue #65 were reviewed; no overlapping active claim found. Owner approved pushing the draft and posting its coordination note on November 9. The coordination claim is posted; draft publication and exact-head CI are in progress. No merge or production deployment is authorized.
+
+Validation: 691 repository tests, focused 11 tests, TypeScript and production build passed. Server-rendered output retains the complete fixture title/body and all 10 links; bundled-font measurements fit inside the frame. Independent local source/render review found no actionable issues. Browser fixture covers 360/390/1280 widths, bounded height, keyboard reopen/close, complete report/source access, PNG dimensions, download dismissal and unchanged existing cards. Chromium could not launch in this environment because its local socket is restricted, including the escalated attempt, so browser interaction/export acceptance and remote CI are still unverified. Preview PNGs are render evidence, not browser evidence. No merge, production deployment, production write or notification was performed.
+
+Next: publish the authorized draft and read exact-head browser CI. Release remains a separate approval.
+
 # Full release follow-up · October 31, 2026
 
 Release PR #170 integrates #167, latest #168 (4103bca) and #169 with their histories preserved. Original #168 audit findings are verified fixed. Final independent audit found result-read starvation and expired collapsed moneyline faces; both are corrected with separate service-only attempt scheduling, a status-preserving queue and clock-driven face expiry even on failed refresh. 384 tests, TypeScript, production build and Deno result-function check pass locally. New head browser CI and full-package peer acceptance must be read before merge; no production UI deployment is claimed here.
