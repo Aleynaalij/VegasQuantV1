@@ -87,6 +87,10 @@ await db.exec(functionFrom('supabase/migrations/20261014041536_launch_safety_con
 await db.exec(`create trigger prepare_community_post before insert on public.community_posts for each row execute function private.prepare_member_publication();
 create trigger safety_post before insert on public.community_posts for each row execute function private.community_safety_check();`);
 await db.exec(live.slice(live.indexOf('-- One row per decided pick'),live.indexOf('-- Every two minutes')));
+await db.exec(`create schema net;create schema vault;
+create table private.synthetic_http_calls(url text);create table private.push_config(dispatch_secret uuid);create table vault.decrypted_secrets(id uuid,decrypted_secret text);
+create function net.http_post(url text,headers jsonb,body jsonb,timeout_milliseconds integer) returns bigint language plpgsql as $$begin insert into private.synthetic_http_calls values(url);return 1;end$$;`);
+await db.exec(functionFrom('supabase/migrations/20261101100000_live_pick_alerts.sql','private.invoke_live_pick_alerts'));
 await db.exec(sql('supabase/migrations/20261103113707_notification_access_contracts.sql'));
 await db.exec(functionFrom('supabase/migrations/20261029001000_nba_three_point_volume.sql','private.zone_post_notify'));
 await db.exec('create trigger zone_post_notify after insert on public.community_posts for each row execute function private.zone_post_notify()');
@@ -104,6 +108,20 @@ const legacy=await emit(b,'like','legacy-b',shared);assert.equal(await emit(c,'l
 const historic='00000000-0000-4000-8000-000000000098';
 await db.query("insert into private.live_pick_alerts(pick_id,sport,message) values($1,'nhl','Historical result')",[historic]);
 await db.exec(sql('supabase/migrations/20261109022723_dealer_zone_follow_notifications.sql'));
+// Latest-main integration seam: install the original follow/profile owner-read policies on
+// minimal fixture tables and the unchanged restrictive age policy; no production gate bypass.
+await db.exec(`alter table public.member_follows enable row level security;
+alter table public.community_profiles enable row level security;
+grant select,insert,delete on public.member_follows to authenticated;`);
+const social=sql('supabase/migrations/20261014025802_community_social_feed.sql');
+for(const name of ['member_follows_read','member_follows_insert','member_follows_delete']) {
+ const statement=social.split('\n').find(line=>line.startsWith('create policy '+name+' '));assert.ok(statement);await db.exec(statement);
+}
+const profilePolicy=sql('supabase/migrations/20261003112128_community_profiles.sql').split('\n').find(line=>line.startsWith('create policy own_profile_read '));
+assert.ok(profilePolicy);await db.exec(profilePolicy);
+for(const table of ['member_follows','community_profiles']) await db.exec(`create policy age_verified_account on public.${table} as restrictive for all to authenticated using((select private.age_member_allowed())) with check((select private.age_member_allowed()))`);
+await db.exec(sql('supabase/migrations/20261109030000_member_follows_any_profile.sql'));
+
 await t.test('no replay, exact Dealer identity and restricted helper ACLs',async()=>{
  assert.equal((await one('select count(*)::int n from public.community_posts')).n,0);
  assert.equal((await one('select zone_post_id from private.live_pick_alerts where pick_id=$1',[historic])).zone_post_id,null);
@@ -136,6 +154,28 @@ await t.test('legacy mixed groups and new single-actor groups follow current rel
  const counts=await asMember(()=>one('select notification_counts() data'));
  const actual=await asMember(()=>one('select count(*)::int n from public.notifications where read_at is null'));
  assert.equal(counts.data.unread,actual.n);
+ await follow(b);
+});
+await t.test('latest-main profile follow allows a confirmed member without posts through authenticated RLS',async()=>{
+ await unfollow(b);
+ assert.equal((await one('select count(*)::int n from public.community_posts where user_id=$1',[b])).n,0);
+ assert.equal((await asMember(()=>q('select user_id from public.community_profiles where user_id=$1',[b]))).length,0,'target profile remains owner-read');
+ assert.equal((await one('select private.has_membership() ok')).ok,true,'existing membership fixture retained');
+ assert.equal(await emit(b,'message','pre-profile-follow'),null);
+ const memberFollow=()=>asMember(()=>db.query('insert into public.member_follows(user_id,target_user_id) values($1,$2)',[a,b]));
+ await db.exec(`update public.community_profiles set visible=false where user_id='${b}'`);await assert.rejects(memberFollow(),/row-level security/);
+ await db.exec(`update public.community_profiles set visible=true where user_id='${b}';update auth.users set email_confirmed_at=null where id='${b}'`);await assert.rejects(memberFollow(),/row-level security/);
+ await db.exec(`update auth.users set email_confirmed_at=now(),banned_until='infinity' where id='${b}'`);await assert.rejects(memberFollow(),/row-level security/);
+ await db.exec(`update auth.users set banned_until=null where id='${b}';insert into public.member_blocks values('${a}','${b}')`);await assert.rejects(memberFollow(),/row-level security/);
+ await db.exec(`delete from public.member_blocks;delete from private.age_checks where user_id='${a}'`);await assert.rejects(memberFollow(),/row-level security/);
+ await db.exec(`insert into private.age_checks values('${a}','verified',1);update auth.sessions set not_after=now()-interval '1 second' where user_id='${a}'`);await assert.rejects(memberFollow(),/row-level security/);
+ await db.exec(`update auth.sessions set not_after=now()+interval '1 day' where user_id='${a}'`);
+ await assert.rejects(asMember(()=>db.query('insert into public.member_follows(user_id,target_user_id) values($1,$1)',[a])),/row-level security/);
+ await assert.rejects(asMember(()=>db.query('insert into public.member_follows(user_id,target_user_id) values($1,$2)',[c,b])),/row-level security/);
+ await memberFollow();
+ const notification=await emit(b,'message','post-profile-follow');assert.ok(notification);assert.equal(await visible(notification),true);
+ await asMember(()=>db.query('delete from public.member_follows where user_id=$1 and target_user_id=$2',[a,b]));
+ assert.equal(await visible(notification),false);assert.equal(await emit(b,'message','after-profile-unfollow'),null);
  await follow(b);
 });
 await t.test('consent, block, age, erasure and protected-pick access remain enforced',async()=>{
@@ -193,7 +233,11 @@ await t.test('existing noncritical notification flood limit remains for Dealer',
 });
 const game=(await one("insert into public.sports_games(sport,slug,start_time) values('nhl','synthetic-game',now()-interval '1 hour') returning id")).id;
 const newPick=async()=>(await one('insert into public.sports_selections(game_id) values($1) returning id',[game])).id;
-const alert=async(id,message)=>one("select public.live_pick_alert('nhl',$1,$2,'/nhl/games/synthetic-game') n",[id,message]);
+const retry=async()=>(await one('select public.retry_live_pick_zone_posts() result')).result;
+const accept=async(id,message)=>one("select public.live_pick_alert('nhl',$1,$2,'/nhl/games/synthetic-game') n",[id,message]);
+// Separate auto-committed RPC calls mirror the API's accept-then-drain phases.
+// Most publication cases use this convenience; queue-only cancellation is tested explicitly.
+const alert=async(id,message)=>{const accepted=await accept(id,message);await retry();return accepted;};
 const settings=async()=>one("select current_setting('request.jwt.claim.sub',true) sub,current_setting('request.jwt.claims',true) claims,current_setting('vq.automated_post',true) automated");
 await t.test('clear and miss results post once, verbatim, together, without duplicate notifications or changed sessions',async()=>{
  await db.exec(`set request.jwt.claim.sub='${a}';set request.jwt.claims='{"sub":"${a}","role":"authenticated"}';set vq.automated_post='off';delete from public.notifications;`);
@@ -210,21 +254,105 @@ await t.test('clear and miss results post once, verbatim, together, without dupl
  assert.equal((await one("select count(*)::int n from public.community_posts")).n,3);
  assert.equal((await one('select count(*)::int n from private.live_pick_alerts where pick_id=$1 and zone_post_id is null',[historic])).n,1);
 });
-await t.test('failure rolls back ledger/post/settings and can retry; ordinary member rate and safety guards stay',async()=>{
+const health=async()=>(await one('select public.live_pick_zone_health() result')).result;
+const due=async(id)=>db.query("update private.live_pick_alerts set zone_next_attempt_at=now()-interval '1 second' where pick_id=$1",[id]);
+await t.test('queue-only acceptance survives separately canceled Zone publication batch',async()=>{
+ const id=await newPick(),before=await settings();
+ await db.exec(`create function private.synthetic_zone_cancel() returns trigger language plpgsql as $$begin if new.body='Synthetic timeout result' then raise exception 'Synthetic Zone timeout' using errcode='57014';end if;return new;end$$;
+ create trigger synthetic_zone_cancel before insert on public.community_posts for each row execute function private.synthetic_zone_cancel();`);
+ const accepted=await accept(id,'Synthetic timeout result');assert.ok(accepted.n>0);
+ const queued=()=>one('select zone_status,zone_attempts,zone_next_attempt_at<=now() due,zone_post_id from private.live_pick_alerts where pick_id=$1',[id]);
+ assert.deepEqual(await queued(),{zone_status:'pending',zone_attempts:0,due:true,zone_post_id:null},'acceptance does not enter any Zone trigger');
+ const counts=()=>one('select (select count(*)::int from public.notifications where content_id=$1) notifications,(select count(*)::int from private.notification_deliveries where notification_id in(select id from public.notifications where content_id=$1)) deliveries',[id]);
+ const original=await counts();assert.ok(original.notifications>0);assert.ok(original.deliveries>0);
+ await assert.rejects(retry(),e=>e.code==='57014' && /Synthetic Zone timeout/.test(e.message));
+ // Canceled retry statements roll back attempts as well as post writes, so the row remains due.
+ assert.deepEqual(await queued(),{zone_status:'pending',zone_attempts:0,due:true,zone_post_id:null});
+ assert.deepEqual(await counts(),original);assert.deepEqual(await settings(),before);
+ assert.equal((await accept(id,'Ignored duplicate text')).n,0);
+ await db.exec('drop trigger synthetic_zone_cancel on public.community_posts');
+ const result=await retry();assert.equal(result.posted,1);
+ const done=await queued();assert.equal(done.zone_status,'posted');assert.equal(done.zone_attempts,1);assert.ok(done.zone_post_id);
+ assert.equal((await one('select body from public.community_posts where id=$1',[done.zone_post_id])).body,'Synthetic timeout result');
+ assert.deepEqual(await counts(),original);assert.equal((await retry()).attempted,0);
+});
+await t.test('publication failure preserves original alert and settings; delayed retry posts exactly once',async()=>{
  const id=await newPick(),before=await settings();
  await db.exec(`update public.community_profiles set visible=false where user_id='${dealer}'`);
- await assert.rejects(alert(id,'Synthetic cleared'),/Complete and enable/);
- assert.equal((await one('select count(*)::int n from private.live_pick_alerts where pick_id=$1',[id])).n,0);
+ assert.ok((await alert(id,'Synthetic cleared')).n>0);
+ let row=await one('select * from private.live_pick_alerts where pick_id=$1',[id]);
+ assert.equal(row.zone_status,'pending');assert.equal(row.zone_attempts,1);assert.equal(row.zone_post_id,null);assert.match(row.zone_last_error,/Complete and enable/);
  assert.deepEqual(await settings(),before);
- await db.exec(`update public.community_profiles set visible=true where user_id='${dealer}'`);await alert(id,'Synthetic cleared');
- const harmful=await newPick();await assert.rejects(alert(harmful,'guaranteed profit'),/harmful content/);
- assert.equal((await one('select count(*)::int n from private.live_pick_alerts where pick_id=$1',[harmful])).n,0);
+ const snapshots=async()=>one('select (select count(*)::int from public.notifications where content_id=$1) notifications,(select count(*)::int from private.notification_events where notification_id in(select id from public.notifications where content_id=$1)) events,(select count(*)::int from private.notification_deliveries where notification_id in(select id from public.notifications where content_id=$1)) deliveries',[id]);
+ const original=await snapshots();assert.ok(original.notifications>0);assert.ok(original.deliveries>0);
+ const next=row.zone_next_attempt_at;assert.equal((await alert(id,'Different retry text')).n,0);
+ row=await one('select * from private.live_pick_alerts where pick_id=$1',[id]);assert.deepEqual(row.zone_next_attempt_at,next);assert.equal(row.zone_attempts,1);
+ assert.equal((await retry()).attempted,0,'backoff is respected');
+ await db.exec(`update public.community_profiles set visible=true where user_id='${dealer}';update public.sports_games set start_time=now()-interval '7 hours' where id='${game}'`);
+ await due(id);assert.equal((await retry()).posted,1,'retry survives original six-hour candidate window');
+ row=await one('select * from private.live_pick_alerts where pick_id=$1',[id]);assert.equal(row.zone_status,'posted');assert.equal(row.zone_attempts,2);
+ assert.equal((await one('select body from public.community_posts where id=$1',[row.zone_post_id])).body,'Synthetic cleared');
+ assert.deepEqual(await snapshots(),original);assert.equal((await retry()).attempted,0);assert.deepEqual(await settings(),before);
+ await db.query('delete from public.community_posts where id=$1',[row.zone_post_id]);
+ assert.equal((await retry()).attempted,0,'deleted terminal post is not republished');
+ assert.equal((await one('select zone_status from private.live_pick_alerts where pick_id=$1',[id])).zone_status,'posted');
+ await db.exec(`update public.sports_games set start_time=now()-interval '1 hour' where id='${game}'`);
  await asMember(()=>db.query("insert into public.community_posts(user_id,sport,kind,title,body) values($1,'nhl','talk','Ordinary','Ordinary member post')",[a]));
  await assert.rejects(asMember(()=>db.query("insert into public.community_posts(user_id,sport,body) values($1,'nhl','Second post')",[a])),/thirty seconds/);
  await assert.rejects(asMember(()=>db.query("insert into public.community_posts(user_id,sport,body) values($1,'nhl','Forged Dealer')",[dealer])),/Sign in as the author/);
- const missing=await newPick();await db.exec(`update auth.users set raw_app_meta_data='{}' where id='${dealer}'`);
- await assert.rejects(alert(missing,'Synthetic cleared'),/Verified Dealer/);
+});
+await t.test('original emitter failures still roll back acceptance and every Zone side effect',async()=>{
+ const id=await newPick(),before=await settings();
+ await db.exec(`create function private.synthetic_emitter_failure() returns trigger language plpgsql as $$begin if new.message='Emitter fails' then raise exception 'Synthetic original emitter failure';end if;return new;end$$;
+ create trigger synthetic_emitter_failure before insert on public.notifications for each row execute function private.synthetic_emitter_failure();`);
+ await assert.rejects(alert(id,'Emitter fails'),/Synthetic original emitter failure/);
+ assert.equal((await one('select count(*)::int n from private.live_pick_alerts where pick_id=$1',[id])).n,0);
+ assert.equal((await one("select count(*)::int n from public.community_posts where id=md5('live-pick-zone:'||$1)::uuid",[id])).n,0);
+ assert.deepEqual(await settings(),before);await db.exec('drop trigger synthetic_emitter_failure on public.notifications');
+ assert.ok((await alert(id,'Emitter recovers')).n>0);
+});
+await t.test('Dealer identity outage cannot suppress original alerts and repairs without replay',async()=>{
+ const id=await newPick(),before=await settings();
+ await db.exec(`update auth.users set raw_app_meta_data='{}' where id='${dealer}'`);
+ assert.ok((await alert(id,'Dealer identity recovery result')).n>0);
+ const queued=await one('select zone_status,zone_last_error from private.live_pick_alerts where pick_id=$1',[id]);
+ assert.equal(queued.zone_status,'pending');assert.match(queued.zone_last_error,/Verified Dealer publisher required/);assert.deepEqual(await settings(),before);
+ const notifications=(await one('select count(*)::int n from public.notifications where content_id=$1',[id])).n;
  await db.exec(`update auth.users set raw_app_meta_data='{"publisher":"vq_dealer"}' where id='${dealer}'`);
+ await due(id);assert.equal((await retry()).posted,1);
+ assert.equal((await one('select count(*)::int n from public.notifications where content_id=$1',[id])).n,notifications);
+});
+await t.test('permanent post failure backs off to eight attempts, remains visible in health, and stops retrying',async()=>{
+ const id=await newPick(),before=await settings();await alert(id,'guaranteed profit');
+ for(let attempt=1;attempt<=8;attempt++){
+  const r=await one('select *,extract(epoch from(zone_next_attempt_at-zone_attempted_at))/60 minutes from private.live_pick_alerts where pick_id=$1',[id]);
+  assert.equal(r.zone_attempts,attempt);assert.ok(r.zone_last_error.length<=200);assert.match(r.zone_last_error,/harmful content/);
+  if(attempt<8){assert.equal(r.zone_status,'pending');assert.equal(Number(r.minutes),Math.min(60,2**(attempt-1)));await due(id);assert.equal((await retry()).failed,1);}
+  else{assert.equal(r.zone_status,'blocked');assert.equal(r.zone_next_attempt_at,null);}
+ }
+ assert.equal((await retry()).attempted,0);assert.equal((await health()).blocked,1);assert.deepEqual(await settings(),before);
+ assert.equal((await one('select social_notification_health() h')).h.zone_results.blocked,1);
+});
+await t.test('bounded batch isolates collisions and unhealthy rows; scheduler wakes without candidates',async()=>{
+ // Synthetic accepted ledger rows isolate batch mechanics from fresh-pick fan-out.
+ const ids=[];for(let i=0;i<22;i++){const id=await newPick();ids.push(id);await db.query("insert into private.live_pick_alerts(pick_id,sport,message,zone_status,zone_next_attempt_at) values($1,'nhl',$2,'pending',now()-interval '1 minute')",[id,`Batch result ${i}`]);}
+ const collision=ids[0],collisionId=(await one("select md5('live-pick-zone:'||$1)::uuid id",[collision])).id;
+ await db.exec(`update public.community_posts set created_at=now()-interval '1 minute' where user_id='${a}'`);
+ await db.query("insert into public.community_posts(id,user_id,sport,body) values($1,$2,'nhl','Unrelated existing post')",[collisionId,a]);
+ const first=await retry();assert.equal(first.attempted,20);assert.equal(first.posted+first.failed,20);
+ const second=await retry();assert.equal(second.attempted,2);
+ assert.equal((await one('select body from public.community_posts where id=$1',[collisionId])).body,'Unrelated existing post');
+ assert.equal((await one('select zone_status from private.live_pick_alerts where pick_id=$1',[collision])).zone_status,'pending');
+ assert.equal((await one("select count(*)::int n from private.live_pick_alerts where pick_id=any($1::uuid[]) and zone_status='posted'",[ids])).n,21);
+ const candidateDefinition=(await one("select pg_get_functiondef('public.live_pick_candidates()'::regprocedure) d")).d;
+ await db.exec("create or replace function public.live_pick_candidates() returns jsonb language sql stable security definer set search_path='' as $$select '[]'::jsonb$$");
+ await due(collision);await db.query('select private.invoke_live_pick_alerts()');
+ assert.equal((await one('select count(*)::int n from private.synthetic_http_calls')).n,1);
+ await db.exec("create or replace function public.live_pick_candidates() returns jsonb language plpgsql stable security definer set search_path='' as $$begin raise exception 'Synthetic candidate outage';end$$");
+ await db.query('select private.invoke_live_pick_alerts()');assert.equal((await one('select count(*)::int n from private.synthetic_http_calls')).n,2,'due retry short-circuits candidate failure');
+ await db.exec(candidateDefinition);
+ assert.equal((await one('select zone_status,zone_attempts from private.live_pick_alerts where pick_id=$1',[historic])).zone_status,null,'historical row never queued');
+ for(const role of ['anon','authenticated'])for(const fn of ['public.retry_live_pick_zone_posts()','public.live_pick_zone_health()'])assert.equal((await one("select has_function_privilege($1,$2,'execute') ok",[role,fn])).ok,false);
 });
 await t.test('Zone insert fan-out follows authors, broadcasts Dealer automation and deduplicates mentions',async()=>{
  await db.exec('delete from public.notifications;delete from private.notification_events');
@@ -281,12 +409,18 @@ await t.test('public RPC works as service_role under authenticator session; auth
  await db.exec(`create trigger a_attach_zone_automated_card before insert on public.community_posts for each row execute function private.attach_zone_automated_card();
  create trigger community_post_card_guard before insert on public.community_posts for each row execute function private.community_post_card_guard();`);
  await db.exec('create role authenticator noinherit;grant service_role,authenticated to authenticator');
- const id=await newPick();
+ const id=await newPick(),harmful=await newPick();
  // Last case: PGlite RESET SESSION AUTHORIZATION does not restore its original bootstrap identity.
  await db.exec('set session authorization authenticator;set role service_role');
  assert.ok((await alert(id,'Service-session cleared')).n>=0);
  assert.equal((await one("select card from public.community_posts where id=md5('live-pick-zone:'||$1)::uuid",[id])).card,null,'service result remains ordinary talk, not a spoofed editorial card');
  assert.deepEqual(await one('select session_user,current_user'),{session_user:'authenticator',current_user:'service_role'});
+ const serviceSettings=await settings(),serviceRoles=await one('select session_user,current_user');
+ const pendingBefore=(await health()).pending;
+ assert.ok((await alert(harmful,'guaranteed profit')).n>0,'caught publication failure preserves service-origin alert');
+ assert.deepEqual(await settings(),serviceSettings);assert.deepEqual(await one('select session_user,current_user'),serviceRoles);
+ assert.equal((await health()).pending,pendingBefore+1,'service health exposes pending failed publication');
+
 });
 
 });

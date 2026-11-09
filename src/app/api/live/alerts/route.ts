@@ -2,14 +2,15 @@ import { timingSafeEqual } from "node:crypto";
 import { serviceDb } from "@/lib/billing-server";
 import { fetchLiveBox, fetchLiveGames } from "@/lib/live-fetch";
 import { planAlerts, type AlertCandidate } from "@/lib/live-alerts";
+import { dispatchLiveAlerts } from "@/lib/live-alert-dispatch";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
- * Called every two minutes by the database while picked games are live (same dispatch secret as
- * push delivery). Each decided pick is sent to public.live_pick_alert, which fans it out once.
+ * The existing database job wakes for live candidates or durable Zone retries. The two lanes
+ * are independent; a score-feed outage cannot strand accepted results or replay their alerts.
  */
 export async function POST(req: Request) {
   const supplied = req.headers.get("x-vq-dispatch");
@@ -23,34 +24,39 @@ export async function POST(req: Request) {
       actual = Buffer.from(supplied);
     if (expected.length !== actual.length || !timingSafeEqual(expected, actual))
       return Response.json({ error: "Unauthorized" }, { status: 401 });
-    const c = await db.rpc("live_pick_candidates");
-    if (c.error) throw Error("Unavailable");
-    const planned = await planAlerts(
-      (c.data || []) as AlertCandidate[],
-      fetchLiveGames,
-      fetchLiveBox,
-    );
-    let sent = 0,
-      failed = 0;
-    for (const a of planned) {
-      const r = await db.rpc("live_pick_alert", {
-        p_sport: a.sport,
-        p_pick: a.pick,
-        p_message: a.message,
-        p_link: a.link,
-      });
-      if (r.error) failed++;
-      else sent++;
-    }
-    return Response.json(
-      {
-        candidates: (c.data || []).length,
-        decided: planned.length,
-        sent,
-        failed,
+    const result = await dispatchLiveAlerts({
+      candidates: async () => {
+        const r = await db.rpc("live_pick_candidates");
+        if (r.error) throw Error("Unavailable");
+        return (r.data || []) as AlertCandidate[];
       },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+      plan: (rows) => planAlerts(rows, fetchLiveGames, fetchLiveBox),
+      publish: async (a) => {
+        const r = await db.rpc("live_pick_alert", {
+          p_sport: a.sport,
+          p_pick: a.pick,
+          p_message: a.message,
+          p_link: a.link,
+        });
+        if (r.error) throw Error("Unavailable");
+      },
+      retryZone: async () => {
+        const r = await db.rpc("retry_live_pick_zone_posts");
+        if (r.error || !r.data) throw Error("Unavailable");
+        const { attempted, posted, failed } = r.data;
+        return { attempted, posted, failed };
+      },
+      zoneHealth: async () => {
+        const r = await db.rpc("live_pick_zone_health");
+        if (r.error || !r.data) throw Error("Unavailable");
+        const { pending, due, blocked } = r.data;
+        return { pending, due, blocked };
+      },
+    });
+    return Response.json(result, {
+      status: result.ok ? 200 : 503,
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch {
     return Response.json({ error: "Live alerts unavailable" }, { status: 503 });
   }
