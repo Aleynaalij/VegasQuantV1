@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { requestUser } from "@/lib/billing-server";
 import {
-  nbaMatchupSheetSlug,
+  nbaMatchupSheetReference,
   type NbaSheetSource,
 } from "@/lib/nba-matchup-sheet";
 import { loadNbaMatchupSheet } from "@/lib/nba-matchup-sheet-server";
@@ -53,8 +53,19 @@ export async function GET(
         403,
       );
     if (post.error) throw post.error;
-    const slug = post.data && nbaMatchupSheetSlug(post.data);
-    if (!slug) return reply({ error: "Matchup sheet unavailable." }, 404);
+    const reference = post.data && nbaMatchupSheetReference(post.data);
+    if (!reference) return reply({ error: "Matchup sheet unavailable." }, 404);
+    let slug = reference.slug;
+    if (!slug) {
+      const matchup = await auth.db
+        .from("nba_games")
+        .select("slug")
+        .eq("provider_id", reference.providerId)
+        .maybeSingle<{ slug: string }>();
+      if (matchup.error) throw matchup.error;
+      slug = matchup.data?.slug;
+      if (!slug) return reply({ error: "Matchup sheet unavailable." }, 404);
+    }
 
     const sheet = await loadNbaMatchupSheet(auth.db, slug, post.data!.body);
     if (!sheet) return reply({ error: "Matchup sheet unavailable." }, 404);

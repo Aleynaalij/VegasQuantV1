@@ -43,7 +43,7 @@ import { NbaThreesCardPreview } from "./nba-threes-card-preview";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { weeklyCardRef } from "@/lib/nfl-weekly-cards";
 import { isPublicationCard } from "@/lib/zone-publication-card";
-import { nbaMatchupSheetSlug } from "@/lib/nba-matchup-sheet";
+import { nbaMatchupSheetReference } from "@/lib/nba-matchup-sheet";
 import NbaMatchupSheetPreview from "./nba-matchup-sheet-preview";
 import "./nba-matchup-sheet.css";
 import ZonePublicationCard from "./zone-publication-card";
@@ -1760,7 +1760,7 @@ export default function CommunityFeed() {
                             />
                           ) : null}
                         </figure>
-                      ) : nbaMatchupSheetSlug(p) ? (
+                      ) : nbaMatchupSheetReference(p) ? (
                         <div>
                           <NbaMatchupSheetPreview
                             key={`${uid}:${p.id}`}
