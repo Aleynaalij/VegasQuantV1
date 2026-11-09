@@ -233,6 +233,11 @@ try {
     for (const report of [research, longResearch]) {
       const card = p.locator(`#post-${report.id} .zone-publication`);
       const face = card.locator("svg");
+      assert.equal(
+        await face.locator(".publication-headline").getAttribute("fill"),
+        colors[await card.getAttribute("data-palette")],
+        "publication palette must match approved lounge design",
+      );
       await card.scrollIntoViewIfNeeded();
       const dimensions = await face.evaluate((svg) => ({ width: svg.viewBox.baseVal.width, height: svg.viewBox.baseVal.height }));
       assert.deepEqual(dimensions, { width: 1080, height: 1350 });
