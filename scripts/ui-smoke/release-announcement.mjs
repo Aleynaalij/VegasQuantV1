@@ -128,8 +128,8 @@ try {
     await page.goto(`${base}/about`);
     const dialog = page.locator(selector);
     await dialog.waitFor({ state: "visible", timeout: 20000 });
-    assert.match(await dialog.innerText(), /Approved testers/);
-    assert.match(await dialog.innerText(), /no release date announced/);
+    assert.match(await dialog.innerText(), /Tap Edit profile/);
+    assert.match(await dialog.innerText(), /Instagram and X links/);
     assert.equal(
       await dialog.evaluate(
         (el) => el.getBoundingClientRect().width <= innerWidth,

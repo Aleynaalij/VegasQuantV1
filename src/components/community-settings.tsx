@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { supabase } from "@/lib/supabase";
-import { regions, socialUrl, type CommunityProfile } from "@/lib/community";
+import { socialUrl, type CommunityProfile } from "@/lib/community";
 import { Avatar } from "./community-home";
 const blank: CommunityProfile = {
   username: "",
@@ -129,7 +129,7 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
       onSaved?.();
       setNotice(
         draft.visible
-          ? "Profile saved. You appear automatically in Community for challenges you join."
+          ? "Profile saved. Your profile is visible to signed-in members."
           : "Profile saved. Your community profile is hidden.",
       );
     }
@@ -166,18 +166,6 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
         3–24 letters, numbers or underscores. Choose a nickname; no real name
         needed.
       </small>
-      <label>
-        Region (optional)
-        <select
-          value={draft.region}
-          onChange={(e) => setDraft((v) => ({ ...v, region: e.target.value }))}
-        >
-          <option value="">Keep private</option>
-          {regions.map((r) => (
-            <option key={r}>{r}</option>
-          ))}
-        </select>
-      </label>
       <label>
         Profile photo (required)
         <input
@@ -225,14 +213,13 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
           checked={draft.visible}
           onChange={(e) => setDraft((v) => ({ ...v, visible: e.target.checked }))}
         />
-        Show my username, photo, region, social links, stage wins, joins and
-        check-ins to signed-in community members.
+        Show my profile (username, photo, tagline, bio, state, social links
+        and posts) to signed-in members.
       </label>
       <small>
         On by default for new profiles. Your email, bets, stakes and balance
-        stay private. Turn this off to hide your profile from the roster and
-        activity. Once you join a challenge, your visible profile appears
-        automatically.
+        stay private. Set your tagline, bio and state with Edit profile on
+        your profile page.
       </small>
       {notice && <p role="alert">{notice}</p>}
       <button className="primary" disabled={busy || preparing}>
