@@ -65,3 +65,7 @@ Rollback should restore the prior emitter, Zone-post notifier, publication guard
 The reviewed SQL was applied once on November 9, 2026. Supabase recorded version `20261109032951`; the repository file and tests were aligned to that actual version without altering migration history or SQL bytes. Its recorded statement MD5 `8a387b4c6a6ca655c59452def80fa21f` matches the reviewed file (SHA-256 `52db149e4711f5b28172bd68ee64bf5847223ba2948fc68b3913ac47dd6978b2`).
 
 Immediate readback verified the restrictive follow policy, service-only retry/health permissions, active existing two-minute scheduler, and zero pending/due/blocked jobs. All 18 pre-existing alert rows remained historical and unqueued; no result posts were created by the migration. App deployment status is recorded in PR #266.
+
+## Release-gate fixture correction
+
+A later browser run correctly showed four games because its fifth synthetic kickoff (`now + 90 minutes`) crossed Eastern midnight. The failed-page artifact confirmed this was test data, not an announcement overlay or application regression. The Lobby story fixture now creates five starts inside the requested NBA day bounds without changing real clocks or weakening the exact five-game assertion. Seven deterministic tests cover the original failure, midnight, 23/25-hour DST days and invalid filters. Script syntax and a fresh current-main build passed. Local Chromium could not launch because of environment socket permissions; actual browser acceptance is required in GitHub CI before merge.
