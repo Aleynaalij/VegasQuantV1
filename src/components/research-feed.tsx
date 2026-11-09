@@ -24,7 +24,6 @@ const WeekendMoneylineCard = dynamic(() => import("./weekend-moneyline-card"));
 import PublishedLegBoard from "./published-leg-board";
 import CandidateTracker, { type CandidateRelease } from "./candidate-tracker";
 import { feedTimeline } from "@/lib/feed-timeline";
-import RubyHub from "./ruby-cards";
 import HowItWorks from "./how-it-works";
 import SectionBoundary from "./section-boundary";
 import EdgeReleaseCard, { type EdgeRelease } from "./edge-release";
@@ -274,17 +273,15 @@ export default function ResearchFeed() {
   useEffect(() => {
     const view = routeView;
     setZoneView(
-      view === "contributors"
-        ? "Contributors"
-        : view === "legs"
-          ? "Legs"
-          : view === "parlays"
-            ? "Parlays"
-            : view === "wins"
-              ? "Wins"
-              : view === "injury"
-                ? "Injury watch"
-                : "Latest",
+      view === "legs"
+        ? "Legs"
+        : view === "parlays"
+          ? "Parlays"
+          : view === "wins"
+            ? "Wins"
+            : view === "injury"
+              ? "Injury watch"
+              : "Latest",
     );
     setFilter(view === "injury" ? "Injury watch" : "All");
     setLimit(20);
@@ -340,10 +337,7 @@ export default function ResearchFeed() {
             Saved legs →
           </Link>
         </header>
-        {zoneView === "Contributors" && access.allowed && (
-          <RubyHub zone selectedId={searchParams.get("ruby") || ""} />
-        )}
-        {zoneView !== "Contributors" && <HowItWorks />}
+        <HowItWorks />
         {zoneView === "Parlays" && <WeekendMoneylineCard />}
         {(zoneView === "Legs" || zoneView === "Parlays") && (
           <ParlayWorkshop
@@ -383,7 +377,7 @@ export default function ResearchFeed() {
         {!loading && (
           <>
             <div className="feed-stream">
-              {(["Legs", "Contributors"].includes(zoneView)
+              {(zoneView === "Legs"
                 ? []
                 : visibleTimeline
               )
@@ -591,8 +585,7 @@ export default function ResearchFeed() {
                   );
                 })}
             </div>
-            {zoneView !== "Contributors" &&
-              zoneView !== "Legs" &&
+            {zoneView !== "Legs" &&
               zoneView !== "Parlays" &&
               !visibleTimeline.length &&
               !error && (
@@ -601,8 +594,7 @@ export default function ResearchFeed() {
                   decision develops.
                 </p>
               )}
-            {zoneView !== "Contributors" &&
-              zoneView !== "Legs" &&
+            {zoneView !== "Legs" &&
               visibleTimeline.length > limit && (
                 <button
                   className="secondary feed-more"

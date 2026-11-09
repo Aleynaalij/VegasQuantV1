@@ -28,7 +28,7 @@ const signedIn = [
   { path: "/membership", expect: ["Your account", "Privacy · Delete account"] },
   { path: "/", expect: ["Your sports research starts here."] },
   { path: "/nfl", expect: ["Next kickoff"] },
-  { path: "/community", expect: ["The Zone", "For you", "VIP lays", "SampleMember", "Sample post body."] },
+  { path: "/community", expect: ["The Zone", "For you", "Following", "SampleMember", "Sample post body."] },
   { path: "/history", expect: ["Records are private."] },
 ];
 const admin = [

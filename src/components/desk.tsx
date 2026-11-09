@@ -394,8 +394,8 @@ export default function DeskApp({
             <SectionBoundary name="Track record">
               <HomeRecordCard />
             </SectionBoundary>
-            <SectionBoundary name="Contributor submission">
-              <RubyHub home composerOnly />
+            <SectionBoundary name="Past contributor results">
+              <RubyHub resultsOnly />
             </SectionBoundary>
             <SectionBoundary name="Next kickoff">
               {/* The simulator returns here when it ships; until then the kickoff card leads Home. */}

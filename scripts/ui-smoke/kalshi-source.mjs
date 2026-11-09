@@ -334,87 +334,8 @@ try {
       await card.locator(".ruby-source-link").evaluate((el) => el.remove());
     await assertRetained(card);
     await page.goto(base + "/community?view=vip", { waitUntil: "networkidle" });
-    await page.locator(".ruby-submit-drawer summary").click();
-    const open = page.getByRole("button", {
-      name: "Submit today’s lay",
-      exact: true,
-    });
-    await open.click();
-    const modal = page.getByRole("dialog", { name: "Make your daily lay." });
-    const assertComposerPaused = async () => {
-      assert.equal(await modal.getByLabel("Paste Kalshi link").count(), 0);
-      assert.equal(await modal.locator('input[name="source_link"]').count(), 0);
-      assert.equal(
-        await modal
-          .getByText(/Contributor-shared Kalshi link · Preview:/)
-          .count(),
-        0,
-      );
-      await assertPaused();
-    };
-    await assertComposerPaused();
-    await modal.getByRole("button", { name: "Publish to The Zone" }).click();
-    await modal.getByText(/Add at least two legs/).waitFor();
-    assert.equal(submissions.length, 0, "empty composer submitted");
-    await modal.getByText("Add details · optional", { exact: true }).click();
-    await modal
-      .getByLabel("Your legs")
-      .fill("Sample A 20+ points\nSample B 5+ rebounds");
-    await modal.getByRole("button", { name: "Publish to The Zone" }).click();
-    await modal.getByText("Synthetic lost response after commit").waitFor();
-    await modal.getByRole("button", { name: "Publish to The Zone" }).click();
-    await modal.waitFor({ state: "hidden" });
-    assert.equal(submissions.length, 2);
-    assert.equal(submissions[0].p_id, submissions[1].p_id, "retry changed id");
-    await open.click();
-    await assertComposerPaused();
-    // Text fields may retain a draft; explicitly clear them for screenshot-only acceptance.
-    const details = modal.locator("details").filter({ hasText: "Add details" });
-    if (
-      (await details.count()) &&
-      (await details.getAttribute("open")) === null
-    )
-      await modal.getByText("Add details · optional", { exact: true }).click();
-    await modal.getByLabel("Your legs").fill("");
-    photoMode = true;
-    lost = true;
-    await modal.locator("input[type=file]").setInputFiles({
-      name: "synthetic.png",
-      mimeType: "image/png",
-      buffer: Buffer.from(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
-        "base64",
-      ),
-    });
-    await modal.getByRole("button", { name: "Publish to The Zone" }).click();
-    await modal.waitFor({ state: "hidden" });
-    assert.ok(mine.photo_path, "recovery discarded stored image");
-    assert.equal(photoDeletes, 0, "recovery deleted stored image");
-    assert.notEqual(
-      submissions.at(-1).p_id,
-      submissions[0].p_id,
-      "new submission reused old id",
-    );
-    await open.click();
-    assert.equal(
-      await modal.locator("input[type=file]").inputValue(),
-      "",
-      "reopening retained photo",
-    );
-    await assertComposerPaused();
-    const beforeSignOut = submissions.length;
-    await page.evaluate(() =>
-      new BroadcastChannel("sb-127-auth-token").postMessage({
-        event: "SIGNED_OUT",
-        session: null,
-      }),
-    );
-    await modal.waitFor({ state: "hidden" });
-    assert.equal(
-      submissions.length,
-      beforeSignOut,
-      "account change submitted a draft",
-    );
+    assert.equal(await page.locator(".ruby-submit-drawer").count(), 0);
+    assert.equal(submissions.length, 0);
     await assertPaused();
     assert.ok(
       await page.evaluate(
@@ -440,7 +361,7 @@ try {
     );
     await ctx.close();
     console.log(
-      `${width}px Kalshi pause, retained cards, admin preservation, copy privacy, typed retry and screenshot recovery passed`,
+      `${width}px Kalshi pause, retained cards, admin preservation, copy privacy, retired composer passed`,
     );
   }
 } finally {

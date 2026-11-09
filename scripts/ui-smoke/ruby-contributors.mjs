@@ -11,25 +11,13 @@ const go = async (page, url) => {
   await page.goto(url, { waitUntil: "load", timeout: 30000 });
   await settle(page);
 };
-const reloadSettled = async (page) => {
-  await page.reload({ waitUntil: "load", timeout: 30000 });
-  await settle(page);
-};
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH,
   headless: true,
   args: ["--no-sandbox", "--disable-dev-shm-usage"],
 });
 const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
-// Noise keeps the PNG over 10 MB, larger than the platform's 4.5 MB request body limit.
 const { default: sharp } = await import("sharp");
-const phoneScreenshot = await sharp(
-  Uint8Array.from({ length: 1320 * 2868 * 3 }, () => (Math.random() * 256) | 0),
-  { raw: { width: 1320, height: 2868, channels: 3 } },
-)
-  .png({ compressionLevel: 1 })
-  .toBuffer();
-assert.ok(phoneScreenshot.length > 5_000_000);
 // What storage serves back: a decodable JPEG, as the server stores every photo.
 const storedSlip = await sharp({
   create: { width: 60, height: 120, channels: 3, background: "white" },
@@ -85,16 +73,18 @@ for (const { width, photoOnly } of [
   page.on("pageerror", (e) => errors.push(e.message));
   const day = "2026-10-23",
     uid = "00000000-0000-0000-0000-000000000001";
-  let mine = null,
-    submits = 0,
-    member = false,
-    full = false,
-    reviewing = false,
-    reported = null,
-    adminView = false,
-    hidden = null,
-    analystActive = false,
-    analystExpired = false;
+  const mine = {
+    id: "00000000-0000-4000-8000-0000000000aa",
+    user_id: uid, brand: "The GOAT", theme: "diamond", submission_day: day,
+    sport: "NFL", title: "The GOAT’s daily lay",
+    legs: photoOnly ? [] : ["Sample X 20+ points", "Sample Y 5+ rebounds"],
+    note: "", photo_path: photoOnly ? `${uid}/fixture.jpg` : null,
+    sportsbook: photoOnly ? null : "Sample Book",
+    reported_odds: photoOnly ? null : 250,
+    created_at: new Date().toISOString(),
+  };
+  let submits = 0, member = false, reviewing = false, reported = null;
+  let adminView = false, hidden = null, analystActive = false, analystExpired = false;
   const analyst = () => ({
     id: "22222222-2222-4222-8222-222222222222",
     day,
@@ -181,7 +171,7 @@ for (const { width, photoOnly } of [
               active: true,
             },
         submitted: mine?.id || null,
-        submission_count: full ? 3 : mine ? 1 : 0,
+        submission_count: 1,
         due:
           reviewing && !reported
             ? [
@@ -197,8 +187,10 @@ for (const { width, photoOnly } of [
             : [],
         admin: adminView,
       };
-    else if (path.endsWith("/ruby_submissions") || path.endsWith("/ruby_cards"))
-      body = mine ? [mine, ...slips] : slips;
+    else if (path.endsWith("/ruby_submissions") || path.endsWith("/ruby_cards")) {
+      const id = new URL(route.request().url()).searchParams.get("id")?.replace(/^eq\./, "");
+      body = id ? [mine, ...slips].find((card) => card.id === id) || null : [mine, ...slips];
+    }
     else if (path.endsWith("/rpc/ruby_record_summary"))
       body = reviewing
         ? [
@@ -243,39 +235,8 @@ for (const { width, photoOnly } of [
           : [analyst()]
         : [];
     else if (path.endsWith("/rpc/submit_ruby")) {
-      const p = route.request().postDataJSON();
-      if (photoOnly) {
-        assert.equal(p.p_title, "The GOAT’s daily lay");
-        assert.equal(p.p_sport, "NFL");
-        assert.deepEqual(p.p_legs, []);
-        assert.equal(p.p_note, "");
-        assert.equal(p.p_book, null);
-        assert.equal(p.p_odds, null);
-        assert.equal(p.p_photo, `${uid}/${p.p_id}.jpg`);
-      } else {
-        assert.equal(p.p_sport, "NBA");
-        assert.deepEqual(p.p_legs, [
-          "Sample X 20+ points",
-          "Sample Y 5+ rebounds",
-        ]);
-      }
       submits++;
-      mine = {
-        id: p.p_id,
-        user_id: uid,
-        brand: "The GOAT",
-        theme: "diamond",
-        submission_day: day,
-        sport: p.p_sport,
-        title: p.p_title,
-        legs: p.p_legs,
-        note: p.p_note,
-        photo_path: p.p_photo,
-        sportsbook: p.p_book,
-        reported_odds: p.p_odds,
-        created_at: new Date().toISOString(),
-      };
-      body = p.p_id;
+      return route.fulfill({ status: 400, json: { message: "Contributor publishing retired" } });
     } else return route.continue();
     return route.fulfill({
       status: 200,
@@ -283,7 +244,6 @@ for (const { width, photoOnly } of [
       body: JSON.stringify(body),
     });
   });
-  let uploadedPhoto = null;
   const kalshiRequests = [];
   await ctx.route(
     /https?:\/\/[^/]*kalshi\.com\/|\/api\/kalshi(?:[/?]|$)|\/rpc\/[^/?]*kalshi/i,
@@ -292,16 +252,6 @@ for (const { width, photoOnly } of [
       return route.fulfill({ status: 503, json: { code: "KALSHI_PAUSED" } });
     },
   );
-  await page.route("**/api/community/photo?post=*", (route) => {
-    uploadedPhoto = route.request().postDataBuffer();
-    return route.fulfill({
-      status: 200,
-      contentType: "application/json",
-      body: JSON.stringify({
-        path: `${uid}/${new URL(route.request().url()).searchParams.get("post")}.jpg`,
-      }),
-    });
-  });
   await page.route("**/storage/v1/object/sign/**", (route) =>
     route.request().method() === "POST"
       ? route.fulfill({
@@ -318,153 +268,18 @@ for (const { width, photoOnly } of [
           body: storedSlip,
         }),
   );
-  // Consumer pages carry no submission form: the NFL desk shows a contributor only a role-gated
-  // Submit a Lay action, which opens the form in the contributor area (VIP lays).
   await go(page, base + "/nfl");
-  const shortcut = page.getByRole("link", { name: "Submit a Lay" });
-  await shortcut.waitFor();
-  assert.equal(
-    await shortcut.getAttribute("href"),
-    "/community?view=vip#submit-lay",
-  );
-  assert.equal(
-    await page.locator(".ruby-submit-drawer").count(),
-    0,
-    "no submission form on the NFL desk",
-  );
+  assert.equal(await page.getByRole("link", { name: "Submit a Lay" }).count(), 0);
   await go(page, base + "/community?view=vip");
-  const submissionDrawer = page.locator(".ruby-submit-drawer");
-  await submissionDrawer.waitFor();
-  assert.equal(await submissionDrawer.getAttribute("open"), null);
-  assert.equal(
-    await page
-      .locator(".ruby-submit-content")
-      .getByRole("button", { name: "Submit today’s lay" })
-      .count(),
-    0,
-  );
-  await submissionDrawer.locator("summary").click();
-  await page
-    .locator(".ruby-submit-content")
-    .getByRole("button", { name: "Submit today’s lay" })
-    .click();
-  assert.equal(await page.getByLabel("Paste Kalshi link").count(), 0);
-  assert.equal(await page.locator('input[name="source_link"]').count(), 0);
-  if (photoOnly) {
-    assert.equal(
-      await page
-        .locator(
-          ".ruby-modal input[required],.ruby-modal textarea[required],.ruby-modal select[required]",
-        )
-        .count(),
-      0,
-    );
-    if (width < 760) {
-      // Phone: copy the slip image elsewhere, then tap Paste screenshot.
-      await page.evaluate(async (b64) => {
-        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            "image/png": new Blob([bytes], { type: "image/png" }),
-          }),
-        ]);
-      }, phoneScreenshot.toString("base64"));
-      await page.getByRole("button", { name: "Paste screenshot" }).click();
-      await page.getByAltText("Your original screenshot preview").waitFor();
-      await page.getByRole("button", { name: "Remove screenshot" }).click();
-      // Press-and-hold Paste (or Ctrl/Cmd+V) anywhere in the composer works too.
-      await page.evaluate((b64) => {
-        const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
-        const data = new DataTransfer();
-        data.items.add(new File([bytes], "slip.png", { type: "image/png" }));
-        document.querySelector(".ruby-modal form").dispatchEvent(
-          new ClipboardEvent("paste", {
-            clipboardData: data,
-            bubbles: true,
-            cancelable: true,
-          }),
-        );
-      }, phoneScreenshot.toString("base64"));
-    } else
-      await page.locator(".ruby-modal input[type=file]").setInputFiles({
-        name: "slip.png",
-        mimeType: "image/png",
-        buffer: phoneScreenshot,
-      });
-    await page.getByAltText("Your original screenshot preview").waitFor();
-  } else {
-    await page.getByText("Add details · optional", { exact: true }).click();
-    // Scoped to the form: the contributor area (The Zone) has its own Sport filter.
-    await page
-      .locator(".ruby-modal")
-      .getByLabel("Sport", { exact: true })
-      .selectOption("NBA");
-    await page.getByLabel("Card title").fill("Sample Ruby drop");
-    await page
-      .getByLabel("Your legs")
-      .fill("Sample X 20+ points\nSample Y 5+ rebounds");
-    await page.getByLabel("Sportsbook · optional").fill("Sample Book");
-    await page.getByLabel("Combined odds · optional").fill("+250");
-    await page.getByText("Preview your card", { exact: true }).click();
-    assert.ok(await page.locator(".ruby-modal .ruby-diamond").count());
-    assert.equal(await page.locator(".ruby-modal .ruby-gambly").count(), 0);
-  }
-  await page
-    .getByRole("button", { name: "Publish to The Zone", exact: true })
-    .click();
-  await page.getByRole("link", { name: "View your lay" }).waitFor();
-  assert.equal(submits, 1);
-  if (photoOnly) {
-    // A full-screen phone screenshot is shrunk in the browser below the 4.5 MB platform limit.
-    assert.ok(uploadedPhoto && uploadedPhoto.length < 4_400_000);
-    assert.ok(uploadedPhoto.includes(Buffer.from("image/jpeg")));
-  }
-  assert.equal(
-    await page
-      .locator(".ruby-submit-content")
-      .getByRole("button", { name: "Submit today’s lay" })
-      .count(),
-    1,
-  );
-  // After the third slip of the day, "View your lay" becomes the gold button; it keeps its dark
-  // label under the dark theme's link color.
-  full = true;
-  await reloadSettled(page);
-  await page.locator(".ruby-submit-drawer > summary").click();
-  const viewLay = page.locator("a.ruby-primary", { hasText: "View your lay" });
-  await viewLay.waitFor();
-  assert.equal(
-    await viewLay.evaluate((a) => getComputedStyle(a).color),
-    "rgb(32, 25, 13)",
-  );
-  assert.equal(
-    await page
-      .locator(".ruby-submit-content")
-      .getByRole("button", { name: "Submit today’s lay" })
-      .count(),
-    0,
-  );
-  full = false;
-  await viewLay.click();
-  await page.locator(".ruby-card.ruby-diamond").waitFor();
-  for (const theme of ["diamond", "orbit", "diagonal", "corner", "skyline"])
-    assert.equal(await page.locator(`.ruby-card.ruby-${theme}`).count(), 1);
-  if (photoOnly) {
-    assert.ok(
-      (await page.locator(".ruby-card.ruby-diamond").innerText()).includes(
-        "The GOAT’s daily lay",
-      ),
-    );
-    await page
-      .locator(".ruby-card.ruby-diamond .community-photo img")
-      .waitFor();
-  } else {
-    assert.ok(
-      (await page.locator(".ruby-card.ruby-diamond").innerText()).includes(
-        "Contributor-reported combined odds",
-      ),
-    );
-  }
+  assert.deepEqual(await page.locator(".zone-tabs [role=tab]").allInnerTexts(), ["For you", "Following"]);
+  assert.equal(await page.locator(".ruby-submit-drawer, .ruby-contributors").count(), 0);
+  await go(page, base + "/community?view=vip&ruby=" + mine.id);
+  const archived = page.locator(".ruby-card.ruby-diamond");
+  await archived.waitFor();
+  assert.equal(await page.locator(".ruby-submit-drawer, .ruby-contributors").count(), 0);
+  if (photoOnly) await archived.locator(".community-photo img").waitFor();
+  else assert.match(await archived.innerText(), /Contributor-reported combined odds/);
+  assert.equal(submits, 0);
   // Every published lay opens with Gambly: typed legs copy as text, a screenshot-only lay
   // copies the screenshot itself as a PNG.
   await page
@@ -546,15 +361,13 @@ for (const { width, photoOnly } of [
   );
   reviewing = false;
   reported = null;
-  // Only an admin sees "Remove from The Zone"; it records a hide for that card.
-  await go(page, base + "/feed?view=contributors");
-  await page.locator(".ruby-contributors").waitFor();
-  assert.equal(
-    await page.getByRole("button", { name: "Remove from The Zone" }).count(),
-    0,
-  );
+  // Older links still open the exact historical card, with moderation restricted to admins.
+  const legacy = base + "/feed?view=contributors&ruby=" + slips[0].id;
+  await go(page, legacy);
+  await page.locator(".ruby-card.ruby-orbit").waitFor();
+  assert.equal(await page.getByRole("button", { name: "Remove from The Zone" }).count(), 0);
   adminView = true;
-  await reloadSettled(page);
+  await go(page, legacy);
   const remove = page
     .locator(".ruby-card.ruby-orbit")
     .getByRole("button", { name: "Remove from The Zone" });
@@ -568,40 +381,12 @@ for (const { width, photoOnly } of [
   assert.equal(await page.getByText("Feature as Double Up").count(), 0);
   assert.equal(await page.getByText(/DOUBLE UP/).count(), 0);
   adminView = false;
-  // For you mixes posts and lays as cards; the contributor picker lives on the VIP lays view.
-  await go(page, base + "/feed");
-  assert.equal(await page.locator(".ruby-contributors").count(), 0);
   member = true;
-  reviewing = true;
-  reported = "WIN";
   await go(page, base + "/feed");
   await page.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
   assert.equal(new URL(page.url()).pathname, "/community");
-  // One feed: For you (posts and VIP lays together), Following, and the VIP lays view.
-  assert.deepEqual(
-    await page.locator(".zone-tabs [role=tab]").allInnerTexts(),
-    ["For you", "Following", "VIP lays"],
-  );
-  await page
-    .locator(".zone-tabs")
-    .getByRole("tab", { name: "VIP lays" })
-    .click();
-  await page.locator(".ruby-contributors").waitFor();
-  // Members don't see the board or records on the row; opening a capper shows their rank.
-  await settle(page);
-  assert.equal(await page.locator(".ruby-board").count(), 0);
-  assert.equal(await page.locator(".ruby-person-record").count(), 0);
-  await page
-    .locator(".ruby-people")
-    .getByRole("button", { name: /The GOAT/ })
-    .click();
-  const record = page.locator(".ruby-profile-record");
-  await record.waitFor();
-  assert.match(await record.textContent(), /The GOAT3–1/);
-  assert.equal(await record.locator(".ruby-profile-rank").count(), 0);
-  member = false;
-  reviewing = false;
-  reported = null;
+  assert.deepEqual(await page.locator(".zone-tabs [role=tab]").allInnerTexts(), ["For you", "Following"]);
+  assert.equal(await page.locator(".ruby-contributors, .ruby-submit-drawer").count(), 0);
   // Neither Zone tab exposes Double Up or the contributor-only leaderboard.
   analystActive = true;
   member = true;
@@ -623,7 +408,7 @@ for (const { width, photoOnly } of [
   assert.deepEqual(errors, []);
   assert.deepEqual(kalshiRequests, [], "paused Kalshi made a request");
   console.log(
-    `PASS Ruby composer, preview, NBA member submission, daily lock, five templates and Zone link @${width} photoOnly=${photoOnly}`,
+    `PASS retired VIP section, historical card access, copy, results and moderation @${width} photoOnly=${photoOnly}`,
   );
   await ctx.close();
 }

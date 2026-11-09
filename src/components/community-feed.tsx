@@ -9,9 +9,9 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
+import RubyHub from "./ruby-cards";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
-import RubyHub from "./ruby-cards";
 import KalshiSourceLink from "./kalshi-source-link";
 import { actionableKalshiSource } from "@/lib/kalshi-availability";
 import { rubyBrands, type RubySlip } from "@/lib/ruby";
@@ -577,7 +577,7 @@ function ZoneLay({
     rubyBrands.find((b) => b.theme === lay.theme) ||
     rubyBrands.find((b) => b.brand === lay.brand);
   const odds = lay.reported_odds;
-  const href = `/community?view=vip&ruby=${lay.id}#ruby-${lay.id}`;
+  const href = `/community?ruby=${lay.id}#ruby-${lay.id}`;
   return (
     <article
       className="zone-post zone-lay"
@@ -593,12 +593,7 @@ function ZoneLay({
             {brand?.monogram || initials(lay.brand)}
           </span>
           <span>
-            <b>
-              {lay.brand}
-              <span className="zone-vip">
-                <Gem size={11} aria-hidden="true" /> VIP
-              </span>
-            </b>
+            <b>{lay.brand}</b>
             <small>
               Contributor lay · {lay.sport.toUpperCase()} ·{" "}
               <time dateTime={lay.created_at}>{ago(lay.created_at)}</time>
@@ -735,6 +730,8 @@ export default function CommunityFeed() {
   const router = useRouter();
   const routeSport = searchParams.get("sport");
   const routePost = searchParams.get("post");
+  const rubyId = searchParams.get("ruby");
+  const targetLay = rubyId && /^[0-9a-f-]{36}$/i.test(rubyId) ? rubyId : null;
   const targetComment = /^[0-9a-f-]{36}$/i.test(
     searchParams.get("comment") || "",
   )
@@ -746,9 +743,6 @@ export default function CommunityFeed() {
     [sport, setSport] = useState<"all" | Sport>("all"),
     [postSport, setPostSport] = useState<Sport>("nfl"),
     [followingOnly, setFollowingOnly] = useState(false),
-    [vipOnly, setVipOnly] = useState(
-      searchParams.get("view") === "vip" || searchParams.has("ruby"),
-    ),
     [lays, setLays] = useState<RubySlip[]>([]),
     [avatars, setAvatars] = useState<Record<string, Person>>({}),
     [me, setMe] = useState<{ username: string; avatar: string | null }>({
@@ -797,13 +791,6 @@ export default function CommunityFeed() {
       routePost && /^[0-9a-f-]{36}$/i.test(routePost) ? routePost : null,
     );
   }, [routeSport, routePost]);
-  // Links can change the view while this page stays mounted: a story opens a post, a lay opens VIP lays.
-  useEffect(() => {
-    if (searchParams.get("view") === "vip" || searchParams.has("ruby")) {
-      setVipOnly(true);
-      setFollowingOnly(false);
-    } else if (searchParams.has("post")) setVipOnly(false);
-  }, [searchParams]);
   useEffect(() => {
     if (uid && routePost && targetComment) setOpenComments(routePost);
   }, [uid, routePost, targetComment]);
@@ -882,9 +869,8 @@ export default function CommunityFeed() {
     if (target.data && !posts.some((p) => p.id === target.data.id))
       posts.unshift(target.data);
     setRows(posts);
-    // VIP lays share the one feed; "Following" stays member posts only.
-    const rubyId = searchParams.get("ruby");
-    const [cards, one, faces, mine] = await Promise.all([
+    // Historical contributor cards still appear in the main feed.
+    const [cards, faces, mine] = await Promise.all([
       followingOnly
         ? Promise.resolve({ data: [] as RubySlip[], error: null })
         : (sport === "all"
@@ -896,9 +882,6 @@ export default function CommunityFeed() {
           )
             .order("created_at", { ascending: false })
             .limit(limit),
-      rubyId && /^[0-9a-f-]{36}$/i.test(rubyId)
-        ? supabase.from("ruby_cards").select("*").eq("id", rubyId).maybeSingle()
-        : Promise.resolve({ data: null, error: null }),
       supabase.rpc("community_avatars", {
         p_users: [...new Set(posts.map((p) => p.user_id))].slice(0, 100),
       }),
@@ -909,10 +892,7 @@ export default function CommunityFeed() {
         .maybeSingle(),
     ]);
     if (n !== epoch.current) return;
-    const laid: RubySlip[] = cards.data || [];
-    if (one.data && !laid.some((x) => x.id === one.data.id))
-      laid.unshift(one.data);
-    setLays(laid);
+    setLays(cards.data || []);
     if (!faces.error)
       setAvatars((known) => ({
         ...known,
@@ -937,7 +917,7 @@ export default function CommunityFeed() {
         .limit(50);
       if (n === epoch.current) setReports(flags.data || []);
     }
-  }, [uid, sport, limit, followingOnly, targetPost, searchParams]);
+  }, [uid, sport, limit, followingOnly, targetPost]);
   useEffect(() => {
     if (
       !targetPost ||
@@ -1103,7 +1083,7 @@ export default function CommunityFeed() {
   }, [lays, uid]);
   async function shareLay(lay: RubySlip) {
     try {
-      const url = `${location.origin}/community?view=vip&ruby=${lay.id}#ruby-${lay.id}`;
+      const url = `${location.origin}/community?ruby=${lay.id}#ruby-${lay.id}`;
       if (navigator.share) await navigator.share({ title: `${lay.brand} lay on Vegas Quant`, url });
       else await navigator.clipboard.writeText(url);
       setNotice("Lay link shared.");
@@ -1322,7 +1302,7 @@ export default function CommunityFeed() {
     );
     if (!r.error) form.reset();
   }
-  const feed = zoneFeed(rows, lays, vipOnly);
+  const feed = zoneFeed(rows, lays.filter((lay) => lay.id !== targetLay));
   const face = (name: string, avatar: string | null | undefined) => (
     <Avatar name={name} avatar={avatar} />
   );
@@ -1357,17 +1337,14 @@ export default function CommunityFeed() {
             <Gem size={22} aria-hidden="true" />
             <h2 id="zone-entry-title">Join the conversation</h2>
             <p>
-              The Zone is where members share slips, talk through games and
-              post VIP lays. It’s member opinion, kept separate from Vegas
+              The Zone is where members share slips and talk through games.
+              It’s member opinion, kept separate from Vegas
               Quant’s published research.
             </p>
             <ul className="zone-entry-list">
               <li>
                 <b>Member slips and game talk</b> · read and comment once
                 you’re signed in
-              </li>
-              <li>
-                <b>VIP lays</b> · from contributors, labelled as theirs
               </li>
               <li>
                 <b>Recent posts</b> · tap through each member’s latest
@@ -1383,8 +1360,8 @@ export default function CommunityFeed() {
               Sign in or create an account
             </Link>
             <p className="zone-entry-more">
-              A free account lets you read posts and VIP lays; complete your
-              visible profile to publish and comment. Posting is always
+              A free account lets you read posts. Complete your visible
+              profile to publish and comment. Posting is always
               optional.
             </p>
             <Link className="zone-entry-research" href="/matchups">
@@ -1514,33 +1491,18 @@ export default function CommunityFeed() {
                 My lays · saved and in progress →
               </Link>
             </p>
-            {/* Contributors submit lays from Home or the VIP lays view, not above the feed. */}
             <div className="zone-tabs" role="tablist" aria-label="Feed">
               {(
                 [
                   [
                     "For you",
-                    !followingOnly && !vipOnly,
-                    () => {
-                      setFollowingOnly(false);
-                      setVipOnly(false);
-                    },
+                    !followingOnly,
+                    () => setFollowingOnly(false),
                   ],
                   [
                     "Following",
                     followingOnly,
-                    () => {
-                      setFollowingOnly(true);
-                      setVipOnly(false);
-                    },
-                  ],
-                  [
-                    "VIP lays",
-                    vipOnly,
-                    () => {
-                      setFollowingOnly(false);
-                      setVipOnly(true);
-                    },
+                    () => setFollowingOnly(true),
                   ],
                 ] as const
               ).map(([label, on, pick]) => (
@@ -1601,17 +1563,13 @@ export default function CommunityFeed() {
                 This post is no longer available.
               </p>
             ) : null}
-            {vipOnly ? (
-              <RubyHub zone selectedId={searchParams.get("ruby") || ""} />
-            ) : null}
-            {!vipOnly && !loading && feed.length === 0 ? (
+            {targetLay ? <RubyHub key={targetLay} selectedId={targetLay} /> : null}
+            {!targetLay && !loading && feed.length === 0 ? (
               <section className="zone-join">
                 <h2>
                   {followingOnly
                     ? "Follow someone to build your feed."
-                    : vipOnly
-                      ? "No VIP lays yet today."
-                      : "Be the first to start the conversation."}
+                    : "Be the first to start the conversation."}
                 </h2>
                 <p>
                   Which player benefits most from the latest injury news? Bring
@@ -1619,7 +1577,7 @@ export default function CommunityFeed() {
                 </p>
               </section>
             ) : null}
-            {(vipOnly ? [] : feed).map((item) =>
+            {feed.map((item) =>
               item.kind === "lay" ? (
                 <ZoneLay
                   key={`lay-${item.id}`}
@@ -1993,8 +1951,7 @@ export default function CommunityFeed() {
                 })()
               ),
             )}
-            {!vipOnly &&
-            (rows.length >= limit || lays.length >= limit) &&
+            {(rows.length >= limit || lays.length >= limit) &&
             limit < 100 ? (
               <button
                 className="secondary"
