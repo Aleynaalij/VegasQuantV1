@@ -151,12 +151,9 @@ try {
     await p.waitForTimeout(200);
     assert.equal(await p.getByTestId("frank-anniversary-fireworks").count(), 0);
     assert.equal(arrivals, 1);
-    // Submit a Lay (the contributor form) lives in the contributor area, not on consumer pages.
     await p.goto(base + "/community?view=vip", { waitUntil: "load" });
-    await p.locator(".ruby-submit-drawer").waitFor();
-    await p.locator(".ruby-submit-drawer > summary").click();
-    await p.locator(".ruby-submit-content button").click();
-    await p.waitForTimeout(200);
+    await p.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
+    assert.equal(await p.locator(".ruby-submit-drawer").count(), 0);
     assert.equal(
       await p
         .getByRole("dialog", { name: "Happy anniversary, Frank!" })
