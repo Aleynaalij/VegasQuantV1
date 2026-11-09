@@ -52,6 +52,7 @@ http.createServer((req, res) => {
   if (rpc("nba_editorial_records") || rpc("sports_records")) return json(res, { selections: 0, win: 0, loss: 0, push: 0, void: 0, pending: 0, review: 0 });
   if (rpc("is_admin")) return json(res, false);
   if (rpc("community_feed")) return json(res, [{ id: "c1", user_id: "u2", author_name: "SampleMember", title: "Sample slip", body: "Sample post body.", sport: "nfl", kind: "talk", legs: [], stake: null, created_at: NOW, reactions: 0, reacted: false, comments: 0, following: false }]);
+  if (rpc("community_profile")) return json(res, { user_id: "u2", username: "SampleMember", avatar: null, region: "Sample", instagram_url: null, x_url: null, member_since: "2026-10-01T00:00:00Z", is_me: false, i_follow: false, followers: 12, following: 4, post_count: 1, posts: [{ id: "c1", sport: "nfl", kind: "talk", title: "Sample slip", body: "Sample post body.", photo_path: null, card: null, created_at: NOW, reactions: 0, comments: 0 }] });
   if (rpc("community_member")) return json(res, { username: "SampleMember", region: "Sample", avatar: null, visible: true, events: [] });
   if (rpc("challenge_community_count")) return json(res, 3);
   if (rpc("tail_leaderboard")) return json(res, [{ username: "SampleMember", wins: 4, losses: 1, pushes: 0, score: 37.6 }]);
