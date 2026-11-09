@@ -89,7 +89,7 @@ await db.exec(`
  execute format('create policy age_verified_account on public.%I as restrictive for all to authenticated using((select private.age_member_allowed()))',t); end loop; end $$;
 `);
 await db.exec(
-  read("supabase/migrations/20261109210336_dealer_only_zone_feed.sql"),
+  read("supabase/migrations/20261109212303_dealer_only_zone_feed.sql"),
 );
 const asViewer = async () =>
   db.exec(
