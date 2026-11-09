@@ -16,7 +16,9 @@
   font-weight: 700;
 }
 .zone-publication-face .publication-headline {
-  font: 800 40px var(--font-body), sans-serif;
+  font:
+    800 40px var(--font-body),
+    sans-serif;
   letter-spacing: 1px;
 }
 .publication-controls {
@@ -45,16 +47,13 @@
   width: fit-content;
   min-height: 44px;
   padding: 8px 12px;
-  border: 1px solid #ff66665c;
+  border: 1px solid #e7cb825c;
   border-radius: 10px;
-  background: #ff4d4d12;
-  box-shadow: 0 0 12px #ff4d4d40;
-  color: #ff9292;
+  background: #e7cb820d;
+  color: #f1d58e;
   cursor: pointer;
   font-weight: 700;
   list-style: none;
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .zone-publication .publication-analysis > summary::after {
   content: "";
@@ -68,15 +67,22 @@
   transform: rotate(225deg);
 }
 .zone-publication .publication-analysis > summary:hover {
-  background: #ff4d4d24;
+  background: #e7cb821a;
 }
 .zone-publication .publication-analysis > summary:focus-visible {
-  outline: 2px solid #ff9292;
+  outline: 2px solid #f1d58e;
   outline-offset: 3px;
 }
 .publication-analysis p {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+.publication-analysis h3 {
+  overflow-wrap: anywhere;
+}
+.zone-publication[data-research-preview] .zone-publication-face {
+  max-width: 540px;
+  margin-inline: auto;
 }
 .zone-publication > textarea {
   width: 100%;
@@ -84,7 +90,18 @@
   font-size: 16px;
 }
 
-.zone-publication-face { border: 1px solid #e7cb824d; background: #10271f; }
-.publication-analysis { color: #f5eedd; font-size: 16px; line-height: 1.65; }
+.zone-publication-face {
+  border: 1px solid #e7cb824d;
+  background: #10271f;
+}
+.publication-analysis {
+  color: #f5eedd;
+  font-size: 16px;
+  line-height: 1.65;
+}
 
-.publication-time { color: #c2cdbf; font-size: 13px; line-height: 1.4; }
+.publication-time {
+  color: #c2cdbf;
+  font-size: 13px;
+  line-height: 1.4;
+}

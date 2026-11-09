@@ -38,21 +38,31 @@ export default function ZonePublicationCard({
   if (!isSport(p.sport)) return null;
   const theme = vqCardPalette(p.id);
   const label = PUBLICATION_LABELS[p.sport];
-  const { title, rows, start, height, editorial } = layout;
-  const headline = watchers
-    ? "WATCHLIST"
-    : editorial || p.legs.length
-      ? "PUBLISHED PICKS"
-      : "RESEARCH UPDATE";
+  const { title, rows, start, height, editorial, research, rules } = layout;
+  const headline =
+    layout.headline ||
+    (watchers
+      ? "WATCHLIST"
+      : editorial || p.legs.length
+        ? "PUBLISHED PICKS"
+        : "RESEARCH UPDATE");
   const stamp = publicationStamp(p.created_at),
     copyText = publicationCopy(p);
   const footer = watchers
     ? "Watchlist only · not official picks · check lines and inactives"
     : editorial
       ? "Qualitative editorial · no validated model edge · prices can change"
-    : p.legs.length
-      ? "Published picks · verify current line and availability"
-      : "Vegas Quant publication · original analysis and sources";
+      : p.legs.length
+        ? "Published picks · verify current line and availability"
+        : "Research only · not picks · quoted prices may change";
+  const rowColor = (row: (typeof rows)[number]) =>
+    row.tone === "accent"
+      ? theme.accent
+      : row.tone === "muted"
+        ? "#c2cdbf"
+        : row.pick
+          ? "#f5eedd"
+          : "#e0e9df";
   async function copy() {
     setError("");
     try {
@@ -125,13 +135,7 @@ export default function ZonePublicationCard({
       title.forEach((line, n) =>
         text(line, 74, 260 + n * 72, 60, "#f5eedd", 700),
       );
-      text(
-        stamp,
-        74,
-        start - 110,
-        40,
-        "#c2cdbf",
-      );
+      text(stamp, 74, start - 110, 40, "#c2cdbf");
       c.strokeStyle = theme.accent + "55";
       c.beginPath();
       c.moveTo(74, start - 80);
@@ -150,8 +154,24 @@ export default function ZonePublicationCard({
         }
       }
       rows.forEach((row) =>
-        text(row.text, row.x, row.y, row.size ?? 56, row.pick ? "#f5eedd" : "#e0e9df"),
+        text(
+          row.text,
+          row.x,
+          row.y,
+          row.size ?? 56,
+          rowColor(row),
+          row.weight ?? 500,
+        ),
       );
+      for (const y of rules || []) {
+        c.strokeStyle = theme.accent + "33";
+        c.beginPath();
+        c.moveTo(74, y);
+        c.lineTo(1006, y);
+        c.stroke();
+      }
+      if (research)
+        text("Complete report in The Zone", 74, 1200, 34, theme.accent, 700);
       text(footer, 74, height - 104, 24, "#c2cdbf");
       text("VEGASQUANT.APP", 74, height - 66, 24, theme.accent, 700);
       const blob = await new Promise<Blob>((ok, fail) =>
@@ -173,16 +193,19 @@ export default function ZonePublicationCard({
       className="zone-publication"
       data-sport={p.sport}
       data-palette={theme.name}
+      data-research-preview={research || undefined}
       aria-label={`${label} Vegas Quant publication`}
     >
-      <p className="publication-time">
-        {stamp} · Publication time, not a price observation.
-      </p>
+      {!research && (
+        <p className="publication-time">
+          {stamp} · Publication time, not a price observation.
+        </p>
+      )}
       <svg
         className="zone-publication-face"
         viewBox={`0 0 1080 ${height}`}
         role="img"
-        aria-label={`${p.title}. ${stamp}. ${watchers ? p.body : rows.map((row) => row.text).join(" ")}`}
+        aria-label={`${p.title}. ${stamp}. ${watchers ? p.body : rows.map((row) => row.text).join(" ")}${research ? ". Research preview, not picks. Open Full analysis and sources for the complete report." : ""}`}
       >
         <defs>
           <radialGradient
@@ -257,10 +280,7 @@ export default function ZonePublicationCard({
         <text x="74" y={start - 110} fontSize="40" fill="#c2cdbf">
           {stamp}
         </text>
-        <path
-          d={`M74 ${start - 80} H1006`}
-          stroke={theme.accent + "55"}
-        />
+        <path d={`M74 ${start - 80} H1006`} stroke={theme.accent + "55"} />
         {watchers && (
           <g>
             <text
@@ -316,11 +336,26 @@ export default function ZonePublicationCard({
             x={row.x}
             y={row.y}
             fontSize={row.size ?? 56}
-            fill={row.pick ? "#f5eedd" : "#e0e9df"}
+            fill={rowColor(row)}
+            fontWeight={row.weight ?? 500}
           >
             {row.text}
           </text>
         ))}
+        {rules?.map((y) => (
+          <path key={y} d={`M74 ${y} H1006`} stroke={theme.accent + "33"} />
+        ))}
+        {research && (
+          <text
+            x="74"
+            y="1200"
+            fontSize="34"
+            fontWeight="700"
+            fill={theme.accent}
+          >
+            Complete report in The Zone
+          </text>
+        )}
         <text x="74" y={height - 104} fontSize="24" fill="#c2cdbf">
           {footer}
         </text>
@@ -336,14 +371,28 @@ export default function ZonePublicationCard({
       </svg>
       <details className="publication-analysis">
         <summary>Full analysis and sources</summary>
-        <p>{p.body.split("\n").map((line, i) => (
-          <span key={i}>
-            {i > 0 && "\n"}
-            {/^https:\/\/[^\s]+$/.test(line.trim()) ? (
-              <a href={line.trim()} target="_blank" rel="noopener noreferrer">{line.trim()}</a>
-            ) : line}
-          </span>
-        ))}</p>
+        {research && (
+          <>
+            <h3>{p.title}</h3>
+            <p className="publication-time">
+              {stamp} · Publication time, not a price observation.
+            </p>
+          </>
+        )}
+        <p>
+          {p.body.split("\n").map((line, i) => (
+            <span key={i}>
+              {i > 0 && "\n"}
+              {/^https:\/\/[^\s]+$/.test(line.trim()) ? (
+                <a href={line.trim()} target="_blank" rel="noopener noreferrer">
+                  {line.trim()}
+                </a>
+              ) : (
+                line
+              )}
+            </span>
+          ))}
+        </p>
         {p.legs.some((l) => !p.body.includes(l)) && (
           <ol>
             {p.legs.map((l, i) => (
