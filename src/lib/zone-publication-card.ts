@@ -102,6 +102,13 @@ function previewLines(text: string, size: number, limit: number, width = 932) {
  * quote or its time cannot be preserved, use the ordinary report preview. */
 function receivingSnapshots(p: PublicationPost) {
   if (p.sport !== "nfl" || !/^NFL WR Matchups · /.test(p.title)) return null;
+  if (
+    wrapCardText(
+      p.title.replace(/^NFL WR Matchups · /, "").replace(" @ ", "\n@ "),
+      60,
+    ).length > 2
+  )
+    return null;
   const observed = p.body.match(
     /FanDuel receiving[\s‑-]yard snapshots at [^\n]+? ET\./,
   )?.[0];
@@ -197,7 +204,7 @@ function researchLayout(p: PublicationPost) {
         size: 34,
         tone: "muted",
       });
-      if (i < snapshots.entries.length - 1) rules.push(y + 56);
+      if (i < snapshots.entries.length - 1) rules.push(y + 50);
     });
   } else {
     // URLs belong in the report, not a second column on the preview image.

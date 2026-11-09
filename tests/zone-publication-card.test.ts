@@ -98,6 +98,13 @@ test("unrecognized or incomplete snapshot formats fall back without inventing a 
     );
   const otherSport = publicationLayout({ ...research, sport: "nba" });
   assert.equal(otherSport.headline, "RESEARCH UPDATE");
+  assert.equal(
+    publicationLayout({
+      ...research,
+      title: "NFL WR Matchups · " + "Long team name ".repeat(10),
+    }).headline,
+    "RESEARCH UPDATE",
+  );
 });
 
 test("arbitrarily long research, titles and sources stay within one portrait card", () => {
