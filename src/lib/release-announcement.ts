@@ -1,16 +1,15 @@
 /** Published only after the matching frontend passes verification. No feature access changes. */
-export const RELEASE_ANNOUNCEMENT_ID = "9e4b549c-51ec-43a7-a3cd-86076246bd86";
-export const RELEASE_ANNOUNCEMENT_TITLE =
-  "Fresh updates. Fear Index is live for testers.";
-export const RELEASE_ANNOUNCEMENT_BODY = `Here’s what’s new in Vegas Quant:
+export const RELEASE_ANNOUNCEMENT_ID = "73a3b654-da0b-456a-ad4d-fab9caa060b5";
+export const RELEASE_ANNOUNCEMENT_TITLE = "Member profiles are live.";
+export const RELEASE_ANNOUNCEMENT_BODY = `Your Vegas Quant profile just got an upgrade.
 
-MATCHUP RESEARCH FIXES
-NFL matchup pages now keep available player research attached. NBA matchup pages keep lineups alongside available sourced research. NHL and college basketball pages label stale research more clearly. Coverage varies by game; not every matchup has a published pick.
+YOUR PAGE, YOUR BRAND
+Tap your photo at the top of any screen to open your profile. You’ll see your followers, who you follow, and every post you’ve made in The Zone, with a photo grid for your picture posts.
 
-FEAR INDEX IS LIVE
-Approved testers can now use Fear Index for supported NFL and NBA matchups. Availability depends on source coverage and your account’s access. Research is not a guaranteed outcome.
+MAKE IT YOURS
+Tap Edit profile to change your photo and add a tagline, a short bio, your state, and your Instagram and X links.
 
-SIMULATOR ON THE WAY
-We’re working on the simulator. It is still in development, with no release date announced yet.
+FOLLOW THE MEMBERS YOU LIKE
+Open anyone’s profile from The Zone and tap Follow. Interaction stays on posts: likes, votes and comments.
 
-Thanks for being part of Vegas Quant. More to come!`;
+See you in The Zone!`;
