@@ -1,6 +1,6 @@
 # Dealer results and followed-account notifications
 
-Prepared from main `b2bf71ce0fd05ac8beee93995bff3486130462d8`, then synchronized with `e52068935bebe529d3254be034ac97a23d222f08` (member profiles) for draft PR review. No production migration, data writes, merge, or manual deployment is part of this change. Repository automation may build a branch preview; that does not apply this SQL to production.
+Prepared from main `b2bf71ce0fd05ac8beee93995bff3486130462d8`, then synchronized with `e52068935bebe529d3254be034ac97a23d222f08` (member profiles) for draft PR review. The owner subsequently authorized a coordinated merge and production deployment. Historical migration sources are restored only, not rerun. Repository automation may build branch previews; previews do not apply SQL to production.
 
 ## Behavior
 
@@ -29,7 +29,7 @@ The existing `vq-live-pick-alerts` job keeps its two-minute schedule and dispatc
 
 There are at most eight completed, handled publication attempts per accepted result, including the first publication attempt. Failed attempts wait 1, 2, 4, 8, 16, 32 and 60 minutes; the two-minute scheduler may round those waits upward. The eighth handled failure becomes `blocked` with no automatic retries. Query cancellation (SQLSTATE 57014), connection termination or a whole-RPC failure aborts the retry transaction, preserving its due rows but rolling back attempt bookkeeping. These interrupted transactions do not consume the cap. Cancellation is intentionally not swallowed so operator/server deadlines remain effective; the route reports `zone_unavailable` and HTTP 503 when that RPC fails. Original notifications were committed in a different RPC and remain intact. Operators can inspect `public.live_pick_zone_health()` or the `zone_results` field of `public.social_notification_health()` for pending/due/blocked counts, oldest due time and the latest bounded error. The authenticated dispatch route reports HTTP 503 for unresolved pending/blocked jobs or a failed lane, including publication failures observed by its final health read. It does not echo stored SQL errors.
 
-Blocked work requires operator investigation and a separately approved targeted requeue after repair. Do not reset posted or historical rows. No production retry, activation or requeue is performed by this PR. Read-only catalog inspection on November 9 confirmed `vq-live-pick-alerts` is active on `*/2 * * * *`. Release validation must recheck that it is present and healthy; the synthetic test's HTTP/cron seam is not evidence of live scheduling.
+Blocked work requires operator investigation and a separately approved targeted requeue after repair. Do not reset posted or historical rows. No manual requeue or new scheduler activation is part of this change. Read-only catalog inspection on November 9 confirmed `vq-live-pick-alerts` is active on `*/2 * * * *`. Release validation must recheck that it is present and healthy; the synthetic test's HTTP/cron seam is not evidence of live scheduling.
 
 ## Recovered deployment prerequisites
 
@@ -59,3 +59,9 @@ Rollback should restore the prior emitter, Zone-post notifier, publication guard
 - `npm run typecheck` and `npm run build`: passed. No separate lint script is defined.
 - Both restored historical source hashes remain pinned and unchanged. Read-only production catalog checks found the target function anchors and the existing active two-minute scheduler. No production DDL/data, notifications or posts were written during preparation.
 - Remote CI must be checked on the published final SHA. The synthetic service-role/authenticator flow and fake HTTP capture are not live requests. Full empty-database reset, live browser/realtime/external delivery and multi-connection PostgreSQL races are not claimed.
+
+## Authorized SQL release
+
+The reviewed SQL was applied once on November 9, 2026. Supabase recorded version `20261109032951`; the repository file and tests were aligned to that actual version without altering migration history or SQL bytes. Its recorded statement MD5 `8a387b4c6a6ca655c59452def80fa21f` matches the reviewed file (SHA-256 `52db149e4711f5b28172bd68ee64bf5847223ba2948fc68b3913ac47dd6978b2`).
+
+Immediate readback verified the restrictive follow policy, service-only retry/health permissions, active existing two-minute scheduler, and zero pending/due/blocked jobs. All 18 pre-existing alert rows remained historical and unqueued; no result posts were created by the migration. App deployment status is recorded in PR #266.

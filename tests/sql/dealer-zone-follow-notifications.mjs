@@ -107,8 +107,7 @@ const shared='00000000-0000-4000-8000-000000000099';
 const legacy=await emit(b,'like','legacy-b',shared);assert.equal(await emit(c,'like','legacy-c',shared),legacy);
 const historic='00000000-0000-4000-8000-000000000098';
 await db.query("insert into private.live_pick_alerts(pick_id,sport,message) values($1,'nhl','Historical result')",[historic]);
-await db.exec(sql('supabase/migrations/20261109022723_dealer_zone_follow_notifications.sql'));
-// Latest-main integration seam: install the original follow/profile owner-read policies on
+// Migration-order integration seam: install the original follow/profile owner-read policies on
 // minimal fixture tables and the unchanged restrictive age policy; no production gate bypass.
 await db.exec(`alter table public.member_follows enable row level security;
 alter table public.community_profiles enable row level security;
@@ -121,6 +120,7 @@ const profilePolicy=sql('supabase/migrations/20261003112128_community_profiles.s
 assert.ok(profilePolicy);await db.exec(profilePolicy);
 for(const table of ['member_follows','community_profiles']) await db.exec(`create policy age_verified_account on public.${table} as restrictive for all to authenticated using((select private.age_member_allowed())) with check((select private.age_member_allowed()))`);
 await db.exec(sql('supabase/migrations/20261109030000_member_follows_any_profile.sql'));
+await db.exec(sql('supabase/migrations/20261109032951_dealer_zone_follow_notifications.sql'));
 
 await t.test('no replay, exact Dealer identity and restricted helper ACLs',async()=>{
  assert.equal((await one('select count(*)::int n from public.community_posts')).n,0);
@@ -428,7 +428,7 @@ await t.test('public RPC works as service_role under authenticator session; auth
 await test('migration fails closed without deployed Dealer identity prerequisite',async(t)=>{
  const isolated=new PGlite();t.after(()=>isolated.close());
  await isolated.exec('create schema private');
- await assert.rejects(isolated.exec(sql('supabase/migrations/20261109022723_dealer_zone_follow_notifications.sql')),/Dealer identity migration required/);
+ await assert.rejects(isolated.exec(sql('supabase/migrations/20261109032951_dealer_zone_follow_notifications.sql')),/Dealer identity migration required/);
  await isolated.exec('rollback');
  const rows=(await isolated.query("select to_regprocedure('private.notification_actor_followed(uuid,uuid,text)') fn")).rows;
  assert.equal(rows[0].fn,null,'failed precondition creates no follow helper');
