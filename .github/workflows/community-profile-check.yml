@@ -4,6 +4,7 @@ on:
     paths:
       - 'supabase/migrations/20261109020607_community_profile.sql'
       - 'supabase/migrations/20261109022151_community_profile_fields.sql'
+      - 'supabase/migrations/20261109030000_member_follows_any_profile.sql'
       - 'src/components/profile-editor.tsx'
       - 'src/components/member-profile.tsx'
       - 'src/lib/member-profile.ts'

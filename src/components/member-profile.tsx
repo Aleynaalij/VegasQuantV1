@@ -75,7 +75,8 @@ export default function MemberProfile({ username }: { username: string }) {
 
   async function toggleFollow() {
     if (!uid || !profile || profile.is_me || busy) return;
-    const was = profile.i_follow;
+    const was = profile.i_follow,
+      target = username;
     setBusy(true);
     setProfile({
       ...profile,
@@ -92,13 +93,11 @@ export default function MemberProfile({ username }: { username: string }) {
           .from("member_follows")
           .insert({ user_id: uid, target_user_id: profile.user_id });
     setBusy(false);
+    if (target !== username) return;
     if (r.error) {
-      setProfile((p) =>
-        p
-          ? { ...p, i_follow: was, followers: p.followers + (was ? 1 : -1) }
-          : p,
-      );
-      setError("Follow could not save. Please retry.");
+      // Refetch instead of reversing the optimistic change: a refresh may already have replaced it.
+      await load();
+      if (target === username) setError("Follow could not save. Please retry.");
     } else setError("");
   }
 

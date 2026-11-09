@@ -147,4 +147,78 @@ await assert.rejects(
   ),
   /guaranteed-return/,
 );
+// Part 3: following a member who has not posted yet (the profile's Follow button).
+await db.exec(`alter table public.member_follows enable row level security;
+grant select, insert, delete on public.member_follows to authenticated;
+grant select on public.community_posts to authenticated;
+create policy member_follows_insert on public.member_follows for insert to authenticated with check(user_id=(select auth.uid()) and exists(select 1 from public.community_posts p where p.user_id=target_user_id));
+create policy member_follows_read on public.member_follows for select to authenticated using(user_id=(select auth.uid()));
+alter table public.community_profiles enable row level security;
+create policy own_profile_read on public.community_profiles for select to authenticated using(user_id=(select auth.uid()));`);
+const follow = async (uid, target) => {
+  await db.exec(
+    `reset role; select set_config('request.jwt.claim.sub','${uid}',false); set role authenticated;`,
+  );
+  try {
+    await db.query(
+      "insert into public.member_follows(user_id,target_user_id) values ($1,$2)",
+      [uid, target],
+    );
+    return true;
+  } catch (e) {
+    if (/row-level security/.test(String(e.message))) return false;
+    throw e;
+  } finally {
+    await db.exec("reset role");
+  }
+};
+const E = "00000000-0000-4000-8000-00000000000e"; // visible, never posted
+await db.exec(
+  `insert into auth.users(id,email_confirmed_at) values ('${E}',now()); insert into public.community_profiles(user_id,username,visible) values ('${E}','Newbie',true)`,
+);
+assert.equal(await follow(B, E), false, "old policy: no posts, no follow");
+await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261109030000_member_follows_any_profile.sql",
+    "utf8",
+  ),
+);
+assert.equal(
+  await follow(B, E),
+  true,
+  "visible member with no posts can be followed",
+);
+assert.equal(
+  await follow(B, C),
+  false,
+  "hidden profile without posts cannot be followed",
+);
+assert.equal(
+  await follow(B, D),
+  false,
+  "unconfirmed account cannot be followed",
+);
+assert.equal(await follow(A, A), false, "no self-follow");
+await db.exec(`insert into private.blocked values ('${A}','${E}')`);
+assert.equal(
+  await follow(A, E),
+  false,
+  "hidden-from-you member cannot be followed",
+);
+assert.equal(
+  await follow(C, B),
+  true,
+  "members who have posted are still followable",
+);
+await db.exec(
+  `reset role; select set_config('request.jwt.claim.sub','${A}',false); set role authenticated;`,
+);
+await assert.rejects(
+  db.query(
+    `insert into public.member_follows(user_id,target_user_id) values ('${B}','${E}')`,
+  ),
+  /row-level security/,
+  "cannot write another member's follow",
+);
+await db.exec("reset role");
 console.log("Community profile SQL checks passed.");
