@@ -1,7 +1,15 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Grid3x3, Heart, MessageCircle, Rows3, Settings } from "lucide-react";
+import {
+  Grid3x3,
+  Heart,
+  Instagram,
+  MessageCircle,
+  Rows3,
+  Settings,
+  Twitter,
+} from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { Shell } from "./ui";
 import CommunityPhoto from "./community-photo";
@@ -11,6 +19,7 @@ import {
   compactCount,
   isProfile,
   memberSince,
+  socialHandle,
   type MemberProfileData,
 } from "@/lib/member-profile";
 import "@/app/member-profile.css";
@@ -181,27 +190,36 @@ export default function MemberProfile({ username }: { username: string }) {
                   <dd>{compactCount(profile.following)}</dd>
                 </div>
               </dl>
-              {profile.instagram_url || profile.x_url ? (
-                <p className="vq-profile-links">
-                  {profile.instagram_url ? (
+              {socialHandle(profile.instagram_url, "instagram") ||
+              socialHandle(profile.x_url, "x") ? (
+                <div className="vq-profile-socials">
+                  {socialHandle(profile.instagram_url, "instagram") ? (
                     <a
-                      href={profile.instagram_url}
+                      className="vq-profile-social"
+                      href={profile.instagram_url!}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label={`${profile.username} on Instagram (opens in a new tab)`}
                     >
-                      Instagram ↗
+                      <Instagram size={17} aria-hidden="true" />
+                      <span>
+                        {socialHandle(profile.instagram_url, "instagram")}
+                      </span>
                     </a>
                   ) : null}
-                  {profile.x_url ? (
+                  {socialHandle(profile.x_url, "x") ? (
                     <a
-                      href={profile.x_url}
+                      className="vq-profile-social"
+                      href={profile.x_url!}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label={`${profile.username} on X (opens in a new tab)`}
                     >
-                      X ↗
+                      <Twitter size={17} aria-hidden="true" />
+                      <span>{socialHandle(profile.x_url, "x")}</span>
                     </a>
                   ) : null}
-                </p>
+                </div>
               ) : null}
               {error ? (
                 <p className="vq-profile-error" role="status">

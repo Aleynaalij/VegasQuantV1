@@ -6,6 +6,7 @@ import {
   compactCount,
   isProfile,
   memberSince,
+  socialHandle,
 } from "../src/lib/member-profile";
 
 test("counts are compact like Instagram", () => {
@@ -40,4 +41,29 @@ test("the profile page shows followers, following and posts, and no launch-era j
     assert.match(src, new RegExp(`<dt>${label}</dt>`));
   assert.doesNotMatch(src, /journey|challenge_number|stage_number/i);
   assert.match(src, /from\("member_follows"\)\s*\.insert/);
+});
+
+test("Instagram and X links render as handles only when they are plain profile URLs", () => {
+  assert.equal(
+    socialHandle("https://instagram.com/vegasquant", "instagram"),
+    "@vegasquant",
+  );
+  assert.equal(
+    socialHandle("https://www.instagram.com/vegas.quant/", "instagram"),
+    "@vegas.quant",
+  );
+  assert.equal(socialHandle("https://x.com/VegasQuant", "x"), "@VegasQuant");
+  assert.equal(
+    socialHandle("https://twitter.com/VegasQuant", "x"),
+    "@VegasQuant",
+  );
+  assert.equal(socialHandle("javascript:alert(1)", "x"), null);
+  assert.equal(
+    socialHandle("https://evil.com/instagram.com/x", "instagram"),
+    null,
+  );
+  assert.equal(socialHandle(null, "x"), null);
+  const src = readFileSync("src/components/member-profile.tsx", "utf8");
+  assert.match(src, /rel="noopener noreferrer"/);
+  assert.match(src, /on Instagram \(opens in a new tab\)/);
 });

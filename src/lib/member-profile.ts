@@ -64,3 +64,23 @@ export function isProfile(x: unknown): x is MemberProfileData {
     Array.isArray(p.posts)
   );
 }
+
+/**
+ * "@handle" from a saved Instagram or X profile URL, or null when the URL isn't a plain https profile
+ * link on that site (so nothing unexpected is ever rendered as a link).
+ */
+export function socialHandle(
+  url: string | null,
+  kind: "instagram" | "x",
+): string | null {
+  if (!url) return null;
+  const m =
+    kind === "instagram"
+      ? /^https:\/\/(?:www\.)?instagram\.com\/([A-Za-z0-9_.]{1,30})\/?$/.exec(
+          url.trim(),
+        )
+      : /^https:\/\/(?:www\.)?(?:x|twitter)\.com\/([A-Za-z0-9_]{1,15})\/?$/.exec(
+          url.trim(),
+        );
+  return m ? `@${m[1]}` : null;
+}

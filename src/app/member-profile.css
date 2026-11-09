@@ -196,15 +196,41 @@ html[data-theme] body .vq-profile .vq-profile-follow.is-following {
   text-transform: uppercase;
   color: var(--vqp-muted);
 }
-.vq-profile-links {
+.vq-profile-socials {
   display: flex;
-  gap: 14px;
-  margin: 14px 0 0;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 16px 0 0;
 }
-.vq-profile-links a {
-  color: var(--vqp-gold);
+.vq-profile-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 14px 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(233, 199, 123, 0.4);
+  background: linear-gradient(
+    180deg,
+    rgba(233, 199, 123, 0.1),
+    rgba(233, 199, 123, 0.03)
+  );
+  color: var(--vqp-ink);
   font-weight: 700;
+  font-size: 0.9rem;
   text-decoration: none;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+.vq-profile-social svg {
+  color: var(--vqp-gold);
+}
+.vq-profile-social:hover,
+.vq-profile-social:focus-visible {
+  border-color: var(--vqp-gold);
+  background: rgba(233, 199, 123, 0.14);
+  outline: none;
 }
 .vq-profile-error {
   margin: 12px 0 0;
