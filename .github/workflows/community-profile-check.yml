@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'supabase/migrations/20261109020607_community_profile.sql'
+      - 'supabase/migrations/20261109022151_community_profile_fields.sql'
+      - 'src/components/profile-editor.tsx'
       - 'src/components/member-profile.tsx'
       - 'src/lib/member-profile.ts'
       - 'tests/member-profile.test.ts'

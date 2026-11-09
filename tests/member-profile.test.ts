@@ -67,3 +67,43 @@ test("Instagram and X links render as handles only when they are plain profile U
   assert.match(src, /rel="noopener noreferrer"/);
   assert.match(src, /on Instagram \(opens in a new tab\)/);
 });
+
+test("location is a US state only, shown by full name", async () => {
+  const { stateName, US_STATES } = await import("../src/lib/member-profile");
+  assert.equal(Object.keys(US_STATES).length, 51, "50 states plus DC");
+  assert.equal(stateName("NV"), "Nevada");
+  assert.equal(stateName("Northeast"), "");
+  assert.equal(stateName(""), "");
+});
+
+test("your own profile opens an editor for photo, tagline, bio, state and social links", () => {
+  const page = readFileSync("src/components/member-profile.tsx", "utf8");
+  assert.match(page, /onClick=\{\(\) => setEditing\(true\)\}/);
+  assert.match(page, /editing && profile\.is_me && uid/);
+  const editor = readFileSync("src/components/profile-editor.tsx", "utf8");
+  for (const field of [
+    "avatar:",
+    "tagline:",
+    "bio:",
+    "state:",
+    "instagram_url:",
+    "x_url:",
+  ])
+    assert.ok(editor.includes(field), field);
+  assert.match(editor, /\.from\("community_profiles"\)\s*\.update\(/);
+  assert.match(editor, /\.eq\("user_id", uid\)/);
+});
+
+test("no follower lists and no direct messages", () => {
+  const page = readFileSync("src/components/member-profile.tsx", "utf8");
+  const stats = page.slice(
+    page.indexOf('className="vq-profile-stats"'),
+    page.indexOf("</dl>"),
+  );
+  assert.doesNotMatch(
+    stats,
+    /<Link|<a |<button|onClick/,
+    "follower and following counts are not clickable",
+  );
+  assert.doesNotMatch(page.replaceAll("MessageCircle", ""), /message|\bDM\b|inbox/i);
+});

@@ -13,6 +13,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { Shell } from "./ui";
 import CommunityPhoto from "./community-photo";
+import ProfileEditor from "./profile-editor";
 import { ago } from "@/lib/zone-feed";
 import {
   cardLabel,
@@ -20,6 +21,7 @@ import {
   isProfile,
   memberSince,
   socialHandle,
+  stateName,
   type MemberProfileData,
 } from "@/lib/member-profile";
 import "@/app/member-profile.css";
@@ -34,7 +36,8 @@ export default function MemberProfile({ username }: { username: string }) {
     [uid, setUid] = useState<string | null>(null),
     [error, setError] = useState(""),
     [tab, setTab] = useState<"posts" | "media">("posts"),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [editing, setEditing] = useState(false);
   const generation = useRef(0);
   const load = useCallback(async () => {
     const run = ++generation.current;
@@ -150,9 +153,13 @@ export default function MemberProfile({ username }: { username: string }) {
                 </div>
                 <div className="vq-profile-actions">
                   {profile.is_me ? (
-                    <Link className="vq-profile-edit" href="/membership">
+                    <button
+                      type="button"
+                      className="vq-profile-edit"
+                      onClick={() => setEditing(true)}
+                    >
                       <Settings size={16} aria-hidden="true" /> Edit profile
-                    </Link>
+                    </button>
                   ) : (
                     <button
                       type="button"
@@ -167,14 +174,22 @@ export default function MemberProfile({ username }: { username: string }) {
                 </div>
               </div>
               <h1 className="vq-profile-name">{profile.username}</h1>
+              {profile.tagline ? (
+                <p className="vq-profile-tagline">{profile.tagline}</p>
+              ) : null}
               <p className="vq-profile-handle">
                 @{profile.username}
-                {profile.region ? <span> · {profile.region}</span> : null}
+                {stateName(profile.state) ? (
+                  <span> · {stateName(profile.state)}</span>
+                ) : null}
               </p>
               {memberSince(profile.member_since) ? (
                 <p className="vq-profile-since">
                   {memberSince(profile.member_since)}
                 </p>
+              ) : null}
+              {profile.bio ? (
+                <p className="vq-profile-bio">{profile.bio}</p>
               ) : null}
               <dl className="vq-profile-stats">
                 <div>
@@ -227,6 +242,17 @@ export default function MemberProfile({ username }: { username: string }) {
                 </p>
               ) : null}
             </header>
+            {editing && profile.is_me && uid ? (
+              <ProfileEditor
+                profile={profile}
+                uid={uid}
+                onClose={() => setEditing(false)}
+                onSaved={() => {
+                  setEditing(false);
+                  void load();
+                }}
+              />
+            ) : null}
 
             <nav className="vq-profile-tabs" aria-label="Profile sections">
               <button

@@ -18,6 +18,9 @@ export type MemberProfileData = {
   username: string;
   avatar: string | null;
   region: string | null;
+  tagline?: string;
+  bio?: string;
+  state?: string;
   instagram_url: string | null;
   x_url: string | null;
   member_since: string | null;
@@ -84,3 +87,65 @@ export function socialHandle(
         );
   return m ? `@${m[1]}` : null;
 }
+
+export const TAGLINE_MAX = 60;
+export const BIO_MAX = 280;
+
+/** US states (and DC) by USPS code; the profile's location is a state only. */
+export const US_STATES: Record<string, string> = {
+  AL: "Alabama",
+  AK: "Alaska",
+  AZ: "Arizona",
+  AR: "Arkansas",
+  CA: "California",
+  CO: "Colorado",
+  CT: "Connecticut",
+  DE: "Delaware",
+  DC: "District of Columbia",
+  FL: "Florida",
+  GA: "Georgia",
+  HI: "Hawaii",
+  ID: "Idaho",
+  IL: "Illinois",
+  IN: "Indiana",
+  IA: "Iowa",
+  KS: "Kansas",
+  KY: "Kentucky",
+  LA: "Louisiana",
+  ME: "Maine",
+  MD: "Maryland",
+  MA: "Massachusetts",
+  MI: "Michigan",
+  MN: "Minnesota",
+  MS: "Mississippi",
+  MO: "Missouri",
+  MT: "Montana",
+  NE: "Nebraska",
+  NV: "Nevada",
+  NH: "New Hampshire",
+  NJ: "New Jersey",
+  NM: "New Mexico",
+  NY: "New York",
+  NC: "North Carolina",
+  ND: "North Dakota",
+  OH: "Ohio",
+  OK: "Oklahoma",
+  OR: "Oregon",
+  PA: "Pennsylvania",
+  RI: "Rhode Island",
+  SC: "South Carolina",
+  SD: "South Dakota",
+  TN: "Tennessee",
+  TX: "Texas",
+  UT: "Utah",
+  VT: "Vermont",
+  VA: "Virginia",
+  WA: "Washington",
+  WV: "West Virginia",
+  WI: "Wisconsin",
+  WY: "Wyoming",
+};
+
+/** Full state name for a stored code, or "" for none or an unknown value. */
+export const stateName = (code: string | undefined | null) =>
+  (code && US_STATES[code]) || "";

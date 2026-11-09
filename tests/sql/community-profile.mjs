@@ -100,4 +100,51 @@ await assert.rejects(
   /permission denied/,
 );
 await db.exec("reset role");
+// Part 2: tagline, bio and state, edited by the owner; text runs through the safety pattern.
+await db.exec("delete from private.blocked");
+await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261109022151_community_profile_fields.sql",
+    "utf8",
+  ),
+);
+await db.exec(
+  `update public.community_profiles set tagline='  Fading the public  ', bio='NFL unders and NHL totals.', state='NV' where user_id='${B}'`,
+);
+const b2 = await as(A, "SharpShooter");
+assert.deepEqual(
+  [b2.tagline, b2.bio, b2.state],
+  ["Fading the public", "NFL unders and NHL totals.", "NV"],
+  "trimmed and returned",
+);
+await assert.rejects(
+  db.exec(
+    `update public.community_profiles set state='Nevada' where user_id='${B}'`,
+  ),
+  /check/,
+);
+await assert.rejects(
+  db.exec(
+    `update public.community_profiles set tagline='${"x".repeat(61)}' where user_id='${B}'`,
+  ),
+  /check/,
+);
+await assert.rejects(
+  db.exec(
+    `update public.community_profiles set bio='${"x".repeat(281)}' where user_id='${B}'`,
+  ),
+  /check/,
+);
+await assert.rejects(
+  db.exec(
+    `update public.community_profiles set bio='Guaranteed profit every night' where user_id='${B}'`,
+  ),
+  /guaranteed-return/,
+);
+await assert.rejects(
+  db.exec(
+    `update public.community_profiles set tagline='<script>x</script>' where user_id='${B}'`,
+  ),
+  /guaranteed-return/,
+);
 console.log("Community profile SQL checks passed.");
