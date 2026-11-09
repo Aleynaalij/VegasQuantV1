@@ -271,7 +271,7 @@ for (const { width, photoOnly } of [
   await go(page, base + "/nfl");
   assert.equal(await page.getByRole("link", { name: "Submit a Lay" }).count(), 0);
   await go(page, base + "/community?view=vip");
-  assert.deepEqual(await page.locator(".zone-tabs [role=tab]").allInnerTexts(), ["For you", "Following"]);
+  assert.deepEqual(await page.locator(".zone-tabs [role=tab]").allInnerTexts(), ["For you", "Following", "Dealer only"]);
   assert.equal(await page.locator(".ruby-submit-drawer, .ruby-contributors").count(), 0);
   await go(page, base + "/community?view=vip&ruby=" + mine.id);
   const archived = page.locator(".ruby-card.ruby-diamond");
@@ -385,7 +385,7 @@ for (const { width, photoOnly } of [
   await go(page, base + "/feed");
   await page.getByRole("heading", { name: "The Zone", exact: true }).waitFor();
   assert.equal(new URL(page.url()).pathname, "/community");
-  assert.deepEqual(await page.locator(".zone-tabs [role=tab]").allInnerTexts(), ["For you", "Following"]);
+  assert.deepEqual(await page.locator(".zone-tabs [role=tab]").allInnerTexts(), ["For you", "Following", "Dealer only"]);
   assert.equal(await page.locator(".ruby-contributors, .ruby-submit-drawer").count(), 0);
   // Neither Zone tab exposes Double Up or the contributor-only leaderboard.
   analystActive = true;

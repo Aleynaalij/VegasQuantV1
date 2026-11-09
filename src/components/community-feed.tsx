@@ -43,16 +43,24 @@ import { NbaThreesCardPreview } from "./nba-threes-card-preview";
 import { threesCardDay } from "@/lib/nba-threes-card";
 import { weeklyCardRef } from "@/lib/nfl-weekly-cards";
 import { isPublicationCard } from "@/lib/zone-publication-card";
-import { nbaMatchupSheetSlug } from "@/lib/nba-matchup-sheet";
+import { nbaMatchupSheetReference } from "@/lib/nba-matchup-sheet";
 import NbaMatchupSheetPreview from "./nba-matchup-sheet-preview";
 import "./nba-matchup-sheet.css";
 import ZonePublicationCard from "./zone-publication-card";
-import ReactionPicker, { useTypedReactions, type TypedReactions } from "./reaction-picker";
+import ReactionPicker, {
+  useTypedReactions,
+  type TypedReactions,
+} from "./reaction-picker";
 import { nextReaction } from "@/lib/community-reaction-contracts";
 import "@/app/reaction-picker.css";
 import "@/app/zone-entry.css";
 import { PollComposer, ZonePoll, useZonePolls } from "./zone-poll";
-import { emptyPoll, pollDraftProblem, pollOptions, type PollDraft } from "@/lib/zone-poll";
+import {
+  emptyPoll,
+  pollDraftProblem,
+  pollOptions,
+  type PollDraft,
+} from "@/lib/zone-poll";
 import { VoteControl, useZoneVotes } from "./zone-votes";
 type Post = {
   id: string;
@@ -308,11 +316,15 @@ type LayComment = {
 };
 /** Why a lay comment did not save, in the member's terms (the server's rule, never a raw error). */
 function layCommentError(message: string) {
-  if (/ten seconds/i.test(message)) return "Wait ten seconds between comments, then retry.";
-  if (/community profile/i.test(message)) return "Complete and enable your community profile to comment.";
-  if (/harmful content/i.test(message)) return "Remove harmful content, executable links or guaranteed-return claims.";
+  if (/ten seconds/i.test(message))
+    return "Wait ten seconds between comments, then retry.";
+  if (/community profile/i.test(message))
+    return "Complete and enable your community profile to comment.";
+  if (/harmful content/i.test(message))
+    return "Remove harmful content, executable links or guaranteed-return claims.";
   if (/1 to 1000/i.test(message)) return "Write 1 to 1000 characters.";
-  if (/Card unavailable|Comment unavailable/i.test(message)) return "This lay or comment is no longer available.";
+  if (/Card unavailable|Comment unavailable/i.test(message))
+    return "This lay or comment is no longer available.";
   return "Could not comment. Your draft is kept; please retry.";
 }
 /** Comments on a VIP lay: the same look and rules as post comments, through the lay comment API. */
@@ -393,13 +405,21 @@ function LayComments({
           id={`lay-comment-${c.id}`}
           className={`zone-comment ${c.parent_id ? "is-reply" : ""}`}
         >
-          <Avatar name={c.author_name} avatar={faces[c.user_id]?.avatar} size={32} />
+          <Avatar
+            name={c.author_name}
+            avatar={faces[c.user_id]?.avatar}
+            size={32}
+          />
           <div className="zone-comment-main">
             <p>
               <b>
                 {c.author_name}
                 {faces[c.user_id]?.staff ? (
-                  <BadgeCheck className="zone-verified" size={14} aria-label="Vegas Quant" />
+                  <BadgeCheck
+                    className="zone-verified"
+                    size={14}
+                    aria-label="Vegas Quant"
+                  />
                 ) : null}
               </b>{" "}
               <RichText text={c.body} />
@@ -418,7 +438,10 @@ function LayComments({
                 Reply
               </button>
               {uid !== c.user_id ? (
-                <button type="button" onClick={() => void onBlock(c.user_id, c.author_name)}>
+                <button
+                  type="button"
+                  onClick={() => void onBlock(c.user_id, c.author_name)}
+                >
                   Block
                 </button>
               ) : null}
@@ -431,7 +454,9 @@ function LayComments({
           </div>
         </article>
       ))}
-      {rows.length === 50 ? <small>Showing the latest 50 comments.</small> : null}
+      {rows.length === 50 ? (
+        <small>Showing the latest 50 comments.</small>
+      ) : null}
       <form onSubmit={submit} className="zone-comment-form">
         {replyTo && (
           <p className="zone-replying">
@@ -545,7 +570,8 @@ function ZoneLay({
   const [copied, setCopied] = useState(false);
   const [liking, setLiking] = useState(false);
   const [failed, setFailed] = useState(false);
-  const state = lay.id in reactions.states ? reactions.states[lay.id] : undefined;
+  const state =
+    lay.id in reactions.states ? reactions.states[lay.id] : undefined;
   const liked = state?.mine === "heart";
   /** Like on a lay: the same one-reaction-per-person state as the emoji picker. */
   async function like(onlyAdd = false) {
@@ -556,7 +582,10 @@ function ZoneLay({
       const current = state ?? (await reactions.load(lay.id));
       if (!current || current === "unavailable") return setFailed(true);
       if (onlyAdd && current.mine === "heart") return;
-      const saved = await reactions.set(lay.id, onlyAdd ? "heart" : nextReaction(current.mine, "heart"));
+      const saved = await reactions.set(
+        lay.id,
+        onlyAdd ? "heart" : nextReaction(current.mine, "heart"),
+      );
       if (saved === null) setFailed(true);
     } finally {
       setLiking(false);
@@ -565,7 +594,13 @@ function ZoneLay({
   async function copy() {
     try {
       await navigator.clipboard.writeText(
-        [lay.brand + " · " + lay.title, ...lay.legs, actionableKalshiSource(lay.source_link)].filter(Boolean).join("\n"),
+        [
+          lay.brand + " · " + lay.title,
+          ...lay.legs,
+          actionableKalshiSource(lay.source_link),
+        ]
+          .filter(Boolean)
+          .join("\n"),
       );
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
@@ -653,7 +688,13 @@ function ZoneLay({
             <button
               type="button"
               className="zone-copy"
-              aria-label={copied ? "Copied" : actionableKalshiSource(lay.source_link) ? "Copy shared source" : "Copy legs"}
+              aria-label={
+                copied
+                  ? "Copied"
+                  : actionableKalshiSource(lay.source_link)
+                    ? "Copy shared source"
+                    : "Copy legs"
+              }
               onClick={() => void copy()}
             >
               {copied ? (
@@ -681,7 +722,11 @@ function ZoneLay({
                 aria-label={liked ? "Unlike lay" : "Like lay"}
                 onClick={() => void like()}
               >
-                <Heart size={21} fill={liked ? "currentColor" : "none"} aria-hidden="true" />
+                <Heart
+                  size={21}
+                  fill={liked ? "currentColor" : "none"}
+                  aria-hidden="true"
+                />
                 <span>{state.total || ""}</span>
               </button>
               <ReactionPicker postId={lay.id} typed={reactions} />
@@ -715,7 +760,11 @@ function ZoneLay({
               View {comments === 1 ? "1 comment" : `all ${comments} comments`}
             </button>
           ) : null}
-          <button type="button" className="zone-comment-start" onClick={() => onComments(true, true)}>
+          <button
+            type="button"
+            className="zone-comment-start"
+            onClick={() => onComments(true, true)}
+          >
             <Avatar name={me.username || "You"} avatar={me.avatar} size={28} />
             <span>Add a comment…</span>
           </button>
@@ -730,8 +779,19 @@ export default function CommunityFeed() {
   const router = useRouter();
   const routeSport = searchParams.get("sport");
   const routePost = searchParams.get("post");
+  const routeView = searchParams.get("view");
   const rubyId = searchParams.get("ruby");
   const targetLay = rubyId && /^[0-9a-f-]{36}$/i.test(rubyId) ? rubyId : null;
+  const hasTargetPost = Boolean(
+    routePost && /^[0-9a-f-]{36}$/i.test(routePost),
+  );
+  // Historical post/comment and contributor-card links retain their exact destination.
+  const routeDealer =
+    !hasTargetPost &&
+    !targetLay &&
+    (routeView === "dealer" || routeView === "vip");
+  const routeFollowing =
+    !hasTargetPost && !targetLay && routeView === "following";
   const targetComment = /^[0-9a-f-]{36}$/i.test(
     searchParams.get("comment") || "",
   )
@@ -742,7 +802,8 @@ export default function CommunityFeed() {
     // One Zone: "all" is the default; a sport chip filters the same feed.
     [sport, setSport] = useState<"all" | Sport>("all"),
     [postSport, setPostSport] = useState<Sport>("nfl"),
-    [followingOnly, setFollowingOnly] = useState(false),
+    [followingOnly, setFollowingOnly] = useState(routeFollowing),
+    [dealerOnly, setDealerOnly] = useState(routeDealer),
     [lays, setLays] = useState<RubySlip[]>([]),
     [avatars, setAvatars] = useState<Record<string, Person>>({}),
     [me, setMe] = useState<{ username: string; avatar: string | null }>({
@@ -759,6 +820,7 @@ export default function CommunityFeed() {
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(false),
+    [feedError, setFeedError] = useState(""),
     [openComments, setOpenComments] = useState<string | null>(null),
     [admin, setAdmin] = useState(false),
     [reports, setReports] = useState<
@@ -785,12 +847,32 @@ export default function CommunityFeed() {
   useEffect(() => {
     const picked =
       isSport(routeSport) && SPORTS[routeSport].live ? routeSport : "all";
+    if (picked !== sport) {
+      epoch.current++;
+      setRows([]);
+      setLays([]);
+      setFeedError("");
+    }
     setSport(picked);
     if (picked !== "all") setPostSport(picked);
     setTargetPost(
       routePost && /^[0-9a-f-]{36}$/i.test(routePost) ? routePost : null,
     );
-  }, [routeSport, routePost]);
+  }, [routeSport, routePost, routeView]);
+  useEffect(() => {
+    const nextDealer = routeDealer;
+    const nextFollowing = routeFollowing;
+    if (nextDealer === dealerOnly && nextFollowing === followingOnly) return;
+    epoch.current++;
+    setRows([]);
+    setLays([]);
+    setNotice("");
+    setFeedError("");
+    setTargetMissing(false);
+    setLimit(20);
+    setDealerOnly(nextDealer);
+    setFollowingOnly(nextFollowing);
+  }, [routeDealer, routeFollowing, dealerOnly, followingOnly]);
   useEffect(() => {
     if (uid && routePost && targetComment) setOpenComments(routePost);
   }, [uid, routePost, targetComment]);
@@ -819,6 +901,7 @@ export default function CommunityFeed() {
       setReports([]);
       setBlocked([]);
       setLoading(false);
+      setFeedError("");
       setAuthReady(true);
     };
     void supabase.auth.getSession().then((s) => {
@@ -840,13 +923,18 @@ export default function CommunityFeed() {
     const n = ++epoch.current;
     setLoading(true);
     const [r, a, target] = await Promise.all([
-      supabase.rpc("community_feed", {
-        p_sport: sport,
-        p_limit: limit,
-        p_following: followingOnly,
-      }),
+      dealerOnly
+        ? supabase.rpc("community_dealer_feed", {
+            p_sport: sport,
+            p_limit: limit,
+          })
+        : supabase.rpc("community_feed", {
+            p_sport: sport,
+            p_limit: limit,
+            p_following: followingOnly,
+          }),
       supabase.rpc("is_admin"),
-      targetPost
+      targetPost && !dealerOnly
         ? supabase.rpc("community_post", { p_id: targetPost })
         : Promise.resolve({ data: null, error: null }),
     ]);
@@ -854,11 +942,14 @@ export default function CommunityFeed() {
     setLoading(false);
     setAdmin(a.data === true);
     if (r.error) {
-      setNotice(
-        "Community could not refresh. Your existing posts are preserved.",
+      setFeedError(
+        dealerOnly
+          ? "Dealer posts could not refresh. Please retry."
+          : "Community could not refresh. Your existing posts are preserved.",
       );
       return;
     }
+    setFeedError("");
     const posts: Post[] = r.data || [];
     if (targetPost && target.error) {
       setNotice("That post could not load. Please refresh to try again.");
@@ -871,7 +962,7 @@ export default function CommunityFeed() {
     setRows(posts);
     // Historical contributor cards still appear in the main feed.
     const [cards, faces, mine] = await Promise.all([
-      followingOnly
+      followingOnly || dealerOnly
         ? Promise.resolve({ data: [] as RubySlip[], error: null })
         : (sport === "all"
             ? supabase.from("ruby_cards").select("*")
@@ -917,7 +1008,7 @@ export default function CommunityFeed() {
         .limit(50);
       if (n === epoch.current) setReports(flags.data || []);
     }
-  }, [uid, sport, limit, followingOnly, targetPost]);
+  }, [uid, sport, limit, followingOnly, dealerOnly, targetPost]);
   useEffect(() => {
     if (
       !targetPost ||
@@ -1023,7 +1114,13 @@ export default function CommunityFeed() {
   }
   // Typed reactions (#206): one authoritative state per post shared by Like and the emoji picker.
   const typed = useTypedReactions((id, st) =>
-    setRows((all) => all.map((x) => (x.id === id ? { ...x, reactions: st.total, reacted: st.mine !== null } : x))),
+    setRows((all) =>
+      all.map((x) =>
+        x.id === id
+          ? { ...x, reactions: st.total, reacted: st.mine !== null }
+          : x,
+      ),
+    ),
   );
   // Poll states for the posts on screen, one batch per feed load.
   const polls = useZonePolls(
@@ -1043,28 +1140,41 @@ export default function CommunityFeed() {
   // with the next refresh instead of leaving the lays without reactions until a remount.
   useEffect(() => {
     if (!uid || !lays.length || layReactions.api === "unavailable") return;
-    const missing = lays.map((x) => x.id).filter((id) => !(id in layReactions.states));
+    const missing = lays
+      .map((x) => x.id)
+      .filter((id) => !(id in layReactions.states));
     if (missing.length) void layReactions.loadMany(missing);
     // layReactions.states is read for filtering only; re-running on every state change would loop.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lays, uid, layReactions.api]);
   // Lay comment counts ({lay id: count}); "unavailable" until the lay comment API is deployed.
   const [layComments, setLayComments] = useState<Record<string, number>>({});
-  const [layCommentsApi, setLayCommentsApi] = useState<"unknown" | "ok" | "unavailable">("unknown");
+  const [layCommentsApi, setLayCommentsApi] = useState<
+    "unknown" | "ok" | "unavailable"
+  >("unknown");
   const layCommentsAccount = useRef(0);
   const loadLayCommentCounts = useCallback(async (ids: string[]) => {
     const a = layCommentsAccount.current;
     for (let i = 0; i < ids.length; i += 50) {
-      const r = await supabase.rpc("ruby_card_comment_counts", { p_cards: ids.slice(i, i + 50) });
+      const r = await supabase.rpc("ruby_card_comment_counts", {
+        p_cards: ids.slice(i, i + 50),
+      });
       if (a !== layCommentsAccount.current) return;
       if (r.error) {
-        if (/PGRST202|not find the function|does not exist/i.test(`${r.error.code} ${r.error.message}`))
+        if (
+          /PGRST202|not find the function|does not exist/i.test(
+            `${r.error.code} ${r.error.message}`,
+          )
+        )
           return setLayCommentsApi("unavailable");
         return;
       }
-      if (!r.data || typeof r.data !== "object" || Array.isArray(r.data)) return;
+      if (!r.data || typeof r.data !== "object" || Array.isArray(r.data))
+        return;
       const got = Object.fromEntries(
-        Object.entries(r.data as Record<string, unknown>).filter(([, n]) => Number.isInteger(n)),
+        Object.entries(r.data as Record<string, unknown>).filter(([, n]) =>
+          Number.isInteger(n),
+        ),
       ) as Record<string, number>;
       setLayComments((m) => ({ ...m, ...got }));
       setLayCommentsApi("ok");
@@ -1084,7 +1194,11 @@ export default function CommunityFeed() {
   async function shareLay(lay: RubySlip) {
     try {
       const url = `${location.origin}/community?ruby=${lay.id}#ruby-${lay.id}`;
-      if (navigator.share) await navigator.share({ title: `${lay.brand} lay on Vegas Quant`, url });
+      if (navigator.share)
+        await navigator.share({
+          title: `${lay.brand} lay on Vegas Quant`,
+          url,
+        });
       else await navigator.clipboard.writeText(url);
       setNotice("Lay link shared.");
     } catch (error) {
@@ -1100,13 +1214,21 @@ export default function CommunityFeed() {
     if (typed.api === "unavailable") return react(p, onlyAdd);
     setLiking(p.id);
     try {
-      const current = p.id in typed.states ? typed.states[p.id] : await typed.load(p.id);
+      const current =
+        p.id in typed.states ? typed.states[p.id] : await typed.load(p.id);
       if (current === "unavailable") return void (await react(p, onlyAdd));
-      if (!current) return setNotice("Your like didn’t save; nothing changed. Please retry.");
+      if (!current)
+        return setNotice(
+          "Your like didn’t save; nothing changed. Please retry.",
+        );
       // Double-tap only ever adds a Like (never removes or replaces into nothing).
       if (onlyAdd && current.mine === "heart") return;
-      const saved = await typed.set(p.id, onlyAdd ? "heart" : nextReaction(current.mine, "heart"));
-      if (saved === null) setNotice("Your like didn’t save; nothing changed. Please retry.");
+      const saved = await typed.set(
+        p.id,
+        onlyAdd ? "heart" : nextReaction(current.mine, "heart"),
+      );
+      if (saved === null)
+        setNotice("Your like didn’t save; nothing changed. Please retry.");
     } finally {
       setLiking(null);
     }
@@ -1114,7 +1236,9 @@ export default function CommunityFeed() {
   // Load the typed state for posts that already show a reaction, so the heart lights only for Like.
   useEffect(() => {
     if (!uid || typed.api === "unavailable") return;
-    const pending = rows.filter((x) => x.reacted && !typed.states[x.id]).slice(0, 30);
+    const pending = rows
+      .filter((x) => x.reacted && !typed.states[x.id])
+      .slice(0, 30);
     let live = true;
     void (async () => {
       for (const x of pending) {
@@ -1302,7 +1426,10 @@ export default function CommunityFeed() {
     );
     if (!r.error) form.reset();
   }
-  const feed = zoneFeed(rows, lays.filter((lay) => lay.id !== targetLay));
+  const feed = zoneFeed(
+    rows,
+    dealerOnly ? [] : lays.filter((lay) => lay.id !== targetLay),
+  );
   const face = (name: string, avatar: string | null | undefined) => (
     <Avatar name={name} avatar={avatar} />
   );
@@ -1333,22 +1460,25 @@ export default function CommunityFeed() {
         {!authReady ? (
           <p className="zone-status">Checking your session…</p>
         ) : !uid ? (
-          <section className="zone-join zone-entry" aria-labelledby="zone-entry-title">
+          <section
+            className="zone-join zone-entry"
+            aria-labelledby="zone-entry-title"
+          >
             <Gem size={22} aria-hidden="true" />
             <h2 id="zone-entry-title">Join the conversation</h2>
             <p>
-              The Zone is where members share slips and talk through games.
-              It’s member opinion, kept separate from Vegas
-              Quant’s published research.
+              The Zone is where members share slips and talk through games. It’s
+              member opinion, kept separate from Vegas Quant’s published
+              research.
             </p>
             <ul className="zone-entry-list">
               <li>
-                <b>Member slips and game talk</b> · read and comment once
-                you’re signed in
+                <b>Member slips and game talk</b> · read and comment once you’re
+                signed in
               </li>
               <li>
-                <b>Recent posts</b> · tap through each member’s latest
-                posts, then the next member’s
+                <b>Recent posts</b> · tap through each member’s latest posts,
+                then the next member’s
               </li>
             </ul>
             {/* Member posts are never sent to visitors, so the preview is honestly empty. */}
@@ -1360,9 +1490,8 @@ export default function CommunityFeed() {
               Sign in or create an account
             </Link>
             <p className="zone-entry-more">
-              A free account lets you read posts. Complete your visible
-              profile to publish and comment. Posting is always
-              optional.
+              A free account lets you read posts. Complete your visible profile
+              to publish and comment. Posting is always optional.
             </p>
             <Link className="zone-entry-research" href="/matchups">
               Browse game research, open to everyone →
@@ -1494,26 +1623,37 @@ export default function CommunityFeed() {
             <div className="zone-tabs" role="tablist" aria-label="Feed">
               {(
                 [
-                  [
-                    "For you",
-                    !followingOnly,
-                    () => setFollowingOnly(false),
-                  ],
-                  [
-                    "Following",
-                    followingOnly,
-                    () => setFollowingOnly(true),
-                  ],
+                  ["For you", !followingOnly && !dealerOnly, "all"],
+                  ["Following", followingOnly, "following"],
+                  ["Dealer only", dealerOnly, "dealer"],
                 ] as const
-              ).map(([label, on, pick]) => (
+              ).map(([label, on, view]) => (
                 <button
                   key={label}
                   role="tab"
                   aria-selected={on}
                   className={on ? "is-active" : ""}
                   onClick={() => {
-                    pick();
+                    if (on) {
+                      void refresh();
+                      return;
+                    }
+                    epoch.current++;
+                    setRows([]);
+                    setLays([]);
+                    setNotice("");
+                    setFeedError("");
+                    setTargetMissing(false);
                     setLimit(20);
+                    const q = new URLSearchParams(searchParams.toString());
+                    if (view === "all") q.delete("view");
+                    else q.set("view", view);
+                    q.delete("post");
+                    q.delete("comment");
+                    q.delete("ruby");
+                    router.push(`/community${q.size ? `?${q}` : ""}`, {
+                      scroll: false,
+                    });
                   }}
                 >
                   {label}
@@ -1541,6 +1681,12 @@ export default function CommunityFeed() {
                     aria-pressed={sport === key}
                     className={sport === key ? "is-active" : ""}
                     onClick={() => {
+                      if (key !== sport) {
+                        epoch.current++;
+                        setRows([]);
+                        setLays([]);
+                        setFeedError("");
+                      }
                       setSport(key);
                       if (key !== "all") setPostSport(key);
                       setLimit(20);
@@ -1558,22 +1704,46 @@ export default function CommunityFeed() {
                 ))}
               </div>
             ) : null}
+            {dealerOnly ? (
+              <p className="zone-status">
+                TheDealer’s cheat sheets, matchup charts and published plays.
+                Use the sport filters to narrow the feed.
+              </p>
+            ) : null}
+            {feedError ? (
+              <p role="alert" className="zone-status">
+                {feedError}{" "}
+                <button
+                  type="button"
+                  className="secondary"
+                  disabled={loading}
+                  onClick={() => void refresh()}
+                >
+                  Retry feed
+                </button>
+              </p>
+            ) : null}
             {targetMissing ? (
               <p role="status" className="zone-status">
                 This post is no longer available.
               </p>
             ) : null}
-            {targetLay ? <RubyHub key={targetLay} selectedId={targetLay} /> : null}
-            {!targetLay && !loading && feed.length === 0 ? (
+            {targetLay ? (
+              <RubyHub key={targetLay} selectedId={targetLay} />
+            ) : null}
+            {!targetLay && !loading && !feedError && feed.length === 0 ? (
               <section className="zone-join">
                 <h2>
-                  {followingOnly
-                    ? "Follow someone to build your feed."
-                    : "Be the first to start the conversation."}
+                  {dealerOnly
+                    ? "No Dealer posts for this sport yet."
+                    : followingOnly
+                      ? "Follow someone to build your feed."
+                      : "Be the first to start the conversation."}
                 </h2>
                 <p>
-                  Which player benefits most from the latest injury news? Bring
-                  a source and your perspective.
+                  {dealerOnly
+                    ? "Choose All to see TheDealer’s published research and plays across sports."
+                    : "Which player benefits most from the latest injury news? Bring a source and your perspective."}
                 </p>
               </section>
             ) : null}
@@ -1584,13 +1754,21 @@ export default function CommunityFeed() {
                   lay={item.lay}
                   reactions={layReactions}
                   signedIn={!!uid}
-                  comments={layCommentsApi === "ok" ? layComments[item.lay.id] : undefined}
+                  comments={
+                    layCommentsApi === "ok"
+                      ? layComments[item.lay.id]
+                      : undefined
+                  }
                   commentsOpen={openComments === `lay:${item.lay.id}`}
                   me={me}
                   onComments={(open, focus) => {
                     setOpenComments(open ? `lay:${item.lay.id}` : null);
                     if (open && focus)
-                      requestAnimationFrame(() => document.getElementById(`lay-reply-${item.lay.id}`)?.focus());
+                      requestAnimationFrame(() =>
+                        document
+                          .getElementById(`lay-reply-${item.lay.id}`)
+                          ?.focus(),
+                      );
                   }}
                   onShare={() => void shareLay(item.lay)}
                 >
@@ -1718,7 +1896,7 @@ export default function CommunityFeed() {
                             />
                           ) : null}
                         </figure>
-                      ) : nbaMatchupSheetSlug(p) ? (
+                      ) : nbaMatchupSheetReference(p) ? (
                         <div>
                           <NbaMatchupSheetPreview
                             key={`${uid}:${p.id}`}
@@ -1727,7 +1905,9 @@ export default function CommunityFeed() {
                           />
                           <details className="zone-matchup-sheet-original">
                             <summary>Original research and sources</summary>
-                            <p className="zone-post-body"><RichText text={p.body} /></p>
+                            <p className="zone-post-body">
+                              <RichText text={p.body} />
+                            </p>
                           </details>
                         </div>
                       ) : isPublicationCard(p) ? (
@@ -1775,7 +1955,8 @@ export default function CommunityFeed() {
                           }
                         />
                       ) : null}
-                      {isPublicationCard(p) ? null : p.kind === "slip" && p.legs.length ? (
+                      {isPublicationCard(p) ? null : p.kind === "slip" &&
+                        p.legs.length ? (
                         <CommunityParlayCard
                           title={p.title}
                           legs={p.legs}
@@ -1812,16 +1993,26 @@ export default function CommunityFeed() {
                         {(() => {
                           // Lit only for a confirmed Like: with typed reactions, another emoji is
                           // not a Like; without them (API not deployed), the old any-reaction flag.
-                          const liked = typed.api === "unavailable" ? p.reacted : p.id in typed.states && typed.states[p.id].mine === "heart";
+                          const liked =
+                            typed.api === "unavailable"
+                              ? p.reacted
+                              : p.id in typed.states &&
+                                typed.states[p.id].mine === "heart";
                           return (
                             <button
                               className={liked ? "is-liked" : ""}
-                              disabled={busy || liking === p.id || !!typed.pending[p.id]}
+                              disabled={
+                                busy || liking === p.id || !!typed.pending[p.id]
+                              }
                               aria-pressed={liked}
                               aria-label={liked ? "Unlike" : "Like"}
                               onClick={() => void like(p)}
                             >
-                              <Heart size={21} fill={liked ? "currentColor" : "none"} aria-hidden="true" />
+                              <Heart
+                                size={21}
+                                fill={liked ? "currentColor" : "none"}
+                                aria-hidden="true"
+                              />
                               <span>{p.reactions || ""}</span>
                             </button>
                           );
@@ -1951,8 +2142,7 @@ export default function CommunityFeed() {
                 })()
               ),
             )}
-            {(rows.length >= limit || lays.length >= limit) &&
-            limit < 100 ? (
+            {(rows.length >= limit || lays.length >= limit) && limit < 100 ? (
               <button
                 className="secondary"
                 onClick={() => setLimit((n) => n + 20)}

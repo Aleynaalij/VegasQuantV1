@@ -1,0 +1,44 @@
+name: Dealer-only feed acceptance
+on:
+  pull_request:
+    paths:
+      - "src/components/community-feed.tsx"
+      - "src/lib/nba-matchup-sheet*"
+      - "src/app/api/nba/matchup-sheet/**"
+      - "src/app/api/nfl/weekly-card/**"
+      - "supabase/migrations/*dealer_only_zone_feed.sql"
+      - "tests/sql/dealer-only-feed.mjs"
+      - "scripts/ui-smoke/dealer-only-feed.mjs"
+      - ".github/workflows/dealer-only-feed.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dealer-feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node tests/sql/dealer-only-feed.mjs
+      - run: node --import tsx --test tests/nba-matchup-sheet-route.test.ts tests/nfl-weekly-card-route.test.ts
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - name: Browser acceptance with synthetic sources
+        run: |
+          npm install --no-save playwright@1.56.1
+          export PLAYWRIGHT_EXECUTABLE=$(command -v google-chrome || command -v chromium)
+          node scripts/ui-smoke/stub.mjs &
+          LIVE_SCORES_DISABLED=1 npx next start -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
+          node scripts/ui-smoke/dealer-only-feed.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dealer-only-feed-evidence
+          path: artifacts/dealer-feed

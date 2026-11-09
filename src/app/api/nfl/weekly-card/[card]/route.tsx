@@ -22,7 +22,7 @@ const PALE = "#f4dc99";
 const INK = "#07090d";
 const MUTED = "#8f99a3";
 const TEXT = "#f2f4f5";
-const TIER = { green: "#48d58a", yellow: "#f2c94c", red: "#c9b78b" } as const;
+const TIER = { green: "#48d58a", yellow: "#f2c94c", red: "#ef6b6b" } as const;
 const font = (file: string) =>
   readFile(path.join(process.cwd(), "src/assets/fonts", file));
 
