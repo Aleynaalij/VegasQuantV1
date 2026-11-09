@@ -1,0 +1,34 @@
+name: Dealer Zone and notification safeguards
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "tests/sql/dealer-zone-follow-notifications.mjs"
+      - "tests/sql/dealer-publisher-recovery.mjs"
+      - ".github/workflows/dealer-notifications.yml"
+      - "package.json"
+      - "package-lock.json"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dealer-notifications:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Composed synthetic database contracts
+        shell: bash
+        run: |
+          set -o pipefail
+          node --test --test-concurrency=1 --test-reporter=tap tests/sql/dealer-publisher-recovery.mjs tests/sql/dealer-zone-follow-notifications.mjs | tee dealer-notifications-evidence.log
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dealer-notifications-synthetic-evidence
+          path: dealer-notifications-evidence.log
