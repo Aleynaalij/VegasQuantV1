@@ -149,3 +149,8 @@ export const US_STATES: Record<string, string> = {
 /** Full state name for a stored code, or "" for none or an unknown value. */
 export const stateName = (code: string | undefined | null) =>
   (code && US_STATES[code]) || "";
+
+/** Stable author link: contributor brands and mutable handles are not account identities. */
+export function memberProfileLink(userId: string): string {
+  return `/community/${encodeURIComponent(userId)}`;
+}

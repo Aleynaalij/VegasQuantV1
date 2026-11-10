@@ -10,6 +10,7 @@ import {
 } from "react";
 import Link from "next/link";
 import RubyHub from "./ruby-cards";
+import { memberProfileLink } from "@/lib/member-profile";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
 import KalshiSourceLink from "./kalshi-source-link";
@@ -620,7 +621,7 @@ function ZoneLay({
       id={`lay-${lay.id}`}
     >
       <header className="zone-post-head">
-        <Link className="zone-author" href={href}>
+        <Link className="zone-author" href={memberProfileLink(lay.user_id)}>
           <span
             className="zone-avatar zone-avatar-initials zone-lay-mark"
             aria-hidden="true"
@@ -1793,7 +1794,7 @@ export default function CommunityFeed() {
                       <header className="zone-post-head">
                         <Link
                           className="zone-author"
-                          href={`/community/${encodeURIComponent(p.author_name)}`}
+                          href={memberProfileLink(p.user_id)}
                         >
                           {face(p.author_name, avatars[p.user_id]?.avatar)}
                           <span>

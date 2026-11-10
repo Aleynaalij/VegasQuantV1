@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
+  memberProfileLink,
   cardLabel,
   compactCount,
   isProfile,
@@ -105,5 +106,21 @@ test("no follower lists and no direct messages", () => {
     /<Link|<a |<button|onClick/,
     "follower and following counts are not clickable",
   );
-  assert.doesNotMatch(page.replaceAll("MessageCircle", ""), /message|\bDM\b|inbox/i);
+  assert.doesNotMatch(
+    page.replaceAll("MessageCircle", ""),
+    /message|\bDM\b|inbox/i,
+  );
+});
+
+test("contributor authors open stable member profiles while slip links stay separate", () => {
+  assert.equal(
+    memberProfileLink("00000000-0000-4000-8000-00000000000b"),
+    "/community/00000000-0000-4000-8000-00000000000b",
+  );
+  const feed = readFileSync("src/components/community-feed.tsx", "utf8");
+  assert.match(feed, /href=\{memberProfileLink\(lay.user_id\)\}/);
+  assert.match(feed, /href=\{memberProfileLink\(p.user_id\)\}/);
+  assert.match(feed, /className="zone-open" href=\{href\}/);
+  const stories = readFileSync("src/components/story-viewer.tsx", "utf8");
+  assert.match(stories, /href=\{memberProfileLink\(post.user_id\)\}/);
 });
