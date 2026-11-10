@@ -114,7 +114,7 @@ const obs = [
   ),
 ];
 const picks = [
-  // p0 was revised by p1; only the revision shows.
+  // p0 was revised by p1; history stays visible but only the revision is actionable.
   {
     id: "p0",
     game_id: "g1",
@@ -208,7 +208,7 @@ for (const width of [390, 1280]) {
       r.fulfill({ json: obs.map((row, i) => ({ ...row, id: `snapshot-${i}`, provider: "Fixture provider", source: "https://example.com/fixture", observed_at: row.payload.provider_updated_at })) }),
     );
     await ctx.route("**/rest/v1/nba_editorial_picks*", (r) =>
-      r.fulfill({ json: picks }),
+      r.fulfill({ json: picks.map((pick) => ({ ...pick, publication_key: pick.id, published_at: iso(-1), quote_recorded_at: iso(-1), quote_source_url: "https://example.com/fixture", unknowns: "Synthetic availability", sources: [], evidence_sources: [] })) }),
     );
     await ctx.route("**/rest/v1/rpc/community_feed", async (r) => {
       feedSports.push(JSON.parse(r.request().postData() || "{}").p_sport);
@@ -253,7 +253,7 @@ for (const width of [390, 1280]) {
       await p
         .locator(".vq-game-row[data-game=g1]")
         .evaluate((d) => (d.open = true));
-      await p.locator(".sport-selections li").first().waitFor();
+      await p.locator(".nba-game-selections .nba-editorial-pick").first().waitFor();
       await p.locator(".vq-game-row[data-game=g1] .nba-board-details").waitFor();
       assert.equal(await p.locator('.vq-game-row[data-game=g1] [aria-label="Starting lineups and availability"]').count(), 1, "research preserves one lineup block");
       await p.locator(".vq-game-row[data-game=g1] .nba-price-card").first().waitFor();
@@ -261,26 +261,25 @@ for (const width of [390, 1280]) {
       assert.equal(
         await p
           .locator(".vq-game-row[data-game=g1]")
-          .locator(".sport-selections li")
+          .locator(".nba-game-selections .nba-editorial-pick")
           .count(),
-        1,
-        "superseded hidden",
+        2,
+        "immutable superseded history preserved",
       );
-      assert.ok(
-        !(await p.locator(".vq-game-row[data-game=g1]").innerText()).includes(
-          "Under 24.5 PTS",
-        ),
-      );
+      assert.equal(await p.locator("#pick-p0 .ticket-destinations").count(), 0, "superseded original is untailable");
+      assert.equal(await p.locator("#pick-p1 .ticket-destinations").count(), 1, "current revision remains actionable");
+      assert.match(await p.locator("#pick-p0").innerText(), /original preserved/i);
       for (const text of [
         "Deni Avdija",
-        "Over 23.5 PTS",
+        "Over 23.5 points",
         "Trail Blazers -6.5",
         "Over 231.5",
         "Open the matchup",
         "Best -105 · DraftKings",
-        "Best +100 · DraftKings",
       ])
         assert.ok(open.includes(text), `${text} ${label}`);
+      await p.locator(".vq-game-row[data-game=g1] .sport-props").evaluate((d) => (d.open = true));
+      assert.match(await p.locator(".vq-game-row[data-game=g1] .sport-props").innerText(), /Best \+100 · DraftKings/, "live price comparison stays in market research");
       assert.equal(
         await p
           .locator(".vq-game-row[data-game=g1] .sport-lines .sport-best")

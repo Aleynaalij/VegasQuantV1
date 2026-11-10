@@ -40,6 +40,7 @@ jobs:
           node scripts/ui-smoke/stub.mjs &
           LIVE_SCORES_DISABLED=1 npx next start -p 3100 &
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/ && break; sleep 2; done
+          node scripts/ui-smoke/nba-game-selections.mjs
           node scripts/ui-smoke/zone-publication-cards.mjs
           node scripts/ui-smoke/nhl-context.mjs
           node scripts/ui-smoke/ruby-contributors.mjs
@@ -48,7 +49,6 @@ jobs:
           node scripts/ui-smoke/parlay-save.mjs
           node scripts/ui-smoke/nba-live.mjs
           node scripts/ui-smoke/nba-game.mjs
-          node scripts/ui-smoke/nba-game-selections.mjs
           node scripts/ui-smoke/sports-live.mjs
           node scripts/ui-smoke/slots-sports.mjs
           node scripts/ui-smoke/frank-release.mjs
