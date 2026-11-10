@@ -102,6 +102,10 @@ try {
       const url = new URL(route.request().url());
       if (url.pathname.startsWith("/rest/v1/")) {
         let data = [];
+        if (url.pathname.endsWith("community_profiles")) {
+          const profile = { user_id: uid, username: "NbaFixture", display_name: "NBA fixture", avatar: "/icons/icon-192.png", region: "Sample", visible: true };
+          data = (route.request().headers().accept || "").includes("vnd.pgrst.object") ? profile : [profile];
+        }
         if (url.pathname.endsWith("membership_status"))
           data = { allowed: member, admin: false };
         if (url.pathname.endsWith("age_verification_status"))
