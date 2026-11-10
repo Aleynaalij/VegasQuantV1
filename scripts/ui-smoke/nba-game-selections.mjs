@@ -115,7 +115,7 @@ try {
             url.searchParams.get("slug") === "eq.fixture-b"
               ? { ...game, id: "game-b", slug: "fixture-b" }
               : game;
-          data = url.searchParams.has("slug") ? g : [g];
+          data = url.searchParams.has("slug") ? g : [game, { ...game, id: "game-b", slug: "fixture-b" }];
         }
         if (url.pathname.endsWith("nba_editorial_picks")) {
           assert.equal(member, true, "no protected payload before access");
@@ -297,13 +297,11 @@ try {
     );
     await page.reload();
     await pendingRequest;
-    await page.evaluate(() => {
-      const a = document.createElement("a");
-      a.href = "/nba/games/fixture-b";
-      a.textContent = "Fixture next game";
-      document.body.append(a);
-    });
-    await page.getByRole("link", { name: "Fixture next game" }).click();
+    await page.getByRole("link", { name: "← NBA games", exact: true }).click();
+    const otherRow = page.locator('.vq-game-row[data-game="game-b"]');
+    await otherRow.locator("summary").first().click();
+    await otherRow.getByRole("link", { name: "Open the matchup" }).click();
+    await page.waitForURL("**/nba/games/fixture-b");
     await section
       .getByText("No VQ selections published for this game", { exact: true })
       .waitFor();
