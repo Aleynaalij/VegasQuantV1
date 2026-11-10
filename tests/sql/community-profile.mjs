@@ -33,6 +33,12 @@ await db.exec(
     "utf8",
   ),
 );
+await db.exec(
+  fs.readFileSync(
+    "supabase/migrations/20261110225115_member_profile_account_links.sql",
+    "utf8",
+  ),
+);
 const firstB = (
   await db.query(`select id from public.community_posts where body='second'`)
 ).rows[0].id;
@@ -53,6 +59,30 @@ const as = async (uid, name) => {
 };
 
 const b = await as(A, "sharpshooter");
+assert.deepEqual(
+  await as(A, B),
+  b,
+  "stable UUID resolves the same profile and only its posts",
+);
+assert.equal(await as(A, C), null, "UUID does not expose private profiles");
+assert.equal(await as(A, D), null, "UUID does not expose unconfirmed accounts");
+assert.equal(
+  await as(A, "not-a-uuid"),
+  null,
+  "unknown handles do not cause UUID cast errors",
+);
+await db.exec(
+  `update public.community_profiles set username='RenamedMember' where user_id='${B}'`,
+);
+assert.equal(
+  (await as(A, B)).username,
+  "RenamedMember",
+  "UUID survives username changes",
+);
+await db.exec(
+  `update public.community_profiles set username='SharpShooter' where user_id='${B}'`,
+);
+
 assert.equal(b.username, "SharpShooter", "username lookup is case-insensitive");
 assert.deepEqual(
   [b.followers, b.following, b.post_count, b.is_me, b.i_follow],
@@ -87,6 +117,7 @@ assert.equal(
 );
 assert.equal(await as(A, "nobody"), null);
 await db.exec(`insert into private.blocked values ('${A}','${B}')`);
+assert.equal(await as(A, B), null, "UUID does not bypass blocks");
 assert.equal(
   await as(A, "SharpShooter"),
   null,
