@@ -33,3 +33,12 @@
 .nba-editorial-pick .btn {
   margin: 4px 6px 4px 0;
 }
+.nba-game-selections {
+  width: 100%;
+  max-width: 760px;
+  min-width: 0;
+  margin: 16px 0 28px;
+}
+.nba-game-selections > h2 {
+  margin-bottom: 8px;
+}
