@@ -42,6 +42,7 @@ import { ago, initials, richParts, zoneFeed } from "@/lib/zone-feed";
 import { isSport, liveSports, SPORTS, type Sport } from "@/lib/sports";
 import { NbaThreesCardPreview } from "./nba-threes-card-preview";
 import { threesCardDay } from "@/lib/nba-threes-card";
+import { positionCardPostId } from "@/lib/nfl-position-card";
 import { weeklyCardRef } from "@/lib/nfl-weekly-cards";
 import { isPublicationCard } from "@/lib/zone-publication-card";
 import { nbaMatchupSheetReference } from "@/lib/nba-matchup-sheet";
@@ -1846,7 +1847,7 @@ export default function CommunityFeed() {
                       {p.title !== "Community post" ? (
                         <h2 className="zone-post-title">{p.title}</h2>
                       ) : null}
-                      {weeklyCardRef(p.card) ? (
+                      {weeklyCardRef(p.card) || positionCardPostId(p) ? (
                         <figure
                           className="zone-card zone-media"
                           onDoubleClick={() => {
@@ -1856,12 +1857,12 @@ export default function CommunityFeed() {
                         >
                           <NbaThreesCardPreview
                             key={p.card}
-                            day={weeklyCardRef(p.card)!.day}
+                            day={weeklyCardRef(p.card)?.day || p.created_at.slice(0, 10)}
                             body={p.body}
                             image={{
-                              src: `/api/nfl/weekly-card/${encodeURIComponent(p.card!)}`,
+                              src: `/api/nfl/weekly-card/${encodeURIComponent(positionCardPostId(p) ? `post-${p.id}` : p.card!)}`,
                               alt: `${p.title}. The full card text is available below.`,
-                              download: `vegas-quant-${p.card!.replaceAll(":", "-")}.png`,
+                              download: `vegas-quant-${(positionCardPostId(p) ? `dvp-${p.id}` : p.card!).replaceAll(":", "-")}.png`,
                             }}
                           />
                           {burst === p.id ? (

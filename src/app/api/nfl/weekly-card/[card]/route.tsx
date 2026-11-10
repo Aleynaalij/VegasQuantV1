@@ -3,6 +3,7 @@ import path from "node:path";
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
 import { publishableKey, supabaseUrl } from "@/lib/supabase";
+import { positionCardPayload } from "@/lib/nfl-position-card";
 import { cardDate } from "@/lib/nba-threes-card";
 import {
   kickoffLabel,
@@ -396,7 +397,7 @@ function split(text: string): [string, string, string] {
   return m ? [m[1], m[2], m[3]] : [text, "", ""];
 }
 
-function DvpBody({ card }: { card: DvpCard }) {
+function DvpBody({ card, single = false }: { card: DvpCard; single?: boolean }) {
   return (
     <div
       style={{
@@ -412,8 +413,8 @@ function DvpBody({ card }: { card: DvpCard }) {
           style={{
             display: "flex",
             flexDirection: "column",
-            width: 462,
-            height: 456,
+            width: single ? 942 : 462,
+            height: single ? 890 : 456,
             marginBottom: 16,
             border: "1px solid #ffffff1f",
             borderRadius: 16,
@@ -469,11 +470,11 @@ function DvpBody({ card }: { card: DvpCard }) {
                     key={l.text}
                     style={{
                       display: "flex",
-                      height: 35,
+                      height: single ? 70 : 35,
                       alignItems: "center",
                       borderBottom: "1px solid #ffffff10",
                       fontFamily: "Barlow Condensed",
-                      fontSize: 21,
+                      fontSize: single ? 32 : 21,
                       letterSpacing: 0.5,
                       color: TEXT,
                       whiteSpace: "nowrap",
@@ -518,16 +519,17 @@ export async function GET(
   { params }: { params: Promise<{ card: string }> },
 ) {
   const { card: id } = await params;
-  const ref = weeklyCardRef(decodeURIComponent(id));
-  if (!ref) return new Response("Unknown card", { status: 404 });
+  const post = /^post-([0-9a-f-]{36})$/i.exec(decodeURIComponent(id));
+  let ref = weeklyCardRef(decodeURIComponent(id));
+  if (!ref && !post) return new Response("Unknown card", { status: 404 });
   const db = createClient(supabaseUrl, publishableKey, {
     auth: { persistSession: false },
   });
   let r;
   try {
-    r = await db.rpc("nfl_weekly_card", {
-      p_card: `nfl-${ref.kind}:${ref.day}:${ref.page}`,
-    });
+    r = post
+      ? await db.rpc("nfl_position_card", { p_post: post[1] })
+      : await db.rpc("nfl_weekly_card", { p_card: `nfl-${ref!.kind}:${ref!.day}:${ref!.page}` });
   } catch {
     return new Response("Card temporarily unavailable", {
       status: 503,
@@ -539,7 +541,9 @@ export async function GET(
       status: 503,
       headers: { "Cache-Control": "no-store", "Retry-After": "2" },
     });
-  const data = r.data as WrCard | DvpCard | null;
+  const data = post ? positionCardPayload(r.data) : r.data as WrCard | DvpCard | null;
+  if (post && data) ref = {kind:"dvp",day:data.day,page:1};
+  if (!ref) return new Response("No card", {status:404});
   const ok =
     ref.kind === "wr"
       ? Array.isArray((data as WrCard | null)?.rows) &&
@@ -572,11 +576,11 @@ export async function GET(
       <Frame
         accent="DEFENSE"
         title="VS POSITION"
-        subtitle="SUNDAY & MONDAY GAMES · TOP-8 SEASON RANKS PER GAME"
+        subtitle={post ? "THURSDAY NIGHT · TOP-8 SEASON RANKS PER GAME" : "SUNDAY & MONDAY GAMES · TOP-8 SEASON RANKS PER GAME"}
         meta={meta}
         footer="“Allow 3rd most” = 3rd most per game allowed this season (1 = most). Research only, not picks. Stats: nflverse."
       >
-        <DvpBody card={data as DvpCard} />
+        <DvpBody card={data as DvpCard} single={!!post} />
       </Frame>
     );
   return new ImageResponse(element, {
