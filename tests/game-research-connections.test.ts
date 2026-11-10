@@ -29,12 +29,13 @@ test("NBA expanded cards retain lineups and share source research with matchup p
   const home = source("nba-home.tsx");
   const detail = source("nba-game-detail.tsx");
   assert.match(home, /<NbaLineups/);
-  assert.match(home, /<NbaGameDetails key=\{`\$\{researchGame.id\}-\$\{accountVersion\}`\} game=\{researchGame\}/);
+  assert.match(home, /<NbaGameDetails\s+key=\{`\$\{researchGame.id\}-\$\{accountVersion\}`\}\s+game=\{researchGame\}/);
   assert.match(home, /researchGame && researchAllowed/);
   assert.match(home, /setResearchAllowed\(false\)/);
   assert.match(detail, /<NbaGameDetails/);
-  assert.ok(home.indexOf("<NbaGameDetails") < home.indexOf("Published Vegas Quant selections"));
-  assert.match(home, /setPicks\(p.error \? \[\] : currentSelections/);
+  assert.ok(home.indexOf("<NbaGameSelections") < home.indexOf("<NbaGameDetails"));
+  assert.ok(detail.indexOf("<NbaGameSelections") < detail.indexOf("<NbaGameDetails"));
+  assert.match(source("nba-game-selections.tsx"), /loadGameSelections\(\s*game.id/);
   assert.doesNotMatch(home, /if \(q.error \|\| p.error\) \{/);
   assert.match(home, /Retry markets and selections/);
   assert.match(home, /\[ids, opened, retry\]/);

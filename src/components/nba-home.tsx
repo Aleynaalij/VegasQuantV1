@@ -9,9 +9,7 @@ import {
   NBA_QUOTE_MAX_AGE_MS,
   nbaFaces,
   nbaSlateGame,
-  currentSelections,
   playerLines,
-  selectionLabel,
   type NbaQuoteRow,
   type NbaSlateRow,
 } from "@/lib/nba-slate";
@@ -30,23 +28,8 @@ import NbaLineups, { NbaAvailabilitySummary } from "./nba-lineups";
 import SportSlate from "./sport/sport-slate";
 import LiveNow from "./sport/live-now";
 import { NbaGameDetails } from "./nba-game-board";
+import NbaGameSelections from "./nba-game-selections";
 import type { NbaGame } from "@/lib/nba-board";
-
-type Pick = {
-  id: string;
-  game_id: string;
-  player: string;
-  market: string;
-  direction: string;
-  line: number;
-  odds: number;
-  book: string;
-  rationale: string;
-  risk: string;
-  quote_observed_at: string | null;
-  expires_at: string;
-  supersedes_id: string | null;
-};
 
 const price = (p: number | null | undefined) =>
   p === null || p === undefined ? "–" : americanPrice(p);
@@ -73,10 +56,8 @@ export default function NbaHome() {
     // Raw quote rows; what shows is re-derived against the clock, so a stalled feed ages out.
     [rows, setRows] = useState<NbaQuoteRow[]>([]),
     [clock, setClock] = useState(() => Date.now()),
-    [picks, setPicks] = useState<Pick[]>([]),
     [notice, setNotice] = useState(""),
-    [retry, setRetry] = useState(0),
-    [copied, setCopied] = useState<Record<string, string>>({});
+    [retry, setRetry] = useState(0);
   useEffect(() => {
     let live = true;
     async function load() {
@@ -123,13 +104,12 @@ export default function NbaHome() {
       if (!session.data.session) {
         setResearchAllowed(false);
         setRows([]);
-        setPicks([]);
         setBooks([]);
         if (opened) setNotice("Sign in to see game markets.");
         return;
       }
       const list = ids.split(",");
-      const [q, p, b, access] = await Promise.all([
+      const [q, b, access] = await Promise.all([
         supabase
           .from("nba_observations")
           .select("game_id,kind,observed_at,recorded_at,payload")
@@ -142,17 +122,6 @@ export default function NbaHome() {
           )
           .order("observed_at", { ascending: false })
           .limit(opened ? 2000 : 400),
-        opened
-          ? supabase
-              .from("nba_editorial_picks")
-              .select(
-                "id,game_id,player,market,direction,line,odds,book,rationale,risk,quote_observed_at,expires_at,supersedes_id",
-              )
-              .in("game_id", list)
-              .gt("expires_at", new Date().toISOString())
-              .order("published_at", { ascending: false })
-              .limit(200)
-          : Promise.resolve({ data: [] as Pick[], error: null }),
         // Every book's quotes, read only once a game opens, to name the best price for each line.
         opened
           ? supabase
@@ -172,22 +141,26 @@ export default function NbaHome() {
       ]);
       if (!live || n !== generation) return;
       setResearchAllowed(!access.error && access.data?.allowed === true);
-      setRows(q.error ? [] : (q.data || []) as NbaQuoteRow[]);
-      setPicks(p.error ? [] : currentSelections((p.data || []) as Pick[]));
+      setRows(q.error ? [] : ((q.data || []) as NbaQuoteRow[]));
       // A failed comparison read only hides "Best"; FanDuel prices still show.
       setBooks(b.error ? [] : ((b.data || []) as QuoteRow[]));
-      setNotice(q.error || p.error ? "Some markets or selections could not load. Please retry." : "");
+      setNotice(
+        q.error
+          ? "Some markets or selections could not load. Please retry."
+          : "",
+      );
     }
     void load();
     const timer = setInterval(load, 60000);
-    const refresh = () => { if (document.visibilityState !== "hidden") void load(); };
+    const refresh = () => {
+      if (document.visibilityState !== "hidden") void load();
+    };
     window.addEventListener("focus", refresh);
     const auth = supabase.auth.onAuthStateChange(() => {
       ++generation;
       setResearchAllowed(false);
       setAccountVersion((n) => n + 1);
       setRows([]);
-      setPicks([]);
       setBooks([]);
       setTimeout(refresh, 0);
     });
@@ -207,23 +180,6 @@ export default function NbaHome() {
   const faces: Record<string, MoneylineRead> = nbaFaces(rows, games, clock);
   const quotes = latestQuotes(rows, clock);
   const compare = bookQuotes(books, clock, BEST_MAX_AGE_MS);
-  async function copy(gameId: string, rows: Pick[]) {
-    const text = rows
-      .map((p) => `${p.player} ${selectionLabel(p)} ${americanPrice(p.odds)}`)
-      .join("\n");
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied((c) => ({
-        ...c,
-        [gameId]: `Copied ${rows.length} selection${rows.length === 1 ? "" : "s"}.`,
-      }));
-    } catch {
-      setCopied((c) => ({
-        ...c,
-        [gameId]: "Copy is unavailable in this browser.",
-      }));
-    }
-  }
   return (
     <div className="nba-home sport-home">
       <SportBrief
@@ -267,6 +223,14 @@ export default function NbaHome() {
           if (notice.startsWith("Sign in"))
             return (
               <div className="sport-markets">
+                {researchGame && (
+                  <NbaGameSelections
+                    key={`selections-${researchGame.id}-${accountVersion}`}
+                    game={researchGame}
+                    allowed={researchAllowed}
+                    now={clock}
+                  />
+                )}
                 <NbaLineups
                   game={{
                     away: g.away.abbreviation,
@@ -279,11 +243,18 @@ export default function NbaHome() {
                 {open}
               </div>
             );
-          const selections = picks.filter((p) => p.game_id === g.id);
           const lines = gameLines(quotes[g.id], g);
           const props = playerLines(quotes[g.id]);
           return (
             <div className="sport-markets">
+              {researchGame && (
+                <NbaGameSelections
+                  key={`selections-${researchGame.id}-${accountVersion}`}
+                  game={researchGame}
+                  allowed={researchAllowed}
+                  now={clock}
+                />
+              )}
               <NbaLineups
                 game={{
                   away: g.away.abbreviation,
@@ -292,60 +263,26 @@ export default function NbaHome() {
                   tbd: g.tbd,
                 }}
               />
-              {notice && <p role="status">{notice} <button type="button" onClick={() => setRetry((n) => n + 1)}>Retry markets and selections</button></p>}
-              {researchGame && researchAllowed ? <NbaGameDetails key={`${researchGame.id}-${accountVersion}`} game={researchGame} now={clock} defaultOpen showLineups={false} /> : <p role="status">Game source research requires verified research access. <Link href="/membership">Check account access →</Link></p>}
-              <h3 className="sport-markets-title">Published Vegas Quant selections</h3>
-              {selections.length ? (
-                <>
-                  <ul className="sport-selections">
-                    {selections.map((p) => (
-                      <li key={p.id}>
-                        <span>
-                          <b>{p.player}</b>
-                          <small>{selectionLabel(p)}</small>
-                        </span>
-                        <span className="sport-price">
-                          {americanPrice(p.odds)}
-                          <small>{p.book}</small>
-                          <Best
-                            q={beats(
-                              compare,
-                              selectionKey(
-                                p.game_id,
-                                p.market,
-                                p.player,
-                                p.direction,
-                                p.line,
-                              ),
-                              p.odds,
-                            )}
-                          />
-                        </span>
-                        <details>
-                          <summary>Why and the risk</summary>
-                          <p>{p.rationale}</p>
-                          <p>
-                            <b>Risk:</b> {p.risk}
-                          </p>
-                        </details>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="vq-prop-copy">
-                    <button
-                      type="button"
-                      onClick={() => void copy(g.id, selections)}
-                    >
-                      Copy selections
-                    </button>
-                    {copied[g.id] ? (
-                      <span role="status">{copied[g.id]}</span>
-                    ) : null}
-                  </div>
-                </>
+              {notice && (
+                <p role="status">
+                  {notice}{" "}
+                  <button type="button" onClick={() => setRetry((n) => n + 1)}>
+                    Retry markets and selections
+                  </button>
+                </p>
+              )}
+              {researchGame && researchAllowed ? (
+                <NbaGameDetails
+                  key={`${researchGame.id}-${accountVersion}`}
+                  game={researchGame}
+                  now={clock}
+                  defaultOpen
+                  showLineups={false}
+                />
               ) : (
-                <p className="sport-empty">
-                  {notice ? "Published selections are unavailable right now." : "No active editorial selections for this game. Available source research is separate from official picks."}
+                <p role="status">
+                  Game source research requires verified research access.{" "}
+                  <Link href="/membership">Check account access →</Link>
                 </p>
               )}
               <h3 className="sport-markets-title">FanDuel lines</h3>
