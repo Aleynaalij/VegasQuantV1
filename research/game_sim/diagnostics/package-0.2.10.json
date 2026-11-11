@@ -1,0 +1,102 @@
+{
+  "model_id": "vq-empirical-game/0.2.10",
+  "integrity_verified": true,
+  "files_verified": 6,
+  "implementation_hashes": 17,
+  "source_hash": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "runs": {
+    "actual": 10000,
+    "failed": 0,
+    "requested": 10000
+  },
+  "replay": {
+    "events": 153,
+    "rules_replay_verified": true
+  },
+  "base_checks_passed": true,
+  "failed_checks": [],
+  "diagnostics": {
+    "fg_attempts": {
+      "difference": -0.008319188191882265,
+      "passed": true,
+      "simulated_mean": 3.9105,
+      "source_mean": 3.918819188191882,
+      "tolerance_3se": 0.322255532707878
+    },
+    "late_decisions": {
+      "difference": -0.2823309963099634,
+      "passed": true,
+      "simulated_mean": 1.8173,
+      "source_mean": 2.0996309963099633,
+      "tolerance_3se": 0.37502903463948734
+    },
+    "late_fg_attempts": {
+      "difference": -0.029084870848708477,
+      "passed": true,
+      "simulated_mean": 0.458,
+      "source_mean": 0.4870848708487085,
+      "tolerance_3se": 0.10993375967988248
+    },
+    "timeouts": {
+      "difference": -0.1930878228782289,
+      "passed": true,
+      "simulated_mean": 7.5892,
+      "source_mean": 7.782287822878229,
+      "tolerance_3se": 0.3893642775610392
+    }
+  },
+  "support": {
+    "avoided_runoff_seconds": 294792,
+    "censoring_non_td": 5139,
+    "censoring_restored_td": 11335,
+    "clock_preserved_samples": 205729,
+    "coupled_stops": 21134,
+    "half_pooled_fallback": 241,
+    "half_preserved_samples": 205488,
+    "missing_eligible_stop_duration": 1865,
+    "separate_timeout:defense": 35510,
+    "separate_timeout:offense": 40382,
+    "stop_clock_candidates": 166569,
+    "thin_context_support": 48662,
+    "thin_stop_duration_context": 48332,
+    "timeout_context_depth:0": 2865671,
+    "timeout_context_depth:1": 101760,
+    "timeout_context_depth:2": 25731,
+    "timeout_context_depth:3": 7240
+  },
+  "calibration": {
+    "margin": {
+      "baseline_mean_crps": 8.065627410398262,
+      "coverage80": 0.7757352941176471,
+      "difference": 0.0975396172487967,
+      "game_bootstrap95": [
+        -0.03844698737460248,
+        0.23122905180490713
+      ],
+      "mean_crps": 8.16316702764706,
+      "n_games": 272,
+      "width80": 34.0
+    },
+    "total": {
+      "baseline_mean_crps": 7.598448874927213,
+      "coverage80": 0.7683823529411765,
+      "difference": 0.026051033896316897,
+      "game_bootstrap95": [
+        -0.03230765125671116,
+        0.08502728471029568
+      ],
+      "mean_crps": 7.6244999088235295,
+      "n_games": 272,
+      "width80": 31.0
+    }
+  },
+  "release_ready": false,
+  "blockers": [
+    "No validated team/player outcome coupling",
+    "No untouched later-season end-to-end validation",
+    "No sourced current roster/role scenario supplied",
+    "No model approval; member publication remains disabled",
+    "2023 inspected calibration does not establish superiority over historical baseline"
+  ],
+  "scope": "Research integrity and adequacy summary only; never approves a model or changes platform state"
+}

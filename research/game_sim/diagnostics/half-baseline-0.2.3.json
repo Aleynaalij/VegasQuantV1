@@ -1,0 +1,228 @@
+{
+  "model_version": "0.2.3",
+  "historical_model_source_sha256": "9f3e120dcfec53c092b289bec6e6c5231cf1f56f9a3c56df8fe31a5b493282cc",
+  "reports": [
+    {
+      "model_id": "vq-empirical-game/0.2.3",
+      "seed": 1701,
+      "counts": {
+        "states": 39347,
+        "source_fg": 1044,
+        "sample_fg": 932,
+        "sample_punt_before_fourth": 60,
+        "sample_fg_beyond_62_yards": 12,
+        "late_states": 569,
+        "late_source_fg": 132,
+        "late_sample_fg": 94
+      },
+      "excluded": {
+        "could not convert string to float: ''": 3391
+      },
+      "kneel_diagnostics": {
+        "leading_q4_last120": {
+          "states": 692,
+          "source_kneels": 308,
+          "sample_kneels": 118,
+          "source_share": 0.44508670520231214,
+          "sampled_share": 0.17052023121387283
+        },
+        "trailing_q4_last120": {
+          "states": 1214,
+          "source_kneels": 8,
+          "sample_kneels": 23,
+          "source_share": 0.006589785831960461,
+          "sampled_share": 0.018945634266886325
+        },
+        "trailing_1_3_q4_last10": {
+          "states": 33,
+          "source_kneels": 0,
+          "sample_kneels": 5,
+          "source_share": 0.0,
+          "sampled_share": 0.15151515151515152
+        },
+        "leading_4_8_q4_last120": {
+          "states": 254,
+          "source_kneels": 104,
+          "sample_kneels": 37,
+          "source_share": 0.4094488188976378,
+          "sampled_share": 0.14566929133858267
+        },
+        "leading_9plus_q4_last120": {
+          "states": 300,
+          "source_kneels": 155,
+          "sample_kneels": 53,
+          "source_share": 0.5166666666666667,
+          "sampled_share": 0.17666666666666667
+        },
+        "tied_q4_last120": {
+          "states": 239,
+          "source_kneels": 12,
+          "sample_kneels": 12,
+          "source_share": 0.0502092050209205,
+          "sampled_share": 0.0502092050209205
+        }
+      },
+      "fallbacks": {
+        "6": 32467,
+        "5": 3425,
+        "4": 3401,
+        "clock_preserved_samples": 5166,
+        "censoring_non_td": 136,
+        "thin_context_support": 284,
+        "censoring_restored_td": 276,
+        "3": 54
+      },
+      "model_file_sha256": "090410d10bf8fb49eccc55fd0cc9083ced71b5c251990f4e4c03d45bba749c63",
+      "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+      "scope": "One sampled action at each valid historical state; source-state fit diagnostic, not held-out accuracy or executable recommendations"
+    },
+    {
+      "model_id": "vq-empirical-game/0.2.3",
+      "seed": 1702,
+      "counts": {
+        "states": 39347,
+        "source_fg": 1044,
+        "sample_fg": 899,
+        "sample_punt_before_fourth": 47,
+        "sample_fg_beyond_62_yards": 7,
+        "late_states": 569,
+        "late_source_fg": 132,
+        "late_sample_fg": 89
+      },
+      "excluded": {
+        "could not convert string to float: ''": 3391
+      },
+      "kneel_diagnostics": {
+        "leading_q4_last120": {
+          "states": 692,
+          "source_kneels": 308,
+          "sample_kneels": 133,
+          "source_share": 0.44508670520231214,
+          "sampled_share": 0.19219653179190752
+        },
+        "trailing_q4_last120": {
+          "states": 1214,
+          "source_kneels": 8,
+          "sample_kneels": 23,
+          "source_share": 0.006589785831960461,
+          "sampled_share": 0.018945634266886325
+        },
+        "trailing_1_3_q4_last10": {
+          "states": 33,
+          "source_kneels": 0,
+          "sample_kneels": 6,
+          "source_share": 0.0,
+          "sampled_share": 0.18181818181818182
+        },
+        "leading_4_8_q4_last120": {
+          "states": 254,
+          "source_kneels": 104,
+          "sample_kneels": 46,
+          "source_share": 0.4094488188976378,
+          "sampled_share": 0.18110236220472442
+        },
+        "leading_9plus_q4_last120": {
+          "states": 300,
+          "source_kneels": 155,
+          "sample_kneels": 66,
+          "source_share": 0.5166666666666667,
+          "sampled_share": 0.22
+        },
+        "tied_q4_last120": {
+          "states": 239,
+          "source_kneels": 12,
+          "sample_kneels": 9,
+          "source_share": 0.0502092050209205,
+          "sampled_share": 0.03765690376569038
+        }
+      },
+      "fallbacks": {
+        "6": 32467,
+        "5": 3425,
+        "4": 3401,
+        "clock_preserved_samples": 5166,
+        "censoring_restored_td": 261,
+        "thin_context_support": 284,
+        "censoring_non_td": 123,
+        "3": 54
+      },
+      "model_file_sha256": "090410d10bf8fb49eccc55fd0cc9083ced71b5c251990f4e4c03d45bba749c63",
+      "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+      "scope": "One sampled action at each valid historical state; source-state fit diagnostic, not held-out accuracy or executable recommendations"
+    },
+    {
+      "model_id": "vq-empirical-game/0.2.3",
+      "seed": 1703,
+      "counts": {
+        "states": 39347,
+        "source_fg": 1044,
+        "sample_fg": 913,
+        "sample_punt_before_fourth": 56,
+        "sample_fg_beyond_62_yards": 8,
+        "late_states": 569,
+        "late_source_fg": 132,
+        "late_sample_fg": 95
+      },
+      "excluded": {
+        "could not convert string to float: ''": 3391
+      },
+      "kneel_diagnostics": {
+        "leading_q4_last120": {
+          "states": 692,
+          "source_kneels": 308,
+          "sample_kneels": 118,
+          "source_share": 0.44508670520231214,
+          "sampled_share": 0.17052023121387283
+        },
+        "trailing_q4_last120": {
+          "states": 1214,
+          "source_kneels": 8,
+          "sample_kneels": 20,
+          "source_share": 0.006589785831960461,
+          "sampled_share": 0.016474464579901153
+        },
+        "trailing_1_3_q4_last10": {
+          "states": 33,
+          "source_kneels": 0,
+          "sample_kneels": 3,
+          "source_share": 0.0,
+          "sampled_share": 0.09090909090909091
+        },
+        "leading_4_8_q4_last120": {
+          "states": 254,
+          "source_kneels": 104,
+          "sample_kneels": 44,
+          "source_share": 0.4094488188976378,
+          "sampled_share": 0.1732283464566929
+        },
+        "leading_9plus_q4_last120": {
+          "states": 300,
+          "source_kneels": 155,
+          "sample_kneels": 56,
+          "source_share": 0.5166666666666667,
+          "sampled_share": 0.18666666666666668
+        },
+        "tied_q4_last120": {
+          "states": 239,
+          "source_kneels": 12,
+          "sample_kneels": 8,
+          "source_share": 0.0502092050209205,
+          "sampled_share": 0.03347280334728033
+        }
+      },
+      "fallbacks": {
+        "6": 32467,
+        "5": 3425,
+        "4": 3401,
+        "clock_preserved_samples": 5166,
+        "censoring_restored_td": 284,
+        "censoring_non_td": 113,
+        "thin_context_support": 284,
+        "3": 54
+      },
+      "model_file_sha256": "090410d10bf8fb49eccc55fd0cc9083ced71b5c251990f4e4c03d45bba749c63",
+      "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+      "scope": "One sampled action at each valid historical state; source-state fit diagnostic, not held-out accuracy or executable recommendations"
+    }
+  ]
+}
