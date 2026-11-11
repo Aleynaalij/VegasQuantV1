@@ -53,7 +53,7 @@ export default function NhlChartPreview({
         touch.current = null;
         const end = e.changedTouches[0]?.clientX;
         if (start !== null && end !== undefined && Math.abs(end - start) > 60)
-          setPage((p) => Math.max(1, Math.min(3, p + (end < start ? 1 : -1))));
+          setPage((p) => Math.max(1, Math.min(9, p + (end < start ? 1 : -1))));
       }}
     >
       <nav
@@ -75,12 +75,24 @@ export default function NhlChartPreview({
           ←
         </button>
         <span aria-live="polite">
-          {["Matchup", "Player volume", "Blocks & roles"][page - 1]} · {page} /
-          3 · Swipe
+          {
+            [
+              "Matchup",
+              "Away volume 1",
+              "Away volume 2",
+              "Home volume 1",
+              "Home volume 2",
+              "Away blocks",
+              "Home blocks",
+              "Away goalies & PP1",
+              "Home goalies & PP1",
+            ][page - 1]
+          }{" "}
+          · {page} / 9 · Swipe
         </span>
         <button
           type="button"
-          disabled={page === 3}
+          disabled={page === 9}
           onClick={() => setPage((p) => p + 1)}
           aria-label="Next chart"
         >
@@ -93,7 +105,7 @@ export default function NhlChartPreview({
         body={body}
         image={{
           src: `/api/nhl/chart/${id}/${page}`,
-          alt: `NHL ${["matchup", "player volume", "blocked shots and roles"][page - 1]} research chart. Full data and sources below.`,
+          alt: `NHL ${page === 1 ? "matchup" : page <= 5 ? "player volume" : "blocked shots and roles"} research chart. Full data and sources below.`,
           download: `vegas-quant-nhl-${id}-page-${page}.png`,
         }}
       />

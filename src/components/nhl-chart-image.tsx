@@ -15,23 +15,47 @@ const panel = {
   flexDirection: "column" as const,
   border: "1px solid #ffffff22",
   borderRadius: 16,
-  padding: 18,
+  padding: 20,
   background: "#ffffff06",
 };
-function Bars({
-  values,
-  labels,
-  max = 8,
-  color = green,
+function Text({
+  children,
+  size = 40,
+  color = muted,
 }: {
-  values: (number | null)[];
-  labels: string[];
-  max?: number;
+  children: React.ReactNode;
+  size?: number;
   color?: string;
 }) {
   return (
+    <div style={{ display: "flex", fontSize: size, color, lineHeight: 1.2 }}>
+      {children}
+    </div>
+  );
+}
+function Bars({
+  values,
+  labels,
+  max,
+  color = green,
+  height = 100,
+  width = 76,
+}: {
+  values: (number | null)[];
+  labels: string[];
+  max: number;
+  color?: string;
+  height?: number;
+  width?: number;
+}) {
+  return (
     <div
-      style={{ display: "flex", height: 146, alignItems: "flex-end", gap: 7 }}
+      style={{
+        display: "flex",
+        alignItems: "flex-end",
+        gap: 8,
+        height: height + 105,
+      }}
     >
       {values.map((v, i) => (
         <div
@@ -40,386 +64,319 @@ function Bars({
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            width: 53,
+            width,
           }}
         >
-          <div style={{ display: "flex", fontSize: 23, color: white }}>
+          <Text size={50} color={white}>
             {v === null ? "—" : v}
-          </div>
+          </Text>
           <div
             style={{
               display: "flex",
-              height: v === null ? 2 : Math.max(2, (v / max) * 85),
-              width: 38,
+              height: v === null ? 2 : Math.max(2, (v / max) * height),
+              width: width - 20,
+              borderRadius: 5,
               background: v === null ? "#57635d" : color,
-              borderRadius: 4,
             }}
           />
-          <div
-            style={{
-              display: "flex",
-              fontSize: 17,
-              color: muted,
-              marginTop: 7,
-            }}
-          >
-            {labels[i]}
-          </div>
+          <Text size={28}>{labels[i]}</Text>
         </div>
       ))}
     </div>
   );
 }
-function Small({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      style={{ display: "flex", fontSize: 20, color: muted, lineHeight: 1.3 }}
-    >
-      {children}
-    </div>
-  );
-}
 function Matchup({ s }: { s: NhlChartSnapshot }) {
-  return (
-    <div style={{ display: "flex", gap: 18, marginTop: 22 }}>
-      {s.teams.map((t) => {
-        const games = [...t.games].reverse(),
-          rest = restDays(s.day, t.games[0]?.date);
-        return (
-          <div key={t.abbreviation} style={{ ...panel, width: 462 }}>
-            <div
-              style={{
-                display: "flex",
-                fontFamily: "Barlow Condensed",
-                fontSize: 40,
-                color: gold,
-              }}
-            >
-              {t.name}
-            </div>
-            <Small>{games.length} prior games · GF / GA per game</Small>
-            <div
-              style={{
-                display: "flex",
-                fontSize: 39,
-                color: white,
-                marginTop: 10,
-              }}
-            >
-              {t.goalsForPerGame?.toFixed(2) ?? "—"} /{" "}
-              {t.goalsAgainstPerGame?.toFixed(2) ?? "—"}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                fontSize: 24,
-                color: green,
-                marginTop: 14,
-              }}
-            >
-              Goals for
-            </div>
-            <Bars
-              values={games.map((g) => g.goalsFor)}
-              labels={games.map((g) => g.date.slice(5))}
-              max={Math.max(8, ...games.map((g) => g.goalsFor))}
-            />
-            <div
-              style={{
-                display: "flex",
-                fontSize: 24,
-                color: gold,
-                marginTop: 18,
-              }}
-            >
-              Goals against
-            </div>
-            <Bars
-              values={games.map((g) => g.goalsAgainst)}
-              labels={games.map((g) => g.date.slice(5))}
-              max={Math.max(8, ...games.map((g) => g.goalsAgainst))}
-              color={gold}
-            />
-            <div
-              style={{
-                display: "flex",
-                fontSize: 24,
-                color: white,
-                marginTop: 24,
-              }}
-            >
-              Rest:{" "}
-              {rest === null
-                ? "unavailable"
-                : rest === 0
-                  ? "back-to-back"
-                  : `${rest} calendar off day${rest === 1 ? "" : "s"}`}
-            </div>
-            <Small>Travel route / distance: unavailable</Small>
-            <div
-              style={{
-                display: "flex",
-                fontSize: 24,
-                color: gold,
-                marginTop: 24,
-              }}
-            >
-              Goalie · {t.goalie?.status ?? "unknown"}
-            </div>
-            <div style={{ display: "flex", fontSize: 27, color: white }}>
-              {t.goalie?.name ?? "Not confirmed"}
-            </div>
-            <Small>
-              {t.goalie
-                ? `${t.goalie.gaa?.toFixed(2) ?? "—"} GAA · ${t.goalie.sample} verified prior appearances`
-                : "No goalie assignment source"}
-            </Small>
-            <Small>
-              {t.goalie
-                ? `Source checked ${nhlStamp(t.goalie.source.retrieved_at)}`
-                : "Morning information may change"}
-            </Small>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-function Volume({ s }: { s: NhlChartSnapshot }) {
-  const top = s.teams.flatMap((t) => chartPlayers(t).slice(0, 2));
-  const toiMax = Math.max(
-    35,
-    ...top.flatMap((p) => p.samples.map((x) => Math.ceil(x.seconds / 300) * 5)),
-  );
-  const shotsMax = Math.max(
+  const max = Math.max(
     8,
-    ...top.flatMap((p) => p.samples.map((x) => x.shots ?? 0)),
+    ...s.teams.flatMap((t) =>
+      t.games.flatMap((g) => [g.goalsFor, g.goalsAgainst]),
+    ),
   );
   return (
     <div
       style={{
         display: "flex",
         flexDirection: "column",
-        gap: 12,
-        marginTop: 20,
+        gap: 14,
+        marginTop: 16,
       }}
     >
-      {s.teams.flatMap((t) =>
-        chartPlayers(t)
-          .slice(0, 2)
-          .map((p) => {
-            const dates = [...t.games].reverse().map((g) => g.date);
-            const samples = dates.map((d) =>
-              p.samples.find((x) => x.date === d),
-            );
-            const mins = samples.map((x) => (x ? x.seconds / 60 : null));
-            const points = mins.map((v, i) =>
-              v === null ? null : `${i * 62},${70 - (v / toiMax) * 60}`,
-            );
-            return (
-              <div
-                key={t.abbreviation + p.id}
-                style={{
-                  ...panel,
-                  padding: 14,
-                  flexDirection: "row",
-                  height: 186,
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    width: 280,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      fontFamily: "Barlow Condensed",
-                      fontSize: 34,
-                      color: white,
-                    }}
-                  >
-                    {p.name}
-                  </div>
-                  <Small>
-                    {t.abbreviation} · {p.samples.length}/{t.games.length}{" "}
-                    appearances
-                  </Small>
-                  <Small>
-                    G {p.goals ?? "—"} · P {p.points ?? "—"} ·{" "}
-                    {p.minutes.toFixed(1)} min/game
-                  </Small>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    width: 330,
-                  }}
-                >
-                  <Small>SOG · actual team-game window</Small>
-                  <Bars
-                    values={samples.map((x) => x?.shots ?? null)}
-                    labels={dates.map((d) => d.slice(5))}
-                    max={shotsMax}
-                  />
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    width: 260,
-                  }}
-                >
-                  <Small>TOI min · 0–{toiMax} scale</Small>
-                  <svg width={250} height={85} viewBox="0 0 250 85">
-                    <line x1="0" y1="70" x2="250" y2="70" stroke="#68776d" />
-                    {points
-                      .slice(1)
-                      .map((p, i) =>
-                        p && points[i] ? (
-                          <polyline
-                            key={i}
-                            points={`${points[i]} ${p}`}
-                            fill="none"
-                            stroke={gold}
-                            strokeWidth={3}
-                          />
-                        ) : null,
-                      )}
-                    {mins.map((v, i) =>
-                      v === null ? null : (
-                        <circle
-                          key={i}
-                          cx={i * 62}
-                          cy={70 - (v / toiMax) * 60}
-                          r={4}
-                          fill={gold}
-                        />
-                      ),
-                    )}
-                  </svg>
-                  <Small>
-                    {mins
-                      .map((v) => (v === null ? "—" : v.toFixed(1)))
-                      .join(" · ")}
-                  </Small>
-                </div>
-              </div>
-            );
-          }),
-      )}
-      <Small>
-        — = no verified row, not zero. Historical volume does not confirm
-        tonight’s lineup. Sources and all players in the full report.
-      </Small>
-    </div>
-  );
-}
-function Blocks({ s }: { s: NhlChartSnapshot }) {
-  const max = Math.max(
-    10,
-    ...s.teams
-      .flatMap((t) => blockChartPlayers(t).slice(0, 3))
-      .map((p) => p.blocksPer60 ?? 0),
-  );
-  return (
-    <div style={{ display: "flex", gap: 18, marginTop: 22 }}>
+      <div style={{ display: "flex", gap: 35 }}>
+        <Text size={36} color={green}>
+          GREEN · GOALS FOR
+        </Text>
+        <Text size={36} color={gold}>
+          GOLD · GOALS AGAINST
+        </Text>
+      </div>
       {s.teams.map((t) => {
-        const ps = blockChartPlayers(t).slice(0, 3);
+        const games = [...t.games].reverse(),
+          rest = restDays(s.day, t.games[0]?.date);
         return (
-          <div key={t.abbreviation} style={{ ...panel, width: 462 }}>
+          <div key={t.abbreviation} style={{ ...panel, padding: 14 }}>
+            <Text size={50} color={gold}>
+              {t.name}
+            </Text>
+            <Text size={36} color={white}>
+              {games.length} prior games · GF{" "}
+              {t.goalsForPerGame?.toFixed(2) ?? "—"} / GA{" "}
+              {t.goalsAgainstPerGame?.toFixed(2) ?? "—"} per game
+            </Text>
             <div
               style={{
                 display: "flex",
-                fontFamily: "Barlow Condensed",
-                fontSize: 40,
-                color: gold,
+                height: 190,
+                alignItems: "flex-end",
+                gap: 12,
               }}
             >
-              {t.abbreviation} · BLOCKS / 60
-            </div>
-            <Small>3+ appearances / 30+ TOI min · Σ blocks / Σ TOI × 60</Small>
-            {ps.length ? (
-              ps.map((p) => (
+              {games.map((g) => (
                 <div
-                  key={p.id}
+                  key={g.id}
                   style={{
                     display: "flex",
                     flexDirection: "column",
-                    marginTop: 22,
+                    alignItems: "center",
+                    width: 160,
                   }}
                 >
-                  <div style={{ display: "flex", fontSize: 25, color: white }}>
-                    {p.name} · {p.blocksPer60?.toFixed(2) ?? "—"}
-                  </div>
                   <div
-                    style={{
-                      display: "flex",
-                      width:
-                        p.blocksPer60 === null
-                          ? 2
-                          : Math.max(2, (p.blocksPer60 / max) * 390),
-                      height: 19,
-                      background: green,
-                      marginTop: 7,
-                    }}
-                  />
-                  <Small>
-                    {p.samples.length} appearances · {p.minutes.toFixed(1)}{" "}
-                    min/game
-                  </Small>
+                    style={{ display: "flex", alignItems: "flex-end", gap: 10 }}
+                  >
+                    {[g.goalsFor, g.goalsAgainst].map((v, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text size={50} color={i ? gold : green}>
+                          {v}
+                        </Text>
+                        <div
+                          style={{
+                            display: "flex",
+                            width: 55,
+                            height: Math.max(2, (v / max) * 75),
+                            background: i ? gold : green,
+                            borderRadius: 4,
+                          }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <Text size={28}>{g.date.slice(5)}</Text>
                 </div>
-              ))
-            ) : (
-              <Small>Verified defenseman sample unavailable</Small>
-            )}
-            <div
-              style={{
-                display: "flex",
-                fontFamily: "Barlow Condensed",
-                fontSize: 34,
-                color: gold,
-                marginTop: 34,
-              }}
-            >
-              PP1 · PROJECTED
+              ))}
             </div>
-            <div
-              style={{
-                display: "flex",
-                fontSize: 24,
-                color: white,
-                lineHeight: 1.5,
-              }}
-            >
-              {t.powerPlay?.players.map((p) => p.name).join(" · ") ??
-                "Unavailable"}
-            </div>
-            <Small>
-              {t.powerPlay
-                ? `Source checked ${nhlStamp(t.powerPlay.source.retrieved_at)}`
-                : "No projected unit source"}
-            </Small>
-            <div
-              style={{
-                display: "flex",
-                marginTop: 24,
-                fontSize: 22,
-                color: muted,
-              }}
-            >
-              Rate is recent all-opponent exposure, not a matchup floor.
-              Linemates, late scratches and opponent-adjusted splits remain
-              unavailable.
-            </div>
+            <Text size={32}>
+              Rest:{" "}
+              {rest === null
+                ? "unavailable"
+                : rest === 0
+                  ? "back-to-back"
+                  : `${rest} calendar off days`}{" "}
+              · Travel: unavailable
+            </Text>
           </div>
         );
       })}
+      <Text size={32}>
+        Goalies & PP1: pages 8–9. Calendar off days are not verified recovery
+        hours or team travel.
+      </Text>
+    </div>
+  );
+}
+function Volume({ s, index }: { s: NhlChartSnapshot; index: number }) {
+  const t = s.teams[Math.floor(index / 2)],
+    p = chartPlayers(t)[index % 2],
+    dates = [...t.games].reverse().map((g) => g.date);
+  if (!p)
+    return (
+      <div style={{ ...panel, marginTop: 25 }}>
+        <Text size={54} color={gold}>
+          {t.name}
+        </Text>
+        <Text size={48}>Verified player volume sample unavailable.</Text>
+      </div>
+    );
+  const samples = dates.map((d) => p.samples.find((x) => x.date === d)),
+    mins = samples.map((x) => (x ? x.seconds / 60 : null)),
+    max = Math.max(35, ...mins.map((v) => Math.ceil((v ?? 0) / 5) * 5)),
+    y = (v: number) => 90 - (v / max) * 75;
+  return (
+    <div style={{ ...panel, marginTop: 20, gap: 8 }}>
+      <Text size={64} color={white}>
+        {p.name}
+      </Text>
+      <Text size={36} color={gold}>
+        {t.name} · {p.samples.length}/{t.games.length} appearances
+      </Text>
+      <Text size={44} color={white}>
+        Goals {p.goals ?? "—"} · Points {p.points ?? "—"} · Avg TOI{" "}
+        {p.minutes.toFixed(1)} min
+      </Text>
+      <Text size={36} color={green}>
+        SHOTS ON GOAL · prior team-game window
+      </Text>
+      <Bars
+        values={samples.map((x) => x?.shots ?? null)}
+        labels={dates.map((d) => d.slice(5))}
+        max={Math.max(8, ...samples.map((x) => x?.shots ?? 0))}
+        height={80}
+        width={163}
+      />
+      <Text size={36} color={gold}>
+        ICE TIME · minutes · 0–{max} scale
+      </Text>
+      <svg width={850} height={105} viewBox="0 0 850 105">
+        <line x1="18" y1="90" x2="832" y2="90" stroke="#68776d" />
+        {mins
+          .slice(1)
+          .map((v, i) =>
+            v !== null && mins[i] !== null ? (
+              <line
+                key={i}
+                x1={81 + i * 171}
+                y1={y(mins[i]!)}
+                x2={281 + i * 171}
+                y2={y(v)}
+                stroke={gold}
+                strokeWidth={5}
+              />
+            ) : null,
+          )}
+        {mins.map((v, i) =>
+          v === null ? null : (
+            <circle key={i} cx={81 + i * 171} cy={y(v)} r={7} fill={gold} />
+          ),
+        )}
+      </svg>
+      <div style={{ display: "flex", gap: 8 }}>
+        {mins.map((v, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              width: 163,
+            }}
+          >
+            <Text size={44} color={white}>
+              {v === null ? "—" : v.toFixed(1)}
+            </Text>
+            <Text size={28}>{dates[i]?.slice(5)}</Text>
+          </div>
+        ))}
+      </div>
+      <Text size={30}>
+        — = no verified field or appearance, not zero. Historical workload does
+        not confirm tonight’s lineup.
+      </Text>
+    </div>
+  );
+}
+function Blocks({ s, index }: { s: NhlChartSnapshot; index: number }) {
+  const t = s.teams[index],
+    players = blockChartPlayers(t).slice(0, 3),
+    max = Math.max(
+      10,
+      ...s.teams
+        .flatMap((x) => blockChartPlayers(x).slice(0, 3))
+        .map((x) => x.blocksPer60 ?? 0),
+    );
+  return (
+    <div style={{ ...panel, marginTop: 20, gap: 24 }}>
+      <Text size={60} color={gold}>
+        {t.name}
+      </Text>
+      <Text size={42}>BLOCKS / 60 · 3+ appearances / 30+ TOI minutes</Text>
+      {players.length ? (
+        players.map((p) => (
+          <div
+            key={p.id}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              marginBottom: 15,
+              gap: 8,
+            }}
+          >
+            <Text size={54} color={white}>
+              {p.name} · {p.blocksPer60!.toFixed(2)}
+            </Text>
+            <div
+              style={{
+                display: "flex",
+                width: Math.max(2, (p.blocksPer60! / max) * 850),
+                height: 30,
+                background: green,
+              }}
+            />
+            <Text size={38}>
+              {p.samples.length} appearances · {p.minutes.toFixed(1)} TOI
+              min/game
+            </Text>
+          </div>
+        ))
+      ) : (
+        <Text size={48}>Verified defenseman exposure unavailable.</Text>
+      )}
+      <Text size={38}>Σ blocks ÷ Σ verified TOI × 60</Text>
+      <Text size={36}>
+        Recent all-opponent exposure. Opponent-adjusted splits are unavailable;
+        this rate is not a matchup floor.
+      </Text>
+    </div>
+  );
+}
+function Roles({ s, index }: { s: NhlChartSnapshot; index: number }) {
+  const t = s.teams[index];
+  return (
+    <div style={{ ...panel, marginTop: 20, gap: 14 }}>
+      <Text size={54} color={gold}>
+        {t.name}
+      </Text>
+      <Text size={48} color={gold}>
+        GOALIE · {t.goalie?.status.toUpperCase() ?? "UNKNOWN"}
+      </Text>
+      <Text size={58} color={white}>
+        {t.goalie?.name ?? "Assignment unavailable"}
+      </Text>
+      <Text size={48} color={white}>
+        {t.goalie
+          ? `${t.goalie.gaa?.toFixed(2) ?? "—"} GAA · ${t.goalie.sample} prior appearances`
+          : "Goalie sample unavailable"}
+      </Text>
+      <Text size={30}>
+        {t.goalie
+          ? `RotoWire checked ${nhlStamp(t.goalie.source.retrieved_at)}`
+          : "No verified assignment source"}
+      </Text>
+      <Text size={32}>
+        GAA uses verified played minutes. Source-reported status is not final
+        clearance.
+      </Text>
+      <Text size={48} color={gold}>
+        PP1 · PROJECTED
+      </Text>
+      <Text size={44} color={white}>
+        {t.powerPlay?.players.map((p) => p.name).join(" · ") || "Unavailable"}
+      </Text>
+      <Text size={30}>
+        {t.powerPlay
+          ? `Source checked ${nhlStamp(t.powerPlay.source.retrieved_at)}`
+          : "Projected unit source unavailable"}
+      </Text>
+      <Text size={36}>
+        Full 5-on-5 lines, injury clearance and late scratches are unavailable
+        in this snapshot. Check current team reports before treating a player as
+        active.
+      </Text>
     </div>
   );
 }
@@ -430,28 +387,39 @@ export function NhlChartImage({
   s: NhlChartSnapshot;
   page: number;
 }) {
-  const names = s.teams.map((t) => t.abbreviation).join(" @ ");
   return (
     <ResearchFrame
       badge="NHL RESEARCH"
-      accent={names}
-      title={page === 1 ? "MATCHUP" : page === 2 ? "VOLUME" : "BLOCKS"}
+      accent={s.teams.map((t) => t.abbreviation).join(" @ ")}
+      title={
+        page === 1
+          ? "MATCHUP"
+          : page <= 5
+            ? "VOLUME"
+            : page <= 7
+              ? "BLOCKS"
+              : "ROLES"
+      }
       subtitle={
         page === 1
-          ? "RECENT SCORING · GOALIES · REST"
-          : page === 2
-            ? "SHOTS ON GOAL · GOALS · POINTS · ICE TIME"
-            : "VERIFIED ICE-TIME DENOMINATORS · PROJECTED PP1"
+          ? "RECENT SCORING · GAME WINDOW · REST"
+          : page <= 5
+            ? "PLAYER SHOTS · GOALS · POINTS · ICE TIME"
+            : page <= 7
+              ? "BLOCKS · VERIFIED ICE-TIME DENOMINATORS"
+              : "GOALIE STATUS · PROJECTED POWER PLAY"
       }
-      meta={`${nhlStamp(s.game.start_time)} · PAGE ${page} OF 3 · DATA ${nhlStamp(s.collected_at)}`}
+      meta={`${nhlStamp(s.game.start_time)} · PAGE ${page} OF 9 · DATA ${nhlStamp(s.collected_at)}`}
       footer="Research only · goals exclude shootout deciders. NHL.com / RotoWire. Full sources, samples and coverage gaps in The Zone."
     >
       {page === 1 ? (
         <Matchup s={s} />
-      ) : page === 2 ? (
-        <Volume s={s} />
+      ) : page <= 5 ? (
+        <Volume s={s} index={page - 2} />
+      ) : page <= 7 ? (
+        <Blocks s={s} index={page - 6} />
       ) : (
-        <Blocks s={s} />
+        <Roles s={s} index={page - 8} />
       )}
     </ResearchFrame>
   );

@@ -32,7 +32,7 @@ const post = {
 };
 const hash = (b) => crypto.createHash("sha256").update(b).digest("hex");
 const pngs = [];
-for (let page = 1; page <= 3; page++) {
+for (let page = 1; page <= 9; page++) {
   const r = await fetch(`${base}/api/nhl/chart/${fixture.id}/${page}`);
   assert.equal(r.status, 200);
   assert.match(r.headers.get("content-type"), /image\/png/);
@@ -42,7 +42,7 @@ for (let page = 1; page <= 3; page++) {
   pngs.push(b);
 }
 assert.equal(
-  (await fetch(`${base}/api/nhl/chart/${fixture.id}/4`)).status,
+  (await fetch(`${base}/api/nhl/chart/${fixture.id}/10`)).status,
   404,
 );
 const browser = await chromium.launch({
@@ -101,7 +101,7 @@ try {
     const chart = page.locator(".nhl-chart-package");
     await chart.waitFor();
     await chart.scrollIntoViewIfNeeded();
-    for (let i = 1; i <= 3; i++) {
+    for (let i = 1; i <= 9; i++) {
       const img = chart.locator(`img[src$="/${i}"]`);
       await img.waitFor();
       await img.scrollIntoViewIfNeeded();
@@ -120,7 +120,7 @@ try {
         hash(pngs[i - 1]),
         "download bytes match displayed native chart",
       );
-      if (i < 3)
+      if (i < 9)
         await chart.getByRole("button", { name: "Next chart" }).click();
     }
     await chart.getByRole("button", { name: "Previous chart" }).click();
@@ -148,7 +148,7 @@ try {
         }),
       );
     });
-    assert.match(await chart.locator("nav").innerText(), /3 \/ 3/);
+    assert.match(await chart.locator("nav").innerText(), /9 \/ 9/);
     assert.equal(
       new URL(page.url()).pathname,
       "/community",

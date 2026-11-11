@@ -1,6 +1,6 @@
 # NHL visual research package
 
-Batch 1: three native 1080 × 1350 evergreen/gold pages per eligible game, posted by TheDealer in The Zone. These are research, not picks. The exact displayed PNG is downloaded. The shared NFL frame is extracted without changing its output (Sunday card 1 SHA256 regression checked).
+Batch 1: nine native 1080 × 1350 evergreen/gold pages per eligible game, posted by TheDealer in The Zone. These are research, not picks. The exact displayed PNG is downloaded. The shared NFL frame is extracted without changing its output (Sunday card 1 SHA256 regression checked).
 
 ## Metric inventory
 
@@ -38,7 +38,7 @@ Activate the integration only after the frontend renderer is deployed. Old snaps
 
 ## Validation and next batches
 
-Tests cover actual statistic extraction, weighted blocks denominators, missing/null vs zero, private/unpublished access, timestamp/source matching, frozen retries, Dealer claims/flag, duplicate calls and postponed-game exclusion. Browser acceptance covers 360/390/1280 px, three real server-rendered PNGs, swipe/buttons, byte-identical downloads, source timestamps, missing rows, source failure/retry and no page overflow. The synthetic smoke fixture is isolated from production research.
+Tests cover actual statistic extraction, weighted blocks denominators, missing/null vs zero, private/unpublished access, timestamp/source matching, frozen retries, Dealer claims/flag, duplicate calls and postponed-game exclusion. Browser acceptance covers 360/390/1280 px, nine real server-rendered PNGs, swipe/buttons, byte-identical downloads, source timestamps, missing rows, source failure/retry and no page overflow. The synthetic smoke fixture is isolated from production research.
 
 Release requires tests, typecheck, production build, deployed commit confirmation and actual published-row/image readback. Run IDs and post IDs belong in the release handoff. Advanced data is not readiness approval for recommendations.
 

@@ -1,3 +1,12 @@
+-- The first renderer paginates player/role charts for phone reading.
+do $page_count$
+declare d text;
+begin
+ d:=pg_get_functiondef('private.nhl_charts_tick()'::regprocedure);
+ if strpos(d,'Three visual research pages:')>0 then execute replace(d,'Three visual research pages:','Nine visual research pages:');
+ elsif strpos(d,'Nine visual research pages:')=0 then raise exception 'NHL chart publisher text changed; review integration';end if;
+end $page_count$;
+
 -- Immutable research payloads; only the initial publication marker can be appended.
 create function private.nhl_chart_immutable() returns trigger language plpgsql set search_path='' as $$
 begin

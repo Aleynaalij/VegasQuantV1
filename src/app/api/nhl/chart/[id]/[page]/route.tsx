@@ -12,7 +12,7 @@ export async function GET(
 ) {
   const { id, page: p } = await params;
   const page = Number(p);
-  if (!/^[0-9a-f-]{36}$/i.test(id) || ![1, 2, 3].includes(page))
+  if (!/^[0-9a-f-]{36}$/i.test(id) || ![1, 2, 3, 4, 5, 6, 7, 8, 9].includes(page))
     return new Response("Unknown chart", { status: 404 });
   const db = createClient(supabaseUrl, publishableKey);
   const r = await db.rpc("nhl_chart_snapshot", { p_id: id });
