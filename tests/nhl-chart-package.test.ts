@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import {
   chartPlayers,
+  blockChartPlayers,
   restDays,
   nhlChartRef,
 } from "../src/lib/nhl-chart-package";
@@ -57,4 +58,27 @@ test("snapshot/source/Dealer publication path enforces immutable dedupe and post
     timeout: 60000,
     stdio: "pipe",
   });
+});
+
+test("blocks chart excludes small exposure while retaining the full raw table", () => {
+  const two = { samples } as any;
+  assert.equal(blockChartPlayers(two).length, 0);
+  assert.equal(
+    blockChartPlayers({
+      samples: [
+        ...samples,
+        { ...samples[1], date: "2026-11-03", game_id: "3" },
+      ],
+    } as any).length,
+    1,
+  );
+  assert.equal(
+    blockChartPlayers({
+      samples: [
+        ...samples,
+        { ...samples[1], date: "2026-11-03", blocks: null },
+      ],
+    } as any).length,
+    0,
+  );
 });

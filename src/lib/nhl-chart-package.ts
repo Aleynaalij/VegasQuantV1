@@ -105,3 +105,13 @@ export function restDays(day: string, last: string | undefined): number | null {
     86400000;
   return Number.isFinite(d) && d >= 1 ? Math.max(0, d - 1) : null;
 }
+
+/** Avoid ranking a single short appearance as a meaningful defensive rate. */
+export function blockChartPlayers(t: NhlChartTeam) {
+  return chartPlayers(t, true).filter(
+    (p) =>
+      p.samples.length >= 3 &&
+      p.minutes * p.samples.length >= 30 &&
+      p.blocksPer60 !== null,
+  );
+}

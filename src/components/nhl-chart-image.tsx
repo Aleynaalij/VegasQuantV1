@@ -1,6 +1,7 @@
 import { ResearchFrame } from "@/lib/vq-research-frame";
 import {
   chartPlayers,
+  blockChartPlayers,
   nhlStamp,
   restDays,
   type NhlChartSnapshot,
@@ -323,13 +324,13 @@ function Blocks({ s }: { s: NhlChartSnapshot }) {
   const max = Math.max(
     10,
     ...s.teams
-      .flatMap((t) => chartPlayers(t, true).slice(0, 3))
+      .flatMap((t) => blockChartPlayers(t).slice(0, 3))
       .map((p) => p.blocksPer60 ?? 0),
   );
   return (
     <div style={{ display: "flex", gap: 18, marginTop: 22 }}>
       {s.teams.map((t) => {
-        const ps = chartPlayers(t, true).slice(0, 3);
+        const ps = blockChartPlayers(t).slice(0, 3);
         return (
           <div key={t.abbreviation} style={{ ...panel, width: 462 }}>
             <div
@@ -342,7 +343,7 @@ function Blocks({ s }: { s: NhlChartSnapshot }) {
             >
               {t.abbreviation} · BLOCKS / 60
             </div>
-            <Small>Σ blocks ÷ Σ verified TOI × 60</Small>
+            <Small>3+ appearances / 30+ TOI min · Σ blocks / Σ TOI × 60</Small>
             {ps.length ? (
               ps.map((p) => (
                 <div
