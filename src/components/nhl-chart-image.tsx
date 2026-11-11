@@ -444,7 +444,7 @@ export function NhlChartImage({
             : "VERIFIED ICE-TIME DENOMINATORS · PROJECTED PP1"
       }
       meta={`${nhlStamp(s.game.start_time)} · PAGE ${page} OF 3 · DATA ${nhlStamp(s.collected_at)}`}
-      footer="Research only · past performance is not a prediction. NHL.com / RotoWire. Full sources and coverage gaps in The Zone."
+      footer="Research only · goals exclude shootout deciders. NHL.com / RotoWire. Full sources, samples and coverage gaps in The Zone."
     >
       {page === 1 ? (
         <Matchup s={s} />

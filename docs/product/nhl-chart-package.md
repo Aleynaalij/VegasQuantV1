@@ -24,7 +24,7 @@ Batch 1: three native 1080 × 1350 evergreen/gold pages per eligible game, poste
 | Controlled entries / exits | Blocked by missing source coverage | Current NHL boxes/context do not identify controlled entries/exits. Need legitimate tagged source with usable terms; no new paid source authorized |
 | Speed / shot velocity / shift duration | Being built / partial | NHL EDGE has public tracking information; supported machine-readable coverage and use terms need verification. Boxes expose shift counts, not actual shift-duration series or speed. TOI / shifts is not actual individual shift duration |
 
-Missing statistics stay null, not zero. A missing game appearance is a dash. Top-player ranking is descriptive, not a selection. Goals/points are observed counts. No numerical edge or future scoring claim.
+Team and player goal counts exclude shootout deciders. Missing statistics stay null, not zero. A missing game appearance is a dash. Top-player ranking is descriptive, not a selection. Goals/points are observed counts. No numerical edge or future scoring claim.
 
 ## Snapshot and publication
 

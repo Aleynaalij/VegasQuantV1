@@ -36,4 +36,6 @@ await db.exec(fs.readFileSync('supabase/migrations/20261111001158_nhl_chart_morn
 await assert.rejects(db.query("update private.nhl_chart_snapshots set payload='{}'"),/immutable/);
 await assert.rejects(db.query('delete from private.nhl_chart_snapshots'),/immutable/);
 await db.query('select private.nhl_charts_run()');assert.equal((await db.query('select count(*)::int n from private.nhl_chart_runs')).rows[0].n,1,'durable per-game outcomes recorded');
+await db.exec("update sports_games set sport='nfl'");
+const empty=(await db.query('select private.nhl_charts_run() r')).rows[0].r;assert.deepEqual(empty.coverage,[],'no-game slate records empty coverage');assert.equal((await db.query('select count(*)::int n from community_posts')).rows[0].n,1,'no-game day publishes nothing');
 console.log('NHL snapshot/publisher SQL checks passed');await db.close();

@@ -149,9 +149,17 @@ try {
       );
     });
     assert.match(await chart.locator("nav").innerText(), /3 \/ 3/);
-    await chart
-      .getByText("Full chart data, sources & gaps", { exact: true })
-      .click();
+    console.log(
+      "NHL disclosure diagnostics",
+      width,
+      await chart.locator("summary").allTextContents(),
+      await page.url(),
+    );
+    fs.mkdirSync("artifacts/ui-smoke", { recursive: true });
+    await chart.screenshot({
+      path: `artifacts/ui-smoke/nhl-charts-${width}-closed.png`,
+    });
+    await chart.locator("details.publication-analysis > summary").click();
     assert.match(await chart.innerText(), /Data collected/);
     assert.match(await chart.innerText(), /—/);
     assert.equal(
@@ -171,9 +179,7 @@ try {
     );
     failed = true;
     await page.reload({ waitUntil: "networkidle" });
-    await chart
-      .getByText("Full chart data, sources & gaps", { exact: true })
-      .click();
+    await chart.locator("details.publication-analysis > summary").click();
     await chart
       .getByText("Chart source details could not load.", { exact: false })
       .waitFor();

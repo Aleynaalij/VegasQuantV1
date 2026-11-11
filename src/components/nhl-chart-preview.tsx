@@ -118,7 +118,8 @@ export default function NhlChartPreview({
           <>
             <p>
               Data collected {nhlStamp(data.collected_at)}. Frozen research
-              snapshot; current lineups may differ.
+              snapshot; current lineups may differ. Goals exclude shootout
+              deciders. A missing field or appearance is unavailable, not zero.
             </p>
             {data.teams.map((t) => (
               <section key={t.abbreviation}>
