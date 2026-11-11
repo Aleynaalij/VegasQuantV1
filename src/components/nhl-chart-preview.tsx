@@ -41,19 +41,18 @@ export default function NhlChartPreview({
       className="nhl-chart-package"
       aria-label="NHL research chart pages"
       onTouchStart={(e) => {
-        touch.current = e.touches[0]?.clientX ?? null;
+        touch.current = (e.target as HTMLElement).closest(
+          "details,nav,a,button",
+        )
+          ? null
+          : (e.touches[0]?.clientX ?? null);
       }}
       onTouchEnd={(e) => {
-        const end = e.changedTouches[0]?.clientX;
-        if (
-          touch.current !== null &&
-          end !== undefined &&
-          Math.abs(end - touch.current) > 60
-        )
-          setPage((p) =>
-            Math.max(1, Math.min(3, p + (end < touch.current! ? 1 : -1))),
-          );
+        const start = touch.current;
         touch.current = null;
+        const end = e.changedTouches[0]?.clientX;
+        if (start !== null && end !== undefined && Math.abs(end - start) > 60)
+          setPage((p) => Math.max(1, Math.min(3, p + (end < start ? 1 : -1))));
       }}
     >
       <nav
