@@ -1,0 +1,1000 @@
+{
+  "id": "00000000-0000-4000-8000-000000000099",
+  "day": "2026-11-10",
+  "game": {
+    "away": {
+      "id": "nhl:espn:27",
+      "name": "Nashville Predators",
+      "short_name": "Predators",
+      "provider_id": "27",
+      "abbreviation": "NSH"
+    },
+    "home": {
+      "id": "nhl:espn:8",
+      "name": "Los Angeles Kings",
+      "short_name": "Kings",
+      "provider_id": "8",
+      "abbreviation": "LA"
+    },
+    "slug": "nsh-la-401892689",
+    "sport": "nhl",
+    "venue": "crypto.com Arena",
+    "season": 2027,
+    "source": {
+      "url": "https://site.api.espn.com/apis/site/v2/sports/hockey/nhl/scoreboard?dates=20261110&limit=1000",
+      "sha256": "6df617951ebf437e41fe43bb416605ec4bc80f1194a1d44f6500d3fead43f566",
+      "retrieved_at": "2026-11-11T00:08:01.404Z"
+    },
+    "status": "STATUS_SCHEDULED",
+    "completed": false,
+    "away_score": null,
+    "home_score": null,
+    "start_time": "2026-11-11T03:00:00.000Z",
+    "updated_at": "2026-11-11T00:08:01.404Z",
+    "provider_id": "401892689",
+    "season_type": 2,
+    "neutral_site": false,
+    "start_time_tbd": false
+  },
+  "gaps": [
+    "Line combinations/injuries: use timestamped team reports; morning lineup is not final clearance.",
+    "Shot maps, Corsi/Fenwick, on-ice share, 32-team matrix, iXG, entries/exits and sensor tracking: not yet integrated.",
+    "No odds or puck-line value claim in this research release."
+  ],
+  "teams": [
+    {
+      "name": "Sample Away",
+      "games": [
+        {
+          "id": 2026020266,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-11-07",
+          "result": "W",
+          "goalsFor": 3,
+          "opponent": "STL",
+          "goalsAgainst": 1
+        },
+        {
+          "id": 2026020261,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-11-05",
+          "result": "W",
+          "goalsFor": 3,
+          "opponent": "COL",
+          "goalsAgainst": 2
+        },
+        {
+          "id": 2026020245,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-11-03",
+          "result": "W",
+          "goalsFor": 4,
+          "opponent": "CAR",
+          "goalsAgainst": 1
+        },
+        {
+          "id": 2026020219,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-10-31",
+          "result": "W",
+          "goalsFor": 4,
+          "opponent": "TBL",
+          "goalsAgainst": 4
+        },
+        {
+          "id": 2026020208,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-10-29",
+          "result": "L",
+          "goalsFor": 3,
+          "opponent": "WSH",
+          "goalsAgainst": 4
+        }
+      ],
+      "notes": [],
+      "goalie": {
+        "id": 8477424,
+        "gaa": 2.34769849464703,
+        "name": "Sample Keeper",
+        "sample": 5,
+        "source": {
+          "url": "https://api-web.nhle.com/v1/gamecenter/2026020001/boxscore",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "retrieved_at": "2026-11-11T00:17:35.653073+00:00"
+        },
+        "status": "expected",
+        "seconds": 18401,
+        "goalsAgainst": 12
+      },
+      "record": {
+        "wins": 4,
+        "losses": 1,
+        "overtimeLosses": 0
+      },
+      "roster": [
+        {
+          "id": 145,
+          "name": "Sample Player"
+        },
+        {
+          "id": 525,
+          "name": "Sample Player"
+        },
+        {
+          "id": 835,
+          "name": "Sample Player"
+        },
+        {
+          "id": 726,
+          "name": "Sample Player"
+        },
+        {
+          "id": 887,
+          "name": "Sample Player"
+        },
+        {
+          "id": 535,
+          "name": "Sample Player"
+        },
+        {
+          "id": 21,
+          "name": "Sample Player"
+        },
+        {
+          "id": 539,
+          "name": "Sample Player"
+        },
+        {
+          "id": 158,
+          "name": "Sample Player"
+        },
+        {
+          "id": 189,
+          "name": "Sample Player"
+        },
+        {
+          "id": 513,
+          "name": "Sample Player"
+        },
+        {
+          "id": 564,
+          "name": "Sample Player"
+        },
+        {
+          "id": 524,
+          "name": "Sample Player"
+        },
+        {
+          "id": 980,
+          "name": "Sample Player"
+        },
+        {
+          "id": 94,
+          "name": "Sample Player"
+        },
+        {
+          "id": 600,
+          "name": "Sample Player"
+        },
+        {
+          "id": 950,
+          "name": "Sample Player"
+        },
+        {
+          "id": 246,
+          "name": "Sample Player"
+        },
+        {
+          "id": 869,
+          "name": "Sample Player"
+        },
+        {
+          "id": 593,
+          "name": "Sample Player"
+        },
+        {
+          "id": 806,
+          "name": "Sample Player"
+        },
+        {
+          "id": 482,
+          "name": "Sample Player"
+        }
+      ],
+      "samples": [
+        {
+          "id": 887,
+          "date": "2026-11-07",
+          "name": "Sample Player 8476887",
+          "goals": 0,
+          "shots": null,
+          "blocks": 2,
+          "points": 1,
+          "shifts": 21,
+          "game_id": "2026020266",
+          "seconds": 1248,
+          "opponent": "STL",
+          "position": "L"
+        },
+        {
+          "id": 21,
+          "date": "2026-11-07",
+          "name": "Sample Player 8477021",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 2,
+          "points": 0,
+          "shifts": 19,
+          "game_id": "2026020266",
+          "seconds": 843,
+          "opponent": "STL",
+          "position": "C"
+        },
+        {
+          "id": 482,
+          "date": "2026-11-07",
+          "name": "Sample Player 8482482",
+          "goals": 0,
+          "shots": 1,
+          "blocks": 1,
+          "points": 0,
+          "shifts": 26,
+          "game_id": "2026020266",
+          "seconds": 1163,
+          "opponent": "STL",
+          "position": "D"
+        },
+        {
+          "id": 593,
+          "date": "2026-11-07",
+          "name": "Sample Player 8481593",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 1,
+          "points": 0,
+          "shifts": 20,
+          "game_id": "2026020266",
+          "seconds": 1023,
+          "opponent": "STL",
+          "position": "D"
+        },
+        {
+          "id": 887,
+          "date": "2026-11-05",
+          "name": "Sample Player 8476887",
+          "goals": 0,
+          "shots": 3,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 22,
+          "game_id": "2026020261",
+          "seconds": 1207,
+          "opponent": "COL",
+          "position": "L"
+        },
+        {
+          "id": 21,
+          "date": "2026-11-05",
+          "name": "Sample Player 8477021",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 23,
+          "game_id": "2026020261",
+          "seconds": 916,
+          "opponent": "COL",
+          "position": "C"
+        },
+        {
+          "id": 482,
+          "date": "2026-11-05",
+          "name": "Sample Player 8482482",
+          "goals": 0,
+          "shots": 2,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 27,
+          "game_id": "2026020261",
+          "seconds": 1362,
+          "opponent": "COL",
+          "position": "D"
+        },
+        {
+          "id": 593,
+          "date": "2026-11-05",
+          "name": "Sample Player 8481593",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 4,
+          "points": 0,
+          "shifts": 15,
+          "game_id": "2026020261",
+          "seconds": 743,
+          "opponent": "COL",
+          "position": "D"
+        },
+        {
+          "id": 887,
+          "date": "2026-11-03",
+          "name": "Sample Player 8476887",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 2,
+          "points": 2,
+          "shifts": 17,
+          "game_id": "2026020245",
+          "seconds": 1007,
+          "opponent": "CAR",
+          "position": "L"
+        },
+        {
+          "id": 21,
+          "date": "2026-11-03",
+          "name": "Sample Player 8477021",
+          "goals": 0,
+          "shots": 1,
+          "blocks": 1,
+          "points": 0,
+          "shifts": 17,
+          "game_id": "2026020245",
+          "seconds": 792,
+          "opponent": "CAR",
+          "position": "C"
+        },
+        {
+          "id": 482,
+          "date": "2026-11-03",
+          "name": "Sample Player 8482482",
+          "goals": 0,
+          "shots": 1,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 22,
+          "game_id": "2026020245",
+          "seconds": 1257,
+          "opponent": "CAR",
+          "position": "D"
+        },
+        {
+          "id": 593,
+          "date": "2026-11-03",
+          "name": "Sample Player 8481593",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 2,
+          "points": 0,
+          "shifts": 18,
+          "game_id": "2026020245",
+          "seconds": 899,
+          "opponent": "CAR",
+          "position": "D"
+        },
+        {
+          "id": 887,
+          "date": "2026-10-31",
+          "name": "Sample Player 8476887",
+          "goals": 0,
+          "shots": 2,
+          "blocks": 0,
+          "points": 2,
+          "shifts": 22,
+          "game_id": "2026020219",
+          "seconds": 1245,
+          "opponent": "TBL",
+          "position": "L"
+        },
+        {
+          "id": 21,
+          "date": "2026-10-31",
+          "name": "Sample Player 8477021",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 0,
+          "points": 1,
+          "shifts": 25,
+          "game_id": "2026020219",
+          "seconds": 1152,
+          "opponent": "TBL",
+          "position": "C"
+        },
+        {
+          "id": 482,
+          "date": "2026-10-31",
+          "name": "Sample Player 8482482",
+          "goals": 0,
+          "shots": 3,
+          "blocks": 3,
+          "points": 1,
+          "shifts": 28,
+          "game_id": "2026020219",
+          "seconds": 1292,
+          "opponent": "TBL",
+          "position": "D"
+        },
+        {
+          "id": 593,
+          "date": "2026-10-31",
+          "name": "Sample Player 8481593",
+          "goals": 1,
+          "shots": 1,
+          "blocks": 2,
+          "points": 1,
+          "shifts": 22,
+          "game_id": "2026020219",
+          "seconds": 1051,
+          "opponent": "TBL",
+          "position": "D"
+        },
+        {
+          "id": 887,
+          "date": "2026-10-29",
+          "name": "Sample Player 8476887",
+          "goals": 2,
+          "shots": 3,
+          "blocks": 1,
+          "points": 2,
+          "shifts": 24,
+          "game_id": "2026020208",
+          "seconds": 1299,
+          "opponent": "WSH",
+          "position": "L"
+        },
+        {
+          "id": 21,
+          "date": "2026-10-29",
+          "name": "Sample Player 8477021",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 19,
+          "game_id": "2026020208",
+          "seconds": 749,
+          "opponent": "WSH",
+          "position": "C"
+        },
+        {
+          "id": 482,
+          "date": "2026-10-29",
+          "name": "Sample Player 8482482",
+          "goals": 0,
+          "shots": 1,
+          "blocks": 1,
+          "points": 0,
+          "shifts": 24,
+          "game_id": "2026020208",
+          "seconds": 1086,
+          "opponent": "WSH",
+          "position": "D"
+        },
+        {
+          "id": 593,
+          "date": "2026-10-29",
+          "name": "Sample Player 8481593",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 1,
+          "points": 0,
+          "shifts": 19,
+          "game_id": "2026020208",
+          "seconds": 898,
+          "opponent": "WSH",
+          "position": "D"
+        }
+      ],
+      "skaters": [],
+      "powerPlay": {
+        "source": {
+          "url": "https://api-web.nhle.com/v1/gamecenter/2026020001/boxscore",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "retrieved_at": "2026-11-11T00:17:35.653073+00:00"
+        },
+        "status": "projected",
+        "players": [
+          {
+            "name": "Sample PP 0",
+            "position": "C"
+          },
+          {
+            "name": "Sample PP 1",
+            "position": "LW"
+          },
+          {
+            "name": "Sample PP 2",
+            "position": "RW"
+          },
+          {
+            "name": "Sample PP 3",
+            "position": "LD"
+          },
+          {
+            "name": "Sample PP 4",
+            "position": "RD"
+          }
+        ]
+      },
+      "abbreviation": "AAA",
+      "boxesVerified": 5,
+      "goalsForPerGame": 3.4,
+      "goalsAgainstPerGame": 2.4,
+      "chart_boxes_verified": 5
+    },
+    {
+      "name": "Sample Home",
+      "games": [
+        {
+          "id": 2026020275,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-11-07",
+          "result": "L",
+          "goalsFor": 2,
+          "opponent": "PIT",
+          "goalsAgainst": 5
+        },
+        {
+          "id": 2026020249,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-11-04",
+          "result": "W",
+          "goalsFor": 7,
+          "opponent": "SJS",
+          "goalsAgainst": 2
+        },
+        {
+          "id": 2026020221,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-10-31",
+          "result": "L",
+          "goalsFor": 2,
+          "opponent": "BUF",
+          "goalsAgainst": 3
+        },
+        {
+          "id": 2026020212,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-10-29",
+          "result": "W",
+          "goalsFor": 6,
+          "opponent": "OTT",
+          "goalsAgainst": 5
+        },
+        {
+          "id": 2026020190,
+          "url": "https://www.nhl.com/gamecenter/2026020001",
+          "date": "2026-10-27",
+          "result": "L",
+          "goalsFor": 1,
+          "opponent": "CHI",
+          "goalsAgainst": 2
+        }
+      ],
+      "notes": [],
+      "goalie": {
+        "id": 8476341,
+        "gaa": 1.987364288781206,
+        "name": "Sample Keeper",
+        "sample": 5,
+        "source": {
+          "url": "https://api-web.nhle.com/v1/gamecenter/2026020001/boxscore",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "retrieved_at": "2026-11-11T00:17:35.653073+00:00"
+        },
+        "status": "confirmed",
+        "seconds": 16303,
+        "goalsAgainst": 9
+      },
+      "record": {
+        "wins": 2,
+        "losses": 3,
+        "overtimeLosses": 0
+      },
+      "roster": [
+        {
+          "id": 469,
+          "name": "Sample Player"
+        },
+        {
+          "id": 124,
+          "name": "Sample Player"
+        },
+        {
+          "id": 675,
+          "name": "Sample Player"
+        },
+        {
+          "id": 942,
+          "name": "Sample Player"
+        },
+        {
+          "id": 287,
+          "name": "Sample Player"
+        },
+        {
+          "id": 726,
+          "name": "Sample Player"
+        },
+        {
+          "id": 960,
+          "name": "Sample Player"
+        },
+        {
+          "id": 155,
+          "name": "Sample Player"
+        },
+        {
+          "id": 872,
+          "name": "Sample Player"
+        },
+        {
+          "id": 732,
+          "name": "Sample Player"
+        },
+        {
+          "id": 675,
+          "name": "Sample Player"
+        },
+        {
+          "id": 550,
+          "name": "Sample Player"
+        },
+        {
+          "id": 621,
+          "name": "Sample Player"
+        },
+        {
+          "id": 532,
+          "name": "Sample Player"
+        },
+        {
+          "id": 692,
+          "name": "Sample Player"
+        },
+        {
+          "id": 998,
+          "name": "Sample Player"
+        },
+        {
+          "id": 879,
+          "name": "Sample Player"
+        },
+        {
+          "id": 730,
+          "name": "Sample Player"
+        },
+        {
+          "id": 563,
+          "name": "Sample Player"
+        },
+        {
+          "id": 208,
+          "name": "Sample Player"
+        },
+        {
+          "id": 441,
+          "name": "Sample Player"
+        },
+        {
+          "id": 979,
+          "name": "Sample Player"
+        }
+      ],
+      "samples": [
+        {
+          "id": 960,
+          "date": "2026-11-07",
+          "name": "Sample Player 8477960",
+          "goals": 0,
+          "shots": null,
+          "blocks": 0,
+          "points": 1,
+          "shifts": 21,
+          "game_id": "2026020275",
+          "seconds": 1157,
+          "opponent": "PIT",
+          "position": "R"
+        },
+        {
+          "id": 550,
+          "date": "2026-11-07",
+          "name": "Sample Player 8478550",
+          "goals": 0,
+          "shots": 3,
+          "blocks": 0,
+          "points": 1,
+          "shifts": 21,
+          "game_id": "2026020275",
+          "seconds": 1272,
+          "opponent": "PIT",
+          "position": "L"
+        },
+        {
+          "id": 208,
+          "date": "2026-11-07",
+          "name": "Sample Player 8475208",
+          "goals": 0,
+          "shots": 2,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 20,
+          "game_id": "2026020275",
+          "seconds": 1068,
+          "opponent": "PIT",
+          "position": "D"
+        },
+        {
+          "id": 441,
+          "date": "2026-11-07",
+          "name": "Sample Player 8476441",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 21,
+          "game_id": "2026020275",
+          "seconds": 1023,
+          "opponent": "PIT",
+          "position": "D"
+        },
+        {
+          "id": 960,
+          "date": "2026-11-04",
+          "name": "Sample Player 8477960",
+          "goals": 3,
+          "shots": 4,
+          "blocks": 0,
+          "points": 4,
+          "shifts": 21,
+          "game_id": "2026020249",
+          "seconds": 1043,
+          "opponent": "SJS",
+          "position": "R"
+        },
+        {
+          "id": 550,
+          "date": "2026-11-04",
+          "name": "Sample Player 8478550",
+          "goals": 0,
+          "shots": 3,
+          "blocks": 1,
+          "points": 4,
+          "shifts": 22,
+          "game_id": "2026020249",
+          "seconds": 1082,
+          "opponent": "SJS",
+          "position": "L"
+        },
+        {
+          "id": 208,
+          "date": "2026-11-04",
+          "name": "Sample Player 8475208",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 1,
+          "points": 1,
+          "shifts": 23,
+          "game_id": "2026020249",
+          "seconds": 1074,
+          "opponent": "SJS",
+          "position": "D"
+        },
+        {
+          "id": 441,
+          "date": "2026-11-04",
+          "name": "Sample Player 8476441",
+          "goals": 0,
+          "shots": 1,
+          "blocks": 1,
+          "points": 0,
+          "shifts": 25,
+          "game_id": "2026020249",
+          "seconds": 1050,
+          "opponent": "SJS",
+          "position": "D"
+        },
+        {
+          "id": 550,
+          "date": "2026-10-31",
+          "name": "Sample Player 8478550",
+          "goals": 0,
+          "shots": 3,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 24,
+          "game_id": "2026020221",
+          "seconds": 1490,
+          "opponent": "BUF",
+          "position": "L"
+        },
+        {
+          "id": 208,
+          "date": "2026-10-31",
+          "name": "Sample Player 8475208",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 3,
+          "points": 0,
+          "shifts": 22,
+          "game_id": "2026020221",
+          "seconds": 878,
+          "opponent": "BUF",
+          "position": "D"
+        },
+        {
+          "id": 441,
+          "date": "2026-10-31",
+          "name": "Sample Player 8476441",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 7,
+          "points": 0,
+          "shifts": 25,
+          "game_id": "2026020221",
+          "seconds": 1085,
+          "opponent": "BUF",
+          "position": "D"
+        },
+        {
+          "id": 960,
+          "date": "2026-10-29",
+          "name": "Sample Player 8477960",
+          "goals": 0,
+          "shots": 5,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 26,
+          "game_id": "2026020212",
+          "seconds": 1321,
+          "opponent": "OTT",
+          "position": "R"
+        },
+        {
+          "id": 550,
+          "date": "2026-10-29",
+          "name": "Sample Player 8478550",
+          "goals": 1,
+          "shots": 7,
+          "blocks": 0,
+          "points": 2,
+          "shifts": 26,
+          "game_id": "2026020212",
+          "seconds": 1447,
+          "opponent": "OTT",
+          "position": "L"
+        },
+        {
+          "id": 208,
+          "date": "2026-10-29",
+          "name": "Sample Player 8475208",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 1,
+          "points": 1,
+          "shifts": 26,
+          "game_id": "2026020212",
+          "seconds": 1261,
+          "opponent": "OTT",
+          "position": "D"
+        },
+        {
+          "id": 441,
+          "date": "2026-10-29",
+          "name": "Sample Player 8476441",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 1,
+          "points": 0,
+          "shifts": 24,
+          "game_id": "2026020212",
+          "seconds": 1007,
+          "opponent": "OTT",
+          "position": "D"
+        },
+        {
+          "id": 960,
+          "date": "2026-10-27",
+          "name": "Sample Player 8477960",
+          "goals": 0,
+          "shots": 1,
+          "blocks": 1,
+          "points": 0,
+          "shifts": 25,
+          "game_id": "2026020190",
+          "seconds": 1321,
+          "opponent": "CHI",
+          "position": "R"
+        },
+        {
+          "id": 550,
+          "date": "2026-10-27",
+          "name": "Sample Player 8478550",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 1,
+          "points": 0,
+          "shifts": 24,
+          "game_id": "2026020190",
+          "seconds": 1434,
+          "opponent": "CHI",
+          "position": "L"
+        },
+        {
+          "id": 208,
+          "date": "2026-10-27",
+          "name": "Sample Player 8475208",
+          "goals": 0,
+          "shots": 1,
+          "blocks": 0,
+          "points": 0,
+          "shifts": 20,
+          "game_id": "2026020190",
+          "seconds": 1009,
+          "opponent": "CHI",
+          "position": "D"
+        },
+        {
+          "id": 441,
+          "date": "2026-10-27",
+          "name": "Sample Player 8476441",
+          "goals": 0,
+          "shots": 0,
+          "blocks": 3,
+          "points": 0,
+          "shifts": 21,
+          "game_id": "2026020190",
+          "seconds": 1120,
+          "opponent": "CHI",
+          "position": "D"
+        }
+      ],
+      "skaters": [],
+      "powerPlay": {
+        "source": {
+          "url": "https://api-web.nhle.com/v1/gamecenter/2026020001/boxscore",
+          "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "retrieved_at": "2026-11-11T00:17:35.653073+00:00"
+        },
+        "status": "projected",
+        "players": [
+          {
+            "name": "Sample PP 0",
+            "position": "C"
+          },
+          {
+            "name": "Sample PP 1",
+            "position": "LW"
+          },
+          {
+            "name": "Sample PP 2",
+            "position": "RW"
+          },
+          {
+            "name": "Sample PP 3",
+            "position": "LD"
+          },
+          {
+            "name": "Sample PP 4",
+            "position": "RD"
+          }
+        ]
+      },
+      "abbreviation": "BBB",
+      "boxesVerified": 5,
+      "goalsForPerGame": 3.6,
+      "goalsAgainstPerGame": 3.4,
+      "chart_boxes_verified": 5
+    }
+  ],
+  "game_id": "00000000-0000-4000-8000-000000000098",
+  "nhl_url": "https://www.nhl.com/gamecenter/2026020001",
+  "sources": [
+    {
+      "url": "https://api-web.nhle.com/v1/gamecenter/2026020001/boxscore",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "retrieved_at": "2026-11-11T00:17:35.653073+00:00"
+    }
+  ],
+  "version": 1,
+  "nhl_game_id": 2026020001,
+  "collected_at": "2026-11-11T00:17:35.653073+00:00"
+}
