@@ -25,7 +25,7 @@ const nba = [
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
 const homeLegs = [{ leg_key: "tonight:0", name: "Sample Runner", market: "Full game · 60+ rushing yards", game_id: "g1", quote: null, expires_at: "2026-10-16T00:15:00Z", result: null, copy_text: "Sample Runner 60+ rushing yards", gambly_url: null, why: "w", risk: "r" }];
-async function open(name, { width = 390, signedIn = false, draft = null, empty = false, collegeFailsOnce = false, refresh = null, clockAt = null, nbaCalls = null, path = "/" } = {}, run) {
+async function open(name, { width = 390, signedIn = false, draft = null, empty = false, collegeFailsOnce = false, refresh = null, clockAt = null, nbaCalls = null, path = "/", absent = false } = {}, run) {
   const ctx = await browser.newContext({ viewport: { width, height: 844 }, reducedMotion: "reduce" });
   await ctx.addInitScript(({ uid, signedIn, draft }) => {
     localStorage.setItem(`vq-app-refresh:${uid}`, "gold-2026-10-22-v2");
@@ -80,6 +80,11 @@ async function open(name, { width = 390, signedIn = false, draft = null, empty =
     // out-of-order test, so those cases only wait for the page itself.
     await page.goto(BASE + path, { waitUntil: nbaCalls ? "load" : "networkidle" });
     await page.evaluate(() => document.querySelectorAll("dialog[open]").forEach((d) => d.close()));
+    // absent: a page that must not render VQ Tonight at all (the NFL desk).
+    if (absent) {
+      await run({ page, fail });
+      throw null;
+    }
     await page.locator(".vq-tonight").waitFor();
     // Home now previews three real games. This suite checks the full schedule; the
     // lobby-mobile suite separately verifies the initial preview and first fold.
@@ -88,7 +93,7 @@ async function open(name, { width = 390, signedIn = false, draft = null, empty =
     await run({ page, fail });
     if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)) fail("sideways scroll");
   } catch (e) {
-    fail(`threw · ${String(e).split("\n")[0].slice(0, 200)}`);
+    if (e !== null) fail(`threw · ${String(e).split("\n")[0].slice(0, 200)}`);
   }
   if (errors.length) fail(`page error · ${errors[0].slice(0, 160)}`);
   console.log(`${failures.length > before ? "FAIL" : "ok  "} ${name}`);
@@ -135,18 +140,10 @@ await open("signed in with a lay in progress", { signedIn: true, draft: ["k1", "
   if ((await zone.getAttribute("href")) !== "/community") fail("signed-in Zone card does not go to /community");
 });
 
-// The game rows live on the NFL desk (/nfl); VQ Tonight renders there too.
-await open("lay card follows selections on the NFL desk without a reload", { signedIn: true, path: "/nfl" }, async ({ page, fail }) => {
-  const card = () => tonight(page).locator(".vq-tonight-next a").first();
-  if (!/My lays/.test(await card().innerText())) fail("lay card does not start as My lays with no draft");
-  await page.locator("details.vq-game-row").first().locator("summary").click();
-  await page.getByRole("button", { name: /Sample Runner/ }).first().click();
-  await page.getByRole("button", { name: "Add to your lay" }).click();
-  const added = await page.waitForFunction(() => /Continue your lay · 1 selected/.test(document.querySelector(".vq-tonight-next a")?.textContent || ""), null, { timeout: 5000 }).then(() => true, () => false);
-  if (!added) fail("lay card did not update after adding a pick on Home");
-  await page.getByRole("button", { name: /Added to your lay/ }).click();
-  const removed = await page.waitForFunction(() => /My lays/.test(document.querySelector(".vq-tonight-next a")?.textContent || ""), null, { timeout: 5000 }).then(() => true, () => false);
-  if (!removed) fail("lay card did not update after removing the pick");
+// Owner request (Nov 10): VQ Tonight belongs to the lobby only; the NFL desk (/nfl) no longer shows it.
+await open("the NFL desk does not show VQ Tonight", { signedIn: true, path: "/nfl", absent: true }, async ({ page, fail }) => {
+  await page.locator("details.vq-game-row").first().waitFor({ timeout: 10000 }).catch(() => fail("NFL desk game rows did not render"));
+  if (await page.locator(".vq-tonight, .vq-tonight-next, #vq-tonight").count()) fail("VQ Tonight still renders on the NFL desk");
 });
 
 await open("lay card follows an account switch without a reload", { signedIn: true, draft: ["k1"] }, async ({ page, fail }) => {
