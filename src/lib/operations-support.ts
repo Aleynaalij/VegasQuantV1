@@ -44,10 +44,21 @@ export const operationErrors = {
   unavailable: 503,
 } as const;
 export type OperationError = keyof typeof operationErrors;
+export type OperationsRelease = {
+  environment: "production" | "preview";
+  deploymentId: string;
+  commit: string | null;
+  observedAt: string;
+};
 export type OperationResult =
   | { state: OperationError }
   | { state: "submitted"; id: string }
-  | { state: "ready"; tickets: Ticket[]; next: TicketCursor | null }
+  | {
+      state: "ready";
+      tickets: Ticket[];
+      next: TicketCursor | null;
+      release?: OperationsRelease | null;
+    }
   | { state: "ready"; ticket: Ticket; events: TicketEvent[] };
 
 const uuid = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;

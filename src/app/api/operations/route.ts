@@ -1,3 +1,4 @@
+import { observeOperationsRelease } from "@/lib/operations-release";
 import { requestUser, sameOrigin } from "@/lib/billing-server";
 import {
   operationErrors,
@@ -72,7 +73,14 @@ export async function POST(req: Request) {
         !Object.hasOwn(operationErrors, data.state))
     )
       return reply({ state: "unavailable" });
-    return reply(data as OperationResult);
+    const result = data as OperationResult;
+    if (
+      input.action === "list" &&
+      result.state === "ready" &&
+      "tickets" in result
+    )
+      return reply({ ...result, release: observeOperationsRelease() });
+    return reply(result);
   } catch {
     return reply({ state: "unavailable" });
   }

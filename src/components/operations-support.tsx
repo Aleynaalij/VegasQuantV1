@@ -261,16 +261,52 @@ export function OperationsQueue() {
               )}
             </section>
           )}
+          <section aria-labelledby="operations-release-heading">
+            <h2 id="operations-release-heading">
+              Deployment serving this page
+            </h2>
+            {queue.release ? (
+              <>
+                <p>
+                  {queue.release.environment === "production"
+                    ? "Production"
+                    : "Preview"}{" "}
+                  · Vercel
+                  {" · "}Observed{" "}
+                  {utc.format(new Date(queue.release.observedAt))} UTC
+                </p>
+                <p style={{ overflowWrap: "anywhere" }}>
+                  Deployment: <code>{queue.release.deploymentId}</code>
+                </p>
+                <p>
+                  {queue.release.commit ? (
+                    <a
+                      href={`https://github.com/Aleynaalij/VegasQuantV1/commit/${queue.release.commit}`}
+                    >
+                      GitHub commit{" "}
+                      <code>{queue.release.commit.slice(0, 12)}</code>
+                    </a>
+                  ) : (
+                    "GitHub commit unavailable."
+                  )}
+                </p>
+              </>
+            ) : (
+              <p>Deployment identity unavailable for this environment.</p>
+            )}
+            <p>
+              <a href="https://vercel.com/goatq2s-projects/vegas-quant-v1/deployments">
+                Open deployment history in Vercel
+              </a>
+            </p>
+          </section>
           <section aria-label="Operational sources">
             <h2>Operational sources</h2>
             <p>
               <Link href="/admin/feeds">Open existing Feed Health</Link>.
               Operations health summary unavailable.
             </p>
-            <p>
-              Deployment history unavailable. Traffic metrics unavailable.
-              Support email not connected.
-            </p>
+            <p>Traffic metrics unavailable. Support email not connected.</p>
           </section>
         </>
       )}
