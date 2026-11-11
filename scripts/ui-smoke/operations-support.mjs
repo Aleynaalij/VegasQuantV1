@@ -85,7 +85,17 @@ async function fixture(width, role, intercept) {
       return route.fulfill({ status: 403, json: { state: "forbidden" } });
     if (input.action === "list")
       return route.fulfill({
-        json: { state: "ready", tickets: [ticket], next: null },
+        json: {
+          state: "ready",
+          tickets: [ticket],
+          next: null,
+          release: {
+            environment: width === 390 ? "preview" : "production",
+            deploymentId: "dpl_fixture12345",
+            commit: "a".repeat(40),
+            observedAt: time,
+          },
+        },
       });
     if (input.action === "triage") {
       assert.equal(input.expected, "new");
@@ -228,6 +238,12 @@ try {
     await anonymous.page.getByRole("region", { name: "Support queue" }).count(),
     0,
   );
+  assert.equal(
+    await anonymous.page
+      .getByRole("heading", { name: "Deployment serving this page" })
+      .count(),
+    0,
+  );
   assert.equal(anonymous.calls.length, 0);
   await anonymous.context.close();
 
@@ -238,6 +254,12 @@ try {
     .waitFor();
   assert.equal(
     await member.page.getByRole("region", { name: "Support queue" }).count(),
+    0,
+  );
+  assert.equal(
+    await member.page
+      .getByRole("heading", { name: "Deployment serving this page" })
+      .count(),
     0,
   );
   await member.page.goto(base + "/support");
@@ -256,6 +278,18 @@ try {
   for (const width of [390, 1280]) {
     const admin = await fixture(width, "admin");
     await admin.page.goto(base + "/admin/operations");
+    const release = admin.page.getByRole("region", {
+      name: "Deployment serving this page",
+    });
+    await release
+      .getByText(width === 390 ? /Preview · Vercel/ : /Production · Vercel/)
+      .waitFor();
+    assert.equal(
+      await release
+        .getByRole("link", { name: /GitHub commit/ })
+        .getAttribute("href"),
+      "https://github.com/Aleynaalij/VegasQuantV1/commit/" + "a".repeat(40),
+    );
     await admin.page.getByRole("button", { name: /Research.*New/ }).click();
     const heading = admin.page.getByRole("heading", { name: "Report details" });
     await heading.waitFor();

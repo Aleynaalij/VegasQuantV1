@@ -1,4 +1,4 @@
-# Admin operations portal · draft first slice
+# Admin operations portal · support and releases
 
 ## Inventory and navigation
 
@@ -18,11 +18,11 @@ A report retry with the same request ID and selection returns the same receipt. 
 | Area | Existing source | Contract and current state |
 | --- | --- | --- |
 | Service health | `/admin/feeds` and `feed_runs` | Link to the existing desk. A later operations summary can project allowlisted source/status values and UTC last success/check with a per-source stale threshold. Raw details stay out of the portal. Unavailable means no approved observation, not a healthy service. |
-| Releases | Git commits and Vercel deployments | No feed connected. A release record needs environment, verified deployment state, observation time, commit and source URL. A Git merge is a separate change event. |
+| Releases | Git commits and Vercel deployments | The queue response shows the Vercel deployment serving that request, its environment, observation time, and GitHub commit when the runtime identifies the expected repository. Missing metadata stays unavailable. The Vercel dashboard provides history; this view does not verify domain promotion, health, or previous builds. No API token, new database grant, or migration is needed. |
 | Traffic | Existing admin engagement metrics | No visitor feed connected. Engagement metrics cannot stand in for visits. A later aggregate needs a documented numerator, time window, timezone, source timestamp and coverage. |
 | Support email | #218 contact gap | Not connected. A later intake adapter needs an external message ID for deduplication, receipt time, approved category mapping and a separately reviewed contact/erasure policy. Replies and delivery states require their own authorization. |
 
-The draft migration needs independent review and separate authorization to apply. Until the RPC is installed, the UI reports an unavailable queue. Review retention, queue pagination, verified health/traffic/release sources, and whether users need a safe way to add context before rollout.
+The support queue migration shipped with #252. If the RPC is unavailable, the UI reports an unavailable queue. Review retention and additional data sources separately.
 
 ## Retention and diagnostic context proposal
 

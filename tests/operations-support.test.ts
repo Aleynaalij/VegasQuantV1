@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { observeOperationsRelease } from "../src/lib/operations-release";
 import { POST } from "../src/app/api/operations/route";
 import { parseOperationInput } from "../src/lib/operations-support";
 
@@ -107,15 +108,22 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
     await (await POST(request({ action: "list" }, "invalid"))).json(),
     { state: "unauthenticated" },
   );
-  const denied = await POST(
-    request({ action: "detail", id }, "fixture-member"),
-  );
+  const denied = await POST(request({ action: "list" }, "fixture-member"));
   assert.equal(denied.status, 403);
   assert.deepEqual(await denied.json(), { state: "forbidden" });
   const success = await POST(request({ action: "list" }, "fixture-admin"));
   assert.equal(success.status, 200);
   assert.match(success.headers.get("cache-control") ?? "", /no-store/);
-  assert.deepEqual(await success.json(), { state: "ready", tickets: [] });
+  const payload = await success.json();
+  const expectedRelease = observeOperationsRelease();
+  assert.deepEqual(payload, {
+    state: "ready",
+    tickets: [],
+    release: expectedRelease && {
+      ...expectedRelease,
+      observedAt: payload.release.observedAt,
+    },
+  });
   const error = await POST(request({ action: "list" }, "fixture-db-error"));
   assert.equal(error.status, 503);
   assert.deepEqual(await error.json(), { state: "unavailable" });
@@ -127,4 +135,38 @@ test("operations migration enforces direct RPC and table denial, validation, ret
     timeout: 60000,
   });
   assert.equal(r.status, 0, r.error?.message || r.stderr || r.stdout);
+});
+
+test("deployment identity is sourced from the serving runtime and never guesses a GitHub commit", () => {
+  const now = new Date("2026-11-11T14:00:00Z");
+  const env = {
+    VERCEL: "1",
+    VERCEL_ENV: "preview",
+    VERCEL_DEPLOYMENT_ID: "dpl_Example12345",
+    VERCEL_GIT_PROVIDER: "github",
+    VERCEL_GIT_REPO_OWNER: "Aleynaalij",
+    VERCEL_GIT_REPO_SLUG: "VegasQuantV1",
+    VERCEL_GIT_COMMIT_SHA: "a".repeat(40),
+    VERCEL_TOKEN: "never-return-this",
+  };
+  assert.deepEqual(observeOperationsRelease(env, now), {
+    environment: "preview",
+    deploymentId: env.VERCEL_DEPLOYMENT_ID,
+    commit: env.VERCEL_GIT_COMMIT_SHA,
+    observedAt: now.toISOString(),
+  });
+  assert.equal(
+    observeOperationsRelease({ ...env, VERCEL_GIT_REPO_SLUG: "other" }, now)
+      ?.commit,
+    null,
+  );
+  assert.equal(
+    observeOperationsRelease({ ...env, VERCEL_ENV: "development" }, now),
+    null,
+  );
+  assert.equal(
+    observeOperationsRelease({ ...env, VERCEL_DEPLOYMENT_ID: "<bad>" }, now),
+    null,
+  );
+  assert.equal(observeOperationsRelease({}, now), null);
 });
