@@ -8,7 +8,7 @@ from collections import Counter, defaultdict
 from datetime import datetime
 from pathlib import Path
 
-MODEL_ID = 'vq-matchup-features/0.1.0'
+MODEL_ID = 'vq-matchup-features/0.1.1'
 RIDGE_PLAYS = 100
 ITERATIONS = 100
 
@@ -55,6 +55,7 @@ def fit(rows, cutoff, sources):
     retrospective = any(timestamp(x['retrieved_at']) > limit for x in sources)
     groups = defaultdict(list)
     opportunity = defaultdict(Counter)
+    raw_opportunity = defaultdict(Counter)
     coverage = Counter()
     latest = None
     for row in rows:
@@ -68,6 +69,20 @@ def fit(rows, cutoff, sources):
         if when >= limit:
             coverage['excluded:at_or_after_cutoff'] += 1
             continue
+        end = row.get('game_end_utc')
+        if not end:
+            raise ValueError('verified game_end_utc required')
+        completed = timestamp(end)
+        if completed < when:
+            raise ValueError('completion before kickoff')
+        if completed >= limit:
+            coverage['excluded:incomplete_at_cutoff'] += 1
+            continue
+        age_days = (limit - when).total_seconds() / 86400
+        if age_days > 730:
+            coverage['excluded:older_than_730_days'] += 1
+            continue
+        weight = 2 ** (-age_days / 120)
         if row.get('season_type') != 'REG' or row.get('qtr') not in ('1', '2', '3', '4'):
             coverage['excluded:period_or_season'] += 1
             continue
@@ -87,42 +102,47 @@ def fit(rows, cutoff, sources):
             coverage['excluded:invalid_value'] += 1
             continue
         offense, defense = row['posteam'], row['defteam']
-        groups[kind].append((offense, defense, epa))
+        groups[kind].append((offense, defense, epa, weight))
         latest = when if latest is None else max(latest, when)
         coverage['accepted:' + kind] += 1
+        if row.get('qb_scramble') == '1':
+            coverage['qb_scramble:rush_epa_and_carry'] += 1
         roles = [('carry', row.get('rusher_player_id'))] if kind == 'run' else (
             [] if row.get('sack') == '1' else [
                 ('passer', row.get('passer_player_id')),
                 ('target', row.get('receiver_player_id'))])
         for role, player in roles:
             if player:
-                opportunity[(offense, role)][player] += 1
+                opportunity[(offense, role)][player] += weight
+                raw_opportunity[(offense, role)][player] += 1
             else:
                 coverage['missing_identity:' + role] += 1
     effects = {}
     for kind, plays in sorted(groups.items()):
-        mean = sum(p[2] for p in plays) / len(plays)
+        mean = sum(p[2]*p[3] for p in plays) / sum(p[3] for p in plays)
         teams = sorted({p[0] for p in plays} | {p[1] for p in plays})
         attack = dict.fromkeys(teams, 0.0)
         defense = dict.fromkeys(teams, 0.0)
         by_attack, by_defense = defaultdict(list), defaultdict(list)
-        for a, d, y in plays:
-            by_attack[a].append((d, y))
-            by_defense[d].append((a, y))
+        for a, d, y, w in plays:
+            by_attack[a].append((d, y, w))
+            by_defense[d].append((a, y, w))
         for _ in range(ITERATIONS):
             for team in teams:
-                attack[team] = sum(y - mean - defense[d] for d, y in by_attack[team]) / (len(by_attack[team]) + RIDGE_PLAYS)
+                attack[team] = sum(w*(y - mean - defense[d]) for d, y, w in by_attack[team]) / (sum(w for d,y,w in by_attack[team]) + RIDGE_PLAYS)
             for team in teams:
-                defense[team] = sum(y - mean - attack[a] for a, y in by_defense[team]) / (len(by_defense[team]) + RIDGE_PLAYS)
+                defense[team] = sum(w*(y - mean - attack[a]) for a, y, w in by_defense[team]) / (sum(w for a,y,w in by_defense[team]) + RIDGE_PLAYS)
         effects[kind] = dict(league_epa=mean, offense=attack, defense_allowed=defense,
                              offense_plays={t: len(by_attack[t]) for t in teams},
-                             defense_plays={t: len(by_defense[t]) for t in teams})
+                             defense_plays={t: len(by_defense[t]) for t in teams},
+                             offense_weighted_support={t:sum(w for d,y,w in by_attack[t]) for t in teams})
     if set(effects) != {'run', 'pass'}:
         raise ValueError('both pass and rush support required')
     return dict(model_id=MODEL_ID, status='DEVELOPMENT_ONLY', cutoff=cutoff,
                 historical_cutoff=latest.isoformat(), sources=sources, coverage=dict(coverage),
                 retrospective_source_retrieval=retrospective,
-                effects=effects, opportunities=[dict(team=t, role=r, counts=dict(sorted(c.items())))
+                effects=effects, recency=dict(half_life_days=120, maximum_age_days=730),
+                opportunities=[dict(team=t, role=r, counts=dict(sorted(c.items())),raw_counts=dict(raw_opportunity[(t,r)]))
                     for (t, r), c in sorted(opportunity.items())],
                 forecast_supported=False)
 

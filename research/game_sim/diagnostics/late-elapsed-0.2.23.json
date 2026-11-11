@@ -1,0 +1,1438 @@
+{
+  "scope": "DESCRIPTIVE_DIAGNOSTIC_ONLY",
+  "model": "research/game_sim/artifacts/v0.2.23-accounting/model.json.gz",
+  "source_games": 271,
+  "sim_games": 1000,
+  "source": {
+    "last10@h1|field_goal|no_timeout": {
+      "per_game": 0.0332,
+      "mean_seconds": 4.33,
+      "share_over_30s": 0.0,
+      "n": 9
+    },
+    "last10@h1|field_goal|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 4.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last10@h1|other|no_timeout": {
+      "per_game": 0.0185,
+      "mean_seconds": 1.8,
+      "share_over_30s": 0.0,
+      "n": 5
+    },
+    "last10@h1|other|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 9.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last10@h1|pass_complete|no_timeout": {
+      "per_game": 0.0406,
+      "mean_seconds": 5.0,
+      "share_over_30s": 0.0,
+      "n": 11
+    },
+    "last10@h1|pass_complete|timeout": {
+      "per_game": 0.0554,
+      "mean_seconds": 4.67,
+      "share_over_30s": 0.0,
+      "n": 15
+    },
+    "last10@h1|pass_incomplete|no_timeout": {
+      "per_game": 0.1107,
+      "mean_seconds": 4.53,
+      "share_over_30s": 0.0,
+      "n": 30
+    },
+    "last10@h1|pass_incomplete|timeout": {
+      "per_game": 0.0221,
+      "mean_seconds": 4.17,
+      "share_over_30s": 0.0,
+      "n": 6
+    },
+    "last10@h1|run|no_timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 4.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last10@h1|run|timeout": {
+      "per_game": 0.0221,
+      "mean_seconds": 5.33,
+      "share_over_30s": 0.0,
+      "n": 6
+    },
+    "last10@h1|spike|no_timeout": {
+      "per_game": 0.0443,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 12
+    },
+    "last10@h1|spike|timeout": {
+      "per_game": 0.0111,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 3
+    },
+    "last10@h2|field_goal|no_timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 3.0,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last10@h2|other|no_timeout": {
+      "per_game": 0.0148,
+      "mean_seconds": 0.0,
+      "share_over_30s": 0.0,
+      "n": 4
+    },
+    "last10@h2|pass_complete|no_timeout": {
+      "per_game": 0.0221,
+      "mean_seconds": 5.17,
+      "share_over_30s": 0.0,
+      "n": 6
+    },
+    "last10@h2|pass_complete|timeout": {
+      "per_game": 0.0111,
+      "mean_seconds": 4.0,
+      "share_over_30s": 0.0,
+      "n": 3
+    },
+    "last10@h2|pass_incomplete|no_timeout": {
+      "per_game": 0.0406,
+      "mean_seconds": 4.82,
+      "share_over_30s": 0.0,
+      "n": 11
+    },
+    "last10@h2|pass_incomplete|timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 6.0,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last10@h2|run|no_timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 7.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last10@h2|run|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 7.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last10@h2|sack|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 5.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last10@h2|spike|no_timeout": {
+      "per_game": 0.0221,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 6
+    },
+    "last10@h2|spike|timeout": {
+      "per_game": 0.0111,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 3
+    },
+    "last120@h1|field_goal|no_timeout": {
+      "per_game": 0.203,
+      "mean_seconds": 5.65,
+      "share_over_30s": 0.0,
+      "n": 55
+    },
+    "last120@h1|other|no_timeout": {
+      "per_game": 0.3653,
+      "mean_seconds": 3.92,
+      "share_over_30s": 0.0,
+      "n": 99
+    },
+    "last120@h1|other|timeout": {
+      "per_game": 0.0258,
+      "mean_seconds": 6.29,
+      "share_over_30s": 0.0,
+      "n": 7
+    },
+    "last120@h1|pass_complete|no_timeout": {
+      "per_game": 2.1033,
+      "mean_seconds": 16.58,
+      "share_over_30s": 0.114,
+      "n": 570
+    },
+    "last120@h1|pass_complete|timeout": {
+      "per_game": 0.7601,
+      "mean_seconds": 10.14,
+      "share_over_30s": 0.0485,
+      "n": 206
+    },
+    "last120@h1|pass_incomplete|no_timeout": {
+      "per_game": 1.4649,
+      "mean_seconds": 5.02,
+      "share_over_30s": 0.0,
+      "n": 397
+    },
+    "last120@h1|pass_incomplete|timeout": {
+      "per_game": 0.0996,
+      "mean_seconds": 4.56,
+      "share_over_30s": 0.0,
+      "n": 27
+    },
+    "last120@h1|punt|no_timeout": {
+      "per_game": 0.369,
+      "mean_seconds": 9.26,
+      "share_over_30s": 0.0,
+      "n": 100
+    },
+    "last120@h1|run|no_timeout": {
+      "per_game": 1.1144,
+      "mean_seconds": 23.28,
+      "share_over_30s": 0.3344,
+      "n": 302
+    },
+    "last120@h1|run|timeout": {
+      "per_game": 0.6089,
+      "mean_seconds": 9.62,
+      "share_over_30s": 0.0788,
+      "n": 165
+    },
+    "last120@h1|sack|no_timeout": {
+      "per_game": 0.1255,
+      "mean_seconds": 25.71,
+      "share_over_30s": 0.4412,
+      "n": 34
+    },
+    "last120@h1|sack|timeout": {
+      "per_game": 0.2325,
+      "mean_seconds": 8.44,
+      "share_over_30s": 0.0317,
+      "n": 63
+    },
+    "last120@h2|field_goal|no_timeout": {
+      "per_game": 0.1107,
+      "mean_seconds": 5.63,
+      "share_over_30s": 0.0,
+      "n": 30
+    },
+    "last120@h2|field_goal|timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 6.5,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last120@h2|kneel|no_timeout": {
+      "per_game": 0.5018,
+      "mean_seconds": 34.49,
+      "share_over_30s": 0.7132,
+      "n": 136
+    },
+    "last120@h2|kneel|timeout": {
+      "per_game": 0.0554,
+      "mean_seconds": 20.2,
+      "share_over_30s": 0.4667,
+      "n": 15
+    },
+    "last120@h2|other|no_timeout": {
+      "per_game": 0.3284,
+      "mean_seconds": 3.64,
+      "share_over_30s": 0.0,
+      "n": 89
+    },
+    "last120@h2|other|timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 0.5,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last120@h2|pass_complete|no_timeout": {
+      "per_game": 1.3284,
+      "mean_seconds": 17.5,
+      "share_over_30s": 0.0778,
+      "n": 360
+    },
+    "last120@h2|pass_complete|timeout": {
+      "per_game": 0.3247,
+      "mean_seconds": 11.1,
+      "share_over_30s": 0.0341,
+      "n": 88
+    },
+    "last120@h2|pass_incomplete|no_timeout": {
+      "per_game": 1.0517,
+      "mean_seconds": 5.19,
+      "share_over_30s": 0.0,
+      "n": 285
+    },
+    "last120@h2|pass_incomplete|timeout": {
+      "per_game": 0.059,
+      "mean_seconds": 4.81,
+      "share_over_30s": 0.0,
+      "n": 16
+    },
+    "last120@h2|punt|no_timeout": {
+      "per_game": 0.2251,
+      "mean_seconds": 9.57,
+      "share_over_30s": 0.0,
+      "n": 61
+    },
+    "last120@h2|punt|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 7.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last120@h2|run|no_timeout": {
+      "per_game": 0.7269,
+      "mean_seconds": 27.48,
+      "share_over_30s": 0.4873,
+      "n": 197
+    },
+    "last120@h2|run|timeout": {
+      "per_game": 0.8819,
+      "mean_seconds": 14.12,
+      "share_over_30s": 0.205,
+      "n": 239
+    },
+    "last120@h2|sack|no_timeout": {
+      "per_game": 0.1587,
+      "mean_seconds": 22.53,
+      "share_over_30s": 0.3023,
+      "n": 43
+    },
+    "last120@h2|sack|timeout": {
+      "per_game": 0.059,
+      "mean_seconds": 8.44,
+      "share_over_30s": 0.0,
+      "n": 16
+    },
+    "last120@h2|spike|no_timeout": {
+      "per_game": 0.0295,
+      "mean_seconds": 0.88,
+      "share_over_30s": 0.0,
+      "n": 8
+    },
+    "last300@h1|field_goal|no_timeout": {
+      "per_game": 0.1513,
+      "mean_seconds": 5.76,
+      "share_over_30s": 0.0,
+      "n": 41
+    },
+    "last300@h1|other|no_timeout": {
+      "per_game": 0.4354,
+      "mean_seconds": 12.45,
+      "share_over_30s": 0.0339,
+      "n": 118
+    },
+    "last300@h1|other|timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 13.0,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last300@h1|pass_complete|no_timeout": {
+      "per_game": 1.8561,
+      "mean_seconds": 31.67,
+      "share_over_30s": 0.6262,
+      "n": 503
+    },
+    "last300@h1|pass_complete|timeout": {
+      "per_game": 0.0406,
+      "mean_seconds": 42.18,
+      "share_over_30s": 0.9091,
+      "n": 11
+    },
+    "last300@h1|pass_incomplete|no_timeout": {
+      "per_game": 1.0369,
+      "mean_seconds": 5.16,
+      "share_over_30s": 0.0,
+      "n": 281
+    },
+    "last300@h1|pass_incomplete|timeout": {
+      "per_game": 0.0443,
+      "mean_seconds": 5.42,
+      "share_over_30s": 0.0,
+      "n": 12
+    },
+    "last300@h1|punt|no_timeout": {
+      "per_game": 0.4207,
+      "mean_seconds": 9.53,
+      "share_over_30s": 0.0,
+      "n": 114
+    },
+    "last300@h1|run|no_timeout": {
+      "per_game": 2.4096,
+      "mean_seconds": 32.33,
+      "share_over_30s": 0.6845,
+      "n": 653
+    },
+    "last300@h1|run|timeout": {
+      "per_game": 0.0775,
+      "mean_seconds": 34.33,
+      "share_over_30s": 0.7143,
+      "n": 21
+    },
+    "last300@h1|sack|no_timeout": {
+      "per_game": 0.1845,
+      "mean_seconds": 32.36,
+      "share_over_30s": 0.7,
+      "n": 50
+    },
+    "last300@h1|sack|timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 12.5,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last300@h2|field_goal|no_timeout": {
+      "per_game": 0.1808,
+      "mean_seconds": 6.02,
+      "share_over_30s": 0.0,
+      "n": 49
+    },
+    "last300@h2|field_goal|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 4.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last300@h2|other|no_timeout": {
+      "per_game": 0.4686,
+      "mean_seconds": 3.89,
+      "share_over_30s": 0.0,
+      "n": 127
+    },
+    "last300@h2|other|timeout": {
+      "per_game": 0.0148,
+      "mean_seconds": 3.25,
+      "share_over_30s": 0.0,
+      "n": 4
+    },
+    "last300@h2|pass_complete|no_timeout": {
+      "per_game": 2.4686,
+      "mean_seconds": 23.06,
+      "share_over_30s": 0.299,
+      "n": 669
+    },
+    "last300@h2|pass_complete|timeout": {
+      "per_game": 0.1365,
+      "mean_seconds": 15.32,
+      "share_over_30s": 0.1622,
+      "n": 37
+    },
+    "last300@h2|pass_incomplete|no_timeout": {
+      "per_game": 1.5277,
+      "mean_seconds": 5.34,
+      "share_over_30s": 0.0,
+      "n": 414
+    },
+    "last300@h2|pass_incomplete|timeout": {
+      "per_game": 0.0517,
+      "mean_seconds": 7.14,
+      "share_over_30s": 0.0,
+      "n": 14
+    },
+    "last300@h2|punt|no_timeout": {
+      "per_game": 0.3616,
+      "mean_seconds": 9.37,
+      "share_over_30s": 0.0,
+      "n": 98
+    },
+    "last300@h2|punt|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 8.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last300@h2|run|no_timeout": {
+      "per_game": 2.4539,
+      "mean_seconds": 30.72,
+      "share_over_30s": 0.5925,
+      "n": 665
+    },
+    "last300@h2|run|timeout": {
+      "per_game": 0.9041,
+      "mean_seconds": 8.22,
+      "share_over_30s": 0.0571,
+      "n": 245
+    },
+    "last300@h2|sack|no_timeout": {
+      "per_game": 0.2768,
+      "mean_seconds": 28.05,
+      "share_over_30s": 0.5333,
+      "n": 75
+    },
+    "last300@h2|sack|timeout": {
+      "per_game": 0.048,
+      "mean_seconds": 12.31,
+      "share_over_30s": 0.1538,
+      "n": 13
+    },
+    "last30@h1|field_goal|no_timeout": {
+      "per_game": 0.1255,
+      "mean_seconds": 6.0,
+      "share_over_30s": 0.0,
+      "n": 34
+    },
+    "last30@h1|field_goal|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 3.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last30@h1|kneel|timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 2.5,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last30@h1|other|no_timeout": {
+      "per_game": 0.1845,
+      "mean_seconds": 3.66,
+      "share_over_30s": 0.0,
+      "n": 50
+    },
+    "last30@h1|other|timeout": {
+      "per_game": 0.0406,
+      "mean_seconds": 2.09,
+      "share_over_30s": 0.0,
+      "n": 11
+    },
+    "last30@h1|pass_complete|no_timeout": {
+      "per_game": 0.4244,
+      "mean_seconds": 7.9,
+      "share_over_30s": 0.0,
+      "n": 115
+    },
+    "last30@h1|pass_complete|timeout": {
+      "per_game": 0.4022,
+      "mean_seconds": 7.28,
+      "share_over_30s": 0.0,
+      "n": 109
+    },
+    "last30@h1|pass_incomplete|no_timeout": {
+      "per_game": 0.6236,
+      "mean_seconds": 4.82,
+      "share_over_30s": 0.0,
+      "n": 169
+    },
+    "last30@h1|pass_incomplete|timeout": {
+      "per_game": 0.0812,
+      "mean_seconds": 5.82,
+      "share_over_30s": 0.0,
+      "n": 22
+    },
+    "last30@h1|punt|no_timeout": {
+      "per_game": 0.0886,
+      "mean_seconds": 8.71,
+      "share_over_30s": 0.0,
+      "n": 24
+    },
+    "last30@h1|punt|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 10.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last30@h1|run|no_timeout": {
+      "per_game": 0.0701,
+      "mean_seconds": 9.47,
+      "share_over_30s": 0.0,
+      "n": 19
+    },
+    "last30@h1|run|timeout": {
+      "per_game": 0.1624,
+      "mean_seconds": 7.7,
+      "share_over_30s": 0.0,
+      "n": 44
+    },
+    "last30@h1|sack|no_timeout": {
+      "per_game": 0.0221,
+      "mean_seconds": 8.0,
+      "share_over_30s": 0.0,
+      "n": 6
+    },
+    "last30@h1|sack|timeout": {
+      "per_game": 0.0406,
+      "mean_seconds": 9.18,
+      "share_over_30s": 0.0,
+      "n": 11
+    },
+    "last30@h1|spike|no_timeout": {
+      "per_game": 0.0221,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 6
+    },
+    "last30@h1|spike|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last30@h2|field_goal|no_timeout": {
+      "per_game": 0.059,
+      "mean_seconds": 4.94,
+      "share_over_30s": 0.0,
+      "n": 16
+    },
+    "last30@h2|field_goal|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 6.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last30@h2|kneel|no_timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 2.0,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last30@h2|kneel|timeout": {
+      "per_game": 0.0148,
+      "mean_seconds": 9.75,
+      "share_over_30s": 0.0,
+      "n": 4
+    },
+    "last30@h2|other|no_timeout": {
+      "per_game": 0.0738,
+      "mean_seconds": 3.4,
+      "share_over_30s": 0.0,
+      "n": 20
+    },
+    "last30@h2|other|timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 5.5,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last30@h2|pass_complete|no_timeout": {
+      "per_game": 0.1697,
+      "mean_seconds": 9.28,
+      "share_over_30s": 0.0,
+      "n": 46
+    },
+    "last30@h2|pass_complete|timeout": {
+      "per_game": 0.1033,
+      "mean_seconds": 8.11,
+      "share_over_30s": 0.0,
+      "n": 28
+    },
+    "last30@h2|pass_incomplete|no_timeout": {
+      "per_game": 0.2435,
+      "mean_seconds": 5.64,
+      "share_over_30s": 0.0,
+      "n": 66
+    },
+    "last30@h2|pass_incomplete|timeout": {
+      "per_game": 0.0185,
+      "mean_seconds": 5.4,
+      "share_over_30s": 0.0,
+      "n": 5
+    },
+    "last30@h2|punt|no_timeout": {
+      "per_game": 0.0406,
+      "mean_seconds": 7.73,
+      "share_over_30s": 0.0,
+      "n": 11
+    },
+    "last30@h2|punt|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 13.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last30@h2|run|no_timeout": {
+      "per_game": 0.048,
+      "mean_seconds": 9.0,
+      "share_over_30s": 0.0,
+      "n": 13
+    },
+    "last30@h2|run|timeout": {
+      "per_game": 0.0332,
+      "mean_seconds": 7.11,
+      "share_over_30s": 0.0,
+      "n": 9
+    },
+    "last30@h2|sack|no_timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 12.0,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last30@h2|sack|timeout": {
+      "per_game": 0.0074,
+      "mean_seconds": 6.0,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last30@h2|spike|no_timeout": {
+      "per_game": 0.0627,
+      "mean_seconds": 0.94,
+      "share_over_30s": 0.0,
+      "n": 17
+    },
+    "last30@h2|spike|timeout": {
+      "per_game": 0.0037,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    }
+  },
+  "sim": {
+    "last10@h1|field_goal|no_timeout": {
+      "per_game": 0.032,
+      "mean_seconds": 3.16,
+      "share_over_30s": 0.0,
+      "n": 32
+    },
+    "last10@h1|field_goal|timeout": {
+      "per_game": 0.003,
+      "mean_seconds": 3.67,
+      "share_over_30s": 0.0,
+      "n": 3
+    },
+    "last10@h1|kneel|no_timeout": {
+      "per_game": 0.498,
+      "mean_seconds": 3.96,
+      "share_over_30s": 0.0,
+      "n": 498
+    },
+    "last10@h1|kneel|timeout": {
+      "per_game": 0.01,
+      "mean_seconds": 5.5,
+      "share_over_30s": 0.0,
+      "n": 10
+    },
+    "last10@h1|other|no_timeout": {
+      "per_game": 0.043,
+      "mean_seconds": 1.26,
+      "share_over_30s": 0.0,
+      "n": 43
+    },
+    "last10@h1|other|timeout": {
+      "per_game": 0.002,
+      "mean_seconds": 0.0,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last10@h1|pass_complete|no_timeout": {
+      "per_game": 0.162,
+      "mean_seconds": 3.75,
+      "share_over_30s": 0.0,
+      "n": 162
+    },
+    "last10@h1|pass_complete|timeout": {
+      "per_game": 0.043,
+      "mean_seconds": 3.91,
+      "share_over_30s": 0.0,
+      "n": 43
+    },
+    "last10@h1|pass_incomplete|no_timeout": {
+      "per_game": 0.221,
+      "mean_seconds": 3.29,
+      "share_over_30s": 0.0,
+      "n": 221
+    },
+    "last10@h1|pass_incomplete|timeout": {
+      "per_game": 0.013,
+      "mean_seconds": 3.92,
+      "share_over_30s": 0.0,
+      "n": 13
+    },
+    "last10@h1|run|no_timeout": {
+      "per_game": 0.076,
+      "mean_seconds": 4.01,
+      "share_over_30s": 0.0,
+      "n": 76
+    },
+    "last10@h1|run|timeout": {
+      "per_game": 0.012,
+      "mean_seconds": 3.75,
+      "share_over_30s": 0.0,
+      "n": 12
+    },
+    "last10@h1|sack|no_timeout": {
+      "per_game": 0.06,
+      "mean_seconds": 2.68,
+      "share_over_30s": 0.0,
+      "n": 60
+    },
+    "last10@h1|sack|timeout": {
+      "per_game": 0.005,
+      "mean_seconds": 2.2,
+      "share_over_30s": 0.0,
+      "n": 5
+    },
+    "last10@h1|spike|no_timeout": {
+      "per_game": 0.069,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 69
+    },
+    "last10@h1|spike|timeout": {
+      "per_game": 0.01,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 10
+    },
+    "last10@h2|field_goal|no_timeout": {
+      "per_game": 0.032,
+      "mean_seconds": 1.91,
+      "share_over_30s": 0.0,
+      "n": 32
+    },
+    "last10@h2|field_goal|timeout": {
+      "per_game": 0.003,
+      "mean_seconds": 3.0,
+      "share_over_30s": 0.0,
+      "n": 3
+    },
+    "last10@h2|kneel|no_timeout": {
+      "per_game": 0.132,
+      "mean_seconds": 3.56,
+      "share_over_30s": 0.0,
+      "n": 132
+    },
+    "last10@h2|kneel|timeout": {
+      "per_game": 0.013,
+      "mean_seconds": 3.85,
+      "share_over_30s": 0.0,
+      "n": 13
+    },
+    "last10@h2|other|no_timeout": {
+      "per_game": 0.02,
+      "mean_seconds": 2.05,
+      "share_over_30s": 0.0,
+      "n": 20
+    },
+    "last10@h2|other|timeout": {
+      "per_game": 0.002,
+      "mean_seconds": 0.0,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last10@h2|pass_complete|no_timeout": {
+      "per_game": 0.044,
+      "mean_seconds": 4.84,
+      "share_over_30s": 0.0,
+      "n": 44
+    },
+    "last10@h2|pass_complete|timeout": {
+      "per_game": 0.021,
+      "mean_seconds": 4.1,
+      "share_over_30s": 0.0,
+      "n": 21
+    },
+    "last10@h2|pass_incomplete|no_timeout": {
+      "per_game": 0.04,
+      "mean_seconds": 3.27,
+      "share_over_30s": 0.0,
+      "n": 40
+    },
+    "last10@h2|pass_incomplete|timeout": {
+      "per_game": 0.002,
+      "mean_seconds": 6.5,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last10@h2|run|no_timeout": {
+      "per_game": 0.018,
+      "mean_seconds": 4.89,
+      "share_over_30s": 0.0,
+      "n": 18
+    },
+    "last10@h2|run|timeout": {
+      "per_game": 0.006,
+      "mean_seconds": 5.0,
+      "share_over_30s": 0.0,
+      "n": 6
+    },
+    "last10@h2|sack|no_timeout": {
+      "per_game": 0.017,
+      "mean_seconds": 4.71,
+      "share_over_30s": 0.0,
+      "n": 17
+    },
+    "last10@h2|sack|timeout": {
+      "per_game": 0.002,
+      "mean_seconds": 6.0,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last10@h2|spike|no_timeout": {
+      "per_game": 0.042,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 42
+    },
+    "last10@h2|spike|timeout": {
+      "per_game": 0.007,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 7
+    },
+    "last120@h1|field_goal|no_timeout": {
+      "per_game": 0.02,
+      "mean_seconds": 4.65,
+      "share_over_30s": 0.0,
+      "n": 20
+    },
+    "last120@h1|field_goal|timeout": {
+      "per_game": 0.002,
+      "mean_seconds": 4.5,
+      "share_over_30s": 0.0,
+      "n": 2
+    },
+    "last120@h1|kneel|no_timeout": {
+      "per_game": 0.005,
+      "mean_seconds": 42.0,
+      "share_over_30s": 1.0,
+      "n": 5
+    },
+    "last120@h1|other|no_timeout": {
+      "per_game": 0.62,
+      "mean_seconds": 6.61,
+      "share_over_30s": 0.0226,
+      "n": 620
+    },
+    "last120@h1|other|timeout": {
+      "per_game": 0.045,
+      "mean_seconds": 5.96,
+      "share_over_30s": 0.0,
+      "n": 45
+    },
+    "last120@h1|pass_complete|no_timeout": {
+      "per_game": 2.227,
+      "mean_seconds": 16.31,
+      "share_over_30s": 0.1082,
+      "n": 2227
+    },
+    "last120@h1|pass_complete|timeout": {
+      "per_game": 0.848,
+      "mean_seconds": 6.78,
+      "share_over_30s": 0.0047,
+      "n": 848
+    },
+    "last120@h1|pass_incomplete|no_timeout": {
+      "per_game": 1.631,
+      "mean_seconds": 4.63,
+      "share_over_30s": 0.0,
+      "n": 1631
+    },
+    "last120@h1|pass_incomplete|timeout": {
+      "per_game": 0.124,
+      "mean_seconds": 4.59,
+      "share_over_30s": 0.0,
+      "n": 124
+    },
+    "last120@h1|punt|no_timeout": {
+      "per_game": 0.221,
+      "mean_seconds": 9.36,
+      "share_over_30s": 0.0,
+      "n": 221
+    },
+    "last120@h1|punt|timeout": {
+      "per_game": 0.019,
+      "mean_seconds": 8.89,
+      "share_over_30s": 0.0,
+      "n": 19
+    },
+    "last120@h1|run|no_timeout": {
+      "per_game": 1.27,
+      "mean_seconds": 23.97,
+      "share_over_30s": 0.3583,
+      "n": 1270
+    },
+    "last120@h1|run|timeout": {
+      "per_game": 0.496,
+      "mean_seconds": 6.51,
+      "share_over_30s": 0.0161,
+      "n": 496
+    },
+    "last120@h1|sack|no_timeout": {
+      "per_game": 0.308,
+      "mean_seconds": 16.23,
+      "share_over_30s": 0.2403,
+      "n": 308
+    },
+    "last120@h1|sack|timeout": {
+      "per_game": 0.029,
+      "mean_seconds": 14.93,
+      "share_over_30s": 0.1724,
+      "n": 29
+    },
+    "last120@h2|field_goal|no_timeout": {
+      "per_game": 0.023,
+      "mean_seconds": 4.74,
+      "share_over_30s": 0.0,
+      "n": 23
+    },
+    "last120@h2|field_goal|timeout": {
+      "per_game": 0.003,
+      "mean_seconds": 4.33,
+      "share_over_30s": 0.0,
+      "n": 3
+    },
+    "last120@h2|kneel|no_timeout": {
+      "per_game": 0.805,
+      "mean_seconds": 34.67,
+      "share_over_30s": 0.8099,
+      "n": 805
+    },
+    "last120@h2|kneel|timeout": {
+      "per_game": 0.049,
+      "mean_seconds": 33.88,
+      "share_over_30s": 0.7347,
+      "n": 49
+    },
+    "last120@h2|other|no_timeout": {
+      "per_game": 0.581,
+      "mean_seconds": 7.24,
+      "share_over_30s": 0.0344,
+      "n": 581
+    },
+    "last120@h2|other|timeout": {
+      "per_game": 0.039,
+      "mean_seconds": 9.15,
+      "share_over_30s": 0.0769,
+      "n": 39
+    },
+    "last120@h2|pass_complete|no_timeout": {
+      "per_game": 1.289,
+      "mean_seconds": 18.12,
+      "share_over_30s": 0.0605,
+      "n": 1289
+    },
+    "last120@h2|pass_complete|timeout": {
+      "per_game": 0.364,
+      "mean_seconds": 8.35,
+      "share_over_30s": 0.0,
+      "n": 364
+    },
+    "last120@h2|pass_incomplete|no_timeout": {
+      "per_game": 0.984,
+      "mean_seconds": 4.8,
+      "share_over_30s": 0.0,
+      "n": 984
+    },
+    "last120@h2|pass_incomplete|timeout": {
+      "per_game": 0.05,
+      "mean_seconds": 4.48,
+      "share_over_30s": 0.0,
+      "n": 50
+    },
+    "last120@h2|punt|no_timeout": {
+      "per_game": 0.17,
+      "mean_seconds": 9.16,
+      "share_over_30s": 0.0,
+      "n": 170
+    },
+    "last120@h2|punt|timeout": {
+      "per_game": 0.009,
+      "mean_seconds": 8.67,
+      "share_over_30s": 0.0,
+      "n": 9
+    },
+    "last120@h2|run|no_timeout": {
+      "per_game": 0.789,
+      "mean_seconds": 26.52,
+      "share_over_30s": 0.4728,
+      "n": 789
+    },
+    "last120@h2|run|timeout": {
+      "per_game": 0.64,
+      "mean_seconds": 6.35,
+      "share_over_30s": 0.0391,
+      "n": 640
+    },
+    "last120@h2|sack|no_timeout": {
+      "per_game": 0.162,
+      "mean_seconds": 21.58,
+      "share_over_30s": 0.3086,
+      "n": 162
+    },
+    "last120@h2|sack|timeout": {
+      "per_game": 0.009,
+      "mean_seconds": 18.67,
+      "share_over_30s": 0.2222,
+      "n": 9
+    },
+    "last120@h2|spike|no_timeout": {
+      "per_game": 0.04,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 40
+    },
+    "last300@h1|field_goal|no_timeout": {
+      "per_game": 0.016,
+      "mean_seconds": 4.5,
+      "share_over_30s": 0.0,
+      "n": 16
+    },
+    "last300@h1|other|no_timeout": {
+      "per_game": 0.591,
+      "mean_seconds": 14.63,
+      "share_over_30s": 0.0948,
+      "n": 591
+    },
+    "last300@h1|other|timeout": {
+      "per_game": 0.021,
+      "mean_seconds": 13.81,
+      "share_over_30s": 0.0476,
+      "n": 21
+    },
+    "last300@h1|pass_complete|no_timeout": {
+      "per_game": 1.73,
+      "mean_seconds": 31.77,
+      "share_over_30s": 0.6405,
+      "n": 1730
+    },
+    "last300@h1|pass_complete|timeout": {
+      "per_game": 0.09,
+      "mean_seconds": 20.51,
+      "share_over_30s": 0.2667,
+      "n": 90
+    },
+    "last300@h1|pass_incomplete|no_timeout": {
+      "per_game": 1.036,
+      "mean_seconds": 4.96,
+      "share_over_30s": 0.0,
+      "n": 1036
+    },
+    "last300@h1|pass_incomplete|timeout": {
+      "per_game": 0.024,
+      "mean_seconds": 5.04,
+      "share_over_30s": 0.0,
+      "n": 24
+    },
+    "last300@h1|punt|no_timeout": {
+      "per_game": 0.416,
+      "mean_seconds": 9.31,
+      "share_over_30s": 0.0,
+      "n": 416
+    },
+    "last300@h1|punt|timeout": {
+      "per_game": 0.003,
+      "mean_seconds": 9.33,
+      "share_over_30s": 0.0,
+      "n": 3
+    },
+    "last300@h1|run|no_timeout": {
+      "per_game": 2.315,
+      "mean_seconds": 32.88,
+      "share_over_30s": 0.7102,
+      "n": 2315
+    },
+    "last300@h1|run|timeout": {
+      "per_game": 0.109,
+      "mean_seconds": 15.56,
+      "share_over_30s": 0.2202,
+      "n": 109
+    },
+    "last300@h1|sack|no_timeout": {
+      "per_game": 0.196,
+      "mean_seconds": 33.86,
+      "share_over_30s": 0.7296,
+      "n": 196
+    },
+    "last300@h1|sack|timeout": {
+      "per_game": 0.001,
+      "mean_seconds": 10.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last300@h2|field_goal|no_timeout": {
+      "per_game": 0.015,
+      "mean_seconds": 4.73,
+      "share_over_30s": 0.0,
+      "n": 15
+    },
+    "last300@h2|other|no_timeout": {
+      "per_game": 0.745,
+      "mean_seconds": 8.43,
+      "share_over_30s": 0.0658,
+      "n": 745
+    },
+    "last300@h2|other|timeout": {
+      "per_game": 0.037,
+      "mean_seconds": 9.84,
+      "share_over_30s": 0.1351,
+      "n": 37
+    },
+    "last300@h2|pass_complete|no_timeout": {
+      "per_game": 2.212,
+      "mean_seconds": 22.18,
+      "share_over_30s": 0.2464,
+      "n": 2212
+    },
+    "last300@h2|pass_complete|timeout": {
+      "per_game": 0.2,
+      "mean_seconds": 9.27,
+      "share_over_30s": 0.035,
+      "n": 200
+    },
+    "last300@h2|pass_incomplete|no_timeout": {
+      "per_game": 1.459,
+      "mean_seconds": 4.9,
+      "share_over_30s": 0.0,
+      "n": 1459
+    },
+    "last300@h2|pass_incomplete|timeout": {
+      "per_game": 0.051,
+      "mean_seconds": 4.96,
+      "share_over_30s": 0.0,
+      "n": 51
+    },
+    "last300@h2|punt|no_timeout": {
+      "per_game": 0.233,
+      "mean_seconds": 8.82,
+      "share_over_30s": 0.0,
+      "n": 233
+    },
+    "last300@h2|punt|timeout": {
+      "per_game": 0.012,
+      "mean_seconds": 8.5,
+      "share_over_30s": 0.0,
+      "n": 12
+    },
+    "last300@h2|run|no_timeout": {
+      "per_game": 2.528,
+      "mean_seconds": 30.92,
+      "share_over_30s": 0.5961,
+      "n": 2528
+    },
+    "last300@h2|run|timeout": {
+      "per_game": 0.893,
+      "mean_seconds": 6.19,
+      "share_over_30s": 0.0202,
+      "n": 893
+    },
+    "last300@h2|sack|no_timeout": {
+      "per_game": 0.278,
+      "mean_seconds": 26.56,
+      "share_over_30s": 0.4856,
+      "n": 278
+    },
+    "last300@h2|sack|timeout": {
+      "per_game": 0.008,
+      "mean_seconds": 24.75,
+      "share_over_30s": 0.375,
+      "n": 8
+    },
+    "last30@h1|field_goal|no_timeout": {
+      "per_game": 0.024,
+      "mean_seconds": 4.5,
+      "share_over_30s": 0.0,
+      "n": 24
+    },
+    "last30@h1|field_goal|timeout": {
+      "per_game": 0.003,
+      "mean_seconds": 3.67,
+      "share_over_30s": 0.0,
+      "n": 3
+    },
+    "last30@h1|kneel|no_timeout": {
+      "per_game": 0.131,
+      "mean_seconds": 13.57,
+      "share_over_30s": 0.0,
+      "n": 131
+    },
+    "last30@h1|kneel|timeout": {
+      "per_game": 0.012,
+      "mean_seconds": 16.83,
+      "share_over_30s": 0.0,
+      "n": 12
+    },
+    "last30@h1|other|no_timeout": {
+      "per_game": 0.219,
+      "mean_seconds": 4.53,
+      "share_over_30s": 0.0,
+      "n": 219
+    },
+    "last30@h1|other|timeout": {
+      "per_game": 0.025,
+      "mean_seconds": 4.68,
+      "share_over_30s": 0.0,
+      "n": 25
+    },
+    "last30@h1|pass_complete|no_timeout": {
+      "per_game": 0.31,
+      "mean_seconds": 7.98,
+      "share_over_30s": 0.0,
+      "n": 310
+    },
+    "last30@h1|pass_complete|timeout": {
+      "per_game": 0.312,
+      "mean_seconds": 5.55,
+      "share_over_30s": 0.0,
+      "n": 312
+    },
+    "last30@h1|pass_incomplete|no_timeout": {
+      "per_game": 0.497,
+      "mean_seconds": 4.82,
+      "share_over_30s": 0.0,
+      "n": 497
+    },
+    "last30@h1|pass_incomplete|timeout": {
+      "per_game": 0.044,
+      "mean_seconds": 4.82,
+      "share_over_30s": 0.0,
+      "n": 44
+    },
+    "last30@h1|punt|no_timeout": {
+      "per_game": 0.058,
+      "mean_seconds": 8.52,
+      "share_over_30s": 0.0,
+      "n": 58
+    },
+    "last30@h1|punt|timeout": {
+      "per_game": 0.004,
+      "mean_seconds": 7.0,
+      "share_over_30s": 0.0,
+      "n": 4
+    },
+    "last30@h1|run|no_timeout": {
+      "per_game": 0.092,
+      "mean_seconds": 11.21,
+      "share_over_30s": 0.0,
+      "n": 92
+    },
+    "last30@h1|run|timeout": {
+      "per_game": 0.095,
+      "mean_seconds": 5.14,
+      "share_over_30s": 0.0,
+      "n": 95
+    },
+    "last30@h1|sack|no_timeout": {
+      "per_game": 0.06,
+      "mean_seconds": 12.05,
+      "share_over_30s": 0.0,
+      "n": 60
+    },
+    "last30@h1|sack|timeout": {
+      "per_game": 0.008,
+      "mean_seconds": 11.62,
+      "share_over_30s": 0.0,
+      "n": 8
+    },
+    "last30@h1|spike|no_timeout": {
+      "per_game": 0.027,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 27
+    },
+    "last30@h1|spike|timeout": {
+      "per_game": 0.001,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last30@h2|field_goal|no_timeout": {
+      "per_game": 0.027,
+      "mean_seconds": 4.93,
+      "share_over_30s": 0.0,
+      "n": 27
+    },
+    "last30@h2|kneel|no_timeout": {
+      "per_game": 0.134,
+      "mean_seconds": 15.02,
+      "share_over_30s": 0.0,
+      "n": 134
+    },
+    "last30@h2|kneel|timeout": {
+      "per_game": 0.01,
+      "mean_seconds": 13.4,
+      "share_over_30s": 0.0,
+      "n": 10
+    },
+    "last30@h2|other|no_timeout": {
+      "per_game": 0.11,
+      "mean_seconds": 4.55,
+      "share_over_30s": 0.0,
+      "n": 110
+    },
+    "last30@h2|other|timeout": {
+      "per_game": 0.004,
+      "mean_seconds": 4.75,
+      "share_over_30s": 0.0,
+      "n": 4
+    },
+    "last30@h2|pass_complete|no_timeout": {
+      "per_game": 0.164,
+      "mean_seconds": 8.95,
+      "share_over_30s": 0.0,
+      "n": 164
+    },
+    "last30@h2|pass_complete|timeout": {
+      "per_game": 0.077,
+      "mean_seconds": 5.51,
+      "share_over_30s": 0.0,
+      "n": 77
+    },
+    "last30@h2|pass_incomplete|no_timeout": {
+      "per_game": 0.228,
+      "mean_seconds": 5.07,
+      "share_over_30s": 0.0,
+      "n": 228
+    },
+    "last30@h2|pass_incomplete|timeout": {
+      "per_game": 0.018,
+      "mean_seconds": 5.33,
+      "share_over_30s": 0.0,
+      "n": 18
+    },
+    "last30@h2|punt|no_timeout": {
+      "per_game": 0.033,
+      "mean_seconds": 7.09,
+      "share_over_30s": 0.0,
+      "n": 33
+    },
+    "last30@h2|punt|timeout": {
+      "per_game": 0.004,
+      "mean_seconds": 7.5,
+      "share_over_30s": 0.0,
+      "n": 4
+    },
+    "last30@h2|run|no_timeout": {
+      "per_game": 0.06,
+      "mean_seconds": 11.63,
+      "share_over_30s": 0.0,
+      "n": 60
+    },
+    "last30@h2|run|timeout": {
+      "per_game": 0.036,
+      "mean_seconds": 5.08,
+      "share_over_30s": 0.0,
+      "n": 36
+    },
+    "last30@h2|sack|no_timeout": {
+      "per_game": 0.019,
+      "mean_seconds": 13.21,
+      "share_over_30s": 0.0,
+      "n": 19
+    },
+    "last30@h2|sack|timeout": {
+      "per_game": 0.001,
+      "mean_seconds": 23.0,
+      "share_over_30s": 0.0,
+      "n": 1
+    },
+    "last30@h2|spike|no_timeout": {
+      "per_game": 0.09,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 90
+    },
+    "last30@h2|spike|timeout": {
+      "per_game": 0.007,
+      "mean_seconds": 1.0,
+      "share_over_30s": 0.0,
+      "n": 7
+    }
+  }
+}

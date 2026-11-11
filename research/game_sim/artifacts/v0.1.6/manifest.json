@@ -1,0 +1,14 @@
+{
+  "model_id": "vq-empirical-game/0.1.6",
+  "status": "REJECTED_DEVELOPMENT_GATE",
+  "compressed_sha256": "c63cbc4d5b06d3ab64238f9e4a29e256394dac6eda5fe0f61d0ea1bee6367b5e",
+  "artifact_sha256": "adcc4a0b7a486649b7dc67e00972fbad779093167ed54fbc0808f6da673c63bd",
+  "gate_path": "research/game_sim/diagnostics/correction-0.1.6-gate.json",
+  "implementation_sha256": {
+    "research/game_sim/model.py": "976f48ea3dfb90e77b3d604f62eca9e5b313fe8ee652671009d6cfac2ea9b306",
+    "research/game_sim/state.py": "5b3147c3e8e3fdd71c2e9838fe2a02fd5071ba3aa2dec6298a6ced91accb6c3e",
+    "research/game_sim/batch.py": "3d0319233ae5c7977480f414bb053f548b97af490ea199205b994de0d8320ec5",
+    "research/game_sim/reproduction.py": "26c92aedc716fbecc8bdd9b2c3163910ec0fe25f940231deb9ae33a452cb4f3a"
+  },
+  "approval": false
+}

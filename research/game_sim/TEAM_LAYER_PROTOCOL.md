@@ -1,7 +1,12 @@
 # Team layer v0.3.0: frozen protocol draft (Claude), amended per Codex read-backs 6483704618 and 6507924056
 
 Status: DRAFT FOR READ-BACK. Nothing is fitted, downloaded or evaluated under this protocol until
-both agents agree. This protocol never approves a model, publishes forecasts, writes to a database
+both agents agree.
+
+**Status update (2026-11-07): AGREED AND FROZEN as amended through A3 (`6970d4e`).** Mike (owner)
+relayed that Codex and Elo agree and gave the go-ahead to execute in this session. Their written
+read-backs are requested on #65; this note does not stand in for them. Nothing above or below is
+changed after this point. A result is appended after the run, and failures are preserved. This protocol never approves a model, publishes forecasts, writes to a database
 or sends notifications. Player workloads are out of scope and get their own protocol.
 
 ## 0. Base engine (selected after the clock experiments, before any 2024 download)
@@ -15,6 +20,88 @@ or sends notifications. Player workloads are out of scope and get their own prot
 - Before anything else happens, a separate commit writes the base's exact commit SHA,
   `model_sha256`, `implementation_sha256` map and source hash into this section.
   - Arm A (section 5) means exactly that package with zero team coefficients.
+
+### Pinned base (provenance only, written 2026-11-07 after Elo's final disposition)
+- **Disposition:** Elo accepted v0.2.24 as the league-level research baseline, eligible for this pin
+  ([#237 comment 6705087332](https://github.com/Aleynaalij/VegasQuantV1/pull/237#issuecomment-6705087332)).
+  - Independent reviews: the scientific re-audit at `bd575b9`
+    ([review 5809312645](https://github.com/Aleynaalij/VegasQuantV1/pull/237#pullrequestreview-5809312645)) and
+    the reporting follow-up at `05a0c79`
+    ([comment 6702835305](https://github.com/Aleynaalij/VegasQuantV1/pull/237#issuecomment-6702835305)).
+    Codex independently reproduced the preceding v0.2.23 accounting package
+    ([review 5809232082](https://github.com/Aleynaalij/VegasQuantV1/pull/237#pullrequestreview-5809232082)).
+  - Roles have swapped since this section was drafted: Claude built this package and Elo audited it.
+    The fourth criterion above is therefore met by Elo's independent audit, not by Claude's.
+  - Elo recorded these review limits, which still apply. The final reporting review ran 23 focused
+    tests and skipped the source-gated checks. Its local broad run had errors because historical
+    packages were missing from its snapshot. Exact-head kernel CI ran 157 tests and passed with 3
+    skips. None of this is a fresh full-source rerun. The full-source evidence is the `bd575b9`
+    review.
+- **Commits:**
+  - Build (engine source the package was built from): `ad175550a3dc805dc335d163d731113a17135b38`
+  - Package committed: `df433313d27ee685e3dc5ed2e39e1486f13f07af`
+  - Reviewed head for the final disposition: `05a0c79a8a2af4d183b3686ad2c77e9c6f997c0e`
+- **Package:** `research/game_sim/artifacts/v0.2.24`, model `vq-empirical-game/0.2.24`.
+- **`model_sha256`:** `f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d`
+- **Source:** `play_by_play_2022.csv.gz`, SHA256 `0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4`.
+- **Run:** seed 1701, 10,000 / 10,000 runs, 0 failed, old opening-TD OT.
+- **Package flags (unchanged):**
+  - `approval: false`
+  - `current_matchup_supported: false`
+  - `team_player_coupling_enabled: false`
+  - blockers: UNCALIBRATED_LEAGUE_BASELINE, NOT_A_CURRENT_MATCHUP_FORECAST, NO_CURRENT_ROSTER_OR_AVAILABILITY, PLAYER_WORKLOAD_NOT_YET_SUPPORTED, HISTORICAL_KICKOFF_DISTRIBUTION, COMPOUND_LIVE_BALL_PENALTIES_EXCLUDED
+- **Arm A** (section 5) is exactly this package with zero team coefficients.
+
+Archived `implementation_sha256` map, copied verbatim from the package manifest. The head copies of
+the reporting tools changed after the build (`05a0c79`); those newer hashes are deliberately **not**
+used here.
+
+| file | sha256 (as archived in the package) |
+|---|---|
+| `integrated.py` | `3e7c7cf76f51fe36b3e8ad33b4f1c480a776458cd30fc7c0f04ab587598e3a9e` |
+| `model.py` | `a40f8a271202c3386ebc65e754ae4eb2fa2edf40472c91aef5b615c9ca380e2d` |
+| `state.py` | `7ea5e495e06e082badce0aba5cd9bed0f06764352c6ad5f965a3db9cb245c16d` |
+| `batch.py` | `0195777806f8c1552a02aadd2f79c0f0529efa663d4f8294c270902fadb1d5a6` |
+| `evaluate.py` | `529a0e5c4d869049cd736045d9720208b8c93c6af5c007bcc0454e91742bf0d1` |
+| `render.py` | `f3fb9d395e8d069c4733cbbc0da0427b6031c66804669b714c9c4a995a007450` |
+| `workload.py` | `fbbdcc3de9358d00d7eafc5094d52b782ccc2e6972fac959e0bfe58434189750` |
+| `timeout_cells.py` | `5eb9783b8c231f331447ee2881ffda26b01ca07bdcad137fb529eadecdaf0b63` |
+| `INTEGRATED_BUILD_PROTOCOL.md` | `9f6b36fdfb1a76b2b1e28e2a8294ecf589c4ba4bf4c5c053379164eca95b9a1f` |
+| `FIELD_CONTEXT_PROTOCOL.md` | `450b171ca212c7bf462bf87e98f5f14deff4bb9fd91204131405fdec29aa5632` |
+| `LATE_SCORE_PROTOCOL.md` | `a6b6b3a8709c54b5001a5a8168574bbabd6031f9d633d10698361e8c9b86095d` |
+| `HALF_CONTEXT_PROTOCOL.md` | `6619c3aa81b35b7f57ef3503f79bfa6d1963be0e7223d90379bf1f13adadec72` |
+| `TIMEOUT_BUDGET_PROTOCOL.md` | `abe8f2ad6b8c3b80f5dde5d8a14c0654e63d72959cadcf51485313f9b9f3ea0e` |
+| `TIMEOUT_SUPPORT_PROTOCOL.md` | `beedd471ad8bfcde55c843a503552210061259247509d531a2a32e812d59cea8` |
+| `LAST300_PROTOCOL.md` | `e9c110f68438ff5d03ca9c10e5cb44a1a76ea8400213f1f9a52e0f53c20a6cfb` |
+| `COMPOUND_TIMEOUT_PROTOCOL.md` | `69496ce56ad41cc61289b4015a7dfc754bde6eef231ebdb8b9ee79612ca3f422` |
+| `TWO_STAGE_TIMEOUT_PROTOCOL.md` | `fd32157850b849776849ce997342516ef00f5a8cf94f13c10bd40e4d7e032434` |
+| `STOP_CLOCK_PROTOCOL.md` | `8c4cc7170a04cc7404f0509f7f375bd715429414b62096ad37ca65860e8ea330` |
+| `COMPETING_TIMEOUT_PROTOCOL.md` | `a64aba1199e0eb1a4c21fe930397029ce6a210d1162b458340d4b0af319a0161` |
+| `RELOAD_PROTOCOL.md` | `890f3c69dd41e1a17795636fd0f3d534b6f0a7e95e56a8a5a94d25cd49922447` |
+| `PHANTOM_STOP_PROTOCOL.md` | `31e17ca78643a576d9c6daa51629381d6b58fb2f3d8ad0670240ecec5a6f7c75` |
+| `RUNNING_CLOCK_PROTOCOL.md` | `29751194d64dae2f8b615e98469244960bff375fb3dd420bc81fc2f75065a1c2` |
+| `RESIDUAL_BACKOFF_PROTOCOL.md` | `6a506548059300cfda997f47140872642f5ec6542d453c68880d5500663c07b4` |
+| `TWO_MINUTE_WARNING_PROTOCOL.md` | `cd0444d2df3d1730b844acee8455282479398ce77cadfb302ebf675040cce21e` |
+| `LATE_PLAY_CONTEXT_PROTOCOL.md` | `af423726a37f40089d9c4875ef4a8f8429039178bc58d15a239190890d15a308` |
+| `ACCOUNTING_PROTOCOL.md` | `93ebff10bc13e8626391a9e44a699217319c0da83c1bcbd0f0c639427eb50d4f` |
+| `accounting.py` | `ef34d0e08f7cc29efe75843fce8b892153d1a82b604bf8ed0bb0cfec427428d1` |
+| `ROLE_MARGINAL_PROTOCOL.md` | `69f4a0b52c595645b26be643df9308960459a3025118f64622d443b84993fd38` |
+| `role_marginal_check.py` | `6ec3c3f2486bccd5ac93d1f577f17284ac463f8099ce93a46cc9c1840a97715e` |
+
+Package files (from the manifest):
+
+| file | sha256 | canonical sha256 |
+|---|---|---|
+| `model.json.gz` | `b62de8ad6051e57efa2286178ab87eb9ba9464ed95380fe98c0ef42a7ff299c9` | `f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d` |
+| `batch.json.gz` | `4dd95a405c458a1206d59b71af4d324f9db27903ec1ea1b43a7ae419fc8c3b77` | `32b9d8ef2b93bf29f5c901c490ec77e2233256e4312dda06def8ae5cac3a87c6` |
+| `gate.json.gz` | `13400aee4d60cfa0ddeeb0702a57f6b316abd8e1224d996bb28aedfaaf39ff8b` | `85a464b55dce9ca3486e80f4cd45d64be4552d54e9ada25a09a3f6ec9893ce82` |
+| `calibration.json.gz` | `6b10388ecf5d5a80368d24f1a9ef8de5b78c084df604a08c0dee719bf0ddfaed` | `6b3ade2c8cdf2d6689ea07a86849d27abbbfad456d8fffb93b3f8b4319b3ea49` |
+| `replay.json.gz` | `b2169a6c07fd7de7ae008d7c589e520f29496b037e509699383bd1e17c999331` | `5548c35e777b5ebfff741169703191d828e56ffa0be8040ad5bc6f5dde0a7527` |
+| `runtime-source.json.gz` | `cdfffe8041011da0311ab45e3b8df1b3bd6f776e0ae001b9f5b96229f135696e` | `439d361e8e7d01b546555e64c6ef6e0c84fca753cbf085f0c9fcf1a394bc855d` |
+
+Still held after this pin: team fitting, any 2024 download or evaluation, and further team-layer
+work. These wait for the pin read-back and this protocol's separate agreement. The 2023 comparison
+shows no superiority, and the disclosed kneel and approximation limitations remain.
 
 ## 1. Evidence eligibility (cutoff safety)
 - An evidence game E may inform target game G only if all of these hold:
@@ -80,9 +167,15 @@ templates split into four groups:
   - F's total probability mass and its internal proportions never change.
   - So turnover, penalty, kick, timeout and clock-event shares stay at league level.
 
+**Sign convention (amendment A1, 2026-11-06).** `b_d` and `h_d` are what a defense *allows*: the
+shared ridge (`matchup.py`, `defense_allowed`) estimates them from residuals with the offense
+effect removed, so a positive value means opponents gain more or pass more against that defense.
+They are therefore **added**. The earlier draft's `a_o − b_d` and `g_o − h_d` would have inverted
+every defense; no fit or evaluation ever used them.
+
 The adjustment works in two steps.
 1. **Run/pass split.** The combined mass `M = P(G_run) + P(G_pass)` is fixed. The pass share
-   `q = P(G_pass)/M` becomes `q' = logistic(logit(q) + g_o − h_d)`.
+   `q = P(G_pass)/M` becomes `q' = logistic(logit(q) + g_o + h_d)`.
    - **Degenerate contexts:** when `M = 0`, `q = 0` or `q = 1`, the split is left unchanged and
      counted as `split_degenerate`. A one-sided context is never given a group it has no
      templates for.
@@ -90,7 +183,7 @@ The adjustment works in two steps.
 2. **Gain tilt within each group.** Each template weight is multiplied by `exp(λ·y_t)`, where `y_t`
    is the template's source-recorded signed yards: sacks are negative and incompletions are 0.
    - The group is then renormalized back to its new mass.
-   - λ is the numerical root of `E_λ[y] = E_0[y] + (a_o − b_d)` on the group's own templates.
+   - λ is the numerical root of `E_λ[y] = E_0[y] + (a_o + b_d)` on the group's own templates.
      - Solved by bisection on λ ∈ [−0.5, 0.5].
      - Stops at |residual| ≤ 1e-6 yards or after 200 iterations.
    - If the target is outside the attainable range at the bracket ends, nothing is clamped:
@@ -102,11 +195,22 @@ The adjustment works in two steps.
 moves mass between recorded templates. The existing survival correction then runs after the draw,
 unchanged. This is disclosed as an approximation.
 
-**Zero coefficients:** when every coefficient for a game is 0, the sampler takes the **unchanged
-0.2.10.1 code path** and makes no extra RNG calls. A test checks bit-for-bit equality of full traces
-for 1,000 seeds.
+**Zero coefficients (amendment A3, 2026-11-07, before any fit):** when every coefficient for a game
+is 0, the sampler takes the **unchanged code path of the §0-pinned base**: v0.2.24, model
+`f0b8ab26…512d`, with the runtime archived in `artifacts/v0.2.24`. It makes no extra RNG calls.
+- A test checks bit-for-bit equality of full traces for 1,000 seeds (1701–2700, old OT).
+- The comparison is against the pinned package's saved `model.json.gz` run under its archived
+  runtime.
+- No other baseline may be substituted.
+- The earlier draft named the 0.2.10.1 code path, which predates the pin. Elo flagged this on #237
+  (comment 6705128172).
 
-**Clock, timeouts and kicking stay league-level** in v0.3.0. This is listed as a limitation.
+**Clock, timeouts and kicking stay league-level** in v0.3.0. This is listed as a limitation. With a
+two-stage base (timeout decision, then play), the mapping applies only to the stage-2 play table
+(amendment A2).
+
+**Reference implementation:** `research/game_sim/team_layer/` implements sections 1–3 as pure
+functions with synthetic tests. It is not wired into any engine before the section-0 base exists.
 
 ## 4. Data, exposure and splits
 - **Fit / evidence seasons:** 2022 and 2023 REG play-by-play, which is already inspected, plus
@@ -186,3 +290,91 @@ go-ahead.
 ## 8. Not in scope
 Player workloads, weather, QB-specific effects (absorbed by the team effect and disclosed),
 2025/2026 forecasts, database writes, notifications, member UI.
+
+## Result (2026-11-07, appended after the run and scoring; nothing above was changed)
+Run `artifacts/team-0.3.0`, code `98d71ba`, scorer `972876d` (committed before any 2024 outcome
+was read), shards committed at `5f53b34` before scoring.
+
+**Inputs**
+- 2024 play-by-play `23370d5d…0c06` and `games.csv` `9150a9d8…0f00`, both retrieved
+  2026-11-07T09:39:57Z.
+- The generated exclusion list is **empty**. The canceled 2022 BUF–CIN week-17 game is absent from
+  both sources (271 REG games in 2022 in each), not present without a result, so it never becomes
+  evidence. The example in section 1 does not occur in these sources.
+- Evidence: 100,823 pass-rate plays and 98,834 gain plays. 1,989 turnover plays are kept in the
+  rate ridge and left out of the gain ridge; 374 rows were excluded for missing fields.
+- Every target passed `check_cutoff`. `rate_degenerate` occurred 0 times.
+- Rate-cell fallback levels, in play-target units: level 0: 17,973,850; level 1: 338,081;
+  level 2: 4,203.
+
+**Coefficients across 544 possession sides**
+
+| effect | min | median | max |
+|---|---:|---:|---:|
+| `a_o` | −1.115 | −0.038 | 1.368 |
+| `b_d` | −0.738 | 0.013 | 0.719 |
+| `g_o` | −0.328 | −0.023 | 0.409 |
+| `h_d` | −0.230 | −0.002 | 0.250 |
+
+**Runs**
+- 272 games × 2,000 runs × arms A and D: 1,088,000 simulated games, **0 failed**.
+- 5,329 s wall-clock on 4 processes, 8 shards with their SHA256 in `shards.json`.
+- A spot re-run of game 0 reproduced its shard result exactly.
+- Mean Monte Carlo SE of each game's simulated mean is about 0.29 points (margin and total, both
+  arms).
+- Arm D mapping counts, in draw units:
+  - adjusted draws: 82,593,276
+  - `split_degenerate`: 4,787,844
+  - `tilt_degenerate`: 3,610,364
+  - `tilt_unattainable`: 1,507,861
+- Arm C SDs from 2022–2023 (543 games): margin 12.273, total 13.191.
+- Seed note: run j of game i uses seed 1701 + i + j, so neighbouring games share most of their run
+  seeds within each arm. A and D stay exactly paired, but Monte Carlo noise is correlated across
+  games. This is disclosed, not corrected.
+
+**Metrics** (272 games)
+
+| arm | margin CRPS | total CRPS | Brier (home win) | 80% cov. margin | 80% cov. total |
+|---|---:|---:|---:|---:|---:|
+| A (zero coefficients) | 8.1247 | 7.2807 | 0.2502 | 75.7% | 80.5% |
+| B (historical baseline) | 8.0824 | 7.4017 | 0.2497 | 73.5% | 83.1% |
+| C (assumed market normal) | 7.0447 | 6.9918 | 0.2013 | 77.9% | 84.6% |
+| **D (team layer)** | **7.4832** | **7.3297** | **0.2186** | **78.3%** | **80.1%** |
+
+Paired differences, bootstrap 10,000 resamples, seed 20261028, 95% percentile:
+
+| difference | mean | 95% CI |
+|---|---:|---|
+| D−A margin CRPS | −0.642 | [−1.014, −0.269] |
+| D−A total CRPS | +0.049 | [−0.283, +0.377] |
+| D−A Brier | −0.0316 | [−0.0479, −0.0145] |
+| D−C margin CRPS | +0.439 | [+0.150, +0.736] |
+| D−C total CRPS | +0.338 | [+0.108, +0.570] |
+| D−C Brier | +0.0173 | [+0.0046, +0.0297] |
+| D−B margin CRPS | −0.599 | [−1.002, −0.193] |
+| D−B total CRPS | −0.072 | [−0.412, +0.266] |
+
+**Decision (A), research acceptance: PASSED.**
+- D−A margin CRPS is below 0, with a CI that excludes 0.
+- D−A total CRPS has a CI that includes 0.
+- D's 80% coverage is 78.3% for margin and 80.1% for total, both within ±5 points.
+
+Passing (A) only allows the team layer to become the base for the player protocol.
+
+**Decision (B), member/market qualification: FAILED on all three statistical criteria.** D is
+shown to be worse than the assumed market reference C on:
+- margin CRPS (CI entirely above 0)
+- total CRPS (CI entirely above 0)
+- home-win Brier (CI entirely above 0)
+
+So (B) does not pass, whatever the owner decides. Nothing is tuned on 2024, and no metric or
+threshold was added after outcomes were read.
+
+**Limits**
+- C is an assumed normal on nflverse's retrospective closing lines, not verified timestamped
+  prices.
+- The team layer moves only run/pass mix and gain within the stage-2 play table. Clock, timeouts,
+  kicking and turnovers stay league-level.
+- QB-specific effects are absorbed into team effects.
+- These are research results only: `approval: false`, no forecasts, picks, member use, merge or
+  deploy.

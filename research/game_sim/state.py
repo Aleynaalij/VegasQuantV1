@@ -94,6 +94,8 @@ def transition(s:State,a:Action)->Event:
         return Event(s,a,n)
     if s.clock==0 and s.phase!='try':raise ValueError('advance the period first')
     n=replace(s,clock=s.clock-a.elapsed)
+    # Two-minute warning (TWO_MINUTE_WARNING_PROTOCOL.md, v0.2.22): the clock stops at 2:00 in Q2, Q4, OT.
+    if s.period in (2,4,5) and s.clock>120 and n.clock<120:n=replace(n,clock=120)
     if a.kind=='timeout':
         if a.timeout_side not in ('home','away') or a.elapsed or a.yards:raise ValueError('invalid timeout')
         key=f'{a.timeout_side}_timeouts'
@@ -119,7 +121,7 @@ def transition(s:State,a:Action)->Event:
         if y>=s.yardline:y=max(0,s.yardline//2)
         if -y>=100-s.yardline:y=-((100-s.yardline)//2)
         spot=s.yardline-y
-        if a.automatic_first:n=new_series(n,s.possession,spot)
+        if a.automatic_first or y>=s.distance:n=new_series(n,s.possession,spot)
         elif a.loss_of_down and s.down==4:n=new_series(n,other(s.possession),100-spot)
         else:n=replace(n,yardline=spot,down=s.down+int(a.loss_of_down),distance=max(1,s.distance-y))
     elif a.kind=='defensive_touchdown':
