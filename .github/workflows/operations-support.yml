@@ -33,7 +33,12 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
       - run: |
           npm install --no-save playwright@1.56.1
-          npx playwright install --with-deps chromium
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install --with-deps chromium
+          fi
       - name: Run synthetic report and queue journeys
         run: |
           node scripts/ui-smoke/stub.mjs &
