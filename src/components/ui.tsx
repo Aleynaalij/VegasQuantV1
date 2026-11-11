@@ -124,7 +124,9 @@ export function Shell({
     : "home";
   const nflHref = (
     {
-      community: "/community",
+      // The Zone's default view is every sport, so the NFL chip has to name its sport: a bare
+      // /community link from the Zone points at the page you are already on and does nothing.
+      community: "/community?sport=nfl",
       home: SPORTS.nfl.home,
       game: "/matchups",
       feed: "/feed",

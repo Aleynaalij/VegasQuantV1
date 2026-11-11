@@ -26,6 +26,7 @@ import { gamePicksPath } from "@/lib/game-picks";
 import { homeGamePath } from "@/lib/journey";
 import NgsContext from "./ngs-context";
 import HomeGameList from "./home-game-list";
+import GameZonePosts from "./game-zone-posts";
 function Fields({ value }: { value: unknown }) {
   if (value == null) return <p className="muted">Not supplied.</p>;
   if (Array.isArray(value))
@@ -684,6 +685,7 @@ export default function MatchupIntelligence({
             {playerResearchAllowed && (!selected || current?.id === versions[0]?.id) && (
               <HomeGameList key={row.game.id} games={[row.game]} focused />
             )}
+            <GameZonePosts key={`zone-${row.game.id}`} sport="nfl" gameId={row.game.id} />
             {loading && !current ? (
               <p role="status">Loading game research…</p>
             ) : error && !current ? (

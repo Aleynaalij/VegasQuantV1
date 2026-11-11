@@ -11,6 +11,7 @@ import { Shell } from "../ui";
 import SportLogo from "./sport-logo";
 import SportMarkets from "./sport-markets";
 import NhlGameReport from "./nhl-game-report";
+import GameZonePosts from "../game-zone-posts";
 
 const RESULT: Record<string, string> = {
   AWAITING_FINAL: "Awaiting the final",
@@ -177,6 +178,7 @@ export default function SportGame({
                 selections.
               </p>
             )}
+            <GameZonePosts key={`zone-${raw.id}`} sport={sport} gameId={raw.id} />
             {sport === "nhl" && page!.access ? <NhlGameReport gameId={raw.id} /> : null}
             {page!.access && injuries ? (
               <section className="sport-injuries">

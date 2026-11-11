@@ -37,7 +37,6 @@ import BeatTheClose from "./beat-the-close";
 import MyTailRecord from "./my-tail-record";
 import RubyHub from "./ruby-cards";
 import HomeBrief from "./home-brief";
-import VqTonight from "./vq-tonight";
 import HomeRecordCard from "./home-record";
 import HomeGameList from "./home-game-list";
 import LiveNow from "./sport/live-now";
@@ -388,9 +387,6 @@ export default function DeskApp({
         )}
         {page === "home" && (
           <>
-            <SectionBoundary name="VQ Tonight">
-              <VqTonight nflGames={d.games} />
-            </SectionBoundary>
             <SectionBoundary name="Track record">
               <HomeRecordCard />
             </SectionBoundary>
