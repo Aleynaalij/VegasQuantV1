@@ -31,7 +31,8 @@ insert into public.nba_games values
  ('${G(11)}','Boston Celtics','Philadelphia 76ers','BOS','PHI','2026-11-11 01:00+00'),
  ('${G(12)}','Orlando Magic','Sacramento Kings','ORL','SAC','2026-11-11 03:00+00'),
  ('${G(13)}','Oklahoma City Thunder','Portland Trail Blazers','OKC','POR','2026-11-12 03:00+00'),
- ('${G(14)}','Oklahoma City Thunder','Portland Trail Blazers','OKC','POR','2026-11-14 03:00+00');
+ ('${G(14)}','Oklahoma City Thunder','Portland Trail Blazers','OKC','POR','2026-11-14 03:00+00'),
+ ('${G(15)}','Philadelphia 76ers','Boston Celtics','PHI','BOS','2026-11-13 01:00+00');
 create table public.nba_editorial_picks(id uuid default gen_random_uuid(), game_id uuid, player text, published_at timestamptz);
 insert into public.nba_editorial_picks(game_id,player,published_at) values ('${G(11)}','Payton Pritchard','2026-11-10 14:12:22.928614+00');
 create table public.sports_games(id uuid primary key, sport text, start_time timestamptz, payload jsonb);
@@ -71,6 +72,11 @@ assert.deepEqual(await games(await post("nba", "NBA Matchup Cheat Sheet · Bosto
 assert.deepEqual(await games(await post("nba", "Payton Pritchard Under 12.5 points", "Boston and Philadelphia both submitted.", { at: "2026-11-10 14:12:22.928614+00" })), [G(11)]);
 assert.deepEqual(await games(await post("nba", "Payton Pritchard Under 12.5 points", "x", { at: "2026-11-10 15:00+00" })), [], "a pick with no recorded link is not guessed");
 assert.deepEqual(await games(await post("nba", "3-point volume · Tue Nov 10", "1. Desmond Bane (ORL) 9.5 att\n6. Paul George (BOS) 8.1 att", { card: "nba-threes:2026-11-10", at: "2026-11-10 14:20+00" })), [G(11), G(12)]);
+// Home-and-home inside the window: "vs" matches either order, but only the nearest game is tagged;
+// naming the return game in its own order still reaches it.
+assert.deepEqual(await games(await post("nba", "Celtics vs 76ers preview", "x")), [G(11)]);
+assert.deepEqual(await games(await post("nba", "76ers vs Celtics preview", "x")), [G(11)]);
+assert.deepEqual(await games(await post("nba", "Philadelphia 76ers @ Boston Celtics preview", "x")), [G(15)]);
 assert.deepEqual(await games(await post("nba", "Thunder @ Trail Blazers preview", "x")), [G(13)],
   "two-word nickname; a repeat meeting two days later is not tagged too");
 // 3. NHL: "at" form and the recorded charts link.

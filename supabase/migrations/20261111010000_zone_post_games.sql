@@ -73,7 +73,8 @@ begin
    and i.start_time between p.created_at - interval '6 hours' and p.created_at + interval '8 days'
    order by i.start_time, i.game_id loop
   -- Teams that meet twice inside the window: a post belongs to the nearest game only.
-  pair := g.away || '|' || g.home;
+  -- Unordered, because the "vs" form matches either order: a home-and-home pair is still one matchup.
+  pair := least(g.away, g.home) || '|' || greatest(g.away, g.home);
   continue when pair = any(seen);
   a := private.zone_side_rx(g.sport, g.away, g.away_short);
   h := private.zone_side_rx(g.sport, g.home, g.home_short);
