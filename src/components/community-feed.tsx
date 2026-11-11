@@ -10,6 +10,8 @@ import {
 } from "react";
 import Link from "next/link";
 import RubyHub from "./ruby-cards";
+import NhlChartPreview from "./nhl-chart-preview";
+import { nhlChartRef } from "@/lib/nhl-chart-package";
 import { memberProfileLink } from "@/lib/member-profile";
 import { Shell } from "./ui";
 import { supabase } from "@/lib/supabase";
@@ -1847,7 +1849,7 @@ export default function CommunityFeed() {
                       {p.title !== "Community post" ? (
                         <h2 className="zone-post-title">{p.title}</h2>
                       ) : null}
-                      {weeklyCardRef(p.card) || positionCardPostId(p) ? (
+                      {nhlChartRef(p.card) ? (<NhlChartPreview id={nhlChartRef(p.card)!} body={p.body} />) : weeklyCardRef(p.card) || positionCardPostId(p) ? (
                         <figure
                           className="zone-card zone-media"
                           onDoubleClick={() => {
