@@ -124,12 +124,34 @@ try {
         await chart.getByRole("button", { name: "Next chart" }).click();
     }
     await chart.getByRole("button", { name: "Previous chart" }).click();
-    await chart.dispatchEvent("touchstart", { touches: [{ clientX: 300 }] });
-    await chart.dispatchEvent("touchend", {
-      changedTouches: [{ clientX: 100 }],
+    await chart.evaluate((el) => {
+      const start = new Touch({
+        identifier: 1,
+        target: el,
+        clientX: 300,
+        clientY: 100,
+      });
+      el.dispatchEvent(
+        new TouchEvent("touchstart", { bubbles: true, touches: [start] }),
+      );
+      const end = new Touch({
+        identifier: 1,
+        target: el,
+        clientX: 100,
+        clientY: 100,
+      });
+      el.dispatchEvent(
+        new TouchEvent("touchend", {
+          bubbles: true,
+          touches: [],
+          changedTouches: [end],
+        }),
+      );
     });
     assert.match(await chart.locator("nav").innerText(), /3 \/ 3/);
-    await chart.getByText("Full chart data, sources & gaps", { exact: true }).click();
+    await chart
+      .getByText("Full chart data, sources & gaps", { exact: true })
+      .click();
     assert.match(await chart.innerText(), /Data collected/);
     assert.match(await chart.innerText(), /—/);
     assert.equal(
@@ -149,7 +171,9 @@ try {
     );
     failed = true;
     await page.reload({ waitUntil: "networkidle" });
-    await chart.getByText("Full chart data, sources & gaps", { exact: true }).click();
+    await chart
+      .getByText("Full chart data, sources & gaps", { exact: true })
+      .click();
     await chart
       .getByText("Chart source details could not load.", { exact: false })
       .waitFor();
