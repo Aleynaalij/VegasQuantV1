@@ -1,3 +1,4 @@
+import type { OperationsTraffic } from "./operations-traffic";
 import type { OperationsFeedHealth } from "./operations-feed-health";
 
 export const operationFeatures = [
@@ -59,6 +60,7 @@ export type OperationResult =
       state: "ready";
       tickets: Ticket[];
       next: TicketCursor | null;
+      traffic?: OperationsTraffic;
       release?: OperationsRelease | null;
       feedHealth?: { checkedAt: string; feeds: OperationsFeedHealth[] };
     }
