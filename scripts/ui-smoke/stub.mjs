@@ -1,6 +1,7 @@
 // Minimal Supabase stand-in for UI smoke tests. All data is synthetic ("Sample …").
 // Usage: node scripts/ui-smoke/stub.mjs  (listens on 127.0.0.1:54321)
 import http from "node:http";
+import fs from "node:fs";
 
 const NOW = "2026-10-14T02:00:00Z"; // the smoke test pins the browser clock here
 const games = [
@@ -44,6 +45,7 @@ http.createServer((req, res) => {
   const u = decodeURIComponent(req.url || "");
   const rpc = (name) => u.startsWith(`/rest/v1/rpc/${name}`);
   if (u.startsWith("/__stub/desk")) { deskFails = u.includes("fail=1"); return json(res, { deskFails }); }
+  if (rpc("nhl_chart_snapshot")) return json(res, JSON.parse(fs.readFileSync("tests/fixtures/nhl-chart.json", "utf8")));
   if (rpc("desk_data")) return deskFails ? json(res, { message: "synthetic desk failure" }, 500) : json(res, desk);
   if (rpc("matchup_directory")) return json(res, games.map((game) => ({ game, analysis: null, market: null })));
   if (rpc("public_research_status")) return json(res, { updated_at: NOW, games: [], results: [{ id: "r1", game: "BUF @ LAR", published_at: pick.created_at, selection: pick.selection, odds: -110, result: "WIN", profit_cents: 1818, stake_cents: 2000, closing_recorded: false }] });

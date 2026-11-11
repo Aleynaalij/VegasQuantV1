@@ -1,0 +1,71 @@
+.nhl-chart-package {
+  min-width: 0;
+  max-width: 100%;
+}
+.nhl-chart-package > img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+}
+.nhl-chart-package nav {
+  font-size: 14px;
+  color: #f4dc99;
+}
+.nhl-chart-package nav button {
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid #e8ca7d66;
+  border-radius: 12px;
+  background: #12382a;
+  color: #f4dc99;
+  font-size: 22px;
+}
+.nhl-chart-package nav button:disabled {
+  opacity: 0.4;
+}
+.nhl-chart-package nav button:focus-visible,
+.nhl-chart-package a:focus-visible {
+  outline: 2px solid #e8ca7d;
+  outline-offset: 3px;
+}
+.nhl-chart-package .threes-card-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 15px;
+}
+.nhl-chart-package .publication-analysis > summary {
+  padding: 14px 0;
+  cursor: pointer;
+  color: #f4dc99;
+}
+.nhl-chart-package .publication-analysis {
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.5;
+}
+.nhl-chart-package .publication-analysis a {
+  overflow-wrap: anywhere;
+}
+.nhl-chart-package table {
+  border-collapse: collapse;
+  font-size: 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+.nhl-chart-package th,
+.nhl-chart-package td {
+  padding: 8px;
+  border-bottom: 1px solid #e8ca7d33;
+}
+.nhl-chart-package th {
+  color: #f4dc99;
+}
+.nhl-chart-package .publication-analysis ul {
+  padding-left: 20px;
+}
+.nhl-chart-package .publication-analysis li {
+  margin-bottom: 12px;
+}
