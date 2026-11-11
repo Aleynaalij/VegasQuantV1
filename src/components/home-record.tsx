@@ -3,12 +3,13 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useIsAdmin } from "@/lib/use-admin";
 import { HOME_RECORD_RULE, type HomeRecord } from "@/lib/track-record";
+import styles from "@/app/record-presentation.module.css";
 
 const pct = (n: number | null) => (n === null ? "—" : `${Math.round(n)}%`);
 const signed = (n: number) => `${n >= 0 ? "+" : "−"}${Math.abs(n).toFixed(1)}`;
 
 /**
- * Home leads with the official record once it has earned the spot (HOME_RECORD_RULE). Every number
+ * Home shows the official record once it has earned the spot (HOME_RECORD_RULE). Every number
  * sits beside the others: wins never appear without units, ROI and closing-line value.
  */
 export default function HomeRecordCard() {
@@ -28,16 +29,29 @@ export default function HomeRecordCard() {
   }, []);
   if (!r || (!r.visible && !admin)) return null;
   return (
-    <section className="home-record" aria-labelledby="home-record-title">
+    <section
+      className={`home-record ${styles.card}`}
+      aria-labelledby="home-record-title"
+    >
       {!r.visible ? (
         <p className="home-record-preview">
-          Admin preview. Members see this once{" "}
+          <strong>Admin preview.</strong> Members see this once{" "}
           {HOME_RECORD_RULE.profitableAfter}+ official picks are in profit, or
           at {HOME_RECORD_RULE.alwaysAfter} picks either way ({r.picks} so far).
         </p>
       ) : null}
       <div className="home-record-head">
-        <h2 id="home-record-title">The Vegas Quant record</h2>
+        <div className={styles.identity}>
+          <span className={styles.monogram} aria-hidden="true">
+            VQ
+          </span>
+          <div>
+            <span className={styles.eyebrow}>
+              Published picks · original prices
+            </span>
+            <h2 id="home-record-title">The Vegas Quant record</h2>
+          </div>
+        </div>
         <small>
           {r.picks} graded official picks
           {r.since
@@ -48,10 +62,13 @@ export default function HomeRecordCard() {
       <dl className="home-record-stats">
         <div>
           <dt>Record</dt>
-          <dd>
+          <dd
+            aria-label={`${r.wins} wins, ${r.losses} losses, ${r.pushes} pushes`}
+          >
             {r.wins}–{r.losses}
             {r.pushes ? `–${r.pushes}` : ""}
           </dd>
+          <small>Wins · losses{r.pushes ? " · pushes" : ""}</small>
         </div>
         <div>
           <dt>Hit rate</dt>
