@@ -62,3 +62,10 @@ jobs:
           node scripts/ui-smoke/auth-flows.mjs
           node scripts/ui-smoke/save-share-recovery.mjs
           node scripts/ui-smoke/records-membership.mjs
+      - name: Save NHL chart phone and desktop previews
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nhl-chart-previews
+          path: artifacts/ui-smoke/nhl-charts-*.png
+          if-no-files-found: ignore

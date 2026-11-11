@@ -100,9 +100,11 @@ try {
     await page.goto(base + "/community", { waitUntil: "networkidle" });
     const chart = page.locator(".nhl-chart-package");
     await chart.waitFor();
+    await chart.scrollIntoViewIfNeeded();
     for (let i = 1; i <= 3; i++) {
       const img = chart.locator(`img[src$="/${i}"]`);
       await img.waitFor();
+      await img.scrollIntoViewIfNeeded();
       await page.waitForFunction(() => {
         const i = document.querySelector(".nhl-chart-package img");
         return i?.complete && i.naturalWidth === 1080;
@@ -127,7 +129,7 @@ try {
       changedTouches: [{ clientX: 100 }],
     });
     assert.match(await chart.locator("nav").innerText(), /3 \/ 3/);
-    await chart.locator("summary").click();
+    await chart.getByText("Full chart data, sources & gaps", { exact: true }).click();
     assert.match(await chart.innerText(), /Data collected/);
     assert.match(await chart.innerText(), /—/);
     assert.equal(
@@ -147,7 +149,7 @@ try {
     );
     failed = true;
     await page.reload({ waitUntil: "networkidle" });
-    await chart.locator("summary").click();
+    await chart.getByText("Full chart data, sources & gaps", { exact: true }).click();
     await chart
       .getByText("Chart source details could not load.", { exact: false })
       .waitFor();
