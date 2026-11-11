@@ -1,0 +1,162 @@
+/* Zone polls: composer fields and the poll card under a post. */
+.zone-poll {
+  margin: 12px 0 4px;
+  padding: 12px;
+  border: 1px solid #8be8b855;
+  border-radius: 14px;
+  background: #0f1d19;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.zone-poll legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  font-weight: 700;
+  color: #eafff5;
+}
+.zone-poll legend svg {
+  color: #8be8b8;
+  flex: none;
+}
+.zone-poll-option {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #8be8b866;
+  background: transparent;
+  color: #eafff5;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  overflow: hidden;
+  isolation: isolate;
+}
+.zone-poll-option::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--zone-poll-share, 0%);
+  background: #8be8b826;
+  z-index: -1;
+  transition: width 0.35s ease;
+}
+.zone-poll-option:hover:not(:disabled),
+.zone-poll-option:focus-visible {
+  border-color: #8be8b8;
+  outline: none;
+}
+.zone-poll-option.is-mine {
+  border-color: #8be8b8;
+  box-shadow: inset 0 0 0 1px #8be8b8;
+}
+.zone-poll-option.is-mine::before {
+  background: #8be8b84d;
+}
+.zone-poll-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.zone-poll-percent {
+  font-weight: 800;
+  color: #8be8b8;
+  flex: none;
+}
+.zone-poll-meta {
+  color: #9fbdb1;
+}
+.zone-poll-composer {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0;
+  padding: 12px;
+  border: 1px dashed #8be8b866;
+  border-radius: 14px;
+}
+.zone-poll-composer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.zone-poll-composer input {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid #3c4a45;
+  background: #0b1311;
+  color: #eafff5;
+  font: inherit;
+}
+.zone-poll-composer-option {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.zone-poll-remove {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid #3c4a45;
+  background: transparent;
+  color: #c6d8d0;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  .zone-poll-option::before {
+    transition: none;
+  }
+}
+
+/* The Poll control is a real <button>: drop browser button chrome so it matches the Photo label,
+   and let the composer bar wrap on narrow phones now that it holds one more control. */
+.zone-feed .zone-composer-bar {
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+.zone-feed button.zone-icon-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+/* Site-wide pressed-button styles (gold fill) must not repaint poll options. */
+.zone-feed .zone-poll .zone-poll-option,
+.zone-feed .zone-poll .zone-poll-option[aria-pressed="true"] {
+  background: transparent;
+  color: #eafff5;
+  box-shadow: none;
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+}
+.zone-feed .zone-poll .zone-poll-option.is-mine {
+  border-color: #8be8b8;
+  box-shadow: inset 0 0 0 1px #8be8b8;
+  font-weight: 700;
+}
+.zone-feed .zone-poll .zone-poll-option.is-mine .zone-poll-percent {
+  color: #c9ffe4;
+}
+/* lounge.css paints every pressed button gold with !important; a poll choice keeps the Zone look. */
+html[data-theme] body .zone-feed .zone-poll .zone-poll-option[aria-pressed="true"] {
+  background: transparent !important;
+  border-color: #8be8b8 !important;
+  color: #eafff5 !important;
+  box-shadow: inset 0 0 0 1px #8be8b8 !important;
+}

@@ -2,6 +2,26 @@
 // Reuses the production trusted-clock rail/viewer; does not post or modify any real account.
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
+// Schedule fixtures must belong to the day actually requested by the browser, including
+// runs near ET midnight and 23/25-hour DST days. Never replace the story's real clocks.
+function scheduledFixtureTimes(url) {
+  const filters = url.searchParams.getAll("tipoff");
+  const starts = filters.filter((value) => value.startsWith("gte."));
+  const ends = filters.filter((value) => value.startsWith("lt."));
+  if (filters.length !== 2 || starts.length !== 1 || ends.length !== 1)
+    throw new Error("NBA fixture requires exactly one gte and one lt tipoff filter");
+  const start = Date.parse(starts[0].slice(4));
+  const end = Date.parse(ends[0].slice(3));
+  if (
+    !Number.isFinite(start) || !Number.isFinite(end) ||
+    end - start < 23 * 3600000 || end - start > 25 * 3600000
+  )
+    throw new Error("NBA fixture requires a valid 23–25 hour requested day");
+  return Array.from({ length: 5 }, (_, i) =>
+    new Date(start + 12 * 3600000 + i * 15 * 60000).toISOString(),
+  );
+}
+
 const { chromium } = await import(
   process.env.PLAYWRIGHT_MODULE || "playwright"
 );
@@ -284,18 +304,20 @@ async function run(
           games: [],
         },
       });
-    if (path.endsWith("nba_games"))
+    if (path.endsWith("nba_games")) {
+      const tipoffs = scheduledFixtureTimes(url);
       return route.fulfill({
         json: Array.from({ length: 5 }, (_, i) => ({
           id: `story-game-${i}`,
           slug: `sample-story-game-${i}`,
           away_team: `Sample Away ${i}`,
           home_team: `Sample Home ${i}`,
-          tipoff: new Date(now + (30 + i * 15) * 60000).toISOString(),
+          tipoff: tipoffs[i],
           status: "STATUS_SCHEDULED",
           tipoff_tbd: false,
         })),
       });
+    }
     return route.fulfill({ json: [] });
   });
   const page = await ctx.newPage();

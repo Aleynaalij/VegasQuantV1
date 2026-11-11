@@ -133,8 +133,8 @@ async function verifyCombinedRoutes() {
     await page.goto(base + "/community/FixtureHeaderMember");
     assert.equal(
       (await page.locator(".breadcrumb b").textContent())?.trim(),
-      "Sports desk",
-      "a neutral profile must not claim the NFL desk",
+      "The Zone",
+      "a member profile belongs to The Zone, not the NFL desk",
     );
     console.log(`PASS 9 desk/game/neutral header assertions at ${width}px`);
     const response = await ctx.request.get(

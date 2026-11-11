@@ -7,7 +7,7 @@
 const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || "playwright");
 
 const BASE = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
-const MEMBER_RPCS = /\/rest\/v1\/rpc\/(community_feed|community_post|community_activity|community_member|community_post_comments)\b/;
+const MEMBER_RPCS = /\/rest\/v1\/rpc\/(community_feed|community_post|community_activity|community_member|community_profile|community_post_comments)\b/;
 const browser = await chromium.launch(process.env.PLAYWRIGHT_EXECUTABLE ? { executablePath: process.env.PLAYWRIGHT_EXECUTABLE } : {});
 const failures = [];
 for (const width of [360, 390, 1280]) {

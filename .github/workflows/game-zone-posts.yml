@@ -1,0 +1,52 @@
+name: Game Zone posts
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261111010000_zone_post_games.sql"
+      - "src/components/game-zone-posts.tsx"
+      - "src/lib/game-zone-posts.ts"
+      - "src/app/game-zone-posts.css"
+      - "src/components/matchup-intelligence.tsx"
+      - "src/components/nba-game-detail.tsx"
+      - "src/components/sport/sport-game.tsx"
+      - "src/components/ui.tsx"
+      - "src/components/desk.tsx"
+      - "tests/game-zone-posts.test.ts"
+      - "tests/sql/zone-post-games.mjs"
+      - "scripts/ui-smoke/game-zone-posts.mjs"
+      - ".github/workflows/game-zone-posts.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  game-zone-posts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --import tsx --test tests/game-zone-posts.test.ts
+      - run: node tests/sql/zone-post-games.mjs
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - name: Prepare browser
+        run: |
+          npm install --no-save playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"; else npx playwright install --with-deps chromium; fi
+      - name: Matchup pages show their Zone posts; the Zone's NFL chip works
+        run: |
+          node scripts/ui-smoke/stub.mjs &
+          LIVE_SCORES_DISABLED=1 npx next start -H 127.0.0.1 -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/about && break; sleep 2; done
+          node scripts/ui-smoke/game-zone-posts.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: game-zone-posts-synthetic-evidence
+          path: artifacts/game-zone-posts

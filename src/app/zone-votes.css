@@ -1,0 +1,56 @@
+/* Reddit-style votes on Zone posts: up arrow, score, down arrow in one pill. Up is Zone green, down is
+   a muted red; the global gold pressed-button style must not repaint them. */
+html[data-theme] body .zone-feed .zone-vote,
+.zone-feed .zone-vote {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+}
+html[data-theme] body .zone-feed .zone-vote button,
+html[data-theme] body .zone-feed .zone-vote button[aria-pressed="true"] {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 999px;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #9fb3ab !important;
+  cursor: pointer;
+}
+html[data-theme] body .zone-feed .zone-vote button:hover:not(:disabled),
+html[data-theme] body .zone-feed .zone-vote button:focus-visible {
+  background: rgba(255, 255, 255, 0.07) !important;
+  outline: none;
+}
+html[data-theme] body .zone-feed .zone-vote .zone-vote-up[aria-pressed="true"] {
+  color: #8be8b8 !important;
+}
+html[data-theme]
+  body
+  .zone-feed
+  .zone-vote
+  .zone-vote-down[aria-pressed="true"] {
+  color: #ff8a80 !important;
+}
+.zone-feed .zone-vote-score {
+  min-width: 2ch;
+  padding: 0 2px;
+  text-align: center;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #eafff5;
+}
+.zone-feed .zone-vote.is-up .zone-vote-score {
+  color: #8be8b8;
+}
+.zone-feed .zone-vote.is-down .zone-vote-score {
+  color: #ff8a80;
+}

@@ -1,4 +1,5 @@
 "use client";
+import { memberProfileLink } from "@/lib/member-profile";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -621,7 +622,9 @@ export default function StoryViewer({
           <div className="story-viewer-meta">
             {post ? (
               <>
-                <b>{post.author_name}</b>
+                <Link href={memberProfileLink(post.user_id)} onClick={onClose}>
+                  <b>{post.author_name}</b>
+                </Link>
                 <small>
                   {SPORTS[post.sport].label} · {time(post.created_at)}
                   {group && group.posts.length > 1

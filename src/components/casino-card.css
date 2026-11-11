@@ -14,7 +14,7 @@
   box-shadow:
     0 18px 40px rgba(0, 0, 0, 0.45),
     inset 0 0 0 8px rgba(0, 0, 0, 0.18);
-  color: #f6f8fd;
+  color: #f6f3eb;
 }
 /* Inner gold frame, like the border printed on a card. */
 .vqc::before {
@@ -89,6 +89,8 @@
 .vqc-face {
   display: grid;
   gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 /* Keep the eyebrow and title clear of the stamp. */
 html[data-theme] body .vqc.vqc-stamped .vqc-eyebrow {
@@ -110,8 +112,8 @@ html[data-theme] body .vqc .vqc-eyebrow {
 }
 html[data-theme] body .vqc .vqc-title {
   margin: 6px 0 0;
-  max-width: calc(100% - 60px);
-  color: #f6f8fd;
+  max-width: 100%;
+  color: #f6f3eb;
   font: 800 clamp(26px, 7vw, 34px) / 1.08 var(--font-display), sans-serif;
   letter-spacing: -0.02em;
 }
@@ -120,7 +122,7 @@ html[data-theme] body .vqc .vqc-market {
   font: 700 19px/1.3 var(--font-display), sans-serif;
 }
 html[data-theme] body .vqc .vqc-matchup {
-  color: #b8c3d8;
+  color: #cbc8bb;
   font-size: 14px;
   line-height: 1.45;
 }
@@ -136,7 +138,7 @@ html[data-theme] body .vqc .vqc-matchup {
 }
 html[data-theme] body .vqc-hero small {
   grid-column: 1 / -1;
-  color: #b8c3d8;
+  color: #cbc8bb;
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.12em;
@@ -149,7 +151,7 @@ html[data-theme] body .vqc-hero strong {
 }
 html[data-theme] body .vqc-hero span {
   margin-top: 4px;
-  color: #dfe6f3;
+  color: #e6e2d7;
   font-size: 12.5px;
   font-weight: 600;
 }
@@ -160,7 +162,7 @@ html[data-theme] body .vqc .vqc-price {
   border: 1px solid var(--vqc-accent);
   border-radius: 999px;
   background: var(--vqc-accent-soft);
-  color: #f6f8fd;
+  color: #f6f3eb;
   font-size: 13px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -186,17 +188,18 @@ html[data-theme] body .vqc .vqc-price {
   font-size: 17px;
   line-height: 1;
 }
+.vqc-legs li small:empty { display: none; }
 .vqc-legs li > span {
   display: grid;
   min-width: 0;
 }
 html[data-theme] body .vqc-legs b {
-  color: #f6f8fd;
+  color: #f6f3eb;
   font-size: 15px;
 }
 html[data-theme] body .vqc-legs small {
-  color: #b8c3d8;
-  font-size: 12.5px;
+  color: #cbc8bb;
+  font-size: 14px;
   line-height: 1.4;
 }
 .vqc-legs em {
@@ -205,21 +208,21 @@ html[data-theme] body .vqc-legs small {
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #1ed883;
+  background: #8fdbb1;
   color: #06120d;
   font-style: normal;
   font-weight: 900;
   font-size: 14px;
 }
 .vqc-legs .vqc-leg-lost em {
-  background: #ff5d6c;
+  background: #e8c46a;
 }
 .vqc-legs .vqc-leg-push em {
-  background: #8a94a8;
+  background: #c9c4b8;
 }
 html[data-theme] body .vqc .vqc-footnote {
   margin-top: 8px;
-  color: #8f9bb2;
+  color: #bdb9ad;
   font-size: 11.5px;
   line-height: 1.5;
 }
@@ -238,7 +241,7 @@ html[data-theme] body .vqc-foot span {
   letter-spacing: 0.22em;
 }
 html[data-theme] body .vqc-foot time {
-  color: #8f9bb2;
+  color: #bdb9ad;
   font-size: 11.5px;
 }
 /* Gold foil sheen on the Ace (Pick of the Day) and the Jokers. */

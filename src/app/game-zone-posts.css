@@ -1,0 +1,16 @@
+/* "From The Zone" on matchup pages (all sports). Scoped under body so global button/link gold does not leak in. */
+html[data-theme] body .game-zone-posts { margin: 18px 0; padding: 16px; border: 1px solid #2f8f6b55; border-radius: 16px; background: linear-gradient(180deg, #0f2a22, #0b1512); }
+html[data-theme] body .game-zone-posts > header h2 { margin: 0; font: 700 .78rem/1.2 var(--font-body); letter-spacing: .14em; text-transform: uppercase; color: #6fe0b0; }
+html[data-theme] body .game-zone-posts > header p { margin: 4px 0 0; font-size: .84rem; color: #a9b8b1; }
+html[data-theme] body .game-zone-posts ol { list-style: none; margin: 12px 0 0; padding: 0; display: grid; gap: 10px; }
+html[data-theme] body .game-zone-posts details { border: 1px solid #ffffff14; border-radius: 12px; background: #0a1210; overflow: hidden; }
+html[data-theme] body .game-zone-posts summary { display: grid; gap: 3px; padding: 12px 14px; min-height: 44px; cursor: pointer; list-style: none; }
+html[data-theme] body .game-zone-posts summary::-webkit-details-marker { display: none; }
+html[data-theme] body .game-zone-posts summary b { font-size: .95rem; line-height: 1.3; color: #f3efe2; overflow-wrap: anywhere; }
+html[data-theme] body .game-zone-posts summary small { font-size: .76rem; color: #8fa39a; }
+html[data-theme] body .game-zone-posts details[open] summary { border-bottom: 1px solid #ffffff12; }
+html[data-theme] body .game-zone-posts .game-zone-lead { margin: 0; padding: 12px 14px; white-space: pre-line; font-size: .88rem; line-height: 1.5; color: #d5ddd8; overflow-wrap: anywhere; }
+html[data-theme] body .game-zone-posts .game-zone-foot { display: flex; align-items: center; gap: 14px; padding: 10px 14px 12px; font-size: .82rem; color: #8fa39a; }
+html[data-theme] body .game-zone-posts .game-zone-foot span { display: inline-flex; align-items: center; gap: 5px; }
+html[data-theme] body .game-zone-posts .game-zone-foot a { margin-left: auto; min-height: 44px; display: inline-flex; align-items: center; color: #6fe0b0; font-weight: 600; text-decoration: none; }
+html[data-theme] body .game-zone-posts .game-zone-foot a:hover { text-decoration: underline; }

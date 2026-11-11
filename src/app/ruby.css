@@ -184,9 +184,9 @@ html[data-theme] body a.ruby-primary {
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  border: 1px solid #bc7180;
+  border: 1px solid var(--ruby-card-accent);
   border-radius: 22px;
-  background: #21121c;
+  background: var(--ruby-card-base);
   color: #fbf1ee;
   box-shadow: 0 15px 35px #0003;
   padding: 23px;
@@ -202,28 +202,28 @@ html[data-theme] body a.ruby-primary {
   opacity: 0.65;
 }
 .ruby-orbit.ruby-card {
-  background: radial-gradient(ellipse at 90% 0, #772a4e, #21121d 60%);
+  background: radial-gradient(ellipse at 90% 0, var(--ruby-card-glow), var(--ruby-card-base) 60%);
 }
 .ruby-marquee.ruby-card {
-  border-color: #e5ae91;
-  border-top: 5px solid #c87079;
-  background: linear-gradient(155deg, #521c32, #21121c 65%);
+  border-color: var(--ruby-card-accent);
+  border-top: 5px solid var(--ruby-card-accent);
+  background: linear-gradient(155deg, var(--ruby-card-glow), var(--ruby-card-base) 65%);
 }
 .ruby-marquee.ruby-card::before {
   inset: 9px;
-  border: 1px solid #e5ae912b;
+  border: 1px solid #e8c46a2b;
   border-radius: 12px;
   background: repeating-linear-gradient(
     90deg,
     transparent 0 23px,
-    #e5ae910a 24px 25px
+    #e8c46a0a 24px 25px
   );
 }
 .ruby-marquee .ruby-monogram,
 .ruby-marquee .ruby-avatar {
   border-radius: 15px;
-  border: 1px solid #e5ae91;
-  background: #5b2338;
+  border: 1px solid var(--ruby-card-accent);
+  background: var(--ruby-card-glow);
   color: #ffe3cc;
 }
 .ruby-marquee .ruby-signature h3 {
@@ -233,43 +233,43 @@ html[data-theme] body a.ruby-primary {
   background: repeating-radial-gradient(
     circle at 110% 0,
     transparent 0 49px,
-    #f2a2b326 50px 51px,
+    #e8c46a26 50px 51px,
     transparent 52px 85px
   );
 }
 .ruby-diagonal.ruby-card {
   border-radius: 6px 28px 6px 28px;
-  background: linear-gradient(145deg, #711d32, #22131b 60%);
+  background: linear-gradient(145deg, var(--ruby-card-glow), var(--ruby-card-base) 60%);
 }
 .ruby-diagonal.ruby-card::before {
   background: repeating-linear-gradient(
     132deg,
     transparent 0 55px,
-    #ee9ba418 56px 72px,
+    #e8c46a18 56px 72px,
     transparent 73px 100px
   );
 }
 .ruby-corner.ruby-card {
-  border: 3px double #dca7a0;
-  background: linear-gradient(120deg, #341820, #171319);
+  border: 3px double var(--ruby-card-accent);
+  background: linear-gradient(120deg, var(--ruby-card-glow), var(--ruby-card-base));
 }
 .ruby-corner.ruby-card::before {
   inset: 8px;
-  border: 1px solid #dca7a02e;
+  border: 1px solid #e8c46a2e;
   border-radius: 12px;
-  background: linear-gradient(45deg, #b4616922, transparent 60%);
+  background: linear-gradient(45deg, #e8c46a22, transparent 60%);
 }
 .ruby-skyline.ruby-card {
-  background: linear-gradient(170deg, #4b2241, #161722 70%);
-  border-color: #b78cbb;
+  background: linear-gradient(170deg, var(--ruby-card-glow), var(--ruby-card-base) 70%);
+  border-color: var(--ruby-card-accent);
 }
 .ruby-skyline.ruby-card::before {
   background: linear-gradient(
     90deg,
     transparent 68%,
-    #c589ab14 68% 75%,
+    #e8c46a14 68% 75%,
     transparent 75% 78%,
-    #c589ab14 78% 89%,
+    #e8c46a14 78% 89%,
     transparent 89%
   );
   clip-path: polygon(
@@ -315,9 +315,9 @@ html[data-theme] body a.ruby-primary {
   display: flex;
   align-items: center;
   gap: 5px;
-  border: 1px solid #ec97ab66;
+  border: 1px solid #e8c46a66;
   border-radius: 20px;
-  color: #f8b3c3;
+  color: #f0d595;
   padding: 5px 8px;
   font-size: 9px;
   letter-spacing: 0.18em;
@@ -332,13 +332,13 @@ html[data-theme] body a.ruby-primary {
   font:
     italic 32px Georgia,
     serif;
-  color: #e8b1b7;
+  color: #e8c46a;
   min-width: 49px;
   letter-spacing: -3px;
 }
 .ruby-signature p {
   font-size: 10px;
-  color: #bca4b0;
+  color: #cbc8bb;
   margin-bottom: 4px;
 }
 .ruby-signature h3 {
@@ -347,7 +347,7 @@ html[data-theme] body a.ruby-primary {
   overflow-wrap: anywhere;
 }
 .ruby-card-label {
-  border-block: 1px solid #c293a333;
+  border-block: 1px solid #e8c46a33;
   padding: 10px 0;
   display: flex;
   justify-content: space-between;
@@ -355,7 +355,7 @@ html[data-theme] body a.ruby-primary {
   font-size: 9px;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: #d0b2b4;
+  color: #cbc8bb;
 }
 .ruby-card h4 {
   font-size: 22px;
@@ -374,13 +374,13 @@ html[data-theme] body a.ruby-primary {
   align-items: flex-start;
   gap: 11px;
   padding: 14px 0;
-  border-bottom: 1px solid #d6a9b21c;
+  border-bottom: 1px solid #e8c46a1c;
   font-size: 14px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
 .ruby-legs li > span {
-  color: #d88a9d;
+  color: var(--ruby-card-accent);
   font-size: 10px;
   font-weight: 800;
   flex: none;
@@ -389,7 +389,7 @@ html[data-theme] body a.ruby-primary {
 .ruby-note {
   font-size: 12px !important;
   line-height: 1.7;
-  color: #c5b6bf;
+  color: #cbc8bb;
   margin: 15px 0 !important;
   white-space: pre-wrap;
 }
@@ -407,7 +407,7 @@ html[data-theme] body a.ruby-primary {
 .ruby-price > span {
   font-size: 10px;
   line-height: 1.6;
-  color: #c8b6c1;
+  color: #cbc8bb;
 }
 .ruby-price a {
   color: inherit;
@@ -419,7 +419,7 @@ html[data-theme] body a.ruby-primary {
   gap: 8px;
   margin-top: 20px;
   padding-top: 16px;
-  border-top: 1px solid #d6a9b233;
+  border-top: 1px solid #e8c46a33;
 }
 .ruby-gambly {
   display: flex;
@@ -433,7 +433,7 @@ html[data-theme] body a.ruby-primary {
 .ruby-card > footer > span {
   flex: 1;
   font-size: 9px;
-  color: #b9a8b5;
+  color: #cbc8bb;
   line-height: 1.6;
 }
 .ruby-icon-button {
@@ -443,10 +443,10 @@ html[data-theme] body a.ruby-primary {
   width: 40px;
   height: 40px;
   flex: none;
-  border: 1px solid #be879144;
+  border: 1px solid #e8c46a44;
   border-radius: 12px;
   background: transparent;
-  color: #efcbd1;
+  color: #f0d595;
   cursor: pointer;
   text-decoration: none;
 }

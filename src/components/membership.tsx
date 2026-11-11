@@ -5,6 +5,14 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import {
+  authErrorCode,
+  authErrorMessage,
+  CHECK_EMAIL_NOTICE,
+  RESEND_COOLDOWN_SECONDS,
+  retryAfterSeconds,
+  signupAlreadyRegistered,
+} from "@/lib/auth-messages";
 import { noAccess, type Access } from "@/lib/membership";
 import { Shell, Panel } from "./ui";
 import FriendPass from "./friend-pass";
@@ -36,7 +44,16 @@ export default function Membership() {
     [mode, setMode] = useState("test"),
     [factor, setFactor] = useState(""),
     [qr, setQr] = useState(""),
-    [setupKey, setSetupKey] = useState("");
+    [setupKey, setSetupKey] = useState(""),
+    // Address waiting on a confirmation email, and seconds until it may be resent.
+    [pendingEmail, setPendingEmail] = useState(""),
+    [resendWait, setResendWait] = useState(0);
+  const submitting = useRef(false);
+  useEffect(() => {
+    if (resendWait <= 0) return;
+    const t = setTimeout(() => setResendWait((w) => Math.max(0, w - 1)), 1000);
+    return () => clearTimeout(t);
+  }, [resendWait]);
   const refreshGeneration = useRef(0),
     accountId = useRef<string | null>(null);
   async function refresh() {
@@ -100,16 +117,18 @@ export default function Membership() {
   }, []);
   async function auth(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setBusy(true);
-    setNotice("");
+    // A double tap must not send two sign-ups: each one emails a new link and voids the last.
+    if (submitting.current) return;
     const f = new FormData(e.currentTarget);
     if (signup && f.get("legal_consent") !== "on") {
       setNotice(
         "Confirm that you are 21 or older and accept the Terms of Use before registering.",
       );
-      setBusy(false);
       return;
     }
+    submitting.current = true;
+    setBusy(true);
+    setNotice("");
     const credentials = {
       email: String(f.get("email")),
       password: String(f.get("password")),
@@ -129,6 +148,18 @@ export default function Membership() {
           })
         : await supabase.auth.signInWithPassword(credentials);
       if (r.error) throw r.error;
+      if (signup && signupAlreadyRegistered(r.data.user)) {
+        setPendingEmail("");
+        setSignup(false);
+        setNotice(
+          "This email already has an account. Sign in, or use Forgot password if you don’t remember it.",
+        );
+        return;
+      }
+      if (signup) {
+        setPendingEmail(credentials.email);
+        setResendWait(RESEND_COOLDOWN_SECONDS);
+      } else setPendingEmail("");
       if (signup) window.dispatchEvent(new Event("vq:welcome"));
       const friendsCode = String(f.get("friends_code") || "").trim();
       if (signup && friendsCode) {
@@ -136,11 +167,7 @@ export default function Membership() {
           sessionStorage.setItem("vq-friend-code", friendsCode);
         } catch {}
       }
-      setNotice(
-        signup
-          ? "Confirm your email, then return here to sign in. If you entered a friends code, activate it below after signing in."
-          : "Signed in.",
-      );
+      setNotice(signup ? CHECK_EMAIL_NOTICE : "Signed in.");
       await refresh();
       if (!signup) {
         const gate = await supabase.rpc("age_verification_status");
@@ -151,8 +178,38 @@ export default function Membership() {
         );
       }
     } catch (e) {
-      setNotice(e instanceof Error ? e.message : "Sign in failed.");
+      const code = authErrorCode(e);
+      if (code === "email_not_confirmed" || (signup && code === "over_email_send_rate_limit"))
+        setPendingEmail(credentials.email);
+      if (code === "over_email_send_rate_limit")
+        setResendWait(retryAfterSeconds(e) ?? RESEND_COOLDOWN_SECONDS);
+      setNotice(authErrorMessage(e, signup ? "Registration failed." : "Sign in failed."));
     } finally {
+      submitting.current = false;
+      setBusy(false);
+    }
+  }
+  async function resendConfirmation() {
+    if (!pendingEmail || resendWait > 0 || submitting.current) return;
+    submitting.current = true;
+    setBusy(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: pendingEmail,
+        options: { emailRedirectTo: location.origin },
+      });
+      if (error) throw error;
+      setResendWait(RESEND_COOLDOWN_SECONDS);
+      setNotice(
+        "Confirmation email sent again. Use this newest email — the link in any earlier one no longer works. Check spam or junk.",
+      );
+    } catch (e) {
+      if (authErrorCode(e) === "over_email_send_rate_limit")
+        setResendWait(retryAfterSeconds(e) ?? RESEND_COOLDOWN_SECONDS);
+      setNotice(authErrorMessage(e, "Couldn’t resend the email. Please wait a minute and try again."));
+    } finally {
+      submitting.current = false;
       setBusy(false);
     }
   }
@@ -391,6 +448,12 @@ export default function Membership() {
             <label>
               Email
               <input name="email" type="email" autoComplete="email" required />
+              {signup && (
+                <small>
+                  We’ll email you a confirmation link. It can land in spam or
+                  junk, so check there if you don’t see it within a few minutes.
+                </small>
+              )}
             </label>
             <label>
               Password
@@ -449,6 +512,18 @@ export default function Membership() {
                 ? "Already registered? Sign in"
                 : "New here? Create an account"}
             </button>
+            {pendingEmail && (
+              <button
+                type="button"
+                className="research-more"
+                disabled={busy || resendWait > 0}
+                onClick={() => void resendConfirmation()}
+              >
+                {resendWait > 0
+                  ? `Resend confirmation email (${resendWait}s)`
+                  : "Resend confirmation email"}
+              </button>
+            )}
             {!signup && (
               <button
                 type="button"

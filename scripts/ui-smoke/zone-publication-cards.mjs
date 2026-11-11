@@ -35,6 +35,15 @@ const posts = ["nfl", "nba", "nhl", "ncaab"].map((sport, i) => ({
   reacted: false,
   photo_path: null,
 }));
+// The owner's reported long WR post, reproduced locally with synthetic source URLs.
+const research = JSON.parse(readFileSync("tests/fixtures/research-publication.json", "utf8"));
+posts.push({ ...posts[0], ...research });
+const longResearch = {
+  ...posts[0], id: "long-research", legs: [],
+  title: "Long research report ".repeat(30),
+  body: "A report paragraph with original context. ".repeat(200) + "\n\nFinal caveat remains reachable.\n\nhttps://example.com/" + "W".repeat(1000),
+};
+posts.push(longResearch);
 posts.push(
   {
     ...posts[0],
@@ -55,6 +64,11 @@ posts.push(
     body: "Research only, not picks",
   },
 );
+const memberLegs = Array.from({length: 7}, (_, i) => `Member Player ${i + 1} 40+ rushing yards`);
+posts.push({
+  ...posts[0], id: "member-parlay", title: "My parlay", kind: "slip", card: null,
+  created_at: "2026-10-31T15:00:00Z", legs: memberLegs, body: "Member-created combination.",
+});
 const sheetPost = {
   ...posts[1],
   id: "5937fd42-e301-4fd5-92b6-abbe3f0d3de0",
@@ -157,7 +171,7 @@ try {
     await p.locator(".zone-publication").first().waitFor();
     await p.evaluate(() => document.fonts.ready);
     await p.locator(".vq-brand-opening").waitFor({ state: "hidden" });
-    assert.equal(await p.locator(".zone-publication").count(), 4);
+    assert.equal(await p.locator(".zone-publication").count(), 6);
     assert.equal(sheetReads, 0, "offscreen matchup sheets must load lazily");
     if (process.env.UI_SMOKE_NEGATIVE === "card-palette")
       await p.locator('.zone-publication .publication-headline').first().evaluate(e => e.setAttribute('fill', '#ff858e'));
@@ -170,16 +184,12 @@ try {
       const box = await link.boundingBox();
       assert.ok(box && box.height >= 44, "sport navigation touch height");
     }
-    for (const [sport, color] of [
-      ["nfl", "#c8decf"],
-      ["nba", "#e7cb82"],
-      ["nhl", "#b7dad5"],
-      ["ncaab", "#d5d8b5"],
-    ]) {
-      const card = p.locator(`.zone-publication[data-sport=${sport}]`);
+    const colors = { green: "#8fdbb1", gold: "#f1d58e", black: "#d7c393" };
+    for (const sport of ["nfl", "nba", "nhl", "ncaab"]) {
+      const card = p.locator(`.zone-publication[data-sport=${sport}]:not([data-research-preview])`);
       assert.equal(
         await card.locator(".publication-headline").getAttribute("fill"),
-        color,
+        colors[await card.getAttribute("data-palette")],
         "publication palette must match approved lounge design",
       );
       await card
@@ -198,46 +208,79 @@ try {
         return { divider: divider.getBBox().y, body: body.getBBox().y };
       });
       assert.ok(geometry.divider < geometry.body, "divider must not strike through analysis");
-      const lines = [];
-      for (;;) {
-        lines.push(
-          ...(await card.locator("svg text[font-size='56']").allTextContents()),
-        );
-        const overflow = await card.locator("svg text").evaluateAll((es) =>
-          es
-            .filter((e) => e.textContent.trim())
-            .flatMap((e) => {
-              const b = e.getBBox();
-              return b.x >= 27 &&
-                b.x + b.width <= 1054 &&
-                b.y + b.height <= 1322
-                ? []
-                : [
-                    {
-                      text: e.textContent,
-                      x: b.x,
-                      right: b.x + b.width,
-                      bottom: b.y + b.height,
-                    },
-                  ];
-            }),
-        );
-        assert.deepEqual(overflow, [], `${sport} text within frame`);
-        const next = card.getByRole("button", {
-          name: "Next card",
-          exact: true,
-        });
-        if (await next.isDisabled()) break;
-        await next.click();
-      }
+      const lines = await card.locator("svg text[font-size='56']").allTextContents();
+      const details = card.locator("details.publication-analysis");
+      assert.equal(await details.getAttribute("open"), null);
+      assert.doesNotMatch(await card.locator("svg").textContent(), /Original analysis|Risk:|https:/);
+      await details.locator("summary").click();
+      assert.match(await details.innerText(), /Original analysis with source timestamps/);
+      assert.equal(await details.locator("a").count(), 1);
+      await details.locator("summary").click();
+      const overflow = await card.locator("svg text").evaluateAll((elements) =>
+        elements.filter((e) => e.textContent.trim()).flatMap((e) => {
+          const b = e.getBBox();
+          return b.x >= 27 && b.x + b.width <= 1054 &&
+            b.y + b.height <= e.ownerSVGElement.viewBox.baseVal.height - 28 ? [] : [e.textContent];
+        }),
+      );
+      assert.deepEqual(overflow, [], `${sport} text within frame`);
+      assert.equal(await card.getByRole("button", {name: "Next card", exact: true}).count(), 0);
       assert.equal(
         lines.join("").replace(/\s/g, ""),
-        posts[0].body.replace(/\s/g, ""),
+        posts[0].legs[0].replace(/\s/g, ""),
       );
     }
-    const first = p.locator(".zone-publication[data-sport=nfl]");
-    const previous = first.getByRole("button", { name: "Previous card", exact: true });
-    while (!(await previous.isDisabled())) await previous.click();
+    for (const report of [research, longResearch]) {
+      const card = p.locator(`#post-${report.id} .zone-publication`);
+      const face = card.locator("svg");
+      assert.equal(
+        await face.locator(".publication-headline").getAttribute("fill"),
+        colors[await card.getAttribute("data-palette")],
+        "publication palette must match approved lounge design",
+      );
+      await card.scrollIntoViewIfNeeded();
+      const dimensions = await face.evaluate((svg) => ({ width: svg.viewBox.baseVal.width, height: svg.viewBox.baseVal.height }));
+      assert.deepEqual(dimensions, { width: 1080, height: 1350 });
+      assert.ok((await face.boundingBox()).height <= 675.5, "a collapsed report must not fill multiple screens");
+      assert.doesNotMatch(await face.textContent(), /https:/);
+      const overflow = await face.locator("text").evaluateAll((elements) =>
+        elements.filter((e) => e.textContent.trim()).flatMap((e) => {
+          const b = e.getBBox();
+          return b.x >= 27 && b.x + b.width <= 1054 && b.y + b.height <= 1322 ? [] : [e.textContent];
+        }),
+      );
+      assert.deepEqual(overflow, [], "research text stays inside the frame");
+      const details = card.locator("details.publication-analysis");
+      const summary = details.locator("summary");
+      assert.equal(await details.getAttribute("open"), null);
+      assert.ok((await summary.boundingBox()).height >= 44);
+      await summary.focus();
+      await p.keyboard.press("Enter");
+      assert.notEqual(await details.getAttribute("open"), null);
+      assert.equal(await details.locator(":scope > p:not(.publication-time)").textContent(), report.body);
+      assert.equal(await details.locator("h3").textContent(), report.title);
+      assert.equal(await details.locator("a").count(), report.body.split("\n").filter((line) => /^https:\/\//.test(line)).length);
+      await summary.focus();
+      await p.keyboard.press("Space");
+      assert.equal(await details.getAttribute("open"), null);
+      await card.getByRole("button", { name: "Download card", exact: true }).click();
+      const save = card.getByRole("link", { name: "Save image", exact: true });
+      await save.waitFor();
+      const download = p.waitForEvent("download");
+      await save.click();
+      const bytes = readFileSync(await (await download).path());
+      assert.equal(bytes.readUInt32BE(16), 1080);
+      assert.equal(bytes.readUInt32BE(20), 1350);
+      writeFileSync(`${out}/${width}-${report.id}-download.png`, bytes);
+      await card.getByRole("button", { name: "Close download", exact: true }).click();
+      assert.equal(await save.count(), 0);
+      // Repeated open/close must remain usable and not change the card geometry.
+      await summary.click();
+      await summary.click();
+      assert.equal(await details.getAttribute("open"), null);
+      await card.screenshot({ path: `${out}/${width}-${report.id}.png` });
+    }
+    const first = p.locator(".zone-publication[data-sport=nfl]:not([data-research-preview])");
     await first.getByRole("button", { name: /Download card/ }).click();
     const save = first.getByRole("link", { name: /Save image/ });
     await save.waitFor();
@@ -246,7 +289,21 @@ try {
     const file = await (await dl).path(),
       bytes = readFileSync(file);
     assert.equal(bytes.readUInt32BE(16), 1080);
-    assert.equal(bytes.readUInt32BE(20), 1350);
+    const expectedHeight = await first.locator("svg").evaluate((svg) => svg.viewBox.baseVal.height);
+    assert.equal(bytes.readUInt32BE(20), expectedHeight);
+    assert.ok(expectedHeight < 900, "analysis does not extend the pick image");
+    const parlay = p.locator("#post-member-parlay .community-parlay-card");
+    assert.equal(await parlay.locator(".vqc").count(), 1);
+    assert.equal(await parlay.locator(".vqc-legs li").count(), memberLegs.length);
+    assert.match(await parlay.locator(".vqc-legs").innerText(), /Member Player 7/);
+    assert.equal(await parlay.getByRole("button", { name: "Next", exact: true }).count(), 0);
+    assert.match(await parlay.locator(".vqc").getAttribute("data-palette"), /^(green|gold|black)$/);
+    await parlay.getByRole("button", { name: "Download card", exact: true }).click();
+    const memberImage = parlay.getByRole("img", { name: "My parlay card" });
+    await memberImage.waitFor();
+    await memberImage.evaluate((img) => img.decode());
+    assert.ok(await memberImage.evaluate((img) => img.naturalHeight > 1512));
+    await parlay.locator(".vqc").screenshot({ path: `${out}/${width}-seven-leg-parlay.png` });
     writeFileSync(`${out}/${width}-downloaded-card.png`, bytes);
     await first.locator("svg").screenshot({ path: `${out}/${width}-matching-feed-card.png` });
     await first
@@ -323,7 +380,7 @@ try {
     assert.deepEqual(errors, []);
     await ctx.close();
     console.log(
-      `PASS publication cards ${width}px: labelled sports with restrained accents, full paginated content, bounded text, copy, 1080x1350 download, Gambly age gate, inline matchup sheet, and unchanged manual/threes`,
+      `PASS publication cards ${width}px: labelled sports with restrained accents, full single-card content, bounded text, copy, matching single-image download, Gambly age gate, inline matchup sheet, and unchanged manual/threes`,
     );
   }
 } finally {

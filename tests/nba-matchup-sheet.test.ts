@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {
-  nbaMatchupSheetSlug,
+  nbaMatchupSheetReference,
   nbaSheetAvailability,
 } from "../src/lib/nba-matchup-sheet";
 import {
@@ -38,7 +38,7 @@ const game: SheetGame = {
 };
 
 test("only a linked server publication opens the sheet layout", () => {
-  assert.equal(nbaMatchupSheetSlug(post), "ny-cle-20261107");
+  assert.deepEqual(nbaMatchupSheetReference(post), { slug: "ny-cle-20261107" });
   for (const changes of [
     { card: null },
     { sport: "nhl" },
@@ -46,7 +46,17 @@ test("only a linked server publication opens the sheet layout", () => {
     { title: "NBA picks" },
     { body: post.body.replace("vegasquant.app", "vegasquant.app.example.com") },
   ])
-    assert.equal(nbaMatchupSheetSlug({ ...post, ...changes }), null);
+    assert.equal(nbaMatchupSheetReference({ ...post, ...changes }), null);
+});
+
+test("an ESPN matchup link can resolve a server publication without its VQ link", () => {
+  const body = post.body
+    .replace("https://vegasquant.app/nba/games/ny-cle-20261107", "https://www.espn.com/nba/game/_/gameId/401909953")
+    .replace("AVAILABILITY · NBA 6:00 AM ET REPORT\n", "Injury report (3:30 PM ET): ");
+  assert.deepEqual(nbaMatchupSheetReference({ ...post, body }), { providerId: "401909953" });
+  assert.equal(nbaMatchupSheetReference({ ...post, card: null, body }), null);
+  assert.equal(nbaMatchupSheetReference({ ...post, body: body.replace("www.espn.com", "www.espn.com.example.org") }), null);
+  assert.equal(nbaSheetAvailability(body)?.text, "Cleveland had not submitted.");
 });
 
 test("official availability preserves the recorded report and requires its source", () => {

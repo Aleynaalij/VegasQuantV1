@@ -1,6 +1,7 @@
 // Minimal Supabase stand-in for UI smoke tests. All data is synthetic ("Sample …").
 // Usage: node scripts/ui-smoke/stub.mjs  (listens on 127.0.0.1:54321)
 import http from "node:http";
+import fs from "node:fs";
 
 const NOW = "2026-10-14T02:00:00Z"; // the smoke test pins the browser clock here
 const games = [
@@ -44,6 +45,7 @@ http.createServer((req, res) => {
   const u = decodeURIComponent(req.url || "");
   const rpc = (name) => u.startsWith(`/rest/v1/rpc/${name}`);
   if (u.startsWith("/__stub/desk")) { deskFails = u.includes("fail=1"); return json(res, { deskFails }); }
+  if (rpc("nhl_chart_snapshot")) return json(res, JSON.parse(fs.readFileSync("tests/fixtures/nhl-chart.json", "utf8")));
   if (rpc("desk_data")) return deskFails ? json(res, { message: "synthetic desk failure" }, 500) : json(res, desk);
   if (rpc("matchup_directory")) return json(res, games.map((game) => ({ game, analysis: null, market: null })));
   if (rpc("public_research_status")) return json(res, { updated_at: NOW, games: [], results: [{ id: "r1", game: "BUF @ LAR", published_at: pick.created_at, selection: pick.selection, odds: -110, result: "WIN", profit_cents: 1818, stake_cents: 2000, closing_recorded: false }] });
@@ -51,7 +53,9 @@ http.createServer((req, res) => {
   if (rpc("age_verification_status")) return json(res, { required: true, verified: true, state: "verified", version: 1, retry_after: null });
   if (rpc("nba_editorial_records") || rpc("sports_records")) return json(res, { selections: 0, win: 0, loss: 0, push: 0, void: 0, pending: 0, review: 0 });
   if (rpc("is_admin")) return json(res, false);
+  if (rpc("community_dealer_feed")) return json(res, []);
   if (rpc("community_feed")) return json(res, [{ id: "c1", user_id: "u2", author_name: "SampleMember", title: "Sample slip", body: "Sample post body.", sport: "nfl", kind: "talk", legs: [], stake: null, created_at: NOW, reactions: 0, reacted: false, comments: 0, following: false }]);
+  if (rpc("community_profile")) return json(res, { user_id: "u2", username: "SampleMember", avatar: null, region: "Sample", instagram_url: null, x_url: null, member_since: "2026-10-01T00:00:00Z", is_me: false, i_follow: false, followers: 12, following: 4, post_count: 1, posts: [{ id: "c1", sport: "nfl", kind: "talk", title: "Sample slip", body: "Sample post body.", photo_path: null, card: null, created_at: NOW, reactions: 0, comments: 0 }] });
   if (rpc("community_member")) return json(res, { username: "SampleMember", region: "Sample", avatar: null, visible: true, events: [] });
   if (rpc("challenge_community_count")) return json(res, 3);
   if (rpc("tail_leaderboard")) return json(res, [{ username: "SampleMember", wins: 4, losses: 1, pushes: 0, score: 37.6 }]);

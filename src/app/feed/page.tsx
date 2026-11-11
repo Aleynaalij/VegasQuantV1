@@ -38,8 +38,8 @@ export default async function Page({
     const ruby = typeof query.ruby === "string" ? query.ruby : "";
     redirect(
       ruby
-        ? `/community?view=vip&ruby=${encodeURIComponent(ruby)}#ruby-${encodeURIComponent(ruby)}`
-        : "/community?view=vip",
+        ? `/community?ruby=${encodeURIComponent(ruby)}#ruby-${encodeURIComponent(ruby)}`
+        : "/community",
     );
   }
   return (

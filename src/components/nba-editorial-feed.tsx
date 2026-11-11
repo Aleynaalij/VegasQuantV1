@@ -3,18 +3,9 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
-import { time } from "@/lib/domain";
-import {
-  nbaEditorialCopy,
-  nbaEditorialMarket,
-  nbaEditorialOpen,
-  nbaEditorialSources,
-  type NbaEditorialPick,
-} from "@/lib/nba-editorial";
+import type { NbaEditorialPick } from "@/lib/nba-editorial";
 import { Shell } from "./ui";
-import CasinoCard, { CasinoCardDownload } from "./casino-card";
-import type { CasinoCardData } from "@/lib/casino-card";
-import GamblyLink from "./gambly-link";
+import NbaEditorialCard from "./nba-editorial-card";
 import NbaResearchFeed from "./nba-research-feed";
 import "@/app/nba-editorial.css";
 
@@ -117,95 +108,15 @@ export default function NbaEditorialFeed() {
         {!loading && !error && allowed && !picks.length && (
           <p>No NBA selections have been published yet.</p>
         )}
-        {picks.map((p) => {
-          const open =
-            !loading &&
-            !error &&
-            nbaEditorialOpen(p, now, superseded.has(p.id));
-          const face: CasinoCardData = {
-            variant: "pick",
-            eyebrow: "NBA · Analyst selection",
-            title: p.player,
-            market: nbaEditorialMarket(p),
-            matchup: p.game
-              ? `${p.game.away_team} @ ${p.game.home_team} · ${time(p.game.tipoff)}`
-              : "NBA matchup",
-            price: `${p.book} ${p.odds > 0 ? "+" : ""}${p.odds} · observed`,
-            footnote: "Qualitative selection · No validated edge claimed",
-            publishedAt: p.published_at,
-          };
-          return (
-            <section
-              key={p.id}
-              id={`pick-${p.id}`}
-              className="nba-editorial-pick"
-            >
-              <CasinoCard data={face} />
-              <p className="nba-editorial-quote">
-                Quote: {time(p.quote_observed_at)} · Full game
-              </p>
-              <p>
-                <strong>The case:</strong> {p.rationale}
-              </p>
-              <p>
-                <strong>Why it could lose:</strong> {p.risk}
-              </p>
-              {open ? (
-                <GamblyLink
-                  url="https://gambly.com/"
-                  selection={nbaEditorialCopy(p)}
-                  kalshiTexts={nbaEditorialCopy(p).split("\n").filter(Boolean)}
-                  beforeOpen={async () =>
-                    nbaEditorialOpen(p, Date.now(), superseded.has(p.id))
-                  }
-                />
-              ) : (
-                <p className="notice">
-                  {superseded.has(p.id)
-                    ? "Updated selection below or above; original preserved."
-                    : "Pregame copying closed. Original selection preserved."}
-                </p>
-              )}
-              <details>
-                <summary>Sources & availability</summary>
-                <p>{p.unknowns}</p>
-                <p>
-                  FanDuel provider quote {time(p.quote_observed_at)}; received{" "}
-                  {time(p.quote_recorded_at)}. This is the recorded publication
-                  price, not a live executable quote.
-                </p>
-                <p>
-                  Analyst judgment. No model probability, EV, confidence score
-                  or official-pick status is assigned.
-                </p>
-                <ul>
-                  {nbaEditorialSources(p).map((s) => (
-                    <li key={s.url}>
-                      <a href={s.url} target="_blank" rel="noopener noreferrer">
-                        {s.label} ↗
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  href={p.quote_source_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  FanDuel-attributed provider snapshot source ↗
-                </a>
-                {p.game && (
-                  <p>
-                    <Link href={`/nba/games/${p.game.slug}`}>
-                      Matchup & latest markets →
-                    </Link>
-                  </p>
-                )}
-              </details>
-              <CasinoCardDownload data={face} />
-            </section>
-          );
-        })}
+        {picks.map((p) => (
+          <NbaEditorialCard
+            key={p.id}
+            pick={p}
+            now={now}
+            superseded={superseded.has(p.id)}
+            enabled={!loading && !error}
+          />
+        ))}
         <section aria-labelledby="nba-research-heading">
           <h2 id="nba-research-heading">NBA research board</h2>
           <NbaResearchFeed />

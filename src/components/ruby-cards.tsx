@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import Link from "next/link";
 import {
   ArrowUpRight,
@@ -12,6 +12,7 @@ import {
   Upload,
   X,
 } from "lucide-react";
+import { vqCardPalette } from "@/lib/vq-card-palette";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
 import {
@@ -59,6 +60,7 @@ export function RubyCard({
 }) {
   const [copied, setCopied] = useState(false);
   const [notice, setNotice] = useState("");
+  const palette = vqCardPalette(slip.id);
   const source = normalizeKalshiSourceLink(slip.source_link);
   const brand = rubyBrands.find((b) => b.theme === slip.theme) || rubyBrands[0];
   async function copy() {
@@ -85,7 +87,15 @@ export function RubyCard({
     }
   }
   return (
-    <article className={`ruby-card ruby-${brand.theme}`} id={`ruby-${slip.id}`}>
+    <article
+      className={`ruby-card ruby-${brand.theme}`}
+      id={`ruby-${slip.id}`}
+      style={{
+        "--ruby-card-accent": palette.accent,
+        "--ruby-card-glow": palette.glow,
+        "--ruby-card-base": palette.base,
+      } as CSSProperties}
+    >
       <div className="ruby-card-top">
         <span className="ruby-vq">
           VQ <span>VEGAS QUANT</span>
@@ -940,14 +950,14 @@ function ResultPrompt({
 
 export default function RubyHub({
   home = false,
-  composerOnly = false,
+  resultsOnly = false,
   leaderboardOnly = false,
   zone = false,
   selectedId = "",
   contributorsOnly = false,
 }: {
   home?: boolean;
-  composerOnly?: boolean;
+  resultsOnly?: boolean;
   leaderboardOnly?: boolean;
   zone?: boolean;
   selectedId?: string;
@@ -969,6 +979,19 @@ export default function RubyHub({
       setState({});
       setSlips([]);
       setError("");
+      return;
+    }
+    if (selectedId || resultsOnly) {
+      const [homeState, card] = await Promise.all([
+        supabase.rpc("ruby_home"),
+        selectedId
+          ? supabase.from("ruby_cards").select("*").eq("id", selectedId).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
+      if (version !== epoch.current) return;
+      setState(homeState.data || {});
+      setSlips(card.data ? [card.data] : []);
+      setError(card.error ? "Contributor card could not load." : "");
       return;
     }
     if (leaderboardOnly) {
@@ -1005,16 +1028,7 @@ export default function RubyHub({
     setRecords(record.error ? [] : record.data || []);
     setSlips(r.data || []);
     setError("");
-    const neededId = selectedId;
-    if (neededId && !r.data?.some((x) => x.id === neededId)) {
-      const one = await supabase
-        .from("ruby_cards")
-        .select("*")
-        .eq("id", neededId)
-        .maybeSingle();
-      if (version === epoch.current && one.data)
-        setSlips((current) => [one.data, ...current]);
-    }
+
   }
   useEffect(() => {
     void refresh();
@@ -1035,7 +1049,7 @@ export default function RubyHub({
       window.removeEventListener("focus", focus);
       window.removeEventListener("vq:ruby-result-saved", focus);
     };
-  }, [home, leaderboardOnly, limit, selectedId]); // account epochs reject stale reads
+  }, [home, leaderboardOnly, limit, selectedId, resultsOnly]); // account epochs reject stale reads
   useEffect(() => {
     if (selectedId && slips.some((s) => s.id === selectedId))
       document
@@ -1110,17 +1124,19 @@ export default function RubyHub({
         )}
       </div>
     );
-  // Consumer pages (the NFL desk) never carry the submission form: an authorized contributor gets
-  // one role-gated Submit a Lay action that opens the form in the contributor area (VIP lays).
-  if (composerOnly)
+  if (selectedId)
     return (
       <div className="ruby-hub">
-        {state.contributor ? (
-          <Link className="ruby-submit-shortcut" href="/community?view=vip#submit-lay">
-            <Gem size={16} aria-hidden="true" /> Submit a Lay
-            <ArrowUpRight size={16} aria-hidden="true" />
-          </Link>
+        {slips[0] ? (
+          <RubyCard slip={slips[0]} admin={state.admin} onFeatured={() => void refresh()} />
+        ) : error ? (
+          <p role="status">{error} <button onClick={() => void refresh()}>Retry</button></p>
         ) : null}
+      </div>
+    );
+  if (resultsOnly)
+    return (
+      <div className="ruby-hub">
         {state.due?.length ? (
           <ResultPrompt
             state={state}

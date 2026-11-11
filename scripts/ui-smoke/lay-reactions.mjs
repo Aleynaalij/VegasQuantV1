@@ -184,7 +184,7 @@ await open("share on a lay shares the lay's own link", {}, async ({ page, fail }
   await layCard(page, L2).getByRole("button", { name: "Share lay" }).click();
   await page.getByText("Lay link shared.").waitFor().catch(() => fail("no share confirmation"));
   const shared = await page.evaluate(() => window.__shared);
-  if (shared.length !== 1 || !shared[0].url.endsWith(`/community?view=vip&ruby=${L2}#ruby-${L2}`)) fail(`shared ${JSON.stringify(shared)}`);
+  if (shared.length !== 1 || !shared[0].url.endsWith(`/community?ruby=${L2}#ruby-${L2}`)) fail(`shared ${JSON.stringify(shared)}`);
 });
 
 await open("before lay comments are live: no Comments button, Share still works", { commentsAvailable: false }, async ({ page, fail }) => {

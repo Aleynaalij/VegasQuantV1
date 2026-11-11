@@ -8,6 +8,8 @@ import { nbaHasScore, nbaPhase, type NbaGame } from "@/lib/nba-board";
 import { nbaIsLive, nbaNickname } from "@/lib/nba-home";
 import NbaTeamLogo from "./nba-team-logo";
 import { NbaGameDetails } from "./nba-game-board";
+import NbaGameSelections from "./nba-game-selections";
+import GameZonePosts from "./game-zone-posts";
 import { Shell } from "./ui";
 import "@/app/nba-game-detail.css";
 function NbaGameDetailContent({ slug }: { slug: string }) {
@@ -153,6 +155,13 @@ function NbaGameDetailContent({ slug }: { slug: string }) {
                         : "Scheduled"}
               </b>
             </header>
+            <NbaGameSelections
+              key={`selections-${game.id}-${epoch}`}
+              game={game}
+              allowed={allowed}
+              now={now}
+            />
+            <GameZonePosts key={`zone-${game.id}`} sport="nba" gameId={game.id} />
             {allowed ? (
               <NbaGameDetails
                 key={`${game.id}-${epoch}`}
