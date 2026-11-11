@@ -1,0 +1,662 @@
+{
+  "schema_version": "vq-game-sim/0.1",
+  "mode": "demo",
+  "is_demo": true,
+  "run_id": "demo-script-v1",
+  "generated_at": "2026-10-27T00:00:00Z",
+  "historical_cutoff": null,
+  "inputs_as_of": null,
+  "model_id": "synthetic-script-v1",
+  "model_version": "demo-1",
+  "artifact_hash": null,
+  "teams": {
+    "home": {
+      "id": "demo-home",
+      "abbr": "VQA",
+      "name": "Vegas Demo Home"
+    },
+    "away": {
+      "id": "demo-away",
+      "abbr": "VQB",
+      "name": "Vegas Demo Away"
+    }
+  },
+  "runs": {
+    "requested": 0,
+    "actual": 0
+  },
+  "seed": null,
+  "blockers": [
+    "SYNTHETIC_DEMO_NOT_A_FORECAST",
+    "PARTIAL_REPLAY_NOT_A_FULL_GAME"
+  ],
+  "sources": [],
+  "ensemble": null,
+  "players": [],
+  "replay": {
+    "seed": null,
+    "selection": {
+      "method": "synthetic_script",
+      "description": "Hand-authored partial first-quarter sequence; no model runs or selection from an ensemble.",
+      "distance": null
+    },
+    "events": [
+      {
+        "sequence": 0,
+        "period": 1,
+        "clock_before_s": 900,
+        "clock_after_s": 865,
+        "possession": "home",
+        "play_type": "run",
+        "yards": 6,
+        "yardline_100": 75,
+        "ball_start_x": 25,
+        "ball_end_x": 31,
+        "before": {
+          "period": 1,
+          "clock_s": 900,
+          "possession": "home",
+          "home_defends": "left",
+          "down": 1,
+          "yards_to_go": 10,
+          "yardline_100": 75,
+          "home_score": 0,
+          "away_score": 0
+        },
+        "after": {
+          "period": 1,
+          "clock_s": 865,
+          "possession": "home",
+          "home_defends": "left",
+          "down": 2,
+          "yards_to_go": 4,
+          "yardline_100": 69,
+          "home_score": 0,
+          "away_score": 0
+        },
+        "participants": [
+          {
+            "role": "rusher",
+            "player_id": "demo-home-rusher",
+            "name": "Demo Runner"
+          }
+        ],
+        "flags": {
+          "first_down": false,
+          "touchdown": false,
+          "turnover": false,
+          "safety": false,
+          "made": null,
+          "penalty_on": null
+        },
+        "score_delta": {
+          "home": 0,
+          "away": 0
+        },
+        "stat_deltas": [
+          {
+            "player_id": "demo-home-rusher",
+            "stat": "rushing_yards",
+            "value": 6
+          },
+          {
+            "player_id": "demo-home-rusher",
+            "stat": "carries",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "sequence": 1,
+        "period": 1,
+        "clock_before_s": 865,
+        "clock_after_s": 827,
+        "possession": "home",
+        "play_type": "pass_complete",
+        "yards": 19,
+        "yardline_100": 69,
+        "ball_start_x": 31,
+        "ball_end_x": 50,
+        "before": {
+          "period": 1,
+          "clock_s": 865,
+          "possession": "home",
+          "home_defends": "left",
+          "down": 2,
+          "yards_to_go": 4,
+          "yardline_100": 69,
+          "home_score": 0,
+          "away_score": 0
+        },
+        "after": {
+          "period": 1,
+          "clock_s": 827,
+          "possession": "home",
+          "home_defends": "left",
+          "down": 1,
+          "yards_to_go": 10,
+          "yardline_100": 50,
+          "home_score": 0,
+          "away_score": 0
+        },
+        "participants": [
+          {
+            "role": "target",
+            "player_id": "demo-home-target",
+            "name": "Demo Receiver"
+          },
+          {
+            "role": "passer",
+            "player_id": "demo-home-passer",
+            "name": "Demo Quarterback"
+          }
+        ],
+        "flags": {
+          "first_down": true,
+          "touchdown": false,
+          "turnover": false,
+          "safety": false,
+          "made": null,
+          "penalty_on": null
+        },
+        "score_delta": {
+          "home": 0,
+          "away": 0
+        },
+        "stat_deltas": [
+          {
+            "player_id": "demo-home-target",
+            "stat": "receiving_yards",
+            "value": 19
+          },
+          {
+            "player_id": "demo-home-target",
+            "stat": "receptions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "passing_yards",
+            "value": 19
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "completions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "pass_attempts",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "sequence": 2,
+        "period": 1,
+        "clock_before_s": 827,
+        "clock_after_s": 791,
+        "possession": "home",
+        "play_type": "run",
+        "yards": 8,
+        "yardline_100": 50,
+        "ball_start_x": 50,
+        "ball_end_x": 58,
+        "before": {
+          "period": 1,
+          "clock_s": 827,
+          "possession": "home",
+          "home_defends": "left",
+          "down": 1,
+          "yards_to_go": 10,
+          "yardline_100": 50,
+          "home_score": 0,
+          "away_score": 0
+        },
+        "after": {
+          "period": 1,
+          "clock_s": 791,
+          "possession": "home",
+          "home_defends": "left",
+          "down": 2,
+          "yards_to_go": 2,
+          "yardline_100": 42,
+          "home_score": 0,
+          "away_score": 0
+        },
+        "participants": [
+          {
+            "role": "rusher",
+            "player_id": "demo-home-rusher",
+            "name": "Demo Runner"
+          }
+        ],
+        "flags": {
+          "first_down": false,
+          "touchdown": false,
+          "turnover": false,
+          "safety": false,
+          "made": null,
+          "penalty_on": null
+        },
+        "score_delta": {
+          "home": 0,
+          "away": 0
+        },
+        "stat_deltas": [
+          {
+            "player_id": "demo-home-rusher",
+            "stat": "rushing_yards",
+            "value": 8
+          },
+          {
+            "player_id": "demo-home-rusher",
+            "stat": "carries",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "sequence": 3,
+        "period": 1,
+        "clock_before_s": 791,
+        "clock_after_s": 751,
+        "possession": "home",
+        "play_type": "pass_complete",
+        "yards": 22,
+        "yardline_100": 42,
+        "ball_start_x": 58,
+        "ball_end_x": 80,
+        "before": {
+          "period": 1,
+          "clock_s": 791,
+          "possession": "home",
+          "home_defends": "left",
+          "down": 2,
+          "yards_to_go": 2,
+          "yardline_100": 42,
+          "home_score": 0,
+          "away_score": 0
+        },
+        "after": {
+          "period": 1,
+          "clock_s": 751,
+          "possession": "home",
+          "home_defends": "left",
+          "down": 1,
+          "yards_to_go": 10,
+          "yardline_100": 20,
+          "home_score": 0,
+          "away_score": 0
+        },
+        "participants": [
+          {
+            "role": "target",
+            "player_id": "demo-home-target",
+            "name": "Demo Receiver"
+          },
+          {
+            "role": "passer",
+            "player_id": "demo-home-passer",
+            "name": "Demo Quarterback"
+          }
+        ],
+        "flags": {
+          "first_down": true,
+          "touchdown": false,
+          "turnover": false,
+          "safety": false,
+          "made": null,
+          "penalty_on": null
+        },
+        "score_delta": {
+          "home": 0,
+          "away": 0
+        },
+        "stat_deltas": [
+          {
+            "player_id": "demo-home-target",
+            "stat": "receiving_yards",
+            "value": 22
+          },
+          {
+            "player_id": "demo-home-target",
+            "stat": "receptions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "passing_yards",
+            "value": 22
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "completions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-home-passer",
+            "stat": "pass_attempts",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "sequence": 4,
+        "period": 1,
+        "clock_before_s": 751,
+        "clock_after_s": 719,
+        "possession": "home",
+        "play_type": "run",
+        "yards": 20,
+        "yardline_100": 20,
+        "ball_start_x": 80,
+        "ball_end_x": 100,
+        "before": {
+          "period": 1,
+          "clock_s": 751,
+          "possession": "home",
+          "home_defends": "left",
+          "down": 1,
+          "yards_to_go": 10,
+          "yardline_100": 20,
+          "home_score": 0,
+          "away_score": 0
+        },
+        "after": {
+          "period": 1,
+          "clock_s": 719,
+          "possession": "home",
+          "home_defends": "left",
+          "down": null,
+          "yards_to_go": null,
+          "yardline_100": 98,
+          "home_score": 6,
+          "away_score": 0
+        },
+        "participants": [
+          {
+            "role": "rusher",
+            "player_id": "demo-home-rusher",
+            "name": "Demo Runner"
+          }
+        ],
+        "flags": {
+          "first_down": true,
+          "touchdown": true,
+          "turnover": false,
+          "safety": false,
+          "made": null,
+          "penalty_on": null
+        },
+        "score_delta": {
+          "home": 6,
+          "away": 0
+        },
+        "stat_deltas": [
+          {
+            "player_id": "demo-home-rusher",
+            "stat": "rushing_yards",
+            "value": 20
+          },
+          {
+            "player_id": "demo-home-rusher",
+            "stat": "carries",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "sequence": 5,
+        "period": 1,
+        "clock_before_s": 719,
+        "clock_after_s": 719,
+        "possession": "home",
+        "play_type": "extra_point",
+        "yards": 0,
+        "yardline_100": 98,
+        "ball_start_x": 2,
+        "ball_end_x": 2,
+        "before": {
+          "period": 1,
+          "clock_s": 719,
+          "possession": "home",
+          "home_defends": "left",
+          "down": null,
+          "yards_to_go": null,
+          "yardline_100": 98,
+          "home_score": 6,
+          "away_score": 0
+        },
+        "after": {
+          "period": 1,
+          "clock_s": 719,
+          "possession": "home",
+          "home_defends": "left",
+          "down": null,
+          "yards_to_go": null,
+          "yardline_100": 65,
+          "home_score": 7,
+          "away_score": 0
+        },
+        "participants": [],
+        "flags": {
+          "first_down": false,
+          "touchdown": false,
+          "turnover": false,
+          "safety": false,
+          "made": true,
+          "penalty_on": null
+        },
+        "score_delta": {
+          "home": 1,
+          "away": 0
+        },
+        "stat_deltas": []
+      },
+      {
+        "sequence": 6,
+        "period": 1,
+        "clock_before_s": 719,
+        "clock_after_s": 711,
+        "possession": "home",
+        "play_type": "kickoff",
+        "yards": 0,
+        "yardline_100": 65,
+        "ball_start_x": 35,
+        "ball_end_x": 100,
+        "before": {
+          "period": 1,
+          "clock_s": 719,
+          "possession": "home",
+          "home_defends": "left",
+          "down": null,
+          "yards_to_go": null,
+          "yardline_100": 65,
+          "home_score": 7,
+          "away_score": 0
+        },
+        "after": {
+          "period": 1,
+          "clock_s": 711,
+          "possession": "away",
+          "home_defends": "left",
+          "down": 1,
+          "yards_to_go": 10,
+          "yardline_100": 75,
+          "home_score": 7,
+          "away_score": 0
+        },
+        "participants": [],
+        "flags": {
+          "first_down": false,
+          "touchdown": false,
+          "turnover": false,
+          "safety": false,
+          "made": null,
+          "penalty_on": null
+        },
+        "score_delta": {
+          "home": 0,
+          "away": 0
+        },
+        "stat_deltas": []
+      },
+      {
+        "sequence": 7,
+        "period": 1,
+        "clock_before_s": 711,
+        "clock_after_s": 676,
+        "possession": "away",
+        "play_type": "run",
+        "yards": 4,
+        "yardline_100": 75,
+        "ball_start_x": 75,
+        "ball_end_x": 71,
+        "before": {
+          "period": 1,
+          "clock_s": 711,
+          "possession": "away",
+          "home_defends": "left",
+          "down": 1,
+          "yards_to_go": 10,
+          "yardline_100": 75,
+          "home_score": 7,
+          "away_score": 0
+        },
+        "after": {
+          "period": 1,
+          "clock_s": 676,
+          "possession": "away",
+          "home_defends": "left",
+          "down": 2,
+          "yards_to_go": 6,
+          "yardline_100": 71,
+          "home_score": 7,
+          "away_score": 0
+        },
+        "participants": [
+          {
+            "role": "rusher",
+            "player_id": "demo-away-rusher",
+            "name": "Demo Runner"
+          }
+        ],
+        "flags": {
+          "first_down": false,
+          "touchdown": false,
+          "turnover": false,
+          "safety": false,
+          "made": null,
+          "penalty_on": null
+        },
+        "score_delta": {
+          "home": 0,
+          "away": 0
+        },
+        "stat_deltas": [
+          {
+            "player_id": "demo-away-rusher",
+            "stat": "rushing_yards",
+            "value": 4
+          },
+          {
+            "player_id": "demo-away-rusher",
+            "stat": "carries",
+            "value": 1
+          }
+        ]
+      },
+      {
+        "sequence": 8,
+        "period": 1,
+        "clock_before_s": 676,
+        "clock_after_s": 638,
+        "possession": "away",
+        "play_type": "pass_complete",
+        "yards": 12,
+        "yardline_100": 71,
+        "ball_start_x": 71,
+        "ball_end_x": 59,
+        "before": {
+          "period": 1,
+          "clock_s": 676,
+          "possession": "away",
+          "home_defends": "left",
+          "down": 2,
+          "yards_to_go": 6,
+          "yardline_100": 71,
+          "home_score": 7,
+          "away_score": 0
+        },
+        "after": {
+          "period": 1,
+          "clock_s": 638,
+          "possession": "away",
+          "home_defends": "left",
+          "down": 1,
+          "yards_to_go": 10,
+          "yardline_100": 59,
+          "home_score": 7,
+          "away_score": 0
+        },
+        "participants": [
+          {
+            "role": "target",
+            "player_id": "demo-away-target",
+            "name": "Demo Receiver"
+          },
+          {
+            "role": "passer",
+            "player_id": "demo-away-passer",
+            "name": "Demo Quarterback"
+          }
+        ],
+        "flags": {
+          "first_down": true,
+          "touchdown": false,
+          "turnover": false,
+          "safety": false,
+          "made": null,
+          "penalty_on": null
+        },
+        "score_delta": {
+          "home": 0,
+          "away": 0
+        },
+        "stat_deltas": [
+          {
+            "player_id": "demo-away-target",
+            "stat": "receiving_yards",
+            "value": 12
+          },
+          {
+            "player_id": "demo-away-target",
+            "stat": "receptions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-away-passer",
+            "stat": "passing_yards",
+            "value": 12
+          },
+          {
+            "player_id": "demo-away-passer",
+            "stat": "completions",
+            "value": 1
+          },
+          {
+            "player_id": "demo-away-passer",
+            "stat": "pass_attempts",
+            "value": 1
+          }
+        ]
+      }
+    ]
+  },
+  "box_score": {
+    "home": 7,
+    "away": 0
+  },
+  "input_hash": "dd7e901fe8a3319448b04a6f4642419f1118b8741acf9762f970953ff834a65e"
+}
