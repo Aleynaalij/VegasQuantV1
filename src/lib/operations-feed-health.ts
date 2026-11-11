@@ -51,16 +51,20 @@ export function summarizeOperationsFeed(
     );
   }
   const stale = result.timeState === "stale";
-  const status =
-    result.state === "ok" && history[0] && isSuccess(history[0])
-      ? stale
-        ? "stale"
-        : "current"
-      : result.state === "missing" ||
-          result.state === "unknown" ||
-          result.state === "ok"
-        ? "unavailable"
-        : result.state;
+  let status: OperationsFeedHealth["status"] = "unavailable";
+  switch (result.state) {
+    case "ok":
+      if (history[0] && isSuccess(history[0]))
+        status = stale ? "stale" : "current";
+      break;
+    case "failed":
+    case "partial":
+    case "no_events":
+    case "not_due":
+    case "skipped":
+      status = result.state;
+      break;
+  }
   return {
     provider,
     status,
