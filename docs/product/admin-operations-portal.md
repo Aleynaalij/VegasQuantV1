@@ -1,4 +1,4 @@
-# Admin operations portal · support and releases
+# Admin operations portal · support, releases, and feed health
 
 ## Inventory and navigation
 
@@ -17,7 +17,7 @@ A report retry with the same request ID and selection returns the same receipt. 
 
 | Area | Existing source | Contract and current state |
 | --- | --- | --- |
-| Service health | `/admin/feeds` and `feed_runs` | Link to the existing desk. A later operations summary can project allowlisted source/status values and UTC last success/check with a per-source stale threshold. Raw details stay out of the portal. Unavailable means no approved observation, not a healthy service. |
+| Service health | `/admin/feeds` and `feed_runs` | After the queue’s current MFA admin check, read up to 50 recent runs per each of the six existing NFL checks with the same bearer and existing RLS. Display latest check and last successful run in UTC. Use the existing 30-minute job threshold; show failed, partial, skipped, no-events and not-due outcomes separately. Ignore future timestamps; do not count carried-forward runs or odds rows without coverage markers as fresh successes. Missing evidence and query failures show unavailable. Do not return raw run details, and do not infer quote, slate, other-sport or settlement coverage. |
 | Releases | Git commits and Vercel deployments | The queue response shows the Vercel deployment serving that request, its environment, observation time, and GitHub commit when the runtime identifies the expected repository. Missing metadata stays unavailable. The Vercel dashboard provides history; this view does not verify domain promotion, health, or previous builds. No API token, new database grant, or migration is needed. |
 | Traffic | Existing admin engagement metrics | No visitor feed connected. Engagement metrics cannot stand in for visits. A later aggregate needs a documented numerator, time window, timezone, source timestamp and coverage. |
 | Support email | #218 contact gap | Not connected. A later intake adapter needs an external message ID for deduplication, receipt time, approved category mapping and a separately reviewed contact/erasure policy. Replies and delivery states require their own authorization. |

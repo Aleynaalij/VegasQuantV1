@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { onUserChange } from "@/lib/auth-user";
+import {
+  operationsFeedMaxAgeMinutes,
+  operationsFeedSample,
+  type OperationsFeedHealth,
+} from "@/lib/operations-feed-health";
 import { supabase } from "@/lib/supabase";
 import {
   operationFeatures,
@@ -54,6 +59,21 @@ const utc = new Intl.DateTimeFormat("en-US", {
   timeStyle: "short",
   timeZone: "UTC",
 });
+
+const feedStatusNames: Record<OperationsFeedHealth["status"], string> = {
+  current: "Current",
+  stale: "Stale",
+  unavailable: "Unavailable",
+  failed: "Failed",
+  partial: "Partial",
+  no_events: "No upcoming events",
+  not_due: "Not due",
+  skipped: "Skipped",
+};
+
+function utcTime(value: string) {
+  return <time dateTime={value}>{utc.format(new Date(value))} UTC</time>;
+}
 
 async function operation(input: OperationInput): Promise<OperationResult> {
   try {
@@ -300,12 +320,48 @@ export function OperationsQueue() {
               </a>
             </p>
           </section>
-          <section aria-label="Operational sources">
-            <h2>Operational sources</h2>
+          <section aria-labelledby="operations-health-heading">
+            <h2 id="operations-health-heading">NFL feed health</h2>
+            {queue.feedHealth ? (
+              <>
+                <p>Checked {utcTime(queue.feedHealth.checkedAt)}.</p>
+                <ul>
+                  {queue.feedHealth.feeds.map((feed) => (
+                    <li key={feed.provider}>
+                      <strong>{feed.provider}</strong> ·{" "}
+                      {feedStatusNames[feed.status]}
+                      {feed.stale && feed.status !== "stale"
+                        ? " · Last check stale"
+                        : ""}
+                      <div>
+                        Last check:{" "}
+                        {feed.latestAt ? utcTime(feed.latestAt) : "Unavailable"}
+                      </div>
+                      <div>
+                        Last successful run:{" "}
+                        {feed.lastSuccessAt
+                          ? utcTime(feed.lastSuccessAt)
+                          : "Not found in recent runs"}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                <p>
+                  Checks older than {operationsFeedMaxAgeMinutes} minutes are
+                  stale. Success is based on the latest {operationsFeedSample}{" "}
+                  recorded runs per feed. These checks do not verify current
+                  quotes, game coverage, settlement, or other sports.
+                </p>
+              </>
+            ) : (
+              <p>Feed health summary unavailable.</p>
+            )}
             <p>
               <Link href="/admin/feeds">Open existing Feed Health</Link>.
-              Operations health summary unavailable.
             </p>
+          </section>
+          <section aria-label="Operational sources">
+            <h2>Other operational sources</h2>
             <p>Traffic metrics unavailable. Support email not connected.</p>
           </section>
         </>

@@ -1,3 +1,5 @@
+import type { OperationsFeedHealth } from "./operations-feed-health";
+
 export const operationFeatures = [
   "account",
   "research",
@@ -58,6 +60,7 @@ export type OperationResult =
       tickets: Ticket[];
       next: TicketCursor | null;
       release?: OperationsRelease | null;
+      feedHealth?: { checkedAt: string; feeds: OperationsFeedHealth[] };
     }
   | { state: "ready"; ticket: Ticket; events: TicketEvent[] };
 

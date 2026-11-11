@@ -1,3 +1,8 @@
+import {
+  operationsProviders,
+  operationsFeedSample,
+  summarizeOperationsFeed,
+} from "@/lib/operations-feed-health";
 import { observeOperationsRelease } from "@/lib/operations-release";
 import { requestUser, sameOrigin } from "@/lib/billing-server";
 import {
@@ -78,8 +83,37 @@ export async function POST(req: Request) {
       input.action === "list" &&
       result.state === "ready" &&
       "tickets" in result
-    )
-      return reply({ ...result, release: observeOperationsRelease() });
+    ) {
+      const checkedAt = new Date();
+      const timeout = AbortSignal.timeout(4000);
+      const feeds = await Promise.all(
+        operationsProviders.map(async (provider) => {
+          try {
+            const runs = await session.db
+              .from("feed_runs")
+              .select("provider,status,created_at,details")
+              .eq("provider", provider)
+              .lte("created_at", checkedAt.toISOString())
+              .order("created_at", { ascending: false })
+              .order("id", { ascending: false })
+              .limit(operationsFeedSample)
+              .abortSignal(timeout);
+            return summarizeOperationsFeed(
+              provider,
+              runs.error ? [] : (runs.data ?? []),
+              checkedAt.getTime(),
+            );
+          } catch {
+            return summarizeOperationsFeed(provider, [], checkedAt.getTime());
+          }
+        }),
+      );
+      return reply({
+        ...result,
+        release: observeOperationsRelease(),
+        feedHealth: { checkedAt: checkedAt.toISOString(), feeds },
+      });
+    }
     return reply(result);
   } catch {
     return reply({ state: "unavailable" });
