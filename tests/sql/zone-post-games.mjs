@@ -40,8 +40,11 @@ insert into public.sports_games values
  ('${G(22)}','nhl','2026-11-11 00:00+00','{"away":{"name":"New Jersey Devils","short_name":"Devils","abbreviation":"NJ"},"home":{"name":"Winnipeg Jets","short_name":"Jets","abbreviation":"WPG"}}'),
  ('${G(31)}','ncaab','2026-11-11 02:00+00','{"away":{"name":"Utah Tech Trailblazers","short_name":"Utah Tech","abbreviation":"UTU"},"home":{"name":"Utah State Aggies","short_name":"Utah State","abbreviation":"USU"}}'),
  ('${G(32)}','ncaab','2026-11-11 02:00+00','{"away":{"name":"Queens University Royals","short_name":"Queens","abbreviation":"QUC"},"home":{"name":"Utah Utes","short_name":"Utah","abbreviation":"UTAH"}}');
-create table private.nhl_chart_snapshots(id uuid default gen_random_uuid(), game_id uuid, post_id uuid);`);
+insert into public.community_posts(user_id,sport,title,body,created_at) values ('${DEALER}','nhl','Devils at Jets: New Jersey Devils moneyline','x','2026-11-10 19:00+00');`);
+// The migration (and its backfill of an existing NHL post) must run before the NHL charts table exists.
 await db.exec(fs.readFileSync("supabase/migrations/20261111010000_zone_post_games.sql", "utf8"));
+assert.equal((await db.query("select count(*)::int n from private.zone_post_games where game_id=$1", [G(22)])).rows[0].n, 1, "backfill tags without the charts table");
+await db.exec("create table private.nhl_chart_snapshots(id uuid default gen_random_uuid(), game_id uuid, post_id uuid)");
 
 const post = async (sport, title, body, extra = {}) => {
   const r = await db.query(

@@ -60,6 +60,7 @@ create function private.zone_tag_post(p_post uuid) returns integer
 language plpgsql security definer set search_path='' as $$
 declare p public.community_posts; txt text; n integer := 0; g record; a text; h text; hit boolean; threes_day date;
  tail text; seen text[] := '{}'; pair text;
+ has_charts boolean := to_regclass('private.nhl_chart_snapshots') is not null;
 begin
  select * into p from public.community_posts where id = p_post;
  if not found or not exists (select 1 from private.zone_automation z where z.user_id = p.user_id) then return 0; end if;
@@ -97,8 +98,10 @@ begin
    hit := exists (select 1 from public.nba_editorial_picks e where e.game_id = g.game_id
      and e.published_at = p.created_at and p.title ilike private.zone_like(e.player) || '%');
   end if;
-  if not hit and p.sport = 'nhl' then
-   hit := exists (select 1 from private.nhl_chart_snapshots c where c.post_id = p.id and c.game_id = g.game_id);
+  -- The charts table arrives in its own migration (20261111000938); the tagger must work without it.
+  if not hit and p.sport = 'nhl' and has_charts then
+   execute 'select exists (select 1 from private.nhl_chart_snapshots c where c.post_id = $1 and c.game_id = $2)'
+    into hit using p.id, g.game_id;
   end if;
   if hit then
    insert into private.zone_post_games (post_id, game_id, sport) values (p.id, g.game_id, g.sport)
