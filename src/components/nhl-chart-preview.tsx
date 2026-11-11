@@ -39,6 +39,7 @@ export default function NhlChartPreview({
   return (
     <section
       className="nhl-chart-package"
+      data-no-tab-swipe
       aria-label="NHL research chart pages"
       onTouchStart={(e) => {
         touch.current = (e.target as HTMLElement).closest(

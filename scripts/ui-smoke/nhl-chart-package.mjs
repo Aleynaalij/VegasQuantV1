@@ -149,11 +149,10 @@ try {
       );
     });
     assert.match(await chart.locator("nav").innerText(), /3 \/ 3/);
-    console.log(
-      "NHL disclosure diagnostics",
-      width,
-      await chart.locator("summary").allTextContents(),
-      await page.url(),
+    assert.equal(
+      new URL(page.url()).pathname,
+      "/community",
+      "chart swipe must stay in The Zone",
     );
     fs.mkdirSync("artifacts/ui-smoke", { recursive: true });
     await chart.screenshot({
