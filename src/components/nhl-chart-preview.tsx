@@ -1,4 +1,5 @@
 "use client";
+import "./nhl-chart-preview.css";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -96,6 +97,13 @@ export default function NhlChartPreview({
           download: `vegas-quant-nhl-${id}-page-${page}.png`,
         }}
       />
+      <a
+        href={`/api/nhl/chart/${id}/${page}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Open full-size chart ↗
+      </a>
       <details className="publication-analysis">
         <summary>Full chart data, sources & gaps</summary>
         {failed ? (
