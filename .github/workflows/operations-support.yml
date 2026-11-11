@@ -9,6 +9,7 @@ on:
       - 'src/lib/operations-support.ts'
       - 'src/lib/operations-release.ts'
       - 'src/lib/operations-feed-health.ts'
+      - 'src/lib/operations-traffic.ts'
       - 'src/lib/feed-health.ts'
       - 'supabase/migrations/*admin_operations_support.sql'
       - 'tests/**/operations-support.*'

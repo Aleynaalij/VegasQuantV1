@@ -360,9 +360,66 @@ export function OperationsQueue() {
               <Link href="/admin/feeds">Open existing Feed Health</Link>.
             </p>
           </section>
+          <section aria-labelledby="operations-traffic-heading">
+            <h2 id="operations-traffic-heading">Site traffic</h2>
+            {queue.traffic?.state === "ready" ? (
+              <>
+                <p>
+                  {queue.traffic.since.slice(0, 10)} through{" "}
+                  {queue.traffic.until.slice(0, 10)} UTC · Vercel Web Analytics
+                </p>
+                <p>
+                  {queue.traffic.totals.visitors.toLocaleString("en-US")}{" "}
+                  visitors ·{" "}
+                  {queue.traffic.totals.pageviews.toLocaleString("en-US")} page
+                  views
+                </p>
+                <p>
+                  Checked {utcTime(queue.traffic.checkedAt)}. Counts cover
+                  recorded project traffic.
+                </p>
+                {queue.traffic.trend?.length ? (
+                  <table>
+                    <caption>Daily recorded traffic (UTC)</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Day</th>
+                        <th scope="col">Visitors</th>
+                        <th scope="col">Page views</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {queue.traffic.trend.map(
+                        ({ day, visitors, pageviews }) => (
+                          <tr key={day}>
+                            <th scope="row">{day}</th>
+                            <td>{visitors.toLocaleString("en-US")}</td>
+                            <td>{pageviews.toLocaleString("en-US")}</td>
+                          </tr>
+                        ),
+                      )}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p>No daily breakdown returned.</p>
+                )}
+              </>
+            ) : (
+              <p>
+                {queue.traffic?.state === "unavailable"
+                  ? "Traffic counts are unavailable. Try refreshing later."
+                  : "Traffic reporting isn’t connected."}
+              </p>
+            )}
+            <p>
+              <a href="https://vercel.com/goatq2s-projects/vegas-quant-v1/analytics">
+                Open Vercel Web Analytics
+              </a>
+            </p>
+          </section>
           <section aria-label="Operational sources">
             <h2>Other operational sources</h2>
-            <p>Traffic metrics unavailable. Support email not connected.</p>
+            <p>Support email not connected.</p>
           </section>
         </>
       )}

@@ -1,3 +1,4 @@
+import { observeOperationsTraffic } from "../src/lib/operations-traffic";
 import {
   operationsProviders,
   summarizeOperationsFeed,
@@ -139,7 +140,8 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
   const success = await POST(request({ action: "list" }, "fixture-admin"));
   assert.equal(success.status, 200);
   assert.match(success.headers.get("cache-control") ?? "", /no-store/);
-  const { feedHealth, ...payload } = await success.json();
+  const { feedHealth, traffic, ...payload } = await success.json();
+  assert.equal(traffic.state, "not_connected");
   assert.deepEqual(feedRequests, new Set(operationsProviders));
   assert.deepEqual(
     feedHealth.feeds.map((feed: { status: string }) => feed.status),
@@ -258,4 +260,70 @@ test("feed health separates latest checks from successful runs and rejects unsup
     summarizeOperationsFeed(provider, [run(1, "error")], now).status,
     "failed",
   );
+});
+
+test("traffic reports Vercel totals without summing visitors or filling missing days", async (t) => {
+  const now = new Date("2026-11-11T14:00:00Z");
+  const env = {
+    VERCEL_ENV: "production",
+    VQ_ANALYTICS_READ_TOKEN: "fixture",
+    VQ_ANALYTICS_PROJECT_ID: "prj_fixture",
+    VQ_ANALYTICS_TEAM_ID: "team_fixture",
+  };
+  const saved = Object.fromEntries(
+    Object.keys(env).map((key) => [key, process.env[key]]),
+  );
+  t.after(() => {
+    for (const [key, value] of Object.entries(saved))
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+  });
+  Object.assign(process.env, env);
+  let denied = false;
+  t.mock.method(
+    globalThis,
+    "fetch",
+    async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      assert.equal(url.origin, "https://api.vercel.com");
+      assert.equal(
+        new Headers(init?.headers).get("authorization"),
+        "Bearer fixture",
+      );
+      assert.equal(url.searchParams.get("since"), "2026-11-04T00:00:00.000Z");
+      assert.equal(url.searchParams.get("until"), "2026-11-10T23:59:59.999Z");
+      if (denied) return Response.json({ error: "private" }, { status: 403 });
+      const data = url.pathname.endsWith("/count")
+        ? { visitors: 6, pageviews: 11 }
+        : [
+            {
+              timestamp: "2026-11-05T00:00:00.000Z",
+              visitors: 4,
+              pageviews: 6,
+            },
+            {
+              timestamp: "2026-11-04T00:00:00.000Z",
+              visitors: 4,
+              pageviews: 5,
+            },
+          ];
+      return Response.json({ version: 1, data });
+    },
+  );
+  const report = await observeOperationsTraffic(now);
+  assert.equal(report.state, "ready");
+  if (report.state !== "ready") return;
+  assert.deepEqual(report.totals, { visitors: 6, pageviews: 11 });
+  assert.deepEqual(
+    report.trend?.map((row) => row.day),
+    ["2026-11-04", "2026-11-05"],
+  );
+  denied = true;
+  assert.deepEqual(await observeOperationsTraffic(now), {
+    state: "unavailable",
+  });
+  process.env.VERCEL_ENV = "preview";
+  assert.deepEqual(await observeOperationsTraffic(now), {
+    state: "not_connected",
+  });
 });

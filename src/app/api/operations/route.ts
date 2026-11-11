@@ -1,3 +1,4 @@
+import { observeOperationsTraffic } from "@/lib/operations-traffic";
 import {
   operationsProviders,
   operationsFeedSample,
@@ -86,6 +87,7 @@ export async function POST(req: Request) {
     ) {
       const checkedAt = new Date();
       const timeout = AbortSignal.timeout(4000);
+      const traffic = observeOperationsTraffic(checkedAt);
       const feeds = await Promise.all(
         operationsProviders.map(async (provider) => {
           try {
@@ -111,6 +113,7 @@ export async function POST(req: Request) {
       return reply({
         ...result,
         release: observeOperationsRelease(),
+        traffic: await traffic,
         feedHealth: { checkedAt: checkedAt.toISOString(), feeds },
       });
     }
