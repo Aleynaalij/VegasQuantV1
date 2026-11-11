@@ -1,3 +1,9 @@
+# Admin operations draft · November 8, 2026
+
+ADMIN-PORTAL-01 on `codex/admin-portal-01` starts the separate operations queue and structured malfunction intake. Claim and review coordination are recorded on #65. The draft uses verified bearer sessions and database MFA authorization for queue and triage, with private ticket storage, bounded reads, retry keys, rate limits and audited status updates. The [draft contract](../product/admin-operations-portal.md) records the source inventory and the remaining health, deployment, traffic and email adapters. Activation requires separate review of the schema and rollout policy.
+
+---
+
 # Compact research card draft · November 9, 2026
 
 Task COMPACT-RESEARCH-CARDS. Owner requested a shorter research card consistent with existing Vegas Quant cards. Local branch `fix/compact-research-cards`, base `daddf05`. The Zone publication renderer now uses one 1080×1350 research preview: recognized WR reports show all five stored player lines, both prices and the quote observation time; other reports use a bounded one-column excerpt. Full titles, body text, injuries, caveats and source links remain in the keyboard-accessible disclosure. Existing pick/watchlist, 3-point and matchup-sheet paths remain separate. No stored report or data contract changes.

@@ -1,0 +1,39 @@
+name: Admin operations draft acceptance
+on:
+  pull_request:
+    paths:
+      - 'src/app/admin/operations/**'
+      - 'src/app/support/report/**'
+      - 'src/app/api/operations/**'
+      - 'src/components/operations-support.tsx'
+      - 'src/lib/operations-support.ts'
+      - 'supabase/migrations/*admin_operations_support.sql'
+      - 'tests/**/operations-support.*'
+      - 'scripts/ui-smoke/operations-support.mjs'
+      - '.github/workflows/operations-support.yml'
+permissions:
+  contents: read
+jobs:
+  operations-support:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --import tsx --test tests/operations-support.test.ts
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
+      - run: |
+          npm install --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Run synthetic report and queue journeys
+        run: |
+          node scripts/ui-smoke/stub.mjs &
+          LIVE_SCORES_DISABLED=1 npx next start -H 127.0.0.1 -p 3100 &
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3100/support && break; sleep 2; done
+          node scripts/ui-smoke/operations-support.mjs
