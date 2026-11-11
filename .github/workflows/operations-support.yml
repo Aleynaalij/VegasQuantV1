@@ -8,6 +8,8 @@ on:
       - 'src/components/operations-support.tsx'
       - 'src/lib/operations-support.ts'
       - 'src/lib/operations-release.ts'
+      - 'src/lib/operations-feed-health.ts'
+      - 'src/lib/feed-health.ts'
       - 'supabase/migrations/*admin_operations_support.sql'
       - 'tests/**/operations-support.*'
       - 'scripts/ui-smoke/operations-support.mjs'

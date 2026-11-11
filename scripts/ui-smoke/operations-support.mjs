@@ -89,6 +89,25 @@ async function fixture(width, role, intercept) {
           state: "ready",
           tickets: [ticket],
           next: null,
+          feedHealth: {
+            checkedAt: time,
+            feeds: [
+              {
+                provider: "ESPN",
+                status: "stale",
+                latestAt: time,
+                lastSuccessAt: time,
+                stale: true,
+              },
+              {
+                provider: "ESPN injuries",
+                status: "unavailable",
+                latestAt: null,
+                lastSuccessAt: null,
+                stale: false,
+              },
+            ],
+          },
           release: {
             environment: width === 390 ? "preview" : "production",
             deploymentId: "dpl_fixture12345",
@@ -278,6 +297,12 @@ try {
   for (const width of [390, 1280]) {
     const admin = await fixture(width, "admin");
     await admin.page.goto(base + "/admin/operations");
+    const health = admin.page.getByRole("region", { name: "NFL feed health" });
+    await health.getByText(/ESPN · Stale/).waitFor();
+    await health.getByText(/ESPN injuries · Unavailable/).waitFor();
+    await health
+      .getByRole("link", { name: "Open existing Feed Health" })
+      .waitFor();
     const release = admin.page.getByRole("region", {
       name: "Deployment serving this page",
     });

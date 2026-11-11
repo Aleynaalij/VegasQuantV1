@@ -1,3 +1,7 @@
+import {
+  operationsProviders,
+  summarizeOperationsFeed,
+} from "../src/lib/operations-feed-health";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
@@ -51,6 +55,7 @@ test("operations validates exact structured input and rejects arbitrary or priva
 
 test("operations route verifies user bearer, enforces origin and keeps internal errors out of responses", async (t) => {
   let calls = 0;
+  const feedRequests = new Set<string>();
   t.mock.method(
     globalThis,
     "fetch",
@@ -68,6 +73,25 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
           id,
           email_confirmed_at: "2026-11-07T00:00:00Z",
         });
+      }
+      if (url.pathname.endsWith("/feed_runs")) {
+        assert.equal(token, "Bearer fixture-admin");
+        const provider = url.searchParams.get("provider")!.slice(3);
+        feedRequests.add(provider);
+        assert.equal(url.searchParams.get("limit"), "50");
+        if (provider === "ESPN injuries")
+          return Response.json(
+            { message: "private fixture payload" },
+            { status: 500 },
+          );
+        return Response.json([
+          {
+            provider,
+            status: "ok",
+            created_at: new Date(Date.now() - 1000).toISOString(),
+            details: { events: 3, secret: "private fixture payload" },
+          },
+        ]);
       }
       assert.ok(url.pathname.endsWith("/rpc/operations_support"));
       assert.ok(
@@ -111,10 +135,20 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
   const denied = await POST(request({ action: "list" }, "fixture-member"));
   assert.equal(denied.status, 403);
   assert.deepEqual(await denied.json(), { state: "forbidden" });
+  assert.equal(feedRequests.size, 0);
   const success = await POST(request({ action: "list" }, "fixture-admin"));
   assert.equal(success.status, 200);
   assert.match(success.headers.get("cache-control") ?? "", /no-store/);
-  const payload = await success.json();
+  const { feedHealth, ...payload } = await success.json();
+  assert.deepEqual(feedRequests, new Set(operationsProviders));
+  assert.deepEqual(
+    feedHealth.feeds.map((feed: { status: string }) => feed.status),
+    ["current", "unavailable", "current", "current", "current", "current"],
+  );
+  assert.doesNotMatch(
+    JSON.stringify(feedHealth),
+    /private fixture payload|details/,
+  );
   const expectedRelease = observeOperationsRelease();
   assert.deepEqual(payload, {
     state: "ready",
@@ -169,4 +203,59 @@ test("deployment identity is sourced from the serving runtime and never guesses 
     null,
   );
   assert.equal(observeOperationsRelease({}, now), null);
+});
+
+test("feed health separates latest checks from successful runs and rejects unsupported freshness", () => {
+  const now = Date.parse("2026-11-11T14:00:00Z");
+  const provider = "The Odds API props";
+  const run = (
+    minutes: number,
+    status: string,
+    details?: Record<string, unknown>,
+  ) => ({
+    provider,
+    status,
+    details,
+    created_at: new Date(now - minutes * 60_000).toISOString(),
+  });
+  const oldSuccess = run(40, "ok", { events: 2 });
+  assert.deepEqual(
+    summarizeOperationsFeed(
+      provider,
+      [run(-1, "ok", { events: 2 }), run(2, "partial"), oldSuccess],
+      now,
+    ),
+    {
+      provider,
+      status: "partial",
+      latestAt: run(2, "partial").created_at,
+      lastSuccessAt: oldSuccess.created_at,
+      stale: false,
+    },
+  );
+  assert.equal(
+    summarizeOperationsFeed(provider, [oldSuccess], now).status,
+    "stale",
+  );
+  assert.equal(
+    summarizeOperationsFeed(provider, [run(1, "ok")], now).status,
+    "unavailable",
+  );
+  assert.equal(
+    summarizeOperationsFeed(
+      provider,
+      [run(1, "ok", { carried_forward: true, events: 2 })],
+      now,
+    ).lastSuccessAt,
+    null,
+  );
+  assert.equal(
+    summarizeOperationsFeed(provider, [run(1, "no upcoming events")], now)
+      .status,
+    "no_events",
+  );
+  assert.equal(
+    summarizeOperationsFeed(provider, [run(1, "error")], now).status,
+    "failed",
+  );
 });
