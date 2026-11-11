@@ -205,7 +205,11 @@ function Volume({ s, index }: { s: NhlChartSnapshot; index: number }) {
     );
   const samples = dates.map((d) => p.samples.find((x) => x.date === d)),
     mins = samples.map((x) => (x ? x.seconds / 60 : null)),
-    max = Math.max(35, ...mins.map((v) => Math.ceil((v ?? 0) / 5) * 5)),
+    all = s.teams
+      .flatMap((t) => chartPlayers(t).slice(0, 2))
+      .flatMap((p) => p.samples),
+    shotsMax = Math.max(8, ...all.map((x) => x.shots ?? 0)),
+    max = Math.max(35, ...all.map((x) => Math.ceil(x.seconds / 300) * 5)),
     y = (v: number) => 90 - (v / max) * 75;
   return (
     <div style={{ ...panel, marginTop: 20, gap: 8 }}>
@@ -220,12 +224,12 @@ function Volume({ s, index }: { s: NhlChartSnapshot; index: number }) {
         {p.minutes.toFixed(1)} min
       </Text>
       <Text size={36} color={green}>
-        SHOTS ON GOAL · prior team-game window
+        SHOTS ON GOAL · 0–{shotsMax} scale
       </Text>
       <Bars
         values={samples.map((x) => x?.shots ?? null)}
         labels={dates.map((d) => d.slice(5))}
-        max={Math.max(8, ...samples.map((x) => x?.shots ?? 0))}
+        max={shotsMax}
         height={80}
         width={163}
       />

@@ -1,6 +1,7 @@
 "use client";
 import "./nhl-chart-preview.css";
 import { useEffect, useRef, useState } from "react";
+import { swipeStep } from "@/lib/tab-swipe";
 import { supabase } from "@/lib/supabase";
 import {
   isNhlChart,
@@ -19,7 +20,7 @@ export default function NhlChartPreview({
     [data, setData] = useState<NhlChartSnapshot | null>(null),
     [failed, setFailed] = useState(false),
     [attempt, setAttempt] = useState(0);
-  const touch = useRef<number | null>(null);
+  const touch = useRef<{ x: number; y: number; at: number } | null>(null);
   useEffect(() => {
     let live = true;
     setData(null);
@@ -42,18 +43,24 @@ export default function NhlChartPreview({
       data-no-tab-swipe
       aria-label="NHL research chart pages"
       onTouchStart={(e) => {
-        touch.current = (e.target as HTMLElement).closest(
-          "details,nav,a,button",
-        )
-          ? null
-          : (e.touches[0]?.clientX ?? null);
+        const t = e.touches[0];
+        touch.current =
+          (e.target as HTMLElement).closest("details,nav,a,button") || !t
+            ? null
+            : { x: t.clientX, y: t.clientY, at: performance.now() };
       }}
       onTouchEnd={(e) => {
         const start = touch.current;
         touch.current = null;
-        const end = e.changedTouches[0]?.clientX;
-        if (start !== null && end !== undefined && Math.abs(end - start) > 60)
-          setPage((p) => Math.max(1, Math.min(9, p + (end < start ? 1 : -1))));
+        const end = e.changedTouches[0];
+        if (start && end) {
+          const step = swipeStep(
+            end.clientX - start.x,
+            end.clientY - start.y,
+            performance.now() - start.at,
+          );
+          if (step) setPage((p) => Math.max(1, Math.min(9, p + step)));
+        }
       }}
     >
       <nav
@@ -105,7 +112,7 @@ export default function NhlChartPreview({
         body={body}
         image={{
           src: `/api/nhl/chart/${id}/${page}`,
-          alt: `NHL ${page === 1 ? "matchup" : page <= 5 ? "player volume" : "blocked shots and roles"} research chart. Full data and sources below.`,
+          alt: `NHL ${page === 1 ? "matchup" : page <= 5 ? "player volume" : page <= 7 ? "blocked shots" : "goalies and projected power play"} research chart. Full data and sources below.`,
           download: `vegas-quant-nhl-${id}-page-${page}.png`,
         }}
       />

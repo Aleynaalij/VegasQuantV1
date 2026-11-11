@@ -7,7 +7,7 @@ Batch 1: nine native 1080 × 1350 evergreen/gold pages per eligible game, posted
 | Requested input / chart | State | Current source / precise gap |
 |---|---|---|
 | Matchup, start, home/road, recent GF/GA | Available | Existing schedule payload + verified NHL.com regular-season final boxes; last five completed team games, dates printed |
-| Player SOG, goals, points, rolling TOI | Available | Source-matched NHL.com final boxes; actual positive TOI; four leading shot-volume players on image, all available roster-matched rows in expanded table |
+| Player SOG, goals, points, rolling TOI | Available | Source-matched NHL.com final boxes; actual positive TOI; four leading shot-volume players across pages 2–5, all available roster-matched rows in expanded table |
 | Goalie status and recent GAA | Available, source-reported | Existing RotoWire report plus verified goalie boxes. Confirmed/expected/unknown and source retrieval time retained; does not establish final lineup clearance |
 | Projected PP1 | Available, projected | Existing timestamped RotoWire source; historical team label does not establish activation |
 | Full line combinations, injury/late-scratch updates | Being built | No reliable structured injury/5-on-5 line fields in current context. First daily snapshot does not automatically revise with late news; linked immutable revisions are next batch |

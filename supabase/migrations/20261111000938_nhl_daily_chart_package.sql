@@ -113,7 +113,7 @@ begin
  if not found then return jsonb_build_object('status','NOTHING_READY','coverage',outcomes);end if;
  post:=md5('nhl-chart-post:'||item.id::text)::uuid;
  if exists(select 1 from public.community_posts where id=post or card='nhl-charts:'||item.id::text) then raise exception 'Existing NHL chart publication requires reconciliation';end if;
- body:='Nine visual research pages: matchup and recent scoring; player shots/ice time; points and blocked shots. Collected '||(item.payload->>'collected_at')||'. Historical samples and missing fields are labeled. Goalies and PP units are source-reported snapshots, not final clearance. No selections or odds.'||E'\n'||(item.payload->>'nhl_url');
+ body:='Three visual research pages: matchup and recent scoring; player shots/ice time; points and blocked shots. Collected '||(item.payload->>'collected_at')||'. Historical samples and missing fields are labeled. Goalies and PP units are source-reported snapshots, not final clearance. No selections or odds.'||E'\n'||(item.payload->>'nhl_url');
  perform set_config('request.jwt.claim.sub',author::text,true);
  perform set_config('request.jwt.claims',jsonb_build_object('sub',author,'role','authenticated')::text,true);
  perform set_config('vq.automated_post','on',true);
