@@ -33,6 +33,24 @@ const easternDay = new Intl.DateTimeFormat("en-CA", {
   day: "2-digit",
 });
 
+// Require an explicit offset and reject calendar dates that Date.parse normalizes.
+function parseScheduleAttempt(value: string): number {
+  const timestamp =
+    /^(\d{4}-\d{2}-\d{2})T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/.exec(
+      value,
+    );
+  if (!timestamp || timestamp[0] !== value) return NaN;
+
+  const date = Date.parse(`${timestamp[1]}T00:00:00Z`);
+  if (
+    !Number.isFinite(date) ||
+    new Date(date).toISOString().slice(0, 10) !== timestamp[1]
+  ) {
+    return NaN;
+  }
+  return Date.parse(value);
+}
+
 export function verifyNbaPublication(evidence: PublicationEvidence): {
   status: PublicationStatus;
   reason: string;
@@ -104,11 +122,25 @@ export function verifyNbaPublication(evidence: PublicationEvidence): {
       reason: "The publisher journal records a wait.",
     };
   }
-  if (!journal && checked < Date.parse(scheduledAt[0])) {
-    return {
-      status: "WAITING",
-      reason: "The first scheduled attempt is still ahead.",
-    };
+  if (!journal) {
+    const [first, second] = scheduledAt.map(parseScheduleAttempt);
+    if (
+      !Number.isFinite(first) ||
+      !Number.isFinite(second) ||
+      first >= second ||
+      easternDay.format(first) !== slate ||
+      easternDay.format(second) !== slate
+    ) {
+      return unavailable(
+        "Scheduled attempts must have valid offsets and increase within the Eastern slate.",
+      );
+    }
+    if (checked < first) {
+      return {
+        status: "WAITING",
+        reason: "The first scheduled attempt is still ahead.",
+      };
+    }
   }
   return unavailable(
     "No verified publication or publisher disposition is available.",

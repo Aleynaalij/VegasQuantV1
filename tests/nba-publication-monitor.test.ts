@@ -111,3 +111,90 @@ test("the November 12 evidence shape leaves publication unresolved", () => {
     "EVIDENCE_UNAVAILABLE",
   );
 });
+
+test("schedule inference rejects missing or invalid offsets, normalized dates, wrong slate days and non-increasing instants", () => {
+  const first = "2026-11-16T14:20:00Z";
+  const second = "2026-11-16T15:20:00Z";
+  const cases: Record<string, readonly [string, string]> = {
+    "missing offset": ["2026-11-16T09:20:00", second],
+    "invalid offset hour": ["2026-11-16T09:20:00-24:00", second],
+    "invalid offset minute": [first, "2026-11-16T10:20:00-05:60"],
+    "invalid hour": ["2026-11-16T24:00:00Z", second],
+    "impossible date": ["2026-02-30T14:20:00Z", second],
+    "previous Eastern date": ["2026-11-16T04:59:59Z", second],
+    "next Eastern date": [first, "2026-11-17T05:00:00Z"],
+    "both attempts on the next date": [
+      "2026-11-17T14:20:00Z",
+      "2026-11-17T15:20:00Z",
+    ],
+    "reversed attempts": [second, first],
+    "equal instants with different offsets": [
+      first,
+      "2026-11-16T09:20:00-05:00",
+    ],
+  };
+
+  for (const [label, scheduledAt] of Object.entries(cases)) {
+    const result = verifyNbaPublication({
+      ...missing,
+      scheduler: null,
+      checkedAt: "2026-11-16T14:00:00Z",
+      eligibility: { eligibleGames: 4, observedAt: "2026-11-16T13:55:00Z" },
+      scheduledAt,
+    });
+    assert.equal(result.status, "EVIDENCE_UNAVAILABLE", label);
+    assert.match(result.reason, /Scheduled attempts/, label);
+  }
+});
+
+test("checks Eastern midnight and instant ordering on both DST transition days", () => {
+  const transitionCases = [
+    {
+      slate: "2026-03-08",
+      midnight: "2026-03-08T00:00:00-05:00",
+      beforeMidnight: "2026-03-08T04:59:59Z",
+      scheduledAt: ["2026-03-08T01:59:59-05:00", "2026-03-08T03:00:00-04:00"],
+    },
+    {
+      slate: "2026-11-01",
+      midnight: "2026-11-01T00:00:00-04:00",
+      beforeMidnight: "2026-11-01T03:59:59Z",
+      scheduledAt: ["2026-11-01T01:59:59-04:00", "2026-11-01T01:00:00-05:00"],
+    },
+  ] as const;
+  for (const {
+    slate,
+    midnight,
+    beforeMidnight,
+    scheduledAt,
+  } of transitionCases) {
+    const evidence = {
+      ...missing,
+      slate,
+      checkedAt: midnight,
+      scheduler: null,
+      eligibility: { eligibleGames: 1, observedAt: midnight },
+      scheduledAt,
+    };
+    assert.equal(verifyNbaPublication(evidence).status, "WAITING");
+    assert.equal(
+      verifyNbaPublication({
+        ...evidence,
+        scheduledAt: [beforeMidnight, scheduledAt[1]],
+      }).status,
+      "EVIDENCE_UNAVAILABLE",
+    );
+  }
+});
+
+test("independent publication and journal evidence survive an invalid schedule", () => {
+  for (const example of examples.slice(0, 4)) {
+    assert.equal(
+      verifyNbaPublication({
+        ...example.evidence,
+        scheduledAt: ["invalid", "2026-11-17T15:20:00Z"],
+      }).status,
+      example.status,
+    );
+  }
+});
