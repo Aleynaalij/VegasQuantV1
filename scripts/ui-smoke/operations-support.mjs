@@ -339,7 +339,10 @@ try {
       await monitor
         .getByText(/No verified publication or publisher disposition/)
         .waitFor();
-      await monitor.getByText(/4 eligible games/).waitFor();
+      await monitor
+        .locator("details", { has: missing })
+        .getByText(/4 eligible games/)
+        .waitFor();
       await monitor.getByText(/Unresolved investigation/).waitFor();
       await monitor.getByText(/Verified Dealer post/).click();
       await monitor.getByText("00000000-0000-4000-8000-000000000301").waitFor();
