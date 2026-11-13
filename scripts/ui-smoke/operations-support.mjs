@@ -357,7 +357,9 @@ try {
         name: "fixture EVIDENCE_UNAVAILABLE",
         exact: true,
       });
-      await discrepancy.getByText(/scheduler without post/).click();
+      await discrepancy
+        .getByText("scheduler without post · medium severity", { exact: true })
+        .click();
       await discrepancy
         .getByRole("button", { name: "Mark reviewed in this session" })
         .click();
