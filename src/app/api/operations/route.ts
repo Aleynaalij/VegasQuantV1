@@ -108,8 +108,15 @@ export async function POST(req: Request) {
           }
         }),
       );
+      const publicationMonitor =
+        process.env.VERCEL_ENV === "preview"
+          ? (
+              await import("@/lib/nba-publication-monitor-fixtures")
+            ).previewNbaPublicationMonitor()
+          : undefined;
       return reply({
         ...result,
+        publicationMonitor,
         release: observeOperationsRelease(),
         feedHealth: { checkedAt: checkedAt.toISOString(), feeds },
       });

@@ -98,6 +98,7 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
         [
           "Bearer fixture-admin",
           "Bearer fixture-member",
+          "Bearer fixture-admin-no-mfa",
           "Bearer fixture-db-error",
         ].includes(token ?? ""),
       );
@@ -106,7 +107,10 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
           { message: "private fixture payload" },
           { status: 500 },
         );
-      if (token === "Bearer fixture-member")
+      if (
+        token === "Bearer fixture-member" ||
+        token === "Bearer fixture-admin-no-mfa"
+      )
         return Response.json({
           state: "forbidden",
           details: "private fixture payload",
@@ -139,7 +143,11 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
   const success = await POST(request({ action: "list" }, "fixture-admin"));
   assert.equal(success.status, 200);
   assert.match(success.headers.get("cache-control") ?? "", /no-store/);
-  const { feedHealth, ...payload } = await success.json();
+  const {
+    feedHealth,
+    publicationMonitor: _monitor,
+    ...payload
+  } = await success.json();
   assert.deepEqual(feedRequests, new Set(operationsProviders));
   assert.deepEqual(
     feedHealth.feeds.map((feed: { status: string }) => feed.status),
@@ -158,6 +166,34 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
       observedAt: payload.release.observedAt,
     },
   });
+  const originalEnvironment = process.env.VERCEL_ENV;
+  try {
+    process.env.VERCEL_ENV = "preview";
+    for (const [token, status, state] of [
+      [undefined, 401, "unauthenticated"],
+      ["fixture-member", 403, "forbidden"],
+      ["fixture-admin-no-mfa", 403, "forbidden"],
+      ["fixture-db-error", 503, "unavailable"],
+    ] as const) {
+      const response = await POST(request({ action: "list" }, token));
+      assert.equal(response.status, status);
+      assert.deepEqual(await response.json(), { state });
+    }
+    const preview = await POST(request({ action: "list" }, "fixture-admin"));
+    assert.match(
+      preview.headers.get("cache-control") ?? "",
+      /private, no-store/,
+    );
+    const { publicationMonitor } = await preview.json();
+    assert.equal(publicationMonitor.length, 5);
+    assert.equal(publicationMonitor[4].status, "EVIDENCE_UNAVAILABLE");
+    process.env.VERCEL_ENV = "production";
+    const production = await POST(request({ action: "list" }, "fixture-admin"));
+    assert.ok(!("publicationMonitor" in (await production.json())));
+  } finally {
+    if (originalEnvironment === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = originalEnvironment;
+  }
   const error = await POST(request({ action: "list" }, "fixture-db-error"));
   assert.equal(error.status, 503);
   assert.deepEqual(await error.json(), { state: "unavailable" });

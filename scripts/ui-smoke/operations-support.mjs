@@ -1,6 +1,20 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { chromium } from "playwright";
+import { execFileSync } from "node:child_process";
+
+const publicationFixtures = JSON.parse(
+  execFileSync(
+    process.execPath,
+    [
+      "--import",
+      "tsx",
+      "-e",
+      'const { previewNbaPublicationMonitor } = require("./src/lib/nba-publication-monitor-fixtures"); console.log(JSON.stringify(previewNbaPublicationMonitor()));',
+    ],
+    { encoding: "utf8" },
+  ),
+);
 
 const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const browser = await chromium.launch({
@@ -89,6 +103,7 @@ async function fixture(width, role, intercept) {
           state: "ready",
           tickets: [ticket],
           next: null,
+          publicationMonitor: width === 390 ? publicationFixtures : undefined,
           feedHealth: {
             checkedAt: time,
             feeds: [
@@ -264,6 +279,12 @@ try {
     0,
   );
   assert.equal(anonymous.calls.length, 0);
+  assert.equal(
+    await anonymous.page
+      .getByRole("heading", { name: /Publication Monitor/ })
+      .count(),
+    0,
+  );
   await anonymous.context.close();
 
   const member = await fixture(390, "member");
@@ -278,6 +299,12 @@ try {
   assert.equal(
     await member.page
       .getByRole("heading", { name: "Deployment serving this page" })
+      .count(),
+    0,
+  );
+  assert.equal(
+    await member.page
+      .getByRole("heading", { name: /Publication Monitor/ })
       .count(),
     0,
   );
@@ -297,8 +324,34 @@ try {
   for (const width of [390, 1280]) {
     const admin = await fixture(width, "admin");
     await admin.page.goto(base + "/admin/operations");
+    const monitor = admin.page.getByRole("region", {
+      name: /Publication Monitor/,
+    });
+    if (width === 390) {
+      await monitor.getByText("Preview · Synthetic evidence").waitFor();
+      const missing = monitor.getByText(
+        /Scheduler succeeded, publication evidence missing/,
+      );
+      await missing.click();
+      await monitor
+        .getByText("EVIDENCE_UNAVAILABLE", { exact: true })
+        .waitFor();
+      await monitor
+        .getByText(/No verified publication or publisher disposition/)
+        .waitFor();
+      await monitor
+        .locator("details[open]")
+        .getByText(/4 eligible games/)
+        .waitFor();
+      await monitor.getByText(/Unresolved investigation/).waitFor();
+      await monitor.getByText(/Verified Dealer post/).click();
+      await monitor.getByText("00000000-0000-4000-8000-000000000301").waitFor();
+      if (process.env.VQ_MONITOR_SCREENSHOT)
+        await monitor.screenshot({ path: process.env.VQ_MONITOR_SCREENSHOT });
+    }
     const health = admin.page.getByRole("region", { name: "NFL feed health" });
     await health.getByText(/ESPN · Stale/).waitFor();
+    if (width === 1280) assert.equal(await monitor.count(), 0);
     await health.getByText(/ESPN injuries · Unavailable/).waitFor();
     await health
       .getByRole("link", { name: "Open existing Feed Health" })
