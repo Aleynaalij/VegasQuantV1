@@ -32,6 +32,11 @@ export function NbaPublicationIntelligence({ data }: { data: Preview }) {
             <p>
               {report.slate} Eastern · {report.reason}
             </p>
+            {evidence.integrityWarnings.map((warning) => (
+              <p key={warning}>
+                <strong>Evidence integrity warning.</strong> {warning}
+              </p>
+            ))}
             <dl>
               <dt>Expected deadline</dt>
               <dd>{time(report.deadline)}</dd>

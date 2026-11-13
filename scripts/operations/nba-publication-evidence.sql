@@ -32,6 +32,8 @@ begin
         then f.created_at end
       from public.feed_runs f where f.provider = 'ESPN NBA'
       order by f.created_at desc, f.id desc limit 1),
+    -- Current ingestion stores a batch date range, with no explicit per-slate completeness attestation.
+    'slateCoverage', null,
     'eligibleGames', (select count(*) from public.nba_games g
       where g.season_type = 2 and g.tipoff >= start_at and g.tipoff < end_at),
     'journal', case when journal.day is not null then jsonb_build_object(

@@ -31,6 +31,11 @@ const base = {
   journal: null,
   posts: [],
 };
+const slateCoverage = {
+  slate,
+  evaluatedAt: slate + "T15:31:00Z",
+  complete: true,
+};
 const assess = (changes: Record<string, unknown> = {}) =>
   assessPublication({ ...base, ...changes }, now, "fixture");
 const flags = (changes?: Record<string, unknown>) =>
@@ -46,7 +51,10 @@ test("live contract preserves five publication classifications", () => {
     assess({ journal: { ...journal, status: "SKIPPED", postId: null } }).status,
     "SKIPPED",
   );
-  assert.equal(assess({ eligibleGames: 0 }).status, "NO_ELIGIBLE_SLATE");
+  assert.equal(
+    assess({ eligibleGames: 0, slateCoverage }).status,
+    "NO_ELIGIBLE_SLATE",
+  );
   assert.equal(assess().status, "EVIDENCE_UNAVAILABLE");
 });
 
@@ -57,7 +65,7 @@ test("scheduler success and overdue missing evidence are separate from confirmed
       "publisher_failure",
     ),
   );
-  assert.deepEqual(flags({ eligibleGames: 0 }), []);
+  assert.deepEqual(flags({ eligibleGames: 0, slateCoverage }), []);
   assert.ok(!flags({ scheduleFeedAt: null }).includes("overdue"));
   assert.ok(
     !flags({ checkedAt: slate + "T15:30:00Z" }).includes("publisher_failure"),
@@ -115,5 +123,113 @@ test("UTC attempts retain their Eastern slate on DST transition days and across 
       "fixture",
     ).slate,
     slate,
+  );
+});
+
+test("FAILED journal and verified Dealer card preserve publication and open reconciliation", () => {
+  const failed = { ...journal, status: "FAILED" };
+  for (const changes of [
+    { journal: failed, posts: [post] },
+    { journal: { ...failed, postId: null }, posts: [post], runs: [run, run] },
+    {
+      journal: { ...failed, observedAt: "invalid" },
+      posts: [post],
+      eligibleGames: 0,
+    },
+  ]) {
+    const result = assess(changes);
+    assert.equal(result.status, "PUBLISHED");
+    assert.ok(
+      result.evidence.integrityWarnings.some((w) =>
+        w.includes("FAILED journal"),
+      ),
+    );
+    assert.ok(
+      result.incidents.some((i) => i.classification === "journal_mismatch"),
+    );
+    assert.ok(
+      result.incidents.every(
+        (i) => i.resolution === "Proposed for human review",
+      ),
+    );
+    assert.ok(!flags(changes).includes("publisher_failure"));
+    assert.ok(!flags(changes).includes("overdue"));
+  }
+  assert.notEqual(
+    assess({ journal: failed, posts: [{ ...post, dealer: false }] }).status,
+    "PUBLISHED",
+  );
+  assert.ok(
+    !flags({ journal: failed, posts: [post, post] }).includes(
+      "publisher_failure",
+    ),
+  );
+});
+
+test("invalid scheduler, journal and post timestamps suppress overdue inference", () => {
+  for (const changes of [
+    { runs: [{ ...run, status: "running" }] },
+    { runs: [{ ...run, completedAt: null }] },
+    { runs: [{ ...run, completedAt: slate + "T15:19:59Z" }] },
+    { runs: [{ ...run, completedAt: slate + "T15:36:01Z" }] },
+    { runs: [{ ...run, startedAt: slate + "T15:20:01" }] },
+    { runs: [{ ...run, startedAt: slate + "T15:20:01+24:00" }] },
+    {
+      journal: {
+        ...journal,
+        slate: "2026-11-15",
+        status: "FAILED",
+        postId: null,
+      },
+    },
+    {
+      journal: {
+        ...journal,
+        observedAt: slate + "T04:59:59Z",
+        status: "WAITING",
+        postId: null,
+      },
+    },
+    {
+      journal: { ...journal, observedAt: slate + "T15:20:06Z" },
+      posts: [post],
+    },
+    { scheduleFeedAt: slate + "T15:36:01Z" },
+  ]) {
+    const result = assess(changes);
+    assert.ok(
+      result.evidence.integrityWarnings.length,
+      JSON.stringify(changes),
+    );
+    assert.ok(!flags(changes).includes("overdue"));
+    assert.ok(!flags(changes).includes("publisher_failure"));
+  }
+  assert.equal(
+    assess({ runs: [{ ...run, status: "running" }], journal, posts: [post] })
+      .status,
+    "PUBLISHED",
+  );
+});
+
+test("zero stored games require fresh authoritative coverage of the target slate", () => {
+  for (const coverage of [
+    undefined,
+    { ...slateCoverage, complete: false },
+    { ...slateCoverage, slate: "2026-11-15" },
+    { ...slateCoverage, evaluatedAt: slate + "T15:36:01Z" },
+    { ...slateCoverage, evaluatedAt: slate + "T15:29:59Z" },
+    { ...slateCoverage, evaluatedAt: slate + "T15:31:00" },
+  ]) {
+    const changes = { eligibleGames: 0, slateCoverage: coverage };
+    assert.equal(assess(changes).status, "EVIDENCE_UNAVAILABLE");
+    assert.ok(!flags(changes).includes("overdue"));
+  }
+  assert.equal(
+    assess({
+      eligibleGames: 0,
+      slateCoverage,
+      scheduleFeedAt: slate + "T14:30:00Z",
+    }).status,
+    "EVIDENCE_UNAVAILABLE",
   );
 });

@@ -5,6 +5,10 @@ import {
 } from "./nba-publication-monitor";
 
 const instant = z.iso.datetime({ offset: true });
+function timestamp(value: string | null | undefined): number {
+  if (!instant.safeParse(value).success || !value) return NaN;
+  return Date.parse(value);
+}
 const eastern = new Intl.DateTimeFormat("en-CA", {
   timeZone: "America/New_York",
   year: "numeric",
@@ -13,7 +17,7 @@ const eastern = new Intl.DateTimeFormat("en-CA", {
 });
 const evidenceSchema = z.object({
   slate: z.iso.date(),
-  checkedAt: instant,
+  checkedAt: z.string(),
   schedule: z
     .object({
       expression: z.string(),
@@ -24,8 +28,8 @@ const evidenceSchema = z.object({
   runs: z
     .array(
       z.object({
-        startedAt: instant,
-        completedAt: instant.nullable(),
+        startedAt: z.string(),
+        completedAt: z.string().nullable(),
         status: z.enum([
           "succeeded",
           "failed",
@@ -37,21 +41,28 @@ const evidenceSchema = z.object({
       }),
     )
     .max(3),
-  scheduleFeedAt: instant.nullable(),
+  scheduleFeedAt: z.string().nullable(),
+  slateCoverage: z
+    .object({
+      slate: z.iso.date(),
+      evaluatedAt: z.string(),
+      complete: z.boolean(),
+    })
+    .nullish(),
   eligibleGames: z.number().int().nonnegative(),
   journal: z
     .object({
       slate: z.iso.date(),
       status: z.enum(["POSTED", "WAITING", "SKIPPED", "FAILED"]),
       postId: z.uuid().nullable(),
-      observedAt: instant,
+      observedAt: z.string(),
     })
     .nullable(),
   posts: z
     .array(
       z.object({
         id: z.uuid(),
-        publishedAt: instant,
+        publishedAt: z.string(),
         dealer: z.boolean(),
         contentMatches: z.boolean(),
       }),
@@ -101,12 +112,14 @@ export function assessPublication(
   const row = parsed.success ? parsed.data : null;
   const slate = eastern.format(now);
   const checkedAt = now.toISOString();
-  const snapshotAt = row ? Date.parse(row.checkedAt) : NaN;
-  const fresh =
+  const snapshotAt = timestamp(row?.checkedAt);
+  const validSnapshot =
     !!row &&
+    Number.isFinite(snapshotAt) &&
     row.slate === slate &&
-    snapshotAt <= +now &&
-    +now - snapshotAt <= 60_000;
+    eastern.format(snapshotAt) === slate &&
+    snapshotAt <= +now;
+  const fresh = validSnapshot && +now - snapshotAt <= 60_000;
   const data = fresh ? row : null;
   // The installed job is a fixed UTC pair. Other expressions or zones need a reviewed adapter.
   const schedule = data?.schedule;
@@ -119,69 +132,133 @@ export function assessPublication(
   const deadline = scheduledAt[1]
     ? new Date(Date.parse(scheduledAt[1]) + 15 * 60_000).toISOString()
     : null;
-  const feed = data?.scheduleFeedAt ? Date.parse(data.scheduleFeedAt) : NaN;
+  const feed = timestamp(data?.scheduleFeedAt);
+  const coverage = data?.slateCoverage;
+  const evaluated = timestamp(coverage?.evaluatedAt);
+  const coverageComplete =
+    coverage?.complete === true &&
+    coverage.slate === slate &&
+    evaluated <= snapshotAt &&
+    snapshotAt - evaluated <= 30 * 60_000 &&
+    evaluated >= feed &&
+    eastern.format(evaluated) === slate;
   const eligible =
-    data && feed <= snapshotAt && snapshotAt - feed <= 30 * 60_000
+    data &&
+    feed <= snapshotAt &&
+    snapshotAt - feed <= 30 * 60_000 &&
+    (data.eligibleGames > 0 || coverageComplete)
       ? data.eligibleGames
       : null;
   const runs = data?.runs ?? [];
+  const withinSlate = (at: number) =>
+    Number.isFinite(at) && at <= snapshotAt && eastern.format(at) === slate;
   const runSlots = runs.map((r) =>
     scheduledAt.findIndex((at) => {
-      const delta = Date.parse(r.startedAt) - Date.parse(at);
+      const delta = timestamp(r.startedAt) - Date.parse(at);
       return delta >= 0 && delta < 15 * 60_000;
     }),
   );
   const inconsistentRuns =
     new Set(runSlots).size !== runs.length ||
     runSlots.includes(-1) ||
-    runs.some(
-      (r) =>
-        Date.parse(r.startedAt) > snapshotAt ||
-        (r.completedAt
-          ? Date.parse(r.completedAt) < Date.parse(r.startedAt) ||
-            Date.parse(r.completedAt) > snapshotAt
-          : ["succeeded", "failed"].includes(r.status)),
-    );
+    runs.some((r) => {
+      const started = timestamp(r.startedAt);
+      const completed = timestamp(r.completedAt);
+      const terminal = r.status === "succeeded" || r.status === "failed";
+      return (
+        !withinSlate(started) ||
+        terminal !== (r.completedAt !== null) ||
+        (terminal && (!withinSlate(completed) || completed < started))
+      );
+    });
   const completed = inconsistentRuns
     ? undefined
-    : runs.find(
-        (r) =>
-          r.completedAt && (r.status === "succeeded" || r.status === "failed"),
-      );
+    : runs.find((r) => r.status === "succeeded" || r.status === "failed");
   const journal = data?.journal ?? null;
+  const journalAt = timestamp(journal?.observedAt);
+  const invalidJournal =
+    !!journal && (journal.slate !== slate || !withinSlate(journalAt));
   const posts = data?.posts ?? [];
-  const post = posts.length === 1 ? posts[0] : null;
-  const result = verifyNbaPublication({
-    slate,
-    checkedAt: data?.checkedAt ?? checkedAt,
-    scheduledAt: inconsistentRuns ? ["", ""] : scheduledAt,
-    eligibility:
-      eligible === null
-        ? null
-        : { eligibleGames: eligible, observedAt: data!.checkedAt },
-    journal,
-    post: post
-      ? {
-          id: post.id,
-          slate,
-          author: post.dealer ? "TheDealer" : "other",
-          kind: post.contentMatches ? "nba-threes" : "other",
-          publishedAt: post.publishedAt,
-        }
-      : null,
-    scheduler: completed
-      ? {
-          completedAt: completed.completedAt!,
-          outcome: completed.status === "succeeded" ? "succeeded" : "failed",
-        }
-      : null,
-  });
+  const invalidPosts = posts.some(
+    (p) => !withinSlate(timestamp(p.publishedAt)),
+  );
+  const post = posts.length === 1 && !invalidPosts ? posts[0] : null;
+  const failedWithPost =
+    journal?.status === "FAILED" && !!post?.dealer && post.contentMatches;
+  const integrityWarnings = [
+    ...(!parsed.success && input != null
+      ? ["Malformed evidence snapshot."]
+      : []),
+    ...(row && !validSnapshot
+      ? ["Snapshot timestamp or Eastern slate is inconsistent."]
+      : []),
+    ...(data?.scheduleFeedAt && (!Number.isFinite(feed) || feed > snapshotAt)
+      ? ["Schedule feed timestamp is invalid or in the future."]
+      : []),
+    ...(coverage &&
+    (coverage.slate !== slate ||
+      !Number.isFinite(evaluated) ||
+      evaluated > snapshotAt)
+      ? ["Slate coverage timestamp or Eastern slate is inconsistent."]
+      : []),
+    ...(inconsistentRuns
+      ? ["Scheduler records have inconsistent states, timestamps, or attempts."]
+      : []),
+    ...(invalidJournal
+      ? ["Journal timestamp or Eastern slate is inconsistent."]
+      : []),
+    ...(invalidPosts || posts.length > 1
+      ? ["Zone post timestamps or uniqueness are inconsistent."]
+      : []),
+    ...(journal?.status === "POSTED" &&
+    post &&
+    timestamp(post.publishedAt) > journalAt
+      ? ["Zone post timestamp follows its POSTED journal entry."]
+      : []),
+    ...(failedWithPost
+      ? ["FAILED journal conflicts with a verified Dealer post."]
+      : []),
+  ];
+  const result = failedWithPost
+    ? {
+        status: "PUBLISHED" as const,
+        reason:
+          "A unique Dealer card was verified. The FAILED journal requires reconciliation.",
+      }
+    : verifyNbaPublication({
+        slate,
+        checkedAt: data?.checkedAt ?? checkedAt,
+        scheduledAt: integrityWarnings.length ? ["", ""] : scheduledAt,
+        eligibility:
+          eligible === null
+            ? null
+            : { eligibleGames: eligible, observedAt: data!.checkedAt },
+        journal: invalidJournal ? null : journal,
+        post: post
+          ? {
+              id: post.id,
+              slate,
+              author: post.dealer ? "TheDealer" : "other",
+              kind: post.contentMatches ? "nba-threes" : "other",
+              publishedAt: post.publishedAt,
+            }
+          : null,
+        scheduler: completed
+          ? {
+              completedAt: completed.completedAt!,
+              outcome:
+                completed.status === "succeeded" ? "succeeded" : "failed",
+            }
+          : null,
+      });
   const verified = result.status === "PUBLISHED";
   const evidence = {
     observedAt: row?.checkedAt ?? null,
     scheduleFeedAt: row?.scheduleFeedAt ?? null,
     eligibilityFresh: eligible !== null,
     eligibleGames: eligible,
+    slateCoverageComplete: coverageComplete,
+    integrityWarnings,
     attempts: scheduledAt.filter(Boolean),
     runs,
     journalStatus: journal?.status ?? null,
@@ -193,19 +270,19 @@ export function assessPublication(
   const conditions: Array<keyof typeof incidentTypes> = [];
   if (!data || eligible === null || !scheduledAt[0])
     conditions.push("evidence_unavailable");
-  if (inconsistentRuns || posts.length > 1)
-    conditions.push("inconsistent_records");
+  if (integrityWarnings.length) conditions.push("inconsistent_records");
   if (
-    !verified &&
-    (journal?.status === "POSTED" || journal?.postId || posts.length)
+    failedWithPost ||
+    (!verified &&
+      (journal?.status === "POSTED" || journal?.postId || posts.length))
   )
     conditions.push("journal_mismatch");
   if (
     !verified &&
     journal?.status === "FAILED" &&
-    journal.slate === slate &&
-    eastern.format(Date.parse(journal.observedAt)) === slate &&
-    Date.parse(journal.observedAt) <= snapshotAt
+    !posts.length &&
+    !integrityWarnings.length &&
+    !journal.postId
   )
     conditions.push("publisher_failure");
   if (
@@ -219,7 +296,8 @@ export function assessPublication(
     eligible !== null &&
     eligible > 0 &&
     deadline &&
-    !inconsistentRuns &&
+    !integrityWarnings.length &&
+    !runs.some((r) => r.completedAt === null) &&
     +now >= Date.parse(deadline)
   )
     conditions.push("overdue");
@@ -249,7 +327,7 @@ export function assessPublication(
     evidence,
     incidents,
     diagnosis: {
-      facts: [result.reason, ...incidents.map((i) => i.classification)],
+      facts: [result.reason, ...integrityWarnings],
       hypotheses: [
         "Source delay, publisher deferral, or attribution mismatch may require investigation.",
       ],
