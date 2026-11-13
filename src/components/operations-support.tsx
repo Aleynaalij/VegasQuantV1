@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { NbaPublicationMonitor } from "./nba-publication-monitor";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { onUserChange } from "@/lib/auth-user";
 import {
@@ -185,6 +186,9 @@ export function OperationsQueue() {
       </div>
       {queue && (
         <>
+          {queue.publicationMonitor && (
+            <NbaPublicationMonitor examples={queue.publicationMonitor} />
+          )}
           <section aria-label="Support queue">
             <h2>Support queue</h2>
             <div className="vq-help-actions">

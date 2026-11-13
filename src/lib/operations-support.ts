@@ -1,3 +1,4 @@
+import type { previewNbaPublicationMonitor } from "./nba-publication-monitor-fixtures";
 import type { OperationsFeedHealth } from "./operations-feed-health";
 
 export const operationFeatures = [
@@ -60,6 +61,7 @@ export type OperationResult =
       tickets: Ticket[];
       next: TicketCursor | null;
       release?: OperationsRelease | null;
+      publicationMonitor?: ReturnType<typeof previewNbaPublicationMonitor>;
       feedHealth?: { checkedAt: string; feeds: OperationsFeedHealth[] };
     }
   | { state: "ready"; ticket: Ticket; events: TicketEvent[] };
