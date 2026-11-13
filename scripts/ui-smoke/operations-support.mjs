@@ -340,7 +340,7 @@ try {
         .getByText(/No verified publication or publisher disposition/)
         .waitFor();
       await monitor
-        .locator("details", { has: missing })
+        .locator("details[open]")
         .getByText(/4 eligible games/)
         .waitFor();
       await monitor.getByText(/Unresolved investigation/).waitFor();
