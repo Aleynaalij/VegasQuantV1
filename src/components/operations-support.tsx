@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { NbaPublicationIntelligence } from "./nba-publication-intelligence";
 import { NbaPublicationMonitor } from "./nba-publication-monitor";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { onUserChange } from "@/lib/auth-user";
@@ -186,6 +187,12 @@ export function OperationsQueue() {
       </div>
       {queue && (
         <>
+          {queue.publicationIntelligence && (
+            <NbaPublicationIntelligence
+              key={queue.publicationIntelligence.live?.checkedAt ?? "fixture"}
+              data={queue.publicationIntelligence}
+            />
+          )}
           {queue.publicationMonitor && (
             <NbaPublicationMonitor examples={queue.publicationMonitor} />
           )}

@@ -55,6 +55,7 @@ test("operations validates exact structured input and rejects arbitrary or priva
 
 test("operations route verifies user bearer, enforces origin and keeps internal errors out of responses", async (t) => {
   let calls = 0;
+  let publicationReads = 0;
   const feedRequests = new Set<string>();
   t.mock.method(
     globalThis,
@@ -63,6 +64,10 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
       ++calls;
       const url = new URL(input instanceof Request ? input.url : String(input));
       const token = new Headers(init?.headers).get("authorization");
+      if (url.pathname.endsWith("/rpc/nba_publication_evidence")) {
+        publicationReads++;
+        return Response.json(null);
+      }
       if (url.pathname.endsWith("/auth/v1/user")) {
         if (token === "Bearer invalid")
           return Response.json(
@@ -146,6 +151,7 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
   const {
     feedHealth,
     publicationMonitor: _monitor,
+    publicationIntelligence: _intelligence,
     ...payload
   } = await success.json();
   assert.deepEqual(feedRequests, new Set(operationsProviders));
@@ -166,7 +172,17 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
       observedAt: payload.release.observedAt,
     },
   });
-  const originalEnvironment = process.env.VERCEL_ENV;
+  const configured = {
+    VQ_PUBLICATION_PREVIEW_LIVE_ENABLED: "true",
+    VQ_PUBLICATION_PREVIEW_PROJECT_REF: "apwndmcsjxzjxnpxfywo",
+    NEXT_PUBLIC_SUPABASE_URL: "https://apwndmcsjxzjxnpxfywo.supabase.co",
+  };
+  const previous = Object.fromEntries(
+    ["VERCEL_ENV", ...Object.keys(configured)].map((key) => [
+      key,
+      process.env[key],
+    ]),
+  );
   try {
     process.env.VERCEL_ENV = "preview";
     for (const [token, status, state] of [
@@ -184,15 +200,73 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
       preview.headers.get("cache-control") ?? "",
       /private, no-store/,
     );
-    const { publicationMonitor } = await preview.json();
+    const { publicationMonitor, publicationIntelligence } =
+      await preview.json();
+    assert.equal(publicationIntelligence.live, null);
+    assert.deepEqual(
+      publicationIntelligence.fixtures.map(
+        (item: { status: string }) => item.status,
+      ),
+      ["PUBLISHED", "EVIDENCE_UNAVAILABLE", "PUBLISHED"],
+    );
     assert.equal(publicationMonitor.length, 5);
     assert.equal(publicationMonitor[4].status, "EVIDENCE_UNAVAILABLE");
+    Object.assign(process.env, configured);
     process.env.VERCEL_ENV = "production";
     const production = await POST(request({ action: "list" }, "fixture-admin"));
-    assert.ok(!("publicationMonitor" in (await production.json())));
+    assert.equal(production.status, 200);
+    const productionBody = await production.json();
+    assert.deepEqual(
+      productionBody.publicationMonitor.map(
+        (item: { status: string }) => item.status,
+      ),
+      [
+        "PUBLISHED",
+        "WAITING",
+        "SKIPPED",
+        "NO_ELIGIBLE_SLATE",
+        "EVIDENCE_UNAVAILABLE",
+      ],
+    );
+    assert.equal(productionBody.publicationIntelligence.live, null);
+    const contradiction = productionBody.publicationIntelligence.fixtures[2];
+    assert.equal(contradiction.status, "PUBLISHED");
+    assert.ok(
+      contradiction.evidence.integrityWarnings.some((w: string) =>
+        w.includes("FAILED journal"),
+      ),
+    );
+    assert.ok(
+      contradiction.incidents.some(
+        (i: { classification: string }) =>
+          i.classification === "journal_mismatch",
+      ),
+    );
+    assert.ok(
+      !contradiction.incidents.some(
+        (i: { classification: string }) =>
+          i.classification === "publisher_failure",
+      ),
+    );
+    for (const token of ["fixture-member", "fixture-admin-no-mfa"]) {
+      assert.deepEqual(
+        await (await POST(request({ action: "list" }, token))).json(),
+        { state: "forbidden" },
+      );
+    }
+    assert.equal(publicationReads, 0);
+    process.env.VERCEL_ENV = "preview";
+    await POST(request({ action: "list" }, "fixture-admin"));
+    assert.equal(
+      publicationReads,
+      1,
+      "RPC spy detects a deliberately enabled isolated preview",
+    );
   } finally {
-    if (originalEnvironment === undefined) delete process.env.VERCEL_ENV;
-    else process.env.VERCEL_ENV = originalEnvironment;
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
   }
   const error = await POST(request({ action: "list" }, "fixture-db-error"));
   assert.equal(error.status, 503);
