@@ -37,7 +37,13 @@ begin
     'eligibleGames', (select count(*) from public.nba_games g
       where g.season_type = 2 and g.tipoff >= start_at and g.tipoff < end_at),
     'journal', case when journal.day is not null then jsonb_build_object(
-      'slate',journal.day,'status',journal.status,'postId',journal.post_id,'observedAt',journal.updated_at) end,
+      'slate',journal.day,'status',journal.status,'postId',journal.post_id,'observedAt',journal.updated_at,
+      'skipReason', case when journal.status = 'SKIPPED' then case journal.detail
+        when 'No player on today''s teams has 3 games with recorded attempts' then 'insufficient_player_history'
+        when 'No Zone author configured' then 'publisher_unavailable'
+        else 'unexplained' end end,
+      'skipPublisherVerified', case when journal.status = 'SKIPPED'
+        then coalesce(private.is_dealer_publisher(publisher), false) end) end,
     'posts', (select coalesce(jsonb_agg(to_jsonb(p)), '[]') from (
       select c.id, c.created_at as "publishedAt",
         coalesce(c.user_id = publisher and private.is_dealer_publisher(c.user_id), false) as dealer,

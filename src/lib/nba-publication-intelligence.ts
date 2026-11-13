@@ -56,6 +56,14 @@ const evidenceSchema = z.object({
       status: z.enum(["POSTED", "WAITING", "SKIPPED", "FAILED"]),
       postId: z.uuid().nullable(),
       observedAt: z.string(),
+      skipReason: z
+        .enum([
+          "insufficient_player_history",
+          "publisher_unavailable",
+          "unexplained",
+        ])
+        .nullish(),
+      skipPublisherVerified: z.boolean().nullish(),
     })
     .nullable(),
   posts: z
@@ -95,6 +103,11 @@ const incidentTypes = {
     "high",
     "high",
     "Reconcile the duplicate or inconsistent records with their original sources.",
+  ],
+  skip_requires_review: [
+    "medium",
+    "medium",
+    "Reconcile the skip reason, Dealer authorization, and scheduler attempt.",
   ],
   publisher_failure: [
     "high",
@@ -183,8 +196,35 @@ export function assessPublication(
     (p) => !withinSlate(timestamp(p.publishedAt)),
   );
   const post = posts.length === 1 && !invalidPosts ? posts[0] : null;
-  const failedWithPost =
-    journal?.status === "FAILED" && !!post?.dealer && post.contentMatches;
+  const verifiedPost = !!post?.dealer && post.contentMatches;
+  const failedWithPost = journal?.status === "FAILED" && verifiedPost;
+  const skipped = journal?.status === "SKIPPED";
+  const skipConflicts = skipped && (!!journal.postId || posts.length > 0);
+  const skipMatchedRun =
+    !inconsistentRuns &&
+    runs.some(
+      (run) =>
+        run.status === "succeeded" &&
+        timestamp(run.startedAt) <= journalAt &&
+        timestamp(run.completedAt) >= journalAt &&
+        !runs.some(
+          (other) => timestamp(other.startedAt) > timestamp(run.startedAt),
+        ),
+    );
+  const skipAssessment = !skipped
+    ? null
+    : skipConflicts
+      ? "contradictory"
+      : invalidJournal || eligible === null || !skipMatchedRun
+        ? "insufficient_evidence"
+        : journal.skipReason === "publisher_unavailable" ||
+            journal.skipPublisherVerified === false
+          ? "unauthorized"
+          : !journal.skipReason || journal.skipReason === "unexplained"
+            ? "unexplained"
+            : journal.skipPublisherVerified !== true || eligible === 0
+              ? "insufficient_evidence"
+              : "verified_expected";
   const integrityWarnings = [
     ...(!parsed.success && input != null
       ? ["Malformed evidence snapshot."]
@@ -215,42 +255,45 @@ export function assessPublication(
     timestamp(post.publishedAt) > journalAt
       ? ["Zone post timestamp follows its POSTED journal entry."]
       : []),
+    ...(skipConflicts
+      ? ["SKIPPED journal conflicts with a linked or observed Zone post."]
+      : []),
     ...(failedWithPost
       ? ["FAILED journal conflicts with a verified Dealer post."]
       : []),
   ];
-  const result = failedWithPost
-    ? {
-        status: "PUBLISHED" as const,
-        reason:
-          "A unique Dealer card was verified. The FAILED journal requires reconciliation.",
-      }
-    : verifyNbaPublication({
-        slate,
-        checkedAt: data?.checkedAt ?? checkedAt,
-        scheduledAt: integrityWarnings.length ? ["", ""] : scheduledAt,
-        eligibility:
-          eligible === null
-            ? null
-            : { eligibleGames: eligible, observedAt: data!.checkedAt },
-        journal: invalidJournal ? null : journal,
-        post: post
-          ? {
-              id: post.id,
-              slate,
-              author: post.dealer ? "TheDealer" : "other",
-              kind: post.contentMatches ? "nba-threes" : "other",
-              publishedAt: post.publishedAt,
-            }
-          : null,
-        scheduler: completed
-          ? {
-              completedAt: completed.completedAt!,
-              outcome:
-                completed.status === "succeeded" ? "succeeded" : "failed",
-            }
-          : null,
-      });
+  const result =
+    failedWithPost || (skipConflicts && verifiedPost)
+      ? {
+          status: "PUBLISHED" as const,
+          reason: `A unique Dealer card was verified. The ${journal!.status} journal requires reconciliation.`,
+        }
+      : verifyNbaPublication({
+          slate,
+          checkedAt: data?.checkedAt ?? checkedAt,
+          scheduledAt: integrityWarnings.length ? ["", ""] : scheduledAt,
+          eligibility:
+            eligible === null
+              ? null
+              : { eligibleGames: eligible, observedAt: data!.checkedAt },
+          journal: invalidJournal ? null : journal,
+          post: post
+            ? {
+                id: post.id,
+                slate,
+                author: post.dealer ? "TheDealer" : "other",
+                kind: post.contentMatches ? "nba-threes" : "other",
+                publishedAt: post.publishedAt,
+              }
+            : null,
+          scheduler: completed
+            ? {
+                completedAt: completed.completedAt!,
+                outcome:
+                  completed.status === "succeeded" ? "succeeded" : "failed",
+              }
+            : null,
+        });
   const verified = result.status === "PUBLISHED";
   const evidence = {
     observedAt: row?.checkedAt ?? null,
@@ -262,6 +305,7 @@ export function assessPublication(
     attempts: scheduledAt.filter(Boolean),
     runs,
     journalStatus: journal?.status ?? null,
+    skipAssessment,
     journalAt: journal?.observedAt ?? null,
     journalPostId: journal?.postId ?? null,
     posts,
@@ -273,10 +317,13 @@ export function assessPublication(
   if (integrityWarnings.length) conditions.push("inconsistent_records");
   if (
     failedWithPost ||
+    skipConflicts ||
     (!verified &&
       (journal?.status === "POSTED" || journal?.postId || posts.length))
   )
     conditions.push("journal_mismatch");
+  if (skipAssessment && skipAssessment !== "verified_expected")
+    conditions.push("skip_requires_review");
   if (
     !verified &&
     journal?.status === "FAILED" &&
@@ -287,12 +334,14 @@ export function assessPublication(
     conditions.push("publisher_failure");
   if (
     !verified &&
+    skipAssessment !== "verified_expected" &&
     eligible !== 0 &&
     runs.some((r) => !inconsistentRuns && r.status === "succeeded")
   )
     conditions.push("scheduler_without_post");
   if (
     !verified &&
+    skipAssessment !== "verified_expected" &&
     eligible !== null &&
     eligible > 0 &&
     deadline &&

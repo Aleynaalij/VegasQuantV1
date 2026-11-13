@@ -32,3 +32,9 @@ Two scheduler runs succeeded at 9:20 and 10:20 a.m. ET. The journal was WAITING 
 The branch rules endpoint returned an empty list. Propose PR-only updates, one independent human approval of the latest push, dismissal of stale reviews, resolved conversations, blocked force pushes and deletions, and no automation bypass. Require uniquely named always-reported GitHub Actions checks for tests, types, build and browser smoke, including a conditional Operations acceptance gate that reports success explicitly for out-of-scope changes. Require branches current with main. Verify that the independent reviewer has a distinct eligible GitHub identity. Rules are proposed only.
 
 Retire the preview or revert its branch commit. If installed in isolation, drop only the proposed RPC there after withdrawing the preview. The incident queue and review acknowledgments have no durable records to reverse.
+
+## Skip policy
+
+The RPC projects a bounded reason code from the private journal, plus current verification of the configured Dealer. A verified expected skip requires the recorded insufficient-player-history reason, a verified Dealer, fresh positive eligibility, a same-slate journal timestamp within the latest consistent successful scheduler attempt, and no linked or observed post. Only this assessment suppresses overdue and scheduler-without-post proposals based on a skip. Unexplained, unauthorized, contradictory and insufficient-evidence skips remain reviewable. A verified Dealer post conflicting with a skip remains published and is proposed for reconciliation. The current Dealer check is a present-time observation. Historic identity and manual recovery that lacks a matching cron attempt remain insufficient evidence.
+
+The current hosted staging RPC predates these optional fields. Its skips remain conservative until a separately authorized staging SQL update can exercise the new projection.

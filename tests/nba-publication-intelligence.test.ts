@@ -233,3 +233,73 @@ test("zero stored games require fresh authoritative coverage of the target slate
     "EVIDENCE_UNAVAILABLE",
   );
 });
+
+test("only an authoritative policy skip suppresses missing-publication proposals", () => {
+  const expected = {
+    ...journal,
+    status: "SKIPPED",
+    postId: null,
+    skipReason: "insufficient_player_history",
+    skipPublisherVerified: true,
+  };
+  const accepted = assess({ journal: expected });
+  assert.equal(accepted.status, "SKIPPED");
+  assert.equal(accepted.evidence.skipAssessment, "verified_expected");
+  assert.deepEqual(accepted.incidents, []);
+
+  const cases = [
+    {
+      label: "unexplained",
+      journal: { ...expected, skipReason: "unexplained" },
+    },
+    {
+      label: "unauthorized",
+      journal: { ...expected, skipPublisherVerified: false },
+    },
+    {
+      label: "unauthorized",
+      journal: { ...expected, skipReason: "publisher_unavailable" },
+    },
+    {
+      label: "insufficient_evidence",
+      journal: { ...expected, skipPublisherVerified: null },
+    },
+    {
+      label: "insufficient_evidence",
+      journal: { ...expected, slate: "2026-11-15" },
+    },
+    {
+      label: "insufficient_evidence",
+      journal: { ...expected, observedAt: slate + "T15:21:00Z" },
+    },
+    { label: "insufficient_evidence", journal: expected, scheduleFeedAt: null },
+    { label: "insufficient_evidence", journal: expected, runs: [] },
+    { label: "contradictory", journal: { ...expected, postId: post.id } },
+    { label: "contradictory", journal: expected, posts: [post] },
+  ];
+  for (const { label, ...changes } of cases) {
+    const result = assess(changes);
+    assert.equal(result.evidence.skipAssessment, label);
+    assert.ok(
+      result.incidents.some((i) => i.classification === "skip_requires_review"),
+    );
+    assert.ok(
+      result.incidents.every((i) => i.classification !== "publisher_failure"),
+    );
+    if (["unexplained", "unauthorized"].includes(label)) {
+      assert.ok(result.incidents.some((i) => i.classification === "overdue"));
+      assert.ok(
+        result.incidents.some(
+          (i) => i.classification === "scheduler_without_post",
+        ),
+      );
+    }
+  }
+  const contradiction = assess({ journal: expected, posts: [post] });
+  assert.equal(contradiction.status, "PUBLISHED");
+  assert.ok(
+    contradiction.incidents.some(
+      (i) => i.classification === "journal_mismatch",
+    ),
+  );
+});

@@ -38,6 +38,12 @@ export function NbaPublicationIntelligence({ data }: { data: Preview }) {
               </p>
             ))}
             <dl>
+              {evidence.skipAssessment && (
+                <>
+                  <dt>Skip assessment</dt>
+                  <dd>{evidence.skipAssessment.replaceAll("_", " ")}</dd>
+                </>
+              )}
               <dt>Expected deadline</dt>
               <dd>{time(report.deadline)}</dd>
               <dt>Evidence snapshot</dt>

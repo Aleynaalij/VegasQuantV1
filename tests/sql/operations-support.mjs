@@ -239,7 +239,7 @@ create schema cron;
 create table cron.job(jobid int, jobname text, schedule text, active boolean);
 create table cron.job_run_details(jobid int, start_time timestamptz, end_time timestamptz, status text);
 create table private.zone_automation(name text, user_id uuid);
-create table private.nba_threes_posts(day date, status text, post_id uuid, updated_at timestamptz);
+create table private.nba_threes_posts(day date, status text, post_id uuid, updated_at timestamptz, detail text);
 create function private.is_dealer_publisher(uuid) returns boolean language sql as 'select true';
 create table public.feed_runs(id uuid, provider text, status text, details jsonb, created_at timestamptz);
 create table public.nba_games(season_type int, tipoff timestamptz);
@@ -248,7 +248,7 @@ delete from private.account_erasure_jobs;
 update auth.users set banned_until = null where id = '${admin}';
 insert into public.nba_games values (2, now());
 insert into private.zone_automation values ('nba_threes', '${admin}');
-insert into private.nba_threes_posts values ((now() at time zone 'America/New_York')::date, 'POSTED', '${id(40)}', now());
+insert into private.nba_threes_posts values ((now() at time zone 'America/New_York')::date, 'POSTED', '${id(40)}', now(), null);
 insert into public.community_posts select '${id(40)}','${admin}','nba','talk',
   'nba-threes:' || (now() at time zone 'America/New_York')::date,
   '[]',null,null,'3-point volume · ' || trim(to_char((now() at time zone 'America/New_York')::date,'Dy Mon FMDD')),
@@ -280,6 +280,21 @@ assert.deepEqual(
 );
 assert.ok(!("body" in observation.posts[0]));
 await db.exec("commit; reset role");
+await db.exec(`update private.nba_threes_posts set status='SKIPPED', post_id=null,
+  detail='No player on today''s teams has 3 games with recorded attempts'`);
+await as(admin, adminSession, { aal: "aal2" });
+const skip = (await publication()).journal;
+assert.equal(skip.skipReason, "insufficient_player_history");
+assert.equal(skip.skipPublisherVerified, true);
+assert.ok(!("detail" in skip));
+await db.exec(
+  "reset role; update private.nba_threes_posts set detail='private unrecognized detail'",
+);
+await as(admin, adminSession, { aal: "aal2" });
+const unknownSkip = (await publication()).journal;
+assert.equal(unknownSkip.skipReason, "unexplained");
+assert.ok(!JSON.stringify(unknownSkip).includes("private unrecognized detail"));
+await db.exec("reset role");
 
 await db.exec(
   `update auth.users set banned_until=now()+interval '1 hour' where id='${admin}'`,
