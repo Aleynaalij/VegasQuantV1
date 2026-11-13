@@ -18,7 +18,7 @@ export function NbaPublicationMonitor({
   return (
     <section aria-labelledby="nba-publication-monitor">
       <h2 id="nba-publication-monitor">NBA three-point Publication Monitor</h2>
-      <p>Preview · Synthetic evidence</p>
+      <p>SYNTHETIC evidence</p>
       <p>
         Expected publication · One original NBA three-point volume card by
         TheDealer in The Zone on an eligible Eastern slate.

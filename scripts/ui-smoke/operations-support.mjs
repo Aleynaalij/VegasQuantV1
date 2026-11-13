@@ -116,9 +116,8 @@ async function fixture(width, role, intercept) {
           state: "ready",
           tickets: [ticket],
           next: null,
-          publicationMonitor: width === 390 ? publicationFixtures : undefined,
-          publicationIntelligence:
-            width === 390 ? publicationIntelligence : undefined,
+          publicationMonitor: publicationFixtures,
+          publicationIntelligence: publicationIntelligence,
           feedHealth: {
             checkedAt: time,
             feeds: [
@@ -342,14 +341,14 @@ try {
     const monitor = admin.page.getByRole("region", {
       name: /Publication Monitor/,
     });
-    if (width === 390) {
+    {
       const intelligence = admin.page.getByRole("region", {
         name: "NBA publication intelligence",
         exact: true,
       });
       await intelligence
         .getByRole("heading", {
-          name: "Synthetic example · PUBLISHED",
+          name: "SYNTHETIC example · PUBLISHED",
           exact: true,
         })
         .waitFor();
@@ -366,7 +365,33 @@ try {
       await discrepancy
         .getByRole("button", { name: "Reviewed in this session" })
         .waitFor();
-      await monitor.getByText("Preview · Synthetic evidence").waitFor();
+      await admin.page.reload();
+      await discrepancy
+        .getByText("scheduler without post · medium severity", { exact: true })
+        .click();
+      await discrepancy
+        .getByRole("button", { name: "Mark reviewed in this session" })
+        .waitFor();
+      await intelligence
+        .getByRole("heading", { name: "SYNTHETIC contradiction · PUBLISHED" })
+        .waitFor();
+      await intelligence
+        .getByText(/FAILED journal conflicts with a verified Dealer post/)
+        .first()
+        .waitFor();
+      await intelligence
+        .getByText("journal mismatch · high severity", { exact: true })
+        .waitFor();
+      await monitor.getByText("SYNTHETIC evidence").waitFor();
+      for (const state of [
+        "PUBLISHED",
+        "WAITING",
+        "SKIPPED",
+        "NO_ELIGIBLE_SLATE",
+        "EVIDENCE_UNAVAILABLE",
+      ]) {
+        await monitor.getByText(state, { exact: true }).waitFor();
+      }
       const missing = monitor.getByText(
         /Scheduler succeeded, publication evidence missing/,
       );
@@ -389,7 +414,7 @@ try {
     }
     const health = admin.page.getByRole("region", { name: "NFL feed health" });
     await health.getByText(/ESPN · Stale/).waitFor();
-    if (width === 1280) assert.equal(await monitor.count(), 0);
+
     await health.getByText(/ESPN injuries · Unavailable/).waitFor();
     await health
       .getByRole("link", { name: "Open existing Feed Health" })
@@ -420,7 +445,7 @@ try {
     await fits(admin.page);
     assert.deepEqual(
       admin.calls.map((call) => call.action),
-      ["list", "detail", "triage"],
+      ["list", "list", "detail", "triage"],
     );
     await admin.context.close();
   }

@@ -108,18 +108,12 @@ export async function POST(req: Request) {
           }
         }),
       );
-      const publicationMonitor =
-        process.env.VERCEL_ENV === "preview"
-          ? (
-              await import("@/lib/nba-publication-monitor-fixtures")
-            ).previewNbaPublicationMonitor()
-          : undefined;
-      const publicationIntelligence =
-        process.env.VERCEL_ENV === "preview"
-          ? await (
-              await import("@/lib/nba-publication-intelligence-preview")
-            ).readPreviewPublicationIntelligence(session.db)
-          : undefined;
+      const publicationMonitor = (
+        await import("@/lib/nba-publication-monitor-fixtures")
+      ).previewNbaPublicationMonitor();
+      const publicationIntelligence = await (
+        await import("@/lib/nba-publication-intelligence-preview")
+      ).readPreviewPublicationIntelligence(session.db);
       return reply({
         ...result,
         publicationMonitor,

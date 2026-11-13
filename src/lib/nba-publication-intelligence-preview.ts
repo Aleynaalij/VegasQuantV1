@@ -46,12 +46,34 @@ export async function readPreviewPublicationIntelligence(db: SupabaseClient) {
       new Date(checkedAt),
       "fixture",
     ),
+    assessPublication(
+      {
+        ...common,
+        journal: {
+          slate,
+          status: "FAILED",
+          postId,
+          observedAt: "2026-11-16T15:20:08Z",
+        },
+        posts: [
+          {
+            id: postId,
+            publishedAt: "2026-11-16T15:20:07Z",
+            dealer: true,
+            contentMatches: true,
+          },
+        ],
+      },
+      new Date(checkedAt),
+      "fixture",
+    ),
   ];
   let live = null;
   // Only an explicitly configured, separate preview Supabase project may serve this read.
   const project = process.env.VQ_PUBLICATION_PREVIEW_PROJECT_REF;
   if (
     process.env.VERCEL_ENV === "preview" &&
+    process.env.VQ_PUBLICATION_PREVIEW_LIVE_ENABLED === "true" &&
     project &&
     /^[a-z]{20}$/.test(project) &&
     project !== "uowearboulykfcwnuirn" &&
