@@ -1,3 +1,4 @@
+import type { readPreviewPublicationIntelligence } from "./nba-publication-intelligence-preview";
 import type { previewNbaPublicationMonitor } from "./nba-publication-monitor-fixtures";
 import type { OperationsFeedHealth } from "./operations-feed-health";
 
@@ -61,6 +62,9 @@ export type OperationResult =
       tickets: Ticket[];
       next: TicketCursor | null;
       release?: OperationsRelease | null;
+      publicationIntelligence?: Awaited<
+        ReturnType<typeof readPreviewPublicationIntelligence>
+      >;
       publicationMonitor?: ReturnType<typeof previewNbaPublicationMonitor>;
       feedHealth?: { checkedAt: string; feeds: OperationsFeedHealth[] };
     }

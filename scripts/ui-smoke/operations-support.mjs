@@ -16,6 +16,19 @@ const publicationFixtures = JSON.parse(
   ),
 );
 
+const publicationIntelligence = JSON.parse(
+  execFileSync(
+    process.execPath,
+    [
+      "--import",
+      "tsx",
+      "-e",
+      'require("./src/lib/nba-publication-intelligence-preview").readPreviewPublicationIntelligence({}).then(result => console.log(JSON.stringify(result)))',
+    ],
+    { encoding: "utf8" },
+  ),
+);
+
 const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const browser = await chromium.launch({
   executablePath: process.env.PLAYWRIGHT_EXECUTABLE,
@@ -104,6 +117,8 @@ async function fixture(width, role, intercept) {
           tickets: [ticket],
           next: null,
           publicationMonitor: width === 390 ? publicationFixtures : undefined,
+          publicationIntelligence:
+            width === 390 ? publicationIntelligence : undefined,
           feedHealth: {
             checkedAt: time,
             feeds: [
@@ -328,6 +343,27 @@ try {
       name: /Publication Monitor/,
     });
     if (width === 390) {
+      const intelligence = admin.page.getByRole("region", {
+        name: "NBA publication intelligence",
+        exact: true,
+      });
+      await intelligence
+        .getByRole("heading", {
+          name: "Synthetic example · PUBLISHED",
+          exact: true,
+        })
+        .waitFor();
+      const discrepancy = intelligence.getByRole("region", {
+        name: "fixture EVIDENCE_UNAVAILABLE",
+        exact: true,
+      });
+      await discrepancy.getByText(/scheduler without post/).click();
+      await discrepancy
+        .getByRole("button", { name: "Mark reviewed in this session" })
+        .click();
+      await discrepancy
+        .getByRole("button", { name: "Reviewed in this session" })
+        .waitFor();
       await monitor.getByText("Preview · Synthetic evidence").waitFor();
       const missing = monitor.getByText(
         /Scheduler succeeded, publication evidence missing/,

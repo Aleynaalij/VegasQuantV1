@@ -114,9 +114,16 @@ export async function POST(req: Request) {
               await import("@/lib/nba-publication-monitor-fixtures")
             ).previewNbaPublicationMonitor()
           : undefined;
+      const publicationIntelligence =
+        process.env.VERCEL_ENV === "preview"
+          ? await (
+              await import("@/lib/nba-publication-intelligence-preview")
+            ).readPreviewPublicationIntelligence(session.db)
+          : undefined;
       return reply({
         ...result,
         publicationMonitor,
+        publicationIntelligence,
         release: observeOperationsRelease(),
         feedHealth: { checkedAt: checkedAt.toISOString(), feeds },
       });

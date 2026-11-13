@@ -232,6 +232,55 @@ assert.deepEqual(
 await db.exec(
   "reset role; delete from private.operations_tickets where created_at > '2029-01-01'",
 );
+// Publication evidence is a separate read-only RPC using the same live session gate.
+await db.exec(`
+reset role;
+create schema cron;
+create table cron.job(jobid int, jobname text, schedule text, active boolean);
+create table cron.job_run_details(jobid int, start_time timestamptz, end_time timestamptz, status text);
+create table private.zone_automation(name text, user_id uuid);
+create table private.nba_threes_posts(day date, status text, post_id uuid, updated_at timestamptz);
+create function private.is_dealer_publisher(uuid) returns boolean language sql as 'select true';
+create table public.feed_runs(id uuid, provider text, status text, details jsonb, created_at timestamptz);
+create table public.nba_games(season_type int, tipoff timestamptz);
+create table public.community_posts(id uuid, user_id uuid, sport text, kind text, card text, legs jsonb, stake numeric, photo_path text, title text, body text, created_at timestamptz);
+delete from private.account_erasure_jobs;
+update auth.users set banned_until = null where id = '${admin}';
+insert into public.nba_games values (2, now());
+insert into private.zone_automation values ('nba_threes', '${admin}');
+insert into private.nba_threes_posts values ((now() at time zone 'America/New_York')::date, 'POSTED', '${id(40)}', now());
+insert into public.community_posts select '${id(40)}','${admin}','nba','talk',
+  'nba-threes:' || (now() at time zone 'America/New_York')::date,
+  '[]',null,null,'3-point volume · ' || trim(to_char((now() at time zone 'America/New_York')::date,'Dy Mon FMDD')),
+  'Most 3s attempted per game · Most 3s made per game · Research only, not picks. Box scores: ESPN.',now();
+`);
+await db.exec(
+  readFileSync("scripts/operations/nba-publication-evidence.sql", "utf8"),
+);
+const publication = async () =>
+  (await db.query("select public.nba_publication_evidence() as evidence"))
+    .rows[0].evidence;
+await db.exec("set role anon");
+await assert.rejects(publication(), /permission denied/);
+await as(member, memberSession, { aal: "aal2" });
+assert.equal(await publication(), null);
+await as(admin, adminSession);
+assert.equal(await publication(), null);
+await as(admin, adminSession, { aal: "aal2" });
+await db.exec("begin read only");
+const observation = await publication();
+assert.equal(observation.eligibleGames, 1);
+assert.equal(observation.journal.postId, id(40));
+assert.deepEqual(
+  observation.posts.map(({ dealer, contentMatches }) => [
+    dealer,
+    contentMatches,
+  ]),
+  [[true, true]],
+);
+assert.ok(!("body" in observation.posts[0]));
+await db.exec("commit; reset role");
+
 await db.exec(
   `update auth.users set banned_until=now()+interval '1 hour' where id='${admin}'`,
 );

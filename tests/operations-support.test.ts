@@ -146,6 +146,7 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
   const {
     feedHealth,
     publicationMonitor: _monitor,
+    publicationIntelligence: _intelligence,
     ...payload
   } = await success.json();
   assert.deepEqual(feedRequests, new Set(operationsProviders));
@@ -184,12 +185,22 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
       preview.headers.get("cache-control") ?? "",
       /private, no-store/,
     );
-    const { publicationMonitor } = await preview.json();
+    const { publicationMonitor, publicationIntelligence } =
+      await preview.json();
+    assert.equal(publicationIntelligence.live, null);
+    assert.deepEqual(
+      publicationIntelligence.fixtures.map(
+        (item: { status: string }) => item.status,
+      ),
+      ["PUBLISHED", "EVIDENCE_UNAVAILABLE"],
+    );
     assert.equal(publicationMonitor.length, 5);
     assert.equal(publicationMonitor[4].status, "EVIDENCE_UNAVAILABLE");
     process.env.VERCEL_ENV = "production";
     const production = await POST(request({ action: "list" }, "fixture-admin"));
-    assert.ok(!("publicationMonitor" in (await production.json())));
+    const productionBody = await production.json();
+    assert.ok(!("publicationMonitor" in productionBody));
+    assert.ok(!("publicationIntelligence" in productionBody));
   } finally {
     if (originalEnvironment === undefined) delete process.env.VERCEL_ENV;
     else process.env.VERCEL_ENV = originalEnvironment;
