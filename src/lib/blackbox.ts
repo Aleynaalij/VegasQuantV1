@@ -16,7 +16,9 @@ export type BlackboxTask = {
   }[];
 };
 
-export function blackboxEnabled(env = process.env) {
+export function blackboxEnabled(
+  env: Record<string, string | undefined> = process.env,
+) {
   return (
     env.VERCEL_ENV === "preview" &&
     env.VQ_BLACKBOX_STAGING === "true" &&
