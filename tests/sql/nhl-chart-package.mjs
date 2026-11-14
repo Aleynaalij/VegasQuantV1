@@ -11,28 +11,28 @@ create function private.is_dealer_publisher(u uuid) returns boolean language sql
 create function private.age_eligible(u uuid) returns boolean language sql as $$select true$$;
 create table community_posts(id uuid primary key,user_id uuid,sport text,kind text,title text,body text,card text,legs jsonb,stake numeric,created_at timestamptz default now(),constraint community_posts_card_check check(card is null or card='vq-publication:v1' or card ~ '^nfl-dvp:'));
 `);
-const now=new Date(), start=new Date(now.getTime()+60*60000), prior=new Date(now.getTime()-86400000).toISOString().slice(0,10), oldid=2026020001;
+// Noon Eastern keeps the chart window and the scheduled game on the same slate.
+const now=new Date('2026-11-13T17:00:00Z'), start=new Date('2026-11-14T00:00:00Z'), prior='2026-11-12', oldid=2026020001;
+const fixtureClock=sql=>sql.replace(/\b(?:now|clock_timestamp)\(\)/g,"timestamptz '2026-11-13T17:00:00Z'");
 const gameData={start_time:start.toISOString(),status:'STATUS_SCHEDULED',season:2027,away:{name:'Toronto Maple Leafs',short_name:'Maple Leafs',abbreviation:'TOR'},home:{name:'Ottawa Senators',short_name:'Senators',abbreviation:'OTT'}};
 await db.query(`insert into sports_games values($1,'nhl',$2,$3)`,[game,start.toISOString(),gameData]);
 const body={id:oldid,season:20262027,gameType:2,gameState:'OFF',startTimeUTC:prior+'T00:00:00Z',awayTeam:{abbrev:'TOR',score:1,sog:4},homeTeam:{abbrev:'OTT',score:1,sog:4},playerByGameStats:{}};
 const p=(id)=>({playerId:id,position:'D',toi:'20:00',sog:4,goals:1,assists:1,points:2,blockedShots:2,shifts:20});body.playerByGameStats.awayTeam={forwards:[],defense:[p(1)]};body.playerByGameStats.homeTeam={forwards:[],defense:[p(2)]};
 const source={url:`https://api-web.nhle.com/v1/gamecenter/${oldid}/boxscore`,sha256:createHash('sha256').update(JSON.stringify(body)).digest('hex'),retrieved_at:now.toISOString()};await db.query('insert into private.nhl_context_sources values($1,$2,$3,$4,$5)',[source.url,JSON.stringify(body),source.sha256,source.retrieved_at,start.toISOString()]);
 const team=(abbr,id)=>({name:abbr,abbreviation:abbr,games:[{id:oldid,date:prior,opponent:abbr==='TOR'?'OTT':'TOR',goalsFor:1,goalsAgainst:1,result:'W'}],roster:[{id,name:'Test '+abbr}],goalie:null,powerPlay:null,notes:[],goalsForPerGame:1,goalsAgainstPerGame:1});
-const report={version:1,game_id:game,cutoff:start.toISOString(),generated_at:now.toISOString(),nhl_game_id:2026020999,nhl_url:'https://www.nhl.com/gamecenter/2026020999',teams:[team('TOR',1),team('OTT',2)],sources:[source]};await db.query('insert into private.nhl_context_reports values($1,$2,now())',[game,report]);
-await db.exec(fs.readFileSync('supabase/migrations/20261111000938_nhl_daily_chart_package.sql','utf8'));
+const report={version:1,game_id:game,cutoff:start.toISOString(),generated_at:now.toISOString(),nhl_game_id:2026020999,nhl_url:'https://www.nhl.com/gamecenter/2026020999',teams:[team('TOR',1),team('OTT',2)],sources:[source]};await db.query('insert into private.nhl_context_reports values($1,$2,$3)',[game,report,now.toISOString()]);
+await db.exec(fixtureClock(fs.readFileSync('supabase/migrations/20261111000938_nhl_daily_chart_package.sql','utf8')));
 const id=(await db.query('select private.nhl_chart_capture($1) id',[game])).rows[0].id;
 let snap=(await db.query('select payload from private.nhl_chart_snapshots where id=$1',[id])).rows[0].payload;
 assert.equal(snap.teams[0].samples[0].shots,4);assert.equal(snap.teams[0].samples[0].seconds,1200);
 await db.query("update private.nhl_context_sources set body='{}'");assert.equal((await db.query('select private.nhl_chart_capture($1) id',[game])).rows[0].id,id,'retries reuse snapshot');assert.equal((await db.query('select payload from private.nhl_chart_snapshots where id=$1',[id])).rows[0].payload.teams[0].samples[0].shots,4,'old stats remain frozen');
 await db.exec('set role anon');assert.equal((await db.query('select public.nhl_chart_snapshot($1) r',[id])).rows[0].r,null,'unpublished data stays private');await assert.rejects(db.query('select * from private.nhl_chart_snapshots'),/permission denied/);await db.exec('reset role');
 await db.exec(`create function public.assert_chart_author() returns trigger language plpgsql as $$begin if current_setting('request.jwt.claim.sub',true)<>new.user_id::text or current_setting('vq.automated_post',true)<>'on' then raise exception 'missing author claims';end if;return new;end$$;create trigger author before insert on community_posts for each row execute function public.assert_chart_author();`);
-// Exercise the exact publisher after its morning gate; replace clock only in this isolated fixture.
-let def=(await db.query("select pg_get_functiondef('private.nhl_charts_tick()'::regprocedure) d")).rows[0].d;await db.exec(def.replace("now_et timestamp:=now() at time zone 'America/New_York'","now_et timestamp:=((now() at time zone 'America/New_York')::date + time '12:00')"));
 const posted=(await db.query('select private.nhl_charts_tick() r')).rows[0].r;assert.equal(posted.status,'POSTED');assert.equal((await db.query('select count(*)::int n from community_posts')).rows[0].n,1);
 assert.equal((await db.query('select public.nhl_chart_snapshot($1) r',[id])).rows[0].r.id,id);
 const again=(await db.query('select private.nhl_charts_tick() r')).rows[0].r;assert.ok(['WAITING','NOTHING_READY'].includes(again.status));assert.equal((await db.query('select count(*)::int n from community_posts')).rows[0].n,1,'duplicate run creates no post');
 await db.exec("update sports_games set payload=jsonb_set(payload,'{status}','\"STATUS_POSTPONED\"')");assert.equal((await db.query('select private.nhl_charts_tick() r')).rows[0].r.coverage[0].status,'NOT_SCHEDULED');
-await db.exec(fs.readFileSync('supabase/migrations/20261111001158_nhl_chart_morning_integration.sql','utf8').split('do $integration$')[0]);
+await db.exec(fixtureClock(fs.readFileSync('supabase/migrations/20261111001158_nhl_chart_morning_integration.sql','utf8').split('do $integration$')[0]));
 await assert.rejects(db.query("update private.nhl_chart_snapshots set payload='{}'"),/immutable/);
 await assert.rejects(db.query('delete from private.nhl_chart_snapshots'),/immutable/);
 await db.query('select private.nhl_charts_run()');assert.equal((await db.query('select count(*)::int n from private.nhl_chart_runs')).rows[0].n,1,'durable per-game outcomes recorded');

@@ -11,8 +11,10 @@ create table public.nba_result_progress(game_id uuid,status text);
 create table public.nba_game_results(game_id uuid);
 create table private.nba_threes_posts(day date primary key,status text,detail text,updated_at timestamptz default now());
 create function private.nba_threes_post()returns jsonb language plpgsql as $$begin return '{"status":"POSTED"}'::jsonb;end$$;`);
-await db.exec("insert into public.nba_games values('00000000-0000-4000-8000-000000000002',2,now()+interval '1 hour','STATUS_SCHEDULED')");
-await db.exec(readFileSync('supabase/migrations/20261031150209_nba_live_readiness.sql','utf8'));
+await db.exec("insert into public.nba_games values('00000000-0000-4000-8000-000000000002',2,timestamptz '2026-11-14T04:45:00Z','STATUS_SCHEDULED')");
+// The upcoming game is Friday evening ET, even though its UTC date is Saturday.
+const readiness = readFileSync('supabase/migrations/20261031150209_nba_live_readiness.sql','utf8');
+await db.exec(readiness.replace(/\bnow\(\)/g,"timestamptz '2026-11-14T04:19:15Z'"));
 await db.exec(readFileSync('supabase/migrations/20261031180000_nba_live_dispatch.sql','utf8'));
 const jobs=(await db.query('select * from cron.job order by jobid')).rows;
 assert.equal(jobs.length,3);assert.match(jobs[0].command,/nba_live_post\('nba-sync'\)/);assert.match(jobs[1].command,/nba_live_post\('nba-results'\)/);
@@ -23,7 +25,7 @@ await assert.rejects(db.query("select private.nba_live_post('sports-sync')"),/Un
 for(const role of ['anon','authenticated','service_role'])assert.equal((await db.query("select has_function_privilege($1,'private.nba_live_post(text)','execute') p",[role])).rows[0].p,false);
 const call=async()=>(await db.query('select private.nba_threes_post() r')).rows[0].r;
 assert.equal((await call()).status,'POSTED');
-await db.exec(`insert into public.nba_games values('00000000-0000-4000-8000-000000000001',2,((now() at time zone 'America/New_York')::date-1+time '20:00') at time zone 'America/New_York','STATUS_FINAL');insert into public.nba_result_progress values('00000000-0000-4000-8000-000000000001','CONFIRMING');`);
+await db.exec(`insert into public.nba_games values('00000000-0000-4000-8000-000000000001',2,timestamptz '2026-11-13T01:00:00Z','STATUS_FINAL');insert into public.nba_result_progress values('00000000-0000-4000-8000-000000000001','CONFIRMING');`);
 assert.equal((await call()).status,'WAITING');
 await db.exec("insert into public.nba_game_results values('00000000-0000-4000-8000-000000000001')");assert.equal((await call()).status,'POSTED');
 await db.exec("update private.nba_threes_posts set status='POSTED'");assert.equal((await call()).status,'ALREADY_POSTED');
