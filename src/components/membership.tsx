@@ -29,7 +29,11 @@ type Quote = {
   recurring: boolean;
   expires_at: string | null;
 };
-export default function Membership() {
+export default function Membership({
+  stagingMfaEnrollment = false,
+}: {
+  stagingMfaEnrollment?: boolean;
+}) {
   const router = useRouter();
   const [age, setAge] = useState<AgeStatus | null>(null);
   const [session, setSession] = useState<Session | null>(null),
@@ -179,11 +183,19 @@ export default function Membership() {
       }
     } catch (e) {
       const code = authErrorCode(e);
-      if (code === "email_not_confirmed" || (signup && code === "over_email_send_rate_limit"))
+      if (
+        code === "email_not_confirmed" ||
+        (signup && code === "over_email_send_rate_limit")
+      )
         setPendingEmail(credentials.email);
       if (code === "over_email_send_rate_limit")
         setResendWait(retryAfterSeconds(e) ?? RESEND_COOLDOWN_SECONDS);
-      setNotice(authErrorMessage(e, signup ? "Registration failed." : "Sign in failed."));
+      setNotice(
+        authErrorMessage(
+          e,
+          signup ? "Registration failed." : "Sign in failed.",
+        ),
+      );
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -207,7 +219,12 @@ export default function Membership() {
     } catch (e) {
       if (authErrorCode(e) === "over_email_send_rate_limit")
         setResendWait(retryAfterSeconds(e) ?? RESEND_COOLDOWN_SECONDS);
-      setNotice(authErrorMessage(e, "Couldn’t resend the email. Please wait a minute and try again."));
+      setNotice(
+        authErrorMessage(
+          e,
+          "Couldn’t resend the email. Please wait a minute and try again.",
+        ),
+      );
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -324,6 +341,91 @@ export default function Membership() {
       setBusy(false);
     }
   }
+  const adminMfaPanel = access.admin_account && !access.admin && (
+    <Panel title="Admin security · Two-step verification">
+      <div className="notebook">
+        <p>
+          Your admin account is recognized. Complete authenticator verification
+          to continue.
+        </p>
+        {!factor && (
+          <button className="primary" disabled={busy} onClick={prepareMfa}>
+            Continue with authenticator
+          </button>
+        )}
+        {setupKey && (
+          <div className="mfa-setup">
+            <h3>Setting up on this phone?</h3>
+            <p>
+              Copy the setup key. In your authenticator app, add an account
+              using a setup key (manual entry), choose Time-based, and name it
+              Vegas Quant. Return here and enter its six-digit code.
+            </p>
+            <label>
+              Setup key
+              <input
+                aria-label="Authenticator setup key"
+                readOnly
+                value={setupKey}
+                autoComplete="off"
+                spellCheck={false}
+              />
+            </label>
+            <button
+              type="button"
+              className="primary"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(setupKey);
+                  setNotice(
+                    "Setup key copied. Add it in your authenticator app, then return here.",
+                  );
+                } catch {
+                  setNotice(
+                    "Press and hold the setup key to copy it manually.",
+                  );
+                }
+              }}
+            >
+              Copy setup key
+            </button>
+            <p className="muted">
+              Keep this key private. It is shown only during setup.
+            </p>
+          </div>
+        )}
+        {qr && (
+          <details className="mfa-alternative">
+            <summary>Using another device? Show QR code</summary>
+            <img
+              className="mfa-qr"
+              src={qr}
+              alt="Scan with your authenticator app"
+            />
+          </details>
+        )}
+        {factor && (
+          <form className="member-form" onSubmit={verifyMfa}>
+            <label>
+              Authenticator code
+              <input
+                name="code"
+                aria-label="Authenticator code"
+                maxLength={6}
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                autoComplete="one-time-code"
+                required
+              />
+            </label>
+            <button className="primary" disabled={busy}>
+              Verify & open board
+            </button>
+          </form>
+        )}
+      </div>
+    </Panel>
+  );
   if (session && (!age || (age.required && !age.verified)))
     return (
       <Shell active="account">
@@ -335,6 +437,8 @@ export default function Membership() {
           key={`age-${session.user.id}`}
           uid={session.user.id}
         />
+        {stagingMfaEnrollment && adminMfaPanel}
+        {stagingMfaEnrollment && notice && <p role="status">{notice}</p>}
         <Panel title="Account controls">
           <p>{session.user.email}</p>
           <button
@@ -574,92 +678,7 @@ export default function Membership() {
         </Panel>
       )}
       {session && !access.allowed && !access.admin_account && <FriendPass />}
-      {access.admin_account && !access.admin && (
-        <Panel title="Admin security · Two-step verification">
-          <div className="notebook">
-            <p>
-              Your admin account is recognized. Two-step verification protects
-              your research and publishing tools. Complete it below to open the
-              board.
-            </p>
-            {!factor && (
-              <button className="primary" disabled={busy} onClick={prepareMfa}>
-                Continue with authenticator
-              </button>
-            )}
-            {setupKey && (
-              <div className="mfa-setup">
-                <h3>Setting up on this phone?</h3>
-                <p>
-                  Copy the setup key. In your authenticator app, add an account
-                  using a setup key (manual entry), choose Time-based, and name
-                  it Vegas Quant. Return here and enter its six-digit code.
-                </p>
-                <label>
-                  Setup key
-                  <input
-                    aria-label="Authenticator setup key"
-                    readOnly
-                    value={setupKey}
-                    autoComplete="off"
-                    spellCheck={false}
-                  />
-                </label>
-                <button
-                  type="button"
-                  className="primary"
-                  onClick={async () => {
-                    try {
-                      await navigator.clipboard.writeText(setupKey);
-                      setNotice(
-                        "Setup key copied. Add it in your authenticator app, then return here.",
-                      );
-                    } catch {
-                      setNotice(
-                        "Press and hold the setup key to copy it manually.",
-                      );
-                    }
-                  }}
-                >
-                  Copy setup key
-                </button>
-                <p className="muted">
-                  Keep this key private. It is shown only during setup.
-                </p>
-              </div>
-            )}
-            {qr && (
-              <details className="mfa-alternative">
-                <summary>Using another device? Show QR code</summary>
-                <img
-                  className="mfa-qr"
-                  src={qr}
-                  alt="Scan with your authenticator app"
-                />
-              </details>
-            )}
-            {factor && (
-              <form className="member-form" onSubmit={verifyMfa}>
-                <label>
-                  Authenticator code
-                  <input
-                    name="code"
-                    aria-label="Authenticator code"
-                    maxLength={6}
-                    inputMode="numeric"
-                    pattern="[0-9]{6}"
-                    autoComplete="one-time-code"
-                    required
-                  />
-                </label>
-                <button className="primary" disabled={busy}>
-                  Verify & open board
-                </button>
-              </form>
-            )}
-          </div>
-        </Panel>
-      )}
+      {adminMfaPanel}
       {access.admin && (
         <p>
           <Link className="text-link" href="/admin">
@@ -694,9 +713,10 @@ export default function Membership() {
             </p>
             <p>
               Full matchup analysis, injury and weather research, target boards,
-              market history and research exports are included. Official history,
-              performance and tailed-pick records are currently restricted to administrators.
-              Administrator tools remain restricted to administrators.
+              market history and research exports are included. Official
+              history, performance and tailed-pick records are currently
+              restricted to administrators. Administrator tools remain
+              restricted to administrators.
             </p>
           </div>
         </Panel>
@@ -795,9 +815,8 @@ export default function Membership() {
               You are buying sports analysis and tracking, not a wager or entry
               into a prize pool. No outcome is guaranteed. See Help & Support
               for the current billing and refund contact status; a monitored
-              request destination has not yet been confirmed.
-              Cancellation stops future monthly renewals; it is separate from a
-              refund request.
+              request destination has not yet been confirmed. Cancellation stops
+              future monthly renewals; it is separate from a refund request.
             </p>
           </div>
         </Panel>
