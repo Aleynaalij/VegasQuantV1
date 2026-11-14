@@ -200,9 +200,18 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
       preview.headers.get("cache-control") ?? "",
       /private, no-store/,
     );
-    const { publicationMonitor, publicationIntelligence } =
+    const { publicationMonitor, publicationIntelligence, autopilotTasks } =
       await preview.json();
     assert.equal(publicationIntelligence.live, null);
+    assert.ok(
+      autopilotTasks.some(
+        (task: { status: string }) => task.status === "blocked",
+      ),
+    );
+    const assignment = await POST(
+      request({ action: "assign", to: "Codex" }, "fixture-admin"),
+    );
+    assert.equal(assignment.status, 400);
     assert.deepEqual(
       publicationIntelligence.fixtures.map(
         (item: { status: string }) => item.status,
@@ -216,6 +225,7 @@ test("operations route verifies user bearer, enforces origin and keeps internal 
     const production = await POST(request({ action: "list" }, "fixture-admin"));
     assert.equal(production.status, 200);
     const productionBody = await production.json();
+    assert.equal(productionBody.autopilotTasks, undefined);
     assert.deepEqual(
       productionBody.publicationMonitor.map(
         (item: { status: string }) => item.status,
