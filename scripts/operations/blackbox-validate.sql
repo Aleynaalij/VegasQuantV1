@@ -77,6 +77,10 @@ begin
     p_review=>'{"recommendation":"Corroborate journal timestamps","classification":"journal","effectiveness":"unmeasured","evidence":"Reviewed fixture"}')->>'revision'='1';
   select t into result from jsonb_array_elements(public.blackbox_intelligence('page')->'tasks') t where t->>'id'='test-lifecycle';
   assert result->'reviews'->0->>'classification'='journal';
+  assert public.blackbox_intelligence('review',p_task=>'test-lifecycle',p_version=>11,
+    p_review=>'{"recommendation":"Corroborate journal timestamps","classification":"journal","effectiveness":"unmeasured","evidence":"Reviewed fixture"}')->>'duplicate'='true';
+  assert public.blackbox_intelligence('page')->'reporting'->'rootCauses'->>'journal'='1';
+
 
 end
 $$;

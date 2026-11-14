@@ -27,39 +27,51 @@ export function BlackboxControlCenter() {
     captured_at: string;
     summary: { tasks: { id: string; status: string; version: number }[] };
   } | null>(null);
+  const [reporting, setReporting] = useState<{
+    effectiveness: Record<string, number>;
+    rootCauses: Record<string, number>;
+    briefingHistory: {
+      day: string;
+      version: number;
+      captured_at: string;
+      task_count: number;
+      policy: string;
+    }[];
+  } | null>(null);
   const [notice, setNotice] = useState("");
+  const [cursor, setCursor] = useState<string | undefined>();
+  const [next, setNext] = useState<string | null>(null);
+  const [previous, setPrevious] = useState<(string | undefined)[]>([]);
   const generation = useRef(0);
-  async function load(signal?: AbortSignal) {
+  async function load(signal?: AbortSignal, after = cursor) {
     const version = ++generation.current;
     try {
       const { data } = await supabase.auth.getSession();
       if (!data.session) throw new Error("Sign in required");
       const credentials = data.session.access_token;
-      const collected: BlackboxTask[] = [];
-      let after: string | undefined;
-      let payload;
-      do {
-        payload = await blackboxRequest(
-          { action: "page", after },
-          credentials,
-          signal,
-        );
-        if (version !== generation.current || signal?.aborted) return;
-        collected.push(...payload.tasks);
-        if (payload.next && payload.next === after)
-          throw new Error("Invalid cursor");
-        after = payload.next ?? undefined;
-      } while (after);
-      setTasks(collected);
+      const payload = await blackboxRequest(
+        { action: "page", after },
+        credentials,
+        signal,
+      );
+      if (version !== generation.current || signal?.aborted) return;
+      setTasks(payload.tasks);
+      setCursor(after);
+      setNext(payload.next ?? null);
       setAgents(payload.agents ?? []);
       setRole(payload.role ?? null);
       setBriefing(payload.briefing ?? null);
+      setReporting(payload.reporting ?? null);
       setToken(data.session.access_token);
       setFailed(false);
     } catch {
       if (version !== generation.current || signal?.aborted) return;
       setTasks(null);
+      setNext(null);
+      setPrevious([]);
+      setCursor(undefined);
       setBriefing(null);
+      setReporting(null);
       setRole(null);
       setToken("");
       setAgents([]);
@@ -72,7 +84,11 @@ export function BlackboxControlCenter() {
     const stop = onUserChange(() => {
       ++generation.current;
       setTasks(null);
+      setNext(null);
+      setPrevious([]);
+      setCursor(undefined);
       setBriefing(null);
+      setReporting(null);
       setRole(null);
       setToken("");
       setAgents([]);
@@ -115,7 +131,33 @@ export function BlackboxControlCenter() {
       {!tasks && !failed && <p role="status">Loading staging task history…</p>}
       {tasks && (
         <>
+          <p>
+            Priority and workload summarize the current task page. Search
+            filters this page.
+          </p>
           <BlackboxBriefing data={intelligence} now={now} />
+          <button
+            type="button"
+            disabled={!previous.length}
+            onClick={() => {
+              const prior = previous.at(-1);
+              setPrevious(previous.slice(0, -1));
+              void load(undefined, prior ?? "");
+            }}
+          >
+            Previous task page
+          </button>
+          <button
+            type="button"
+            disabled={!next}
+            onClick={() => {
+              if (!next) return;
+              setPrevious([...previous, cursor]);
+              void load(undefined, next);
+            }}
+          >
+            Next task page
+          </button>
           {role === "admin" && (
             <button
               type="button"
@@ -134,15 +176,48 @@ export function BlackboxControlCenter() {
             </button>
           )}
           {notice && <p role="status">{notice}</p>}
+          {reporting && (
+            <details>
+              <summary>Verified outcomes and briefing history</summary>
+              <p>
+                Recommendation acceptance and reviewer availability are
+                unavailable without verified records.
+              </p>
+              <h4>Historical fix effectiveness</h4>
+              <p>
+                {Object.entries(reporting.effectiveness)
+                  .map(([key, value]) => `${key} · ${value}`)
+                  .join(" · ") || "Unavailable"}
+              </p>
+              <h4>Reviewed root causes</h4>
+              <p>
+                {Object.entries(reporting.rootCauses)
+                  .map(([key, value]) => `${key} · ${value}`)
+                  .join(" · ") || "Unavailable"}
+              </p>
+              <h4>Recent saved briefing revisions</h4>
+              <ul>
+                {reporting.briefingHistory.map((item) => (
+                  <li key={`${item.day}:${item.version}`}>
+                    {item.day} Eastern · revision {item.version} ·{" "}
+                    {item.task_count} tasks · {item.policy} · {item.captured_at}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
           {briefing && (
             <details>
               <summary>
                 Saved briefing · {briefing.day} Eastern · revision{" "}
                 {briefing.version}
               </summary>
-              <p>Captured {briefing.captured_at}</p>
+              <p>
+                Captured {briefing.captured_at} · showing up to 25 of{" "}
+                {briefing.summary.tasks.length} source records.
+              </p>
               <ul>
-                {briefing.summary.tasks.map((task) => (
+                {briefing.summary.tasks.slice(0, 25).map((task) => (
                   <li key={task.id}>
                     <a href={`#blackbox-task-${task.id}`}>{task.id}</a> ·{" "}
                     {task.status} · version {task.version}
