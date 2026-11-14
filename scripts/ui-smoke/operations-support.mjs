@@ -131,6 +131,7 @@ async function fixture(width, role, intercept) {
           tickets: [ticket],
           next: null,
           autopilotTasks: width === 390 ? autopilotTasks : undefined,
+          blackboxAvailable: width === 390 || undefined,
           publicationMonitor: publicationFixtures,
           publicationIntelligence: publicationIntelligence,
           feedHealth: {
@@ -166,6 +167,22 @@ async function fixture(width, role, intercept) {
       events.push({ action: "triaged", status: "in_review", created_at: time });
     }
     return route.fulfill({ json: { state: "ready", ticket, events } });
+  });
+  await context.route("**/api/operations/blackbox", (route) => {
+    assert.deepEqual(route.request().postDataJSON(), { action: "list" });
+    return route.fulfill({
+      json: {
+        tasks: autopilotTasks.map((proposal) => ({
+          id: proposal.id,
+          proposal,
+          status: proposal.status,
+          version: 0,
+          updated_at: time,
+          assigned_role: null,
+          history: [],
+        })),
+      },
+    });
   });
   const page = await context.newPage();
   page.on("pageerror", (error) => errors.push(error.message));
@@ -379,6 +396,18 @@ try {
       assert.equal(await tasks.getByRole("button").count(), 0);
     } else {
       assert.equal(await tasks.count(), 0);
+    }
+    const blackbox = admin.page.getByRole("region", {
+      name: "Blackbox control center",
+    });
+    if (width === 390) {
+      await blackbox.getByText(/2 open/).waitFor();
+      await blackbox.getByRole("searchbox").fill("no matching fixture text");
+      assert.equal(await blackbox.locator("details").count(), 0);
+      await blackbox.getByRole("searchbox").fill("reconcile-records");
+      assert.equal(await blackbox.locator("details").count(), 1);
+    } else {
+      assert.equal(await blackbox.count(), 0);
     }
     const monitor = admin.page.getByRole("region", {
       name: /Publication Monitor/,

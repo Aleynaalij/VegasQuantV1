@@ -1,3 +1,5 @@
+import { boundedJson } from "@/lib/bounded-json";
+import { blackboxEnabled } from "@/lib/blackbox";
 import {
   operationsProviders,
   operationsFeedSample,
@@ -21,34 +23,6 @@ function reply(result: OperationResult) {
     status,
     headers,
   });
-}
-
-async function boundedJson(req: Request): Promise<unknown> {
-  if (
-    !req.headers.get("content-type")?.startsWith("application/json") ||
-    !req.body
-  )
-    return null;
-  const reader = req.body.getReader();
-  const decoder = new TextDecoder("utf-8", { fatal: true });
-  let size = 0,
-    text = "";
-  try {
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) return JSON.parse(text + decoder.decode());
-      size += value.byteLength;
-      if (size > 2048) {
-        void reader.cancel().catch(() => {});
-        return null;
-      }
-      text += decoder.decode(value, { stream: true });
-    }
-  } catch {
-    return null;
-  } finally {
-    reader.releaseLock();
-  }
 }
 
 export async function POST(req: Request) {
@@ -123,6 +97,7 @@ export async function POST(req: Request) {
       return reply({
         ...result,
         autopilotTasks,
+        blackboxAvailable: blackboxEnabled() || undefined,
         publicationMonitor,
         publicationIntelligence,
         release: observeOperationsRelease(),

@@ -1,5 +1,6 @@
 "use client";
 
+import { BlackboxControlCenter } from "./blackbox-control-center";
 import Link from "next/link";
 import { AutopilotTaskQueue } from "./autopilot-task-queue";
 import { NbaPublicationIntelligence } from "./nba-publication-intelligence";
@@ -188,6 +189,7 @@ export function OperationsQueue() {
       </div>
       {queue && (
         <>
+          {queue.blackboxAvailable && <BlackboxControlCenter />}
           {queue.autopilotTasks && (
             <AutopilotTaskQueue tasks={queue.autopilotTasks} />
           )}
