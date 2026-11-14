@@ -1,3 +1,4 @@
+import { BlackboxExecution } from "@/components/blackbox-execution";
 import { notFound } from "next/navigation";
 import { BlackboxControlCenter } from "@/components/blackbox-control-center";
 import { Shell } from "@/components/ui";
@@ -15,6 +16,7 @@ export default function Page() {
     <Shell active="admin">
       <article className="vq-policy">
         <BlackboxControlCenter />
+        {process.env.VQ_BLACKBOX_EXECUTION === "true" && <BlackboxExecution />}
       </article>
     </Shell>
   );
