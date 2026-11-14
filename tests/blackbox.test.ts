@@ -51,6 +51,18 @@ test("Blackbox SQL enforces the synthetic lifecycle, audit isolation and denial 
       readFileSync("scripts/operations/blackbox-active-session.sql", "utf8"),
     );
     await db.exec(
+      readFileSync("scripts/operations/blackbox-phase3.sql", "utf8"),
+    );
+    await db.exec(
+      readFileSync("scripts/operations/blackbox-phase3-review-fix.sql", "utf8"),
+    );
+    await db.exec(
+      readFileSync("scripts/operations/blackbox-phase3-stability.sql", "utf8"),
+    );
+    await db.exec(
+      readFileSync("scripts/operations/blackbox-phase3-validate.sql", "utf8"),
+    );
+    await db.exec(
       readFileSync("scripts/operations/blackbox-validate.sql", "utf8"),
     );
     const result = await db.query(
