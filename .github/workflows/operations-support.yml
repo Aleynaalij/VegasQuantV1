@@ -8,6 +8,11 @@ on:
       - 'src/components/operations-support.tsx'
       - 'src/lib/operations-support.ts'
       - 'src/lib/autopilot-tasks.ts'
+      - 'src/lib/blackbox.ts'
+      - 'src/lib/bounded-json.ts'
+      - 'src/components/blackbox-control-center.tsx'
+      - 'scripts/operations/blackbox-*'
+      - 'tests/blackbox.test.ts'
       - 'src/components/autopilot-task-queue.tsx'
       - 'tests/autopilot-tasks.test.ts'
       - 'src/components/nba-publication-intelligence.tsx'
@@ -34,7 +39,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node --import tsx --test tests/operations-support.test.ts tests/nba-publication-monitor.test.ts tests/nba-publication-intelligence.test.ts tests/autopilot-tasks.test.ts
+      - run: node --import tsx --test tests/operations-support.test.ts tests/nba-publication-monitor.test.ts tests/nba-publication-intelligence.test.ts tests/autopilot-tasks.test.ts tests/blackbox.test.ts
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321

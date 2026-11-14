@@ -63,6 +63,7 @@ export type OperationResult =
       tickets: Ticket[];
       next: TicketCursor | null;
       release?: OperationsRelease | null;
+      blackboxAvailable?: boolean;
       autopilotTasks?: AutopilotTask[];
       publicationIntelligence?: Awaited<
         ReturnType<typeof readPreviewPublicationIntelligence>
