@@ -416,11 +416,21 @@ try {
     });
     if (width === 390) {
       await blackbox.getByText(/2 open/).waitFor();
+      await blackbox
+        .getByRole("heading", { name: "Engineering briefing" })
+        .waitFor();
       await blackbox.getByRole("searchbox").fill("no matching fixture text");
-      assert.equal(await blackbox.locator("details").count(), 0);
+      assert.equal(
+        await blackbox.locator("details[id^=blackbox-task-]").count(),
+        0,
+      );
       await blackbox.getByRole("searchbox").fill("reconcile-records");
-      assert.equal(await blackbox.locator("details").count(), 1);
-      await blackbox.locator("summary").click();
+      assert.equal(
+        await blackbox.locator("details[id^=blackbox-task-]").count(),
+        1,
+      );
+      await blackbox.locator("details[id^=blackbox-task-] > summary").click();
+      await blackbox.getByText(/Advisory priority/).waitFor();
       await blackbox
         .getByLabel("Evidence or reason")
         .fill("Synthetic browser assignment");
