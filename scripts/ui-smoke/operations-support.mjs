@@ -189,7 +189,7 @@ async function fixture(width, role, intercept) {
       task.assigned_role = "claude";
       return route.fulfill({ json: { version: 1 } });
     }
-    assert.deepEqual(input, { action: "list" });
+    assert.deepEqual(input, { action: "page" });
     return route.fulfill({
       json: {
         role: "admin",

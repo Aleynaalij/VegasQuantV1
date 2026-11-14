@@ -1,7 +1,12 @@
 import type { AutopilotTask } from "./autopilot-tasks";
 
 export type BlackboxRole = "admin" | "reviewer" | "codex" | "claude";
-export type BlackboxAgent = { id: string; role: "codex" | "claude" };
+export type BlackboxAgent = {
+  id: string;
+  role: "codex" | "claude";
+  capability?: string | null;
+  verifiedAt?: string | null;
+};
 export type BlackboxOutcome = Record<string, string | number>;
 export type BlackboxTask = {
   id: string;
@@ -10,6 +15,17 @@ export type BlackboxTask = {
   version: number;
   updated_at: string;
   assigned_role: string | null;
+  dependency_version?: number;
+  dependencies?: string[];
+  hidden_dependencies?: boolean;
+  reviews?: {
+    outcome_version: number;
+    revision: number;
+    recommendation: string;
+    classification: string;
+    effectiveness: string;
+    evidence: string;
+  }[];
   outcomes?: BlackboxOutcome[];
   history: {
     version: number;

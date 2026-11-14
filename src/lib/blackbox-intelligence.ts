@@ -73,6 +73,13 @@ export function buildBlackboxIntelligence(
     role,
     skill,
     registered: agents.some((a) => a.role === role),
+    verified: agents.some(
+      (a) =>
+        a.role === role &&
+        a.capability === skill &&
+        Number.isFinite(Date.parse(a.verifiedAt ?? "")) &&
+        Date.parse(a.verifiedAt ?? "") <= now,
+    ),
     assigned: rows
       .filter((t) => t.assigned_role === role && t.status !== "completed")
       .map((t) => taskAnchor(t.id)),
@@ -89,6 +96,8 @@ export function buildBlackboxIntelligence(
       const contradictory = incident.evidence.integrityWarnings.length > 0;
       const confidence = !fresh || contradictory ? "low" : incident.confidence;
       const blockers = dependenciesOf(task.id, dependencies, tasks);
+      if (task.hidden_dependencies)
+        blockers.push("A dependency is outside your visible ledger");
       if (task.status === "blocked")
         blockers.push("Ledger marks investigation blocked");
       const related = rows.filter(
@@ -128,7 +137,7 @@ export function buildBlackboxIntelligence(
       };
       const preferred = task.proposal.recommendedAgent.toLowerCase();
       const candidates = workload
-        .filter((a) => a.registered)
+        .filter((a) => a.verified)
         .sort(
           (a, b) =>
             a.assigned.length +

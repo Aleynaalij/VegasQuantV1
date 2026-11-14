@@ -45,7 +45,14 @@ test("advisory ranking deduplicates stable IDs and deflates contradictory or old
 test("cycles and unreviewed dependencies block recommendations", async () => {
   const rows = await ledger();
   const [a, b] = rows;
-  const agents = [{ id: "fixture", role: "claude" as const }];
+  const agents = [
+    {
+      id: "fixture",
+      role: "claude" as const,
+      capability: "record reconciliation",
+      verifiedAt: "2026-11-16T15:00:00Z",
+    },
+  ];
   assert.ok(
     buildBlackboxIntelligence(rows, agents, now).queue.every(
       (t) => t.recommended === "claude",
