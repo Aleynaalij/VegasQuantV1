@@ -73,6 +73,11 @@ begin
   begin execute 'delete from blackbox.memory'; raise exception 'Direct memory mutation allowed'; exception when insufficient_privilege then null; end;
   select t into result from jsonb_array_elements(public.blackbox_stage('list')->'tasks') t where t->>'id'='test-lifecycle';
   assert result->>'status'='completed' and jsonb_array_length(result->'history')=11 and jsonb_array_length(result->'outcomes')=1;
+  assert public.blackbox_intelligence('review',p_task=>'test-lifecycle',p_version=>11,
+    p_review=>'{"recommendation":"Corroborate journal timestamps","classification":"journal","effectiveness":"unmeasured","evidence":"Reviewed fixture"}')->>'revision'='1';
+  select t into result from jsonb_array_elements(public.blackbox_intelligence('page')->'tasks') t where t->>'id'='test-lifecycle';
+  assert result->'reviews'->0->>'classification'='journal';
+
 end
 $$;
 reset role;
