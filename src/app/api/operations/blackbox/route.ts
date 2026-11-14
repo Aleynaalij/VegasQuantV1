@@ -30,10 +30,23 @@ export async function POST(req: Request) {
       request: z.uuid().optional(),
       evidence: z.string().max(1500).optional(),
       target: z.uuid().optional(),
+      outcome: z
+        .strictObject({
+          conclusion: z.string().trim().min(1).max(1500),
+          confidence: z.enum(["low", "medium", "high"]),
+          rootCause: z.string().max(500).optional(),
+          fix: z.string().max(500).optional(),
+          tests: z.string().max(500).optional(),
+          deployment: z.string().max(500).optional(),
+          rollback: z.string().max(500).optional(),
+          runbook: z.string().max(500).optional(),
+        })
+        .optional(),
     })
-    .safeParse(await boundedJson(req, 8192));
+    .safeParse(await boundedJson(req, 12288));
   if (!input.success) return reply({ error: "Invalid request" }, 400);
-  const { action, task, version, request, evidence, target } = input.data;
+  const { action, task, version, request, evidence, target, outcome } =
+    input.data;
   const { data, error } = await session.db.rpc("blackbox_stage", {
     p_action: action,
     p_task: task,
@@ -41,6 +54,7 @@ export async function POST(req: Request) {
     p_request: request,
     p_evidence: evidence,
     p_target: target,
+    p_outcome: outcome,
   });
   if (error) {
     if (error.code === "42501") return reply({ error: "Forbidden" }, 403);

@@ -1,38 +1,67 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { directTasks, type BlackboxTask } from "@/lib/blackbox";
+import {
+  directTasks,
+  recommendAgent,
+  type BlackboxAgent,
+  type BlackboxRole,
+  type BlackboxTask,
+} from "@/lib/blackbox";
+import { BlackboxTaskAction, blackboxRequest } from "./blackbox-task-action";
+import { onUserChange } from "@/lib/auth-user";
 
 export function BlackboxControlCenter() {
   const [tasks, setTasks] = useState<BlackboxTask[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [search, setSearch] = useState("");
 
+  const [role, setRole] = useState<BlackboxRole | null>(null);
+  const [agents, setAgents] = useState<BlackboxAgent[]>([]);
+  const [token, setToken] = useState("");
+  const generation = useRef(0);
+  async function load(signal?: AbortSignal) {
+    const version = ++generation.current;
+    try {
+      const { data } = await supabase.auth.getSession();
+      if (!data.session) throw new Error("Sign in required");
+      const payload = await blackboxRequest(
+        { action: "list" },
+        data.session.access_token,
+        signal,
+      );
+      if (version !== generation.current || signal?.aborted) return;
+      setTasks(payload.tasks);
+      setAgents(payload.agents ?? []);
+      setRole(payload.role ?? null);
+      setToken(data.session.access_token);
+      setFailed(false);
+    } catch {
+      if (version !== generation.current || signal?.aborted) return;
+      setTasks(null);
+      setRole(null);
+      setToken("");
+      setAgents([]);
+      setFailed(true);
+    }
+  }
   useEffect(() => {
     const controller = new AbortController();
-    async function load() {
-      try {
-        const { data } = await supabase.auth.getSession();
-        if (!data.session) throw new Error("Sign in required");
-        const response = await fetch("/api/operations/blackbox", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${data.session.access_token}`,
-          },
-          body: JSON.stringify({ action: "list" }),
-          signal: controller.signal,
-        });
-        if (!response.ok) throw new Error("Task history unavailable");
-        const payload = await response.json();
-        if (!controller.signal.aborted) setTasks(payload.tasks);
-      } catch {
-        if (!controller.signal.aborted) setFailed(true);
-      }
-    }
-    void load();
-    return () => controller.abort();
+    void load(controller.signal);
+    const stop = onUserChange(() => {
+      ++generation.current;
+      setTasks(null);
+      setRole(null);
+      setToken("");
+      setAgents([]);
+      void load(controller.signal);
+    });
+    return () => {
+      ++generation.current;
+      controller.abort();
+      stop();
+    };
   }, []);
 
   const summary = directTasks(tasks ?? [], Date.now());
@@ -43,6 +72,7 @@ export function BlackboxControlCenter() {
       task.status,
       ...task.proposal.facts,
       ...task.history.map((event) => event.evidence),
+      ...(task.outcomes ?? []).flatMap(Object.values).map(String),
     ].some((value) => value.toLowerCase().includes(query)),
   );
   return (
@@ -63,6 +93,19 @@ export function BlackboxControlCenter() {
             {summary.blocked} blocked · {summary.overdue.length} awaiting
             acknowledgment for 24 hours
           </p>
+          {summary.overdue.length > 0 && (
+            <p>
+              Escalation recommendation · Ask the assigned agent to acknowledge
+              or arrange a handoff.
+            </p>
+          )}
+          {summary.recurring.map(([kind, count]) => (
+            <p key={kind}>
+              Recurring pattern · {kind.replaceAll("_", " ")} ({count} tasks).
+              Runbook suggestion · Compare the source timelines before revising
+              procedures.
+            </p>
+          ))}
           <label>
             Search operational history{" "}
             <input
@@ -80,11 +123,12 @@ export function BlackboxControlCenter() {
                 {task.status.replaceAll("_", " ")}
               </summary>
               <p>
-                Recommended agent {task.proposal.recommendedAgent} · Assigned{" "}
-                {task.assigned_role ?? "Unassigned"} · {task.proposal.approval}
+                Recommended agent {recommendAgent(task, tasks, agents)} ·
+                Assigned {task.assigned_role ?? "Unassigned"} ·{" "}
+                {task.proposal.approval}
               </p>
               <p>
-                <a href={`#${task.proposal.evidenceAnchor}`}>
+                <a href={`/admin/operations#${task.proposal.evidenceAnchor}`}>
                   Source incident evidence
                 </a>
               </p>
@@ -100,6 +144,41 @@ export function BlackboxControlCenter() {
                   <li key={item}>{item}</li>
                 ))}
               </ul>
+              <h4>Investigation plan</h4>
+              <ul>
+                {task.proposal.investigation.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ul>
+              <h4>Organizational memory</h4>
+              {(task.outcomes ?? []).map((outcome) => (
+                <dl key={outcome.version}>
+                  {Object.entries(outcome)
+                    .filter(([key]) => key !== "version")
+                    .map(([key, value]) => (
+                      <div key={key}>
+                        <dt>
+                          {key.replace(
+                            /[A-Z]/g,
+                            (letter) => " " + letter.toLowerCase(),
+                          )}
+                        </dt>
+                        <dd>{value}</dd>
+                      </div>
+                    ))}
+                </dl>
+              ))}
+              {role && (
+                <BlackboxTaskAction
+                  key={task.version}
+                  task={task}
+                  role={role}
+                  agents={agents}
+                  recommended={recommendAgent(task, tasks, agents)}
+                  token={token}
+                  refresh={load}
+                />
+              )}
               <h4>Audit history</h4>
               <ol>
                 {task.history.map((event) => (

@@ -168,19 +168,33 @@ async function fixture(width, role, intercept) {
     }
     return route.fulfill({ json: { state: "ready", ticket, events } });
   });
-  await context.route("**/api/operations/blackbox", (route) => {
-    assert.deepEqual(route.request().postDataJSON(), { action: "list" });
+  const blackboxTasks = autopilotTasks.map((proposal) => ({
+    id: proposal.id,
+    proposal,
+    status: "proposed",
+    version: 0,
+    updated_at: time,
+    assigned_role: null,
+    history: [],
+  }));
+  await context.route("**/api/operations/blackbox", async (route) => {
+    const input = route.request().postDataJSON();
+    if (input.action === "assign") {
+      const task = blackboxTasks.find((task) => task.id === input.task);
+      assert.equal(input.version, 0);
+      assert.equal(input.target, id);
+      assert.equal(input.evidence, "Synthetic browser assignment");
+      task.status = "assigned";
+      task.version = 1;
+      task.assigned_role = "claude";
+      return route.fulfill({ json: { version: 1 } });
+    }
+    assert.deepEqual(input, { action: "list" });
     return route.fulfill({
       json: {
-        tasks: autopilotTasks.map((proposal) => ({
-          id: proposal.id,
-          proposal,
-          status: proposal.status,
-          version: 0,
-          updated_at: time,
-          assigned_role: null,
-          history: [],
-        })),
+        role: "admin",
+        agents: [{ id, role: "claude" }],
+        tasks: blackboxTasks,
       },
     });
   });
@@ -406,6 +420,17 @@ try {
       assert.equal(await blackbox.locator("details").count(), 0);
       await blackbox.getByRole("searchbox").fill("reconcile-records");
       assert.equal(await blackbox.locator("details").count(), 1);
+      await blackbox.locator("summary").click();
+      await blackbox
+        .getByLabel("Evidence or reason")
+        .fill("Synthetic browser assignment");
+      await blackbox
+        .getByRole("button", { name: "Record staging action" })
+        .click();
+      await blackbox
+        .locator("summary")
+        .filter({ hasText: /assigned/ })
+        .waitFor();
     } else {
       assert.equal(await blackbox.count(), 0);
     }
