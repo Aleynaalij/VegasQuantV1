@@ -1,0 +1,25 @@
+# Blackbox release review
+
+Review the complete stack from 97f76928ee62 through #282, #283, #284 and the hardening draft. Keep the existing Operations authorization boundary and review every changed SQL function and grant before approving. The preview requires the exact isolated Supabase URL and a preview-only enable flag. The authenticated public RPC verifies account eligibility and a live session before invoking private functions. Review AAL2, allowlist, ownership, review separation, idempotency and version locking. The database owner remains privileged. November 12 remains unresolved.
+
+## Independent audit custody
+
+Run blackbox-snapshot.sql from an isolated read-only exporter against the validation database. Save the returned snapshot object outside the application. With a random 32-byte hex key supplied via BLACKBOX_INTEGRITY_KEY, run node --import tsx scripts/operations/blackbox-integrity.ts sign snapshot.json and store the signed digest manifest under independent reviewer custody. Run verify snapshot.json manifest.json against a new export of the same checkpoint. Preserve prior manifests and verify prior event and outcome prefixes before signing any extended checkpoint. The current command verifies exact snapshots. Key and manifest custody must be separate from database administration. Use an existing approved encrypted repository or vault with restricted write access and backups. Store the signing key separately, rotate with key version tracking, and retain historical verification keys. Compare independently retained digests after recovery. This detects alterations after capture, with no evidence about changes before capture. The script adds no paid services. Export, review and verification labor remains to be measured.
+
+Propose 12 months for production integrity manifests and minimum necessary audit provenance, subject to privacy and legal review. Apply legal holds where required. Log approved redactions as separate events and retain a digest where permitted. Restrict raw evidence access and avoid exporting secrets or personal data. No production retention policy is active.
+
+## Governance proposal
+
+Candidate code owner is the repository owner @Aleynaalij, subject to confirmation that a human controls the account and is independent on the PR. Confirm a second eligible human reviewer and explicit write access before installing CODEOWNERS entries for /src/app/admin/operations/, /src/app/api/operations/, /scripts/operations/, /supabase/ and /.github/. Require two distinct approvals, code-owner review, latest-push approval by a different actor, dismissal of stale approvals and resolved conversations. Require strict verify and ui-smoke contexts from Verify Vegas Quant. Block non-fast-forward updates and deletion. Keep bypass empty. Test a disposable branch with the same controls using two human accounts, then separately authorize activation on main.
+
+## Protected acceptance
+
+Sign into the exact Vercel preview normally and use separate staging sessions. Admin assigns Claude. Claude acknowledges and submits fixture evidence. Reviewer rejects with a reason. Admin hands off to Codex. Codex acknowledges and resubmits. Reviewer approves a structured outcome. Reload and search for the conclusion. Confirm member and pre-MFA sessions see no tasks. Revoke each test session before its action and confirm denial without version or audit changes. Disable the ledger control and confirm even an eligible administrator is denied. Restore the isolated switch after the test. Record deployment, SHA, role, action, result and timestamp without credentials.
+
+## Separate release decisions
+
+Release A needs its own production-read-only diff and exact-SHA approval. Present synthetic or read-only data behind existing Operations MFA. Omit task controls and mutation routes. No production SQL or staging keys. Smoke test MFA and member denial, absence of write routes and live evidence calls, unchanged support, publication and billing, and unresolved November 12.
+
+Release B needs separate authorization for production schema, identities, approval policy, monitoring, retention and exact-SHA activation. Start disabled and verify denial. Verify reviewer independence, revoked-token denial and out-of-band digest monitoring before enabling supervised actions. Keep live publication monitoring off.
+
+After authorization, preserve ancestry with merge commits in order #282, #283, #284, then hardening. Retarget each child only after its parent lands. Inspect the remaining diff, confirm the resulting tree, rerun affected exact-head CI and renew release authorization after base changes. Production rollback target is the verified Build #2 deployment dpl_5icNP1wXqudGaGQFsvwKW6xndwLL at 97f76928ee62. For staging containment, disable the ledger first, then remove preview enablement and retain evidence. To revert the active-session wrapper, keep the ledger disabled, revoke public wrapper execution and restore the previous wrapper only under reviewed staging rollback. Never restore session-unchecked writes to an enabled environment.
