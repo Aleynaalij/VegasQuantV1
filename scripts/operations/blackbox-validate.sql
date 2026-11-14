@@ -16,6 +16,7 @@ declare
   reviewer uuid := '10000000-0000-4000-8000-000000000004';
   member uuid := '10000000-0000-4000-8000-000000000005';
   result jsonb;
+  approval_request uuid := gen_random_uuid();
   request uuid := '20000000-0000-4000-8000-000000000001';
 begin
   perform set_config('request.jwt.claims',jsonb_build_object('sub',member,'aal','aal2','user_metadata',jsonb_build_object('role','admin'))::text,true);
@@ -40,11 +41,25 @@ begin
   perform set_config('request.jwt.claims',jsonb_build_object('sub',claude,'aal','aal2')::text,true);
   perform public.blackbox_stage('acknowledge','test-lifecycle',4,gen_random_uuid(),'Synthetic receipt');
   perform public.blackbox_stage('submit','test-lifecycle',5,gen_random_uuid(),'Synthetic reconciliation evidence');
-  begin perform public.blackbox_stage('approve','test-lifecycle',6,gen_random_uuid(),'Self approval'); raise exception 'Self approval allowed'; exception when insufficient_privilege then null; end;
+  begin perform public.blackbox_stage('approve','test-lifecycle',6,gen_random_uuid(),'Self approval',null,'{"conclusion":"Self","confidence":"high"}'); raise exception 'Self approval allowed'; exception when insufficient_privilege then null; end;
   perform set_config('request.jwt.claims',jsonb_build_object('sub',reviewer,'aal','aal2')::text,true);
-  perform public.blackbox_stage('approve','test-lifecycle',6,gen_random_uuid(),'Independently reviewed synthetic evidence');
+  perform public.blackbox_stage('reject','test-lifecycle',6,gen_random_uuid(),'Synthetic evidence lacks corroboration');
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',admin,'aal','aal2')::text,true);
+  perform public.blackbox_stage('handoff','test-lifecycle',7,gen_random_uuid(),'Return to first investigator',codex);
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',codex,'aal','aal2')::text,true);
+  perform public.blackbox_stage('acknowledge','test-lifecycle',8,gen_random_uuid(),'Synthetic receipt');
+  perform public.blackbox_stage('submit','test-lifecycle',9,gen_random_uuid(),'Corroborated synthetic evidence');
+  perform set_config('request.jwt.claims',jsonb_build_object('sub',reviewer,'aal','aal2')::text,true);
+  perform public.blackbox_stage('approve','test-lifecycle',10,approval_request,'Independent synthetic review',null,'{"conclusion":"Synthetic reconciliation","confidence":"high"}');
+  result := public.blackbox_stage('approve','test-lifecycle',10,approval_request,'Independent synthetic review',null,'{"conclusion":"Synthetic reconciliation","confidence":"high"}');
+  assert result->>'duplicate'='true';
+  begin
+    perform public.blackbox_stage('approve','test-lifecycle',10,approval_request,'Independent synthetic review',null,'{"conclusion":"Changed","confidence":"high"}');
+    raise exception 'Outcome changed on retry';
+  exception when unique_violation then null; end;
+  begin execute 'delete from blackbox.memory'; raise exception 'Direct memory mutation allowed'; exception when insufficient_privilege then null; end;
   select t into result from jsonb_array_elements(public.blackbox_stage('list')->'tasks') t where t->>'id'='test-lifecycle';
-  assert result->>'status'='completed' and jsonb_array_length(result->'history')=7;
+  assert result->>'status'='completed' and jsonb_array_length(result->'history')=11 and jsonb_array_length(result->'outcomes')=1;
 end
 $$;
 reset role;
