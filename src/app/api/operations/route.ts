@@ -114,8 +114,15 @@ export async function POST(req: Request) {
       const publicationIntelligence = await (
         await import("@/lib/nba-publication-intelligence-preview")
       ).readPreviewPublicationIntelligence(session.db);
+      const autopilotTasks =
+        process.env.VERCEL_ENV === "preview"
+          ? (await import("@/lib/autopilot-tasks")).previewAutopilotTasks(
+              publicationIntelligence.fixtures,
+            )
+          : undefined;
       return reply({
         ...result,
+        autopilotTasks,
         publicationMonitor,
         publicationIntelligence,
         release: observeOperationsRelease(),
