@@ -90,3 +90,9 @@ D. Add optional followed games/research saves and consolidated pick timeline onl
 Read-only inspection of existing `vq-ap002-validation` found only public community_posts, community_profiles, feed_runs and nba_games; membership_status exists, but sports_slate and game_zone_posts do not. This fixture project is not currently a compatible consumer integration environment. No schema or configuration changed. Do not apply the existing zone tagging migration casually: it includes historical backfill and depends on private age/community authorization helpers, zone_post_games and comment/reaction tables. Codex must own a separate reviewed compatibility plan before connected acceptance. Use clearly labeled fixture mode for initial browser acceptance.
 
 The existing game_zone_posts RPC returns an empty array both when no posts match and when private age/member checks deny access. The frontend therefore says “no accessible linked publications” and explicitly preserves the ambiguity rather than claiming a definitive empty or publishing pass. A typed server disposition is a future contract dependency; do not change backend authorization here.
+
+## Synthetic integration preparation
+
+`tests/discovery-reader-staging.test.ts` runs the actual readResearchHub adapter against synthetic Supabase response shapes, with network forbidden. It covers four sports, preserved event/full-research URLs, denied access and one unavailable sport. This verifies adapter behavior, not deployed RPC/RLS behavior.
+
+Local isolated build with fabricated Supabase URL/key and fixture flags returned HTTP 200 for `/staging/discovery`. Chromium could not launch because the runtime forbids its process-singleton socket, including an escalation retry. Therefore this server check is not browser/a11y acceptance. Use a compatible CI browser runtime for the pending responsive, focus, contrast, reduced-motion and touch-emulation checks. Physical hardware testing remains separate.

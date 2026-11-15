@@ -1,0 +1,54 @@
+name: Discovery isolated staging acceptance
+on:
+  push:
+    branches: [elo/home-zone-phase1-staging]
+  pull_request:
+    paths:
+      - "src/**/discovery/**"
+      - "src/app/staging/discovery/**"
+      - "tests/discovery*.test.ts"
+      - "scripts/ui-smoke/discovery-a11y.mjs"
+      - ".github/workflows/discovery-staging.yml"
+permissions:
+  contents: read
+jobs:
+  synthetic-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://synthetic.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: synthetic-public-fixture
+      STAGING_DISCOVERY_PROJECT: synthetic
+      STAGING_DISCOVERY_ENABLED: "true"
+      STAGING_DISCOVERY_FIXTURES: "true"
+      VERCEL_ENV: preview
+      DISCOVERY_A11Y_OUTPUT: artifacts/discovery-staging
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Install pinned browser audit dependencies
+        run: |
+          npm install --no-save playwright@1.56.1 axe-core@4.14.0
+          npx playwright install --with-deps chromium
+      - name: Audit synthetic staging only
+        run: |
+          set -euo pipefail
+          npx next start --hostname 127.0.0.1 -p 3197 >/tmp/discovery-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3197/staging/discovery && break; sleep 2; done
+          node scripts/ui-smoke/discovery-a11y.mjs
+      - name: Preserve synthetic audit and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery-staging-acceptance
+          path: artifacts/discovery-staging
+          if-no-files-found: warn
