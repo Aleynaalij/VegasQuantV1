@@ -36,7 +36,12 @@ jobs:
       - name: Install pinned browser audit dependencies
         run: |
           npm install --no-save playwright@1.56.1 axe-core@4.14.0
-          npx playwright install --with-deps chromium
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install chromium
+          fi
       - name: Audit synthetic staging only
         run: |
           set -euo pipefail
