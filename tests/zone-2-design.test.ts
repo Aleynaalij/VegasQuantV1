@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import { zoneDocument } from '../src/design/zone-2/document';
+import { GET } from '../src/app/design/zone-2/route';
+test('isolated route fails closed outside development or preview',()=>{const env={...process.env};try{process.env.VERCEL_ENV='production';Object.defineProperty(process.env,'NODE_ENV',{value:'production',writable:true,configurable:true,enumerable:true});assert.equal(GET().status,404);process.env.VERCEL_ENV='preview';const r=GET();assert.equal(r.status,200);assert.match(r.headers.get('Content-Security-Policy')!,/connect-src 'none'/);assert.equal(r.headers.get('Cache-Control'),'no-store')}finally{process.env=env}});
+test('all seven representative destinations are present',()=>{for(const x of ['tonight','research','community','pick','profile','nba','nhl'])assert.ok(zoneDocument.includes("'"+x+"'"));assert.match(zoneDocument,/ALL GAMES, RESEARCH & RECORDS ARE SYNTHETIC/)});
+test('no live network, backend or auth integration',()=>{assert.doesNotMatch(zoneDocument,/\bfetch\s*\(|XMLHttpRequest|WebSocket|supabase|localStorage|https:\/\//);assert.match(zoneDocument,/Publishing not connected/)});
+test('script compiles and accessibility contracts exist',()=>{const script=zoneDocument.match(/<script>([\s\S]*?)<\/script>/)![1];new vm.Script(script);for(const s of ['prefers-reduced-motion:reduce','Skip to intelligence','aria-selected','aria-pressed','role="tabpanel"','ArrowRight','main.focus()','showModal()'])assert.ok(zoneDocument.includes(s),s)});
+test('data provenance, missingness and MLB limits are explicit',()=>{for(const s of ['Synthetic source note','Goalie status: unconfirmed','February 2027','No win, loss or ROI','previous wording remains in history'])assert.ok(zoneDocument.includes(s),s)});
