@@ -169,7 +169,8 @@
   gap: 12px;
   align-items: end;
 }
-.d1-filters label {
+.d1-filters label,
+.d1-filters .d1-field {
   display: flex;
   flex-direction: column;
   gap: 6px;

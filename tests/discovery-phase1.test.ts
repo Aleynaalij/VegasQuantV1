@@ -128,6 +128,8 @@ test("candidate retains existing destinations, read-only adapters and critical a
   assert.ok(component.includes("readResearchHub()"));
   assert.ok(!/\.insert\(|\.update\(|\.delete\(|\.upsert\(/.test(component));
   assert.ok(component.includes('aria-live="polite"'));
+  assert.ok(component.includes('<label htmlFor="d1-sport">Sport</label>'));
+  assert.ok(component.includes('id="d1-sport"'));
   assert.ok(component.includes('id="d1-title"'));
   assert.ok(component.includes("tabIndex={-1}"));
   assert.match(css, /prefers-reduced-motion/);

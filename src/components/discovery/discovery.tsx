@@ -432,9 +432,10 @@ export default function Discovery({
                 </div>
               </header>
               <form className="d1-filters" method="get">
-                <label>
-                  Sport
+                <div className="d1-field">
+                  <label htmlFor="d1-sport">Sport</label>
                   <select
+                    id="d1-sport"
                     name="sport"
                     defaultValue={filters.sport}
                     key={filters.sport}
@@ -446,7 +447,7 @@ export default function Discovery({
                       </option>
                     ))}
                   </select>
-                </label>
+                </div>
                 <label>
                   Find a team or research
                   <input
