@@ -135,6 +135,7 @@ try {
     return route.abort();
   });
   const page = await ctx.newPage();
+  await page.clock.install();
   const marker = page
     .locator(".d1-research-card")
     .filter({ hasText: "SYNTHETIC PRIVATE RESEARCH MARKER" });
@@ -209,6 +210,48 @@ try {
   await focus();
   await waitDenied();
   result.cases.push("Focus rechecks access and removes revoked research");
+  const notificationRequests = () =>
+    result.requests.filter((url) =>
+      /\/(notification_counts|notification_pulse|notification_sync_updates)$/.test(
+        url,
+      ),
+    ).length;
+  const stoppedCount = notificationRequests();
+  assert(
+    stoppedCount > 0,
+    "Normal shell must have made notification requests before denial",
+  );
+  await focus();
+  await page.clock.fastForward(90_000);
+  assert.equal(
+    notificationRequests(),
+    stoppedCount,
+    "Denied shell must not poll or heartbeat after unmount",
+  );
+  result.cases.push(
+    "Denied staging shell stops notification polling and heartbeat",
+  );
+  allowed = true;
+  await page
+    .getByRole("link", {
+      name: "Retry discovery with a fresh access check",
+      exact: true,
+    })
+    .click();
+  await page.waitForFunction(() =>
+    document
+      .querySelector(".d1-status")
+      ?.textContent.includes("Showing research"),
+  );
+  await page.waitForTimeout(100);
+  assert(
+    notificationRequests() > stoppedCount,
+    "Retry must remount normal shell with fresh requests",
+  );
+  result.cases.push(
+    "Retry remounts normal shell with fresh authorization and notifications",
+  );
+
   await reopen();
   await hide();
   await marker.first().waitFor({ state: "hidden" });

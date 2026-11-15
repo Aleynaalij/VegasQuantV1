@@ -123,3 +123,28 @@ test("prior authorized access loss clears, stops lifecycle and redirects with fi
   assert.match(page, /failed access check is not proof/);
   assert.equal(page.includes("returnTo"), false);
 });
+
+test("shell suspension is exact route and server-gated, never an owner grant", async () => {
+  const { discoveryShellSuspended } = await import(
+    "../src/lib/discovery/access"
+  );
+  const denied = "/staging/discovery/access-denied";
+  assert.equal(discoveryShellSuspended(true, denied), true);
+  for (const path of [denied, "/", "/community", "/membership", "/admin"]) {
+    assert.equal(discoveryShellSuspended(false, path), false);
+  }
+  for (const path of [
+    "/",
+    "/staging/discovery",
+    denied + "/extra",
+    "/community",
+  ]) {
+    assert.equal(discoveryShellSuspended(true, path), false);
+  }
+  const layout = readFileSync("src/app/layout.tsx", "utf8");
+  assert.match(layout, /enabled=\{discoveryStagingEnabled\(process.env\)\}/);
+  assert.match(
+    layout,
+    /<StagingAccessShell[\s\S]*<NotificationProvider>[\s\S]*<AgeAccessBoundary[\s\S]*<\/NotificationProvider>[\s\S]*<\/StagingAccessShell>/,
+  );
+});

@@ -1,6 +1,7 @@
 // Synthetic-only browser acceptance. Run against a local, fixture-enabled build.
 // Install pinned playwright and axe-core in CI; never point this at a deployed service.
 import fs from "node:fs/promises";
+import { heroContrast } from "./contrast-bound.mjs";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
@@ -132,10 +133,42 @@ try {
             }))
             .filter((b) => b.height < 44 || b.width < 44),
         );
+      const heroSnapshot = await page.locator(".d1-hero").evaluate((hero) => {
+        const overlay = getComputedStyle(hero, "::after");
+        return {
+          gradient: getComputedStyle(hero).backgroundImage,
+          overlay: {
+            borderColor: overlay.borderTopColor,
+            opacity: overlay.opacity,
+            image: overlay.backgroundImage,
+            background: overlay.backgroundColor,
+          },
+          nodes: [...hero.children].map((node) => {
+            const s = getComputedStyle(node);
+            return {
+              tag: node.tagName,
+              text: node.textContent,
+              color: s.color,
+              fontSize: s.fontSize,
+              fontWeight: s.fontWeight,
+              opacity: s.opacity,
+              filter: s.filter,
+              mixBlendMode: s.mixBlendMode,
+            };
+          }),
+        };
+      });
+      const computedHeroContrast = heroContrast(heroSnapshot);
+      if (computedHeroContrast.some((node) => !node.pass))
+        report.failures.push(
+          `${name}@${width}: conservative computed gradient contrast failed`,
+        );
       report.cases.push({
         name,
         width,
         geometry,
+        heroSnapshot,
+        computedHeroContrast,
         smallPrimaryTargets: controls,
         violations: axe.violations,
         incomplete: axe.incomplete,

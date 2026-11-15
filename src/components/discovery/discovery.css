@@ -1,7 +1,7 @@
 .d1 {
   --d1-gold: #e9cd8c;
   --d1-ink: #f4f3e9;
-  --d1-muted: #b9c9c2;
+  --d1-muted: #c1d0c8;
   max-width: 1200px;
   margin: 0 auto;
   color: var(--d1-ink);
@@ -95,7 +95,7 @@
   width: 360px;
   height: 360px;
   border-radius: 50%;
-  opacity: 0.2;
+  opacity: 0.05;
   pointer-events: none;
 }
 .d1-eyebrow {
@@ -357,4 +357,11 @@
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+/* Keep global prose colors from weakening the hero's verified contrast. */
+.d1-hero > p {
+  color: var(--d1-ink);
+}
+.d1-hero > .d1-meta {
+  color: var(--d1-muted);
 }

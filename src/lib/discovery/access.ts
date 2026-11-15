@@ -4,7 +4,8 @@ export function discoveryStagingEnabled(
 ) {
   if (
     env.VERCEL_ENV === "production" ||
-    env.STAGING_DISCOVERY_ENABLED !== "true"
+    env.STAGING_DISCOVERY_ENABLED !== "true" ||
+    !env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()
   )
     return false;
   try {
@@ -20,4 +21,9 @@ export function discoveryStagingEnabled(
   } catch {
     return false;
   }
+}
+
+/** Presentation-only deny suspension, never an owner/authentication decision. */
+export function discoveryShellSuspended(enabled: boolean, pathname: string) {
+  return enabled && pathname === "/staging/discovery/access-denied";
 }

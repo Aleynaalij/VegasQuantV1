@@ -8,6 +8,7 @@ on:
       - "src/app/staging/discovery/**"
       - "tests/discovery*.test.ts"
       - "scripts/ui-smoke/discovery-*.mjs"
+      - "scripts/ui-smoke/contrast-bound*.mjs"
       - ".github/workflows/discovery-staging.yml"
 permissions:
   contents: read
@@ -32,6 +33,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: node --test scripts/ui-smoke/contrast-bound.test.mjs
       - run: npm run build
       - name: Install pinned browser audit dependencies
         run: |
@@ -50,6 +52,21 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3197/staging/discovery && break; sleep 2; done
           node scripts/ui-smoke/discovery-a11y.mjs
+      - name: Verify isolated feature disable rollback
+        env:
+          STAGING_DISCOVERY_ENABLED: "false"
+        run: |
+          set -euo pipefail
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 -p 3199 >/tmp/discovery-rollback-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3199/research && break; sleep 2; done
+          mkdir -p artifacts/discovery-staging/rollback
+          for route in staging/discovery research community; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:3199/$route")
+            printf '%s %s\n' "$route" "$code" | tee -a artifacts/discovery-staging/rollback/status.txt
+            if [ "$route" = "staging/discovery" ]; then test "$code" = 404; else test "$code" = 200; fi
+          done
       - name: Audit connected reader lifecycle with intercepted synthetic transport
         env:
           STAGING_DISCOVERY_FIXTURES: "false"

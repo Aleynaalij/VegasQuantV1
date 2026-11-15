@@ -20,12 +20,14 @@ const permitted = {
   STAGING_DISCOVERY_ENABLED: "true",
   STAGING_DISCOVERY_PROJECT: "example-staging",
   NEXT_PUBLIC_SUPABASE_URL: "https://example-staging.supabase.co",
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "synthetic-test-only",
 };
 test("Phase 1 is default off and cannot be enabled on production or the production database", () => {
   assert.equal(discoveryStagingEnabled({}), false);
   assert.equal(discoveryStagingEnabled(permitted), true);
   for (const patch of [
     { VERCEL_ENV: "production" },
+    { NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "" },
     { STAGING_DISCOVERY_ENABLED: "false" },
     {
       NEXT_PUBLIC_SUPABASE_URL: "https://uowearboulykfcwnuirn.supabase.co",

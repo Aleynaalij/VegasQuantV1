@@ -120,3 +120,20 @@ Initial anonymous schedule access remains separate. This is not an app-wide logo
 existing global shell subscriptions and AgeAccessBoundary remain unchanged and
 may show their own access state before the local page. Browser lifecycle regression
 uses intercepted synthetic transport, not hosted production-policy parity.
+
+### Denied-shell isolation and rollback acceptance
+
+A presentation-only boundary suspends the normal notification/age-extras subtree
+on the exact staging access-denied route only when the server staging gate is
+true. Production and other routes retain their original shell. Existing cleanup
+removes provider channels/listeners/timers; already-sent requests are not undone,
+and sessions/tokens are not revoked. Retry remounts the normal shell and performs
+fresh checks. This boundary is not #294's owner authorization mechanism.
+
+CI additionally exercises feature-disable rollback by starting the same built
+candidate with the staging flag false: staging discovery must return404 while
+Research and Community retain200. This is isolated HTTP route/gate evidence, not
+a hosted Vercel rollback or full original-feature regression. A separate enabled
+runtime then exercises browser lifecycle. The muted text token is conservatively
+brightened against the gradient's brightest background; automated gradient
+incompletes remain disclosed pending per-element verification.
