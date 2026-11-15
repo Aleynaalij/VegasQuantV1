@@ -56,6 +56,7 @@ export function CommandExperience() {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<EvidenceId | null>(null);
   const [scenario, setScenario] = useState("ready");
+  const needsCeoDecision = scenario === "decisionReady";
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
   const workspace = useRef<HTMLElement>(null);
@@ -176,6 +177,7 @@ export function CommandExperience() {
             No live monitoring, permissions, or execution.
           </span>
         </div>
+        {needsCeoDecision && <div className={s.decisionIndicator}><span>1 CEO decision · synthetic</span><button onClick={() => navigate("security")}>Review decision <ArrowRight size={16}/></button></div>}
         <main ref={workspace} id="command-main" className={s.main} tabIndex={-1}>
           <div className={s.pageHeading}>
             <div>
@@ -205,6 +207,7 @@ export function CommandExperience() {
                 onChange={(e) => setScenario(e.target.value)}
               >
                 <option value="ready">Ready</option>
+                <option value="decisionReady">CEO decision ready · synthetic</option>
                 <option value="loading">Loading</option>
                 <option value="empty">Empty</option>
                 <option value="error">Unavailable</option>
@@ -214,7 +217,7 @@ export function CommandExperience() {
             </label>
             <span>No changes are saved</span>
           </div>
-          {scenario !== "ready" ? (
+          {scenario !== "ready" && scenario !== "decisionReady" ? (
             <section className={s.statePanel} aria-live="polite">
               <LockKeyhole size={32} />
               <p className={s.eyebrow}>SYNTHETIC STATE</p>
@@ -268,11 +271,11 @@ export function CommandExperience() {
                         <br />
                         <span>One clear next move.</span>
                       </h2>
-                      <p>
-                        A publication record conflicts with its journal.
-                        Reconcile the evidence before a release decision.
-                        Engineering can continue within staging.
-                      </p>
+                      <dl className={s.briefStructure}>
+                        <div><dt>Situation</dt><dd>A publication record conflicts with its journal.</dd></div>
+                        <div><dt>Response</dt><dd>Reconcile the dated evidence; hold the affected release.</dd></div>
+                        <div><dt>Your decision</dt><dd>{needsCeoDecision ? "A separate synthetic packet is ready for CEO authorization review. No action has executed." : "None yet. Review is incomplete; no authorization is requested."}</dd></div>
+                      </dl>
                       <div className={s.briefLinks}>
                         {ref("EV-021")}
                         {ref("EV-023")}
@@ -342,7 +345,7 @@ export function CommandExperience() {
                       <strong>
                         01 <ArrowUpRight size={20} />
                       </strong>
-                      <small>Not ready for authorization</small>
+                      <small>{needsCeoDecision ? "CEO authorization required · synthetic" : "Not ready for authorization"}</small>
                     </button>
                   </div>
                   <div className={s.twoCol}>
@@ -621,13 +624,13 @@ export function CommandExperience() {
                     <section className={s.panel}>
                       <div className={s.sectionTop}>
                         <h2>Decision packet</h2>
-                        <Badge tone="red">Blocked</Badge>
+                        <Badge tone={needsCeoDecision ? "gold" : "red"}>{needsCeoDecision ? "CEO authorization required · synthetic" : "Blocked"}</Badge>
                       </div>
                       <h3 className={s.decisionTitle}>
                         Authorize a production release
                       </h3>
                       <p className={s.muted}>
-                        Synthetic request · BB-043 · owner Elo
+                        Synthetic request · {needsCeoDecision ? "BB-044" : "BB-043"} · owner Elo
                       </p>
                       <div className={s.checklist}>
                         <div>
@@ -636,18 +639,18 @@ export function CommandExperience() {
                         </div>
                         <div>
                           <CircleDot size={17} />
-                          <span>Independent review pending</span>
+                          <span>{needsCeoDecision ? "Independent fixture review accepted for BB-044" : "Independent review pending"}</span>
                         </div>
                         <div>
                           <CircleDot size={17} />
-                          <span>Exact production acceptance unavailable</span>
+                          <span>{needsCeoDecision ? "Fixture candidate and scope attached; no real production acceptance" : "Exact production acceptance unavailable"}</span>
                         </div>
                         <div>
                           <LockKeyhole size={17} />
                           <span>CEO authorization not recorded</span>
                         </div>
                       </div>
-                      {ref("EV-023")}
+                      {ref(needsCeoDecision ? "EV-026" : "EV-023")}
                       <button className={s.disabledAction} disabled>
                         Production authorization unavailable{" "}
                         <LockKeyhole size={16} />
@@ -659,7 +662,7 @@ export function CommandExperience() {
                     </section>
                     <section className={s.panel}>
                       <div className={s.sectionTop}>
-                        <h2>Approval history</h2>
+                        <h2>BB-043 review history</h2>
                         <Badge>Illustrative</Badge>
                       </div>
                       <div className={s.approvalStep}>

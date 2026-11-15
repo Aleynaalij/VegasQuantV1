@@ -41,6 +41,14 @@ export const evidence = {
     detail:
       "Example only: source date and Eastern slate were compared, the correction was tested, and a different reviewer recorded acceptance. This does not assert the resolution of any actual investigation.",
   },
+  "EV-026": {
+    title: "CEO decision-ready example",
+    source: "Synthetic review ledger / BB-044",
+    observed: "14 Nov 2026, 09:42 ET",
+    conclusion: "This separate fictional packet has its prerequisite fixture review recorded and awaits a CEO decision. It has no execution or production authority.",
+    confidence: "Synthetic independent-verifier example",
+    detail: "The decision-ready selector illustrates a reviewed packet, not the blocked BB-043 incident. Candidate demo-review-02, scope illustrative only. Reviewer principal demo-reviewer-2 is an account, not proof of a separate human. No real authorization exists; all operational controls stay disabled.",
+  },
   "EV-025": {
     title: "Telemetry coverage",
     source: "Synthetic adapter coverage report",

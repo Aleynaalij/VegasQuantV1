@@ -54,3 +54,7 @@ Presentation rules: unclassified package evidence defaults to agent-reported, ne
 Disabled/audit-missing/awaiting-reconciliation is a distinct non-success state. Re-enable must remain refused until reconciliation. Suspension moves tasks to administrator recovery; separate reassignment must be recorded before showing an owner change or resumption. Controls explain unsupported, unauthorized, stale or suspended reasons. These are fixture semantics only until the independently reviewed server contract exists.
 
 Expected fields to confirm, not new endpoints: principal status and role history; task reclaim/history/version; control enabled state, audit result and unreconciled status; ordered effectiveness verdicts and outcome standing; package digest/base/head/paths; grant expiry/consumption; event actor role at occurrence; evidence provenance and page coverage. No backend interface is changed by this document.
+
+
+## CEO-directed refinements
+Narrow-width card padding is reduced from20px to17px (15%), package padding17/14px to15/12px, agent padding15px to13px. Reading sizes and44px minimum interactive targets are unchanged. Director briefing uses Situation / Response / Your decision. A persistent, non-flashing queue strip appears only in the explicit synthetic decision-ready scenario, linking directly to Control. Default blocked review does not generate a CEO authorization indicator. The separate BB-044 fixture has its own evidence and remains non-operational. No real authorization, backend or production change is introduced.
