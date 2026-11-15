@@ -7,7 +7,7 @@ on:
       - "src/**/discovery/**"
       - "src/app/staging/discovery/**"
       - "tests/discovery*.test.ts"
-      - "scripts/ui-smoke/discovery-a11y.mjs"
+      - "scripts/ui-smoke/discovery-*.mjs"
       - ".github/workflows/discovery-staging.yml"
 permissions:
   contents: read
@@ -50,6 +50,18 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3197/staging/discovery && break; sleep 2; done
           node scripts/ui-smoke/discovery-a11y.mjs
+      - name: Audit connected reader lifecycle with intercepted synthetic transport
+        env:
+          STAGING_DISCOVERY_FIXTURES: "false"
+          STAGING_DISCOVERY_LINKED_PUBLICATIONS: "false"
+          DISCOVERY_A11Y_OUTPUT: artifacts/discovery-staging/lifecycle
+        run: |
+          set -euo pipefail
+          npx next start --hostname 127.0.0.1 -p 3197 >/tmp/discovery-lifecycle-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3197/staging/discovery && break; sleep 2; done
+          node scripts/ui-smoke/discovery-lifecycle.mjs
       - name: Preserve synthetic audit and screenshots
         if: always()
         uses: actions/upload-artifact@v4
