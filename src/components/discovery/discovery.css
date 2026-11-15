@@ -359,9 +359,9 @@
   }
 }
 /* Keep global prose colors from weakening the hero's verified contrast. */
-.d1-hero > p {
-  color: var(--d1-ink);
+html[data-theme="dark"] body .d1 .d1-hero > p {
+  color: var(--d1-ink) !important;
 }
-.d1-hero > .d1-meta {
-  color: var(--d1-muted);
+html[data-theme="dark"] body .d1 .d1-hero > p.d1-meta {
+  color: var(--d1-muted) !important;
 }
