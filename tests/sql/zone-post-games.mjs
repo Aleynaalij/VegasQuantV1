@@ -103,6 +103,26 @@ const read = async (uid, sport, game) => {
 await db.exec(`insert into public.community_reactions values ('${sheet}','${MEMBER}')`);
 const rows = await read(MEMBER, "nfl", G(1));
 assert.equal(rows.length, 3);
+// Optional Phase 1 integration probe: the real SQL projection must remain consumable
+// by the production frontend parser. Invoke with --import tsx; auth helpers above
+// are intentionally synthetic, so this is not GoTrue/PostgREST/RLS acceptance.
+if (process.env.DISCOVERY_SQL_ADAPTER_CHECK === "true") {
+  const module = await import("../../src/lib/game-zone-posts.ts");
+  const { gameZonePosts, zonePostHref } = module.default || module;
+  const parsed = gameZonePosts(rows);
+  assert.equal(parsed.length, rows.length, "SQL output retains every valid publication");
+  for (const row of parsed) {
+    const source = rows.find((r) => r.id === row.id);
+    assert.equal(row.title, source.title);
+    assert.equal(row.body, source.body);
+    assert.equal(row.created_at, source.created_at);
+    assert.equal(row.reactions, source.reactions);
+    assert.equal(row.comments, source.comments);
+    assert.equal(zonePostHref(row), `/community?sport=${encodeURIComponent(row.sport)}&post=${encodeURIComponent(row.id)}#post-${row.id}`);
+  }
+  assert.deepEqual(gameZonePosts(await read("", "nfl", G(1))), [], "signed-out projection cannot manufacture publications");
+  console.log("Discovery SQL-to-adapter contract passed (synthetic auth helpers).");
+}
 assert.equal(rows.find((r) => r.id === sheet).reactions, 1);
 assert.ok(rows.every((r) => r.title && r.body && r.created_at));
 assert.deepEqual(await read(MEMBER, "nba", G(1)), [], "sport must match the game");
