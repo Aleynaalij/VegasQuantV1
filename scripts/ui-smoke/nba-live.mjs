@@ -173,6 +173,13 @@ for (const width of [390, 1280]) {
       reducedMotion: "reduce",
     });
     if (signedIn) await ctx.addInitScript(session);
+    // Exercise the real asynchronous gate rather than assuming URL navigation means
+    // all account-scoped navigation has hydrated. This fixture is not Frank, so NHL
+    // must become visible after the status read. No production permissions change.
+    await ctx.route("**/rest/v1/rpc/frank_anniversary", async (r) => {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      await r.fulfill({ json: { state: "hidden" } });
+    });
     const feedSports = [];
     let recordWins = 2;
     await ctx.route("**/rest/v1/rpc/nba_editorial_records", (r) =>
@@ -232,6 +239,10 @@ for (const width of [390, 1280]) {
     await rooms.locator('a[data-sport="nba"]').click();
     await p.waitForURL(`${base}/nba`);
     const chips = p.getByRole("navigation", { name: "Sport selection" });
+    // NhlChipHold starts hidden while auth/status resolves after a new page mount.
+    // Wait for that actual UI condition, then retain the exact four-sport assertion.
+    // A missing NHL chip still fails within a bounded timeout; no sleep or retry skip.
+    await chips.locator('a[data-sport="nhl"]').waitFor({ state: "visible", timeout: 10000 });
     assert.deepEqual(await chips.locator("a[data-sport]").evaluateAll(a => a.map(x => x.dataset.sport)), ["nfl", "nba", "nhl", "ncaab"]);
     assert.equal(await chips.locator('a[aria-current="page"]').getAttribute('data-sport'), 'nba');
     await p.locator(".home-brief[data-sport=nba] .vq-matchup").waitFor();
