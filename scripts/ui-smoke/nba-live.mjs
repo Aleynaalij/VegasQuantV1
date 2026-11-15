@@ -239,11 +239,16 @@ for (const width of [390, 1280]) {
     await rooms.locator('a[data-sport="nba"]').click();
     await p.waitForURL(`${base}/nba`);
     const chips = p.getByRole("navigation", { name: "Sport selection" });
-    // NhlChipHold starts hidden while auth/status resolves after a new page mount.
-    // Wait for that actual UI condition, then retain the exact four-sport assertion.
-    // A missing NHL chip still fails within a bounded timeout; no sleep or retry skip.
-    await chips.locator('a[data-sport="nhl"]').waitFor({ state: "visible", timeout: 10000 });
-    assert.deepEqual(await chips.locator("a[data-sport]").evaluateAll(a => a.map(x => x.dataset.sport)), ["nfl", "nba", "nhl", "ncaab"]);
+    // Auth/status may re-hold NHL after an initially visible render. Sample readiness
+    // and the exact list atomically, not in two browser calls separated by a render.
+    // This is a bounded web-first assertion: missing, extra or reordered chips fail.
+    const readySports = await p.waitForFunction(() => {
+      const links = [...document.querySelectorAll('nav[aria-label="Sport selection"] a[data-sport]')];
+      const sports = links.map((link) => link.dataset.sport);
+      return JSON.stringify(sports) === JSON.stringify(["nfl", "nba", "nhl", "ncaab"])
+        && links.every((link) => link.getClientRects().length > 0) ? sports : false;
+    }, undefined, { timeout: 10000 });
+    assert.deepEqual(await readySports.jsonValue(), ["nfl", "nba", "nhl", "ncaab"]);
     assert.equal(await chips.locator('a[aria-current="page"]').getAttribute('data-sport'), 'nba');
     await p.locator(".home-brief[data-sport=nba] .vq-matchup").waitFor();
     assert.match(await p.locator(".home-brief").innerText(), /NEXT TIP-OFF/i);
