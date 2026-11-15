@@ -45,7 +45,7 @@ jobs:
       - name: Audit synthetic staging only
         run: |
           set -euo pipefail
-          npx next start --hostname 127.0.0.1 -p 3197 >/tmp/discovery-server.log 2>&1 &
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 -p 3197 >/tmp/discovery-server.log 2>&1 &
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3197/staging/discovery && break; sleep 2; done
@@ -55,12 +55,13 @@ jobs:
           STAGING_DISCOVERY_FIXTURES: "false"
           STAGING_DISCOVERY_LINKED_PUBLICATIONS: "false"
           DISCOVERY_A11Y_OUTPUT: artifacts/discovery-staging/lifecycle
+          DISCOVERY_TEST_URL: http://127.0.0.1:3198
         run: |
           set -euo pipefail
-          npx next start --hostname 127.0.0.1 -p 3197 >/tmp/discovery-lifecycle-server.log 2>&1 &
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 -p 3198 >/tmp/discovery-lifecycle-server.log 2>&1 &
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
-          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3197/staging/discovery && break; sleep 2; done
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3198/staging/discovery && break; sleep 2; done
           node scripts/ui-smoke/discovery-lifecycle.mjs
       - name: Preserve synthetic audit and screenshots
         if: always()
