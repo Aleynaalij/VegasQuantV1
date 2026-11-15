@@ -25,3 +25,5 @@ Existing Home sports rooms, stories, Tonight, /research, Dealer-only discovery, 
 Run `node --import tsx --test tests/zone-2-design.test.ts`, `npm run typecheck`, `npm run build`.
 On an authorized preview open `/design/zone-2#home`, capture 360x800, 390x844 and 1440x1000, repeat for #tonight #nba #nhl #research #community #pick #profile. Exercise first/returning switch, sport filter, search no-results, room arrow tabs, modal Escape/back, repeated saves and browser Back. Enable OS reduced motion. Use axe in an approved browser, verify chart alternatives and contrast. Physical touch and screen-reader checks are separate from desktop resizing.
 Local Chromium is installed but could not launch in this executor; no screenshots or browser interaction passes claimed by this artifact. Parent may validate hosted preview independently.
+
+Static token contrast checks: ivory/panel 14.4:1, gold/brief 6.75:1, mint/tag 7.73:1, dark/gold button 9.71:1. Muted text brightened to #c4cec7 to clear 4.5:1 over the brightest stadium gradient stop. This is token math, not a complete rendered axe audit.
