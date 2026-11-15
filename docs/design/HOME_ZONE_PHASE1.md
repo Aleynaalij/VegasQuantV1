@@ -84,3 +84,9 @@ D. Add optional followed games/research saves and consolidated pick timeline onl
 - Full final-head CI including browser tests; no weakened assertions.
 - Actual connected authorization and content regression, accessibility/mobile acceptance, hosted rollback.
 - Independent review and Mike's exact release approval. Nothing here authorizes production merge or deployment.
+
+## Inspected staging prerequisites (2026-11-15)
+
+Read-only inspection of existing `vq-ap002-validation` found only public community_posts, community_profiles, feed_runs and nba_games; membership_status exists, but sports_slate and game_zone_posts do not. This fixture project is not currently a compatible consumer integration environment. No schema or configuration changed. Do not apply the existing zone tagging migration casually: it includes historical backfill and depends on private age/community authorization helpers, zone_post_games and comment/reaction tables. Codex must own a separate reviewed compatibility plan before connected acceptance. Use clearly labeled fixture mode for initial browser acceptance.
+
+The existing game_zone_posts RPC returns an empty array both when no posts match and when private age/member checks deny access. The frontend therefore says “no accessible linked publications” and explicitly preserves the ambiguity rather than claiming a definitive empty or publishing pass. A typed server disposition is a future contract dependency; do not change backend authorization here.

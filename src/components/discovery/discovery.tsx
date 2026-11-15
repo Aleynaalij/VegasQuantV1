@@ -186,7 +186,7 @@ function RoomPosts({
             : state === "unavailable"
               ? "Publications could not be checked. This is not a no-pick decision."
               : state === "empty"
-                ? "No linked publications were returned for this game. Broader sport research may still be available."
+                ? "No accessible linked publications were returned. This may mean no posts or restricted access; it is not a no-pick decision. Original sport research may still be available."
                 : `${posts.length} linked publications returned.`}
       </p>
       {state === "unavailable" && (
