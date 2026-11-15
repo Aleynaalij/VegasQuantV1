@@ -58,6 +58,7 @@ export function CommandExperience() {
   const [scenario, setScenario] = useState("ready");
   const dialog = useRef<HTMLDialogElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const workspace = useRef<HTMLElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   useEffect(() => {
     const onHash = () => {
@@ -108,7 +109,7 @@ export function CommandExperience() {
   }[view];
   return (
     <div className={s.root}>
-      <a className={s.skip} href="#command-main">
+      <a className={s.skip} href="#command-main" onClick={(event) => { event.preventDefault(); workspace.current?.focus(); }}>
         Skip to workspace
       </a>
       <aside className={s.sidebar} aria-label="Blackbox navigation">
@@ -175,7 +176,7 @@ export function CommandExperience() {
             No live monitoring, permissions, or execution.
           </span>
         </div>
-        <main id="command-main" className={s.main}>
+        <main ref={workspace} id="command-main" className={s.main} tabIndex={-1}>
           <div className={s.pageHeading}>
             <div>
               <p className={s.eyebrow}>

@@ -43,3 +43,10 @@ test("Back to the initial empty hash restores Command and unknown hashes fail sa
   assert.equal(resolveView("#memory"), "memory");
   assert.equal(resolveView("#security"), "security");
 });
+
+test("skip link lands on a programmatically focusable workspace", () => {
+  const ui = readFileSync("src/components/blackbox-command/experience.tsx", "utf8");
+  assert.match(ui, /href="#command-main"/);
+  assert.match(ui, /event.preventDefault\(\); workspace.current\?\.focus\(\)/);
+  assert.match(ui, /<main ref=\{workspace\} id="command-main" className=\{s.main\} tabIndex=\{-1\}>/);
+});
