@@ -1,0 +1,159 @@
+/** Presentation-only fixtures. No live records, authorizations, or network adapters. */
+export const fixtureStamp = "14 NOV 2026 · 09:42 ET";
+export const evidence = {
+  "EV-021": {
+    title: "Publication reconciliation",
+    source: "Synthetic journal / synthetic Dealer record",
+    observed: "14 Nov 2026, 09:38 ET",
+    conclusion:
+      "A publication record and journal disagree. The outcome needs independent reconciliation.",
+    confidence: "Unresolved",
+    detail:
+      "Fixture journal says FAILED. Fixture Dealer post says PUBLISHED for the same slate. Neither record has been changed. This example does not describe a current Vegas Quant incident.",
+  },
+  "EV-022": {
+    title: "Verification package",
+    source: "Synthetic CI artifact · commit demo-7b2",
+    observed: "14 Nov 2026, 09:40 ET",
+    conclusion:
+      "Focused checks passed in this example. Independent review and production acceptance have not occurred.",
+    confidence: "Verified fixture",
+    detail:
+      "14 of 14 fictional focused checks passed. No claim is made about actual GitHub CI. Source revision, reviewer and release authorization must be supplied by the approved Phase 4 contract.",
+  },
+  "EV-023": {
+    title: "Release boundary",
+    source: "Synthetic authorization ledger · revision 3",
+    observed: "14 Nov 2026, 09:41 ET",
+    conclusion:
+      "Staging review is permitted in this example. Production release is not authorized.",
+    confidence: "Verified fixture",
+    detail:
+      "Authorization is scoped to staging and an exact revision. Approval does not imply execution. The UI cannot authorize, deploy, dispatch, or disable anything.",
+  },
+  "EV-024": {
+    title: "Reviewed resolution",
+    source: "Synthetic incident BB-018 / independent review",
+    observed: "12 Nov 2026, 16:20 ET",
+    conclusion:
+      "A synthetic date-boundary mismatch was resolved and independently reviewed.",
+    confidence: "Verified fixture",
+    detail:
+      "Example only: source date and Eastern slate were compared, the correction was tested, and a different reviewer recorded acceptance. This does not assert the resolution of any actual investigation.",
+  },
+  "EV-026": {
+    title: "CEO decision-ready example",
+    source: "Synthetic review ledger / BB-044",
+    observed: "14 Nov 2026, 09:42 ET",
+    conclusion: "This separate fictional packet has its prerequisite fixture review recorded and awaits a CEO decision. It has no execution or production authority.",
+    confidence: "Synthetic independent-verifier example",
+    detail: "The decision-ready selector illustrates a reviewed packet, not the blocked BB-043 incident. Candidate demo-review-02, scope illustrative only. Reviewer principal demo-reviewer-2 is an account, not proof of a separate human. No real authorization exists; all operational controls stay disabled.",
+  },
+  "EV-025": {
+    title: "Telemetry coverage",
+    source: "Synthetic adapter coverage report",
+    observed: "14 Nov 2026, 09:35 ET",
+    conclusion: "Production health cannot be established from this preview.",
+    confidence: "Evidence unavailable",
+    detail:
+      "There are no live read adapters in this prototype. Availability, freshness and service health are intentionally unknown rather than displayed as green.",
+  },
+} as const;
+export type EvidenceId = keyof typeof evidence;
+export const tasks = [
+  {
+    id: "BB-041",
+    title: "Reconcile publication evidence",
+    owner: "Codex",
+    discipline: "Investigation",
+    state: "In progress",
+    tone: "blue",
+    summary:
+      "Compare the dated journal and Dealer record before classifying impact.",
+    evidence: "EV-021" as EvidenceId,
+    dependency: "No prerequisite",
+    steps: [
+      "Match the exact slate and game identifier",
+      "Compare source timestamps and publication records",
+      "Submit a reproducible evidence package",
+    ],
+  },
+  {
+    id: "BB-042",
+    title: "Review the verification package",
+    owner: "Claude",
+    discipline: "Independent review",
+    state: "Awaiting review",
+    tone: "gold",
+    summary:
+      "Validate the scoped change and denial paths independently of its author.",
+    evidence: "EV-022" as EvidenceId,
+    dependency: "BB-041 · evidence package required",
+    steps: [
+      "Inspect the exact candidate revision",
+      "Reproduce focused and negative-path tests",
+      "Record acceptance or a concrete rejection",
+    ],
+  },
+  {
+    id: "BB-043",
+    title: "Prepare the release decision",
+    owner: "Elo",
+    discipline: "Director",
+    state: "Blocked",
+    tone: "red",
+    summary:
+      "A concise decision packet, with rollback evidence and remaining unknowns.",
+    evidence: "EV-023" as EvidenceId,
+    dependency: "BB-042 · independent review required",
+    steps: [
+      "Collect the independent reviewer outcome",
+      "Verify exact-SHA test and rollback evidence",
+      "Present the bounded decision to the CEO",
+    ],
+  },
+];
+export const memories = [
+  {
+    id: "MEM-018",
+    title: "Resolve the slate, not just the matchup",
+    type: "Verified resolution",
+    tone: "green",
+    tag: "Date boundaries",
+    text: "A repeated matchup needs a dated identity. Team names alone are not enough to bind evidence.",
+    evidence: "EV-024" as EvidenceId,
+  },
+  {
+    id: "MEM-019",
+    title: "Separate scheduler success from publication",
+    type: "Proposed improvement",
+    tone: "gold",
+    tag: "Publishing",
+    text: "Require a matching original post before declaring that a successful run reached the feed.",
+    evidence: "EV-021" as EvidenceId,
+  },
+  {
+    id: "MEM-020",
+    title: "A stale source may explain the contradiction",
+    type: "Hypothesis",
+    tone: "blue",
+    tag: "Source integrity",
+    text: "Investigate collection timestamps before drawing a conclusion. This explanation is not verified.",
+    evidence: "EV-021" as EvidenceId,
+  },
+];
+export function searchMemory(query: string) {
+  const term = query.trim().toLowerCase();
+  return memories.filter((x) =>
+    `${x.title} ${x.type} ${x.tag} ${x.text}`.toLowerCase().includes(term),
+  );
+}
+
+export function resolveView(
+  hash: string,
+): "command" | "operations" | "memory" | "security" {
+  const id = hash.replace(/^#/, "");
+  return id === "operations" || id === "memory" || id === "security"
+    ? id
+    : "command";
+}
