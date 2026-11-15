@@ -96,3 +96,19 @@ The existing game_zone_posts RPC returns an empty array both when no posts match
 `tests/discovery-reader-staging.test.ts` runs the actual readResearchHub adapter against synthetic Supabase response shapes, with network forbidden. It covers four sports, preserved event/full-research URLs, denied access and one unavailable sport. This verifies adapter behavior, not deployed RPC/RLS behavior.
 
 Local isolated build with fabricated Supabase URL/key and fixture flags returned HTTP 200 for `/staging/discovery`. Chromium could not launch because the runtime forbids its process-singleton socket, including an escalation retry. Therefore this server check is not browser/a11y acceptance. Use a compatible CI browser runtime for the pending responsive, focus, contrast, reduced-motion and touch-emulation checks. Physical hardware testing remains separate.
+
+### Follow-up isolated acceptance: access lifecycle and degraded linking
+
+Connected staging now defaults to link-only original publications. The deployment
+must explicitly opt into `STAGING_DISCOVERY_LINKED_PUBLICATIONS=true` only where
+the reviewed RPC exists. Otherwise the RPC reader is not mounted and research,
+original matchup, and sport-filtered Zone links remain accessible. This is not
+full game-publication integration or a permanent historical archive.
+
+Discovery-only access revalidation discards rendered protected data and invalidates
+in-flight responses on auth notifications (including the same user), visibility
+changes and focus. A 60-second active polling target also rechecks access; browser
+throttling/offline state can delay it. This is not instant server-pushed revocation.
+Auth callbacks defer reads outside the auth notification lock. Shared production
+auth helpers are unchanged. Unit lifecycle checks pass; real rendered browser
+account-switch/revocation testing remains a separate acceptance gate.

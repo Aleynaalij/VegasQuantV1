@@ -11,7 +11,12 @@ export default function Page() {
   if (!discoveryStagingEnabled(process.env)) notFound();
   return (
     <Suspense fallback={<p role="status">Opening discovery…</p>}>
-      <Discovery fixtures={process.env.STAGING_DISCOVERY_FIXTURES === "true"} />
+      <Discovery
+        fixtures={process.env.STAGING_DISCOVERY_FIXTURES === "true"}
+        linkedPublications={
+          process.env.STAGING_DISCOVERY_LINKED_PUBLICATIONS === "true"
+        }
+      />
     </Suspense>
   );
 }

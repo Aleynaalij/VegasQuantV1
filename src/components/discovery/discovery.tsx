@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Shell } from "@/components/ui";
 import { readResearchHub, type HubData } from "@/lib/research-hub-reader";
-import { onUserChange } from "@/lib/auth-user";
+import { watchDiscoveryAccess } from "@/lib/discovery/revalidate";
 import { supabase } from "@/lib/supabase";
 import { SPORTS, SPORT_ORDER } from "@/lib/sports";
 import {
@@ -157,7 +157,20 @@ function RoomPosts({
       }
     }
     void load();
-    const stop = fixtures ? () => {} : onUserChange(() => void load());
+    const stop = fixtures
+      ? () => {}
+      : watchDiscoveryAccess(
+          () => {
+            ++generation;
+            setPosts([]);
+            setState("loading");
+          },
+          () => void load(),
+          (changed) => {
+            const { data } = supabase.auth.onAuthStateChange(changed);
+            return () => data.subscription.unsubscribe();
+          },
+        );
     return () => {
       mounted = false;
       ++generation;
@@ -222,8 +235,10 @@ function RoomPosts({
 }
 export default function Discovery({
   fixtures = false,
+  linkedPublications = false,
 }: {
   fixtures?: boolean;
+  linkedPublications?: boolean;
 }) {
   const params = useSearchParams(),
     filters = hubFilters(params),
@@ -260,7 +275,21 @@ export default function Discovery({
       }
     }
     void load();
-    const stop = fixtures ? () => {} : onUserChange(() => void load());
+    const stop = fixtures
+      ? () => {}
+      : watchDiscoveryAccess(
+          () => {
+            ++generation;
+            setData(EMPTY);
+            setLoading(true);
+            setCheckedAt(null);
+          },
+          () => void load(),
+          (changed) => {
+            const { data } = supabase.auth.onAuthStateChange(changed);
+            return () => data.subscription.unsubscribe();
+          },
+        );
     return () => {
       mounted = false;
       ++generation;
@@ -399,12 +428,39 @@ export default function Discovery({
                   </Link>
                 )}
               </section>
-              <RoomPosts
-                key={event.key}
-                event={event}
-                fixtures={fixtures}
-                signedIn={data.signedIn}
-              />
+              {fixtures || linkedPublications ? (
+                <RoomPosts
+                  key={event.key}
+                  event={event}
+                  fixtures={fixtures}
+                  signedIn={data.signedIn}
+                />
+              ) : (
+                <section aria-labelledby="d1-posts">
+                  <h2 id="d1-posts">Original research & conversations</h2>
+                  <p>
+                    Linked game publications are not available in this release.
+                    This is not a no-pick decision.
+                  </p>
+                  <Link className="d1-link" href={eventResearchHref(event)}>
+                    Open this game's research →
+                  </Link>
+                  <Link className="d1-link" href={fullMatchupHref(event)}>
+                    Open original matchup →
+                  </Link>
+                  <Link
+                    className="d1-link"
+                    href={`/community?sport=${event.sport}`}
+                  >
+                    Open {SPORTS[event.sport].label} in The Zone →
+                  </Link>
+                  <p className="d1-muted">
+                    The Zone link is sport-filtered, not game-filtered. Original
+                    cards, comments and discussions remain at their existing
+                    destinations.
+                  </p>
+                </section>
+              )}
             </>
           ) : (
             !loading && (
