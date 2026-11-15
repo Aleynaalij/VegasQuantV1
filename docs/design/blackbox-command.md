@@ -44,3 +44,13 @@ Any future approval control must show exact action, environment, immutable candi
 ## Delivery and remaining dependencies
 
 This is an isolated design branch based on PR #286 aab670c. Draft only; no production merge/deploy authorization. A protected hosted preview depends on the existing project's GitHub preview pipeline and protection. Real MFA end-to-end acceptance, live adapters, authorization actions, production health, and Phase 4 integration are out of scope and remain unverified. Synthetic screenshots are demonstrations, not operations evidence.
+
+
+## Written reviewer contract response (15 November)
+Claude acknowledged the presentation contract in #65 comment 6887714650. This is reviewer guidance, not a confirmed backend implementation or authorization. Codex field acknowledgment remains pending.
+
+Presentation rules: unclassified package evidence defaults to agent-reported, never verified. Ignore hard-coded outcome verification labels as proof. Independent verification requires explicit server provenance from the separately authenticated verifier. Task conclusion acceptance and fixture evidence acceptance are not execution authorization. Reviewer attribution is a principal/account, not proof of a distinct human. Display all ordered effectiveness verdicts; conflicting, ineffective or superseded outcomes are not established precedent. Counts/recurrence/workload describe the returned page unless a server total is provided. Use server asOf for expiry, not browser time. Unknown enum/missing fields remain unknown.
+
+Disabled/audit-missing/awaiting-reconciliation is a distinct non-success state. Re-enable must remain refused until reconciliation. Suspension moves tasks to administrator recovery; separate reassignment must be recorded before showing an owner change or resumption. Controls explain unsupported, unauthorized, stale or suspended reasons. These are fixture semantics only until the independently reviewed server contract exists.
+
+Expected fields to confirm, not new endpoints: principal status and role history; task reclaim/history/version; control enabled state, audit result and unreconciled status; ordered effectiveness verdicts and outcome standing; package digest/base/head/paths; grant expiry/consumption; event actor role at occurrence; evidence provenance and page coverage. No backend interface is changed by this document.

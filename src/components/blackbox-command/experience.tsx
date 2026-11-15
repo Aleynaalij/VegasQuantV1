@@ -209,6 +209,7 @@ export function CommandExperience() {
                 <option value="empty">Empty</option>
                 <option value="error">Unavailable</option>
                 <option value="disabled">Emergency disabled</option>
+                <option value="auditMissing">Disabled · audit missing</option>
               </select>
             </label>
             <span>No changes are saved</span>
@@ -224,6 +225,7 @@ export function CommandExperience() {
                     empty: "A clean workspace",
                     error: "Evidence is unavailable",
                     disabled: "Operations are disabled",
+                    auditMissing: "Disabled. Audit record missing.",
                   }[scenario]
                 }
               </h2>
@@ -238,6 +240,7 @@ export function CommandExperience() {
                       "The source could not be read. Preserve the last verified state and investigate before taking action.",
                     disabled:
                       "The emergency-disable state blocks all operational actions. This preview has not changed a real permission or switch.",
+                    auditMissing: "Containment remains in effect. The audit transition is missing and awaits reconciliation. Re-enable is refused until reconciliation is independently recorded. Synthetic example only; no switch was changed.",
                   }[scenario]
                 }
               </p>
@@ -671,15 +674,15 @@ export function CommandExperience() {
                       <div className={s.approvalStep}>
                         <span>02</span>
                         <div>
-                          <h3>Staging approved</h3>
-                          <p>Bounded testing only. No production rights.</p>
+                          <h3>Staging evidence accepted · synthetic</h3>
+                          <p>Acceptance of fixture evidence only. No execution or production rights.</p>
                         </div>
                       </div>
                       <div className={s.approvalStep}>
                         <span>03</span>
                         <div>
                           <h3>Awaiting independent review</h3>
-                          <p>The author cannot approve their own work.</p>
+                          <p>Different-principal review required across package lineage. Separate accounts do not establish separate people.</p>
                         </div>
                       </div>
                       <div className={`${s.approvalStep} ${s.pendingStep}`}>
@@ -712,10 +715,10 @@ export function CommandExperience() {
                           meaning: "Independent evidence review outstanding.",
                         },
                         {
-                          label: "Approved staging",
+                          label: "Staging evidence accepted · synthetic",
                           tone: "green",
                           meaning:
-                            "Only the stated staging scope is authorized.",
+                            "Fixture review accepted; this is not authorization to change anything.",
                         },
                         {
                           label: "Production authorization required",
@@ -732,6 +735,11 @@ export function CommandExperience() {
                           label: "Failed verification",
                           tone: "red",
                           meaning: "Acceptance evidence failed. Investigate.",
+                        },
+                        {
+                          label: "Disabled · audit missing",
+                          tone: "red",
+                          meaning: "Awaiting reconciliation. Re-enable refused; do not report successful audit.",
                         },
                         {
                           label: "Emergency disabled",
@@ -811,6 +819,18 @@ export function CommandExperience() {
         }}
         onClick={(e) => {
           if (e.target === e.currentTarget) closeEvidence();
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== "Tab") return;
+          const controls = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)"));
+          const first = controls[0];
+          const last = controls[controls.length - 1];
+          if (!first || !last) return;
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault(); last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault(); first.focus();
+          }
         }}
         aria-labelledby="evidence-title"
       >

@@ -50,3 +50,7 @@ test("skip link lands on a programmatically focusable workspace", () => {
   assert.match(ui, /event.preventDefault\(\); workspace.current\?\.focus\(\)/);
   assert.match(ui, /<main ref=\{workspace\} id="command-main" className=\{s.main\} tabIndex=\{-1\}>/);
 });
+
+test("audit reconciliation and acceptance never imply operational authority", () => { const ui=readFileSync("src/components/blackbox-command/experience.tsx", "utf8"); assert.match(ui,/auditMissing/); assert.match(ui,/Re-enable is refused/); assert.match(ui,/not authorization to change anything/); assert.match(ui,/Separate accounts do not establish separate people/); });
+
+test("evidence dialog cycles keyboard focus at both edges", () => {const ui=readFileSync("src/components/blackbox-command/experience.tsx", "utf8");assert.match(ui,/event.shiftKey && document.activeElement === first/);assert.match(ui,/!event.shiftKey && document.activeElement === last/);assert.match(ui,/last.focus\(\)/);assert.match(ui,/first.focus\(\)/);});
