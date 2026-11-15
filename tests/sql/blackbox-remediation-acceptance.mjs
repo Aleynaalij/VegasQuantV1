@@ -26,6 +26,10 @@ const CONTRACT = {
   setRole: "set_role", // audited role change, p_value = new role
   disable: "disable", // emergency switch off
   enable: "enable", // emergency switch on
+  // CEO decision (Nov 15): disable succeeds even when the audit record cannot be written. The call
+  // must then report the failure in its result, and a later reconcile records the missed transition.
+  auditFailed: "failed", // value of result.audit when the transition could not be recorded
+  reconcile: "reconcile",
   principalEvents: "blackbox.principal_events", // actor, principal, reason, recorded_at
   controlEvents: "blackbox.control_events", // actor, reason, previous, enabled, recorded_at
   // Every table that must appear in the audit snapshot (blackbox-snapshot.sql), at any depth.
@@ -275,7 +279,7 @@ await check(
 );
 await check(
   "W2.2",
-  "suspending an agent returns its open tasks for reassignment in the same step",
+  "suspending an agent moves its open tasks to audited administrator recovery; reassignment is a separate action",
   async (t) => {
     await t.stage(ADMIN, "assign", "t1", 0, { target: U(CLAUDE) });
     await t.stage(CLAUDE, "acknowledge", "t1", 1);
@@ -283,10 +287,21 @@ await check(
     const row = await t.one(
       "select status,version from blackbox.tasks where id='t1'",
     );
+    const event = await t.one(
+      "select actor, role from blackbox.events where task_id='t1' order by version desc limit 1",
+    );
     return (
       want(
         row.status === CONTRACT.reclaimedStatus,
         `task is still ${row.status}`,
+      ) ||
+      want(
+        event.actor === U(ADMIN) && event.role === "admin",
+        "the recovery was not recorded as the administrator's action",
+      ) ||
+      want(
+        !(await t.stage(CLAUDE, "acknowledge", "t1", row.version)).ok,
+        "the suspended agent could still act on the recovered task",
       ) ||
       want(
         (
@@ -421,9 +436,35 @@ await check(
 );
 await check(
   "W4.2",
-  "disable still takes effect when the audit record cannot be written",
+  "disable still takes effect when the audit record cannot be written, and says so",
   async (t) => {
     // Simulate an audit failure: the recording table rejects every insert.
+    await t.db
+      .exec(`create function blackbox.acceptance_fail() returns trigger language plpgsql as $$ begin raise exception 'audit unavailable'; end $$;
+    create trigger acceptance_fail before insert on ${CONTRACT.controlEvents} for each row execute function blackbox.acceptance_fail();`);
+    const off = await t.admin(
+      ADMIN,
+      CONTRACT.disable,
+      null,
+      "Containment during audit outage",
+    );
+    const state = await t.one("select enabled from blackbox.control");
+    return (
+      want(
+        state.enabled === false,
+        "containment was blocked by the audit failure",
+      ) ||
+      want(
+        off.ok && off.r?.audit === CONTRACT.auditFailed,
+        "the caller was not told that the audit record failed",
+      )
+    );
+  },
+);
+await check(
+  "W4.4",
+  "a missed transition is reconciled afterwards with its original actor and reason",
+  async (t) => {
     await t.db
       .exec(`create function blackbox.acceptance_fail() returns trigger language plpgsql as $$ begin raise exception 'audit unavailable'; end $$;
     create trigger acceptance_fail before insert on ${CONTRACT.controlEvents} for each row execute function blackbox.acceptance_fail();`);
@@ -433,10 +474,31 @@ await check(
       null,
       "Containment during audit outage",
     );
-    const state = await t.one("select enabled from blackbox.control");
-    return want(
-      state.enabled === false,
-      "containment was blocked by the audit failure",
+    await t.db.exec(
+      `drop trigger acceptance_fail on ${CONTRACT.controlEvents}`,
+    );
+    const pending = await t.one("select enabled from blackbox.control");
+    const fixed = await t.admin(
+      ADMIN2,
+      CONTRACT.reconcile,
+      null,
+      "Audit store restored",
+    );
+    const row = await t.one(
+      `select actor, reason, enabled from ${CONTRACT.controlEvents} order by recorded_at limit 1`,
+    );
+    return (
+      want(
+        pending.enabled === false,
+        "the ledger did not stay disabled while the record was missing",
+      ) ||
+      want(fixed.ok, `reconcile refused: ${fixed.code} ${fixed.message}`) ||
+      want(
+        row?.actor === U(ADMIN) &&
+          row.reason === "Containment during audit outage" &&
+          row.enabled === false,
+        "the reconciled record does not carry the original actor and reason",
+      )
     );
   },
 );
