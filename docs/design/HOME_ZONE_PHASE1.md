@@ -112,3 +112,11 @@ throttling/offline state can delay it. This is not instant server-pushed revocat
 Auth callbacks defer reads outside the auth notification lock. Shared production
 auth helpers are unchanged. Unit lifecycle checks pass; real rendered browser
 account-switch/revocation testing remains a separate acceptance gate.
+
+Prior-authorized access loss now clears the Discovery state, invalidates in-flight
+responses and stops its local lifecycle listener/timer before routing to a gated
+access page. Verified denial and an unverifiable access check have distinct copy.
+Initial anonymous schedule access remains separate. This is not an app-wide logout:
+existing global shell subscriptions and AgeAccessBoundary remain unchanged and
+may show their own access state before the local page. Browser lifecycle regression
+uses intercepted synthetic transport, not hosted production-policy parity.

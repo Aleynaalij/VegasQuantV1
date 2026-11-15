@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
   BookOpen,
@@ -240,6 +240,8 @@ export default function Discovery({
   fixtures?: boolean;
   linkedPublications?: boolean;
 }) {
+  const router = useRouter();
+  const hadAuthorizedAccess = useRef(false);
   const params = useSearchParams(),
     filters = hubFilters(params),
     roomKey = params.get("event") || "",
@@ -254,6 +256,15 @@ export default function Discovery({
   useEffect(() => {
     let mounted = true,
       generation = 0;
+    let stop = () => {};
+    const closeAccess = (reason: "denied" | "unverified") => {
+      mounted = false;
+      ++generation;
+      setData(EMPTY);
+      setCheckedAt(null);
+      stop();
+      router.replace(`/staging/discovery/access-denied?reason=${reason}`);
+    };
     async function load() {
       const own = ++generation;
       setData(EMPTY);
@@ -265,17 +276,37 @@ export default function Discovery({
           ? fixtureScenario(scenario)
           : await readResearchHub();
         if (mounted && own === generation) {
+          if (
+            !fixtures &&
+            hadAuthorizedAccess.current &&
+            (!result.signedIn || result.denied)
+          ) {
+            closeAccess(
+              result.errors.some((error) =>
+                error.includes("access could not be checked"),
+              )
+                ? "unverified"
+                : "denied",
+            );
+            return;
+          }
+          if (!fixtures && result.signedIn && !result.denied)
+            hadAuthorizedAccess.current = true;
           setData(result);
           setCheckedAt(new Date().toISOString());
         }
       } catch {
-        if (mounted && own === generation) setFailed(true);
+        if (mounted && own === generation) {
+          if (!fixtures && hadAuthorizedAccess.current)
+            closeAccess("unverified");
+          else setFailed(true);
+        }
       } finally {
         if (mounted && own === generation) setLoading(false);
       }
     }
     void load();
-    const stop = fixtures
+    stop = fixtures
       ? () => {}
       : watchDiscoveryAccess(
           () => {
@@ -295,7 +326,7 @@ export default function Discovery({
       ++generation;
       stop();
     };
-  }, [attempt, fixtures, scenario]);
+  }, [attempt, fixtures, scenario, router]);
   useEffect(() => {
     if (lastRoom.current !== roomKey) {
       lastRoom.current = roomKey;

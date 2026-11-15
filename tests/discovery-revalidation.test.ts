@@ -106,3 +106,20 @@ test("connected discovery defaults to deterministic link-only publications", () 
     /process.env.STAGING_DISCOVERY_LINKED_PUBLICATIONS === "true"/,
   );
 });
+
+test("prior authorized access loss clears, stops lifecycle and redirects with fixed safe routes", () => {
+  const source = readFileSync("src/components/discovery/discovery.tsx", "utf8");
+  assert.match(source, /hadAuthorizedAccess\.current &&/);
+  assert.match(
+    source,
+    /mounted = false;\s+\+\+generation;\s+setData\(EMPTY\);\s+setCheckedAt\(null\);\s+stop\(\);\s+router\.replace/,
+  );
+  assert.match(source, /closeAccess\("unverified"\)/);
+  const page = readFileSync(
+    "src/app/staging/discovery/access-denied/page.tsx",
+    "utf8",
+  );
+  assert.match(page, /discoveryStagingEnabled\(process.env\)/);
+  assert.match(page, /failed access check is not proof/);
+  assert.equal(page.includes("returnTo"), false);
+});

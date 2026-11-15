@@ -36,11 +36,13 @@ try {
       created_at: new Date().toISOString(),
     },
   };
-  await ctx.addInitScript(
-    (s) => localStorage.setItem("sb-synthetic-auth-token", JSON.stringify(s)),
-    session,
-  );
+  await ctx.addInitScript((s) => {
+    if (!sessionStorage.getItem("test-anonymous"))
+      localStorage.setItem("sb-synthetic-auth-token", JSON.stringify(s));
+  }, session);
   let allowed = true,
+    accessError = false,
+    invalidAccess = false,
     membershipCalls = 0,
     holdNext = false,
     held = false;
@@ -86,7 +88,13 @@ try {
       return json({ required: true, verified: true });
     if (path.endsWith("/membership_status")) {
       membershipCalls++;
-      return json({ allowed });
+      if (accessError)
+        return route.fulfill({
+          status: 400,
+          contentType: "application/json",
+          body: JSON.stringify({ message: "Synthetic access unavailable" }),
+        });
+      return json({ allowed: invalidAccess ? "true" : allowed });
     }
     if (path.endsWith("/tester_feature_access")) return json(false);
     if (path.endsWith("/sports_slate")) {
@@ -133,13 +141,29 @@ try {
   const waitAllowed = async () => {
     await marker.first().waitFor({ state: "visible" });
   };
-  const waitDenied = async () => {
-    await page.waitForFunction(() =>
-      document
-        .querySelector(".d1-status")
-        ?.textContent.includes("does not include"),
+  const waitDenied = async (reason = "denied") => {
+    await page.waitForURL(
+      `**/staging/discovery/access-denied?reason=${reason}`,
     );
+    await page
+      .getByRole("heading", {
+        name:
+          reason === "denied"
+            ? "Research access is no longer available"
+            : "Research access could not be verified",
+        exact: true,
+      })
+      .waitFor();
     assert.equal(await marker.count(), 0);
+  };
+  const reopen = async () => {
+    allowed = true;
+    accessError = false;
+    invalidAccess = false;
+    await page.goto(
+      base.origin + "/staging/discovery?event=nba%3Asynthetic-nba",
+    );
+    await waitAllowed();
   };
   const focus = () =>
     page.evaluate(() => window.dispatchEvent(new Event("focus")));
@@ -185,9 +209,7 @@ try {
   await focus();
   await waitDenied();
   result.cases.push("Focus rechecks access and removes revoked research");
-  allowed = true;
-  await focus();
-  await waitAllowed();
+  await reopen();
   await hide();
   await marker.first().waitFor({ state: "hidden" });
   const beforeHidden = membershipCalls;
@@ -199,9 +221,7 @@ try {
   result.cases.push(
     "Hidden tab clears research; visible return rereads denial",
   );
-  allowed = true;
-  await focus();
-  await waitAllowed();
+  await reopen();
   // Use the actual Supabase client cross-tab event channel, not a component test hook.
   allowed = false;
   const beforeAuth = membershipCalls;
@@ -215,9 +235,7 @@ try {
   result.cases.push(
     "Same-user TOKEN_REFRESHED revalidates and clears denied research",
   );
-  allowed = true;
-  await focus();
-  await waitAllowed();
+  await reopen();
   holdNext = true;
   await focus();
   for (let i = 0; i < 100 && !held; i++) await page.waitForTimeout(20);
@@ -232,6 +250,39 @@ try {
   await waitDenied();
   result.cases.push(
     "Late permitted response cannot restore content after newer denial",
+  );
+  await reopen();
+  accessError = true;
+  await focus();
+  await waitDenied("unverified");
+  result.cases.push(
+    "Prior-authorized access verification failure redirects fail-closed",
+  );
+  await reopen();
+  invalidAccess = true;
+  allowed = false;
+  await focus();
+  await waitDenied();
+  result.cases.push(
+    "Malformed allowed flag cannot grant or retain authorization",
+  );
+  accessError = false;
+  invalidAccess = false;
+  allowed = false;
+  await page.evaluate(() => {
+    sessionStorage.setItem("test-anonymous", "1");
+    localStorage.removeItem("sb-synthetic-auth-token");
+  });
+  await page.goto(base.origin + "/staging/discovery?event=nba%3Asynthetic-nba");
+  await page.waitForFunction(() =>
+    document
+      .querySelector(".d1-status")
+      ?.textContent.includes("Sign in to view permitted research"),
+  );
+  assert.equal(new URL(page.url()).pathname, "/staging/discovery");
+  assert.equal(await marker.count(), 0);
+  result.cases.push(
+    "Initial anonymous visitor remains on discovery with sign-in state, no protected research",
   );
   assert.equal(
     result.requests.filter((x) => x.endsWith("/game_zone_posts")).length,
