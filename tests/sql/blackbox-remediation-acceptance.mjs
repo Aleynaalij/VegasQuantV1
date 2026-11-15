@@ -287,6 +287,11 @@ await check(
     const row = await t.one(
       "select status,version from blackbox.tasks where id='t1'",
     );
+    // Ownership history is preserved: the assignment and acknowledgment by the suspended agent remain.
+    const kept = await t.one(
+      "select count(*) filter (where action='assign')::int assigned, count(*) filter (where action='acknowledge' and actor=$1)::int acknowledged from blackbox.events where task_id='t1'",
+      [U(CLAUDE)],
+    );
     const event = await t.one(
       "select actor, role from blackbox.events where task_id='t1' order by version desc limit 1",
     );
@@ -294,6 +299,10 @@ await check(
       want(
         row.status === CONTRACT.reclaimedStatus,
         `task is still ${row.status}`,
+      ) ||
+      want(
+        kept.assigned === 1 && kept.acknowledged === 1,
+        "the suspended agent's earlier ownership events were not preserved",
       ) ||
       want(
         event.actor === U(ADMIN) && event.role === "admin",
@@ -478,6 +487,14 @@ await check(
       `drop trigger acceptance_fail on ${CONTRACT.controlEvents}`,
     );
     const pending = await t.one("select enabled from blackbox.control");
+    // CEO requirement (Nov 15): the system stays disabled until the missing transition is reconciled.
+    const early = await t.admin(
+      ADMIN,
+      CONTRACT.enable,
+      null,
+      "Restore before reconciliation",
+    );
+    const stillOff = await t.one("select enabled from blackbox.control");
     const fixed = await t.admin(
       ADMIN2,
       CONTRACT.reconcile,
@@ -491,6 +508,10 @@ await check(
       want(
         pending.enabled === false,
         "the ledger did not stay disabled while the record was missing",
+      ) ||
+      want(
+        !early.ok && stillOff.enabled === false,
+        "the ledger could be re-enabled before the missed transition was reconciled",
       ) ||
       want(fixed.ok, `reconcile refused: ${fixed.code} ${fixed.message}`) ||
       want(
