@@ -8,19 +8,70 @@ import {
   publicationLayout,
   publicationStamp,
   watcherRows,
+  verifiedZoneSleeper,
+  zoneSleeperReleaseId,
   type PublicationPost,
 } from "@/lib/zone-publication-card";
 import { vqCardPalette } from "@/lib/vq-card-palette";
 import { isSport } from "@/lib/sports";
+import { supabase } from "@/lib/supabase";
 import "./zone-publication-card.css";
 
 /** The existing 3-point research frame/fonts/monogram, adapted to editorial publications.
  * Original nba-threes image rendering remains completely separate and unchanged. */
 export default function ZonePublicationCard({
-  post: p,
+  post,
 }: {
   post: PublicationPost;
 }) {
+  const releaseId = zoneSleeperReleaseId(post);
+  const [ticket, setTicket] = useState<{
+    postId: string;
+    releaseId: string;
+    data: NonNullable<ReturnType<typeof verifiedZoneSleeper>>;
+  } | null>(null);
+  const [canCopySleeper, setCanCopySleeper] = useState(false);
+  const sleeper =
+    ticket?.postId === post.id && ticket.releaseId === releaseId
+      ? ticket.data
+      : null;
+  useEffect(() => {
+    if (!releaseId) return;
+    const id = releaseId;
+    const controller = new AbortController();
+    async function read() {
+      const { data, error } = await supabase
+        .from("candidate_releases")
+        .select("id,title,expires_at,candidates")
+        .eq("id", id)
+        .abortSignal(controller.signal)
+        .maybeSingle();
+      if (controller.signal.aborted || error || !data) return;
+      const result = verifiedZoneSleeper(post, data);
+      if (result) setTicket({ postId: post.id, releaseId: id, data: result });
+    }
+    void read();
+    return () => controller.abort();
+  }, [post, releaseId]);
+  useEffect(() => {
+    const deadline = sleeper?.expiresAt;
+    const refresh = () =>
+      setCanCopySleeper(deadline !== undefined && Date.now() < deadline);
+    refresh();
+    if (deadline === undefined || deadline <= Date.now()) return;
+    const timer = window.setTimeout(refresh, deadline - Date.now());
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [sleeper?.expiresAt]);
+  const p = useMemo(
+    () => (releaseId ? { ...post, legs: sleeper?.legs ?? [] } : post),
+    [post, releaseId, sleeper],
+  );
   const [copied, setCopied] = useState(false),
     [error, setError] = useState(""),
     [manual, setManual] = useState(false),
@@ -40,7 +91,7 @@ export default function ZonePublicationCard({
   const label = PUBLICATION_LABELS[p.sport];
   const { title, rows, start, height, editorial, research, rules } = layout;
   const headline =
-    layout.headline ||
+    (sleeper ? "ENTERTAINMENT TICKET" : layout.headline) ||
     (watchers
       ? "WATCHLIST"
       : editorial || p.legs.length
@@ -48,13 +99,15 @@ export default function ZonePublicationCard({
         : "RESEARCH UPDATE");
   const stamp = publicationStamp(p.created_at),
     copyText = publicationCopy(p);
-  const footer = watchers
-    ? "Watchlist only · not official picks · check lines and inactives"
-    : editorial
-      ? "Qualitative editorial · no validated model edge · prices can change"
-      : p.legs.length
-        ? "Published picks · verify current line and availability"
-        : "Research only · not picks · quoted prices may change";
+  const footer = sleeper
+    ? "Entertainment only · verify availability"
+    : watchers
+      ? "Watchlist only · not official picks · check lines and inactives"
+      : editorial
+        ? "Qualitative editorial · no validated model edge · prices can change"
+        : p.legs.length
+          ? "Published picks · verify current line and availability"
+          : "Research only · not picks · quoted prices may change";
   const rowColor = (row: (typeof rows)[number]) =>
     row.tone === "accent"
       ? theme.accent
@@ -198,7 +251,8 @@ export default function ZonePublicationCard({
     >
       {!research && (
         <p className="publication-time">
-          {stamp} · Publication time, not a price observation.
+          {stamp}
+          {sleeper ? "" : " · Publication time, not a price observation."}
         </p>
       )}
       <svg
@@ -375,7 +429,8 @@ export default function ZonePublicationCard({
           <>
             <h3>{p.title}</h3>
             <p className="publication-time">
-              {stamp} · Publication time, not a price observation.
+              {stamp}
+              {sleeper ? "" : " · Publication time, not a price observation."}
             </p>
           </>
         )}
@@ -410,7 +465,18 @@ export default function ZonePublicationCard({
         >
           {busy ? "Creating card…" : "Download card"}
         </button>
-        {!!p.legs.length && (
+        {sleeper && canCopySleeper && Date.now() < sleeper.expiresAt && (
+          <GamblyLink
+            url="https://gambly.com/"
+            selection={sleeper.copyText}
+            label="Copy parlay & open Gambly ↗"
+            beforeOpen={async () => Date.now() < sleeper.expiresAt}
+          />
+        )}
+        {sleeper && Date.now() >= sleeper.expiresAt && (
+          <p>Pregame copying closed at kickoff.</p>
+        )}
+        {!releaseId && !!p.legs.length && (
           <>
             <button
               type="button"

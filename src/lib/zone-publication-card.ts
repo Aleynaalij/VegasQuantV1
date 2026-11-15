@@ -19,6 +19,81 @@ export type PublicationPost = {
 export const isPublicationCard = (p: PublicationPost) =>
   p.card === AUTOMATED_CARD && isSport(p.sport);
 
+/** Only the server-issued Zone card can opt into the immutable sleeper ticket. */
+export function zoneSleeperReleaseId(post: PublicationPost): string | null {
+  if (
+    !isPublicationCard(post) ||
+    post.sport !== "nfl" ||
+    !/^Worth a dollar of your time · Week [1-9][0-9]?$/.test(post.title)
+  )
+    return null;
+  return (
+    post.body.match(
+      /^https:\/\/vegasquant\.app\/feed\?release=([0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})$/m,
+    )?.[1] ?? null
+  );
+}
+
+export function verifiedZoneSleeper(
+  post: PublicationPost,
+  release: {
+    id: string;
+    title: string;
+    expires_at: string;
+    candidates: unknown;
+  },
+) {
+  if (
+    release.id !== zoneSleeperReleaseId(post) ||
+    release.title !== post.title ||
+    !Number.isFinite(Date.parse(release.expires_at)) ||
+    !Array.isArray(release.candidates) ||
+    release.candidates.length < 3 ||
+    release.candidates.length > 13
+  )
+    return null;
+  const [bundle, ...leaves] = release.candidates;
+  if (
+    bundle?.analysis_kind !== "ENTERTAINMENT_SLEEPER_PARLAY" ||
+    bundle.worth_a_dollar !== true ||
+    bundle.parlay !== true ||
+    bundle.gambly_url !== "https://gambly.com/" ||
+    !Array.isArray(bundle.leg_keys) ||
+    !Array.isArray(bundle.parlay_legs) ||
+    bundle.leg_keys.length !== leaves.length ||
+    bundle.parlay_legs.length !== leaves.length
+  )
+    return null;
+  const legs: string[] = [];
+  for (const [i, leg] of leaves.entries()) {
+    const market =
+      typeof leg?.market === "string" &&
+      /^Full game · ([1-9][0-9]{0,2}\+ (?:rushing yards|receiving yards|passing yards|receptions))$/.exec(
+        leg.market,
+      );
+    if (
+      !market ||
+      typeof leg.name !== "string" ||
+      !leg.name.trim() ||
+      leg.analysis_kind !== "ENTERTAINMENT_SLEEPER" ||
+      leg.parlay_group !== release.id ||
+      bundle.leg_keys[i] !== `candidate:${release.id}:${i + 2}` ||
+      bundle.parlay_legs[i]?.name !== leg.name ||
+      bundle.parlay_legs[i]?.market !== leg.market ||
+      leg.copy_text !== `${leg.name} ${market[1]}`
+    )
+      return null;
+    legs.push(leg.copy_text);
+  }
+  return bundle.copy_text === legs.join("\n")
+    ? {
+        legs,
+        copyText: legs.join("\n"),
+        expiresAt: Date.parse(release.expires_at),
+      }
+    : null;
+}
+
 // Conservative glyph widths keep URLs, long words and wide characters inside the frame.
 export function wrapCardText(
   text: string,

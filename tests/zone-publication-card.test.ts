@@ -8,6 +8,8 @@ import {
   publicationCopy,
   publicationLayout,
   wrapCardText,
+  verifiedZoneSleeper,
+  zoneSleeperReleaseId,
 } from "../src/lib/zone-publication-card";
 const post = {
   id: "fixture",
@@ -253,5 +255,69 @@ test("single-pick editorial cards show the quote and observation time without an
       body: body.replace("observed", "published"),
     }).editorial,
     false,
+  );
+});
+
+test("Zone sleeper takes its visual legs and exact Gambly copy from the linked original", () => {
+  const id = "fbcc3af2-4829-4fef-814e-297080940eea";
+  const title = "Worth a dollar of your time · Week 10";
+  const sleeperPost = {
+    ...post,
+    sport: "nfl",
+    title,
+    legs: [],
+    body: `Release context\nhttps://vegasquant.app/feed?release=${id}`,
+  };
+  const legs = Array.from({ length: 12 }, (_, i) => ({
+    name: `Player ${i + 1}`,
+    market: "Full game · 40+ receiving yards",
+    analysis_kind: "ENTERTAINMENT_SLEEPER",
+    parlay_group: id,
+    copy_text: `Player ${i + 1} 40+ receiving yards`,
+  }));
+  const copyText = legs.map((leg) => leg.copy_text).join("\n");
+  const bundle = {
+    analysis_kind: "ENTERTAINMENT_SLEEPER_PARLAY",
+    worth_a_dollar: true,
+    parlay: true,
+    gambly_url: "https://gambly.com/",
+    copy_text: copyText,
+    leg_keys: legs.map((_, i) => `candidate:${id}:${i + 2}`),
+    parlay_legs: legs,
+  };
+  const release = {
+    id,
+    title,
+    expires_at: "2026-11-15T18:00:00Z",
+    candidates: [bundle, ...legs],
+  };
+  assert.equal(zoneSleeperReleaseId(sleeperPost), id);
+  const ticket = verifiedZoneSleeper(sleeperPost, release);
+  assert.deepEqual(ticket, {
+    legs: copyText.split("\n"),
+    copyText,
+    expiresAt: Date.parse(release.expires_at),
+  });
+  const layout = publicationLayout({ ...sleeperPost, legs: ticket!.legs });
+  assert.equal(layout.research, undefined);
+  assert.ok(layout.rows.some((row) => row.text.includes("12. Player")));
+  assert.equal(zoneSleeperReleaseId({ ...sleeperPost, card: null }), null);
+  assert.equal(
+    zoneSleeperReleaseId({
+      ...sleeperPost,
+      body: sleeperPost.body.replace("vegasquant.app", "example.com"),
+    }),
+    null,
+  );
+  assert.equal(
+    verifiedZoneSleeper(sleeperPost, { ...release, expires_at: "unknown" }),
+    null,
+  );
+  assert.equal(
+    verifiedZoneSleeper(sleeperPost, {
+      ...release,
+      candidates: [{ ...bundle, copy_text: "different" }, ...legs],
+    }),
+    null,
   );
 });
