@@ -173,6 +173,13 @@ for (const width of [390, 1280]) {
       reducedMotion: "reduce",
     });
     if (signedIn) await ctx.addInitScript(session);
+    // Exercise the real asynchronous gate rather than assuming URL navigation means
+    // all account-scoped navigation has hydrated. This fixture is not Frank, so NHL
+    // must become visible after the status read. No production permissions change.
+    await ctx.route("**/rest/v1/rpc/frank_anniversary", async (r) => {
+      await new Promise((resolve) => setTimeout(resolve, 350));
+      await r.fulfill({ json: { state: "hidden" } });
+    });
     const feedSports = [];
     let recordWins = 2;
     await ctx.route("**/rest/v1/rpc/nba_editorial_records", (r) =>
@@ -232,7 +239,16 @@ for (const width of [390, 1280]) {
     await rooms.locator('a[data-sport="nba"]').click();
     await p.waitForURL(`${base}/nba`);
     const chips = p.getByRole("navigation", { name: "Sport selection" });
-    assert.deepEqual(await chips.locator("a[data-sport]").evaluateAll(a => a.map(x => x.dataset.sport)), ["nfl", "nba", "nhl", "ncaab"]);
+    // Auth/status may re-hold NHL after an initially visible render. Sample readiness
+    // and the exact list atomically, not in two browser calls separated by a render.
+    // This is a bounded web-first assertion: missing, extra or reordered chips fail.
+    const readySports = await p.waitForFunction(() => {
+      const links = [...document.querySelectorAll('nav[aria-label="Sport selection"] a[data-sport]')];
+      const sports = links.map((link) => link.dataset.sport);
+      return JSON.stringify(sports) === JSON.stringify(["nfl", "nba", "nhl", "ncaab"])
+        && links.every((link) => link.getClientRects().length > 0) ? sports : false;
+    }, undefined, { timeout: 10000 });
+    assert.deepEqual(await readySports.jsonValue(), ["nfl", "nba", "nhl", "ncaab"]);
     assert.equal(await chips.locator('a[aria-current="page"]').getAttribute('data-sport'), 'nba');
     await p.locator(".home-brief[data-sport=nba] .vq-matchup").waitFor();
     assert.match(await p.locator(".home-brief").innerText(), /NEXT TIP-OFF/i);
