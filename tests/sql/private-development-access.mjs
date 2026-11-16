@@ -36,6 +36,7 @@ test("private development composes with existing grants and restores access on r
       create policy existing_read on public.fixture_records for select to anon, authenticated using (true);
       grant select, insert on public.fixture_records to anon, authenticated, service_role;
     `);
+    await db.exec(await readFile(new URL("../../scripts/operations/private-development-policy.sql", import.meta.url), "utf8"));
     await db.exec(await readFile(new URL("./fixtures/private-development-access.sql", import.meta.url), "utf8"));
     await db.exec(`
       insert into public.fixture_memberships values ('${member}');
