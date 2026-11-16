@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { BlackboxControlCenter } from "@/components/blackbox-control-center";
+import { BlackboxAccess } from "@/components/blackbox-access";
 import { Shell } from "@/components/ui";
 import { blackboxEnabled } from "@/lib/blackbox";
 
@@ -14,7 +14,7 @@ export default function Page() {
   return (
     <Shell active="admin">
       <article className="vq-policy">
-        <BlackboxControlCenter />
+        <BlackboxAccess />
       </article>
     </Shell>
   );

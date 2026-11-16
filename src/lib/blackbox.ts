@@ -36,6 +36,8 @@ export type BlackboxTask = {
   }[];
 };
 
+export const blackboxControlPath = "/admin/operations/blackbox";
+
 export function blackboxEnabled(
   env: Record<string, string | undefined> = process.env,
 ) {
@@ -44,6 +46,13 @@ export function blackboxEnabled(
     env.VQ_BLACKBOX_STAGING === "true" &&
     env.NEXT_PUBLIC_SUPABASE_URL === "https://apwndmcsjxzjxnpxfywo.supabase.co"
   );
+}
+
+export function isIsolatedBlackboxRoute(
+  pathname: string,
+  enabled: boolean,
+) {
+  return enabled && pathname === blackboxControlPath;
 }
 
 export function directTasks(tasks: BlackboxTask[], now: number) {

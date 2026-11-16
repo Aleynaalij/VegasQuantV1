@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { isIsolatedBlackboxRoute } from "@/lib/blackbox";
 const accountPaths = new Set([
   "/membership",
   "/account/verify-age",
@@ -17,9 +18,11 @@ const accountPaths = new Set([
 export default function AgeAccessBoundary({
   children,
   extras,
+  isolatedBlackbox = false,
 }: {
   children: ReactNode;
   extras?: ReactNode;
+  isolatedBlackbox?: boolean;
 }) {
   const path = usePathname();
   const [mode, setMode] = useState<
@@ -100,6 +103,8 @@ export default function AgeAccessBoundary({
       window.removeEventListener("vq:age-verified", verified);
     };
   }, [retry]);
+  // The isolated Blackbox page has its own sign-in and AAL2 gate.
+  if (isIsolatedBlackboxRoute(path, isolatedBlackbox)) return <>{children}</>;
   if (accountPaths.has(path))
     return (
       <>

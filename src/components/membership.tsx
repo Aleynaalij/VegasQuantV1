@@ -21,6 +21,7 @@ import PickAlerts from "./pick-alerts";
 import AccountDeletion from "./account-deletion";
 import AgeVerificationPanel from "./age-verification-panel";
 import type { AgeStatus } from "@/lib/age-verification";
+import { prepareAdminTotp } from "@/lib/admin-totp";
 import BillingAccount from "./billing-account";
 import type { Session } from "@supabase/supabase-js";
 type Quote = {
@@ -267,34 +268,11 @@ export default function Membership() {
   async function prepareMfa() {
     setBusy(true);
     try {
-      const r = await supabase.auth.mfa.listFactors();
-      if (r.error) throw r.error;
-      const existing = r.data.totp.find((f) => f.status === "verified");
-      if (existing) {
-        setFactor(existing.id);
-        setQr("");
-        setSetupKey("");
-      } else {
-        if (factor && setupKey) return;
-        // Unverified enrollments cannot be recovered after leaving this page.
-        // Remove only incomplete setup attempts; never remove a verified factor.
-        for (const pending of r.data.all.filter(
-          (f) => f.factor_type === "totp" && f.status === "unverified",
-        )) {
-          const removed = await supabase.auth.mfa.unenroll({
-            factorId: pending.id,
-          });
-          if (removed.error) throw removed.error;
-        }
-        const enrolled = await supabase.auth.mfa.enroll({
-          factorType: "totp",
-          friendlyName: `Vegas Quant admin ${Date.now()}`,
-        });
-        if (enrolled.error) throw enrolled.error;
-        setFactor(enrolled.data.id);
-        setQr(enrolled.data.totp.qr_code);
-        setSetupKey(enrolled.data.totp.secret);
-      }
+      if (factor && setupKey) return;
+      const enrollment = await prepareAdminTotp(true);
+      setFactor(enrollment.id);
+      setQr(enrollment.qr);
+      setSetupKey(enrollment.setupKey);
       setNotice("Use your authenticator app to provide the six-digit code.");
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "MFA setup failed");

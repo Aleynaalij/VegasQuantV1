@@ -37,6 +37,7 @@ import DailyLuck from "@/components/daily-luck";
 import AppRefreshNotice from "@/components/app-refresh-notice";
 import BrandOpening from "@/components/brand-opening";
 import AgeAccessBoundary from "@/components/age-access-boundary";
+import { blackboxEnabled } from "@/lib/blackbox";
 
 // Self-hosted from the repo (latin subset, SIL OFL; licenses in ./fonts) and preloaded, so builds
 // never fetch Google Fonts.
@@ -105,6 +106,7 @@ export default function RootLayout({
         <ThemePrompt />
         <NotificationProvider>
           <AgeAccessBoundary
+            isolatedBlackbox={blackboxEnabled()}
             extras={
               <>
                 <AppRefreshNotice />

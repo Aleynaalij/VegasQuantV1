@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
-import { blackboxEnabled } from "../src/lib/blackbox";
+import { blackboxEnabled, isIsolatedBlackboxRoute } from "../src/lib/blackbox";
 
 test("Blackbox requires the exact isolated project, explicit activation and a preview runtime", () => {
   const staging = {
@@ -26,6 +26,22 @@ test("Blackbox requires the exact isolated project, explicit activation and a pr
     }),
     false,
   );
+});
+
+test("Only the exact isolated Blackbox screen uses its own sign-in gate", () => {
+  const path = "/admin/operations/blackbox";
+  assert.equal(isIsolatedBlackboxRoute(path, true), true);
+  assert.equal(isIsolatedBlackboxRoute(path, false), false);
+  for (const other of [
+    "/admin",
+    "/admin/operations",
+    "/admin/operations/blackbox/other",
+    "/membership",
+    "/account/verify-age",
+    "/nba",
+  ]) {
+    assert.equal(isIsolatedBlackboxRoute(other, true), false);
+  }
 });
 
 test("Blackbox SQL enforces the synthetic lifecycle, audit isolation and denial controls", async () => {
