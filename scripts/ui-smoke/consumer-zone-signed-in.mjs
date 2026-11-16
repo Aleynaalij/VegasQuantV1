@@ -47,6 +47,13 @@ const post = {
   comments: 0,
   photo_path: null,
 };
+// Synthetic JPEG follows the existing avatar data-URL constraint; never a real person.
+const syntheticAvatar =
+  "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAgACADASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwDhqKKKzPOCiiigAooooAKKKKAP/9k=";
+const completedProfile = {
+  username: "SyntheticMember",
+  avatar: syntheticAvatar,
+};
 const session = {
   access_token: "synthetic-zone-token",
   refresh_token: "synthetic-zone-refresh",
@@ -78,6 +85,19 @@ try {
       viewport: { width, height: 900 },
       reducedMotion: "reduce",
       serviceWorkers: "block",
+    });
+    // Route handlers never connect these sockets to a server. REST interception alone
+    // does not stop Supabase realtime WebSocket transport.
+    await context.routeWebSocket("**/*", (socket) => {
+      report.blockedRequests.push({
+        width,
+        method: "WEBSOCKET",
+        destination: socket.url(),
+      });
+      socket.close({
+        code: 1000,
+        reason: "Synthetic test: external transport disabled",
+      });
     });
     await context.addInitScript(
       ({ session, version }) => {
@@ -165,9 +185,7 @@ try {
           return json([]);
         if (path.startsWith("/rest/v1/") && !rpc && req.method() === "GET")
           return json(
-            path.endsWith("/community_profiles")
-              ? { username: "SyntheticMember", avatar: null }
-              : [],
+            path.endsWith("/community_profiles") ? completedProfile : [],
           );
       }
       report.blockedRequests.push({
@@ -263,6 +281,21 @@ try {
     const search = page.getByRole("searchbox", {
       name: "Search loaded content",
     });
+    // An incomplete fixture profile legitimately opens a focus-trapping setup dialog.
+    // Do not dismiss or disable that production behavior to make this test pass.
+    await page
+      .locator('.profile-setup-dialog[data-profile-required="false"]')
+      .waitFor({ state: "attached" });
+    assert.equal(
+      await page.locator(".profile-setup-dialog[open]").count(),
+      0,
+      "Complete fixture profile must not require setup",
+    );
+    assert.equal(
+      await page.locator("dialog[open]").count(),
+      0,
+      "Search must not run behind a focus-trapping modal",
+    );
     await diagnostic("before-search");
     assert.equal(
       new URL(page.url()).searchParams.get("post"),
@@ -291,6 +324,11 @@ try {
         );
     });
     await search.fill("NO SUCH SYNTHETIC PUBLICATION");
+    assert.equal(
+      await search.inputValue(),
+      "NO SUCH SYNTHETIC PUBLICATION",
+      "Search must receive the intended input before asserting filtering",
+    );
     await diagnostic("after-search-fill");
     try {
       await item.waitFor({ state: "hidden" });

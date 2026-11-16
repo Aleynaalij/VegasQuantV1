@@ -128,27 +128,35 @@ try {
                 }),
               )
           : [];
-      if (name === "home")
+      if (name === "home") {
+        assert.equal(await page.locator(".top-actions").count(), 1);
+        assert.equal(
+          await page.locator('nav[aria-label="Help and legal"]').count(),
+          1,
+        );
+        assert.equal(
+          await root
+            .locator(
+              'nav[aria-label="Account shortcuts"],nav[aria-label="Legal and support"]',
+            )
+            .count(),
+          0,
+        );
         assert(
           primaryButtons.length >= 2,
           "Both primary Home CTAs must be present",
         );
+      }
       const targetSelector =
-        name === "home"
-          ? ".h2-top nav a"
-          : name.startsWith("room-")
-            ? "a"
-            : null;
+        name === "home" ? ".h2-button" : name.startsWith("room-") ? "a" : null;
       const standaloneTargets = targetSelector
-        ? await root
-            .locator(targetSelector)
-            .evaluateAll((nodes) =>
-              nodes.map((e) => ({
-                text: e.textContent,
-                width: e.getBoundingClientRect().width,
-                height: e.getBoundingClientRect().height,
-              })),
-            )
+        ? await root.locator(targetSelector).evaluateAll((nodes) =>
+            nodes.map((e) => ({
+              text: e.textContent,
+              width: e.getBoundingClientRect().width,
+              height: e.getBoundingClientRect().height,
+            })),
+          )
         : [];
       if (targetSelector) assert(standaloneTargets.length > 0);
       for (const target of standaloneTargets)

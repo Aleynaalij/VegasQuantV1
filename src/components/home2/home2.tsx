@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, Bookmark, Bell, Search, RefreshCw } from "lucide-react";
+import { ArrowUpRight, Bookmark, Search, RefreshCw } from "lucide-react";
 import type { Game } from "@/lib/domain";
 import type { ResearchEvent } from "@/lib/research-hub";
 import type { Sport } from "@/lib/sports";
@@ -14,7 +14,6 @@ import { supabase } from "@/lib/supabase";
 import { watchDiscoveryAccess } from "@/lib/discovery/revalidate";
 import { compactText, findingHref } from "@/lib/discovery/model";
 import { homeResearch, HOME_TOOLS, homeTimestamp } from "@/lib/home2";
-import AccountLink from "@/components/account-link";
 import SectionBoundary from "@/components/section-boundary";
 import CommunityStories from "@/components/community-stories";
 import HomeDealer from "./home-dealer";
@@ -104,12 +103,6 @@ export default function Home2({
     <div className="home2">
       <header className="h2-top">
         <span className="h2-eyebrow">Vegas Quant / Intelligence dashboard</span>
-        <nav aria-label="Account shortcuts">
-          <Link href="/notifications" aria-label="Notifications">
-            <Bell size={19} />
-          </Link>
-          <AccountLink />
-        </nav>
       </header>
       <section
         className={`h2-welcome ${member ? "h2-returning" : ""}`}
@@ -393,20 +386,6 @@ export default function Home2({
           Research, not guarantees. Availability and account access vary. MLB
           development is planned for February 2027.
         </p>
-        <nav aria-label="Legal and support">
-          {[
-            ["/about", "About"],
-            ["/methodology", "Methodology"],
-            ["/support", "Support"],
-            ["/terms", "Terms"],
-            ["/privacy", "Privacy"],
-            ["/responsible-play", "Responsible play"],
-          ].map(([href, label]) => (
-            <Link key={href} href={href}>
-              {label}
-            </Link>
-          ))}
-        </nav>
       </footer>
     </div>
   );

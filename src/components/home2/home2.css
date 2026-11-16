@@ -397,10 +397,6 @@
 html[data-theme] body .home2 .h2-button:not(.secondary) {
   color: #10261b !important;
 }
-.home2 .h2-top nav a {
-  min-width: 44px;
-  justify-content: center;
-}
 /* The old Home's decorative arena is not part of the replacement dashboard. */
 .screen-lobby .main-wrap:has(.home2)::before {
   display: none;

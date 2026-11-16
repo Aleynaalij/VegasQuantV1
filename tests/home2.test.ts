@@ -73,6 +73,18 @@ test("Home preserves account collection, builder and Fear destinations", () => {
 
 test("Home account access reuses the existing authenticated profile destination", () => {
   const source = readFileSync("src/components/home2/home2.tsx", "utf8");
-  assert.match(source, /<AccountLink \/>/);
+  const wrapper = readFileSync(
+    "src/components/consumer/home-experience.tsx",
+    "utf8",
+  );
+  const shell = readFileSync("src/components/ui.tsx", "utf8");
+  assert.match(wrapper, /<Shell active="lobby">/);
+  assert.match(shell, /<AccountLink \/>/);
+  assert.match(shell, /<UpdateInbox \/>/);
+  assert.match(shell, /aria-label="Help and legal"/);
+  assert.doesNotMatch(
+    source,
+    /Account shortcuts|Legal and support|<AccountLink/,
+  );
   assert.doesNotMatch(source, /href="\/account"/);
 });
