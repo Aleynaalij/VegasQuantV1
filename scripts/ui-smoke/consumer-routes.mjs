@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { chromium } from "playwright";
 const base = process.env.CONSUMER_TEST_URL || "http://127.0.0.1:3201";
+assert(
+  ["127.0.0.1", "localhost", "[::1]"].includes(new URL(base).hostname),
+  "Consumer synthetic acceptance is restricted to loopback, never a deployed service",
+);
 const enabled = process.env.EXPECT_CONSUMER_UI === "true";
 const browser = await chromium.launch({
   headless: true,
@@ -11,10 +15,13 @@ const browser = await chromium.launch({
 try {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },
+    serviceWorkers: "block",
   });
   // This suite is routing/rollback evidence, never a live account test. No external calls.
   await context.route("**/*", (route) =>
-    new URL(route.request().url()).origin === new URL(base).origin
+    new URL(route.request().url()).origin === new URL(base).origin &&
+    !new URL(route.request().url()).pathname.startsWith("/api/") &&
+    ["GET", "HEAD"].includes(route.request().method())
       ? route.continue()
       : route.abort(),
   );
@@ -44,6 +51,10 @@ try {
   await page.goto(base + "/#home-games");
   await page.waitForURL("**/nfl#home-games");
   await page.goto(base + "/community?saved=synthetic");
+  // Next may stream this redirect after the initial 200 shell. Await navigation, not just load.
+  await page.waitForURL("**/parlays?saved=synthetic#my-parlay-synthetic", {
+    timeout: 15000,
+  });
   assert.equal(new URL(page.url()).pathname, "/parlays");
   assert.equal(new URL(page.url()).hash, "#my-parlay-synthetic");
   console.log(

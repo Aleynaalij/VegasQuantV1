@@ -17,6 +17,7 @@ import { homeResearch, HOME_TOOLS, homeTimestamp } from "@/lib/home2";
 import AccountLink from "@/components/account-link";
 import SectionBoundary from "@/components/section-boundary";
 import CommunityStories from "@/components/community-stories";
+import HomeDealer from "./home-dealer";
 import "./home2.css";
 
 export type Home2Props = {
@@ -371,6 +372,9 @@ export default function Home2({
       <aside className="h2-zone">
         <span className="h2-eyebrow">The Dealer / Community</span>
         <h2>The research. The reasons. The conversation.</h2>
+        <SectionBoundary name="Dealer publications">
+          <HomeDealer sport={sport} zoneHref={zoneHref} />
+        </SectionBoundary>
         <p>
           Open compact publications in The Zone. Full charts, source notes and
           the original research remain available there.

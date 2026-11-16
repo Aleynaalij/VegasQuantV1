@@ -96,3 +96,42 @@ test("new room uses existing staging gate and revocation lifecycle, not a new au
   assert.match(client, /hadAccess.current/);
   assert.doesNotMatch(client, /service_role/);
 });
+
+test("room publications remain server opt-in and fixtures never read live publications", () => {
+  const route = readFileSync(
+    "src/app/staging/discovery/rooms/[sport]/[id]/page.tsx",
+    "utf8",
+  );
+  const client = readFileSync(
+    "src/components/game-room/game-room-client.tsx",
+    "utf8",
+  );
+  assert.match(route, /STAGING_DISCOVERY_LINKED_PUBLICATIONS === "true"/);
+  assert.match(client, /linkedPublications && !fixtures/);
+});
+
+test("linked charts use existing permission-aware renderers and clear on access changes", () => {
+  const source = readFileSync(
+    "src/components/game-room/room-publications.tsx",
+    "utf8",
+  );
+  const view = readFileSync(
+    "src/components/game-room/game-intelligence-room.tsx",
+    "utf8",
+  );
+  assert.match(source, /supabase\.rpc\("game_zone_posts"/);
+  assert.match(source, /p_game: reference.id/);
+  assert.match(source, /own !== generation/);
+  assert.match(source, /setPosts\(\[\]\)/);
+  assert.match(source, /watchDiscoveryAccess/);
+  assert.match(source, /rows.some\(\(p\) => p.sport !== reference.sport\)/);
+  assert.match(source, /nba-matchup-sheet-preview/);
+  assert.match(source, /nhl-chart-preview/);
+  assert.match(
+    source.replace(/\s+/g, " "),
+    /Other card formats and attachments remain/,
+  );
+  assert.match(view, /!data.denied/);
+  assert.match(view, /data.signedIn/);
+  assert.doesNotMatch(source, /service_role|SUPABASE_SERVICE|\.from\(/);
+});

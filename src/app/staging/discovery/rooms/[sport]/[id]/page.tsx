@@ -27,6 +27,9 @@ export default async function Page({
   return (
     <GameRoomClient
       reference={reference}
+      linkedPublications={
+        process.env.STAGING_DISCOVERY_LINKED_PUBLICATIONS === "true"
+      }
       homeHref={
         consumerExperienceEnabled(process.env) ? "/" : "/staging/discovery"
       }

@@ -20,3 +20,13 @@ The existing reader uses the upcoming window and excludes completed/cancelled ga
 ## Acceptance still required on integrated candidate
 
 Protected real-account staging, physical-phone touch and screen reader checks, exact integrated build/hosted CI, full Home→Zone→room navigation, data reader compatibility with gate #295, repeated Back/Forward and authentication interruption, and route rollback evidence. Synthetic unit checks are not production permission parity.
+
+## Bounded publication integration follow-on
+
+Based on PR #296 c0ffe0efd7e6ea043e276bebc72feda3c6c062af. Rooms now support the existing `game_zone_posts` RPC behind the existing server-only `STAGING_DISCOVERY_LINKED_PUBLICATIONS=true` opt-in. Default remains link-only. The source database must already support and authorize that RPC; no migration or permission changes are included. Fixture mode never calls this live publication reader.
+
+Only an authorized, resolved room mounts the reader. Exact sport/provider ID is passed to the RPC; posts are not inferred from title or team names. Access invalidation clears posts, unmounts expanded media, and invalidates in-flight results. Empty, signed-out, malformed, and unavailable states are distinct; empty results do not prove no research exists.
+
+Expanded publications preserve original full text, author, timestamp and post reference. Existing lazy chart components handle NHL chart packages, NBA three-point cards and matchup sheets, NFL weekly/position cards, and standard publication cards (including NCAAB). Their existing endpoint/authorization/download behavior is unchanged. Unknown attachments remain accessible from the original publication. Comments and reactions stay at the original post; no game-specific discussion store is invented. Source timestamps remain distinct from publication time. This does not implement a historical archive.
+
+Verification: focused Room contract tests and TypeScript check; hosted authorized RPC/media smoke, interrupted real-session tests, and screen-reader/mobile media checks remain required at the combined candidate SHA. Synthetic fixture QA is not evidence for the live opt-in reader.

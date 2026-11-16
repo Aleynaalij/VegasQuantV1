@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import RoomPublications from "./room-publications";
 import { SPORTS } from "@/lib/sports";
 import { sourceAge, TOPIC_NAMES, type Finding } from "@/lib/research-hub";
 import type { HubData } from "@/lib/research-hub-reader";
@@ -83,6 +84,7 @@ export default function GameIntelligenceRoom({
   loading = false,
   failed = false,
   refresh,
+  linkedPublications = false,
   homeHref = "/staging/discovery",
   zoneHref = "/community",
 }: {
@@ -91,6 +93,7 @@ export default function GameIntelligenceRoom({
   loading?: boolean;
   failed?: boolean;
   refresh?: () => void;
+  linkedPublications?: boolean;
   homeHref?: string;
   zoneHref?: string;
 }) {
@@ -256,6 +259,13 @@ export default function GameIntelligenceRoom({
               corrections remain at their original destinations; nothing here
               regrades a pick or recreates a historical snapshot.
             </p>
+            {linkedPublications &&
+              !loading &&
+              !failed &&
+              !data.denied &&
+              data.signedIn && (
+                <RoomPublications key={event.key} reference={reference} />
+              )}
             <div className="gr-links">
               <Link href={eventResearchHref(event)}>
                 Complete research dossier

@@ -18,12 +18,14 @@ const EMPTY: HubData = {
 export default function GameRoomClient({
   reference,
   fixtures = false,
+  linkedPublications = false,
   scenario = null,
   homeHref = "/staging/discovery",
   zoneHref = "/community",
 }: {
   reference: RoomReference;
   fixtures?: boolean;
+  linkedPublications?: boolean;
   scenario?: string | null;
   homeHref?: string;
   zoneHref?: string;
@@ -100,6 +102,7 @@ export default function GameRoomClient({
       <GameIntelligenceRoom
         key={`${reference.sport}:${reference.id}`}
         data={data}
+        linkedPublications={linkedPublications && !fixtures}
         homeHref={homeHref}
         zoneHref={zoneHref}
         reference={reference}
