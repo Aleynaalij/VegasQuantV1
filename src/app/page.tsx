@@ -1,5 +1,8 @@
+import { Suspense } from "react";
 import { permanentRedirect } from "next/navigation";
 import { getDeskOrEmpty } from "@/lib/data";
+import HomeExperience from "@/components/consumer/home-experience";
+import { consumerExperienceEnabled } from "@/lib/consumer-experience";
 import VqLobby from "@/components/vq-lobby";
 export const dynamic = "force-dynamic";
 /**
@@ -17,9 +20,25 @@ export default async function Home({
   if (Object.hasOwn(query, "game")) {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(query))
-      for (const v of Array.isArray(value) ? value : value === undefined ? [] : [value]) params.append(key, v);
+      for (const v of Array.isArray(value)
+        ? value
+        : value === undefined
+          ? []
+          : [value])
+        params.append(key, v);
     permanentRedirect(`/nfl?${params.toString()}#home-games`);
   }
   const desk = await getDeskOrEmpty();
-  return <VqLobby nflGames={desk.games} nflUnavailable={Boolean(desk.unavailable)} />;
+  if (consumerExperienceEnabled(process.env))
+    return (
+      <Suspense fallback={<p role="status">Opening Home…</p>}>
+        <HomeExperience
+          nflGames={desk.games}
+          nflUnavailable={Boolean(desk.unavailable)}
+        />
+      </Suspense>
+    );
+  return (
+    <VqLobby nflGames={desk.games} nflUnavailable={Boolean(desk.unavailable)} />
+  );
 }
