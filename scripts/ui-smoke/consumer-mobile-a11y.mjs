@@ -4,6 +4,7 @@
 // Runtime dependencies: pinned playwright and axe-core (same as discovery audit).
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
+import { ratio, parseRGB } from "./contrast-bound.mjs";
 import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const { chromium } = await import(
@@ -92,12 +93,104 @@ try {
             }))
             .filter((e) => e.width < 24 || e.height < 24),
         );
+      // Theme-wide important rules previously made gold CTA text pale on gold.
+      // Audit actual computed opaque button colors even when axe cannot infer a backdrop.
+      const primaryButtons =
+        name === "home"
+          ? await root
+              .locator(".h2-button:not(.secondary)")
+              .evaluateAll((nodes) =>
+                nodes.map((e) => {
+                  const style = getComputedStyle(e);
+                  const composition = [];
+                  for (let node = e; node; node = node.parentElement) {
+                    const ancestor = getComputedStyle(node);
+                    if (
+                      ancestor.opacity !== "1" ||
+                      ancestor.filter !== "none" ||
+                      ancestor.mixBlendMode !== "normal"
+                    )
+                      composition.push({
+                        tag: node.tagName,
+                        opacity: ancestor.opacity,
+                        filter: ancestor.filter,
+                        blend: ancestor.mixBlendMode,
+                      });
+                  }
+                  return {
+                    text: e.textContent,
+                    color: style.color,
+                    background: style.backgroundColor,
+                    image: style.backgroundImage,
+                    opacity: style.opacity,
+                    composition,
+                  };
+                }),
+              )
+          : [];
+      if (name === "home")
+        assert(
+          primaryButtons.length >= 2,
+          "Both primary Home CTAs must be present",
+        );
+      const targetSelector =
+        name === "home"
+          ? ".h2-top nav a"
+          : name.startsWith("room-")
+            ? "a"
+            : null;
+      const standaloneTargets = targetSelector
+        ? await root
+            .locator(targetSelector)
+            .evaluateAll((nodes) =>
+              nodes.map((e) => ({
+                text: e.textContent,
+                width: e.getBoundingClientRect().width,
+                height: e.getBoundingClientRect().height,
+              })),
+            )
+        : [];
+      if (targetSelector) assert(standaloneTargets.length > 0);
+      for (const target of standaloneTargets)
+        assert(
+          target.width >= 44 && target.height >= 44,
+          `${name}: standalone ${target.text} must be at least 44px`,
+        );
+      const buttonContrast = primaryButtons.map((button) => ({
+        ...button,
+        ratio: ratio(parseRGB(button.color), parseRGB(button.background)),
+      }));
+      for (const button of buttonContrast) {
+        assert.equal(
+          button.image,
+          "none",
+          "CTA background requires explicit contrast review",
+        );
+        assert.equal(button.opacity, "1");
+        assert.deepEqual(
+          button.composition,
+          [],
+          "Unexpected CTA compositing requires manual review",
+        );
+        assert(
+          button.ratio >= 4.5,
+          `${name}: ${button.text} contrast ${button.ratio}`,
+        );
+      }
+      if (name.startsWith("room-") || name === "home")
+        assert.equal(
+          smallTargets.length,
+          0,
+          `${name}: standalone controls must have usable minimum targets`,
+        );
       // Target geometry is reported, not falsely equated to WCAG spacing/exemption failures.
       report.cases.push({
         name,
         width,
         overflow,
         smallTargets,
+        buttonContrast,
+        standaloneTargets,
         violations: audit.violations,
         incomplete: audit.incomplete,
       });

@@ -173,7 +173,11 @@ export default function CommunityStories({
           |
         </span>
       ) : null}
-      <div className="community-stories" aria-label="Recent community posts">
+      <div
+        className="community-stories"
+        role="region"
+        aria-label="Recent community posts"
+      >
         {unread.map((member) => (
           <button
             type="button"

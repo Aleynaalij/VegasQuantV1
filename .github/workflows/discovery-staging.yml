@@ -109,6 +109,7 @@ jobs:
             EXPECT_CONSUMER_UI="$enabled" node scripts/ui-smoke/consumer-routes.mjs
             if [ "$enabled" = true ]; then
               CONSUMER_AUDIT_OUTPUT=artifacts/discovery-staging/consumer-mobile node scripts/ui-smoke/consumer-mobile-a11y.mjs
+              CONSUMER_AUDIT_OUTPUT=artifacts/discovery-staging/consumer-zone-signed-in node scripts/ui-smoke/consumer-zone-signed-in.mjs
             fi
             kill "$server"
             wait "$server" || true

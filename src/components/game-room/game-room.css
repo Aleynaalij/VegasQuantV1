@@ -158,3 +158,11 @@
     align-items: center;
   }
 }
+
+/* Standalone source/publication links are controls, not cramped inline footnotes. */
+.gr a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+}
