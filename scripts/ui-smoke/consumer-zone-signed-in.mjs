@@ -22,6 +22,8 @@ const report = {
   cases: [],
   failures: [],
   blockedRequests: [],
+  diagnostics: [],
+  browserErrors: [],
 };
 const uid = "00000000-0000-4000-8000-000000000001";
 const postId = "00000000-0000-4000-8000-000000000002";
@@ -64,7 +66,7 @@ const session = {
 const version = (
   await fs.readFile("src/components/app-refresh-notice.tsx", "utf8")
 ).match(/const VERSION = "([^"]+)"/)[1];
-let browser;
+let browser, activePage, activeWidth;
 try {
   browser = await chromium.launch(
     process.env.PLAYWRIGHT_EXECUTABLE
@@ -176,6 +178,35 @@ try {
       return route.abort();
     });
     const page = await context.newPage();
+    activePage = page;
+    activeWidth = width;
+    page.on("pageerror", (error) =>
+      report.browserErrors.push({ width, error: error.message }),
+    );
+    page.on("console", (message) => {
+      if (message.type() === "error")
+        report.browserErrors.push({ width, error: message.text() });
+    });
+    const diagnostic = async (stage) => {
+      report.diagnostics.push({
+        stage,
+        width,
+        ...(await page.evaluate(() => ({
+          url: location.href,
+          inputs: [...document.querySelectorAll('input[type="search"]')].map(
+            (e) => ({ value: e.value, outerHTML: e.outerHTML }),
+          ),
+          status: [
+            ...document.querySelectorAll('.zone2-scope,[role="status"]'),
+          ].map((e) => e.textContent),
+          posts: [...document.querySelectorAll(".zone-post")].map((e) => ({
+            id: e.id,
+            title: e.querySelector("h2")?.textContent,
+          })),
+          events: window.__zoneTestEvents || [],
+        }))),
+      });
+    };
     const audit = async (state) => {
       await page.addScriptTag({ path: axePath });
       const axe = await page.evaluate(async () =>
@@ -232,8 +263,41 @@ try {
     const search = page.getByRole("searchbox", {
       name: "Search loaded content",
     });
+    await diagnostic("before-search");
+    assert.equal(
+      new URL(page.url()).searchParams.get("post"),
+      null,
+      "Search audit must not be in the intentional deep-link filter bypass",
+    );
+    assert.equal(new URL(page.url()).searchParams.get("ruby"), null);
+    assert.equal(await search.count(), 1);
+    await page.evaluate(() => {
+      window.__zoneTestEvents = [];
+      for (const name of ["input", "change"])
+        document.addEventListener(
+          name,
+          (e) => {
+            if (
+              e.target instanceof HTMLInputElement &&
+              e.target.type === "search"
+            )
+              window.__zoneTestEvents.push({
+                type: e.type,
+                value: e.target.value,
+                trusted: e.isTrusted,
+              });
+          },
+          true,
+        );
+    });
     await search.fill("NO SUCH SYNTHETIC PUBLICATION");
-    await item.waitFor({ state: "hidden" });
+    await diagnostic("after-search-fill");
+    try {
+      await item.waitFor({ state: "hidden" });
+    } catch (error) {
+      await diagnostic("search-timeout");
+      throw error;
+    }
     await search.fill("");
     await item.waitFor();
     await audit("compact-signed-in");
@@ -272,6 +336,17 @@ try {
   }
 } catch (error) {
   report.failures.push(error.stack || String(error));
+  if (activePage && !activePage.isClosed()) {
+    await activePage
+      .screenshot({ path: `${out}/failure-${activeWidth}.png`, fullPage: true })
+      .catch(() => {});
+    await fs
+      .writeFile(
+        `${out}/failure-${activeWidth}.html`,
+        await activePage.content(),
+      )
+      .catch(() => {});
+  }
 } finally {
   await browser?.close();
   await fs.writeFile(`${out}/report.json`, JSON.stringify(report, null, 2));
