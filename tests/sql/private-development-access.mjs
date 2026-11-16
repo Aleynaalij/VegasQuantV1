@@ -8,7 +8,7 @@ const member = "22222222-2222-4222-8222-222222222222";
 const ownerSession = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
 const memberSession = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
 
-test("private development requires a current MFA session for an allowlisted identity", async () => {
+test("private development composes with existing grants and restores access on rollback", async () => {
   const db = await PGlite.create();
   try {
     await db.exec(`
@@ -38,6 +38,11 @@ test("private development requires a current MFA session for an allowlisted iden
     `);
     await db.exec(await readFile(new URL("./fixtures/private-development-access.sql", import.meta.url), "utf8"));
     await db.exec(`
+      insert into public.fixture_memberships values ('${member}');
+      insert into storage.fixture_objects values
+        ('${owner}', 'owner.png'), ('${member}', 'member.png');
+      insert into public.fixture_events values
+        ('${owner}', 'owner event'), ('${member}', 'member event');
       create policy private_development on public.fixture_records as restrictive for all
         to anon, authenticated using ((select private.private_development_allowed()))
         with check ((select private.private_development_allowed()));
@@ -55,6 +60,26 @@ test("private development requires a current MFA session for an allowlisted iden
     const read = (role, claims = {}) => as(role, claims, "select * from public.fixture_records");
     const access = (role, claims) => as(role, claims, "select private.private_development_allowed() as allowed");
 
+    const authenticated = (claims, query, args) => as("authenticated", claims, query, args);
+    const researchPaths = [
+      "select body from public.fixture_research",
+      "select public.fixture_research_invoker() as body",
+      "select public.fixture_research_definer() as body",
+    ];
+    async function assertResearch(claims, expected) {
+      for (const query of researchPaths) {
+        assert.deepEqual(await authenticated(claims, query), expected, query);
+      }
+    }
+    const researchRows = [{ body: "protected research" }];
+    const objects = (claims) => authenticated(claims, "select name from storage.fixture_objects order by name");
+    const events = (claims) => authenticated(claims, "select event from public.fixture_events order by event");
+
+    await assertResearch(memberClaims, researchRows);
+    await assertResearch(ownerClaims, []);
+    assert.deepEqual(await objects(memberClaims), [{ name: "member.png" }]);
+    assert.deepEqual(await events(memberClaims), [{ event: "member event" }]);
+    await assert.rejects(as("anon", {}, "select public.fixture_research_definer()"), /permission denied/);
     assert.equal((await read("anon")).length, 1);
     assert.equal((await read("authenticated", memberClaims)).length, 1);
     await assert.rejects(as("authenticated", ownerClaims, "insert into public.fixture_records values (2)"), /row-level security/);
@@ -74,6 +99,27 @@ test("private development requires a current MFA session for an allowlisted iden
     assert.equal((await read("authenticated", { ...ownerClaims, session_id: "not-a-uuid" })).length, 0);
     assert.equal((await read("authenticated", { sub: owner, aal: "aal2" })).length, 0);
     assert.equal((await read("service_role")).length, 1);
+    await assertResearch(memberClaims, []);
+    await assertResearch(ownerClaims, []);
+    await db.query("insert into public.fixture_memberships values ($1)", [owner]);
+    await assertResearch(ownerClaims, researchRows);
+    await assertResearch({ ...ownerClaims, aal: "aal1" }, []);
+
+    assert.deepEqual(await objects(ownerClaims), [{ name: "owner.png" }]);
+    assert.deepEqual(await objects(memberClaims), []);
+    await assert.rejects(authenticated(memberClaims,
+      "insert into storage.fixture_objects values ($1, 'denied.png')", [member]), /row-level security/);
+    await assert.rejects(authenticated(ownerClaims,
+      "insert into storage.fixture_objects values ($1, 'cross-owner.png')", [member]), /row-level security/);
+    await authenticated(ownerClaims,
+      "insert into storage.fixture_objects values ($1, 'owner-new.png')", [owner]);
+
+    assert.deepEqual(await events(ownerClaims), [{ event: "owner event" }]);
+    assert.deepEqual(await events(memberClaims), []);
+    await as("service_role", {}, "insert into public.fixture_events values ($1, 'worker event')", [member]);
+    assert.deepEqual(await events(memberClaims), []);
+    await assert.rejects(authenticated(ownerClaims,
+      "insert into public.fixture_events values ($1, 'spoofed event')", [owner]), /permission denied/);
     await assert.rejects(as("authenticated", ownerClaims, "insert into public.fixture_records values (2)"), /row-level security/);
     await db.query("update auth.sessions set aal = 'aal1' where id = $1", [ownerSession]);
     assert.deepEqual(await access("authenticated", ownerClaims), [{ allowed: false }]);
@@ -95,11 +141,18 @@ test("private development requires a current MFA session for an allowlisted iden
     await db.query("update auth.users set banned_until = null where id = $1", [owner]);
     await db.query("delete from auth.sessions where id = $1", [ownerSession]);
     assert.deepEqual(await access("authenticated", ownerClaims), [{ allowed: false }]);
+    await assertResearch(ownerClaims, []);
+    assert.deepEqual(await objects(ownerClaims), []);
+    assert.deepEqual(await events(ownerClaims), []);
     await db.exec("delete from private.private_development_settings");
     assert.equal((await read("anon")).length, 0);
     await db.exec("insert into private.private_development_settings(enabled) values (false)");
     assert.equal((await read("anon")).length, 1);
     assert.equal((await read("authenticated", memberClaims)).length, 1);
+    await assertResearch(memberClaims, researchRows);
+    assert.deepEqual(await objects(memberClaims), [{ name: "member.png" }]);
+    assert.deepEqual(await events(memberClaims), [{ event: "member event" }, { event: "worker event" }]);
+    assert.deepEqual(await objects(ownerClaims), [{ name: "owner-new.png" }, { name: "owner.png" }]);
   } finally {
     await db.close();
   }
