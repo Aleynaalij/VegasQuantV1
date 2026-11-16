@@ -7,6 +7,9 @@ on:
       - 'src/app/api/operations/**'
       - 'src/components/operations-support.tsx'
       - 'src/lib/operations-support.ts'
+      - 'src/lib/autopilot-tasks.ts'
+      - 'src/components/autopilot-task-queue.tsx'
+      - 'tests/autopilot-tasks.test.ts'
       - 'src/components/nba-publication-intelligence.tsx'
       - 'src/lib/nba-publication-intelligence*.ts'
       - 'tests/nba-publication-intelligence.test.ts'
@@ -31,7 +34,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node --import tsx --test tests/operations-support.test.ts tests/nba-publication-monitor.test.ts tests/nba-publication-intelligence.test.ts
+      - run: node --import tsx --test tests/operations-support.test.ts tests/nba-publication-monitor.test.ts tests/nba-publication-intelligence.test.ts tests/autopilot-tasks.test.ts
       - run: npm run build
         env:
           NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321

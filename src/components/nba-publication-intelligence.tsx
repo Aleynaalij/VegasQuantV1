@@ -97,7 +97,14 @@ export function NbaPublicationIntelligence({ data }: { data: Preview }) {
               {report.incidents.map((incident) => {
                 const reviewKey = `${key}:${incident.id}:${report.checkedAt}`;
                 return (
-                  <details key={incident.id}>
+                  <details
+                    key={incident.id}
+                    id={
+                      report.source === "fixture"
+                        ? `publication-incident-${incident.id}`
+                        : undefined
+                    }
+                  >
                     <summary>
                       {incident.classification.replaceAll("_", " ")} ·{" "}
                       {incident.severity} severity
