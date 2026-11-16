@@ -1,9 +1,25 @@
 name: Discovery isolated staging acceptance
 on:
   push:
-    branches: [elo/home-zone-phase1-staging]
+    branches: [elo/home-zone-phase1-staging, elo/consumer-integration]
   pull_request:
     paths:
+      - "src/components/home2/**"
+      - "src/components/zone2/**"
+      - "src/components/game-room/**"
+      - "src/components/consumer/**"
+      - "src/components/community-feed.tsx"
+      - "src/lib/consumer-experience.ts"
+      - "src/lib/home2.ts"
+      - "src/lib/zone2.ts"
+      - "src/lib/game-room.ts"
+      - "src/app/page.tsx"
+      - "src/app/community/page.tsx"
+      - "tests/consumer*.test.ts"
+      - "tests/home2*.test.ts"
+      - "tests/zone2*.test.ts"
+      - "tests/game-room*.test.ts"
+      - "scripts/ui-smoke/consumer-*.mjs"
       - "src/**/discovery/**"
       - "src/app/staging/discovery/**"
       - "tests/discovery*.test.ts"
@@ -80,6 +96,19 @@ jobs:
           trap 'kill "$server" 2>/dev/null || true' EXIT
           for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3198/staging/discovery && break; sleep 2; done
           node scripts/ui-smoke/discovery-lifecycle.mjs
+      - name: Verify consumer candidate activation and legacy rollback
+        run: |
+          set -euo pipefail
+          for enabled in true false; do
+            CONSUMER_UI_ENABLED="$enabled" node node_modules/next/dist/bin/next start --hostname 127.0.0.1 -p 3201 >/tmp/consumer-server.log 2>&1 &
+            server=$!
+            trap 'kill "$server" 2>/dev/null || true' EXIT
+            for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3201/research && break; sleep 2; done
+            EXPECT_CONSUMER_UI="$enabled" node scripts/ui-smoke/consumer-routes.mjs
+            kill "$server"
+            wait "$server" || true
+            trap - EXIT
+          done
       - name: Preserve synthetic audit and screenshots
         if: always()
         uses: actions/upload-artifact@v4
