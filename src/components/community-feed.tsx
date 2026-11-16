@@ -1631,7 +1631,9 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
                 My lays · saved and in progress →
               </Link>
             </p>
-            <div className="zone-tabs" role="tablist" aria-label="Feed">
+            {/* Zone2 uses native toggle filters, not a tab widget: refresh is
+                an independent action and every filter remains keyboard reachable. */}
+            <div className="zone-tabs" role={zone2 ? "group" : "tablist"} aria-label="Feed">
               {(
                 [
                   [zone2 ? "Community" : "For you", !followingOnly && !dealerOnly, "all"],
@@ -1641,8 +1643,9 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
               ).map(([label, on, view]) => (
                 <button
                   key={label}
-                  role="tab"
-                  aria-selected={on}
+                  role={zone2 ? undefined : "tab"}
+                  aria-selected={zone2 ? undefined : on}
+                  aria-pressed={zone2 ? on : undefined}
                   className={on ? "is-active" : ""}
                   onClick={() => {
                     if (zone2 && view !== "dealer") setResearchOnly(false);
@@ -1685,7 +1688,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
               </button>
             </div>
             {liveSports().length > 1 ? (
-              <div className="zone-sports" aria-label="Sport">
+              <div className="zone-sports" role="group" aria-label="Sport">
                 {(["all", ...liveSports()] as const).map((key) => (
                   <button
                     key={key}

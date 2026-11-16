@@ -296,6 +296,18 @@ try {
       0,
       "Search must not run behind a focus-trapping modal",
     );
+    // Feed choices are native toggle filters, not tabs containing an action.
+    const feedFilters = page.getByRole("group", { name: "Feed", exact: true });
+    assert.equal(await feedFilters.getByRole("button").count(), 4);
+    assert.equal(await feedFilters.locator('[aria-pressed="true"]').count(), 1);
+    await feedFilters.locator("button.zone-refresh:not(:disabled)").waitFor();
+    await feedFilters.getByRole("button", { name: "Community", exact: true }).focus();
+    for (const [index, name] of ["Community", "Following", "Dealer only", "Refresh"].entries()) {
+      const control = feedFilters.getByRole("button", { name, exact: true });
+      if (index > 0) await page.keyboard.press("Tab");
+      assert(await control.evaluate((el) => el === document.activeElement));
+    }
+    assert.equal(await page.getByRole("group", { name: "Sport", exact: true }).count(), 1);
     await diagnostic("before-search");
     assert.equal(
       new URL(page.url()).searchParams.get("post"),

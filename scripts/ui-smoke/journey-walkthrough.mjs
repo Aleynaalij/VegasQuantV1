@@ -112,7 +112,36 @@ async function inventory(page) {
 async function step(log, page, name, note) {
   await page.waitForTimeout(400);
   const file = `${log.id}-${String(log.steps.length + 1).padStart(2, "0")}-${name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`;
-  await page.screenshot({ path: path.join(OUT, file), fullPage: false });
+  try {
+    await page.screenshot({ path: path.join(OUT, file), fullPage: false });
+  } catch (error) {
+    // Preserve Playwright's call log: the first line alone cannot distinguish a
+    // font-readiness wait from a browser capture failure. Diagnostics never
+    // retry or turn a failed capture into a passing journey.
+    let timer;
+    const state = await Promise.race([
+      page.evaluate(() => ({
+        readyState: document.readyState,
+        fontsStatus: document.fonts.status,
+        fonts: [...document.fonts].map((font) => ({
+          family: font.family, status: font.status,
+        })).slice(0, 30),
+        pendingImages: [...document.images].filter((image) => !image.complete).length,
+        animations: document.getAnimations().map((animation) => ({
+          playState: animation.playState, pending: animation.pending,
+        })).slice(0, 30),
+        viewport: { width: innerWidth, height: innerHeight },
+      })).catch((diagnosticError) => ({ error: String(diagnosticError) })),
+      new Promise((resolve) => {
+        timer = setTimeout(() => resolve({ error: "Capture diagnostics timed out after 1000ms" }), 1000);
+      }),
+    ]);
+    clearTimeout(timer);
+    (log.captureFailures ??= []).push({
+      step: name, file, url: page.url(), error: String(error), state,
+    });
+    throw error;
+  }
   const inv = await inventory(page);
   log.steps.push({ name, note, screenshot: file, ...inv });
   if (inv.overflowX) log.findings.push(`Sideways scroll at step "${name}" (${inv.url}).`);

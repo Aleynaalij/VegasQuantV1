@@ -94,3 +94,12 @@ test("Zone stories mount only once through the existing Shell", () => {
   assert.doesNotMatch(feed, /<CommunityStories/);
   assert.match(shell, /<CommunityStories/);
 });
+
+test("Zone2 exposes feed filters as native grouped toggles and keeps refresh an action", () => {
+  const source = readFileSync("src/components/community-feed.tsx", "utf8");
+  assert.match(source, /role=\{zone2 \? "group" : "tablist"\}/);
+  assert.match(source, /role=\{zone2 \? undefined : "tab"\}/);
+  assert.match(source, /aria-selected=\{zone2 \? undefined : on\}/);
+  assert.match(source, /aria-pressed=\{zone2 \? on : undefined\}/);
+  assert.match(source, /className="zone-sports" role="group" aria-label="Sport"/);
+});
