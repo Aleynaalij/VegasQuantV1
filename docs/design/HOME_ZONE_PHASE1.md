@@ -137,3 +137,21 @@ a hosted Vercel rollback or full original-feature regression. A separate enabled
 runtime then exercises browser lifecycle. The muted text token is conservatively
 brightened against the gradient's brightest background; automated gradient
 incompletes remain disclosed pending per-element verification.
+
+### Rollback recovery checkpoint (2026-11-16)
+
+The narrow proxy rollback guard was reconstructed from published head
+`12ea0cacbe09eca1d16aa26e24344a315fb74a1a` after the earlier local-only patch
+was unavailable. It is not represented as the original local commit. It denies
+only the exact staging discovery route and slash descendants when the existing
+staging gate is false. Enabled staging continues through unchanged page checks;
+the existing game redirect remains root-only. This is not centralized owner
+access control or production authorization parity.
+
+Codex's #294 read-back (issue comment 6914228463) found no published conflicting
+proxy change and proposed reviewing this isolated draft first. The #294
+implementation owner remains unconfirmed, and unpublished Claude work has not
+been ruled out. Compare exact branches before future combined integration.
+Independent code review found no actionable defects and passed 7 focused tests.
+Hosted authenticated frontend acceptance and exact-head CI remain separate gates;
+no production merge, deployment, permission or publishing change is authorized.
