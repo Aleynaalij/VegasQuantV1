@@ -87,28 +87,12 @@ export default function NbaGamePropCard({
           .order("game_id")
           .limit(120);
         if (rows.error) throw rows.error;
-        const recorded = (rows.data || []) as unknown as Joined[];
-        if (recorded.length === 120)
+        // Every recorded game counts, including ones ESPN later revised (status CONFLICT): those
+        // revisions are almost all one-stat corrections, and dropping the games would cost about
+        // a fifth of each player's sample (owner decision, Nov 17).
+        const list = (rows.data || []) as unknown as Joined[];
+        if (list.length === 120)
           throw new Error("History exceeded safe window");
-        // Confirmed results only, as in recorded form: a result later marked CONFLICT keeps its
-        // immutable rows but must not count.
-        const progress = recorded.length
-          ? await supabase
-              .from("nba_result_progress")
-              .select("game_id,status")
-              .in(
-                "game_id",
-                recorded.map((r) => r.game_id),
-              )
-              .limit(200)
-          : { data: [], error: null };
-        if (progress.error) throw progress.error;
-        const confirmed = new Set(
-          (progress.data || [])
-            .filter((p) => p.status === "FINAL")
-            .map((p) => p.game_id),
-        );
-        const list = recorded.filter((r) => confirmed.has(r.game_id));
         const ids = new Set(list.map((r) => String(r.athlete_id)));
         if (ids.size > 1) throw new Error("Ambiguous player identity");
         if (!ids.size) throw new Error("No recorded games");
