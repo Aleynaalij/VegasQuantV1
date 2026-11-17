@@ -1,10 +1,14 @@
 /** Server-only release gate. A URL/query/cookie cannot enable this candidate. */
+import { privateAccessConfig } from "../private-access-stage-config";
+
 export function discoveryStagingEnabled(
   env: Record<string, string | undefined>,
 ) {
   if (
     env.VERCEL_ENV === "production" ||
     env.STAGING_DISCOVERY_ENABLED !== "true" ||
+    (env.VERCEL === "1" &&
+      (env.VQ_STAGE_BUILD_PROFILE !== "combined" || !privateAccessConfig(env))) ||
     !env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim()
   )
     return false;

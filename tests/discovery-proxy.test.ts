@@ -9,7 +9,7 @@ const keys = [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
 ];
-test("staging proxy denies only staging routes and preserves the root redirect", () => {
+test("standard proxy denies only staging routes and preserves the root redirect", async () => {
   const saved = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
   const check = (path: string) =>
     proxy(new NextRequest(`https://example.test${path}`));
@@ -26,15 +26,15 @@ test("staging proxy denies only staging routes and preserves the root redirect",
       "/staging/discovery/",
       "/staging/discovery/access-denied?game=abc",
     ])
-      assert.equal(check(route).status, 404);
+      assert.equal((await check(route)).status, 404);
     for (const route of [
       "/",
       "/research?game=abc",
       "/community",
       "/staging/discovery-other?game=abc",
     ])
-      assert.equal(check(route).status, 200);
-    const redirect = check("/?game=abc&sport=nfl");
+      assert.equal((await check(route)).status, 200);
+    const redirect = await check("/?game=abc&sport=nfl");
     assert.equal(redirect.status, 308);
     assert.equal(
       redirect.headers.get("location"),
@@ -45,10 +45,10 @@ test("staging proxy denies only staging routes and preserves the root redirect",
       "/staging/discovery?game=abc",
       "/staging/discovery/access-denied",
     ])
-      assert.equal(check(route).headers.get("x-middleware-next"), "1");
+      assert.equal((await check(route)).headers.get("x-middleware-next"), "1");
     process.env.VERCEL_ENV = "production";
-    assert.equal(check("/staging/discovery").status, 404);
-    assert.deepEqual(config.matcher, ["/", "/staging/discovery/:path*"]);
+    assert.equal((await check("/staging/discovery")).status, 404);
+    assert.deepEqual(config.matcher, ["/((?!_next/static/).*)"]);
   } finally {
     for (const key of keys) {
       if (saved[key] === undefined) delete process.env[key];

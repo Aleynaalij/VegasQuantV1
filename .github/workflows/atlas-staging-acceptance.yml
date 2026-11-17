@@ -1,0 +1,29 @@
+name: ATLAS isolated staging acceptance
+on:
+  push:
+    branches: [codex/atlas-combined-stage]
+  pull_request:
+    branches: [elo/consumer-integration]
+
+permissions:
+  contents: read
+
+jobs:
+  staging:
+    if: github.event_name == 'push' || github.head_ref == 'codex/atlas-combined-stage'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: git rev-parse HEAD
+      - run: node --import tsx --test tests/private-access-stage.test.ts tests/discovery-proxy.test.ts tests/consumer-integration.test.ts
+      - run: node --test tests/sql/private-development-access.mjs
+      - run: bash scripts/ui-smoke/atlas-staging-modes.sh
