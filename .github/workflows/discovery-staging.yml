@@ -1,7 +1,7 @@
 name: Discovery isolated staging acceptance
 on:
   push:
-    branches: [elo/home-zone-phase1-staging, elo/consumer-integration]
+    branches: [elo/home-zone-phase1-staging, elo/consumer-integration, codex/atlas-combined-stage]
   pull_request:
     paths:
       - "src/components/home2/**"
@@ -41,6 +41,7 @@ jobs:
       STAGING_DISCOVERY_ENABLED: "true"
       STAGING_DISCOVERY_FIXTURES: "true"
       VERCEL_ENV: preview
+      VQ_STAGE_BUILD_PROFILE: consumer-fixture
       DISCOVERY_A11Y_OUTPUT: artifacts/discovery-staging
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683

@@ -1,5 +1,11 @@
 {
   "framework": "nextjs",
+  "git": {
+    "deploymentEnabled": {
+      "codex/private-development-transition": false,
+      "codex/atlas-combined-stage": false
+    }
+  },
   "headers": [
     {
       "source": "/(.*)",
