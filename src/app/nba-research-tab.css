@@ -142,3 +142,238 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Prop rows open a game-log card (nba-prop-card.tsx). */
+.nbar-list li:has(> .nbar-row) {
+  display: block;
+  padding: 0;
+}
+.nbar-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 10px;
+  align-items: center;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 14px;
+}
+.nbar-row:focus-visible {
+  outline: 2px solid #f4dc99;
+  outline-offset: -2px;
+}
+.nbar-more {
+  margin-left: 8px;
+  color: #f4dc99;
+  font-weight: 700;
+}
+.npc {
+  display: grid;
+  gap: 12px;
+  padding: 4px 14px 14px;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+}
+.npc-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 10px;
+}
+.npc-head > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.npc-head small,
+.npc-filters small {
+  color: var(--muted);
+  font-size: 12px;
+}
+.npc-rate {
+  text-align: right;
+}
+.npc-rate b {
+  font-size: 26px;
+  line-height: 1;
+  color: #8ce3bd;
+}
+.npc-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.npc-filters [role="group"] {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.npc-filters [role="group"] > span {
+  padding: 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.npc-filters button {
+  min-width: 36px;
+  min-height: 32px;
+  padding: 0 9px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.npc-filters button[aria-pressed="true"] {
+  background: #f4dc9922;
+  color: #f4dc99;
+}
+.npc-chart,
+.npc-labels,
+.npc-minutes > div {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+.npc-chart {
+  position: relative;
+  align-items: end;
+  height: 140px;
+  margin-top: 14px;
+}
+.npc-bar {
+  position: relative;
+  border-radius: 5px 5px 2px 2px;
+}
+.npc-over {
+  background: #3ddc97;
+}
+.npc-under {
+  background: #ff6b6b;
+}
+.npc-bar em {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  padding-bottom: 2px;
+  text-align: center;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text);
+}
+.npc-labels {
+  margin-top: -6px;
+}
+.npc-labels small {
+  text-align: center;
+  font-size: 9.5px;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--muted);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+.npc-mark {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: 1px dashed var(--text);
+  opacity: 0.7;
+  pointer-events: none;
+  z-index: 1;
+}
+.npc-mark i {
+  position: absolute;
+  right: 0;
+  bottom: 2px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: var(--panel);
+  font-style: normal;
+  font-size: 10px;
+}
+.npc-minutes p {
+  display: flex;
+  justify-content: space-between;
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.npc-minutes p span {
+  color: var(--muted);
+  font-weight: 400;
+}
+.npc-minutes > div {
+  height: 46px;
+}
+.npc-minutes > div > span {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+}
+.npc-minutes i {
+  width: 100%;
+  background: var(--line);
+  border-radius: 3px 3px 1px 1px;
+}
+.npc-minutes em {
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-style: normal;
+  font-size: 10px;
+  color: var(--text);
+}
+.npc-strip {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.nbar-list .npc-strip li {
+  display: grid;
+  grid-template-columns: none;
+  border: 0;
+  justify-items: center;
+  gap: 1px;
+  padding: 7px 4px;
+  border-radius: 10px;
+  background: var(--panel2, var(--panel));
+}
+.npc-strip small {
+  color: var(--muted);
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.npc-strip b {
+  font-size: 16px;
+}
+.npc-hot {
+  color: #3ddc97;
+}
+.npc-cold {
+  color: #ff8a8a;
+}

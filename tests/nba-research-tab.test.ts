@@ -304,3 +304,47 @@ test("3-point leaders average only games with recorded attempts", () => {
     ["Efficient Wing", "Volume Guard"],
   );
 });
+
+test("Prop card: per-game rows carry opponent, venue and rest; filters and hit rates follow them", async () => {
+  const { propGames, filterPropGames, hitRate, restDays } = await import(
+    "../src/lib/nba-research-tab"
+  );
+  const [kat] = seasonLines([
+    row(1, 19, 12, 1, { home: true, opponent_abbr: "BOS" }),
+    row(2, 30, 9, 3, { home: false, opponent_abbr: "MIA" }), // back-to-back
+    row(5, 10, 11, 2, { home: true, opponent_abbr: "ORL" }), // two days off
+    row(6, 25, 7, 4, { home: false, opponent_abbr: "CHI" }),
+  ]);
+  const games = propGames(kat, "player_points", 18.5);
+  assert.deepEqual(
+    games.map((g) => [g.opp, g.home, g.value, g.rest, g.over]),
+    [
+      ["CHI", false, 25, 0, true],
+      ["ORL", true, 10, 2, false],
+      ["MIA", false, 30, 0, true],
+      ["BOS", true, 19, null, true],
+    ],
+  );
+  assert.deepEqual(hitRate(games, 2), { hits: 1, n: 2, pct: 50 });
+  assert.deepEqual(hitRate(games), { hits: 3, n: 4, pct: 75 });
+  assert.equal(hitRate([], 5), null);
+  assert.deepEqual(
+    filterPropGames(games, "home", "any").map((g) => g.opp),
+    ["ORL", "BOS"],
+  );
+  assert.deepEqual(
+    filterPropGames(games, "all", 0).map((g) => g.opp),
+    ["CHI", "MIA"],
+  );
+  assert.deepEqual(
+    filterPropGames(games, "all", 2).map((g) => g.opp),
+    ["ORL"],
+  );
+  // Rebounds use the rebound column; rest is counted in Eastern days, so a late tip is the same day.
+  assert.deepEqual(
+    propGames(kat, "player_rebounds", 9.5).map((g) => g.over),
+    [false, true, false, true],
+  );
+  assert.equal(restDays("2026-11-16T03:30:00Z", "2026-11-17T00:00:00Z"), 0);
+  assert.equal(restDays(undefined, "2026-11-17T00:00:00Z"), null);
+});
