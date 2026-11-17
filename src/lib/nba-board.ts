@@ -222,3 +222,36 @@ export function nbaComparisons(
       (a.point || 0) - (b.point || 0),
   );
 }
+
+/**
+ * Over and Under prices for one player prop line from a single book: FanDuel when it quotes both
+ * sides, otherwise the first book that does (in the order the Over lists them). Null when no book
+ * quotes both.
+ */
+export function nbaPropPair(
+  comparisons: NbaComparison[],
+  market: string,
+  player: string,
+  point: number,
+): { book: string; over: number; under: number } | null {
+  const side = (name: string) =>
+    comparisons.find(
+      (c) =>
+        c.market === market &&
+        c.player === player &&
+        c.point === point &&
+        c.side === name,
+    );
+  const over = side("Over"),
+    under = side("Under");
+  if (!over || !under) return null;
+  const books = [
+    ...over.quotes.filter((q) => q.book === "FanDuel"),
+    ...over.quotes.filter((q) => q.book !== "FanDuel"),
+  ];
+  for (const q of books) {
+    const u = under.quotes.find((x) => x.book === q.book);
+    if (u) return { book: q.book, over: q.price, under: u.price };
+  }
+  return null;
+}

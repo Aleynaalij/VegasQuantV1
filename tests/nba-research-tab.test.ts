@@ -442,3 +442,49 @@ test("Prop card model: projected minutes, matchup rank and our estimate", async 
   assert.equal(propEstimate(flat.slice(0, 4), "player_points", 15.5, 31), null);
   assert.equal(propEstimate(flat, "player_points", 15.5, null), null);
 });
+
+test("Game research rows: opponent, venue and usage come from each row's own game", async () => {
+  const { boxRowsFromGames } = await import("../src/lib/nba-research-tab");
+  const base = {
+    athlete_id: 7,
+    player: "Jalen Brunson",
+    team: "New York Knicks",
+    played: true,
+    minutes: 35,
+    points: 30,
+    rebounds: 3,
+    assists: 7,
+    threes: 4,
+    position: "G",
+  };
+  const rows = boxRowsFromGames(
+    [
+      {
+        ...base,
+        game_id: "g1",
+        tipoff: "2026-11-10T00:00:00Z",
+        away_team: "Boston Celtics",
+        home_team: "New York Knicks",
+        away_abbreviation: "BOS",
+        home_abbreviation: "NY",
+      },
+      {
+        ...base,
+        game_id: "g2",
+        tipoff: "2026-11-12T00:00:00Z",
+        away_team: "New York Knicks",
+        home_team: "Miami Heat",
+        away_abbreviation: "NY",
+        home_abbreviation: "MIA",
+      },
+    ],
+    new Map([["g2:7", 31.4]]),
+  );
+  assert.deepEqual(
+    rows.map((r) => [r.athlete_id, r.home, r.opponent_abbr, r.usage]),
+    [
+      ["7", true, "BOS", null],
+      ["7", false, "MIA", 31.4],
+    ],
+  );
+});
