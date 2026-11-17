@@ -36,7 +36,13 @@ globalThis.fetch = (input, options) => {
     }));
     if (rpc === "sports_slate") { const sport = JSON.parse(options?.body ?? "{}").p_sport;
       return Promise.resolve(Response.json({version: 1, sport, access: true, games: [], facts: [], markets: [], selections: []})); }
-    if (["games", "nba_games"].includes(rpc)) return Promise.resolve(Response.json([]));
+    if (rpc === "games" || rpc === "nba_observations") return Promise.resolve(Response.json([]));
+    if (rpc === "nba_games") {
+      const day = new Intl.DateTimeFormat("en-CA", {timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit"}).format(new Date());
+      return Promise.resolve(Response.json([{id: "11111111-1111-4111-8111-111111111111", slug: "atlas-synthetic-nba",
+        away_team: "Atlas Away", home_team: "Atlas Home", tipoff: day + "T23:59:00Z", tipoff_tbd: false, status: "SCHEDULED",
+        venue: "Synthetic validation", source: "https://example.com/synthetic-schedule"}]));
+    }
   }
   return Promise.reject(new Error("External fetch disabled in the staging acceptance test"));
 };
@@ -129,6 +135,14 @@ for path in /api/checkout /api/stripe/webhook /api/notifications/dispatch /api/n
 done
 expect 405 /community --cookie "$owner" -X POST
 stop
+if [[ "${ATLAS_BROWSER_ACCEPTANCE:-0}" == "1" ]]; then
+  export STAGING_DISCOVERY_FIXTURES=false VQ_STAGE_RESEARCH_CONTRACT=vq-stage-session-v1
+  serve
+  node scripts/ui-smoke/atlas-connected-home.mjs
+  stop
+  export STAGING_DISCOVERY_FIXTURES=true
+  unset VQ_STAGE_RESEARCH_CONTRACT
+fi
 
 export STAGING_DISCOVERY_ENABLED=false
 serve

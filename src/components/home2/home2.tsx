@@ -13,7 +13,12 @@ import { startLabel, statusLabel, type TonightGame } from "@/lib/vq-tonight";
 import { supabase } from "@/lib/supabase";
 import { watchDiscoveryAccess } from "@/lib/discovery/revalidate";
 import { compactText, findingHref } from "@/lib/discovery/model";
-import { homeResearch, HOME_TOOLS, homeTimestamp } from "@/lib/home2";
+import {
+  homeResearch,
+  HOME_TOOLS,
+  homeTimestamp,
+  stageHomeGames,
+} from "@/lib/home2";
 import SectionBoundary from "@/components/section-boundary";
 import CommunityStories from "@/components/community-stories";
 import HomeDealer from "./home-dealer";
@@ -33,10 +38,14 @@ export default function Home2({
   gameHref,
 }: Home2Props) {
   const router = useRouter();
-  const { day, rows, loads, load } = useTonightSchedules(
-    nflGames,
-    nflUnavailable,
-  );
+  const combined = process.env.VQ_COMBINED_STAGE_BUILD === "1";
+  const {
+    now,
+    day,
+    rows: ordinaryRows,
+    loads,
+    load,
+  } = useTonightSchedules(nflGames, nflUnavailable, !combined);
   const [sport, setSport] = useState<Sport | "all">("all");
   const [query, setQuery] = useState("");
   const [data, setData] = useState<HubData | null>(null);
@@ -77,6 +86,12 @@ export default function Home2({
       stop();
     };
   }, [attempt]);
+  const rows = combined ? stageHomeGames(data, now) : ordinaryRows;
+  const stageUnavailable =
+    failed || (!!data && (!data.signedIn || data.denied));
+  const nflScheduleUnavailable = combined
+    ? stageUnavailable
+    : nflUnavailable;
   const member = data?.signedIn === true;
   const research = homeResearch(data, sport);
   const games = rows.filter(
@@ -86,18 +101,24 @@ export default function Home2({
         .toLowerCase()
         .includes(query.trim().toLowerCase()),
   );
-  const loadingSports = (["nba", "nhl", "ncaab"] as const).filter(
-    (s) => loads[s].state === "loading",
+  const loadingSports = (["nba", "nhl", "ncaab"] as const).filter((s) =>
+    combined ? !data && !failed : loads[s].state === "loading",
   );
-  const failedSports = (["nba", "nhl", "ncaab"] as const).filter(
-    (s) => loads[s].state === "error",
+  const failedSports = (["nba", "nhl", "ncaab"] as const).filter((s) =>
+    combined ? stageUnavailable : loads[s].state === "error",
   );
   const staleSports = (["nba", "nhl", "ncaab"] as const).filter(
-    (s) => loads[s].state === "ok" && loads[s].stale,
+    (s) => !combined && loads[s].state === "ok" && loads[s].stale,
   );
   const retry = () => {
+    if (combined) {
+      setData(null);
+      setFailed(false);
+      setAttempt((n) => n + 1);
+      return;
+    }
     failedSports.forEach((s) => void load(s));
-    if (nflUnavailable) router.refresh();
+    if (nflScheduleUnavailable) router.refresh();
   };
   return (
     <div className="home2">
@@ -209,16 +230,25 @@ export default function Home2({
             schedules…
           </p>
         )}
-        {(failedSports.length > 0 || nflUnavailable) && (
+        {(failedSports.length > 0 || nflScheduleUnavailable) && (
           <p className="h2-notice" role="status">
             {[
-              ...(nflUnavailable ? ["NFL"] : []),
+              ...(nflScheduleUnavailable ? ["NFL"] : []),
               ...failedSports.map((s) => SPORTS[s].label),
             ].join(", ")}{" "}
             schedules unavailable. Other games remain accessible.{" "}
             <button onClick={retry}>Retry schedules</button>
           </p>
         )}
+        {combined &&
+          data &&
+          !data.denied &&
+          (data.errors.length > 0 || data.truncated) && (
+            <p className="h2-notice">
+              Partial schedule or research coverage. Returned games are shown;
+              missing records are unverified.
+            </p>
+          )}
         {staleSports.length > 0 && (
           <p className="h2-notice">
             {staleSports.map((s) => SPORTS[s].label).join(", ")} show the
@@ -252,7 +282,7 @@ export default function Home2({
         </div>
         {!games.length && !loadingSports.length && (
           <p className="h2-empty">
-            {failedSports.length || nflUnavailable
+            {failedSports.length || nflScheduleUnavailable
               ? "No matching games in the schedules currently available."
               : "No games match these filters today."}
           </p>
