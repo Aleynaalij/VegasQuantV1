@@ -8,7 +8,7 @@ const config: NextConfig = {
   env: { VQ_COMBINED_STAGE_BUILD: profile === "combined" ? "1" : "0" },
   ...(profile === "gate" && { pageExtensions: stagingExtensions }),
   ...(profile === "combined" && {
-    pageExtensions: [...stagingExtensions, "tsx", "ts", "jsx", "js"],
+    pageExtensions: ["combined.ts", ...stagingExtensions, "tsx", "ts", "jsx", "js"],
   }),
 };
 export default config;

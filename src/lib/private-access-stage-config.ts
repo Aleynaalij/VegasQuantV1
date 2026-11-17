@@ -1,5 +1,7 @@
 export const PRIVATE_ACCESS_TARGET = "atlas-private-access";
 export const PRIVATE_ACCESS_PATH = "/staging/private-access";
+const STAGE_SUPABASE_REF = "caynldluziwrzmvuslzg";
+export const STAGE_SUPABASE_URL = `https://${STAGE_SUPABASE_REF}.supabase.co`;
 
 type Environment = Record<string, string | undefined>;
 
@@ -45,8 +47,8 @@ export function privateAccessConfig(env: Environment) {
   const url = env.NEXT_PUBLIC_SUPABASE_URL;
   const key = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const host = env.VERCEL_URL;
-  if (ref !== "caynldluziwrzmvuslzg" ||
-      url !== `https://${ref}.supabase.co` ||
+  if (ref !== STAGE_SUPABASE_REF ||
+      url !== STAGE_SUPABASE_URL ||
       !key || !/^sb_publishable_[A-Za-z0-9_-]+$/.test(key) ||
       !host || !/^[a-z0-9-]+\.vercel\.app$/.test(host) ||
       env.BILLING_ENABLED !== "false" || env.LIVE_SCORES_DISABLED !== "1" ||
