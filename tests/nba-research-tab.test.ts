@@ -304,3 +304,141 @@ test("3-point leaders average only games with recorded attempts", () => {
     ["Efficient Wing", "Volume Guard"],
   );
 });
+
+test("Prop card: per-game rows carry opponent, venue and rest; filters and hit rates follow them", async () => {
+  const { propGames, filterPropGames, hitRate, restDays } = await import(
+    "../src/lib/nba-research-tab"
+  );
+  const [kat] = seasonLines([
+    row(1, 19, 12, 1, { home: true, opponent_abbr: "BOS" }),
+    row(2, 30, 9, 3, { home: false, opponent_abbr: "MIA" }), // back-to-back
+    row(5, 10, 11, 2, { home: true, opponent_abbr: "ORL" }), // two days off
+    row(6, 25, 7, 4, { home: false, opponent_abbr: "CHI" }),
+  ]);
+  const games = propGames(kat, "player_points", 18.5);
+  assert.deepEqual(
+    games.map((g) => [g.opp, g.home, g.value, g.rest, g.over]),
+    [
+      ["CHI", false, 25, 0, true],
+      ["ORL", true, 10, 2, false],
+      ["MIA", false, 30, 0, true],
+      ["BOS", true, 19, null, true],
+    ],
+  );
+  assert.deepEqual(hitRate(games, 2), { hits: 1, n: 2, pct: 50 });
+  assert.deepEqual(hitRate(games), { hits: 3, n: 4, pct: 75 });
+  assert.equal(hitRate([], 5), null);
+  assert.deepEqual(
+    filterPropGames(games, "home", "any").map((g) => g.opp),
+    ["ORL", "BOS"],
+  );
+  assert.deepEqual(
+    filterPropGames(games, "all", 0).map((g) => g.opp),
+    ["CHI", "MIA"],
+  );
+  assert.deepEqual(
+    filterPropGames(games, "all", 2).map((g) => g.opp),
+    ["ORL"],
+  );
+  // Rebounds use the rebound column; rest is counted in Eastern days, so a late tip is the same day.
+  assert.deepEqual(
+    propGames(kat, "player_rebounds", 9.5).map((g) => g.over),
+    [false, true, false, true],
+  );
+  assert.equal(restDays("2026-11-16T03:30:00Z", "2026-11-17T00:00:00Z"), 0);
+  assert.equal(restDays(undefined, "2026-11-17T00:00:00Z"), null);
+});
+
+test("Prop card model: projected minutes, matchup rank and our estimate", async () => {
+  const { projectedMinutes, matchupFor, propEstimate } = await import(
+    "../src/lib/nba-research-tab"
+  );
+  const g = (min: number, pts: number, reb = 5) => ({
+    pts,
+    reb,
+    ast: 0,
+    min,
+  });
+  // Newest first. Weighted last five: (34*5+30*4+30*3+30*2+30*1)/15 = 31.33; season 30.5.
+  const games = [
+    g(34, 20),
+    g(30, 15),
+    g(30, 15),
+    g(30, 15),
+    g(30, 15),
+    g(29, 15),
+  ];
+  assert.equal(projectedMinutes(games, 1), 31.1);
+  assert.equal(projectedMinutes(games, 0), 30.2); // back-to-back trims 3%
+  assert.equal(projectedMinutes(games.slice(0, 2), 1), null);
+
+  const rows = [
+    {
+      team: "A",
+      pos: "G",
+      games: 10,
+      points: 40,
+      rebounds: 8,
+      points_rank: 1,
+      rebounds_rank: 3,
+    },
+    {
+      team: "B",
+      pos: "G",
+      games: 10,
+      points: 50,
+      rebounds: 9,
+      points_rank: 2,
+      rebounds_rank: 2,
+    },
+    {
+      team: "C",
+      pos: "G",
+      games: 10,
+      points: 60,
+      rebounds: 7,
+      points_rank: 3,
+      rebounds_rank: 1,
+    },
+    {
+      team: "C",
+      pos: "F",
+      games: 10,
+      points: 30,
+      rebounds: 20,
+      points_rank: 1,
+      rebounds_rank: 1,
+    },
+  ];
+  const soft = matchupFor(rows, "C", "G", "player_points")!;
+  // Allows 60 vs a league 50: 1.2 halved toward 1 = 1.1.
+  assert.deepEqual(
+    [soft.rank, soft.of, soft.label, Math.round(soft.factor * 100)],
+    [3, 3, "Soft", 110],
+  );
+  assert.equal(matchupFor(rows, "A", "G", "player_points")!.label, "Tough");
+  assert.equal(matchupFor(rows, "C", "G", "player_rebounds")!.label, "Tough");
+  assert.equal(matchupFor(rows, "C", "F", "player_points"), null); // one team is no ranking
+  assert.equal(matchupFor(rows, "C", null, "player_points"), null);
+
+  // 0.5 points a minute over 31 minutes projects 15.5, right on the line: 50%.
+  const flat = [
+    g(30, 15),
+    g(30, 15),
+    g(30, 15),
+    g(30, 15),
+    g(30, 15),
+    g(30, 15),
+  ];
+  const even = propEstimate(flat, "player_points", 15.5, 31, 1)!;
+  assert.equal(even.projection, 15.5);
+  assert.equal(even.chance, 50);
+  // No spread in his games: the spread floor (square root of the projection) still applies.
+  assert.equal(even.sd, 3.9);
+  // A soft matchup pushes the projection and the chance up; a much higher line pulls it down.
+  assert.ok(propEstimate(flat, "player_points", 15.5, 31, 1.1)!.chance > 60);
+  assert.ok(propEstimate(flat, "player_points", 24.5, 31, 1)!.chance < 5);
+  assert.equal(propEstimate(flat, "player_points", 24.5, 31, 1)!.chance, 3); // floor
+  assert.equal(propEstimate(flat.slice(0, 4), "player_points", 15.5, 31), null);
+  assert.equal(propEstimate(flat, "player_points", 15.5, null), null);
+});

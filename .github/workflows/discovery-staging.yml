@@ -1,7 +1,7 @@
 name: Discovery isolated staging acceptance
 on:
   push:
-    branches: [elo/home-zone-phase1-staging, elo/consumer-integration, codex/atlas-combined-stage]
+    branches: [elo/home-zone-phase1-staging, elo/consumer-integration, codex/atlas-combined-stage, codex/atlas-final-integration, elo/atlas-consumer-reader-ci]
   pull_request:
     paths:
       - "src/components/home2/**"
@@ -46,6 +46,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
           persist-credentials: false
       - uses: actions/setup-node@v4
         with:

@@ -5,8 +5,8 @@ type TesterFeature = "research" | "fear";
 type TesterSection = "quotes" | "injury" | "context";
 type Cursor = Pick<NbaObservation, "id" | "recorded_at">;
 
-export function testerFeatureAccess(feature: TesterFeature) {
-  return supabase.rpc("tester_feature_access", { p_feature: feature });
+export function testerFeatureAccess(feature: TesterFeature, client = supabase) {
+  return client.rpc("tester_feature_access", { p_feature: feature });
 }
 
 export async function testerObservationPage(

@@ -37,9 +37,19 @@ test("ESPN summary becomes a record_nba_result payload: canonical teams, sides, 
   assert.deepEqual(p.home, { team: "Boston Celtics", score: 120, rebounds: 46, assists: 29, threes: 7 });
   assert.equal(p.players.length, 4);
   assert.deepEqual(p.players[0], { athlete_id: "10", player: "James Harden", side: "away", played: true, starter: true, position: "G", minutes: 36, threes: 4,
-    three_attempts: 6, points: 30, rebounds: 6, assists: 9, steals: 1, blocks: 0, turnovers: 2 });
+    three_attempts: 6, fgm: 5, fga: 10, ftm: 0, fta: 0, points: 30, rebounds: 6, assists: 9, steals: 1, blocks: 0, turnovers: 2 });
   assert.deepEqual(p.players[2], { athlete_id: "12", player: "Bench Player", side: "away", played: false, starter: false, position: "G", minutes: null, threes: 0,
-    three_attempts: 0, points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, turnovers: 0 });
+    three_attempts: 0, fgm: 0, fga: 0, ftm: 0, fta: 0, points: 0, rebounds: 0, assists: 0, steals: 0, blocks: 0, turnovers: 0 });
+});
+
+test("field goals and free throws ride along for usage; without those columns the box score still records", () => {
+  const noShots = summary();
+  for (const t of noShots.boxscore.players) t.statistics[0].keys = KEYS.map((k) => (k.startsWith("fieldGoals") || k.startsWith("freeThrows") ? "x" + k : k));
+  const p = resultPayload(noShots as never, game, "f");
+  assert.ok(typeof p !== "string" && p.completed);
+  if (typeof p === "string" || !p.completed) return;
+  assert.deepEqual([p.players[0].fgm, p.players[0].fga, p.players[0].ftm, p.players[0].fta], [null, null, null, null]);
+  assert.equal((p.players[0] as Record<string, unknown>).points, 30);
 });
 
 test("unfinished games, foreign teams and unreadable stats are not recorded", () => {
