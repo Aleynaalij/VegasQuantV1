@@ -16,6 +16,7 @@ import {
   threePointLeaders,
   type BoxRow,
   type Injury,
+  type DefenseRow,
   type PlayerLine,
   type PropTrend,
 } from "@/lib/nba-research-tab";
@@ -45,6 +46,8 @@ type Slate = {
   injuries: Map<string, Injury[]>;
   trends: Map<string, PropTrend[]>;
   propsAt: string | null;
+  /** Defense vs position this season; empty until loaded or for visitors. */
+  defense: DefenseRow[];
 };
 const HOUR = 3600000;
 const etDay = (iso: string) =>
@@ -94,6 +97,7 @@ async function loadSlate(member: boolean): Promise<Slate> {
       injuries: new Map(),
       trends: new Map(),
       propsAt: null,
+      defense: [],
     };
   const teams = [...new Set(games.flatMap((g) => [g.away_team, g.home_team]))];
   // This season's finished games only, so "season" numbers reset at the season boundary.
@@ -120,7 +124,7 @@ async function loadSlate(member: boolean): Promise<Slate> {
   const played = new Map(season.map((g) => [g.id, g]));
   type Row = Omit<BoxRow, "tipoff"> & { game_id: string };
   const columns =
-    "game_id,athlete_id,player,team,played,minutes,points,rebounds,assists,threes";
+    "game_id,athlete_id,player,team,played,minutes,points,rebounds,assists,threes,position";
   // Everyone who has played for tonight's teams, then each of those players' full history (traded
   // players keep the games they played elsewhere); a player's team is the one in his latest game.
   const onTeams = await all<{ athlete_id: string | number }>((from, to) =>
@@ -165,6 +169,36 @@ async function loadSlate(member: boolean): Promise<Slate> {
       )),
     );
   }
+  // Usage per player game, and defense vs position, for members only (props are members-only too).
+  const usage = new Map<string, number>();
+  let defense: DefenseRow[] = [];
+  if (member) {
+    type Usage = {
+      game_id: string;
+      athlete_id: string;
+      usage: number | string;
+    };
+    const [u, d] = await Promise.all([
+      all<Usage>((from, to) =>
+        supabase
+          .rpc("nba_player_usage", { p_athletes: athletes })
+          .order("game_id")
+          .order("athlete_id")
+          .range(from, to),
+      ).catch(() => [] as Usage[]),
+      first.season == null
+        ? Promise.resolve({ data: [], error: null })
+        : supabase.rpc("nba_defense_vs_position", { p_season: first.season }),
+    ]);
+    // Both are extras for the prop card: a failure leaves the card without them, not the tab broken.
+    for (const r of u)
+      usage.set(`${r.game_id}:${r.athlete_id}`, Number(r.usage));
+    defense = ((d.error ? [] : d.data || []) as DefenseRow[]).map((r) => ({
+      ...r,
+      points: Number(r.points),
+      rebounds: Number(r.rebounds),
+    }));
+  }
   const lines = seasonLines(
     box
       .filter((r) => played.has(r.game_id))
@@ -180,6 +214,7 @@ async function loadSlate(member: boolean): Promise<Slate> {
           home,
           opponent: home ? g.away_team : g.home_team,
           opponent_abbr: home ? g.away_abbreviation : g.home_abbreviation,
+          usage: usage.get(`${r.game_id}:${String(r.athlete_id)}`) ?? null,
         };
       }),
   ).filter((l) => teams.includes(l.team));
@@ -238,7 +273,7 @@ async function loadSlate(member: boolean): Promise<Slate> {
       );
     }
   }
-  return { games, lines, injuries, trends, propsAt };
+  return { games, lines, injuries, trends, propsAt, defense };
 }
 
 /** NBA research tab: tonight's slate, injuries, double-double rates and prop trends. Never picks. */
@@ -504,9 +539,14 @@ export default function NbaResearchTab() {
                                   <NbaPropCard
                                     trend={t}
                                     player={player}
+                                    defense={slate.defense}
                                     tonight={{
                                       tipoff: g.tipoff,
                                       home: t.team === g.home_team,
+                                      defense:
+                                        t.team === g.home_team
+                                          ? g.away_team
+                                          : g.home_team,
                                       opponent:
                                         t.team === g.home_team
                                           ? g.away_abbreviation ||

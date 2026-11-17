@@ -1,6 +1,7 @@
 // NBA results: reads ESPN's game summary for games past tip-off and hands each box score to
 // public.record_nba_result, which checks it adds up and records it once it is unchanged for 3 hours.
-// 3-point attempts go to public.record_nba_three_attempts once the box score is recorded.
+// 3-point attempts go to public.record_nba_three_attempts, and field goals and free throws to
+// public.record_nba_shooting, once the box score is recorded.
 // Writes only through those functions and feed_runs; never touches nba_games, nba_observations or NFL.
 import { createClient } from "@supabase/supabase-js";
 import { resultPayload, dueGames, summaryUrl } from "./parse.ts";
@@ -39,6 +40,13 @@ Deno.serve(async (req: Request) => {
     const s = r.data?.status || "UNKNOWN";
     threes[s] = (threes[s] || 0) + 1;
   };
+  const shots: Record<string, number> = {};
+  const recordShooting = async (payload: object) => {
+    const r = await db.rpc("record_nba_shooting", { p: payload });
+    if (r.error) throw Error(r.error.message);
+    const s = r.data?.status || "UNKNOWN";
+    shots[s] = (shots[s] || 0) + 1;
+  };
   try {
     const games = await db.from("nba_games").select("id,provider_id,away_team,home_team,tipoff")
       .lte("tipoff", new Date(now - 2 * 3600000).toISOString())
@@ -61,7 +69,10 @@ Deno.serve(async (req: Request) => {
           checked++;
           const s = saved.data?.status || "UNKNOWN";
           statuses[s] = (statuses[s] || 0) + 1;
-          if (payload.completed) await recordThrees(payload);
+          if (payload.completed) {
+            await recordThrees(payload);
+            await recordShooting(payload);
+          }
         } catch (e) {
           errors.push({ game: g.provider_id, reason: (e instanceof Error ? e.message : "Result read failed").slice(0, 160) });
         }
@@ -82,12 +93,27 @@ Deno.serve(async (req: Request) => {
         }
       }));
     }
+    // Recorded games from before field goals and free throws were kept: a few per run until all have them.
+    const noShots = await db.rpc("nba_shooting_missing", { p_limit: 24 });
+    if (noShots.error) throw noShots.error;
+    for (let i = 0; i < (noShots.data || []).length; i += 4) {
+      await Promise.all((noShots.data || []).slice(i, i + 4).map(async (g: { provider_id: string; away_team: string; home_team: string }) => {
+        try {
+          const text = await readSummary(g.provider_id);
+          const payload = resultPayload(JSON.parse(text), g, await sha(text));
+          if (typeof payload === "string") throw Error(payload);
+          if (payload.completed) await recordShooting(payload);
+        } catch (e) {
+          errors.push({ game: g.provider_id, reason: ("FG/FT: " + (e instanceof Error ? e.message : "read failed")).slice(0, 160) });
+        }
+      }));
+    }
     await db.from("feed_runs").insert({
       provider: "ESPN NBA results",
       status: errors.length ? (checked ? "partial" : "error") : "ok",
-      details: { due: due.length, checked, statuses, threes, errors },
+      details: { due: due.length, checked, statuses, threes, shots, errors },
     });
-    return Response.json({ due: due.length, checked, statuses, threes, failed: errors.length });
+    return Response.json({ due: due.length, checked, statuses, threes, shots, failed: errors.length });
   } catch (e) {
     await db.from("feed_runs").insert({
       provider: "ESPN NBA results",

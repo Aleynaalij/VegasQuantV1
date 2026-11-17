@@ -4,8 +4,12 @@ import { nbaWhen } from "@/lib/nba-home";
 import {
   filterPropGames,
   hitRate,
+  matchupFor,
+  projectedMinutes,
+  propEstimate,
   propGames,
   restDays,
+  type DefenseRow,
   type PlayerLine,
   type PropTrend,
   type Rest,
@@ -17,20 +21,35 @@ const BARS = 10;
 const odds = (p: number | null) => (p == null ? "" : p > 0 ? `+${p}` : `${p}`);
 const short = (iso: string | null) =>
   iso ? nbaWhen(iso, { month: "numeric", day: "numeric" }) : "";
+const POS = { G: "guards", F: "forwards", C: "centers" } as Record<
+  string,
+  string
+>;
+const ordinal = (n: number) =>
+  `${n}${[11, 12, 13].includes(n % 100) ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th")}`;
+/** FanDuel's over chance with the vig removed, when both sides are quoted. */
+function fairOver(over: number | null, under: number | null) {
+  if (over == null || under == null) return null;
+  const p = (o: number) => (o > 0 ? 100 / (o + 100) : -o / (-o + 100));
+  return Math.round((p(over) / (p(over) + p(under))) * 100);
+}
 
 /**
- * One FanDuel prop against the player's recorded games: a bar per game with the line drawn across,
- * hit rates over the last 5, 10 and 20 games and the season, and Home/Away and rest filters.
- * Recorded box scores only; a hit rate is history, not a prediction.
+ * One FanDuel prop against the player's recorded games: our estimate and projection, projected
+ * minutes, a bar per game with the line drawn across, minutes and usage per game, hit rates over the
+ * last 5, 10 and 20 games and the season, Home/Away and rest filters, and how tonight's defense
+ * treats his position. Recorded box scores only; the estimate is research, not a pick.
  */
 export default function NbaPropCard({
   trend,
   player,
+  defense,
   tonight,
 }: {
   trend: PropTrend;
   player: PlayerLine;
-  tonight: { tipoff: string; home: boolean; opponent: string };
+  defense: DefenseRow[];
+  tonight: { tipoff: string; home: boolean; opponent: string; defense: string };
 }) {
   const [venue, setVenue] = useState<Venue>("all");
   const [rest, setRest] = useState<Rest>("any");
@@ -54,6 +73,26 @@ export default function NbaPropCard({
     ["Season", hitRate(games)],
   ];
   const filtered = venue !== "all" || rest !== "any";
+  const matchup = matchupFor(
+    defense,
+    tonight.defense,
+    player.position,
+    trend.market,
+  );
+  const projMin = projectedMinutes(player.games, tonightRest);
+  const estimate = propEstimate(
+    player.games,
+    trend.market,
+    trend.line,
+    projMin,
+    matchup?.factor,
+  );
+  const fair = fairOver(trend.over, trend.under);
+  const usages = bars.filter((g) => g.usage != null);
+  const usageTop = Math.max(...usages.map((g) => g.usage!), 1);
+  const avgUsage = usages.length
+    ? usages.reduce((a, g) => a + g.usage!, 0) / usages.length
+    : null;
 
   return (
     <div className="npc" aria-label={`${trend.player} ${STAT[trend.market]}`}>
@@ -68,13 +107,32 @@ export default function NbaPropCard({
           </small>
         </div>
         <div className="npc-rate">
-          <b>{shown ? `${shown.pct}%` : "—"}</b>
+          <b>{estimate ? `${estimate.chance}%` : "—"}</b>
           <small>
-            {shown ? `${shown.hits}/${shown.n} over` : "no games"}
-            {filtered ? " · filtered" : ""}
+            {estimate
+              ? `our estimate · projecting ${estimate.projection}`
+              : "estimate needs 5 games"}
           </small>
         </div>
       </header>
+
+      <div className="npc-chips">
+        {projMin != null ? (
+          <span className="npc-chip">
+            <b>{projMin.toFixed(1)}</b> proj min
+          </span>
+        ) : null}
+        {fair != null ? (
+          <span className="npc-chip">
+            FanDuel implies <b>{fair}%</b>
+          </span>
+        ) : null}
+        {matchup ? (
+          <span className={`npc-chip npc-${matchup.label.toLowerCase()}`}>
+            {matchup.label} matchup
+          </span>
+        ) : null}
+      </div>
 
       <div className="npc-filters">
         <div role="group" aria-label="Venue">
@@ -112,6 +170,11 @@ export default function NbaPropCard({
 
       {bars.length ? (
         <>
+          <p className="npc-cleared">
+            <b>{shown ? `${shown.pct}%` : "—"}</b> cleared {trend.line}
+            {shown ? ` · ${shown.hits} of ${shown.n} games` : ""}
+            {filtered ? " · filtered" : ""}
+          </p>
           <div
             className="npc-chart"
             role="img"
@@ -143,17 +206,58 @@ export default function NbaPropCard({
               </small>
             ))}
           </div>
-          <div className="npc-minutes" aria-label="Minutes played">
-            <p>
-              Minutes <span>avg {Math.round(avgMin)}</span>
-            </p>
-            <div>
-              {bars.map((g, i) => (
-                <span key={`${g.at}-m-${i}`}>
-                  <i style={{ height: `${(g.min / minTop) * 100}%` }} />
-                  <em>{Math.round(g.min)}</em>
+          <div className="npc-panels">
+            <div className="npc-minutes" aria-label="Minutes played">
+              <p>
+                Minutes{" "}
+                <span>
+                  avg {Math.round(avgMin)}
+                  {projMin != null ? (
+                    <>
+                      {" "}
+                      · <b>proj {Math.round(projMin)}</b>
+                    </>
+                  ) : null}
                 </span>
-              ))}
+              </p>
+              <div>
+                {bars.map((g, i) => (
+                  <span key={`${g.at}-m-${i}`}>
+                    <i style={{ height: `${(g.min / minTop) * 100}%` }} />
+                    <em>{Math.round(g.min)}</em>
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="npc-minutes" aria-label="Usage rate">
+              <p>
+                Usage{" "}
+                <span>
+                  {avgUsage != null ? `avg ${avgUsage.toFixed(1)}%` : "pending"}
+                </span>
+              </p>
+              {usages.length ? (
+                <div>
+                  {bars.map((g, i) => (
+                    <span key={`${g.at}-u-${i}`}>
+                      {g.usage != null ? (
+                        <>
+                          <i
+                            style={{
+                              height: `${(g.usage / usageTop) * 100}%`,
+                            }}
+                          />
+                          <em>{Math.round(g.usage)}</em>
+                        </>
+                      ) : null}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <small className="npc-pending">
+                  Shows once shot attempts are recorded for these games.
+                </small>
+              )}
             </div>
           </div>
         </>
@@ -180,8 +284,46 @@ export default function NbaPropCard({
           </li>
         ))}
       </ul>
+      {matchup ? (
+        <section className="npc-dvp" aria-label="Defense vs position">
+          <p>
+            <b>Defense vs position</b>
+            <span>
+              {tonight.opponent} vs {POS[matchup.pos] ?? matchup.pos},{" "}
+              {STAT[trend.market]}
+            </span>
+          </p>
+          <p className="npc-dvp-rank">
+            <span className={`npc-${matchup.label.toLowerCase()}`}>
+              {matchup.label} matchup
+            </span>
+            <b>
+              {ordinal(matchup.rank)} / {matchup.of}
+            </b>
+          </p>
+          <div
+            className="npc-gauge"
+            role="img"
+            aria-label={`Ranked ${matchup.rank} of ${matchup.of}; 1 allows the least`}
+          >
+            <i style={{ width: `${(matchup.rank / matchup.of) * 100}%` }} />
+          </div>
+          <p className="npc-gauge-ends">
+            <span>Strong</span>
+            <span>
+              allows {matchup.allowed.toFixed(1)} a game · league{" "}
+              {matchup.league.toFixed(1)}
+            </span>
+            <span>Weak</span>
+          </p>
+        </section>
+      ) : null}
+
       <p className="nbar-note">
-        From our recorded box scores. A hit rate is history, not a prediction.
+        Our estimate: his per-minute {STAT[trend.market]} (season and last 10)
+        times projected minutes, adjusted for tonight&rsquo;s defense against
+        his position, with the spread of his own games. From our recorded box
+        scores; research, not a pick.
       </p>
     </div>
   );
