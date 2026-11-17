@@ -88,7 +88,10 @@ if env -u NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY npm run build >"$work/denial.log"
   printf 'Combined build unexpectedly accepted a missing key\n' >&2
   exit 1
 fi
-rg -q 'Invalid or incomplete isolated staging build configuration' "$work/denial.log"
+grep -Fq 'Invalid or incomplete isolated staging build configuration' "$work/denial.log" || {
+  cat "$work/denial.log"
+  exit 1
+}
 verify_mode combined
 serve
 owner='__Host-vq-private-access=fixture.owner.token'
