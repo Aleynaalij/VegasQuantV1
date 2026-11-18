@@ -195,13 +195,27 @@ export function propQuotes(
 }
 
 export type BookQuote = PropQuote & { book: string };
-/** Every book's latest quotes, each from that book's newest snapshot per market. */
+/**
+ * Every book's latest quotes for line shopping, each from that book's newest snapshot per market.
+ * Like best-price.ts, a snapshot counts only when the provider observed it within maxAgeMs (default
+ * an hour): a book that stopped refreshing must not show an old price as the best one.
+ */
 export function allBookQuotes(
-  snapshots: { recorded_at: string; payload: PropPayload }[],
+  snapshots: {
+    recorded_at: string;
+    observed_at?: string | null;
+    payload: PropPayload & { provider_updated_at?: string };
+  }[],
+  now: number,
+  maxAgeMs = 60 * 60000,
 ): BookQuote[] {
-  const books = new Set(snapshots.map((s) => s.payload?.book).filter(Boolean));
+  const fresh = snapshots.filter((s) => {
+    const t = Date.parse(s.observed_at || s.payload?.provider_updated_at || "");
+    return Number.isFinite(t) && t <= now + 5 * 60000 && now - t <= maxAgeMs;
+  });
+  const books = new Set(fresh.map((s) => s.payload?.book).filter(Boolean));
   return [...books].flatMap((book) =>
-    propQuotes(snapshots, book as string).map((q) => ({
+    propQuotes(fresh, book as string).map((q) => ({
       ...q,
       book: book as string,
     })),

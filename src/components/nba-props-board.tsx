@@ -269,7 +269,10 @@ export default function NbaPropsBoard() {
       try {
         const a = await supabase.rpc("membership_status");
         const status = a.error ? noAccess : (a.data as Access);
-        const s = await loadSlate(status.allowed);
+        const s = await loadSlate(
+          status.allowed,
+          params.get("game") || undefined,
+        );
         if (!live) return;
         setAccess(status);
         setSlate(s);
@@ -284,6 +287,8 @@ export default function NbaPropsBoard() {
       live = false;
       stop();
     };
+    // The requested game is read once, on arrival; later chip changes filter the loaded slate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Keep the view in the address bar, so a filtered board can be shared or reopened.

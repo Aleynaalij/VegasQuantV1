@@ -182,8 +182,13 @@ export function sortRows(rows: PropRow[], by: PropSort) {
   );
 }
 
-/** Which side the numbers favor: our estimate when we have one, else the L10 hit rate. */
+/**
+ * Which side the numbers favor. Against the book when both prices are known: the side our estimate
+ * rates above the book's no-vig chance, so the edge shown (and ranked) is never negative. Otherwise
+ * our estimate, else the L10 hit rate.
+ */
 export function lean(r: PropRow): "over" | "under" | null {
+  if (r.edge != null) return r.edge >= 0 ? "over" : "under";
   if (r.estimate) return r.estimate.chance >= 50 ? "over" : "under";
   if (r.l10) return r.l10.pct >= 50 ? "over" : "under";
   return null;

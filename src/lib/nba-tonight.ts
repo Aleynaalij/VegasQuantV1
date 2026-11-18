@@ -64,7 +64,11 @@ async function all<T>(
 }
 
 /** Tonight's NBA slate with season lines, injuries, FanDuel prop trends and every book's quotes. */
-export async function loadSlate(member: boolean): Promise<Slate> {
+export async function loadSlate(
+  member: boolean,
+  /** An nba_games id to load that game's Eastern day instead of tonight's (per-game links). */
+  forGame?: string,
+): Promise<Slate> {
   const now = Date.now();
   const upcoming = await supabase
     .from("nba_games")
@@ -76,13 +80,40 @@ export async function loadSlate(member: boolean): Promise<Slate> {
     .lte("tipoff", new Date(now + 36 * HOUR).toISOString())
     .order("tipoff");
   if (upcoming.error) throw upcoming.error;
-  // Tonight's slate: every game on the Eastern date of the next game that has not finished.
-  const first = (upcoming.data || [])[0];
-  const games = first
-    ? (upcoming.data || []).filter(
-        (g) => etDay(g.tipoff) === etDay(first.tipoff),
-      )
+  // Tonight's slate: every game on the Eastern date of the next game that has not finished. A
+  // per-game link to a later day loads that game's day instead.
+  let pool = upcoming.data || [];
+  if (forGame && !pool.some((g) => g.id === forGame)) {
+    const one = await supabase
+      .from("nba_games")
+      .select("tipoff")
+      .eq("id", forGame)
+      .maybeSingle();
+    if (!one.error && one.data) {
+      const day = await supabase
+        .from("nba_games")
+        .select(
+          "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,season",
+        )
+        .eq("season_type", 2)
+        .gte(
+          "tipoff",
+          new Date(Date.parse(one.data.tipoff) - 24 * HOUR).toISOString(),
+        )
+        .lte(
+          "tipoff",
+          new Date(Date.parse(one.data.tipoff) + 24 * HOUR).toISOString(),
+        )
+        .order("tipoff");
+      if (day.error) throw day.error;
+      pool = day.data || [];
+    }
+  }
+  const anchor = pool.find((g) => g.id === forGame) || pool[0];
+  const games = anchor
+    ? pool.filter((g) => etDay(g.tipoff) === etDay(anchor.tipoff))
     : [];
+  const first = games[0];
   if (!games.length)
     return {
       games,
@@ -274,8 +305,10 @@ export async function loadSlate(member: boolean): Promise<Slate> {
         allBookQuotes(
           rows.filter((r) => r.kind === "prop" && r.game_id === g.id) as {
             recorded_at: string;
+            observed_at: string | null;
             payload: Parameters<typeof propQuotes>[0][number]["payload"];
           }[],
+          Date.now(),
         ),
       );
       trends.set(

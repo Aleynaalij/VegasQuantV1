@@ -195,3 +195,46 @@ test("No-vig chance and streaks", () => {
   assert.equal(streakOf([g(false), g(false), g(true)]), -2);
   assert.equal(streakOf([]), 0);
 });
+
+test("Line shopping ignores books that stopped refreshing; lean follows the edge", async () => {
+  const { allBookQuotes } = await import("../src/lib/nba-research-tab");
+  const now = Date.parse("2026-11-18T16:00:00Z");
+  const snap = (book: string, at: string, over: number) => ({
+    recorded_at: at,
+    observed_at: at,
+    payload: {
+      book,
+      market: "player_points",
+      outcomes: [
+        { name: "Over", description: "Tyrese Maxey", point: 25.5, price: over },
+        {
+          name: "Under",
+          description: "Tyrese Maxey",
+          point: 25.5,
+          price: -120,
+        },
+      ],
+    },
+  });
+  const quotes = allBookQuotes(
+    [
+      snap("FanDuel", "2026-11-18T15:50:00Z", -110),
+      snap("DraftKings", "2026-11-18T12:00:00Z", 150), // four hours old: dropped
+      snap("BetMGM", "2026-11-18T15:30:00Z", -105),
+    ],
+    now,
+  );
+  assert.deepEqual(quotes.map((q) => [q.book, q.over]).sort(), [
+    ["BetMGM", -105],
+    ["FanDuel", -110],
+  ]);
+
+  // Our 55% over against the book's 58%: the under is the side with the edge.
+  const row = {
+    edge: -3,
+    estimate: { chance: 55, projection: 0, sd: 1 },
+    l10: null,
+  } as unknown as Parameters<typeof lean>[0];
+  assert.equal(lean(row), "under");
+  assert.equal(lean({ ...row, edge: null } as typeof row), "over");
+});
