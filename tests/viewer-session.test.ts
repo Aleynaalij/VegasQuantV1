@@ -374,3 +374,31 @@ test("consumer states never turn verifier error, missing age or denied access in
   assert.equal(viewerPresentation({ ...v, age: "unknown" }).allowed, false);
   assert.equal(viewerPresentation({ ...v, session: null }).allowed, false);
 });
+
+test("unverified full-sheet download fails before a second SDK session or network access", async (t) => {
+  const keys = [
+    "VQ_COMBINED_STAGE_BUILD",
+    "NEXT_PUBLIC_SUPABASE_URL",
+    "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
+  ] as const;
+  const before = Object.fromEntries(keys.map((k) => [k, process.env[k]]));
+  Object.assign(process.env, {
+    VQ_COMBINED_STAGE_BUILD: "1",
+    NEXT_PUBLIC_SUPABASE_URL: env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:
+      env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  });
+  t.after(() => {
+    for (const k of keys) {
+      if (before[k] === undefined) delete process.env[k];
+      else process.env[k] = before[k];
+    }
+  });
+  const { fetchNbaMatchupSheet } = await import(
+    "../src/lib/nba-matchup-sheet-client"
+  );
+  await assert.rejects(
+    fetchNbaMatchupSheet(user.id, new AbortController().signal),
+    /unavailable until their isolated publication and source contracts are verified/,
+  );
+});

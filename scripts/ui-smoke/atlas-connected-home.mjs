@@ -58,6 +58,19 @@ try {
     const external = [];
     await context.route("**/*", (route) => {
       const url = new URL(route.request().url());
+      // Local HTTP serves a synthetic HTTPS deployment fixture. Match that
+      // configured Origin for the data bridge only; production guard is unchanged.
+      if (
+        url.origin === base &&
+        url.pathname === "/staging/discovery/data" &&
+        route.request().method() === "POST"
+      )
+        return route.continue({
+          headers: {
+            ...route.request().headers(),
+            origin: "https://atlas-fixture.vercel.app",
+          },
+        });
       if (url.origin === base || ["data:", "blob:"].includes(url.protocol))
         return route.continue();
       external.push(url.origin + url.pathname);
@@ -175,6 +188,26 @@ try {
     await page.goto(base + "/membership");
     await page.getByRole("heading", { name: "Account", exact: true }).waitFor();
     await page.getByText("fixture@example.invalid", { exact: true }).waitFor();
+    await page.goto(base + "/saved");
+    await page
+      .getByText("Saved legs could not load.", { exact: true })
+      .waitFor();
+    assert.equal(
+      await page
+        .getByText(
+          "Sign in to view published selections and your saved legs.",
+          { exact: true },
+        )
+        .count(),
+      0,
+    );
+    await page.goto(base + "/parlays?build=1");
+    await page
+      .getByText(
+        "Your leg library or saved lays could not load. Please retry.",
+        { exact: true },
+      )
+      .waitFor();
     await page.goto(base + "/notifications");
     await page.getByText(/Unread count is unknown/).waitFor();
     await page.screenshot({
@@ -206,6 +239,7 @@ try {
           "verified shell Account without second SDK identity",
           "four guarded schedules and all-sport Room navigation",
           "account identity and explicit unavailable notifications",
+          "saved legs and My Lays distinguish missing contracts from signed-out",
           "guarded schedule populates Home",
           "exact game ID opens connected Room",
           "external backend transport remains blocked",

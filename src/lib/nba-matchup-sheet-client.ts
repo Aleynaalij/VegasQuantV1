@@ -6,6 +6,10 @@ export async function fetchNbaMatchupSheet(
   signal: AbortSignal,
   userId?: string,
 ) {
+  if (process.env.VQ_COMBINED_STAGE_BUILD === "1")
+    throw Error(
+      "Full matchup sheets and downloads are unavailable until their isolated publication and source contracts are verified.",
+    );
   const {
     data: { session },
   } = await supabase.auth.getSession();
