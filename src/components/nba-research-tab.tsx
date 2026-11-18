@@ -121,7 +121,23 @@ async function loadSlate(member: boolean): Promise<Slate> {
       .order("id")
       .range(from, to);
   });
-  const played = new Map(season.map((g) => [g.id, g]));
+  // Confirmed results only, as recorded form counts them. Minor ESPN revisions keep a game FINAL
+  // (20261118010000); a game still in CONFLICT has a larger dispute and does not count.
+  const confirmed = new Set(
+    (
+      await all<{ game_id: string }>((from, to) =>
+        supabase
+          .from("nba_result_progress")
+          .select("game_id")
+          .eq("status", "FINAL")
+          .order("game_id")
+          .range(from, to),
+      )
+    ).map((p) => p.game_id),
+  );
+  const played = new Map(
+    season.filter((g) => confirmed.has(g.id)).map((g) => [g.id, g]),
+  );
   type Row = Omit<BoxRow, "tipoff"> & { game_id: string };
   const columns =
     "game_id,athlete_id,player,team,played,minutes,points,rebounds,assists,threes,position";
