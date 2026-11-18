@@ -1,16 +1,16 @@
 name: ATLAS isolated staging acceptance
 on:
   push:
-    branches: [codex/atlas-combined-stage]
+    branches: [codex/atlas-combined-stage, codex/atlas-final-integration, elo/atlas-consumer-reader-ci]
   pull_request:
-    branches: [elo/consumer-integration]
+    branches: [elo/consumer-integration, codex/atlas-combined-stage]
 
 permissions:
   contents: read
 
 jobs:
   staging:
-    if: github.event_name == 'push' || github.head_ref == 'codex/atlas-combined-stage'
+    if: github.event_name == 'push' || contains(fromJSON('["codex/atlas-combined-stage","codex/atlas-final-integration","elo/atlas-consumer-reader-ci"]'), github.head_ref)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -24,6 +24,27 @@ jobs:
           cache: npm
       - run: npm ci
       - run: git rev-parse HEAD
-      - run: node --import tsx --test tests/private-access-stage.test.ts tests/discovery-proxy.test.ts tests/consumer-integration.test.ts
+      - run: npm test
+      - run: npm run typecheck
+      - run: node --import tsx --test tests/private-access-stage.test.ts tests/discovery-proxy.test.ts tests/consumer-integration.test.ts tests/stage-consumer-reader.test.ts tests/stage-consumer-client.test.ts tests/stage-dealer-client.test.ts
       - run: node --test tests/sql/private-development-access.mjs
+      - name: Install pinned browser for connected combined acceptance
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install chromium
+          fi
       - run: bash scripts/ui-smoke/atlas-staging-modes.sh
+        env:
+          ATLAS_BROWSER_ACCEPTANCE: "1"
+          ATLAS_BROWSER_OUTPUT: artifacts/atlas-connected-home
+      - name: Preserve connected combined browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-connected-home
+          path: artifacts/atlas-connected-home
+          if-no-files-found: warn

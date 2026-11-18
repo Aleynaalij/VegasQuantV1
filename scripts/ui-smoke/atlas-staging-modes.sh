@@ -24,6 +24,26 @@ globalThis.fetch = (input, options) => {
     const authorization = new Headers(options?.headers).get("authorization");
     return Promise.resolve(Response.json(authorization === "Bearer fixture.owner.token"));
   }
+  if (url.origin === process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    const auth = new Headers(options?.headers).get("authorization");
+    if (auth !== "Bearer fixture.owner.token") return Promise.resolve(new Response(null, {status: 403}));
+    const rpc = url.pathname.split("/").pop();
+    if (rpc === "age_verification_status") return Promise.resolve(Response.json({synthetic: true, verified: true}));
+    if (rpc === "membership_status") return Promise.resolve(Response.json({allowed: true}));
+    if (rpc === "vq_private_access_stage_dealer_feed") return Promise.resolve(Response.json({
+      contract: "vq-stage-dealer-v1", posts: [{id: "11111111-1111-4111-8111-111111111111", sport: "nba",
+        title: "Synthetic Dealer acceptance", body: "Research only. Synthetic fixture.", created_at: "2026-11-01T15:00:00Z"}]
+    }));
+    if (rpc === "sports_slate") { const sport = JSON.parse(options?.body ?? "{}").p_sport;
+      return Promise.resolve(Response.json({version: 1, sport, access: true, games: [], facts: [], markets: [], selections: []})); }
+    if (rpc === "games" || rpc === "nba_observations") return Promise.resolve(Response.json([]));
+    if (rpc === "nba_games") {
+      const day = new Intl.DateTimeFormat("en-CA", {timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit"}).format(new Date());
+      return Promise.resolve(Response.json([{id: "11111111-1111-4111-8111-111111111111", slug: "atlas-synthetic-nba",
+        away_team: "Atlas Away", home_team: "Atlas Home", tipoff: day + "T23:59:00Z", tipoff_tbd: false, status: "SCHEDULED",
+        venue: "Synthetic validation", source: "https://example.com/synthetic-schedule"}]));
+    }
+  }
   return Promise.reject(new Error("External fetch disabled in the staging acceptance test"));
 };
 EOF
@@ -45,6 +65,8 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 const mode = process.argv[2];
 const paths = Object.keys(JSON.parse(readFileSync(".next/server/app-paths-manifest.json", "utf8")));
+const readers = ["/staging/discovery/read/dealer/route", "/staging/discovery/read/research/route"];
+for (const path of readers) assert.equal(paths.includes(path), mode === "combined", path);
 const gateRoutes = ["/staging/private-access/route", "/staging/private-access/records/route", "/api/staging/private-access/route"];
 const normalRoutes = ["/page", "/community/page", "/research/page", "/staging/discovery/page", "/staging/discovery/rooms/[sport]/[id]/page", "/api/notifications/dispatch/route", "/api/stripe/webhook/route", "/api/nba/threes-card/[day]/route"];
 for (const path of gateRoutes) assert.equal(paths.includes(path), mode === "gate" || mode === "combined", path);
@@ -97,9 +119,14 @@ serve
 owner='__Host-vq-private-access=fixture.owner.token'
 expect 200 /staging/private-access
 expect 401 /api/staging/private-access
+expect 401 /staging/discovery/read/dealer
+expect 403 /staging/discovery/read/dealer --cookie "__Host-vq-private-access=fixture.member.token"
+expect 200 /staging/discovery/read/dealer --cookie "__Host-vq-private-access=fixture.owner.token"
+expect 200 /staging/discovery/read/research --cookie "__Host-vq-private-access=fixture.owner.token"
+expect 400 "/staging/discovery/read/research?url=https://vegasquant.app" --cookie "__Host-vq-private-access=fixture.owner.token"
 expect 303 /community
 expect 403 /community --cookie '__Host-vq-private-access=fixture.member.token'
-for path in / /community /research /staging/discovery /staging/discovery/rooms/nba/fixture-nba; do
+for path in / /community /research /staging/discovery /staging/discovery/rooms/nba/fixture-nba /membership /notifications /slots /vegas-fear /privacy /terms /faq /responsible-play /about /methodology /support /support/report /account/recovery /account/verify-age; do
   expect 200 "$path" --cookie "$owner"
 done
 expect 308 '/?game=legacy' --cookie "$owner"
@@ -108,6 +135,14 @@ for path in /api/checkout /api/stripe/webhook /api/notifications/dispatch /api/n
 done
 expect 405 /community --cookie "$owner" -X POST
 stop
+if [[ "${ATLAS_BROWSER_ACCEPTANCE:-0}" == "1" ]]; then
+  export STAGING_DISCOVERY_FIXTURES=false VQ_STAGE_RESEARCH_CONTRACT=vq-stage-session-v1
+  serve
+  node scripts/ui-smoke/atlas-connected-home.mjs
+  stop
+  export STAGING_DISCOVERY_FIXTURES=true
+  unset VQ_STAGE_RESEARCH_CONTRACT
+fi
 
 export STAGING_DISCOVERY_ENABLED=false
 serve

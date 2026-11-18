@@ -1,0 +1,30 @@
+name: NBA prop card
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261117120000_nba_prop_card_inputs.sql"
+      - "supabase/functions/nba-results/**"
+      - "src/lib/nba-research-tab.ts"
+      - "src/components/nba-research-tab.tsx"
+      - "src/components/nba-prop-card.tsx"
+      - "src/app/nba-research-tab.css"
+      - "tests/nba-research-tab.test.ts"
+      - "tests/nba-results.test.ts"
+      - "tests/sql/nba-prop-card-inputs.mjs"
+      - ".github/workflows/nba-prop-card.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  nba-prop-card:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --import tsx --test tests/nba-research-tab.test.ts tests/nba-results.test.ts
+      - run: node tests/sql/nba-prop-card-inputs.mjs

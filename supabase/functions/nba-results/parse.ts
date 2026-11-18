@@ -34,6 +34,16 @@ const made = (v: string | undefined) => count((v ?? "").split("-")[0]);
 const attempted = (v: string | undefined) => count((v ?? "").split("-")[1]);
 const STATS = ["points", "rebounds", "assists", "steals", "blocks", "turnovers"] as const;
 const THREES = "threePointFieldGoalsMade-threePointFieldGoalsAttempted";
+// Field goals and free throws feed usage only; a summary without them still records its box score.
+const FIELD_GOALS = "fieldGoalsMade-fieldGoalsAttempted";
+const FREE_THROWS = "freeThrowsMade-freeThrowsAttempted";
+
+/** Made and attempted field goals and free throws, or nulls when the column is absent or unreadable. */
+function shooting(played: boolean, fg: string | undefined, ft: string | undefined) {
+  if (!played) return { fgm: 0, fga: 0, ftm: 0, fta: 0 };
+  const v = { fgm: made(fg), fga: attempted(fg), ftm: made(ft), fta: attempted(ft) };
+  return Object.values(v).every(Number.isFinite) ? v : { fgm: null, fga: null, ftm: null, fta: null };
+}
 
 export function resultPayload(data: Summary, game: Game, sourceHash: string) {
   if (data.header?.id != null && String(data.header.id) !== game.provider_id)
@@ -75,6 +85,7 @@ export function resultPayload(data: Summary, game: Game, sourceHash: string) {
         minutes: played ? (Number.isFinite(count(st[at("minutes")])) ? count(st[at("minutes")]) : null) : null,
         threes: played ? made(st[at(THREES)]) : 0,
         three_attempts: played ? attempted(st[at(THREES)]) : 0,
+        ...shooting(played, at(FIELD_GOALS) < 0 ? undefined : st[at(FIELD_GOALS)], at(FREE_THROWS) < 0 ? undefined : st[at(FREE_THROWS)]),
         ...Object.fromEntries(STATS.map((k) => [k, played ? count(st[at(k)]) : 0])),
       };
       if ([row.threes, row.three_attempts, ...STATS.map((k) => (row as Record<string, unknown>)[k])].some((v) => !Number.isFinite(v)))

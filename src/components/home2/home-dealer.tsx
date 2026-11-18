@@ -8,6 +8,7 @@ import {
   readHomeDealer,
   type HomeDealerResult,
 } from "@/lib/home-dealer";
+import { createStageDealerReader } from "@/lib/stage-dealer-client";
 import { zonePostLead } from "@/lib/game-zone-posts";
 import { homeTimestamp } from "@/lib/home2";
 
@@ -23,6 +24,26 @@ export default function HomeDealer({
   // Tag responses with the requested sport so a filter change cannot flash old rows.
   const [loadedSport, setLoadedSport] = useState("");
   useEffect(() => {
+    if (process.env.VQ_COMBINED_STAGE_BUILD === "1") {
+      const reader = createStageDealerReader(
+        (next) => {
+          setResult(next);
+          setLoadedSport(sport);
+        },
+        () => setResult(null),
+      );
+      void reader.read(sport);
+      // HttpOnly cookie changes have no browser auth event; recheck on focus/visibility/poll.
+      const stop = watchDiscoveryAccess(
+        reader.invalidate,
+        () => void reader.read(sport),
+        () => () => {},
+      );
+      return () => {
+        stop();
+        reader.dispose();
+      };
+    }
     let active = true,
       generation = 0;
     const clear = () => {
@@ -66,6 +87,9 @@ export default function HomeDealer({
   const current = loadedSport === sport ? result : null;
   return (
     <section aria-labelledby="home2-dealer-title">
+      {process.env.VQ_COMBINED_STAGE_BUILD === "1" && (
+        <p>ISOLATED STAGING · Synthetic publications, not live picks.</p>
+      )}
       <h3 id="home2-dealer-title">Latest from The Dealer</h3>
       <p>
         Recent publications from the configured Dealer publisher, shown only
