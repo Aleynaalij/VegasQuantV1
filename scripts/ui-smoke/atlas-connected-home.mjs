@@ -178,6 +178,9 @@ try {
       );
       assert.equal(identity.body.session.transport, "httpOnly-stage");
       assert.equal("access_token" in identity.body.session, false);
+      await page
+        .locator(".vq-brand-opening")
+        .waitFor({ state: "detached", timeout: 5000 });
       await page.screenshot({
         path: `${out}/${storage}-${sport}-room-phone.png`,
         fullPage: true,
@@ -242,6 +245,9 @@ try {
       .waitFor();
     await page.goto(base + "/notifications");
     await page.getByText(/Unread count is unknown/).waitFor();
+    await page
+      .locator(".vq-brand-opening")
+      .waitFor({ state: "detached", timeout: 5000 });
     await page.screenshot({
       path: `${out}/${storage}-notifications-phone.png`,
       fullPage: true,
