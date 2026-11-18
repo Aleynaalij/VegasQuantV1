@@ -16,9 +16,11 @@ import {
   latestNbaObservations,
   nbaFreshness,
   nbaSource,
+  nbaPropPair,
   type NbaGame,
   type NbaObservation,
 } from "@/lib/nba-board";
+import NbaGamePropCard from "./nba-game-prop-card";
 import "@/app/nba-board.css";
 
 const stamp = (s: string | null) => {
@@ -428,6 +430,30 @@ export function NbaGameDetails({
                       player={c.player}
                     />
                   )}
+                  {c.player &&
+                    c.point !== null &&
+                    (c.market === "player_points" ||
+                      c.market === "player_rebounds") &&
+                    (() => {
+                      const pair = nbaPropPair(
+                        comparisons,
+                        c.market,
+                        c.player,
+                        c.point,
+                      );
+                      return pair ? (
+                        <NbaGamePropCard
+                          key={`card-${c.market}-${c.player}-${c.point}`}
+                          game={game}
+                          player={c.player}
+                          market={c.market}
+                          point={c.point}
+                          over={pair.over}
+                          under={pair.under}
+                          book={pair.book}
+                        />
+                      ) : null;
+                    })()}
                   {c.player && (
                     <NbaPlayerForm
                       key={`${c.player}-${game.id}`}

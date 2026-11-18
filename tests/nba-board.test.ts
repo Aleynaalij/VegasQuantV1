@@ -211,3 +211,50 @@ test("withdrawn and future-dated snapshots cannot revive a best price", () => {
     null,
   );
 });
+
+test("Prop pair: one book's over and under for the game-log card, FanDuel first", async () => {
+  const { nbaPropPair } = await import("../src/lib/nba-board");
+  const q = (book: string, price: number) => ({
+    book,
+    price,
+    observed_at: null,
+    recorded_at: "2026-11-17T22:00:00Z",
+    source: "",
+    fresh: true,
+  });
+  const side = (name: string, quotes: ReturnType<typeof q>[]) => ({
+    key: name,
+    market: "player_points",
+    player: "Jalen Brunson",
+    side: name,
+    point: 26.5,
+    quotes,
+    best: null,
+  });
+  const both = [
+    side("Over", [q("DraftKings", -110), q("FanDuel", -115)]),
+    side("Under", [q("DraftKings", -110), q("FanDuel", -105)]),
+  ];
+  assert.deepEqual(nbaPropPair(both, "player_points", "Jalen Brunson", 26.5), {
+    book: "FanDuel",
+    over: -115,
+    under: -105,
+  });
+  // FanDuel quotes only the over: fall back to a book with both sides.
+  const partial = [
+    side("Over", [q("FanDuel", -115), q("BetMGM", -120)]),
+    side("Under", [q("BetMGM", -102)]),
+  ];
+  assert.deepEqual(
+    nbaPropPair(partial, "player_points", "Jalen Brunson", 26.5),
+    { book: "BetMGM", over: -120, under: -102 },
+  );
+  assert.equal(
+    nbaPropPair(partial, "player_points", "Jalen Brunson", 27.5),
+    null,
+  );
+  assert.equal(
+    nbaPropPair([both[0]], "player_points", "Jalen Brunson", 26.5),
+    null,
+  );
+});
