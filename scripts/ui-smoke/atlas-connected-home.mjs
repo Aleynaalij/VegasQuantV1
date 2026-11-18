@@ -108,6 +108,10 @@ try {
         .getAttribute("href"),
       /^\/notifications$/,
     );
+    await page
+      .locator(".lobby-community-stories")
+      .getByRole("button", { name: "Stories unavailable · Retry", exact: true })
+      .waitFor();
     await page.screenshot({
       path: `${out}/${storage}-home-phone.png`,
       fullPage: true,
@@ -270,6 +274,7 @@ try {
         storage,
         cases: [
           "verified shell Account without second SDK identity",
+          "verified story identity with explicit unavailable isolated story contract",
           "four guarded schedules and all-sport Room navigation",
           "account identity and explicit unavailable notifications",
           "saved legs and My Lays distinguish missing contracts from signed-out",

@@ -61,3 +61,9 @@ Sequence: exact-head code/CI and Elo independent consumer/security review → ow
 ## Independent lifecycle review
 
 Elo independently reproduced a forced-refresh epoch defect at initial407964f (#303 comment6966130234): a pending A read was reused by read(true), so a delayed A response remained eligible after foreground refresh. The follow-up forces cancellation/new epoch while preserving ordinary deduplication and adds delayed A→forced denied plus sign-out invalidation/concurrent-signout tests. It also requires Auth success followed by live gate denial before sign-out success. These fixes need independent replay on the final exact SHA. Core consumer wrappers preserve ordinary components and avoid a second SDK enrollment/login, fake profile-setup prompt, or fabricated zero-notification success.
+
+## Accepted-main compatibility alignment
+
+A fresh main fetch found `cc87ddc42c544a2e45340fc53c86565e57791f1e`, after the original df5e5f0 baseline. This isolated candidate retains accepted #299, #301 and #302 as a separate integration parent, preserving their NBA game-log card, minor-result correction and confirmed-result behavior. Those commits are existing main work, not a new NBA initiative. No production branch was merged or deployed and no SQL was run. The already accepted migration file is retained byte-for-byte from main, not newly authored/applied here. Existing source branches remain unchanged. Main added no route/proxy/build/configuration changes; the 88-route inventory is unchanged. Final exact-head CI must cover the integrated tree, including the existing minor-corrections SQL regression.
+
+The story rail now shares the same viewer identity as its clock and viewer; an authorized staging owner sees the existing explicit Stories unavailable/Retry state when the isolated contracts are missing, rather than a false signed-out rail. This does not enable any social RPC, mutation or notification capability.
