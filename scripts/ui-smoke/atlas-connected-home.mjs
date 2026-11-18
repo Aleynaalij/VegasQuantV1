@@ -189,9 +189,20 @@ try {
     await page.getByRole("heading", { name: "Account", exact: true }).waitFor();
     await page.getByText("fixture@example.invalid", { exact: true }).waitFor();
     await page.goto(base + "/saved");
-    await page
-      .getByText("Saved legs could not load.", { exact: true })
-      .waitFor();
+    const savedUnavailable = page
+      .locator(".published-board p[role=status]")
+      .filter({ hasText: "Saved legs could not load." });
+    await savedUnavailable.waitFor();
+    assert.match(
+      await savedUnavailable.innerText(),
+      /^Saved legs could not load\.\s*Retry$/,
+    );
+    assert.equal(
+      await savedUnavailable
+        .getByRole("button", { name: "Retry", exact: true })
+        .count(),
+      1,
+    );
     assert.equal(
       await page
         .getByText(
@@ -201,12 +212,29 @@ try {
         .count(),
       0,
     );
+    assert.doesNotMatch(
+      await page.locator(".published-board").innerText(),
+      /Sign in to view published selections/,
+    );
+    assert.equal(
+      await page
+        .locator(".published-board")
+        .getByRole("link", {
+          name: "Sign in or create a free account →",
+          exact: true,
+        })
+        .count(),
+      0,
+    );
     await page.goto(base + "/parlays?build=1");
     await page
-      .getByText(
-        "Your leg library or saved lays could not load. Please retry.",
-        { exact: true },
-      )
+      .getByRole("alert")
+      .filter({
+        hasText: "Your leg library or saved lays could not load. Please retry.",
+      })
+      .waitFor();
+    await page
+      .getByRole("button", { name: "Retry library", exact: true })
       .waitFor();
     await page.goto(base + "/notifications");
     await page.getByText(/Unread count is unknown/).waitFor();
@@ -214,6 +242,11 @@ try {
       path: `${out}/${storage}-notifications-phone.png`,
       fullPage: true,
     });
+    assert.equal(
+      external.filter((url) => url.includes("supabase.co")).length,
+      0,
+      "Every connected journey must avoid a second browser backend identity",
+    );
     await fs.writeFile(
       `${out}/${storage}-report.json`,
       JSON.stringify(
@@ -249,6 +282,37 @@ try {
     );
     await context.close();
   }
+} catch (error) {
+  // Preserve the actual failing UI for diagnosis without altering any assertion.
+  for (const [i, context] of browser.contexts().entries()) {
+    for (const [j, page] of context.pages().entries()) {
+      await fs
+        .writeFile(`${out}/failure-${i}-${j}.html`, await page.content())
+        .catch(() => {});
+      await fs
+        .writeFile(
+          `${out}/failure-${i}-${j}.json`,
+          JSON.stringify(
+            {
+              url: page.url(),
+              error: String(error),
+              body: (await page.locator("body").innerText()).slice(0, 12000),
+            },
+            null,
+            2,
+          ),
+        )
+        .catch(() => {});
+      await page
+        .screenshot({
+          path: `${out}/failure-${i}-${j}.png`,
+          fullPage: true,
+          timeout: 5000,
+        })
+        .catch(() => {});
+    }
+  }
+  throw error;
 } finally {
   await browser.close();
 }
