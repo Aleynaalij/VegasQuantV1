@@ -194,6 +194,20 @@ export function propQuotes(
   return [...quotes.values()];
 }
 
+export type BookQuote = PropQuote & { book: string };
+/** Every book's latest quotes, each from that book's newest snapshot per market. */
+export function allBookQuotes(
+  snapshots: { recorded_at: string; payload: PropPayload }[],
+): BookQuote[] {
+  const books = new Set(snapshots.map((s) => s.payload?.book).filter(Boolean));
+  return [...books].flatMap((book) =>
+    propQuotes(snapshots, book as string).map((q) => ({
+      ...q,
+      book: book as string,
+    })),
+  );
+}
+
 export type PropTrend = PropQuote & {
   athlete_id: string;
   team: string;
