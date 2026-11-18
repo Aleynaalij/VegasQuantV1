@@ -136,6 +136,20 @@ export async function stageDataGateway(
     if (payload.length > 2_000_000) return fail(503);
     // Strip backend headers/errors. These fixed invoker RPCs are the reviewed public projections.
     const data: unknown = JSON.parse(payload);
+    // A successful initial check is not permission to return a now-revoked read.
+    const [finalAge, finalMember] = await Promise.all([
+      call("rpc/age_verification_status", "{}"),
+      call("rpc/membership_status", "{}"),
+    ]);
+    if (!finalAge.ok || !finalMember.ok) return fail(503);
+    const finalA = await finalAge.json(),
+      finalM = await finalMember.json();
+    if (
+      finalA?.synthetic !== true ||
+      finalA?.verified !== true ||
+      finalM?.allowed !== true
+    )
+      return fail(403);
     const current = await authorizeStageToken(config, token, transport);
     return current === 200
       ? NextResponse.json(data, { headers })

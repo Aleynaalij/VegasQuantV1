@@ -99,6 +99,16 @@ export async function stageViewerSession(
       member?.allowed !== true
     )
       return fail(403);
+    const [finalAge, finalMember] = await Promise.all([
+      read("/rest/v1/rpc/age_verification_status", "POST"),
+      read("/rest/v1/rpc/membership_status", "POST"),
+    ]);
+    if (
+      finalAge?.synthetic !== true ||
+      finalAge?.verified !== true ||
+      finalMember?.allowed !== true
+    )
+      return fail(403);
     const current = await authorizeStageToken(config, token, transport);
     if (current !== 200) return fail(current);
     return NextResponse.json(

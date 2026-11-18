@@ -690,3 +690,23 @@ test("isolated SQL denies stored live sessions, preserves records and workers, a
     await db.close();
   }
 });
+
+test("feature-preservation branch fails closed without its isolated build configuration", () => {
+  assert.throws(
+    () =>
+      stageBuildProfile({
+        VERCEL: "1",
+        VERCEL_ENV: "preview",
+        VERCEL_GIT_COMMIT_REF: "codex/atlas-feature-preservation",
+      }),
+    /Invalid or incomplete/,
+  );
+  assert.equal(
+    stageBuildProfile({
+      VERCEL: "1",
+      VERCEL_ENV: "production",
+      VERCEL_GIT_COMMIT_REF: "codex/atlas-feature-preservation",
+    }),
+    "standard",
+  );
+});

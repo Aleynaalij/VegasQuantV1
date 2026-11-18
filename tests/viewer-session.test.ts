@@ -73,6 +73,7 @@ test("viewer and data boundary: owner, denial, original age/entitlement, race re
     outage = false,
     malformed = false,
     race = false,
+    dataRace: "age" | "member" | "outage" | null = null,
     logout = 204,
     revokeOnLogout = true;
   const calls: string[] = [];
@@ -100,7 +101,10 @@ test("viewer and data boundary: owner, denial, original age/entitlement, race re
       if (logout === 204 && revokeOnLogout) gate = false;
       return new Response(null, { status: logout });
     }
-    if (url.pathname.endsWith("game_zone_posts"))
+    if (url.pathname.endsWith("game_zone_posts")) {
+      if (dataRace === "age") age = false;
+      if (dataRace === "member") member = false;
+      if (dataRace === "outage") outage = true;
       return Response.json([
         {
           id: "original-id",
@@ -108,6 +112,7 @@ test("viewer and data boundary: owner, denial, original age/entitlement, race re
           body: "Original source",
         },
       ]);
+    }
     throw Error(url.pathname);
   };
   let response: Response = await stageViewerSession(req(), transport);
@@ -203,9 +208,48 @@ test("viewer and data boundary: owner, denial, original age/entitlement, race re
   response = await stageDataGateway(req("data", "POST", query), transport);
   assert.equal(response.status, 200);
   assert.equal((await response.json())[0].id, "original-id");
+  for (const mutation of ["age", "member", "outage"] as const) {
+    dataRace = mutation;
+    response = await stageDataGateway(req("data", "POST", query), transport);
+    assert.equal(response.status, mutation === "outage" ? 503 : 403);
+    assert(!JSON.stringify(await response.json()).includes("original-id"));
+    age = member = true;
+    outage = false;
+  }
+  dataRace = null;
+  for (const endpoint of ["age_verification_status", "membership_status"]) {
+    let reads = 0;
+    const changing: typeof fetch = async (input, init) => {
+      if (String(input).endsWith(endpoint) && ++reads === 2)
+        return Response.json(
+          endpoint === "membership_status"
+            ? { allowed: false }
+            : { synthetic: true, verified: false },
+        );
+      return transport(input, init);
+    };
+    response = await stageViewerSession(req(), changing);
+    assert.equal(
+      response.status,
+      403,
+      `identity eligibility changed during ${endpoint}`,
+    );
+    assert(!JSON.stringify(await response.json()).includes(user.email));
+  }
   for (const path of [
     "community_posts",
     "rpc/create_community_post",
+    "rpc/community_activity",
+    "rpc/community_comments",
+    "rpc/notification_inbox",
+    "rpc/notification_action",
+    "rpc/create_member_parlay",
+    "rpc/share_member_parlay",
+    "rpc/community_profile",
+    "saved_legs",
+    "member_parlays",
+    "notification_preferences",
+    "member_follows",
     "rpc/notification_sync_updates",
     "rpc/checkout",
     "../auth/v1/admin",
