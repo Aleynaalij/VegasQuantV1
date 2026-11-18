@@ -44,6 +44,7 @@ export function stageBuildProfile(env: Environment): StageBuildProfile {
       "codex/atlas-combined-stage",
       "codex/atlas-final-integration",
       "codex/atlas-authenticated-experience",
+      "codex/atlas-feature-preservation",
       "elo/atlas-consumer-reader-ci",
     ].includes(env.VERCEL_GIT_COMMIT_REF ?? "") ||
     (env.VERCEL === "1" &&
