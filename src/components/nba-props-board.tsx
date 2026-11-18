@@ -7,6 +7,7 @@ import { onUserChange } from "@/lib/auth-user";
 import { noAccess, type Access } from "@/lib/membership";
 import { nbaNickname, nbaWhen } from "@/lib/nba-home";
 import { loadSlate, type Slate } from "@/lib/nba-tonight";
+import { latestRequest } from "@/lib/latest-request";
 import {
   SORTS,
   buildPropRows,
@@ -263,9 +264,12 @@ export default function NbaPropsBoard() {
   const [game, setGame] = useState(params.get("game") || "all");
   const [open, setOpen] = useState<string | null>(null);
 
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    let live = true;
-    async function load() {
+    const gate = latestRequest();
+    // quiet: a background refresh keeps what is on screen if it fails.
+    async function load(quiet = false) {
+      const current = gate.start();
       try {
         const a = await supabase.rpc("membership_status");
         const status = a.error ? noAccess : (a.data as Access);
@@ -273,19 +277,36 @@ export default function NbaPropsBoard() {
           status.allowed,
           params.get("game") || undefined,
         );
-        if (!live) return;
+        if (!current()) return;
         setAccess(status);
         setSlate(s);
         setError("");
+        setNow(Date.now());
       } catch {
-        if (live) setError("Props could not load. Retry in a moment.");
+        if (current() && !quiet)
+          setError("Props could not load. Retry in a moment.");
       }
     }
     void load();
-    const stop = onUserChange(() => void load());
+    // A sign-in or sign-out drops everything shown for the previous account at once, and any
+    // request still running for it can no longer land.
+    const stop = onUserChange(() => {
+      gate.cancel();
+      setOpen(null);
+      setSlate(null);
+      setAccess(noAccess);
+      setError("");
+      void load();
+    });
+    // Lines are collected about every 15 minutes: refresh quietly while the board is on screen.
+    const refresh = setInterval(() => {
+      if (document.visibilityState === "visible") void load(true);
+      setNow(Date.now());
+    }, 15 * 60000);
     return () => {
-      live = false;
+      gate.cancel();
       stop();
+      clearInterval(refresh);
     };
     // The requested game is read once, on arrival; later chip changes filter the loaded slate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -397,6 +418,12 @@ export default function NbaPropsBoard() {
         ) : null}
       </div>
 
+      {slate?.propsAt && now - Date.parse(slate.propsAt) > 60 * 60000 ? (
+        <p className="pf-stale" role="status">
+          FanDuel lines last updated {time(slate.propsAt)} ET. Prices may have
+          moved since; the board refreshes when new lines arrive.
+        </p>
+      ) : null}
       {!slate ? (
         <ul className="pf-list" aria-busy="true" aria-label="Loading props">
           {Array.from({ length: 6 }, (_, i) => (

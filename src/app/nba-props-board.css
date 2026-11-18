@@ -435,3 +435,12 @@
 .pf-sheet-head .pf-face {
   grid-area: auto;
 }
+.pf-stale {
+  margin: 0;
+  padding: 8px 12px;
+  border: 1px solid #f4dc9966;
+  border-radius: 10px;
+  background: #f4dc9914;
+  color: #f4dc99;
+  font-size: 12.5px;
+}
