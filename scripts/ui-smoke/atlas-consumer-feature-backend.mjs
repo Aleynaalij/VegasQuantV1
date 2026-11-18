@@ -19,6 +19,7 @@ await db.exec(
   `insert into saved_legs(user_id,leg_key) values('${id(1)}','a');select create_member_parlay('Synthetic saved lay',array['a','b']);`,
 );
 let chain = Promise.resolve();
+let logoutFailure = false;
 const server = createServer((req, res) => {
   chain = chain
     .then(async () => {
@@ -34,6 +35,21 @@ const server = createServer((req, res) => {
           if (body.length > 400000) throw Error("bound");
         }
         const path = new URL(req.url, "http://127.0.0.1").pathname;
+        if (path === "/fixture/incomplete-profile") {
+          await db.exec(
+            `reset role;update public.community_profiles set avatar=null where user_id='${id(1)}'`,
+          );
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end("{}");
+          return;
+        }
+        if (path === "/fixture/logout-mode") {
+          if (req.method === "POST")
+            logoutFailure = JSON.parse(body).fail === true;
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ fail: logoutFailure }));
+          return;
+        }
         await fixture.as(1);
         const query =
           path === "/rest/v1/rpc/vq_private_access_stage_features"

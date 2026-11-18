@@ -365,7 +365,7 @@
       "upsert": false
     },
     "candidate_releases": {
-      "group": "research",
+      "group": "desk",
       "write": [],
       "methods": [
         "GET"

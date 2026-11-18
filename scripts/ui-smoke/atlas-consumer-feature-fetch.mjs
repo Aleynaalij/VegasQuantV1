@@ -4,6 +4,13 @@ const baseline = globalThis.fetch;
 globalThis.fetch = async (input, options) => {
   const url = new URL(input instanceof Request ? input.url : String(input));
   if (url.origin === process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    if (url.pathname === "/auth/v1/logout") {
+      const mode = await baseline(
+        `http://127.0.0.1:${process.env.ATLAS_FEATURE_PORT || 3221}/fixture/logout-mode`,
+        { headers: { authorization: "Bearer fixture.owner.token" } },
+      );
+      if ((await mode.json()).fail) return new Response(null, { status: 503 });
+    }
     if (
       url.pathname === "/auth/v1/user" &&
       new Headers(options?.headers).get("authorization") ===

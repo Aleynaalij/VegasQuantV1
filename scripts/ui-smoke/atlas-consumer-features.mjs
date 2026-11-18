@@ -171,6 +171,122 @@ try {
     });
     await context.close();
   }
+  // Incomplete profile is a separate positive journey, not hidden by the ready-profile seed.
+  const control = async (path, body) => {
+    const r = await fetch(
+      `http://127.0.0.1:${process.env.ATLAS_FEATURE_PORT || 3221}/fixture/${path}`,
+      {
+        method: "POST",
+        headers: {
+          authorization: "Bearer fixture.owner.token",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      },
+    );
+    assert.equal(r.status, 200);
+  };
+  await control("incomplete-profile", {});
+  await control("logout-mode", { fail: true });
+  const incomplete = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+  });
+  await incomplete.addCookies([
+    {
+      name: "__Host-vq-private-access",
+      value: "fixture.owner.token",
+      domain: "127.0.0.1",
+      path: "/",
+      secure: true,
+      httpOnly: true,
+      sameSite: "Strict",
+    },
+  ]);
+  await incomplete.route("**/*", (route) => {
+    const u = new URL(route.request().url());
+    if (u.origin !== base && !["data:", "blob:"].includes(u.protocol))
+      return route.abort("blockedbyclient");
+    if (
+      u.pathname === "/staging/discovery/data" &&
+      route.request().method() === "POST"
+    )
+      return route.continue({
+        headers: {
+          ...route.request().headers(),
+          origin: "https://atlas-fixture.vercel.app",
+        },
+      });
+    if (
+      u.pathname === "/staging/discovery/session" &&
+      route.request().method() === "POST"
+    )
+      return route.continue({
+        headers: {
+          ...route.request().headers(),
+          origin: "https://atlas-fixture.vercel.app",
+        },
+      });
+    return route.continue();
+  });
+  const page = await incomplete.newPage();
+  page.setDefaultTimeout(20000);
+  await page.goto(`${base}/membership`);
+  const dialog = page.getByRole("dialog", {
+    name: "Make your profile yours",
+    exact: true,
+  });
+  await dialog.waitFor();
+  await dialog.getByRole("button", { name: "Sign out", exact: true }).click();
+  await page
+    .getByText(
+      "Sign-out could not be verified. Your staging session may still be active. Retry sign out.",
+      { exact: true },
+    )
+    .waitFor();
+  assert(
+    (await incomplete.cookies()).some(
+      (c) => c.name === "__Host-vq-private-access",
+    ),
+    "failed revocation retains the retry cookie",
+  );
+  assert.equal(
+    await page.evaluate(
+      async () => (await fetch("/staging/discovery/session")).status,
+    ),
+    200,
+    "failed revocation must not claim the server session was invalidated",
+  );
+  await control("logout-mode", { fail: false });
+  await page.getByRole("button", { name: "Sign out", exact: true }).click();
+  await page.waitForURL(`${base}/staging/private-access`);
+  assert.equal(
+    (await incomplete.cookies()).some(
+      (c) => c.name === "__Host-vq-private-access",
+    ),
+    false,
+  );
+  assert.equal(
+    (
+      await incomplete.request.get(`${base}/community`, {
+        headers: { cookie: "__Host-vq-private-access=fixture.owner.token" },
+      })
+    ).status(),
+    403,
+    "replayed old session is denied after successful retry",
+  );
+  await page.screenshot({
+    path: `${out}/incomplete-profile-logout.png`,
+    fullPage: true,
+  });
+  results.push({
+    evidence: "SYNTHETIC",
+    incompleteProfileSignOut: true,
+    failedRevocationNotice: true,
+    retryCookieRetained: true,
+    retryClearedCookie: true,
+    revokedReplayDenied: true,
+  });
+  await incomplete.close();
   await fs.writeFile(`${out}/results.json`, JSON.stringify(results, null, 2));
   console.log(JSON.stringify(results, null, 2));
 } catch (error) {

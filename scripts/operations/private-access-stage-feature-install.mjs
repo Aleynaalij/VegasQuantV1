@@ -1,6 +1,31 @@
 import { readFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
-export async function stageFeatureInstallSql() {
+export async function stageFeatureCatalogSql() {
+  const source = await readFile(
+    new URL("./private-access-stage-features.sql", import.meta.url),
+    "utf8",
+  );
+  const match =
+    /create function vq_private_access_stage[.]feature_fingerprints\(\)[\s\S]*?as \$\$([\s\S]*?)\$\$;/.exec(
+      source,
+    );
+  if (!match) throw Error("Catalog contract missing");
+  return match[1].trim();
+}
+/** Requires a separately reviewed pre-install catalog, never captured/blessed during install. */
+export async function stageFeatureInstallSql({ reviewedCatalog } = {}) {
+  if (
+    !reviewedCatalog ||
+    typeof reviewedCatalog !== "object" ||
+    !reviewedCatalog.functions ||
+    !reviewedCatalog.tables
+  )
+    throw Error(
+      "A separately reviewed original security catalog is required before isolated installation",
+    );
+  const catalogSql = await stageFeatureCatalogSql();
+  const expectedCatalog =
+    "'" + JSON.stringify(reviewedCatalog).replaceAll("'", "''") + "'::jsonb";
   const registry = JSON.parse(
     await readFile(
       new URL("../../src/lib/stage-feature-registry.json", import.meta.url),
@@ -35,6 +60,8 @@ export async function stageFeatureInstallSql() {
  if exists(select 1 from pg_trigger t join pg_proc p on p.oid=t.tgfoid join pg_namespace n on n.oid=p.pronamespace
   where not t.tgisinternal and n.nspname in ('public','private') and (case when p.prokind='f' then pg_get_functiondef(p.oid) else '' end) ~* '(net[.]http_|http_post\\s*\\(|http_get\\s*\\(|dblink\\s*\\(|pg_notify\\s*\\()') then
   raise exception 'Unreviewed outbound trigger';end if;
+ if (${catalogSql}) is distinct from ${expectedCatalog} then
+  raise exception 'Original security catalog drifted from the separately reviewed pre-install artifact';end if;
  end $isolated$;
  ${source}
  insert into vq_private_access_stage.feature_contract(version,registry,capabilities)
@@ -106,5 +133,21 @@ export async function stageFeatureInstallSql() {
  update vq_private_access_stage.feature_contract set fingerprints=vq_private_access_stage.feature_fingerprints() where singleton;
  commit;`;
 }
-if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url)
-  process.stdout.write(await stageFeatureInstallSql());
+if (
+  process.argv[1] &&
+  pathToFileURL(process.argv[1]).href === import.meta.url
+) {
+  if (process.argv.includes("--catalog-query"))
+    process.stdout.write(await stageFeatureCatalogSql());
+  else {
+    const index = process.argv.indexOf("--reviewed-catalog");
+    if (index < 0 || !process.argv[index + 1])
+      throw Error(
+        "Supply --reviewed-catalog FILE after independent original-schema review; no automatic live-baseline acceptance",
+      );
+    const reviewedCatalog = JSON.parse(
+      await readFile(process.argv[index + 1], "utf8"),
+    );
+    process.stdout.write(await stageFeatureInstallSql({ reviewedCatalog }));
+  }
+}

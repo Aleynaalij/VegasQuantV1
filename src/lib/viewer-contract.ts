@@ -16,6 +16,7 @@ export type ViewerIdentity = {
   session: ViewerSession | null;
   age: "verified" | "unknown";
   capabilities: FeatureCapabilities;
+  failure?: "logout";
 };
 export const unavailableCapabilities = {
   profile: false,

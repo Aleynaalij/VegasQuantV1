@@ -182,3 +182,16 @@ test("feature HTTP and original asset adapter preserve same-session eligibility,
   assert.equal((await render()).status, 404);
   assert.equal(rendered, before);
 });
+
+test("same-session asset path renders the original nonempty publication SVG with canonical source checks", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const output = execFileSync(
+    process.execPath,
+    ["--import", "tsx", "tests/fixtures/stage-original-sheet.mjs"],
+    {
+      encoding: "utf8",
+      env: { ...process.env, ...env, VQ_COMBINED_STAGE_BUILD: "1" },
+    },
+  );
+  assert.match(output, /PASS: original nonempty SVG/);
+});

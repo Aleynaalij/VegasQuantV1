@@ -368,6 +368,10 @@ test("viewer client drops delayed identities, clears before revalidation, dedupl
   assert.equal(c.getSnapshot().session, null);
   pending[4](new Response(null, { status: 503 }));
   assert((await logout).error);
+  assert.match(
+    viewerPresentation(c.getSnapshot()).message,
+    /Sign-out could not be verified/,
+  );
   assert.equal(c.getSnapshot().state, "error");
   const retry = c.signOut();
   pending[5](Response.json({ state: "anonymous" }));

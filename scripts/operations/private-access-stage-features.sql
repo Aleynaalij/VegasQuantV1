@@ -52,7 +52,7 @@ language sql stable security invoker set search_path='' as $$
   'acl',c.relacl::text,'force_rls',c.relforcerowsecurity,'options',c.reloptions,'kind',c.relkind,'view',case when c.relkind='v' then pg_get_viewdef(c.oid) else null end,
   'constraints',(select jsonb_agg(pg_get_constraintdef(co.oid) order by co.conname) from pg_constraint co where co.conrelid=c.oid),
   'triggers',(select jsonb_agg(jsonb_build_array(pg_get_triggerdef(tr.oid),tr.tgenabled) order by tr.tgname) from pg_trigger tr where tr.tgrelid=c.oid and not tr.tgisinternal),
-  'columns',(select jsonb_agg(jsonb_build_array(a.attname,a.atttypid,a.attnotnull) order by a.attnum)
+  'columns',(select jsonb_agg(jsonb_build_array(a.attname,a.atttypid,a.attnotnull,a.attacl::text,a.attidentity,a.attgenerated,(select pg_get_expr(d.adbin,d.adrelid) from pg_attrdef d where d.adrelid=a.attrelid and d.adnum=a.attnum)) order by a.attnum)
    from pg_attribute a where a.attrelid=c.oid and a.attnum>0 and not a.attisdropped),
   'policies',(select jsonb_agg(jsonb_build_array(p.polname,p.polpermissive,p.polroles::text,p.polcmd,
    pg_get_expr(p.polqual,p.polrelid),pg_get_expr(p.polwithcheck,p.polrelid)) order by p.polname) from pg_policy p where p.polrelid=c.oid))), '{}')

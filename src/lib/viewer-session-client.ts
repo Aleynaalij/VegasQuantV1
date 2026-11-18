@@ -95,7 +95,7 @@ export function createViewerSessionClient(transport: typeof fetch = fetch) {
         publish({ ...emptyViewer, state: "anonymous" });
         return { error: null };
       } catch (error) {
-        publish({ ...emptyViewer, state: "error" });
+        publish({ ...emptyViewer, state: "error", failure: "logout" });
         return {
           error:
             error instanceof Error ? error : new Error("Sign-out unavailable"),

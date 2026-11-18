@@ -573,3 +573,64 @@ test(
     );
   },
 );
+
+test(
+  "pre-install original-policy drift cannot be accepted as a new trusted baseline",
+  { timeout: 120000 },
+  async () => {
+    const { consumerDb } = await import("./fixtures/stage-consumer-db.mjs");
+    await assert.rejects(
+      consumerDb(undefined, async (db) => {
+        await db.exec(
+          "create policy accidental_profile_read on public.community_profiles for select to authenticated using(true)",
+        );
+      }),
+      /security catalog drifted/,
+    );
+    const { stageFeatureInstallSql } = await import(
+      "../scripts/operations/private-access-stage-feature-install.mjs"
+    );
+    await assert.rejects(
+      stageFeatureInstallSql(),
+      /separately reviewed original security catalog/,
+    );
+  },
+);
+
+test(
+  "privileged RLS-disable control records the direct-data limitation separately from manifest denial",
+  { timeout: 120000 },
+  async (t) => {
+    const { consumerDb } = await import("./fixtures/stage-consumer-db.mjs");
+    const fixture = await consumerDb();
+    t.after(() => fixture.db.close());
+    await fixture.as(3);
+    assert.equal(
+      (await fixture.db.query<any>("select count(*) n from community_posts"))
+        .rows[0].n,
+      0,
+    );
+    await fixture.db.exec(
+      "reset role;alter table public.community_posts disable row level security",
+    );
+    await fixture.as(3);
+    assert.equal(
+      (
+        await fixture.db.query<any>(
+          "select public.vq_private_access_stage_features() m",
+        )
+      ).rows[0].m,
+      null,
+    );
+    const exposed = (
+      await fixture.db.query<any>("select count(*) n from community_posts")
+    ).rows[0].n;
+    assert(
+      exposed > 0,
+      "retain the independently reported operator-DDL counterexample; do not mistake manifest NULL for direct-data protection",
+    );
+    console.warn(
+      "KNOWN ACCEPTANCE LIMITATION: privileged RLS disable closes the manifest but permits direct underlying reads. Hosting/release must not claim this operator-DDL boundary is protected.",
+    );
+  },
+);

@@ -1,9 +1,15 @@
 import { PGlite } from "@electric-sql/pglite";
 import { readFile } from "node:fs/promises";
-import { stageFeatureInstallSql } from "../../scripts/operations/private-access-stage-feature-install.mjs";
+import {
+  stageFeatureInstallSql,
+  stageFeatureCatalogSql,
+} from "../../scripts/operations/private-access-stage-feature-install.mjs";
 export const id = (n) =>
   `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
-export async function consumerDb(beforeInstall = async (_db) => {}) {
+export async function consumerDb(
+  beforeInstall = async (_db) => {},
+  unreviewedDrift = async (_db) => {},
+) {
   const db = new PGlite();
   const migration = async (file) =>
     db.exec(await readFile(`supabase/migrations/${file}`, "utf8"));
@@ -106,13 +112,17 @@ export async function consumerDb(beforeInstall = async (_db) => {}) {
     tails.slice(tails.indexOf("create function private.leg_tail_counts")),
   );
   await beforeInstall(db);
+  // Only the known committed synthetic preparation is the explicitly reviewed test baseline.
+  const reviewedCatalog = (await db.query(await stageFeatureCatalogSql()))
+    .rows[0].jsonb_build_object;
+  await unreviewedDrift(db);
   const aclBefore = (
     await db.query(
       `select oid::regprocedure::text f,proacl::text acl from pg_proc where pronamespace in ('public'::regnamespace,'private'::regnamespace) order by 1`,
     )
   ).rows;
   try {
-    await db.exec(await stageFeatureInstallSql());
+    await db.exec(await stageFeatureInstallSql({ reviewedCatalog }));
   } catch (error) {
     await db.close();
     throw error;
