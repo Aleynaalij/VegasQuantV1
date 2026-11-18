@@ -1,4 +1,5 @@
 "use client";
+import PropFinderLink from "./prop-finder-link";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -188,6 +189,7 @@ export default function NbaHome() {
         action="Choose player props"
         emptyTitle={loaded ? "No NBA games this week." : "Loading the slate."}
       />
+      <PropFinderLink />
       <LiveNow sport="nba" />
       {error ? (
         <p role="status" className="vq-slate-empty">
@@ -386,6 +388,9 @@ export default function NbaHome() {
           );
         }}
       </SportSlate>
+      <Link className="sport-research-link" href="/nba/props">
+        NBA Prop Finder · every prop tonight, ranked →
+      </Link>
       <Link className="sport-research-link" href="/nba/analysis">
         NBA research · season trends, injuries and lines →
       </Link>
