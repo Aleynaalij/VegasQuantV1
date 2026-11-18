@@ -16,7 +16,20 @@ export default function PropFinderLink({
       href={game ? `/nba/props?game=${encodeURIComponent(game)}` : "/nba/props"}
     >
       <span className="pf-cta-icon" aria-hidden="true">
-        ▮▮▯▮
+        {/* A tiny hit-rate chart: three games over the line, one under. */}
+        <svg viewBox="0 0 24 24" width="28" height="28">
+          <rect x="2" y="9" width="4" height="13" rx="1.2" />
+          <rect x="7.5" y="4" width="4" height="18" rx="1.2" />
+          <rect
+            className="pf-cta-miss"
+            x="13"
+            y="14"
+            width="4"
+            height="8"
+            rx="1.2"
+          />
+          <rect x="18.5" y="7" width="4" height="15" rx="1.2" />
+        </svg>
       </span>
       <span>
         <b>{label || "NBA Prop Finder"}</b>
