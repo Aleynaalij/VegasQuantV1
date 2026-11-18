@@ -6,6 +6,7 @@ export async function stagingInstallSql() {
   const surfaces = await readFile(new URL("./private-access-stage-surfaces.sql", import.meta.url), "utf8");
   const dealer = await readFile(new URL("./private-access-stage-dealer.sql", import.meta.url), "utf8");
   const research = await readFile(new URL("./private-access-stage-research.sql", import.meta.url), "utf8");
+  const preflight = await readFile(new URL("./private-access-stage-preflight.sql", import.meta.url), "utf8");
   return `
 begin;
 do $require_consumer_validation$
@@ -21,6 +22,7 @@ begin
   end if;
 end
 $require_consumer_validation$;
+${preflight}
 create schema vq_private_access_stage;
 revoke all on schema vq_private_access_stage from public;
 grant usage on schema vq_private_access_stage to authenticated;

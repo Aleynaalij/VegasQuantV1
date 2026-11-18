@@ -291,6 +291,10 @@ test("isolated SQL denies stored live sessions, preserves records and workers, a
       alter table vq_fixture.entitlements enable row level security;
       grant select on vq_fixture.entitlements to authenticated;
       create policy fixture_owned_entitlement on vq_fixture.entitlements to authenticated using (user_id = auth.uid());
+      create table vq_fixture.age_states(user_id uuid, verified boolean);
+      alter table vq_fixture.age_states enable row level security;
+      grant select on vq_fixture.age_states to authenticated;
+      create policy own_age on vq_fixture.age_states to authenticated using (user_id = auth.uid());
       create function vq_fixture.allowed() returns boolean language sql stable
         as $$select allowed from vq_fixture.entitlements where user_id = auth.uid()$$;
       create function public.age_verification_status() returns jsonb language sql stable
@@ -328,6 +332,85 @@ test("isolated SQL denies stored live sessions, preserves records and workers, a
         create policy synthetic_baseline on ${table} for select to anon, authenticated using (true);
         insert into ${table} values (1);`);
     }
+    // Independent review negative controls: installer must refuse drift rather than
+    // silently install ineffective policies or leave partial acceptance objects.
+    async function refuse(sql: string, restore: string, pattern: RegExp) {
+      await db.exec(sql);
+      await assert.rejects(db.exec(install), pattern);
+      await db.exec("rollback;");
+      assert.deepEqual(
+        (
+          await db.query(
+            "select to_regnamespace('vq_private_access_stage')::text as schema, to_regclass('public.vq_private_access_stage_records')::text as records",
+          )
+        ).rows,
+        [{ schema: null, records: null }],
+      );
+      assert.equal(
+        (
+          await db.query<{ n: number }>(
+            "select count(*)::integer as n from pg_policies where policyname like 'stage_private_%'",
+          )
+        ).rows[0].n,
+        0,
+      );
+      await db.exec(restore);
+    }
+    for (const table of [
+      "public.games",
+      "public.nba_games",
+      "public.nba_observations",
+      "public.analysis_versions",
+      "public.market_snapshots",
+      "public.published_legs",
+      "public.research_feed_posts",
+      "public.source_observations",
+      "vq_fixture.sports",
+      "vq_fixture.posts",
+      "vq_fixture.entitlements",
+      "vq_fixture.age_states",
+    ]) {
+      await refuse(
+        `alter table ${table} disable row level security`,
+        `alter table ${table} enable row level security`,
+        /Unsafe isolated relation baseline/,
+      );
+    }
+    await refuse(
+      "alter table public.games rename to original_games",
+      "alter table public.original_games rename to games",
+      /Unsafe isolated relation baseline/,
+    );
+    await refuse(
+      "alter table public.games rename to original_games; create view public.games as select * from public.original_games",
+      "drop view public.games; alter table public.original_games rename to games",
+      /Unsafe isolated relation baseline/,
+    );
+    await refuse(
+      "grant insert(id) on public.games to authenticated",
+      "revoke insert(id) on public.games from authenticated",
+      /Unsafe isolated relation baseline/,
+    );
+    await refuse(
+      "grant insert on public.games to authenticated",
+      "revoke insert on public.games from authenticated",
+      /Unsafe isolated relation baseline/,
+    );
+    await refuse(
+      "alter table public.games owner to authenticated",
+      "alter table public.games owner to postgres; revoke all on public.games from authenticated; grant select on public.games to authenticated",
+      /Unsafe isolated relation baseline/,
+    );
+    await refuse(
+      "create view public.unreviewed_research as select * from public.games; grant select on public.unreviewed_research to authenticated",
+      "drop view public.unreviewed_research",
+      /Unreviewed readable isolated view/,
+    );
+    await refuse(
+      "create function public.unreviewed_reader() returns integer language sql security definer as $$select 1$$; grant execute on function public.unreviewed_reader() to authenticated",
+      "drop function public.unreviewed_reader()",
+      /Unreviewed callable isolated definer/,
+    );
     await db.exec(install);
 
     const users = [primary, recovery, member];
