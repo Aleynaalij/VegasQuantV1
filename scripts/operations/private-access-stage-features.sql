@@ -10,7 +10,7 @@ create table vq_private_access_stage.feature_contract (
  original_definitions jsonb not null default '{}'
 );
 revoke all on vq_private_access_stage.feature_contract from public,anon,authenticated,service_role;
-grant select on vq_private_access_stage.feature_contract to authenticated;
+grant select(singleton,version,registry,fingerprints,capabilities) on vq_private_access_stage.feature_contract to authenticated;
 
 -- Server workers keep their original permissions; this never grants a new one.
 create function vq_private_access_stage.feature_allowed() returns boolean
@@ -66,7 +66,7 @@ language plpgsql stable security invoker set search_path='' as $$
 declare c vq_private_access_stage.feature_contract;
 begin
  if not coalesce(vq_private_access_stage.feature_allowed(),false) then return null; end if;
- select * into c from vq_private_access_stage.feature_contract where singleton;
+ select version,registry,fingerprints,capabilities into c.version,c.registry,c.fingerprints,c.capabilities from vq_private_access_stage.feature_contract where singleton;
  if c.version<>'vq-stage-features-v1' or c.fingerprints is distinct from vq_private_access_stage.feature_fingerprints() then return null; end if;
  return jsonb_build_object('contract',c.version,'capabilities',c.capabilities);
 end $$;
@@ -86,7 +86,7 @@ begin
  if not coalesce(vq_private_access_stage.feature_allowed(),false) then raise exception 'Isolated feature access denied' using errcode='42501';end if;
  if p is null or jsonb_typeof(p)<>'object' or length(p::text)>400000 then raise exception 'Invalid feature request';end if;
  manifest:=public.vq_private_access_stage_features();
- select * into c from vq_private_access_stage.feature_contract where singleton;
+ select version,registry,fingerprints,capabilities into c.version,c.registry,c.fingerprints,c.capabilities from vq_private_access_stage.feature_contract where singleton;
  if manifest is null or manifest->'capabilities'->>(p->>'group') is distinct from 'true' then raise exception 'Feature contract unavailable';end if;
  if p->>'kind'='rpc' then
   rule:=c.registry->'rpcs'->(p->>'name');
@@ -97,7 +97,7 @@ begin
   end if;
   if p->'args' ? 'p_photo_path' and p->'args'->'p_photo_path'<>'null'::jsonb then raise exception 'Staging photo upload unavailable';end if;
   proc:=to_regprocedure('public.'||(rule->>'signature'));
-  if proc is null then raise exception 'Original feature RPC unavailable';end if;
+  if proc is null or (select count(*) from pg_proc f join pg_namespace ns on ns.oid=f.pronamespace where ns.nspname='public' and f.proname=p->>'name')<>1 then raise exception 'Original feature RPC unavailable or ambiguous';end if;
   arguments:=p->'args';
   if jsonb_typeof(arguments) is distinct from 'object' or exists(select 1 from jsonb_object_keys(arguments) k where not (rule->'args' ? k)) then raise exception 'Unknown RPC arguments';end if;
   for argname in select jsonb_array_elements_text(rule->'args') loop
@@ -120,6 +120,7 @@ begin
  elsif p->>'kind'='table' then
   target:=p->>'name';rule:=c.registry->'tables'->target;
   if rule is null or rule->>'group' is distinct from p->>'group' or not (rule->'methods' ? (p->>'method')) then raise exception 'Unknown feature table';end if;
+  if p->>'upsert'='true' and rule->>'upsert' is distinct from 'true' then raise exception 'Unreviewed upsert';end if;
   if jsonb_typeof(p->'columns') is distinct from 'array' or jsonb_array_length(p->'columns') not between 1 and 100
    or exists(select 1 from jsonb_array_elements_text(p->'columns') k where not (rule->'columns' ? k)) then raise exception 'Unknown projection';end if;
   select string_agg(format('%I',x),',') into cols from jsonb_array_elements_text(p->'columns') x;

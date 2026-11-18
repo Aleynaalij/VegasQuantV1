@@ -46,12 +46,13 @@ export async function stageFeatureInstallSql() {
  for f in select p.*,n.nspname,l.lanname from pg_proc p join pg_namespace n on n.oid=p.pronamespace join pg_language l on l.oid=p.prolang
   where n.nspname in ('public','private') and p.prokind='f' and p.prosecdef
   and (has_function_privilege('authenticated',p.oid,'EXECUTE') or has_function_privilege('anon',p.oid,'EXECUTE')) loop
+  if f.proowner<>'postgres'::regrole then raise exception 'Unsafe isolated definer owner: %.%',f.nspname,f.proname;end if;
   definition:=pg_get_functiondef(f.oid);
   original:=original||jsonb_build_object(f.oid::regprocedure::text,definition);
   if f.lanname='plpgsql' then
    body:='begin if not coalesce(vq_private_access_stage.feature_allowed(),false) then raise exception ''Isolated feature denied'' using errcode=''42501'';end if;'
     ||E'\\n'||rtrim(f.prosrc)||case when right(rtrim(f.prosrc),1)=';' then '' else ';' end||E'\\nend';
-  elsif f.lanname='sql' and f.prorettype<>'trigger'::regtype and (f.prorettype<>'record'::regtype or f.proretset) then
+  elsif f.lanname='sql' and f.provolatile in ('s','i') and f.prorettype<>'trigger'::regtype and (f.prorettype<>'record'::regtype or f.proretset) then
    suffix:=regexp_replace(btrim(f.prosrc),';\\s*$','');
    if position(';' in suffix)>0 then raise exception 'Unreviewed multi-statement SQL definer %',f.proname;end if;
    if f.proretset then body:='select * from ('||suffix||') original where (select vq_private_access_stage.feature_allowed())';
@@ -66,6 +67,16 @@ export async function stageFeatureInstallSql() {
   if not r.relrowsecurity then raise exception 'Original feature table lacks RLS: %',r.relname;end if;
   execute format('create policy stage_consumer_gate on public.%I as restrictive to authenticated,anon using ((select vq_private_access_stage.feature_allowed())) with check ((select vq_private_access_stage.feature_allowed()))',r.relname);
   execute format('create constraint trigger stage_consumer_commit after insert or update or delete on public.%I deferrable initially deferred for each row execute function vq_private_access_stage.feature_commit_guard()',r.relname);
+ end loop;
+ -- Definer side effects in private tables also roll back if interactive eligibility
+ -- changes before commit. Do not grant the caller access to those private tables.
+ for r in select c.oid,c.relname,c.relrowsecurity from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='private' and c.relkind='r' loop
+  if (select relowner from pg_class where oid=r.oid)<>'postgres'::regrole then raise exception 'Unsafe isolated private table owner: %',r.relname;end if;
+  if has_table_privilege('authenticated',r.oid,'SELECT,INSERT,UPDATE,DELETE') or has_table_privilege('anon',r.oid,'SELECT,INSERT,UPDATE,DELETE') then
+   if not r.relrowsecurity then raise exception 'Readable private source lacks original RLS: %',r.relname;end if;
+   execute format('create policy stage_consumer_gate on private.%I as restrictive to authenticated,anon using ((select vq_private_access_stage.feature_allowed())) with check ((select vq_private_access_stage.feature_allowed()))',r.relname);
+  end if;
+  execute format('create constraint trigger stage_consumer_commit after insert or update or delete on private.%I deferrable initially deferred for each row execute function vq_private_access_stage.feature_commit_guard()',r.relname);
  end loop;
  end $guard$;
  -- Activate only complete groups with original reviewed signatures and source
@@ -83,7 +94,7 @@ export async function stageFeatureInstallSql() {
   end loop;
   for item in select * from jsonb_each(c.registry->'rpcs') where value->>'group'=g loop
    f:=to_regprocedure('public.'||(item.value->>'signature'));
-   if f is null then ok:=false;else
+   if f is null or (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname=item.key)<>1 then ok:=false;else
     olddef:=c.original_definitions->>(f::regprocedure::text);
     expected:=encode(sha256(convert_to(coalesce(olddef,pg_get_functiondef(f)),'UTF8')),'hex');
     if expected is distinct from item.value->>'source_hash' then ok:=false;end if;

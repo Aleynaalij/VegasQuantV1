@@ -58,6 +58,10 @@ test("feature parser binds existing names and rejects arbitrary schemas, service
     },
     input("rpc/community_comments", "", "POST", { p_post: id(20), p_limit: 5 }),
     input("community_posts", "?limit=0"),
+    {
+      ...input("community_posts", "", "POST", { user_id: id(1), body: "Hi" }),
+      prefer: "resolution=merge-duplicates",
+    },
   ])
     assert.equal(stageFeatureQuery(p), null, JSON.stringify(p));
 });
@@ -81,6 +85,12 @@ test(
         before,
         "original execution grants must not change",
       );
+    await assert.rejects(
+      db.query(
+        "select original_definitions from vq_private_access_stage.feature_contract",
+      ),
+      /permission denied/,
+    );
     const initial = (
       await db.query<any>(
         "select public.vq_private_access_stage_features() as m",
@@ -510,3 +520,56 @@ test("capabilities are a versioned server projection; stale or malformed identit
   client.invalidate();
   assert.equal(client.getSnapshot().session, null);
 });
+
+test(
+  "isolated preparation rejects unsafe owners/volatile SQL and guards private-only mutation commit",
+  { timeout: 120000 },
+  async (t) => {
+    const { consumerDb } = await import("./fixtures/stage-consumer-db.mjs");
+    await assert.rejects(
+      consumerDb(async (db) => {
+        await db.exec(
+          `grant create on schema public to authenticated;create function public.unreviewed_owner() returns boolean language sql stable security definer as $$select true$$;alter function public.unreviewed_owner() owner to authenticated;`,
+        );
+      }),
+      /Unsafe isolated definer owner/,
+    );
+
+    await assert.rejects(
+      consumerDb(async (db) => {
+        await db.exec(
+          `create function public.unreviewed_volatile() returns setof integer language sql security definer as $$select 1$$;`,
+        );
+      }),
+      /Unreviewed definer shape/,
+    );
+    await assert.rejects(
+      consumerDb(async (db) => {
+        await db.exec(
+          `create table private.unsafe_direct_source(secret text);grant select on private.unsafe_direct_source to authenticated;`,
+        );
+      }),
+      /private source lacks original RLS/,
+    );
+    const fixture = await consumerDb(async (db) => {
+      await db.exec(
+        `create table private.synthetic_notes(user_id uuid,note text);create function private.synthetic_private_mutation() returns void language plpgsql security definer set search_path='' as $$begin insert into private.synthetic_notes values(auth.uid(),'synthetic note');perform set_config('test.age','off',true);return;end$$;revoke all on function private.synthetic_private_mutation() from public,anon;grant execute on function private.synthetic_private_mutation() to authenticated;`,
+      );
+    });
+    t.after(() => fixture.db.close());
+    await fixture.as(1);
+    await assert.rejects(
+      fixture.db.query("select private.synthetic_private_mutation()"),
+      /authorization changed/,
+    );
+    await fixture.db.exec("reset role");
+    assert.equal(
+      (
+        await fixture.db.query<any>(
+          "select count(*) as n from private.synthetic_notes",
+        )
+      ).rows[0].n,
+      0,
+    );
+  },
+);

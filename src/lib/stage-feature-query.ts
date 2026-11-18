@@ -170,6 +170,7 @@ export function stageFeatureQuery(value: unknown) {
         group: string;
         methods: string[];
         key: string[];
+        upsert: boolean;
       }
     >
   )[v.path];
@@ -254,6 +255,11 @@ export function stageFeatureQuery(value: unknown) {
   )
     return null;
   const conflict = params.get("on_conflict");
+  if (
+    (conflict || preferences.some((p) => p.startsWith("resolution="))) &&
+    (!rule.upsert || read)
+  )
+    return null;
   if (conflict && conflict !== rule.key.join(",")) return null;
   if (read && Object.keys(body).length) return null;
   if (v.method === "PATCH" && !Object.keys(body).length) return null;

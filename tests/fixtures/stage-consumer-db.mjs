@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { stageFeatureInstallSql } from "../../scripts/operations/private-access-stage-feature-install.mjs";
 export const id = (n) =>
   `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
-export async function consumerDb() {
+export async function consumerDb(beforeInstall = async (_db) => {}) {
   const db = new PGlite();
   const migration = async (file) =>
     db.exec(await readFile(`supabase/migrations/${file}`, "utf8"));
@@ -105,12 +105,18 @@ export async function consumerDb() {
   await db.exec(
     tails.slice(tails.indexOf("create function private.leg_tail_counts")),
   );
+  await beforeInstall(db);
   const aclBefore = (
     await db.query(
       `select oid::regprocedure::text f,proacl::text acl from pg_proc where pronamespace in ('public'::regnamespace,'private'::regnamespace) order by 1`,
     )
   ).rows;
-  await db.exec(await stageFeatureInstallSql());
+  try {
+    await db.exec(await stageFeatureInstallSql());
+  } catch (error) {
+    await db.close();
+    throw error;
+  }
   return {
     db,
     aclBefore,

@@ -36,7 +36,8 @@
         "tagline",
         "bio",
         "state"
-      ]
+      ],
+      "upsert": true
     },
     "community_posts": {
       "group": "social",
@@ -72,7 +73,8 @@
         "created_at",
         "photo_path",
         "card"
-      ]
+      ],
+      "upsert": false
     },
     "community_post_comments": {
       "group": "social",
@@ -99,7 +101,8 @@
         "body",
         "created_at",
         "parent_id"
-      ]
+      ],
+      "upsert": false
     },
     "community_reactions": {
       "group": "social",
@@ -122,7 +125,8 @@
         "user_id",
         "created_at",
         "reaction_type"
-      ]
+      ],
+      "upsert": false
     },
     "community_comment_reactions": {
       "group": "social",
@@ -143,7 +147,8 @@
         "comment_id",
         "user_id",
         "created_at"
-      ]
+      ],
+      "upsert": false
     },
     "member_follows": {
       "group": "social",
@@ -164,7 +169,8 @@
         "user_id",
         "target_user_id",
         "created_at"
-      ]
+      ],
+      "upsert": true
     },
     "member_blocks": {
       "group": "social",
@@ -187,7 +193,8 @@
         "target_user_id",
         "label",
         "created_at"
-      ]
+      ],
+      "upsert": true
     },
     "community_reports": {
       "group": "social",
@@ -211,7 +218,8 @@
         "user_id",
         "reason",
         "created_at"
-      ]
+      ],
+      "upsert": false
     },
     "saved_legs": {
       "group": "desk",
@@ -232,7 +240,8 @@
         "user_id",
         "leg_key",
         "created_at"
-      ]
+      ],
+      "upsert": true
     },
     "leg_tails": {
       "group": "desk",
@@ -253,7 +262,8 @@
         "user_id",
         "leg_key",
         "created_at"
-      ]
+      ],
+      "upsert": true
     },
     "member_parlays": {
       "group": "desk",
@@ -277,7 +287,8 @@
         "created_at",
         "expires_at",
         "community_post_id"
-      ]
+      ],
+      "upsert": false
     },
     "notification_preferences": {
       "group": "notifications",
@@ -316,7 +327,8 @@
         "quiet_start",
         "quiet_end",
         "updated_at"
-      ]
+      ],
+      "upsert": true
     },
     "published_legs": {
       "group": "desk",
@@ -349,7 +361,8 @@
         "result_source",
         "odds",
         "original_leg_key"
-      ]
+      ],
+      "upsert": false
     },
     "candidate_releases": {
       "group": "research",
@@ -368,7 +381,8 @@
         "expires_at",
         "created_at",
         "publication_key"
-      ]
+      ],
+      "upsert": false
     },
     "community_shares": {
       "columns": [
@@ -388,7 +402,8 @@
       "key": [
         "post_id",
         "user_id"
-      ]
+      ],
+      "upsert": true
     },
     "leg_book_prices": {
       "columns": [
@@ -407,7 +422,8 @@
       "write": [],
       "key": [
         "leg_key"
-      ]
+      ],
+      "upsert": false
     },
     "leg_history": {
       "columns": [
@@ -427,7 +443,8 @@
       "write": [],
       "key": [
         "leg_key"
-      ]
+      ],
+      "upsert": false
     },
     "leg_market_prices": {
       "columns": [
@@ -449,7 +466,8 @@
       "write": [],
       "key": [
         "leg_key"
-      ]
+      ],
+      "upsert": false
     },
     "leg_result_progress": {
       "columns": [
@@ -467,7 +485,8 @@
       "write": [],
       "key": [
         "leg_key"
-      ]
+      ],
+      "upsert": false
     },
     "research_leg_results": {
       "columns": [
@@ -483,7 +502,8 @@
       "write": [],
       "key": [
         "leg_key"
-      ]
+      ],
+      "upsert": false
     },
     "ruby_cards": {
       "columns": [
@@ -513,7 +533,8 @@
       "write": [],
       "key": [
         "id"
-      ]
+      ],
+      "upsert": false
     }
   },
   "rpcs": {

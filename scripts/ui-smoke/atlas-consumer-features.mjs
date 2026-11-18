@@ -111,7 +111,15 @@ try {
     await page.goto(`${base}/saved`);
     await page.getByText("Sample Player", { exact: false }).first().waitFor();
     await page.goto(`${base}/parlays`);
-    await page.getByText("Synthetic saved lay", { exact: true }).waitFor();
+    const savedLay = page
+      .locator("details.workshop-leg > summary")
+      .filter({ hasText: "Synthetic saved lay" });
+    await savedLay.waitFor();
+    await savedLay.click();
+    await page
+      .locator("details.workshop-leg[open] .vqc-title")
+      .filter({ hasText: "Synthetic saved lay" })
+      .waitFor();
     await page.goto(`${base}/notifications`);
     await page
       .getByRole("heading", { name: "Notifications", exact: true })
@@ -124,6 +132,16 @@ try {
       path: `${out}/${viewport.width}-inbox.png`,
       fullPage: true,
     });
+    await page.keyboard.press("Tab");
+    const keyboardFocus = await page.evaluate(() => {
+      const el = document.activeElement;
+      return !!el && el !== document.body && el.getClientRects().length > 0;
+    });
+    assert.equal(
+      keyboardFocus,
+      true,
+      "keyboard focus reaches a visible interactive destination",
+    );
     const overflow = await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth + 1,
     );
@@ -144,6 +162,7 @@ try {
       myLays: true,
       inbox: true,
       keyboardStoryDismiss: true,
+      keyboardFocusVisible: keyboardFocus,
       horizontalOverflow: false,
       externalRequests: external,
       pageErrors: errors,
@@ -154,6 +173,24 @@ try {
   }
   await fs.writeFile(`${out}/results.json`, JSON.stringify(results, null, 2));
   console.log(JSON.stringify(results, null, 2));
+} catch (error) {
+  await fs.writeFile(`${out}/failure.txt`, String(error));
+  for (const [i, page] of browser
+    .contexts()
+    .flatMap((c) => c.pages())
+    .entries()) {
+    await page
+      .screenshot({ path: `${out}/failure-${i}.png`, fullPage: true })
+      .catch(() => {});
+    await fs.writeFile(
+      `${out}/failure-${i}.txt`,
+      await page
+        .locator("body")
+        .innerText()
+        .catch(() => "Body unavailable"),
+    );
+  }
+  throw error;
 } finally {
   await browser.close();
 }
