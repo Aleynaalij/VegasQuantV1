@@ -204,6 +204,44 @@ test("request-scoped reader checks live authorization, age and original entitlem
   );
   assert.equal(research.status, 200);
   assert.deepEqual((await research.json()).events, []);
+  for (const resource of ["dealer", "research"]) {
+    for (const endpoint of ["age_verification_status", "membership_status"]) {
+      for (const change of ["revoked", "malformed", "outage"]) {
+        let reads = 0;
+        const changing: typeof fetch = async (input, init) => {
+          // Research hub independently checks membership once while constructing its payload.
+          const finalRead =
+            resource === "research" && endpoint === "membership_status" ? 3 : 2;
+          if (String(input).endsWith(endpoint) && ++reads >= finalRead) {
+            if (change === "outage") return new Response(null, { status: 503 });
+            return Response.json(
+              change === "malformed"
+                ? { verified: "true", allowed: "true" }
+                : endpoint === "membership_status"
+                  ? { allowed: false }
+                  : { synthetic: true, verified: false },
+            );
+          }
+          return transport(input, init);
+        };
+        const response = await readStageConsumer(
+          req(resource === "dealer" ? "dealer?sport=nba" : resource),
+          resource,
+          changing,
+        );
+        assert.equal(
+          response.status,
+          change === "outage" ? 503 : 403,
+          `${resource}/${endpoint}/${change}`,
+        );
+        assert.equal(
+          await response.text(),
+          "",
+          "no protected response on final verification failure",
+        );
+      }
+    }
+  }
   unavailable = true;
   assert.equal(
     (await readStageConsumer(req(), "dealer", transport)).status,

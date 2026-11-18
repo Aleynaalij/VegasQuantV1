@@ -26,7 +26,7 @@ The bridge still forwards only four reviewed read RPCs. This package deliberatel
 
 ## Security defect reproduced and fixed
 
-Initial eligibility checks plus a final private-gate check could return data after independent age eligibility changed while the read was in flight. Both the viewer identity endpoint and data gateway now repeat independent age and entitlement checks before their final live-gate check and response. Failure/outage returns no protected payload. This narrows a race; it is not a claim of atomic cross-request revocation or hosted security certification.
+Initial eligibility checks plus a final private-gate check could return data after independent age eligibility changed while the read was in flight. The viewer identity endpoint, data gateway and actual Home/Room consumer reader now repeat independent age and entitlement checks before their final live-gate check and response. Failure/outage returns no protected payload. This narrows a race; it is not a claim of atomic cross-request revocation or hosted security certification.
 
 New negative controls change age/entitlement after a research read, fail the final backend read, and change eligibility between identity checks. The same new regression against unchanged #303 reproduces `200 !== 403`; the patched endpoints deny. Unsupported production social/library/notification mutation and read paths remain rejected without upstream forwarding. No new capability is enabled by this fix.
 
@@ -53,3 +53,5 @@ Retain the original 15-second smoke timeout as unresolved, and eight gradient co
 Rollback: record previous isolated app SHA, restrictive-policy catalog, own/historical row hashes/counts and entitlements before installation. Roll back the application/UI independently while keeping live-session RLS installed. Prove non-owner/revoked access remains denied; fresh owner recovery and worker append still work; row hashes/counts and entitlements remain preserved. No data deletion or security-policy removal to make rollback pass. Hosted rollback remains untested.
 
 Recommended sequence: this exact-head security/source review → reviewed positive isolated contract packages + Elo consumer integration → owner cost/isolation approval → isolated preparation and protected manual deployment → full real-session acceptance and independent security review → consolidated exact-SHA CEO decision. **Production remains NO-GO.**
+
+Independent review of initial `464f7653` found that the separate Home/Room reader still lacked final independent eligibility checks (#304 comment 6982342260). The follow-up applies them to both Dealer and research paths and tests 12 combinations of resource, eligibility endpoint and revocation/malformed/outage result. Denied responses contain no protected payload. Initial two-endpoint coverage was incomplete; do not treat that checkpoint as the finished fix.

@@ -96,6 +96,17 @@ export async function readStageConsumer(
       payload = research;
     }
     // Discard completed reads if the session was revoked while the backend was loading.
+    const [finalAge, finalMember] = await Promise.all([
+      client.rpc("age_verification_status"),
+      client.rpc("membership_status"),
+    ]);
+    if (finalAge.error || finalMember.error) return denied(503);
+    if (
+      finalAge.data?.synthetic !== true ||
+      finalAge.data?.verified !== true ||
+      finalMember.data?.allowed !== true
+    )
+      return denied(403);
     const current = await authorizeStageToken(config, token, transport);
     return current === 200
       ? NextResponse.json(payload, { headers })

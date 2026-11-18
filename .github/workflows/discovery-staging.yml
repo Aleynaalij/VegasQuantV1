@@ -12,6 +12,8 @@ on:
       - "src/lib/consumer-experience.ts"
       - "src/lib/stage-viewer-session.ts"
       - "src/lib/stage-data-gateway.ts"
+      - "src/lib/stage-consumer-reader.ts"
+      - "tests/stage-consumer-reader.test.ts"
       - "src/lib/private-access-stage-config.ts"
       - "tests/viewer-session.test.ts"
       - "tests/private-access-stage.test.ts"
