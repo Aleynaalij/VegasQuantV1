@@ -121,9 +121,11 @@ export function PropRowItem({ r, onOpen }: { r: PropRow; onOpen: () => void }) {
         <span className={`pf-score ${tone}`}>
           <b>{s.chance == null ? "—" : `${s.chance}%`}</b>
           <small>
-            {s.edge == null
-              ? "our est."
-              : `${s.edge > 0 ? "+" : ""}${s.edge} edge`}
+            {r.stale
+              ? `old line · ${r.trend.observedAt ? time(r.trend.observedAt) : "time unknown"}`
+              : s.edge == null
+                ? "our est."
+                : `${s.edge > 0 ? "+" : ""}${s.edge} edge`}
           </small>
         </span>
         <span className="pf-bet">
@@ -298,15 +300,25 @@ export default function NbaPropsBoard() {
       setError("");
       void load();
     });
-    // Lines are collected about every 15 minutes: refresh quietly while the board is on screen.
-    const refresh = setInterval(() => {
-      if (document.visibilityState === "visible") void load(true);
+    // Lines are collected about every 15 minutes: refresh quietly while the board is on screen,
+    // and at once when it comes back into view. The clock ticks every minute so a line that ages
+    // past an hour is flagged (and drops out of Best edge) even if a refresh fails.
+    let fetchedAt = Date.now();
+    const refreshIfDue = () => {
+      if (document.visibilityState !== "visible") return;
       setNow(Date.now());
-    }, 15 * 60000);
+      if (Date.now() - fetchedAt >= 15 * 60000) {
+        fetchedAt = Date.now();
+        void load(true);
+      }
+    };
+    const tick = setInterval(refreshIfDue, 60000);
+    document.addEventListener("visibilitychange", refreshIfDue);
     return () => {
       gate.cancel();
       stop();
-      clearInterval(refresh);
+      clearInterval(tick);
+      document.removeEventListener("visibilitychange", refreshIfDue);
     };
     // The requested game is read once, on arrival; later chip changes filter the loaded slate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -332,7 +344,11 @@ export default function NbaPropsBoard() {
     window.history.replaceState(null, "", u.toString());
   }, [query, market, sort, game]);
 
-  const rows = useMemo(() => (slate ? buildPropRows(slate) : []), [slate]);
+  const rows = useMemo(
+    () => (slate ? buildPropRows(slate, now) : []),
+    [slate, now],
+  );
+  const staleCount = rows.filter((r) => r.stale).length;
   const shown = useMemo(
     () => sortRows(filterRows(rows, { market, game, query }), sort),
     [rows, market, game, query, sort],
@@ -418,10 +434,12 @@ export default function NbaPropsBoard() {
         ) : null}
       </div>
 
-      {slate?.propsAt && now - Date.parse(slate.propsAt) > 60 * 60000 ? (
+      {staleCount ? (
         <p className="pf-stale" role="status">
-          FanDuel lines last updated {time(slate.propsAt)} ET. Prices may have
-          moved since; the board refreshes when new lines arrive.
+          {staleCount} of {rows.length} FanDuel lines are over an hour old by
+          the book&rsquo;s own time. They are marked &ldquo;old line&rdquo;,
+          show no edge and sit at the bottom of Best edge until fresh prices
+          arrive.
         </p>
       ) : null}
       {!slate ? (

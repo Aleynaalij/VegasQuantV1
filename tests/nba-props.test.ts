@@ -31,6 +31,8 @@ const box = (
     opponent_abbr: "BOS",
     home: i % 2 === 0,
   }));
+const NOW = Date.parse("2026-11-18T16:00:00Z");
+const FRESH = "2026-11-18T15:50:00Z";
 const game = {
   id: "g1",
   away_team: "Orlando Magic",
@@ -72,6 +74,7 @@ test("Prop Finder rows: edge, streak, best price across books, lean and ranking"
     line,
     over,
     under,
+    observedAt: FRESH,
     gp: 10,
     seasonAvg: 0,
     lastN: 5,
@@ -79,64 +82,70 @@ test("Prop Finder rows: edge, streak, best price across books, lean and ranking"
     seasonHits: 0,
     gap: 0,
   });
-  const rows = buildPropRows({
-    games: [game],
-    lines,
-    defense: [],
-    trends: new Map([
-      [
-        "g1",
+  const rows = buildPropRows(
+    {
+      games: [game],
+      lines,
+      defense: [],
+      trends: new Map([
         [
-          {
-            ...trend(
-              "1",
-              "Tyrese Maxey",
-              "Philadelphia 76ers",
-              24.5,
-              -110,
-              -110,
-            ),
-            gap: 4.5,
-          },
-          {
-            ...trend("2", "Franz Wagner", "Orlando Magic", 18.5, -120, 100),
-            gap: 1.7,
-          },
+          "g1",
+          [
+            {
+              ...trend(
+                "1",
+                "Tyrese Maxey",
+                "Philadelphia 76ers",
+                24.5,
+                -110,
+                -110,
+              ),
+              gap: 4.5,
+            },
+            {
+              ...trend("2", "Franz Wagner", "Orlando Magic", 18.5, -120, 100),
+              gap: 1.7,
+            },
+          ],
         ],
-      ],
-    ]),
-    quotes: new Map([
-      [
-        "g1",
+      ]),
+      quotes: new Map([
         [
-          {
-            book: "FanDuel",
-            player: "Tyrese Maxey",
-            market: "player_points" as const,
-            line: 24.5,
-            over: -110,
-            under: -110,
-          },
-          {
-            book: "DraftKings",
-            player: "Tyrese Maxey",
-            market: "player_points" as const,
-            line: 24.5,
-            over: -102,
-            under: -118,
-          },
-          {
-            book: "Caesars",
-            player: "Tyrese Maxey",
-            market: "player_points" as const,
-            line: 25.5,
-            over: 120,
-            under: -150,
-          }, // other line
+          "g1",
+          [
+            {
+              book: "FanDuel",
+              player: "Tyrese Maxey",
+              market: "player_points" as const,
+              observedAt: FRESH,
+              line: 24.5,
+              over: -110,
+              under: -110,
+            },
+            {
+              book: "DraftKings",
+              player: "Tyrese Maxey",
+              market: "player_points" as const,
+              observedAt: FRESH,
+              line: 24.5,
+              over: -102,
+              under: -118,
+            },
+            {
+              book: "Caesars",
+              player: "Tyrese Maxey",
+              market: "player_points" as const,
+              observedAt: FRESH,
+              line: 25.5,
+              over: 120,
+              under: -150,
+            }, // other line
+          ],
         ],
-      ],
-    ]),
-  });
+      ]),
+    },
+    NOW,
+  );
   const maxey = rows.find((r) => r.trend.player === "Tyrese Maxey")!;
   const wagner = rows.find((r) => r.trend.player === "Franz Wagner")!;
   assert.equal(maxey.streak, 10);
@@ -237,4 +246,141 @@ test("Line shopping ignores books that stopped refreshing; lean follows the edge
   } as unknown as Parameters<typeof lean>[0];
   assert.equal(lean(row), "under");
   assert.equal(lean({ ...row, edge: null } as typeof row), "over");
+});
+
+test("Freshness is judged per quote against the clock: stale lines are labelled and lose their edge", async () => {
+  const { propQuotes } = await import("../src/lib/nba-research-tab");
+  // A snapshot recorded just now that carries an old provider observation time is still old.
+  const [late] = propQuotes([
+    {
+      recorded_at: "2026-11-18T15:59:00Z",
+      observed_at: "2026-11-18T13:00:00Z",
+      payload: {
+        book: "FanDuel",
+        market: "player_points",
+        outcomes: [
+          {
+            name: "Over",
+            description: "Joel Embiid",
+            point: 23.5,
+            price: -115,
+          },
+          {
+            name: "Under",
+            description: "Joel Embiid",
+            point: 23.5,
+            price: -105,
+          },
+        ],
+      },
+    },
+  ]);
+  assert.equal(late.observedAt, "2026-11-18T13:00:00Z");
+
+  const lines = seasonLines([
+    ...box(
+      "1",
+      "Tyrese Maxey",
+      "Philadelphia 76ers",
+      [30, 31, 28, 29, 27, 26, 30, 25, 33, 31],
+    ),
+    ...box(
+      "3",
+      "Joel Embiid",
+      "Philadelphia 76ers",
+      [28, 19, 31, 24, 26, 22, 29, 30, 18, 27],
+    ),
+  ]);
+  const t = (
+    id: string,
+    player: string,
+    line: number,
+    observedAt: string | null,
+  ) => ({
+    athlete_id: id,
+    player,
+    team: "Philadelphia 76ers",
+    market: "player_points" as const,
+    line,
+    over: -110,
+    under: -110,
+    observedAt,
+    gp: 10,
+    seasonAvg: 0,
+    lastN: 5,
+    lastHits: 0,
+    seasonHits: 0,
+    gap: 0,
+  });
+  const q = (
+    book: string,
+    player: string,
+    line: number,
+    observedAt: string,
+    over: number,
+  ) => ({
+    book,
+    player,
+    market: "player_points" as const,
+    line,
+    over,
+    under: -110,
+    observedAt,
+  });
+  const slate = {
+    games: [game],
+    lines,
+    defense: [],
+    trends: new Map([
+      [
+        "g1",
+        [
+          t("1", "Tyrese Maxey", 24.5, FRESH),
+          { ...t("3", "Joel Embiid", 23.5, late.observedAt ?? null) },
+        ],
+      ],
+    ]),
+    quotes: new Map([
+      [
+        "g1",
+        [
+          q("FanDuel", "Tyrese Maxey", 24.5, FRESH, -110),
+          q("DraftKings", "Tyrese Maxey", 24.5, "2026-11-18T15:20:00Z", 120),
+        ],
+      ],
+    ]),
+  };
+  // Mixed: the fresh game keeps its edge; the old FanDuel line is stale, with no edge.
+  const at4 = buildPropRows(slate, NOW);
+  const maxey = at4.find((r) => r.trend.player === "Tyrese Maxey")!;
+  const embiid = at4.find((r) => r.trend.player === "Joel Embiid")!;
+  assert.equal(maxey.stale, false);
+  assert.ok(maxey.edge != null);
+  assert.deepEqual(maxey.bestOver, { book: "DraftKings", price: 120 });
+  assert.equal(embiid.stale, true);
+  assert.equal(embiid.edge, null);
+  assert.equal(sortRows(at4, "edge").at(-1)!.trend.player, "Joel Embiid");
+  // Unknown provider time counts as stale.
+  assert.equal(
+    buildPropRows(
+      {
+        ...slate,
+        trends: new Map([["g1", [t("1", "Tyrese Maxey", 24.5, null)]]]),
+      },
+      NOW,
+    )[0].stale,
+    true,
+  );
+
+  // A failed refresh keeps the same slate, but the clock moves on: 25 minutes later the 15:20
+  // DraftKings price has expired and no longer wins best; 70 minutes later FanDuel's line is stale.
+  const later = buildPropRows(slate, NOW + 25 * 60000).find(
+    (r) => r.trend.player === "Tyrese Maxey",
+  )!;
+  assert.deepEqual(later.bestOver, { book: "FanDuel", price: -110 });
+  const muchLater = buildPropRows(slate, NOW + 70 * 60000).find(
+    (r) => r.trend.player === "Tyrese Maxey",
+  )!;
+  assert.equal(muchLater.stale, true);
+  assert.equal(muchLater.bestOver, null);
 });

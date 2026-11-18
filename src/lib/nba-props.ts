@@ -8,6 +8,7 @@ import {
   matchupFor,
   projectedMinutes,
   propEstimate,
+  quoteIsFresh,
   propGames,
   restDays,
   type BookQuote,
@@ -56,8 +57,13 @@ export type PropRow = {
   /** Best over and under price at this exact line across books. */
   bestOver: Price | null;
   bestUnder: Price | null;
-  /** Every book quoting this exact line. */
+  /** Every book quoting this exact line with a fresh price. */
   books: BookQuote[];
+  /**
+   * FanDuel's line is over an hour old by provider time (or its time is unknown): the row is shown,
+   * labelled, but has no edge and drops out of "Best edge".
+   */
+  stale: boolean;
 };
 
 const implied = (o: number) => (o > 0 ? 100 / (o + 100) : -o / (-o + 100));
@@ -89,13 +95,17 @@ function best(books: BookQuote[], side: "over" | "under"): Price | null {
   return top;
 }
 
-export function buildPropRows(slate: {
-  games: PropSlateGame[];
-  lines: PlayerLine[];
-  trends: Map<string, PropTrend[]>;
-  quotes: Map<string, BookQuote[]>;
-  defense: DefenseRow[];
-}): PropRow[] {
+/** Rows as of `now`: freshness is judged against the clock each time, not only when loaded. */
+export function buildPropRows(
+  slate: {
+    games: PropSlateGame[];
+    lines: PlayerLine[];
+    trends: Map<string, PropTrend[]>;
+    quotes: Map<string, BookQuote[]>;
+    defense: DefenseRow[];
+  },
+  now: number,
+): PropRow[] {
   const byId = new Map(slate.lines.map((l) => [l.athlete_id, l]));
   const rows: PropRow[] = [];
   for (const game of slate.games) {
@@ -123,12 +133,14 @@ export function buildPropRows(slate: {
         minutes,
         matchup?.factor,
       );
-      const fair = noVig(trend.over, trend.under);
+      const stale = !quoteIsFresh(trend.observedAt, now);
+      const fair = stale ? null : noVig(trend.over, trend.under);
       const books = quotes.filter(
         (q) =>
           q.market === trend.market &&
           q.line === trend.line &&
-          q.player === trend.player,
+          q.player === trend.player &&
+          quoteIsFresh(q.observedAt, now),
       );
       rows.push({
         key: `${game.id}|${trend.market}|${trend.athlete_id}|${trend.line}`,
@@ -152,6 +164,7 @@ export function buildPropRows(slate: {
         bestOver: best(books, "over"),
         bestUnder: best(books, "under"),
         books,
+        stale,
       });
     }
   }
