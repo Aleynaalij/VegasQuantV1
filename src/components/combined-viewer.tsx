@@ -54,8 +54,16 @@ export function CombinedAccountContent() {
       {view.allowed && (
         <>
           <p>{viewer.session!.user.email ?? viewer.session!.user.id}</p>
-          {viewer.capabilities.profile && <CommunitySettings key={viewer.session!.user.id} uid={viewer.session!.user.id} />}
-          <p>Account deletion, billing and MFA enrollment remain outside the isolated consumer contract.</p>
+          {viewer.capabilities.profile && (
+            <CommunitySettings
+              key={viewer.session!.user.id}
+              uid={viewer.session!.user.id}
+            />
+          )}
+          <p>
+            Account deletion, billing and MFA enrollment remain outside the
+            isolated consumer contract.
+          </p>
         </>
       )}
       <button
@@ -107,13 +115,15 @@ export function CombinedAgeBoundary({
         </h1>
         <p role="status">{view.message}</p>
         <Link href="/staging/private-access">Private-access sign-in</Link>
-        <button
-          type="button"
-          className="secondary"
-          onClick={() => void viewerAuth.getSession(true)}
-        >
-          Retry verification
-        </button>
+        {viewer.failure !== "logout" && (
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => void viewerAuth.getSession(true)}
+          >
+            Retry verification
+          </button>
+        )}
         <CombinedSignOut />
       </section>
     </main>

@@ -314,6 +314,22 @@ test(
     const saved = await sdk.from("saved_legs").select("leg_key");
     ok(saved);
     assert.deepEqual(saved.data, [{ leg_key: "a" }]);
+    ok(
+      await sdk
+        .from("saved_legs")
+        .delete()
+        .eq("user_id", id(2))
+        .eq("leg_key", "a"),
+    );
+    assert.deepEqual((await sdk.from("saved_legs").select("leg_key")).data, []);
+    ok(
+      await sdk
+        .from("saved_legs")
+        .upsert(
+          { user_id: id(2), leg_key: "a" },
+          { onConflict: "user_id,leg_key", ignoreDuplicates: true },
+        ),
+    );
     assert(
       (
         await sdk
@@ -421,6 +437,49 @@ test(
         .data!.length,
       1,
     );
+    ok(await sdk.from("community_post_comments").delete().eq("id", id(21)));
+    assert.deepEqual(
+      (await sdk.from("community_post_comments").select("id").eq("id", id(21)))
+        .data,
+      [],
+    );
+    ok(
+      await sdk
+        .from("member_follows")
+        .delete()
+        .eq("user_id", id(2))
+        .eq("target_user_id", id(1)),
+    );
+    assert.deepEqual(
+      (await sdk.from("member_follows").select("user_id")).data,
+      [],
+    );
+    ok(
+      await sdk.rpc("set_community_reaction", {
+        p_post: id(20),
+        p_reaction: null,
+      }),
+    );
+    assert.equal(
+      (await sdk.rpc("community_reaction_state", { p_post: id(20) })).data.mine,
+      null,
+    );
+    await fixture.as(1);
+    const unread = await sdk.rpc("notification_counts");
+    ok(unread);
+    assert(unread.data.unread > 0);
+    ok(
+      await sdk.rpc("notification_action", {
+        p_action: "read_all",
+        p_before: new Date().toISOString(),
+      }),
+    );
+    assert.equal(
+      (await sdk.rpc("notification_counts")).data.unread,
+      0,
+      "own inbox read action is persisted",
+    );
+    await fixture.as(2);
     // Direct database paths must obey the same stage gate, not only the bridge.
     for (const [setting, value] of [
       ["test.gate", "off"],

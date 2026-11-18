@@ -57,6 +57,9 @@ try {
     console.log(`Testing synthetic consumer journeys at ${viewport.width}px`);
     page.on("pageerror", (e) => errors.push(e.message));
     await page.goto(base);
+    await page
+      .locator(".vq-brand-opening")
+      .waitFor({ state: "detached", timeout: 5000 });
     await page.locator("[data-viewer-state=ready]").first().waitFor();
     const story = page.getByRole("button", {
       name: /Open (OwnerOne|MobileOwner)'s recent community posts/,
@@ -72,6 +75,9 @@ try {
       .getByRole("dialog", { name: "Recent community posts" })
       .waitFor({ state: "detached" });
     await page.goto(`${base}/membership`);
+    await page
+      .locator(".vq-brand-opening")
+      .waitFor({ state: "detached", timeout: 5000 });
     await page
       .getByRole("heading", { name: "Your community identity" })
       .waitFor();
@@ -93,6 +99,9 @@ try {
       `${base}/community?post=00000000-0000-4000-8000-000000000020`,
     );
     await page
+      .locator(".vq-brand-opening")
+      .waitFor({ state: "detached", timeout: 5000 });
+    await page
       .getByText("Original synthetic discussion", { exact: true })
       .first()
       .waitFor();
@@ -109,8 +118,14 @@ try {
       .getByText(`Synthetic browser ${viewport.width}`, { exact: true })
       .waitFor();
     await page.goto(`${base}/saved`);
+    await page
+      .locator(".vq-brand-opening")
+      .waitFor({ state: "detached", timeout: 5000 });
     await page.getByText("Sample Player", { exact: false }).first().waitFor();
     await page.goto(`${base}/parlays`);
+    await page
+      .locator(".vq-brand-opening")
+      .waitFor({ state: "detached", timeout: 5000 });
     const savedLay = page
       .locator("details.workshop-leg > summary")
       .filter({ hasText: "Synthetic saved lay" });
@@ -121,6 +136,9 @@ try {
       .filter({ hasText: "Synthetic saved lay" })
       .waitFor();
     await page.goto(`${base}/notifications`);
+    await page
+      .locator(".vq-brand-opening")
+      .waitFor({ state: "detached", timeout: 5000 });
     await page
       .getByRole("heading", { name: "Notifications", exact: true })
       .waitFor();
@@ -231,6 +249,9 @@ try {
   const page = await incomplete.newPage();
   page.setDefaultTimeout(20000);
   await page.goto(`${base}/membership`);
+  await page
+    .locator(".vq-brand-opening")
+    .waitFor({ state: "detached", timeout: 5000 });
   const dialog = page.getByRole("dialog", {
     name: "Make your profile yours",
     exact: true,
@@ -259,6 +280,9 @@ try {
   await control("logout-mode", { fail: false });
   await page.getByRole("button", { name: "Sign out", exact: true }).click();
   await page.waitForURL(`${base}/staging/private-access`);
+  await page
+    .locator(".vq-brand-opening")
+    .waitFor({ state: "detached", timeout: 5000 });
   assert.equal(
     (await incomplete.cookies()).some(
       (c) => c.name === "__Host-vq-private-access",

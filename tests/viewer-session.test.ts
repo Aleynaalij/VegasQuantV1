@@ -373,6 +373,16 @@ test("viewer client drops delayed identities, clears before revalidation, dedupl
     /Sign-out could not be verified/,
   );
   assert.equal(c.getSnapshot().state, "error");
+  c.invalidate();
+  const frozen = c.read(true);
+  await Promise.resolve();
+  assert.equal(
+    pending.length,
+    5,
+    "automatic forced revalidation cannot erase failed logout and restore the old session",
+  );
+  assert.equal((await frozen).failure, "logout");
+  assert.equal(c.getSnapshot().session, null);
   const retry = c.signOut();
   pending[5](Response.json({ state: "anonymous" }));
   assert.equal((await retry).error, null);

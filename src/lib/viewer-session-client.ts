@@ -10,6 +10,7 @@ export function createViewerSessionClient(transport: typeof fetch = fetch) {
   let snapshot: ViewerIdentity = emptyViewer;
   let generation = 0;
   let signingOut = false;
+  let logoutFailed = false;
   let logoutPending: Promise<{ error: Error | null }> | undefined;
   let controller: AbortController | undefined;
   let pending: Promise<ViewerIdentity> | undefined;
@@ -22,10 +23,14 @@ export function createViewerSessionClient(transport: typeof fetch = fetch) {
     generation++;
     controller?.abort();
     pending = undefined;
-    publish({ ...emptyViewer });
+    publish(
+      logoutFailed
+        ? { ...emptyViewer, state: "error", failure: "logout" }
+        : { ...emptyViewer },
+    );
   };
   const read = (force = false): Promise<ViewerIdentity> => {
-    if (signingOut) return Promise.resolve(snapshot);
+    if (signingOut || logoutFailed) return Promise.resolve(snapshot);
     if (!force && snapshot.state === "ready") return Promise.resolve(snapshot);
     if (pending && !force) return pending;
     const epoch = ++generation;
@@ -79,6 +84,7 @@ export function createViewerSessionClient(transport: typeof fetch = fetch) {
   const signOut = (): Promise<{ error: Error | null }> => {
     if (logoutPending) return logoutPending;
     signingOut = true;
+    logoutFailed = false;
     invalidate();
     logoutPending = (async () => {
       try {
@@ -95,6 +101,7 @@ export function createViewerSessionClient(transport: typeof fetch = fetch) {
         publish({ ...emptyViewer, state: "anonymous" });
         return { error: null };
       } catch (error) {
+        logoutFailed = true;
         publish({ ...emptyViewer, state: "error", failure: "logout" });
         return {
           error:
