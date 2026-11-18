@@ -145,7 +145,22 @@ try {
         .locator(".gr-hero h1")
         .filter({ hasText: `Atlas ${sport} Away` })
         .waitFor();
-      await page.locator("[data-viewer-state=ready]").waitFor();
+      // Standalone Rooms intentionally omit the global Account link. Verify the
+      // same server identity directly rather than assuming a different shell.
+      const identity = await page.evaluate(async () => {
+        const r = await fetch("/staging/discovery/session", {
+          credentials: "same-origin",
+          cache: "no-store",
+        });
+        return { status: r.status, body: await r.json() };
+      });
+      assert.equal(identity.status, 200);
+      assert.equal(
+        identity.body.session.user.id,
+        "11111111-1111-4111-8111-111111111111",
+      );
+      assert.equal(identity.body.session.transport, "httpOnly-stage");
+      assert.equal("access_token" in identity.body.session, false);
       await page.screenshot({
         path: `${out}/${storage}-${sport}-room-phone.png`,
         fullPage: true,
