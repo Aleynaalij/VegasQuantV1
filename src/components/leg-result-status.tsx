@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { legResults, useLegDataVersion, wireAuthInvalidation, type ResultState } from "@/lib/leg-data";
@@ -16,7 +17,7 @@ export function useReleaseResults(releaseId?: string, count = 0) {
     }
     const keys = Array.from({ length: count }, (_, i) => `candidate:${releaseId}:${i + 1}`);
     (async () => {
-      const session = await supabase.auth.getSession();
+      const session = await viewerAuth.getSession();
       if (!live) return;
       if (!session.data.session) return setStates({});
       const found = await legResults.loadMany(keys);

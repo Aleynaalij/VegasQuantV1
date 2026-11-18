@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { runMilestone, type CommunityProfile } from "@/lib/community";
@@ -36,7 +37,7 @@ export default function CommunityCard({
     setNotice("");
     invalidate();
     try {
-      const { data: auth } = await supabase.auth.getUser();
+      const { data: auth } = await viewerAuth.getUser();
       if (!auth.user) throw Error("Sign in to create your Run Card.");
       const uid = auth.user.id;
       const [a, c, r] = await Promise.all([

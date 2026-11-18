@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bookmark, Flame } from "lucide-react";
@@ -35,7 +36,7 @@ export default function LegActions({
     async function load() {
       const request = ++epoch;
       try {
-        const session = await supabase.auth.getSession();
+        const session = await viewerAuth.getSession();
         if (!live || request !== epoch) return;
         if (session.error) throw session.error;
         const id = session.data.session?.user.id || null;
@@ -81,7 +82,7 @@ export default function LegActions({
       }
     }
     void load();
-    const auth = supabase.auth.onAuthStateChange((_event, session) => {
+    const auth = viewerAuth.onAuthStateChange((_event, session) => {
       if ((session?.user.id || null) !== current.current.uid) {
         current.current = {
           uid: session?.user.id || null,

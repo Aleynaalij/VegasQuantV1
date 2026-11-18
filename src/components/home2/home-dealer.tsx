@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -55,7 +56,7 @@ export default function HomeDealer({
       const next = await readHomeDealer(
         {
           authenticated: async () => {
-            const { data, error } = await supabase.auth.getUser();
+            const { data, error } = await viewerAuth.getUser();
             return !error && !!data.user;
           },
           feed: async (p_sport, p_limit) =>
@@ -74,7 +75,7 @@ export default function HomeDealer({
       clear,
       () => void read(),
       (changed) => {
-        const { data } = supabase.auth.onAuthStateChange(changed);
+        const { data } = viewerAuth.onAuthStateChange(changed);
         return () => data.subscription.unsubscribe();
       },
     );

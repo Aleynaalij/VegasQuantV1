@@ -6,7 +6,8 @@
       "codex/atlas-combined-stage": false,
       "codex/atlas-isolated-db-prep": false,
       "codex/atlas-final-integration": false,
-      "elo/atlas-consumer-reader-ci": false
+      "elo/atlas-consumer-reader-ci": false,
+      "codex/atlas-authenticated-experience": false
     }
   },
   "headers": [

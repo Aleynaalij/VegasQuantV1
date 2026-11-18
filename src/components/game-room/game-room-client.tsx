@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import GameIntelligenceRoom from "./game-intelligence-room";
@@ -81,7 +82,7 @@ export default function GameRoomClient({
           invalidate,
           () => void load(),
           (changed) => {
-            const { data } = supabase.auth.onAuthStateChange(changed);
+            const { data } = viewerAuth.onAuthStateChange(changed);
             return () => data.subscription.unsubscribe();
           },
         );

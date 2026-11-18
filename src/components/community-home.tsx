@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import {
   useCallback,
   useEffect,
@@ -78,7 +79,7 @@ export default function CommunityHome({
   const epoch = useRef(0);
   const load = useCallback(async () => {
     const version = ++epoch.current;
-    const { data } = await supabase.auth.getSession();
+    const { data } = await viewerAuth.getSession();
     const user = data.session?.user.id;
     if (!user) {
       if (version === epoch.current) {
@@ -119,7 +120,7 @@ export default function CommunityHome({
     }, 20000);
     window.addEventListener("focus", load);
     window.addEventListener("vq-community-changed", load);
-    const auth = supabase.auth.onAuthStateChange(() => {
+    const auth = viewerAuth.onAuthStateChange(() => {
       setTimeout(() => void load(), 0);
     });
     return () => {

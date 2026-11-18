@@ -1,3 +1,4 @@
+import { viewerAuth } from "./viewer-auth";
 import { supabase } from "./supabase";
 
 /**
@@ -8,10 +9,10 @@ import { supabase } from "./supabase";
  */
 export function onUserChange(fn: (userId: string | null) => void) {
   let current: string | null | undefined;
-  void supabase.auth.getSession().then((r) => {
+  void viewerAuth.getSession().then((r) => {
     if (current === undefined) current = r.data.session?.user.id ?? null;
   });
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+  const { data } = viewerAuth.onAuthStateChange((_event, session) => {
     const id = session?.user.id ?? null;
     if (current === undefined) {
       current = id;

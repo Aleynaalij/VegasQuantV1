@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -21,7 +22,7 @@ export default function TailLeaderboard() {
   useEffect(() => {
     let live = true;
     async function load() {
-      const s = await supabase.auth.getSession();
+      const s = await viewerAuth.getSession();
       if (!live) return;
       setSignedIn(!!s.data.session);
       if (!s.data.session) return setRows([]);

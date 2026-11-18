@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
@@ -41,7 +42,7 @@ export default function MemberProfile({ username }: { username: string }) {
   const generation = useRef(0);
   const load = useCallback(async () => {
     const run = ++generation.current;
-    const { data } = await supabase.auth.getSession();
+    const { data } = await viewerAuth.getSession();
     if (run !== generation.current) return;
     const id = data.session?.user.id ?? null;
     setUid(id);
@@ -63,7 +64,7 @@ export default function MemberProfile({ username }: { username: string }) {
     const timer = setInterval(() => {
       if (document.visibilityState === "visible") void load();
     }, 30000);
-    const sub = supabase.auth.onAuthStateChange(() =>
+    const sub = viewerAuth.onAuthStateChange(() =>
       setTimeout(() => void load(), 0),
     );
     return () => {

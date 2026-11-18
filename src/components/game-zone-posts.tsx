@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Heart, MessageCircle } from "lucide-react";
@@ -32,7 +33,7 @@ export default function GameZonePosts({
       generation = 0;
     async function load() {
       const n = ++generation;
-      const { data } = await supabase.auth.getSession();
+      const { data } = await viewerAuth.getSession();
       if (!live || n !== generation) return;
       if (!data.session) return setPosts([]);
       const r = await supabase.rpc("game_zone_posts", {
@@ -43,7 +44,7 @@ export default function GameZonePosts({
       setPosts(r.error ? [] : gameZonePosts(r.data));
     }
     void load();
-    const sub = supabase.auth.onAuthStateChange(() =>
+    const sub = viewerAuth.onAuthStateChange(() =>
       setTimeout(() => void load(), 0),
     );
     return () => {

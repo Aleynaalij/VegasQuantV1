@@ -1,16 +1,16 @@
 name: ATLAS isolated staging acceptance
 on:
   push:
-    branches: [codex/atlas-combined-stage, codex/atlas-final-integration, elo/atlas-consumer-reader-ci]
+    branches: [codex/atlas-combined-stage, codex/atlas-final-integration, elo/atlas-consumer-reader-ci, codex/atlas-authenticated-experience]
   pull_request:
-    branches: [elo/consumer-integration, codex/atlas-combined-stage]
+    branches: [elo/consumer-integration, codex/atlas-combined-stage, codex/atlas-final-integration]
 
 permissions:
   contents: read
 
 jobs:
   staging:
-    if: github.event_name == 'push' || contains(fromJSON('["codex/atlas-combined-stage","codex/atlas-final-integration","elo/atlas-consumer-reader-ci"]'), github.head_ref)
+    if: github.event_name == 'push' || contains(fromJSON('["codex/atlas-combined-stage","codex/atlas-final-integration","elo/atlas-consumer-reader-ci","codex/atlas-authenticated-experience"]'), github.head_ref)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

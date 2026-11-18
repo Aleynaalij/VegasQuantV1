@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -76,7 +77,7 @@ export default function Home2({
       clear,
       () => void read(),
       (changed) => {
-        const { data: subscription } = supabase.auth.onAuthStateChange(changed);
+        const { data: subscription } = viewerAuth.onAuthStateChange(changed);
         return () => subscription.subscription.unsubscribe();
       },
     );

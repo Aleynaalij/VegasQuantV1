@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -95,7 +96,7 @@ export default function RoomPublications({
       clear();
       const own = generation;
       try {
-        const session = await supabase.auth.getSession();
+        const session = await viewerAuth.getSession();
         if (!active || own !== generation) return;
         if (session.error || !session.data.session) {
           setState("signed-out");
@@ -128,7 +129,7 @@ export default function RoomPublications({
       clear,
       () => void load(),
       (changed) => {
-        const { data } = supabase.auth.onAuthStateChange(changed);
+        const { data } = viewerAuth.onAuthStateChange(changed);
         return () => data.subscription.unsubscribe();
       },
     );

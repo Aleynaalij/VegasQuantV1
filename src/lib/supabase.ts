@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { STAGE_SUPABASE_URL } from "./private-access-stage-config";
+import { stageDataFetch } from "./stage-data-client";
 
 const configuredUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const configuredKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
@@ -28,6 +29,7 @@ export const supabase = createClient(
   publishableKey,
   process.env.VQ_COMBINED_STAGE_BUILD === "1"
     ? {
+        global: { fetch: stageDataFetch(STAGE_SUPABASE_URL) },
         auth: {
           persistSession: false,
           autoRefreshToken: false,

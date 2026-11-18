@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -21,7 +22,7 @@ export default function TailedParlays() {
     async function load() {
       const n = ++epoch;
       try {
-        const s = await supabase.auth.getSession();
+        const s = await viewerAuth.getSession();
         if (!live || n !== epoch) return;
         const uid = s.data.session?.user.id;
         setSignedIn(!!uid);
@@ -72,7 +73,7 @@ export default function TailedParlays() {
     const refresh = () => void load();
     window.addEventListener("vq-saved-changed", refresh);
     window.addEventListener("focus", refresh);
-    const auth = supabase.auth.onAuthStateChange(() => {
+    const auth = viewerAuth.onAuthStateChange(() => {
       ++epoch;
       setRows([]);
       setSignedIn(false);

@@ -175,7 +175,11 @@ export async function checkCombinedStageRequest(request: NextRequest) {
   )
     return null;
 
-  if (/^\/staging\/discovery\/read\/(?:dealer|research)$/.test(path))
+  if (
+    path === "/staging/discovery/session" ||
+    path === "/staging/discovery/data" ||
+    /^\/staging\/discovery\/read\/(?:dealer|research)$/.test(path)
+  )
     return null;
 
   if (request.method !== "GET" && request.method !== "HEAD")
@@ -204,12 +208,17 @@ export async function checkCombinedStageRequest(request: NextRequest) {
 
 export async function signOutStage(config: StageConfig, token: string | null) {
   if (token) {
-    await fetch(`${config.url}/auth/v1/logout?scope=local`, {
+    const result = await fetch(`${config.url}/auth/v1/logout?scope=local`, {
       method: "POST",
       headers: { apikey: config.key, Authorization: `Bearer ${token}` },
       redirect: "error",
       signal: AbortSignal.timeout(5000),
-    }).catch(() => undefined);
+    }).catch(() => null);
+    if (!result?.ok)
+      return stageResponse(
+        "Sign-out could not be verified. Please retry.",
+        503,
+      );
   }
   return stageRedirect(PRIVATE_ACCESS_PATH, config);
 }
