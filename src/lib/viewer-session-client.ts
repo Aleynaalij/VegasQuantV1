@@ -1,3 +1,4 @@
+import { featureCapabilities } from "./stage-feature-query";
 import {
   emptyViewer,
   projectViewerUser,
@@ -59,7 +60,7 @@ export function createViewerSessionClient(transport: typeof fetch = fetch) {
             state: "ready",
             session: { user, transport: "httpOnly-stage" },
             age: "verified",
-            capabilities: unavailableCapabilities,
+            capabilities: featureCapabilities(raw) ?? unavailableCapabilities,
           };
         }
       } catch {

@@ -1,3 +1,4 @@
+import type { FeatureCapabilities } from "./stage-feature-query";
 /** Application identity, deliberately NOT a Supabase Session. No bearer tokens. */
 export type ViewerUser = {
   id: string;
@@ -14,18 +15,14 @@ export type ViewerIdentity = {
   state: "checking" | "ready" | "anonymous" | "denied" | "error";
   session: ViewerSession | null;
   age: "verified" | "unknown";
-  capabilities: {
-    profile: false;
-    notifications: false;
-    social: false;
-    desk: false;
-  };
+  capabilities: FeatureCapabilities;
 };
 export const unavailableCapabilities = {
   profile: false,
   notifications: false,
   social: false,
   desk: false,
+  research: false,
 } as const;
 export const emptyViewer: ViewerIdentity = {
   state: "checking",

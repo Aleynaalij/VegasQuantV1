@@ -8,7 +8,8 @@
       "codex/atlas-final-integration": false,
       "elo/atlas-consumer-reader-ci": false,
       "codex/atlas-authenticated-experience": false,
-      "codex/atlas-feature-preservation": false
+      "codex/atlas-feature-preservation": false,
+      "codex/atlas-consumer-contracts": false
     }
   },
   "headers": [

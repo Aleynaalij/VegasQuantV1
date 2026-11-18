@@ -1,5 +1,5 @@
 "use client";
-import { combinedViewer } from "@/lib/viewer-auth";
+import { combinedViewer, viewerAuth, useViewerIdentity } from "@/lib/viewer-auth";
 import { CombinedProfileNotice } from "./combined-viewer";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
@@ -7,7 +7,8 @@ import CommunitySettings from "./community-settings";
 import { dropPrompt, markPromptShown, wantPrompt } from "@/lib/prompt-queue";
 
 export default function ProfileSetupGate() {
-  return combinedViewer ? (
+  const viewer = useViewerIdentity();
+  return combinedViewer && !viewer.capabilities.profile ? (
     <CombinedProfileNotice />
   ) : (
     <OrdinaryProfileSetupGate />
@@ -23,7 +24,7 @@ function OrdinaryProfileSetupGate() {
       generation = 0;
     async function check() {
       const current = ++generation;
-      const { data } = await supabase.auth.getSession();
+      const { data } = await viewerAuth.getSession();
       if (!live || current !== generation) return;
       const id = data.session?.user.id;
       setUid(id || null);
@@ -52,7 +53,7 @@ function OrdinaryProfileSetupGate() {
       if (!needed) dropPrompt("profile");
     }
     void check();
-    const listener = supabase.auth.onAuthStateChange(() => {
+    const listener = viewerAuth.onAuthStateChange(() => {
       setTimeout(() => void check(), 0);
     });
     window.addEventListener("vq-community-changed", check);

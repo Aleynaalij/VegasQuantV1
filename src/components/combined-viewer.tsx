@@ -1,4 +1,5 @@
 "use client";
+import CommunitySettings from "./community-settings";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { useViewerIdentity, viewerAuth } from "@/lib/viewer-auth";
@@ -53,11 +54,8 @@ export function CombinedAccountContent() {
       {view.allowed && (
         <>
           <p>{viewer.session!.user.email ?? viewer.session!.user.id}</p>
-          <p>
-            Profile editing, account changes, MFA enrollment, billing and
-            notification preferences are unavailable until their isolated
-            contracts are verified. No production settings are used.
-          </p>
+          {viewer.capabilities.profile && <CommunitySettings key={viewer.session!.user.id} uid={viewer.session!.user.id} />}
+          <p>Account deletion, billing and MFA enrollment remain outside the isolated consumer contract.</p>
         </>
       )}
       <button

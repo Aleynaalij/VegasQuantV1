@@ -125,6 +125,7 @@ test("viewer and data boundary: owner, denial, original age/entitlement, race re
     notifications: false,
     social: false,
     desk: false,
+    research: false,
   });
   assert(!JSON.stringify(data).includes("must never"));
   assert(!JSON.stringify(data).includes("access_token"));

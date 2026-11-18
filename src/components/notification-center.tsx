@@ -1,5 +1,5 @@
 "use client";
-import { combinedViewer } from "@/lib/viewer-auth";
+import { combinedViewer, useViewerIdentity } from "@/lib/viewer-auth";
 import { CombinedNotificationContent } from "./combined-viewer";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -53,7 +53,8 @@ const switches = [
   ["profile_reminder", "Profile reminders"],
 ];
 export default function NotificationCenter() {
-  return combinedViewer ? (
+  const viewer = useViewerIdentity();
+  return combinedViewer && !viewer.capabilities.notifications ? (
     <Shell active="membership">
       <CombinedNotificationContent />
     </Shell>
@@ -88,6 +89,7 @@ function OrdinaryNotificationCenter() {
   }, [preferences, uid]);
   useEffect(() => {
     let live = true;
+    if (combinedViewer) return;
     void fetch("/api/notifications/channels")
       .then((r) => r.json())
       .then((d) => {
@@ -218,6 +220,8 @@ function OrdinaryNotificationCenter() {
     setSaving(true);
     setPrefNotice("");
     try {
+      if (combinedViewer && (pref.push_enabled || pref.email_enabled))
+        throw Error("External delivery is disabled in isolated staging.");
       if (pref.push_enabled) {
         if (!supportsPush())
           throw Error(

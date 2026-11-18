@@ -6,10 +6,30 @@ export async function fetchNbaMatchupSheet(
   signal: AbortSignal,
   userId?: string,
 ) {
-  if (process.env.VQ_COMBINED_STAGE_BUILD === "1")
-    throw Error(
-      "Full matchup sheets and downloads are unavailable until their isolated publication and source contracts are verified.",
+  if (process.env.VQ_COMBINED_STAGE_BUILD === "1") {
+    const { readViewerIdentity } = await import("./viewer-auth");
+    const viewer = await readViewerIdentity();
+    signal.throwIfAborted();
+    if (
+      viewer.state !== "ready" ||
+      !viewer.capabilities.research ||
+      (userId && viewer.session?.user.id !== userId)
+    )
+      throw Error(
+        "Full matchup sheets and downloads are unavailable until their isolated publication and source contracts are verified.",
+      );
+    const r = await fetch(
+      `/staging/discovery/read/matchup-sheet/${encodeURIComponent(id)}`,
+      {
+        credentials: "same-origin",
+        cache: "no-store",
+        redirect: "error",
+        signal,
+      },
     );
+    if (!r.ok) throw Error("Matchup sheet unavailable.");
+    return (await r.json()) as NbaSheetResponse;
+  }
   const {
     data: { session },
   } = await supabase.auth.getSession();

@@ -1,3 +1,5 @@
+import { stageFeatureManifest } from "./stage-feature-manifest";
+import { FEATURE_CONTRACT } from "./stage-feature-query";
 import { NextRequest, NextResponse } from "next/server";
 import { privateAccessConfig } from "./private-access-stage-config";
 import {
@@ -5,7 +7,7 @@ import {
   stageToken,
   stageRedirect,
 } from "./private-access-stage";
-import { projectViewerUser, unavailableCapabilities } from "./viewer-contract";
+import { projectViewerUser } from "./viewer-contract";
 
 const headers = {
   "Cache-Control": "private, no-store",
@@ -99,6 +101,7 @@ export async function stageViewerSession(
       member?.allowed !== true
     )
       return fail(403);
+    const capabilities = await stageFeatureManifest(config, token, transport);
     const [finalAge, finalMember] = await Promise.all([
       read("/rest/v1/rpc/age_verification_status", "POST"),
       read("/rest/v1/rpc/membership_status", "POST"),
@@ -116,7 +119,8 @@ export async function stageViewerSession(
         state: "ready",
         session: { user, transport: "httpOnly-stage" },
         age: "verified",
-        capabilities: unavailableCapabilities,
+        contract: FEATURE_CONTRACT,
+        capabilities,
       },
       { headers },
     );

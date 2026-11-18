@@ -1,0 +1,1003 @@
+{
+  "version": "vq-stage-features-v1",
+  "tables": {
+    "community_profiles": {
+      "group": "profile",
+      "write": [
+        "user_id",
+        "username",
+        "region",
+        "avatar",
+        "visible",
+        "instagram_url",
+        "x_url",
+        "tagline",
+        "bio",
+        "state",
+        "updated_at"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "key": [
+        "user_id"
+      ],
+      "columns": [
+        "user_id",
+        "username",
+        "region",
+        "avatar",
+        "visible",
+        "updated_at",
+        "instagram_url",
+        "x_url",
+        "tagline",
+        "bio",
+        "state"
+      ]
+    },
+    "community_posts": {
+      "group": "social",
+      "write": [
+        "id",
+        "user_id",
+        "sport",
+        "kind",
+        "title",
+        "body",
+        "legs",
+        "stake",
+        "photo_path"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "key": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "user_id",
+        "sport",
+        "kind",
+        "title",
+        "body",
+        "legs",
+        "stake",
+        "author_name",
+        "created_at",
+        "photo_path",
+        "card"
+      ]
+    },
+    "community_post_comments": {
+      "group": "social",
+      "write": [
+        "id",
+        "post_id",
+        "user_id",
+        "body",
+        "parent_id"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "key": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "post_id",
+        "user_id",
+        "author_name",
+        "body",
+        "created_at",
+        "parent_id"
+      ]
+    },
+    "community_reactions": {
+      "group": "social",
+      "write": [
+        "post_id",
+        "user_id",
+        "reaction_type"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "key": [
+        "post_id",
+        "user_id"
+      ],
+      "columns": [
+        "post_id",
+        "user_id",
+        "created_at",
+        "reaction_type"
+      ]
+    },
+    "community_comment_reactions": {
+      "group": "social",
+      "write": [
+        "comment_id",
+        "user_id"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "key": [
+        "comment_id",
+        "user_id"
+      ],
+      "columns": [
+        "comment_id",
+        "user_id",
+        "created_at"
+      ]
+    },
+    "member_follows": {
+      "group": "social",
+      "write": [
+        "user_id",
+        "target_user_id"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "key": [
+        "user_id",
+        "target_user_id"
+      ],
+      "columns": [
+        "user_id",
+        "target_user_id",
+        "created_at"
+      ]
+    },
+    "member_blocks": {
+      "group": "social",
+      "write": [
+        "user_id",
+        "target_user_id",
+        "label"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "key": [
+        "user_id",
+        "target_user_id"
+      ],
+      "columns": [
+        "user_id",
+        "target_user_id",
+        "label",
+        "created_at"
+      ]
+    },
+    "community_reports": {
+      "group": "social",
+      "write": [
+        "id",
+        "post_id",
+        "user_id",
+        "reason"
+      ],
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "key": [
+        "post_id",
+        "user_id"
+      ],
+      "columns": [
+        "id",
+        "post_id",
+        "user_id",
+        "reason",
+        "created_at"
+      ]
+    },
+    "saved_legs": {
+      "group": "desk",
+      "write": [
+        "user_id",
+        "leg_key"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "key": [
+        "user_id",
+        "leg_key"
+      ],
+      "columns": [
+        "user_id",
+        "leg_key",
+        "created_at"
+      ]
+    },
+    "leg_tails": {
+      "group": "desk",
+      "write": [
+        "user_id",
+        "leg_key"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "DELETE"
+      ],
+      "key": [
+        "user_id",
+        "leg_key"
+      ],
+      "columns": [
+        "user_id",
+        "leg_key",
+        "created_at"
+      ]
+    },
+    "member_parlays": {
+      "group": "desk",
+      "write": [
+        "title"
+      ],
+      "methods": [
+        "GET",
+        "PATCH",
+        "DELETE"
+      ],
+      "key": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "user_id",
+        "title",
+        "leg_keys",
+        "legs",
+        "created_at",
+        "expires_at",
+        "community_post_id"
+      ]
+    },
+    "notification_preferences": {
+      "group": "notifications",
+      "write": [
+        "user_id",
+        "disabled_types",
+        "push_enabled",
+        "email_enabled",
+        "sound_enabled",
+        "haptics_enabled",
+        "batch_minutes",
+        "timezone",
+        "quiet_enabled",
+        "quiet_start",
+        "quiet_end",
+        "updated_at"
+      ],
+      "methods": [
+        "GET",
+        "POST",
+        "PATCH"
+      ],
+      "key": [
+        "user_id"
+      ],
+      "columns": [
+        "user_id",
+        "disabled_types",
+        "push_enabled",
+        "email_enabled",
+        "sound_enabled",
+        "haptics_enabled",
+        "batch_minutes",
+        "timezone",
+        "quiet_enabled",
+        "quiet_start",
+        "quiet_end",
+        "updated_at"
+      ]
+    },
+    "published_legs": {
+      "group": "desk",
+      "write": [],
+      "methods": [
+        "GET"
+      ],
+      "key": [
+        "leg_key"
+      ],
+      "columns": [
+        "leg_key",
+        "release_id",
+        "leg_index",
+        "official_pick_id",
+        "game_id",
+        "kind",
+        "name",
+        "market",
+        "matchup",
+        "quote",
+        "quote_observed_at",
+        "gambly_url",
+        "copy_text",
+        "why",
+        "risk",
+        "published_at",
+        "expires_at",
+        "result",
+        "result_source",
+        "odds",
+        "original_leg_key"
+      ]
+    },
+    "candidate_releases": {
+      "group": "research",
+      "write": [],
+      "methods": [
+        "GET"
+      ],
+      "key": [
+        "id"
+      ],
+      "columns": [
+        "id",
+        "stage_id",
+        "title",
+        "candidates",
+        "expires_at",
+        "created_at",
+        "publication_key"
+      ]
+    },
+    "community_shares": {
+      "columns": [
+        "post_id",
+        "user_id",
+        "created_at"
+      ],
+      "group": "social",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "write": [
+        "post_id",
+        "user_id"
+      ],
+      "key": [
+        "post_id",
+        "user_id"
+      ]
+    },
+    "leg_book_prices": {
+      "columns": [
+        "leg_key",
+        "book",
+        "price",
+        "point",
+        "observed_at",
+        "kickoff",
+        "updated_at"
+      ],
+      "group": "desk",
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "leg_key"
+      ]
+    },
+    "leg_history": {
+      "columns": [
+        "leg_key",
+        "player_id",
+        "position",
+        "games",
+        "cleared",
+        "sample",
+        "median",
+        "computed_at"
+      ],
+      "group": "desk",
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "leg_key"
+      ]
+    },
+    "leg_market_prices": {
+      "columns": [
+        "leg_key",
+        "book",
+        "first_price",
+        "first_point",
+        "first_observed_at",
+        "last_price",
+        "last_point",
+        "last_observed_at",
+        "kickoff",
+        "updated_at"
+      ],
+      "group": "desk",
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "leg_key"
+      ]
+    },
+    "leg_result_progress": {
+      "columns": [
+        "leg_key",
+        "status",
+        "value",
+        "reason",
+        "source_url",
+        "checked_at"
+      ],
+      "group": "desk",
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "leg_key"
+      ]
+    },
+    "research_leg_results": {
+      "columns": [
+        "leg_key",
+        "result",
+        "source_url",
+        "verified_at"
+      ],
+      "group": "desk",
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "leg_key"
+      ]
+    },
+    "ruby_cards": {
+      "columns": [
+        "id",
+        "user_id",
+        "brand",
+        "theme",
+        "submission_day",
+        "sport",
+        "title",
+        "legs",
+        "note",
+        "photo_path",
+        "sportsbook",
+        "reported_odds",
+        "created_at",
+        "revision",
+        "edited_at",
+        "hidden",
+        "reported_result",
+        "source_link"
+      ],
+      "group": "social",
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "id"
+      ]
+    }
+  },
+  "rpcs": {
+    "community_activity": {
+      "args": [],
+      "name": "community_activity",
+      "types": [],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "community_activity()",
+      "source_hash": "f39cd74f912f4a5c4648734fa32a5eb788a8ff098ea9772f7417f023d4f73267",
+      "group": "social",
+      "write": false
+    },
+    "community_avatars": {
+      "args": [
+        "p_users"
+      ],
+      "name": "community_avatars",
+      "types": [
+        "uuid[]"
+      ],
+      "return": "jsonb",
+      "definer": true,
+      "signature": "community_avatars(uuid[])",
+      "source_hash": "931aa3cda32dbe4d11316a9e219339f1304b657287c31c040691debcc057f0dd",
+      "group": "social",
+      "write": false
+    },
+    "community_comments": {
+      "args": [
+        "p_post",
+        "p_target"
+      ],
+      "name": "community_comments",
+      "types": [
+        "uuid",
+        "uuid"
+      ],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "community_comments(uuid,uuid)",
+      "source_hash": "cea17c86497dadfe9f7cd4a5c76617842b4571aecf4c4ac794ea9f0a1898a8e1",
+      "group": "social",
+      "write": false
+    },
+    "community_dealer_feed": {
+      "args": [
+        "p_sport",
+        "p_limit"
+      ],
+      "name": "community_dealer_feed",
+      "types": [
+        "text",
+        "integer"
+      ],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "community_dealer_feed(text,integer)",
+      "source_hash": "bb8c26a3b1dab066aeba677c328bb3ebeb9380c44d84cb394c43f792f888f105",
+      "group": "social",
+      "write": false
+    },
+    "community_feed": {
+      "args": [
+        "p_sport",
+        "p_limit",
+        "p_following"
+      ],
+      "name": "community_feed",
+      "types": [
+        "text",
+        "integer",
+        "boolean"
+      ],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "community_feed(text,integer,boolean)",
+      "source_hash": "de793d75199d0c0e3a3fe10cf55a5391df87a8b3cdb29228fa36b6cda7a1d428",
+      "group": "social",
+      "write": false
+    },
+    "community_post": {
+      "args": [
+        "p_id"
+      ],
+      "name": "community_post",
+      "types": [
+        "uuid"
+      ],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "community_post(uuid)",
+      "source_hash": "9630e0732593bee376dceff764fe80280361f8a8bd3a00360305e0221da6b5c3",
+      "group": "social",
+      "write": false
+    },
+    "community_profile": {
+      "args": [
+        "p_username",
+        "p_limit"
+      ],
+      "name": "community_profile",
+      "types": [
+        "text",
+        "integer"
+      ],
+      "return": "jsonb",
+      "definer": true,
+      "signature": "community_profile(text,integer)",
+      "source_hash": "28c5a2c3c86a41869708556ab55a91625ae328e030dc35b053782a2a43147797",
+      "group": "profile",
+      "write": false
+    },
+    "community_reaction_state": {
+      "args": [
+        "p_post"
+      ],
+      "name": "community_reaction_state",
+      "types": [
+        "uuid"
+      ],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "community_reaction_state(uuid)",
+      "source_hash": "b6e3e1c051746e02b3b1ecb85b18373a4383bfb89579ea56800844332afa9408",
+      "group": "social",
+      "write": false
+    },
+    "create_member_parlay": {
+      "args": [
+        "p_title",
+        "p_leg_keys"
+      ],
+      "name": "create_member_parlay",
+      "types": [
+        "text",
+        "text[]"
+      ],
+      "return": "uuid",
+      "definer": false,
+      "signature": "create_member_parlay(text,text[])",
+      "source_hash": "22ec75b70264c893b3d08f9c3be7e93f3fd8960a413b77c4996c023a0cbbfc69",
+      "group": "desk",
+      "write": true
+    },
+    "is_admin": {
+      "args": [],
+      "name": "is_admin",
+      "types": [],
+      "return": "boolean",
+      "definer": false,
+      "signature": "is_admin()",
+      "source_hash": "00bd756d9158a92e622545ea2486cbebe43379361b10e9aee7c5596d84e3275c",
+      "group": "social",
+      "write": false
+    },
+    "notification_action": {
+      "args": [
+        "p_action",
+        "p_id",
+        "p_before"
+      ],
+      "name": "notification_action",
+      "types": [
+        "text",
+        "uuid",
+        "timestamp with time zone"
+      ],
+      "return": "void",
+      "definer": false,
+      "signature": "notification_action(text,uuid,timestamp with time zone)",
+      "source_hash": "ca4662bf2ce6df7b2575493a8189c857013bd7c0753d7e79c32358907e0a5e77",
+      "group": "notifications",
+      "write": true
+    },
+    "notification_counts": {
+      "args": [],
+      "name": "notification_counts",
+      "types": [],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "notification_counts()",
+      "source_hash": "1ee67f0ea276c8551c02b80eff7224b229407577e9b7aaf44169b3631fc84a88",
+      "group": "notifications",
+      "write": false
+    },
+    "notification_inbox": {
+      "args": [
+        "p_type",
+        "p_search",
+        "p_unread",
+        "p_before",
+        "p_id"
+      ],
+      "name": "notification_inbox",
+      "types": [
+        "text",
+        "text",
+        "boolean",
+        "timestamp with time zone",
+        "uuid"
+      ],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "notification_inbox(text,text,boolean,timestamp with time zone,uuid)",
+      "source_hash": "c0a29383cfbf2dcba1c9867cc9e8d682b135e34969c79d17c06ce7742109cca2",
+      "group": "notifications",
+      "write": false
+    },
+    "notification_view": {
+      "args": [
+        "p_ids",
+        "p_before"
+      ],
+      "name": "notification_view",
+      "types": [
+        "uuid[]",
+        "timestamp with time zone"
+      ],
+      "return": "void",
+      "definer": false,
+      "signature": "notification_view(uuid[],timestamp with time zone)",
+      "source_hash": "82f6c001c1a1a8cd9d35cc1629a4ea57a08c602459d1009f985a93d23492369f",
+      "group": "notifications",
+      "write": true
+    },
+    "published_leg_catalog": {
+      "args": [
+        "p_since"
+      ],
+      "name": "published_leg_catalog",
+      "types": [
+        "timestamp with time zone"
+      ],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "published_leg_catalog(timestamp with time zone)",
+      "source_hash": "b33b8a498326d28bc4866e372968b80e8dad03d7420204d14a60217f91270207",
+      "group": "desk",
+      "write": false
+    },
+    "set_community_reaction": {
+      "args": [
+        "p_post",
+        "p_reaction"
+      ],
+      "name": "set_community_reaction",
+      "types": [
+        "uuid",
+        "text"
+      ],
+      "return": "jsonb",
+      "definer": false,
+      "signature": "set_community_reaction(uuid,text)",
+      "source_hash": "66e096aa85be243efeb709982750339d3ef4645b505140afaba1844b457a4bce",
+      "group": "social",
+      "write": true
+    },
+    "share_member_parlay": {
+      "args": [
+        "p_parlay"
+      ],
+      "name": "share_member_parlay",
+      "types": [
+        "uuid"
+      ],
+      "return": "uuid",
+      "definer": true,
+      "signature": "share_member_parlay(uuid)",
+      "source_hash": "a1012cf50183a4324ccc353261cd80a30ad9298078d037197a65cd05c936af61",
+      "group": "desk",
+      "write": true
+    },
+    "nhl_chart_snapshot": {
+      "args": [
+        "p_id"
+      ],
+      "types": [
+        "uuid"
+      ],
+      "name": "nhl_chart_snapshot",
+      "return": "jsonb",
+      "definer": true,
+      "signature": "nhl_chart_snapshot(uuid)",
+      "source_hash": "2a9b395bb7728e8661f1275c5fb224dd40138799f782775da3a6047e1b0aed47",
+      "group": "research",
+      "write": false
+    },
+    "add_ruby_card_comment": {
+      "args": [
+        "p_card",
+        "p_body",
+        "p_parent"
+      ],
+      "name": "add_ruby_card_comment",
+      "types": [
+        "uuid",
+        "text",
+        "uuid"
+      ],
+      "return": "jsonb",
+      "signature": "add_ruby_card_comment(uuid, text, uuid)",
+      "source_hash": "578d778c084e3d00bcc163df2c14ce7d94bbb901de49c84f1f52de042e574dcc",
+      "group": "social",
+      "write": true
+    },
+    "create_community_poll_post": {
+      "args": [
+        "p_id",
+        "p_sport",
+        "p_body",
+        "p_photo_path",
+        "p_question",
+        "p_options"
+      ],
+      "name": "create_community_poll_post",
+      "types": [
+        "uuid",
+        "text",
+        "text",
+        "text",
+        "text",
+        "jsonb"
+      ],
+      "return": "uuid",
+      "signature": "create_community_poll_post(uuid, text, text, text, text, jsonb)",
+      "source_hash": "0b3fbe35db680ddbcea7006bc3acf45c144fd7ba4114492c88800a50f28e86fa",
+      "group": "social",
+      "write": true
+    },
+    "delete_ruby_card_comment": {
+      "args": [
+        "p_comment"
+      ],
+      "name": "delete_ruby_card_comment",
+      "types": [
+        "uuid"
+      ],
+      "return": "boolean",
+      "signature": "delete_ruby_card_comment(uuid)",
+      "source_hash": "2db5f31ab3a3ad4f37a5b831c93149114cd8dfdbab2f8873fc6ca5df704d781e",
+      "group": "social",
+      "write": true
+    },
+    "leg_tail_counts": {
+      "args": [
+        "p_legs"
+      ],
+      "name": "leg_tail_counts",
+      "types": [
+        "text[]"
+      ],
+      "return": "TABLE(leg_key text, tail_count bigint)",
+      "signature": "leg_tail_counts(text[])",
+      "source_hash": "279d180f569827a898b0d82aae398e16ab6ea5fe7e69f766f4a6791768a854e5",
+      "group": "desk",
+      "write": false
+    },
+    "restrict_community_member": {
+      "args": [
+        "p_user",
+        "p_reason",
+        "p_restricted"
+      ],
+      "name": "restrict_community_member",
+      "types": [
+        "uuid",
+        "text",
+        "boolean"
+      ],
+      "return": "void",
+      "signature": "restrict_community_member(uuid, text, boolean)",
+      "source_hash": "467b5ba9df067604858b328e58c7c7be905c4d76e566956db917ff37f8a4295a",
+      "group": "social",
+      "write": true
+    },
+    "ruby_card_comment_counts": {
+      "args": [
+        "p_cards"
+      ],
+      "name": "ruby_card_comment_counts",
+      "types": [
+        "uuid[]"
+      ],
+      "return": "jsonb",
+      "signature": "ruby_card_comment_counts(uuid[])",
+      "source_hash": "57bf573552c0a98668ae38246a2a6cc3ff5784a99dca3b4162c8ade16d2ef415",
+      "group": "social",
+      "write": false
+    },
+    "ruby_card_comments": {
+      "args": [
+        "p_card"
+      ],
+      "name": "ruby_card_comments",
+      "types": [
+        "uuid"
+      ],
+      "return": "jsonb",
+      "signature": "ruby_card_comments(uuid)",
+      "source_hash": "4e81b93f020f56d378a6c0932e8b7e4172ec5ab6a2b13a67b7f2881190aa2028",
+      "group": "social",
+      "write": false
+    },
+    "set_community_post_vote": {
+      "args": [
+        "p_post",
+        "p_value"
+      ],
+      "name": "set_community_post_vote",
+      "types": [
+        "uuid",
+        "integer"
+      ],
+      "return": "jsonb",
+      "signature": "set_community_post_vote(uuid, integer)",
+      "source_hash": "be60891e15b4746fe5140575dca98b86cdc4dc1d1795525c0a071c87d72a6d7c",
+      "group": "social",
+      "write": true
+    },
+    "community_story_clock": {
+      "args": [],
+      "name": "community_story_clock",
+      "types": [],
+      "return": "jsonb",
+      "signature": "community_story_clock()",
+      "source_hash": "1942860d1842ab19d1cc2acb1b0cea51ea5f59cbc9dedeab6d1eb86405472519",
+      "group": "social",
+      "write": false
+    },
+    "set_community_poll_vote": {
+      "args": [
+        "p_post",
+        "p_option"
+      ],
+      "name": "set_community_poll_vote",
+      "types": [
+        "uuid",
+        "integer"
+      ],
+      "return": "jsonb",
+      "signature": "set_community_poll_vote(uuid, integer)",
+      "source_hash": "c9e57843e15c78623fbda04c7c8e7bed847bf0845a6495802bd7dac50f86b031",
+      "group": "social",
+      "write": true
+    },
+    "community_poll_states": {
+      "args": [
+        "p_posts"
+      ],
+      "name": "community_poll_states",
+      "types": [
+        "uuid[]"
+      ],
+      "return": "jsonb",
+      "signature": "community_poll_states(uuid[])",
+      "source_hash": "d218ed43ada28ece6d7bfe94d68730791aef8d010f925a0ada6c9b741832246f",
+      "group": "social",
+      "write": false
+    },
+    "community_vote_states": {
+      "args": [
+        "p_posts"
+      ],
+      "name": "community_vote_states",
+      "types": [
+        "uuid[]"
+      ],
+      "return": "jsonb",
+      "signature": "community_vote_states(uuid[])",
+      "source_hash": "800c17579558d1e535f9246e6e5842640605d6d3d72dca2f0ca37c67c2aa99f4",
+      "group": "social",
+      "write": false
+    }
+  },
+  "requirements": {
+    "research": [
+      "public.nba_games",
+      "public.nba_player_results",
+      "public.nba_player_three_attempts",
+      "public.nba_observations",
+      "public.community_posts",
+      "private.nhl_chart_snapshots"
+    ]
+  }
+}

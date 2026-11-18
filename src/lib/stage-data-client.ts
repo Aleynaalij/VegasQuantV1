@@ -19,6 +19,13 @@ export function stageDataFetch(
     const h = new Headers(
       init?.headers ?? (input instanceof Request ? input.headers : undefined),
     );
+    const path = url.pathname.slice("/rest/v1/".length);
+    const legacy = [
+      "rpc/age_verification_status",
+      "rpc/membership_status",
+      "rpc/sports_slate",
+      "rpc/game_zone_posts",
+    ].includes(path);
     return transport("/staging/discovery/data", {
       method: "POST",
       credentials: "same-origin",
@@ -27,7 +34,13 @@ export function stageDataFetch(
       headers: { "Content-Type": "application/json" },
       signal: init?.signal,
       body: JSON.stringify({
-        path: url.pathname.slice("/rest/v1/".length),
+        path,
+        ...(!legacy
+          ? {
+              prefer: h.get("prefer"),
+              request_id: method === "GET" ? null : crypto.randomUUID(),
+            }
+          : {}),
         query: url.search,
         method,
         accept: h.get("accept"),

@@ -1,3 +1,5 @@
+import { stageFeatureManifest } from "./stage-feature-manifest";
+import { stageFeatureQuery } from "./stage-feature-query";
 import { NextRequest, NextResponse } from "next/server";
 import { privateAccessConfig } from "./private-access-stage-config";
 import { authorizeStageToken, stageToken } from "./private-access-stage";
@@ -103,9 +105,21 @@ export async function stageDataGateway(
   if (access !== 200) return fail(access);
   try {
     const text = await request.text();
-    if (text.length > 8192) return fail(413);
-    const query = stageDataQuery(JSON.parse(text));
-    if (!query) return fail(503);
+    if (
+      text.length >
+      (process.env.VQ_STAGE_FEATURE_CONTRACT === "vq-stage-features-v1"
+        ? 310000
+        : 8192)
+    )
+      return fail(413);
+    const raw = JSON.parse(text);
+    const legacy = stageDataQuery(raw);
+    const feature =
+      !legacy &&
+      process.env.VQ_STAGE_FEATURE_CONTRACT === "vq-stage-features-v1"
+        ? stageFeatureQuery(raw)
+        : null;
+    if (!legacy && !feature) return fail(503);
     const upstreamHeaders = {
       apikey: config.key,
       Authorization: `Bearer ${token}`,
@@ -129,7 +143,15 @@ export async function stageDataGateway(
       m = await member.json();
     if (a?.synthetic !== true || a?.verified !== true || m?.allowed !== true)
       return fail(403);
-    const result = await call(query.path, query.body);
+    if (
+      feature &&
+      !(await stageFeatureManifest(config, token, transport))[feature.group]
+    )
+      return fail(503);
+    const result = await call(
+      legacy ? legacy.path : "rpc/vq_private_access_stage_feature",
+      legacy ? legacy.body : JSON.stringify({ p: feature }),
+    );
     if (!result.ok)
       return fail(result.status === 401 || result.status === 403 ? 403 : 503);
     const payload = await result.text();
@@ -151,9 +173,25 @@ export async function stageDataGateway(
     )
       return fail(403);
     const current = await authorizeStageToken(config, token, transport);
-    return current === 200
-      ? NextResponse.json(data, { headers })
-      : fail(current);
+    if (current !== 200) return fail(current);
+    if (feature) {
+      // Database mutation and final eligibility checks share one transaction.
+      const result = data as {
+        data?: unknown;
+        status?: number;
+        count?: number;
+      };
+      if (![200, 406].includes(result?.status ?? 0)) return fail(503);
+      const extra: Record<string, string> =
+        typeof result.count === "number"
+          ? { "Content-Range": `*/${result.count}` }
+          : {};
+      return NextResponse.json(result.data ?? null, {
+        status: result.status,
+        headers: { ...headers, ...extra },
+      });
+    }
+    return NextResponse.json(data, { headers });
   } catch {
     return fail(503);
   }

@@ -45,6 +45,7 @@ export function stageBuildProfile(env: Environment): StageBuildProfile {
       "codex/atlas-final-integration",
       "codex/atlas-authenticated-experience",
       "codex/atlas-feature-preservation",
+      "codex/atlas-consumer-contracts",
       "elo/atlas-consumer-reader-ci",
     ].includes(env.VERCEL_GIT_COMMIT_REF ?? "") ||
     (env.VERCEL === "1" &&
@@ -73,6 +74,8 @@ export function privateAccessConfig(env: Environment) {
   const key = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const host = env.VERCEL_URL;
   if (
+    (env.VQ_STAGE_FEATURE_CONTRACT !== undefined &&
+      env.VQ_STAGE_FEATURE_CONTRACT !== "vq-stage-features-v1") ||
     ref !== STAGE_SUPABASE_REF ||
     url !== STAGE_SUPABASE_URL ||
     !key ||
