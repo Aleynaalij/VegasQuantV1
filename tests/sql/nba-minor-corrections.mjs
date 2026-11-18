@@ -86,6 +86,20 @@ for (const [name, p] of Object.entries(conflicts)) {
   // ESPN's latest read decides: a minor read afterwards returns the game to FINAL.
   assert.equal((await record(summary(oneRebound))).status, 'FINAL', `${name} then minor`);
 }
+// Backfill: a game in review is cleared only when every logged revision is minor. The log keeps each
+// distinct revision once, so ESPN going major -> minor -> major leaves a minor one as the newest row.
+const backfill = readFileSync('supabase/migrations/20261118010000_nba_minor_corrections.sql', 'utf8')
+  .match(/-- Re-check every game already in review[\s\S]*$/)[0];
+await db.exec(`update public.nba_result_progress set status = 'CONFLICT'`);
+await db.query(`insert into private.nba_result_corrections(game_id, recorded_fingerprint, observed_fingerprint, observed, source_hash)
+  select game_id, fingerprint, 'newest-minor', $1, $2 from public.nba_game_results`, [summary(oneRebound), 'b'.repeat(64)]);
+await db.exec(backfill);
+// The larger revisions logged above (score change, ±3 stats...) keep it in review even though the
+// newest logged row is minor. (The cleared path, only minor revisions logged, ran at migration load.)
+assert.equal(await status(), 'CONFLICT', 'a larger revision on record keeps the game in review');
+await assert.rejects(db.exec(`delete from private.nba_result_corrections`), /immutable/);
+assert.equal((await record(summary(oneRebound))).status, 'FINAL', 'the next live minor read still clears it');
+
 // The read that matches the recorded box score exactly changes nothing.
 assert.equal((await record(summary())).status, 'FINAL');
 await assert.rejects(db.exec(`update public.nba_player_results set rebounds = 4 where athlete_id = '1'`), /immutable/);

@@ -178,9 +178,13 @@ begin
  return jsonb_build_object('status','CONFIRMING');
 end $function$;
 
--- Re-check every game already in review against its latest logged revision.
+-- Re-check every game already in review. The corrections log keeps each distinct revision once (first
+-- seen), not which one ESPN showed last, so a game is cleared only when every revision logged for it is
+-- minor; a game with any larger revision on record stays in review.
 update public.nba_result_progress pr set status = 'FINAL',
  reason = 'ESPN revised the box score after it was recorded (scores unchanged, no stat moved by more than 2); graded on the recorded box score',
  checked_at = now()
-from (select distinct on (game_id) game_id, observed from private.nba_result_corrections order by game_id, detected_at desc) c
-where pr.game_id = c.game_id and pr.status = 'CONFLICT' and private.nba_minor_correction(c.game_id, c.observed);
+where pr.status = 'CONFLICT'
+ and exists (select 1 from private.nba_result_corrections c where c.game_id = pr.game_id)
+ and not exists (select 1 from private.nba_result_corrections c
+  where c.game_id = pr.game_id and not private.nba_minor_correction(c.game_id, c.observed));
