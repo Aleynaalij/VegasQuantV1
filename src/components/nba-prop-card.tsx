@@ -27,7 +27,7 @@ const POS = { G: "guards", F: "forwards", C: "centers" } as Record<
 >;
 const ordinal = (n: number) =>
   `${n}${[11, 12, 13].includes(n % 100) ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th")}`;
-/** FanDuel's over chance with the vig removed, when both sides are quoted. */
+/** The book's over chance with the vig removed, when both sides are quoted. */
 function fairOver(over: number | null, under: number | null) {
   if (over == null || under == null) return null;
   const p = (o: number) => (o > 0 ? 100 / (o + 100) : -o / (-o + 100));
@@ -45,10 +45,13 @@ export default function NbaPropCard({
   player,
   defense,
   tonight,
+  book = "FanDuel",
 }: {
   trend: PropTrend;
   player: PlayerLine;
   defense: DefenseRow[];
+  /** The book whose over/under prices are shown. */
+  book?: string;
   tonight: { tipoff: string; home: boolean; opponent: string; defense: string };
 }) {
   const [venue, setVenue] = useState<Venue>("all");
@@ -102,7 +105,7 @@ export default function NbaPropCard({
             Over {trend.line} {STAT[trend.market]}
           </b>
           <small>
-            FanDuel {odds(trend.over)} / under {odds(trend.under)} ·{" "}
+            {book} {odds(trend.over)} / under {odds(trend.under)} ·{" "}
             {tonight.home ? "vs" : "@"} {tonight.opponent}
           </small>
         </div>
@@ -124,7 +127,7 @@ export default function NbaPropCard({
         ) : null}
         {fair != null ? (
           <span className="npc-chip">
-            FanDuel implies <b>{fair}%</b>
+            {book} implies <b>{fair}%</b>
           </span>
         ) : null}
         {matchup ? (

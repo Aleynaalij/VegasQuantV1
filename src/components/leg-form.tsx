@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
@@ -59,7 +60,7 @@ export function useLegForms(keys: string[]): FormData {
     const list = id ? id.split(",") : [];
     if (!list.length) return;
     async function load() {
-      const s = await supabase.auth.getSession();
+      const s = await viewerAuth.getSession();
       if (!s.data.session) return;
       const [forms, prices, books, admin] = await Promise.all([
         legForms.loadMany(list),

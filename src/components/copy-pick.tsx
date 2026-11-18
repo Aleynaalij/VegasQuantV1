@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 
 import { useRef, useState, type FormEvent } from "react";
 import { money, odd, winProfit } from "@/lib/domain";
@@ -52,7 +53,7 @@ export default function CopyPick({
       const {
         data: { user },
         error: authError,
-      } = await supabase.auth.getUser();
+      } = await viewerAuth.getUser();
       if (authError || !user) {
         setStatus(
           "Pick ready to copy. Sign in to record your wager and track your bankroll.",

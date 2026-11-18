@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "./supabase";
 import {
@@ -38,7 +39,7 @@ export function useStoryClock(created: readonly string[] = []) {
       setFailed(false);
       if (document.visibilityState !== "visible") return;
       try {
-        const result = await supabase.auth.getSession();
+        const result = await viewerAuth.getSession();
         if (!live || request !== generation.current) return;
         const uid = result.data.session?.user.id ?? null;
         if (account.current !== uid) previous.current = null;
@@ -85,7 +86,7 @@ export function useStoryClock(created: readonly string[] = []) {
     const resume = () => {
       void sync();
     };
-    const auth = supabase.auth.onAuthStateChange((_event, session) => {
+    const auth = viewerAuth.onAuthStateChange((_event, session) => {
       const uid = session?.user.id ?? null;
       if (account.current === undefined) {
         account.current = uid;

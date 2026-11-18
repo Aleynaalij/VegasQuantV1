@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -76,7 +77,7 @@ export default function Home2({
       clear,
       () => void read(),
       (changed) => {
-        const { data: subscription } = supabase.auth.onAuthStateChange(changed);
+        const { data: subscription } = viewerAuth.onAuthStateChange(changed);
         return () => subscription.subscription.unsubscribe();
       },
     );
@@ -399,8 +400,7 @@ export default function Home2({
           <HomeDealer sport={sport} zoneHref={zoneHref} />
         </SectionBoundary>
         <p>
-          Open compact publications in The Zone. Full charts, source notes and
-          the original research remain available there.
+          {combined ? "Open compact publications in The Zone. Full charts, downloads and discussion require verified isolated contracts and are currently unavailable." : "Open compact publications in The Zone. Full charts, source notes and the original research remain available there."}
         </p>
         <Link className="h2-button" href={zoneHref}>
           Open The Zone <ArrowUpRight size={16} />

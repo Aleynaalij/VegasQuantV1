@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth, combinedViewer } from "@/lib/viewer-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
@@ -913,11 +914,11 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
       setFeedError("");
       setAuthReady(true);
     };
-    void supabase.auth.getSession().then((s) => {
+    void viewerAuth.getSession().then((s) => {
       if (sessionUid.current === undefined)
         update(s.data.session?.user.id || null);
     });
-    const a = supabase.auth.onAuthStateChange((_e, s) =>
+    const a = viewerAuth.onAuthStateChange((_e, s) =>
       update(s?.user.id || null),
     );
     return () => {
@@ -954,7 +955,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
       setFeedError(
         dealerOnly
           ? "Dealer posts could not refresh. Please retry."
-          : "Community could not refresh. Your existing posts are preserved.",
+          : combinedViewer ? "Zone stories, comments, reactions, following and saved content are unavailable: their isolated backend contracts are not verified. No changes were made." : "Community could not refresh. Your existing posts are preserved.",
       );
       return;
     }
@@ -1047,6 +1048,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
   async function post(e: FormEvent) {
     e.preventDefault();
     if (!uid) return;
+    if (combinedViewer) { setNotice("Posting is unavailable: the isolated social mutation contract is not verified."); return; }
     if (!body.trim() && !photo && !poll) return;
     if (busy) return;
     const pollProblem = poll ? pollDraftProblem(poll) : null;
@@ -1392,6 +1394,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
     );
   }
   async function remove(id: string) {
+    if (combinedViewer) { setNotice("Post deletion is unavailable in isolated staging."); return; }
     if (busy) return;
     setBusy(true);
     const generation = mutationEpoch.current;
@@ -1446,6 +1449,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
   return (
     <Shell active="community" sport={sport === "all" ? undefined : sport}>
       <div className={`community-feed zone-feed${zone2 ? " zone2-experience" : ""}`}>
+        {combinedViewer && <p className="zone-status" role="status">ISOLATED STAGING · Social interactions and full publication downloads need verified backend contracts. They are unavailable here; no production content or permissions are substituted.</p>}
         <header className="zone-head">
           <h1>The Zone</h1>
           <p>{zone2 ? "Research first. Conversation in context." : "Takes, lays and research from the Vegas Quant floor."}</p>

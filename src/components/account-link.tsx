@@ -1,10 +1,15 @@
 "use client";
+import { combinedViewer } from "@/lib/viewer-auth";
+import { CombinedAccountLink } from "./combined-viewer";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 type Me = { username: string; avatar: string | null } | null;
 /** Top-bar identity: your photo links to your profile once signed in; otherwise Login. */
 export default function AccountLink() {
+  return combinedViewer ? <CombinedAccountLink /> : <OrdinaryAccountLink />;
+}
+function OrdinaryAccountLink() {
   const [signedIn, setSignedIn] = useState(false);
   const [me, setMe] = useState<Me>(null);
   useEffect(() => {

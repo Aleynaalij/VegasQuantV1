@@ -1,0 +1,24 @@
+name: NBA minor corrections
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/20261118010000_nba_minor_corrections.sql"
+      - "tests/sql/nba-minor-corrections.mjs"
+      - ".github/workflows/nba-minor-corrections.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  nba-minor-corrections:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node tests/sql/nba-minor-corrections.mjs
+      - run: node tests/sql/nba-results.mjs
+      - run: node tests/sql/nba-shadow.mjs

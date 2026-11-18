@@ -1,4 +1,5 @@
 "use client";
+import { combinedViewer, useViewerIdentity } from "@/lib/viewer-auth";
 import {
   createContext,
   useContext,
@@ -35,9 +36,11 @@ export function NotificationBell() {
       className="update-bell"
       href="/notifications"
       aria-label={
-        failed
-          ? "Notifications · reconnecting"
-          : `Notifications · ${counts.unread} unread`
+        combinedViewer
+          ? "Notifications · unavailable in isolated staging"
+          : failed
+            ? "Notifications · reconnecting"
+            : `Notifications · ${counts.unread} unread`
       }
     >
       <Bell size={21} />
@@ -49,11 +52,32 @@ export function NotificationBell() {
     </Link>
   );
 }
-export default function NotificationProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export default function NotificationProvider(props: { children: ReactNode }) {
+  return combinedViewer ? (
+    <CombinedNotificationProvider {...props} />
+  ) : (
+    <OrdinaryNotificationProvider {...props} />
+  );
+}
+function CombinedNotificationProvider({ children }: { children: ReactNode }) {
+  const viewer = useViewerIdentity();
+  return (
+    <Context.Provider
+      value={{
+        uid: viewer.session?.user.id ?? null,
+        counts: empty,
+        revision: 0,
+        connected: false,
+        failed: true,
+        refresh: () => {},
+        preferences: null,
+      }}
+    >
+      {children}
+    </Context.Provider>
+  );
+}
+function OrdinaryNotificationProvider({ children }: { children: ReactNode }) {
   const [uid, setUid] = useState<string | null>(null),
     [counts, setCounts] = useState(empty),
     [revision, setRevision] = useState(0),

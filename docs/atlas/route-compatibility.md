@@ -1,6 +1,6 @@
 # Route compatibility inventory
 
-Production deployment source: `df5e5f010a19a2a14f009b94c43db033b499d077`. Source-file inventory, not hosted navigation acceptance.
+Current production/main source baseline: `cc87ddc42c544a2e45340fc53c86565e57791f1e` (original audit baseline `df5e5f010a19a2a14f009b94c43db033b499d077`). All 88 route files remain; the three accepted NBA research fixes added no route/build/proxy/configuration changes. Source-file inventory, not deployed-SHA or hosted navigation acceptance.
 
 All baseline page/handler files are compared with the candidate. Explicit staging consumer routes are separately tested against actual page patterns. Legacy service APIs are included in the build but intentionally denied by the combined staging proxy. Their presence is not functional parity.
 

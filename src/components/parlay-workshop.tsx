@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -135,7 +136,7 @@ export default function ParlayWorkshop({
       setAccessState("checking");
       try {
         const access = await resolveWorkshopAccess(
-          () => supabase.auth.getSession(),
+          () => viewerAuth.getSession(),
           () =>
             supabase
               .rpc("membership_status")
@@ -300,7 +301,7 @@ export default function ParlayWorkshop({
     window.addEventListener("focus", refreshCatalog);
     // Supabase repeats SIGNED_IN when a tab regains focus or another tab signs in. Reload (which
     // clears the draft and closes the save dialog) only when the account actually changes.
-    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data } = viewerAuth.onAuthStateChange((event, session) => {
       if (event === "INITIAL_SESSION") return;
       const nextOwner = session?.user.id || "";
       if (nextOwner === owner.current) return;

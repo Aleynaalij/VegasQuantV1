@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
@@ -64,8 +65,8 @@ export default function PublishedLegBoard({
       const n = ++epoch;
       try {
         const s = exact
-          ? await readPublicationSession(() => supabase.auth.getSession())
-          : await supabase.auth.getSession();
+          ? await readPublicationSession(() => viewerAuth.getSession())
+          : await viewerAuth.getSession();
         if (!live || n !== epoch) return;
         if (s.error) throw s.error;
         if (!s.data.session) {
@@ -175,7 +176,7 @@ export default function PublishedLegBoard({
     const timer = gameId ? setInterval(refreshGame, 30000) : null;
     if (gameId) window.addEventListener("focus", refreshGame);
     window.addEventListener("vq-saved-changed", refresh);
-    const auth = supabase.auth.onAuthStateChange((event) => {
+    const auth = viewerAuth.onAuthStateChange((event) => {
       ++epoch;
       if (event === "SIGNED_OUT" || event === "SIGNED_IN") {
         setRows([]);
