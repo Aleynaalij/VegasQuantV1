@@ -414,8 +414,13 @@
   border-radius: 12px;
   background: #f4dc99;
   color: #14110a;
-  font-size: 10px;
-  letter-spacing: -1px;
+}
+.pf-cta-icon svg {
+  display: block;
+  fill: currentColor;
+}
+.pf-cta-icon .pf-cta-miss {
+  fill: #c2453a;
 }
 .pf-cta b {
   display: block;
