@@ -7,6 +7,8 @@ import {
   stageDataQuery,
 } from "../src/lib/stage-data-gateway";
 import { stageDataFetch } from "../src/lib/stage-data-client";
+import { viewerPresentation } from "../src/lib/viewer-presentation";
+import { emptyViewer, type ViewerIdentity } from "../src/lib/viewer-contract";
 import { createViewerSessionClient } from "../src/lib/viewer-session-client";
 import { projectViewerUser } from "../src/lib/viewer-contract";
 const user = {
@@ -71,7 +73,8 @@ test("viewer and data boundary: owner, denial, original age/entitlement, race re
     outage = false,
     malformed = false,
     race = false,
-    logout = 204;
+    logout = 204,
+    revokeOnLogout = true;
   const calls: string[] = [];
   const transport: typeof fetch = async (input, init) => {
     const url = new URL(String(input));
@@ -93,8 +96,10 @@ test("viewer and data boundary: owner, denial, original age/entitlement, race re
       if (race) gate = false;
       return Response.json(malformed ? {} : user);
     }
-    if (url.pathname.endsWith("/logout"))
+    if (url.pathname.endsWith("/logout")) {
+      if (logout === 204 && revokeOnLogout) gate = false;
       return new Response(null, { status: logout });
+    }
     if (url.pathname.endsWith("game_zone_posts"))
       return Response.json([
         {
@@ -177,10 +182,17 @@ test("viewer and data boundary: owner, denial, original age/entitlement, race re
   assert.equal(response.status, 503);
   assert.equal(response.headers.get("set-cookie"), null);
   logout = 204;
+  revokeOnLogout = false;
+  assert.equal(
+    (await stageViewerSession(req("session", "POST", {}), transport)).status,
+    503,
+  );
+  revokeOnLogout = true;
   response = await stageViewerSession(req("session", "POST", {}), transport);
   assert.equal(response.status, 200);
   assert.match(response.headers.get("set-cookie")!, /HttpOnly/);
   assert.match(response.headers.get("set-cookie")!, /Max-Age=0/);
+  gate = true;
   const query = {
     path: "rpc/game_zone_posts",
     method: "POST",
@@ -316,4 +328,49 @@ test("viewer client drops delayed identities, clears before revalidation, dedupl
   pending[5](Response.json({ state: "anonymous" }));
   assert.equal((await retry).error, null);
   assert.equal(c.getSnapshot().state, "anonymous");
+});
+
+test("forced foreground refresh aborts A and cannot reinstate it after B denial, including signout invalidation", async () => {
+  const waiting: ((r: Response) => void)[] = [];
+  const signals: AbortSignal[] = [];
+  const c = createViewerSessionClient(async (_url, init) => {
+    if (init?.signal) signals.push(init.signal);
+    return new Promise((resolve) => waiting.push(resolve));
+  });
+  const a = c.read();
+  await Promise.resolve();
+  const b = c.read(true);
+  await Promise.resolve();
+  assert.notEqual(a, b);
+  assert.equal(waiting.length, 2);
+  assert(signals[0].aborted);
+  waiting[1](Response.json({ state: "denied" }, { status: 403 }));
+  await b;
+  waiting[0](Response.json(ready));
+  await a;
+  assert.equal(c.getSnapshot().state, "denied");
+  const logout = c.signOut();
+  assert.equal(c.signOut(), logout);
+  c.invalidate();
+  assert.equal((await c.read(true)).session, null);
+  assert.equal(waiting.length, 3);
+  waiting[2](Response.json({ state: "anonymous" }));
+  await logout;
+  assert.equal(c.getSnapshot().state, "anonymous");
+});
+test("consumer states never turn verifier error, missing age or denied access into Login/authorized profile", () => {
+  for (const state of ["checking", "anonymous", "denied", "error"] as const) {
+    const v = { ...emptyViewer, state };
+    const p = viewerPresentation(v);
+    assert.equal(p.allowed, false);
+    assert.notEqual(p.accountLabel, "Login");
+    if (state === "error") assert.match(p.accountLabel, /unavailable/);
+  }
+  const v = {
+    ...ready,
+    capabilities: emptyViewer.capabilities,
+  } as ViewerIdentity;
+  assert.equal(viewerPresentation(v).accountLabel, "Account");
+  assert.equal(viewerPresentation({ ...v, age: "unknown" }).allowed, false);
+  assert.equal(viewerPresentation({ ...v, session: null }).allowed, false);
 });

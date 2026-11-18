@@ -214,7 +214,7 @@ export async function signOutStage(config: StageConfig, token: string | null) {
       redirect: "error",
       signal: AbortSignal.timeout(5000),
     }).catch(() => null);
-    if (!result?.ok)
+    if (!result?.ok || (await authorizeStageToken(config, token)) !== 403)
       return stageResponse(
         "Sign-out could not be verified. Please retry.",
         503,

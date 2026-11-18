@@ -1,4 +1,6 @@
 "use client";
+import { combinedViewer } from "@/lib/viewer-auth";
+import { CombinedNotificationContent } from "./combined-viewer";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Shell } from "./ui";
@@ -51,6 +53,15 @@ const switches = [
   ["profile_reminder", "Profile reminders"],
 ];
 export default function NotificationCenter() {
+  return combinedViewer ? (
+    <Shell active="membership">
+      <CombinedNotificationContent />
+    </Shell>
+  ) : (
+    <OrdinaryNotificationCenter />
+  );
+}
+function OrdinaryNotificationCenter() {
   const { uid, counts, revision, connected, failed, refresh, preferences } =
     useNotifications();
   const [rows, setRows] = useState<NotificationRow[]>([]),

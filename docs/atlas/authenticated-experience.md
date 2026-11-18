@@ -16,7 +16,7 @@ The volatile client store clears identity before focus/pageshow/visibility/60-se
 
 | Journey / route | Supported contract | Status and evidence |
 |---|---|---|
-| Shell identity, Account /membership | GET /staging/discovery/session, token-free viewer identity | Implemented; synthetic endpoint/lifecycle tests; consumer adaptation and browser acceptance tracked on draft |
+| Shell identity, Account /membership | GET /staging/discovery/session, token-free viewer identity | Implemented; synthetic endpoint/lifecycle tests; combined Account/age/profile/notification adapters implemented; exact-head browser acceptance tracked on draft |
 | Age and entitlement | Same live session + age_verification_status + membership_status | Working in synthetic endpoint/SQL negative controls; hosted not yet tested |
 | Sign-out, expiration, revocation | POST /staging/discovery/session; live auth.sessions checks | Synthetic transport/lifecycle tests; real Auth revocation and owner recovery not yet tested |
 | Home Dealer research | GET /staging/discovery/read/dealer; vq-stage-dealer-v1 | Existing guarded synthetic projection retains original IDs/body/source/time; real hosted not yet tested |
@@ -57,3 +57,7 @@ Retain the existing nineteen RLS/catalog drift negative controls and transaction
 Rollback the isolated app to the recorded previous exact SHA, keeping live-session restrictive RLS installed. Exercise Discovery off separately from the access gate. Confirm expired/revoked sessions stay denied and fresh authorized owner sessions recover; compare historical row hashes/counts and entitlement records before/after. Client sign-out must clear protected UI even when the backend is unavailable, without claiming server revocation succeeded. Hosted rollback is not yet tested.
 
 Sequence: exact-head code/CI and Elo independent consumer/security review → owner cost/isolation proof → reviewed isolated DB preparation and supported missing-feature contracts → protected deployment → real-session feature/security/data/worker/rollback acceptance → consolidated exact-SHA CEO review. Production needs a separate exact-candidate go/no-go. No production merge, deployment, database migration, accounts, billing or publishing schedules were changed.
+
+## Independent lifecycle review
+
+Elo independently reproduced a forced-refresh epoch defect at initial407964f (#303 comment6966130234): a pending A read was reused by read(true), so a delayed A response remained eligible after foreground refresh. The follow-up forces cancellation/new epoch while preserving ordinary deduplication and adds delayed A→forced denied plus sign-out invalidation/concurrent-signout tests. It also requires Auth success followed by live gate denial before sign-out success. These fixes need independent replay on the final exact SHA. Core consumer wrappers preserve ordinary components and avoid a second SDK enrollment/login, fake profile-setup prompt, or fabricated zero-notification success.

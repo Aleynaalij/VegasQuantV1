@@ -63,12 +63,12 @@ const appSession = (
     : null;
 };
 export const viewerAuth = {
-  async getSession() {
+  async getSession(force = false) {
     if (!combinedViewer) {
       const r = await supabase.auth.getSession();
       return { data: { session: appSession(r.data.session) }, error: r.error };
     }
-    const current = await client.read();
+    const current = await client.read(force);
     return {
       data: { session: current.session },
       error:
@@ -105,6 +105,7 @@ export const viewerAuth = {
       data: {
         subscription: {
           unsubscribe: () => {
+            if (!active) return;
             active = false;
             unsubscribe();
             unwatch();

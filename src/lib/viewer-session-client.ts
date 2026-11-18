@@ -9,6 +9,7 @@ export function createViewerSessionClient(transport: typeof fetch = fetch) {
   let snapshot: ViewerIdentity = emptyViewer;
   let generation = 0;
   let signingOut = false;
+  let logoutPending: Promise<{ error: Error | null }> | undefined;
   let controller: AbortController | undefined;
   let pending: Promise<ViewerIdentity> | undefined;
   const listeners = new Set<() => void>();
@@ -25,7 +26,7 @@ export function createViewerSessionClient(transport: typeof fetch = fetch) {
   const read = (force = false): Promise<ViewerIdentity> => {
     if (signingOut) return Promise.resolve(snapshot);
     if (!force && snapshot.state === "ready") return Promise.resolve(snapshot);
-    if (pending) return pending;
+    if (pending && !force) return pending;
     const epoch = ++generation;
     controller?.abort();
     controller = new AbortController();
@@ -74,32 +75,36 @@ export function createViewerSessionClient(transport: typeof fetch = fetch) {
     publish({ ...emptyViewer });
     return pending;
   };
-  const signOut = async () => {
+  const signOut = (): Promise<{ error: Error | null }> => {
+    if (logoutPending) return logoutPending;
     signingOut = true;
     invalidate();
-    const epoch = generation;
-    try {
-      const result = await transport("/staging/discovery/session", {
-        method: "POST",
-        credentials: "same-origin",
-        cache: "no-store",
-        redirect: "error",
-        headers: { "Content-Type": "application/json" },
-        body: "{}",
-      });
-      if (!result.ok)
-        throw Error("Sign-out could not be verified. Please retry.");
-      if (generation === epoch) publish({ ...emptyViewer, state: "anonymous" });
-      signingOut = false;
-      return { error: null };
-    } catch (error) {
-      if (generation === epoch) publish({ ...emptyViewer, state: "error" });
-      signingOut = false;
-      return {
-        error:
-          error instanceof Error ? error : new Error("Sign-out unavailable"),
-      };
-    }
+    logoutPending = (async () => {
+      try {
+        const result = await transport("/staging/discovery/session", {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store",
+          redirect: "error",
+          headers: { "Content-Type": "application/json" },
+          body: "{}",
+        });
+        if (!result.ok)
+          throw Error("Sign-out could not be verified. Please retry.");
+        publish({ ...emptyViewer, state: "anonymous" });
+        return { error: null };
+      } catch (error) {
+        publish({ ...emptyViewer, state: "error" });
+        return {
+          error:
+            error instanceof Error ? error : new Error("Sign-out unavailable"),
+        };
+      } finally {
+        signingOut = false;
+        logoutPending = undefined;
+      }
+    })();
+    return logoutPending;
   };
   return {
     read,

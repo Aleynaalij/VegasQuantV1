@@ -66,9 +66,11 @@ try {
     const page = await context.newPage();
     const response = await page.goto(base);
     assert.equal(response.status(), 200);
-    const game = page.locator(".h2-games .h2-game");
+    const allGames = page.locator(".h2-games .h2-game");
+    const game = allGames.filter({ hasText: "Atlas Away" });
     await game.first().waitFor();
-    assert.equal(await game.count(), 1);
+    await allGames.nth(3).waitFor();
+    assert.equal(await allGames.count(), 4);
     assert.match(await game.first().innerText(), /Atlas Away[\s\S]*Atlas Home/);
     assert.match(
       await game.first().getAttribute("href"),
@@ -77,6 +79,22 @@ try {
     await page
       .locator(".vq-brand-opening")
       .waitFor({ state: "detached", timeout: 5000 });
+    await page
+      .locator("[data-viewer-state=ready]")
+      .filter({ hasText: "Account" })
+      .waitFor();
+    assert.equal(
+      await page.getByRole("link", { name: "Login", exact: true }).count(),
+      0,
+    );
+    assert.match(
+      await page
+        .getByRole("link", {
+          name: "Notifications · unavailable in isolated staging",
+        })
+        .getAttribute("href"),
+      /^\/notifications$/,
+    );
     await page.screenshot({
       path: `${out}/${storage}-home-phone.png`,
       fullPage: true,
@@ -108,6 +126,46 @@ try {
       path: `${out}/${storage}-room-phone.png`,
       fullPage: true,
     });
+    for (const [sport, id] of [
+      ["nhl", "22222222-2222-4222-8222-222222222222"],
+      ["ncaab", "33333333-3333-4333-8333-333333333333"],
+      ["nfl", "44444444-4444-4444-8444-444444444444"],
+    ]) {
+      await page.goto(
+        base +
+          `/staging/discovery/rooms/${sport}/${id}?date=` +
+          new Intl.DateTimeFormat("en-CA", {
+            timeZone: "America/New_York",
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }).format(new Date()),
+      );
+      await page
+        .locator(".gr-hero h1")
+        .filter({ hasText: `Atlas ${sport} Away` })
+        .waitFor();
+      await page.locator("[data-viewer-state=ready]").waitFor();
+      await page.screenshot({
+        path: `${out}/${storage}-${sport}-room-phone.png`,
+        fullPage: true,
+      });
+      assert.equal(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth,
+        ),
+        false,
+      );
+    }
+    await page.goto(base + "/membership");
+    await page.getByRole("heading", { name: "Account", exact: true }).waitFor();
+    await page.getByText("fixture@example.invalid", { exact: true }).waitFor();
+    await page.goto(base + "/notifications");
+    await page.getByText(/Unread count is unknown/).waitFor();
+    await page.screenshot({
+      path: `${out}/${storage}-notifications-phone.png`,
+      fullPage: true,
+    });
     await fs.writeFile(
       `${out}/${storage}-report.json`,
       JSON.stringify(
@@ -130,6 +188,9 @@ try {
           "Connected combined synthetic Home-to-Room only; no hosted identity proof",
         storage,
         cases: [
+          "verified shell Account without second SDK identity",
+          "four guarded schedules and all-sport Room navigation",
+          "account identity and explicit unavailable notifications",
           "guarded schedule populates Home",
           "exact game ID opens connected Room",
           "external backend transport remains blocked",

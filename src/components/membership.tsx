@@ -1,4 +1,6 @@
 "use client";
+import { combinedViewer } from "@/lib/viewer-auth";
+import { CombinedAccountContent } from "./combined-viewer";
 import FollowTopics from "./follow-topics";
 import AdminMembers from "./admin-members";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -30,6 +32,15 @@ type Quote = {
   expires_at: string | null;
 };
 export default function Membership() {
+  return combinedViewer ? (
+    <Shell active="membership">
+      <CombinedAccountContent />
+    </Shell>
+  ) : (
+    <OrdinaryMembership />
+  );
+}
+function OrdinaryMembership() {
   const router = useRouter();
   const [age, setAge] = useState<AgeStatus | null>(null);
   const [session, setSession] = useState<Session | null>(null),
@@ -179,11 +190,19 @@ export default function Membership() {
       }
     } catch (e) {
       const code = authErrorCode(e);
-      if (code === "email_not_confirmed" || (signup && code === "over_email_send_rate_limit"))
+      if (
+        code === "email_not_confirmed" ||
+        (signup && code === "over_email_send_rate_limit")
+      )
         setPendingEmail(credentials.email);
       if (code === "over_email_send_rate_limit")
         setResendWait(retryAfterSeconds(e) ?? RESEND_COOLDOWN_SECONDS);
-      setNotice(authErrorMessage(e, signup ? "Registration failed." : "Sign in failed."));
+      setNotice(
+        authErrorMessage(
+          e,
+          signup ? "Registration failed." : "Sign in failed.",
+        ),
+      );
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -207,7 +226,12 @@ export default function Membership() {
     } catch (e) {
       if (authErrorCode(e) === "over_email_send_rate_limit")
         setResendWait(retryAfterSeconds(e) ?? RESEND_COOLDOWN_SECONDS);
-      setNotice(authErrorMessage(e, "Couldn’t resend the email. Please wait a minute and try again."));
+      setNotice(
+        authErrorMessage(
+          e,
+          "Couldn’t resend the email. Please wait a minute and try again.",
+        ),
+      );
     } finally {
       submitting.current = false;
       setBusy(false);
@@ -694,9 +718,10 @@ export default function Membership() {
             </p>
             <p>
               Full matchup analysis, injury and weather research, target boards,
-              market history and research exports are included. Official history,
-              performance and tailed-pick records are currently restricted to administrators.
-              Administrator tools remain restricted to administrators.
+              market history and research exports are included. Official
+              history, performance and tailed-pick records are currently
+              restricted to administrators. Administrator tools remain
+              restricted to administrators.
             </p>
           </div>
         </Panel>
@@ -795,9 +820,8 @@ export default function Membership() {
               You are buying sports analysis and tracking, not a wager or entry
               into a prize pool. No outcome is guaranteed. See Help & Support
               for the current billing and refund contact status; a monitored
-              request destination has not yet been confirmed.
-              Cancellation stops future monthly renewals; it is separate from a
-              refund request.
+              request destination has not yet been confirmed. Cancellation stops
+              future monthly renewals; it is separate from a refund request.
             </p>
           </div>
         </Panel>

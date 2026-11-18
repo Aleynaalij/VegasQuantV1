@@ -54,6 +54,9 @@ export async function stageViewerSession(
         );
         // 401/403 alone do not prove server-session revocation. Retain retry cookie on failure.
         if (!result.ok) return fail(503);
+        // Auth success alone is insufficient: the same token must now fail the live gate.
+        if ((await authorizeStageToken(config, token, transport)) !== 403)
+          return fail(503);
       } catch {
         return fail(503);
       }
