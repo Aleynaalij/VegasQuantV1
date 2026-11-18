@@ -499,3 +499,51 @@ export function propEstimate(
     sd: round1(sd),
   };
 }
+
+/** A box-score row joined to its game, as the game research panel reads it. */
+export type JoinedBoxRow = {
+  game_id: string;
+  athlete_id: string | number;
+  player: string;
+  team: string;
+  played: boolean;
+  minutes: number | null;
+  points: number | null;
+  rebounds: number | null;
+  assists: number | null;
+  threes: number | null;
+  position: string | null;
+  tipoff: string;
+  away_team: string;
+  home_team: string;
+  away_abbreviation: string | null;
+  home_abbreviation: string | null;
+};
+
+/** Box rows with opponent, venue and usage filled in from the game each row belongs to. */
+export function boxRowsFromGames(
+  rows: JoinedBoxRow[],
+  usage: Map<string, number>,
+): BoxRow[] {
+  return rows.map((r) => {
+    const home = r.team === r.home_team;
+    return {
+      athlete_id: String(r.athlete_id),
+      player: r.player,
+      team: r.team,
+      played: r.played,
+      minutes: r.minutes,
+      points: r.points,
+      rebounds: r.rebounds,
+      assists: r.assists,
+      threes: r.threes,
+      position: r.position,
+      game_id: r.game_id,
+      tipoff: r.tipoff,
+      home,
+      opponent: home ? r.away_team : r.home_team,
+      opponent_abbr: home ? r.away_abbreviation : r.home_abbreviation,
+      usage: usage.get(`${r.game_id}:${String(r.athlete_id)}`) ?? null,
+    };
+  });
+}
