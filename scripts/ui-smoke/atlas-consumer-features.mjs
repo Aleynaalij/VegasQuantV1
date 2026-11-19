@@ -61,6 +61,31 @@ try {
       .locator(".vq-brand-opening")
       .waitFor({ state: "detached", timeout: 5000 });
     await page.locator("[data-viewer-state=ready]").first().waitFor();
+    await page.goto(
+      `${base}/nba/props?game=00000000-0000-4000-8000-000000000092`,
+    );
+    await page
+      .locator(".vq-brand-opening")
+      .waitFor({ state: "detached", timeout: 5000 });
+    const propRow = page
+      .locator(".pf-row")
+      .filter({ hasText: "Synthetic Player" });
+    await propRow.waitFor();
+    await propRow.click();
+    await page
+      .getByRole("dialog")
+      .filter({ hasText: "Synthetic Player" })
+      .waitFor();
+    await page.keyboard.press("Escape");
+    await page.getByRole("dialog").waitFor({ state: "detached" });
+    await page.screenshot({
+      path: `${out}/props-${viewport.width}.png`,
+      fullPage: true,
+    });
+    await page.goto(base);
+    await page
+      .locator(".vq-brand-opening")
+      .waitFor({ state: "detached", timeout: 5000 });
     const story = page.getByRole("button", {
       name: /Open (OwnerOne|MobileOwner)'s recent community posts/,
       exact: true,

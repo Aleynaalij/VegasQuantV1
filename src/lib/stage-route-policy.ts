@@ -19,6 +19,7 @@ export const STAGE_CONSUMER_ROUTES = [
   "/nba/analysis",
   "/nba/games/[slug]",
   "/nba/matchup-sheet/[id]",
+  "/nba/props",
   "/nba",
   "/nba/records",
   "/nba/rules",

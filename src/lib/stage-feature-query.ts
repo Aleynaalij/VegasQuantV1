@@ -125,12 +125,18 @@ export function stageFeatureQuery(value: unknown) {
     const rule = (
       registry.rpcs as Record<
         string,
-        { args: string[]; types: string[]; group: string; write: boolean }
+        {
+          args: string[];
+          types: string[];
+          group: string;
+          write: boolean;
+          page_columns?: string[];
+        }
       >
     )[rpc[1]];
     if (
       !rule ||
-      v.query !== "" ||
+      (v.query !== "" && !rule.page_columns) ||
       v.method !== "POST" ||
       Object.keys(body).some(
         (k) =>
@@ -140,6 +146,42 @@ export function stageFeatureQuery(value: unknown) {
     )
       return null;
     if ("p_photo_path" in body && body.p_photo_path !== null) return null;
+    let page: { order: string[][]; limit: number; offset: number } | undefined;
+    if (rule.page_columns) {
+      const params = new URLSearchParams(v.query);
+      if (
+        [...params.keys()].some(
+          (key) =>
+            !["order", "limit", "offset"].includes(key) ||
+            params.getAll(key).length !== 1,
+        )
+      )
+        return null;
+      const limit = Number(params.get("limit") ?? 1000),
+        offset = Number(params.get("offset") ?? 0);
+      const order = (params.get("order") ?? "")
+        .split(",")
+        .filter(Boolean)
+        .map((x) => x.split("."));
+      if (
+        !Number.isInteger(limit) ||
+        limit < 1 ||
+        limit > 1000 ||
+        !Number.isInteger(offset) ||
+        offset < 0 ||
+        offset > 10000 ||
+        order.length > 3 ||
+        order.some(
+          ([column, direction, nulls, ...rest]) =>
+            !rule.page_columns!.includes(column) ||
+            (direction && !["asc", "desc"].includes(direction)) ||
+            (nulls && !["nullsfirst", "nullslast"].includes(nulls)) ||
+            rest.length,
+        )
+      )
+        return null;
+      page = { order, limit, offset };
+    }
     if (
       "p_limit" in body &&
       (!Number.isInteger(body.p_limit) ||
@@ -159,6 +201,7 @@ export function stageFeatureQuery(value: unknown) {
       args: body,
       write: rule.write,
       request_id: v.request_id ?? null,
+      ...(page ? { page } : {}),
     };
   }
   const rule = (
@@ -187,7 +230,18 @@ export function stageFeatureQuery(value: unknown) {
   const params = new URLSearchParams(v.query);
   if (
     params.size > 16 ||
-    [...params.keys()].some((k) => params.getAll(k).length !== 1)
+    [...params.keys()].some((k) => {
+      const values = params.getAll(k);
+      if (values.length === 1) return false;
+      // Original slate reads use a lower and upper bound on the same timestamp.
+      // Repeated control keys or duplicate/ambiguous filters remain unavailable.
+      return (
+        !rule.columns.includes(k) ||
+        values.length !== 2 ||
+        !values.some((value) => /^(gt|gte)\./.test(value)) ||
+        !values.some((value) => /^(lt|lte)\./.test(value))
+      );
+    })
   )
     return null;
   const selected = params.get("select") ?? "*";

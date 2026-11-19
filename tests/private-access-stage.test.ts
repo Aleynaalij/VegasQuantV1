@@ -131,6 +131,7 @@ test("renaming a production endpoint or recognizable privileged credential does 
     privateAccessConfig({
       ...combined,
       UNRELATED_SETTING: "non-secret-build-metadata",
+      VERCEL_PROJECT_PRODUCTION_URL: "vegasquant.app",
     }),
   );
   assert.ok(
@@ -186,6 +187,7 @@ test("combined proxy checks the same live stage identity and denies effects befo
   const anonymous = await proxy(request("/", false));
   assert.equal(anonymous.status, 303);
   assert.equal(anonymous.headers.get("location"), origin + path);
+  assert.equal((await proxy(request("/nba/props", false))).status, 303);
   for (const apiPath of [
     "/api/checkout",
     "/api/notifications/dispatch",
@@ -196,6 +198,7 @@ test("combined proxy checks the same live stage identity and denies effects befo
   assert.equal((await proxy(request("/community", true, "POST"))).status, 405);
   assert.equal(transport.mock.callCount(), 0);
   assert.equal((await proxy(request("/community"))).status, 403);
+  assert.equal((await proxy(request("/nba/props"))).status, 403);
   payload = "{}";
   assert.equal((await proxy(request("/community"))).status, 503);
   payload = "true";
@@ -204,6 +207,7 @@ test("combined proxy checks the same live stage identity and denies effects befo
     "/community",
     "/staging/discovery/rooms/nba/test",
     "/nba/games/example",
+    "/nba/props",
   ]) {
     const response = await proxy(request(url));
     assert.equal(response.headers.get("x-middleware-next"), "1");

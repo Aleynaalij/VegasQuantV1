@@ -1,9 +1,15 @@
 // Local synthetic original-contract database, never an external Supabase connection.
 import { createServer } from "node:http";
 import { consumerDb, id } from "../../tests/fixtures/stage-consumer-db.mjs";
-const fixture = await consumerDb();
+import { prepareStageNba } from "../../tests/fixtures/stage-nba-db.mjs";
+const fixture = await consumerDb(prepareStageNba);
 const { db } = fixture;
 await fixture.fixtureEnable();
+// Explicit test-only activation: other original research dependencies are absent.
+// This exercises the bounded reader, never certifies hosted research readiness.
+await db.exec(
+  "update vq_private_access_stage.feature_contract set capabilities=jsonb_set(capabilities,'{research}','true')",
+);
 // Complete the synthetic original catalog projection for browser rendering.
 await db.exec(`reset role;
 alter table published_legs add column matchup text,add column quote_observed_at timestamptz,add column gambly_url text,add column copy_text text,add column why text,add column risk text,add column result_source text,add column odds numeric,add column original_leg_key text;

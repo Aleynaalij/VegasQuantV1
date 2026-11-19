@@ -136,10 +136,13 @@ export type PropQuote = {
   line: number;
   over: number | null;
   under: number | null;
+  /** When the provider observed this quote (observed_at, else provider_updated_at); null if unknown. */
+  observedAt?: string | null;
 };
 type PropPayload = {
   book?: string;
   market?: string;
+  provider_updated_at?: string;
   outcomes?: {
     name?: string;
     description?: string;
@@ -150,7 +153,11 @@ type PropPayload = {
 
 /** Half-point Over/Under lines from FanDuel snapshots; the newest snapshot per market wins. */
 export function propQuotes(
-  snapshots: { recorded_at: string; payload: PropPayload }[],
+  snapshots: {
+    recorded_at: string;
+    observed_at?: string | null;
+    payload: PropPayload;
+  }[],
   book = "FanDuel",
 ): PropQuote[] {
   const newest = new Map<string, (typeof snapshots)[number]>();
@@ -185,6 +192,7 @@ export function propQuotes(
         line: o.point,
         over: null,
         under: null,
+        observedAt: s.observed_at || s.payload.provider_updated_at || null,
       };
       if (o.name === "Over") q.over = o.price;
       else q.under = o.price;
@@ -192,6 +200,46 @@ export function propQuotes(
     }
   }
   return [...quotes.values()];
+}
+
+export type BookQuote = PropQuote & { book: string };
+/** Observed by the provider within maxAgeMs of now (an hour by default) and not from the future. */
+export function quoteIsFresh(
+  observedAt: string | null | undefined,
+  now: number,
+  maxAgeMs = 60 * 60000,
+) {
+  const t = Date.parse(observedAt || "");
+  return Number.isFinite(t) && t <= now + 5 * 60000 && now - t <= maxAgeMs;
+}
+/**
+ * Every book's latest quotes for line shopping, each from that book's newest snapshot per market.
+ * Like best-price.ts, a snapshot counts only when the provider observed it within maxAgeMs (default
+ * an hour): a book that stopped refreshing must not show an old price as the best one.
+ */
+export function allBookQuotes(
+  snapshots: {
+    recorded_at: string;
+    observed_at?: string | null;
+    payload: PropPayload;
+  }[],
+  now: number,
+  maxAgeMs = 60 * 60000,
+): BookQuote[] {
+  const fresh = snapshots.filter((s) => {
+    return quoteIsFresh(
+      s.observed_at || s.payload?.provider_updated_at || null,
+      now,
+      maxAgeMs,
+    );
+  });
+  const books = new Set(fresh.map((s) => s.payload?.book).filter(Boolean));
+  return [...books].flatMap((book) =>
+    propQuotes(fresh, book as string).map((q) => ({
+      ...q,
+      book: book as string,
+    })),
+  );
 }
 
 export type PropTrend = PropQuote & {

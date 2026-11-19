@@ -81,7 +81,7 @@ declare c vq_private_access_stage.feature_contract; rule jsonb; manifest jsonb; 
  target text; cols text; source text; predicate text:='true'; sorting text:='';
  f jsonb; col text; op text; expr text; i integer:=0; ord jsonb; payload jsonb;
  args text:=''; argdefs text:=''; argname text; argtype text; arguments jsonb;
- proc oid; keys text; updates text; n bigint; want text; result jsonb;
+ proc oid; keys text; updates text; n bigint; want text; result jsonb; page_sql text:='';
 begin
  if not coalesce(vq_private_access_stage.feature_allowed(),false) then raise exception 'Isolated feature access denied' using errcode='42501';end if;
  if p is null or jsonb_typeof(p)<>'object' or length(p::text)>400000 then raise exception 'Invalid feature request';end if;
@@ -109,10 +109,26 @@ begin
    end if;
    i:=i+1;
   end loop;
+  if rule ? 'page_columns' then
+   if jsonb_typeof(p->'page') is distinct from 'object'
+    or jsonb_typeof(p->'page'->'order') is distinct from 'array'
+    or jsonb_array_length(p->'page'->'order')>3
+    or coalesce((p->'page'->>'limit')::integer,0) not between 1 and 1000
+    or coalesce((p->'page'->>'offset')::integer,-1) not between 0 and 10000
+    or not (select proretset from pg_proc where oid=proc) or rule->>'write'='true' then raise exception 'Invalid RPC page';end if;
+   for ord in select * from jsonb_array_elements(p->'page'->'order') loop
+    col:=ord->>0;op:=coalesce(ord->>1,'asc');want:=coalesce(ord->>2,'nullslast');
+    if jsonb_typeof(ord) is distinct from 'array' or jsonb_array_length(ord)>3 or not (rule->'page_columns' ? col)
+     or op not in ('asc','desc') or want not in ('nullsfirst','nullslast') then raise exception 'Invalid RPC order';end if;
+    sorting:=concat_ws(',',nullif(sorting,''),format('%I %s %s',col,op,case when want='nullsfirst' then 'nulls first' else 'nulls last' end));
+   end loop;
+   page_sql:=case when sorting<>'' then ' order by '||sorting else '' end
+    ||format(' limit %s offset %s',(p->'page'->>'limit')::integer,(p->'page'->>'offset')::integer);
+  elsif p ? 'page' then raise exception 'Unreviewed RPC pagination';end if;
   if args='' then source:=format('select to_jsonb(public.%I())',p->>'name');
   else source:=format('select to_jsonb(public.%I(%s)) from jsonb_to_record($1->''args'') as a(%s)',p->>'name',args,argdefs);end if;
   if (select proretset from pg_proc where oid=proc) then
-   source:=case when args='' then format('select coalesce(jsonb_agg(to_jsonb(v)),''[]''::jsonb) from public.%I() v',p->>'name') else format('select coalesce(jsonb_agg(to_jsonb(v)),''[]''::jsonb) from jsonb_to_record($1->''args'') as a(%s),lateral public.%I(%s) v',argdefs,p->>'name',args) end;
+   source:=case when args='' then format('select coalesce(jsonb_agg(to_jsonb(v)),''[]''::jsonb) from (select * from public.%I()%s) v',p->>'name',page_sql) else format('select coalesce(jsonb_agg(to_jsonb(v)),''[]''::jsonb) from jsonb_to_record($1->''args'') as a(%s),lateral (select * from public.%I(%s)%s) v',argdefs,p->>'name',args,page_sql) end;
   end if;
   execute source into data using p;
   if rule->>'return'='void' then data:=null;end if;

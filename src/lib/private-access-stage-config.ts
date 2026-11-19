@@ -16,7 +16,7 @@ const forbiddenCredentials = [
  */
 function forbiddenValue(value: string) {
   if (
-    /uowearboulykfcwnuirn|\bvegasquant\.app\b/i.test(value) ||
+    /uowearboulykfcwnuirn|https?:\/\/vegasquant\.app\b/i.test(value) ||
     /(?:sb_secret_|(?:sk|rk)_(?:live|test)_|whsec_)[A-Za-z0-9_-]+/.test(
       value,
     ) ||

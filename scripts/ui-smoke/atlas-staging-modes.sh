@@ -36,7 +36,7 @@ const paths = Object.keys(JSON.parse(readFileSync(".next/server/app-paths-manife
 const readers = ["/staging/discovery/read/dealer/route", "/staging/discovery/read/research/route", "/staging/discovery/session/route", "/staging/discovery/data/route", "/staging/discovery/read/matchup-sheet/[id]/route"];
 for (const path of readers) assert.equal(paths.includes(path), mode === "combined", path);
 const gateRoutes = ["/staging/private-access/route", "/staging/private-access/records/route", "/api/staging/private-access/route"];
-const normalRoutes = ["/page", "/community/page", "/research/page", "/staging/discovery/page", "/staging/discovery/rooms/[sport]/[id]/page", "/api/notifications/dispatch/route", "/api/stripe/webhook/route", "/api/nba/threes-card/[day]/route"];
+const normalRoutes = ["/nba/props/page", "/page", "/community/page", "/research/page", "/staging/discovery/page", "/staging/discovery/rooms/[sport]/[id]/page", "/api/notifications/dispatch/route", "/api/stripe/webhook/route", "/api/nba/threes-card/[day]/route"];
 for (const path of gateRoutes) assert.equal(paths.includes(path), mode === "gate" || mode === "combined", path);
 for (const path of normalRoutes) assert.equal(paths.includes(path), mode !== "gate", path);
 assert.equal(paths.includes("/api/atlas-combined-build-probe/route"), mode === "combined");
@@ -97,7 +97,7 @@ expect 200 /staging/discovery/read/research --cookie "__Host-vq-private-access=f
 expect 400 "/staging/discovery/read/research?url=https://vegasquant.app" --cookie "__Host-vq-private-access=fixture.owner.token"
 expect 303 /community
 expect 403 /community --cookie '__Host-vq-private-access=fixture.member.token'
-for path in / /community /research /staging/discovery /staging/discovery/rooms/nba/fixture-nba /membership /notifications /slots /vegas-fear /privacy /terms /faq /responsible-play /about /methodology /support /support/report /account/recovery /account/verify-age; do
+for path in / /community /research /nba/props /staging/discovery /staging/discovery/rooms/nba/fixture-nba /membership /notifications /slots /vegas-fear /privacy /terms /faq /responsible-play /about /methodology /support /support/report /account/recovery /account/verify-age; do
   expect 200 "$path" --cookie "$owner"
 done
 expect 308 '/?game=legacy' --cookie "$owner"

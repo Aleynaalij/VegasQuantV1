@@ -535,6 +535,104 @@
         "id"
       ],
       "upsert": false
+    },
+    "nba_games": {
+      "group": "research",
+      "columns": [
+        "id",
+        "away_team",
+        "home_team",
+        "away_abbreviation",
+        "home_abbreviation",
+        "tipoff",
+        "tipoff_tbd",
+        "season",
+        "season_type"
+      ],
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "id"
+      ],
+      "upsert": false
+    },
+    "nba_result_progress": {
+      "group": "research",
+      "columns": [
+        "game_id",
+        "status"
+      ],
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "game_id"
+      ],
+      "upsert": false
+    },
+    "nba_player_results": {
+      "group": "research",
+      "columns": [
+        "game_id",
+        "athlete_id",
+        "player",
+        "team",
+        "played",
+        "minutes",
+        "points",
+        "rebounds",
+        "assists",
+        "threes",
+        "position"
+      ],
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "game_id",
+        "athlete_id"
+      ],
+      "upsert": false
+    },
+    "nba_player_three_attempts": {
+      "group": "research",
+      "columns": [
+        "game_id",
+        "athlete_id",
+        "attempts"
+      ],
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "game_id",
+        "athlete_id"
+      ],
+      "upsert": false
+    },
+    "nba_observations": {
+      "group": "research",
+      "columns": [
+        "id",
+        "game_id",
+        "kind",
+        "recorded_at",
+        "observed_at",
+        "payload"
+      ],
+      "methods": [
+        "GET"
+      ],
+      "write": [],
+      "key": [
+        "id"
+      ],
+      "upsert": false
     }
   },
   "rpcs": {
@@ -1009,6 +1107,39 @@
       "source_hash": "800c17579558d1e535f9246e6e5842640605d6d3d72dca2f0ca37c67c2aa99f4",
       "group": "social",
       "write": false
+    },
+    "nba_player_usage": {
+      "group": "research",
+      "args": [
+        "p_athletes"
+      ],
+      "types": [
+        "text[]"
+      ],
+      "signature": "nba_player_usage(text[])",
+      "source_hash": "136d24209e4eba65d298f0f569c237df6b19dcaadd855b5d5124b887c5ee203e",
+      "return": "TABLE(game_id uuid, athlete_id text, usage numeric)",
+      "definer": false,
+      "write": false,
+      "page_columns": [
+        "game_id",
+        "athlete_id",
+        "usage"
+      ]
+    },
+    "nba_defense_vs_position": {
+      "group": "research",
+      "args": [
+        "p_season"
+      ],
+      "types": [
+        "integer"
+      ],
+      "signature": "nba_defense_vs_position(integer)",
+      "source_hash": "04f3beed0596b26dd53677fdffb148af5469a0b3057680c58ce2fed5df9ed9ba",
+      "return": "TABLE(team text, pos text, games integer, points numeric, rebounds numeric, assists numeric, points_rank integer, rebounds_rank integer, assists_rank integer)",
+      "definer": false,
+      "write": false
     }
   },
   "requirements": {
@@ -1018,7 +1149,10 @@
       "public.nba_player_three_attempts",
       "public.nba_observations",
       "public.community_posts",
-      "private.nhl_chart_snapshots"
+      "private.nhl_chart_snapshots",
+      "public.nba_result_progress",
+      "public.nba_player_shooting",
+      "public.nba_game_results"
     ]
   }
 }

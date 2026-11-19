@@ -160,6 +160,7 @@ test("Prop quotes read the newest FanDuel half-point lines", () => {
       line: 22.5,
       over: -115,
       under: -105,
+      observedAt: null,
     },
   ]);
 });
