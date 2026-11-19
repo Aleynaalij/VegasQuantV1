@@ -1,0 +1,14 @@
+depth0         n= 2744 expected=0.1698 observed=0.1698 lost_calls=0.0
+depth1         n= 1691 expected=0.2849 observed=0.3170 lost_calls=54.2
+depth2         n=  223 expected=0.4224 observed=0.4484 lost_calls=5.8
+depth3         n=  184 expected=0.2105 observed=0.2935 lost_calls=15.3
+depth4         n=   39 expected=0.4050 observed=0.4103 lost_calls=0.2
+depth5         n=   57 expected=0.5009 observed=0.7544 lost_calls=14.4
+last10@h1      n=   29 expected=0.5745 observed=0.7241 lost_calls=4.3
+last10@h2      n=    8 expected=0.3344 observed=0.5000 lost_calls=1.3
+last120@h1     n= 1166 expected=0.2830 observed=0.3182 lost_calls=41.1
+last120@h2     n=  804 expected=0.3773 observed=0.3955 lost_calls=14.6
+last300@h1     n= 1114 expected=0.0325 observed=0.0305 lost_calls=-2.2
+last300@h2     n= 1509 expected=0.1769 observed=0.1889 lost_calls=18.1
+last30@h1      n=  243 expected=0.6207 observed=0.6214 lost_calls=0.2
+last30@h2      n=   65 expected=0.2838 observed=0.4769 lost_calls=12.6

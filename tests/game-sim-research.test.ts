@@ -35,3 +35,16 @@ test("rejects mismatched counts, incomplete runs, live-game substitution and cor
     assert.equal(parseResearchRun(r).ok, false);
   }
 });
+
+test("current verified research artifact parses while keeping matchup/player claims disabled", () => {
+  const raw = JSON.parse(gunzipSync(readFileSync("research/game_sim/artifacts/v0.2.10/replay.json.gz")).toString());
+  const result = parseResearchRun(raw);
+  assert.ok(result.ok, result.ok ? "" : result.errors.join("\n"));
+  if (!result.ok) return;
+  assert.equal(result.run.model_version, "vq-empirical-game/0.2.10");
+  assert.equal(result.run.runs.actual,10000);
+  assert.ok(result.run.distributions);
+  assert.equal(result.run.distributions.players.length,0);
+  raw.model_id="vq-empirical-game/unreviewed";
+  assert.equal(parseResearchRun(raw).ok,false);
+});

@@ -1,0 +1,406 @@
+{
+  "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "minimum": 30,
+  "coverage": {
+    "residual_unresolved:running": 0,
+    "residual_unresolved:stopped": 0,
+    "running_calls:defense": 705,
+    "running_calls:none": 3723,
+    "running_calls:offense": 510,
+    "running_no_budget": 38,
+    "running_opportunities:both": 4253,
+    "running_opportunities:defense": 389,
+    "running_opportunities:offense": 296,
+    "running_plays": 4976,
+    "stopped_calls:defense": 335,
+    "stopped_calls:none": 33390,
+    "stopped_calls:offense": 495,
+    "stopped_excluded:ambiguous timeout state": 26,
+    "stopped_opportunities:both": 32834,
+    "stopped_opportunities:defense": 778,
+    "stopped_opportunities:offense": 608,
+    "stopped_skipped:decision_consumed": 3532,
+    "stopped_skipped:running_timeout": 1215
+  },
+  "running_floors": {
+    "last10@h1|both": {
+      "n": 15,
+      "offense": 11,
+      "defense": 2,
+      "supported": false
+    },
+    "last10@h1|defense": {
+      "n": 6,
+      "offense": 0,
+      "defense": 3,
+      "supported": false
+    },
+    "last10@h1|offense": {
+      "n": 8,
+      "offense": 5,
+      "defense": 0,
+      "supported": false
+    },
+    "last10@h2|both": {
+      "n": 2,
+      "offense": 2,
+      "defense": 0,
+      "supported": false
+    },
+    "last10@h2|defense": {
+      "n": 3,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last10@h2|offense": {
+      "n": 3,
+      "offense": 2,
+      "defense": 0,
+      "supported": false
+    },
+    "last120@h1|both": {
+      "n": 18,
+      "offense": 2,
+      "defense": 9,
+      "supported": false
+    },
+    "last120@h1|defense": {
+      "n": 37,
+      "offense": 0,
+      "defense": 3,
+      "supported": true
+    },
+    "last120@h1|offense": {
+      "n": 37,
+      "offense": 19,
+      "defense": 0,
+      "supported": true
+    },
+    "last120@h2|both": {
+      "n": 17,
+      "offense": 2,
+      "defense": 2,
+      "supported": false
+    },
+    "last120@h2|defense": {
+      "n": 49,
+      "offense": 0,
+      "defense": 21,
+      "supported": true
+    },
+    "last120@h2|offense": {
+      "n": 30,
+      "offense": 13,
+      "defense": 1,
+      "supported": true
+    },
+    "last300@h1|both": {
+      "n": 19,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last300@h1|defense": {
+      "n": 11,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last300@h1|offense": {
+      "n": 4,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last300@h2|both": {
+      "n": 28,
+      "offense": 1,
+      "defense": 13,
+      "supported": false
+    },
+    "last300@h2|defense": {
+      "n": 21,
+      "offense": 0,
+      "defense": 7,
+      "supported": false
+    },
+    "last300@h2|offense": {
+      "n": 38,
+      "offense": 4,
+      "defense": 0,
+      "supported": true
+    },
+    "last30@h1|both": {
+      "n": 45,
+      "offense": 30,
+      "defense": 3,
+      "supported": true
+    },
+    "last30@h1|defense": {
+      "n": 47,
+      "offense": 0,
+      "defense": 4,
+      "supported": true
+    },
+    "last30@h1|offense": {
+      "n": 13,
+      "offense": 7,
+      "defense": 0,
+      "supported": false
+    },
+    "last30@h2|both": {
+      "n": 26,
+      "offense": 19,
+      "defense": 4,
+      "supported": false
+    },
+    "last30@h2|defense": {
+      "n": 4,
+      "offense": 0,
+      "defense": 1,
+      "supported": false
+    },
+    "last30@h2|offense": {
+      "n": 5,
+      "offense": 4,
+      "defense": 0,
+      "supported": false
+    }
+  },
+  "stopped_floors": {
+    "last10@h1|both": {
+      "n": 14,
+      "offense": 1,
+      "defense": 0,
+      "supported": false
+    },
+    "last10@h1|defense": {
+      "n": 13,
+      "offense": 0,
+      "defense": 3,
+      "supported": false
+    },
+    "last10@h1|offense": {
+      "n": 42,
+      "offense": 0,
+      "defense": 0,
+      "supported": true
+    },
+    "last10@h2|both": {
+      "n": 15,
+      "offense": 0,
+      "defense": 3,
+      "supported": false
+    },
+    "last10@h2|defense": {
+      "n": 14,
+      "offense": 0,
+      "defense": 4,
+      "supported": false
+    },
+    "last10@h2|offense": {
+      "n": 32,
+      "offense": 6,
+      "defense": 0,
+      "supported": true
+    },
+    "last120@h1|both": {
+      "n": 0,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last120@h1|defense": {
+      "n": 48,
+      "offense": 0,
+      "defense": 2,
+      "supported": true
+    },
+    "last120@h1|offense": {
+      "n": 29,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last120@h2|both": {
+      "n": 0,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last120@h2|defense": {
+      "n": 57,
+      "offense": 0,
+      "defense": 2,
+      "supported": true
+    },
+    "last120@h2|offense": {
+      "n": 49,
+      "offense": 0,
+      "defense": 0,
+      "supported": true
+    },
+    "last300@h2|both": {
+      "n": 50,
+      "offense": 1,
+      "defense": 0,
+      "supported": true
+    },
+    "last300@h2|defense": {
+      "n": 32,
+      "offense": 0,
+      "defense": 3,
+      "supported": true
+    },
+    "last300@h2|offense": {
+      "n": 6,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last30@h1|both": {
+      "n": 56,
+      "offense": 6,
+      "defense": 1,
+      "supported": true
+    },
+    "last30@h1|defense": {
+      "n": 17,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "last30@h1|offense": {
+      "n": 37,
+      "offense": 0,
+      "defense": 0,
+      "supported": true
+    },
+    "last30@h2|both": {
+      "n": 41,
+      "offense": 2,
+      "defense": 0,
+      "supported": true
+    },
+    "last30@h2|defense": {
+      "n": 9,
+      "offense": 0,
+      "defense": 2,
+      "supported": false
+    },
+    "last30@h2|offense": {
+      "n": 15,
+      "offense": 1,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q1|both": {
+      "n": 3,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q2|both": {
+      "n": 0,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q2|defense": {
+      "n": 19,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q2|offense": {
+      "n": 19,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q3|both": {
+      "n": 0,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q4|both": {
+      "n": 25,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q4|defense": {
+      "n": 18,
+      "offense": 0,
+      "defense": 0,
+      "supported": false
+    },
+    "normal@q4|offense": {
+      "n": 5,
+      "offense": 1,
+      "defense": 0,
+      "supported": false
+    }
+  },
+  "running_levels": {
+    "level1:ok": 13,
+    "level1:thin": 29,
+    "level2:ok": 33,
+    "level2:thin": 133,
+    "level3:ok": 56,
+    "level3:thin": 332
+  },
+  "stopped_levels": {
+    "level1:ok": 20,
+    "level1:thin": 36,
+    "level2:ok": 45,
+    "level2:thin": 190,
+    "level3:ok": 166,
+    "level3:thin": 480
+  },
+  "unsupported_running_floors": [
+    "last10@h1|both",
+    "last10@h1|defense",
+    "last10@h1|offense",
+    "last10@h2|both",
+    "last10@h2|defense",
+    "last10@h2|offense",
+    "last120@h1|both",
+    "last120@h2|both",
+    "last300@h1|both",
+    "last300@h1|defense",
+    "last300@h1|offense",
+    "last300@h2|both",
+    "last300@h2|defense",
+    "last30@h1|offense",
+    "last30@h2|both",
+    "last30@h2|defense",
+    "last30@h2|offense"
+  ],
+  "unsupported_stopped_floors": [
+    "last10@h1|both",
+    "last10@h1|defense",
+    "last10@h2|both",
+    "last10@h2|defense",
+    "last120@h1|both",
+    "last120@h1|offense",
+    "last120@h2|both",
+    "last300@h2|offense",
+    "last30@h1|defense",
+    "last30@h2|defense",
+    "last30@h2|offense",
+    "normal@q1|both",
+    "normal@q2|both",
+    "normal@q2|defense",
+    "normal@q2|offense",
+    "normal@q3|both",
+    "normal@q4|both",
+    "normal@q4|defense",
+    "normal@q4|offense"
+  ],
+  "unresolved_running_floors": [],
+  "unresolved_stopped_floors": [],
+  "scope": "SOURCE_SUPPORT_AUDIT_ONLY; no fit, no simulation, no gate"
+}

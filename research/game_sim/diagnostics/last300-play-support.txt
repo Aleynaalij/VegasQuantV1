@@ -1,0 +1,23 @@
+source Q4 121-300 s scrimmage plays 2281 per game 8.42
+scrimmage|last300@h2|100|ahead 60 
+scrimmage|last300@h2|100|behind 91 
+scrimmage|last300@h2|100|tied 10 THIN
+scrimmage|last300@h2|10|ahead 21 THIN
+scrimmage|last300@h2|10|behind 39 
+scrimmage|last300@h2|10|tied 2 THIN
+scrimmage|last300@h2|20|ahead 78 
+scrimmage|last300@h2|20|behind 106 
+scrimmage|last300@h2|20|tied 8 THIN
+scrimmage|last300@h2|40|ahead 213 
+scrimmage|last300@h2|40|behind 223 
+scrimmage|last300@h2|40|tied 27 THIN
+scrimmage|last300@h2|5|ahead 37 
+scrimmage|last300@h2|5|behind 49 
+scrimmage|last300@h2|5|tied 4 THIN
+scrimmage|last300@h2|60|ahead 271 
+scrimmage|last300@h2|60|behind 341 
+scrimmage|last300@h2|60|tied 38 
+scrimmage|last300@h2|80|ahead 206 
+scrimmage|last300@h2|80|behind 413 
+scrimmage|last300@h2|80|tied 44 
+thin floors 6 of 21

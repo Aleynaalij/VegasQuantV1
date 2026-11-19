@@ -1,0 +1,21 @@
+{
+  "package": "research/game_sim/artifacts/v0.2.24",
+  "model_sha256": "f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d",
+  "refit_model_sha256": "f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d",
+  "refit_matches": true,
+  "refit_seconds": 11.0,
+  "batch_seconds": 148.6,
+  "batch_canonical_sha256": "22808d83529be70abb32f15a26d29c01bb981da6cf8c132221f654083b0395da",
+  "stored_batch_canonical_sha256": "32b9d8ef2b93bf29f5c901c490ec77e2233256e4312dda06def8ae5cac3a87c6",
+  "batch_byte_identical": false,
+  "runs": {
+    "requested": 10000,
+    "actual": 10000,
+    "failed": 0
+  },
+  "diff_vs_stored": [
+    "VAL /generated_at 2026-11-07T01:37:49.278588+00:00 | 2026-11-07T01:43:49.391223+00:00",
+    "VAL /runtime_seconds 150.80640235600004 | 147.35613374699983"
+  ],
+  "scope": "Saved-model self-check (built by Claude); independent review still required"
+}
