@@ -1,13 +1,18 @@
 "use client";
-import { combinedViewer } from "@/lib/viewer-auth";
-import { CombinedProfileNotice } from "./combined-viewer";
+import {
+  combinedViewer,
+  viewerAuth,
+  useViewerIdentity,
+} from "@/lib/viewer-auth";
+import { CombinedProfileNotice, CombinedSignOut } from "./combined-viewer";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import CommunitySettings from "./community-settings";
 import { dropPrompt, markPromptShown, wantPrompt } from "@/lib/prompt-queue";
 
 export default function ProfileSetupGate() {
-  return combinedViewer ? (
+  const viewer = useViewerIdentity();
+  return combinedViewer && !viewer.capabilities.profile ? (
     <CombinedProfileNotice />
   ) : (
     <OrdinaryProfileSetupGate />
@@ -23,7 +28,7 @@ function OrdinaryProfileSetupGate() {
       generation = 0;
     async function check() {
       const current = ++generation;
-      const { data } = await supabase.auth.getSession();
+      const { data } = await viewerAuth.getSession();
       if (!live || current !== generation) return;
       const id = data.session?.user.id;
       setUid(id || null);
@@ -52,7 +57,7 @@ function OrdinaryProfileSetupGate() {
       if (!needed) dropPrompt("profile");
     }
     void check();
-    const listener = supabase.auth.onAuthStateChange(() => {
+    const listener = viewerAuth.onAuthStateChange(() => {
       setTimeout(() => void check(), 0);
     });
     window.addEventListener("vq-community-changed", check);
@@ -85,23 +90,34 @@ function OrdinaryProfileSetupGate() {
       ref={dialog}
       className="phone-contact-dialog profile-setup-dialog"
       data-profile-required={required}
-      aria-labelledby="community-profile-title"
+      aria-labelledby="profile-setup-title"
       onCancel={(e) => e.preventDefault()}
     >
       <span className="eyebrow">FINISH YOUR PROFILE</span>
-      {uid && required && <CommunitySettings key={uid} uid={uid} required />}
+      {uid && required && (
+        <CommunitySettings
+          key={uid}
+          uid={uid}
+          required
+          titleId="profile-setup-title"
+        />
+      )}
       {error && (
         <p role="status">
           We couldn’t check your profile. Use Retry above to load it again.
         </p>
       )}
-      <button
-        type="button"
-        className="text-link"
-        onClick={() => void supabase.auth.signOut()}
-      >
-        Sign out
-      </button>
+      {combinedViewer ? (
+        <CombinedSignOut />
+      ) : (
+        <button
+          type="button"
+          className="text-link"
+          onClick={() => void viewerAuth.signOut()}
+        >
+          Sign out
+        </button>
+      )}
     </dialog>
   );
 }

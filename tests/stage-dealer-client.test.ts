@@ -140,7 +140,7 @@ test("actual base selector reserves combined extension exclusively to combined p
   assert.equal((source.match(/"combined\.ts"/g) || []).length, 1);
   assert.match(
     source,
-    /profile === "combined"[\s\S]*pageExtensions: \["combined\.ts", \.\.\.stagingExtensions, "tsx", "ts", "jsx", "js"\]/,
+    /profile === "combined"[\s\S]*pageExtensions: \[\s*"combined\.ts",\s*\.\.\.stagingExtensions,\s*"tsx",\s*"ts",\s*"jsx",\s*"js",?\s*\]/,
   );
   assert.match(
     source,

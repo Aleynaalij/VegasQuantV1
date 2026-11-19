@@ -1,4 +1,5 @@
 "use client";
+import CommunitySettings from "./community-settings";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { useViewerIdentity, viewerAuth } from "@/lib/viewer-auth";
@@ -53,10 +54,15 @@ export function CombinedAccountContent() {
       {view.allowed && (
         <>
           <p>{viewer.session!.user.email ?? viewer.session!.user.id}</p>
+          {viewer.capabilities.profile && (
+            <CommunitySettings
+              key={viewer.session!.user.id}
+              uid={viewer.session!.user.id}
+            />
+          )}
           <p>
-            Profile editing, account changes, MFA enrollment, billing and
-            notification preferences are unavailable until their isolated
-            contracts are verified. No production settings are used.
+            Account deletion, billing and MFA enrollment remain outside the
+            isolated consumer contract.
           </p>
         </>
       )}
@@ -109,13 +115,15 @@ export function CombinedAgeBoundary({
         </h1>
         <p role="status">{view.message}</p>
         <Link href="/staging/private-access">Private-access sign-in</Link>
-        <button
-          type="button"
-          className="secondary"
-          onClick={() => void viewerAuth.getSession(true)}
-        >
-          Retry verification
-        </button>
+        {viewer.failure !== "logout" && (
+          <button
+            type="button"
+            className="secondary"
+            onClick={() => void viewerAuth.getSession(true)}
+          >
+            Retry verification
+          </button>
+        )}
         <CombinedSignOut />
       </section>
     </main>

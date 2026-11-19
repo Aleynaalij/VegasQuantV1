@@ -1,0 +1,11 @@
+{
+  "purpose": "Actual staging execution evidence and unreviewed catalog integrity; not catalog approval",
+  "sha256": {
+    "docs/atlas/schema-execution/README.md": "368f118e4eb627ea666c7623e8fe5a18226175739e028772c39daf3ddffc20a1",
+    "docs/atlas/schema-execution/created-objects.json": "d54a973e0d91f7839ed815d49b4cb4608bdcf2d91d2ba428f5dd68daa2e18796",
+    "docs/atlas/schema-execution/execution.json": "147b4633e5475adfce9dba1029fd25f2543f47693c98043c0e6182eace6ee019",
+    "docs/atlas/schema-execution/feature-catalog-candidate.json": "d464d888d3e1ad83703ba3820ffd4d38ca795e3371561c57162876a3c1f044d6",
+    "docs/atlas/schema-execution/source-function-comparison.json": "bb7fee27c606c875d5f7d11adbc3d4d9618283fc6697385ce4cb19fd26393ccb",
+    "docs/atlas/schema-execution/target-catalog.json.gz": "c95657538b6107723ab94e37d73c4adf767b8c6844550d210160321939b48238"
+  }
+}

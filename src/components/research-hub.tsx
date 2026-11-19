@@ -1,4 +1,5 @@
 "use client";
+import PropFinderLink from "./prop-finder-link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -134,6 +135,9 @@ function Dossier({
             ? `Schedule observed ${when(event.scheduleAt)}`
             : "Schedule source time not supplied"}
         </small>
+        {event.sport === "nba" ? (
+          <PropFinderLink game={event.id} label="Player props for this game" />
+        ) : null}
         <div className="rh-actions">
           <Link href={eventHref(event)}>
             Full matchup & published selections{" "}
@@ -385,6 +389,9 @@ export default function ResearchHub() {
             </div>
           </div>
         </header>
+        {filters.sport === "all" || filters.sport === "nba" ? (
+          <PropFinderLink />
+        ) : null}
         <section className="rh-controls" aria-label="Research filters">
           <div className="rh-sports" aria-label="Filter by sport">
             {(["all", ...SPORT_ORDER] as const).map((s) => (

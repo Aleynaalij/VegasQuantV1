@@ -1,5 +1,5 @@
 "use client";
-import { viewerAuth, combinedViewer } from "@/lib/viewer-auth";
+import { viewerAuth, combinedViewer, useViewerIdentity } from "@/lib/viewer-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
@@ -782,7 +782,10 @@ function ZoneLay({
   );
 }
 export default function CommunityFeed({ experience = "legacy", basePath = "/community" }: { experience?: "legacy" | "zone2"; basePath?: string } = {}) {
+  const viewer = useViewerIdentity();
+  const socialReady = !combinedViewer || viewer.capabilities.social;
   const zone2 = experience === "zone2";
+  const [contributorError, setContributorError] = useState(false);
   const [researchQuery, setResearchQuery] = useState("");
   const [researchOnly, setResearchOnly] = useState(true);
   const searchParams = useSearchParams();
@@ -955,7 +958,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
       setFeedError(
         dealerOnly
           ? "Dealer posts could not refresh. Please retry."
-          : combinedViewer ? "Zone stories, comments, reactions, following and saved content are unavailable: their isolated backend contracts are not verified. No changes were made." : "Community could not refresh. Your existing posts are preserved.",
+          : !socialReady ? "Zone stories, comments, reactions, following and saved content are unavailable: their isolated backend contracts are not verified. No changes were made." : "Community could not refresh. Your existing posts are preserved.",
       );
       return;
     }
@@ -993,6 +996,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
         .maybeSingle(),
     ]);
     if (n !== epoch.current) return;
+    setContributorError(!!cards.error);
     setLays(cards.data || []);
     if (!faces.error)
       setAvatars((known) => ({
@@ -1048,7 +1052,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
   async function post(e: FormEvent) {
     e.preventDefault();
     if (!uid) return;
-    if (combinedViewer) { setNotice("Posting is unavailable: the isolated social mutation contract is not verified."); return; }
+    if (!socialReady) { setNotice("Posting is unavailable: the isolated social mutation contract is not verified."); return; }
     if (!body.trim() && !photo && !poll) return;
     if (busy) return;
     const pollProblem = poll ? pollDraftProblem(poll) : null;
@@ -1062,6 +1066,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
     setBusy(true);
     setNotice("");
     try {
+      if (combinedViewer && photo) throw Error("Photo uploads are unavailable until isolated storage is separately reviewed.");
       if (photo) {
         const session = await supabase.auth.getSession();
         if (generation !== mutationEpoch.current) return;
@@ -1394,7 +1399,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
     );
   }
   async function remove(id: string) {
-    if (combinedViewer) { setNotice("Post deletion is unavailable in isolated staging."); return; }
+    if (!socialReady) { setNotice("Post deletion is unavailable in isolated staging."); return; }
     if (busy) return;
     setBusy(true);
     const generation = mutationEpoch.current;
@@ -1449,7 +1454,8 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
   return (
     <Shell active="community" sport={sport === "all" ? undefined : sport}>
       <div className={`community-feed zone-feed${zone2 ? " zone2-experience" : ""}`}>
-        {combinedViewer && <p className="zone-status" role="status">ISOLATED STAGING · Social interactions and full publication downloads need verified backend contracts. They are unavailable here; no production content or permissions are substituted.</p>}
+        {combinedViewer && !socialReady && <p className="zone-status" role="status">ISOLATED STAGING · Social interactions and full publication downloads need verified backend contracts. They are unavailable here; no production content or permissions are substituted.</p>}
+        {contributorError && <p role="status">Contributor cards could not load. Existing contributor records are preserved; retry to check their availability.</p>}
         <header className="zone-head">
           <h1>The Zone</h1>
           <p>{zone2 ? "Research first. Conversation in context." : "Takes, lays and research from the Vegas Quant floor."}</p>

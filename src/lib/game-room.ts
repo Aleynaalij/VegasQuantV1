@@ -1,5 +1,6 @@
 import {
   etDay,
+  sportErrors,
   safeSource,
   type Finding,
   type ResearchEvent,
@@ -87,3 +88,13 @@ export const ROOM_LABELS: Record<Sport, { context: string; lineup: string }> = {
     lineup: "Starting lineups",
   },
 };
+
+/** The coverage notice names supported sports, not the scope of a failure. */
+export function roomSourceErrors(errors: string[], sport: Sport) {
+  const scoped = new Set(sportErrors(errors, sport));
+  return errors.filter(
+    (error) =>
+      scoped.has(error) ||
+      error.startsWith("Tester coverage currently includes "),
+  );
+}

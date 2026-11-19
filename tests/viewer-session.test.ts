@@ -125,6 +125,7 @@ test("viewer and data boundary: owner, denial, original age/entitlement, race re
     notifications: false,
     social: false,
     desk: false,
+    research: false,
   });
   assert(!JSON.stringify(data).includes("must never"));
   assert(!JSON.stringify(data).includes("access_token"));
@@ -367,7 +368,21 @@ test("viewer client drops delayed identities, clears before revalidation, dedupl
   assert.equal(c.getSnapshot().session, null);
   pending[4](new Response(null, { status: 503 }));
   assert((await logout).error);
+  assert.match(
+    viewerPresentation(c.getSnapshot()).message,
+    /Sign-out could not be verified/,
+  );
   assert.equal(c.getSnapshot().state, "error");
+  c.invalidate();
+  const frozen = c.read(true);
+  await Promise.resolve();
+  assert.equal(
+    pending.length,
+    5,
+    "automatic forced revalidation cannot erase failed logout and restore the old session",
+  );
+  assert.equal((await frozen).failure, "logout");
+  assert.equal(c.getSnapshot().session, null);
   const retry = c.signOut();
   pending[5](Response.json({ state: "anonymous" }));
   assert.equal((await retry).error, null);

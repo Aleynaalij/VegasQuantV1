@@ -16,6 +16,7 @@ import {
   ROOM_LABELS,
   resolveRoom,
   roomSources,
+  roomSourceErrors,
   roomPublicationHref,
   type RoomReference,
 } from "@/lib/game-room";
@@ -104,6 +105,7 @@ export default function GameIntelligenceRoom({
     `${f.title} ${f.text}`.toLowerCase().includes(query.toLowerCase().trim()),
   );
   const sources = roomSources(findings);
+  const sourceErrors = roomSourceErrors(data.errors, reference.sport);
   const zoneLink = `${zoneHref}${zoneHref.includes("?") ? "&" : "?"}sport=${reference.sport}`;
   return (
     <main className="gr" id="game-intelligence-room">
@@ -168,11 +170,11 @@ export default function GameIntelligenceRoom({
           unchanged; no replacement matchup was selected.
         </p>
       )}
-      {!!data.errors.length && (
+      {!!sourceErrors.length && (
         <details open className="gr-notice">
           <summary>Source limitations</summary>
           <ul>
-            {data.errors.map((e, i) => (
+            {sourceErrors.map((e, i) => (
               <li key={i}>{e}</li>
             ))}
           </ul>

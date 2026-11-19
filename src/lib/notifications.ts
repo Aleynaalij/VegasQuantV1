@@ -96,3 +96,22 @@ export const defaultNotificationPreferences = (
   quiet_start: 22,
   quiet_end: 8,
 });
+
+/** Combined staging polls; a successful snapshot is not a realtime connection. */
+export function notificationConnectionLabel(
+  combined: boolean,
+  connected: boolean,
+  failed: boolean,
+): string {
+  if (combined)
+    return failed
+      ? "Notification refresh unavailable · retry Refresh"
+      : connected
+        ? "Automatic refresh about every 30 seconds · Refresh for latest"
+        : "Checking notifications · automatic refresh enabled";
+  return connected
+    ? "Live updates connected"
+    : failed
+      ? "Reconnecting · your notification history is saved"
+      : "Live connection pending · refresh fallback enabled";
+}

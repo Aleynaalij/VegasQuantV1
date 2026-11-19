@@ -9,7 +9,7 @@ const blank: CommunityProfile = {
   avatar: null,
   visible: true,
 };
-export default function CommunitySettings({ uid, required = false, onSaved }: { uid: string; required?: boolean; onSaved?: () => void }) {
+export default function CommunitySettings({ uid, required = false, onSaved, titleId = "community-profile-title" }: { uid: string; required?: boolean; onSaved?: () => void; titleId?: string }) {
   const [draft, setDraft] = useState<CommunityProfile>(blank),
     [notice, setNotice] = useState(""),
     [busy, setBusy] = useState(false),
@@ -148,7 +148,7 @@ export default function CommunitySettings({ uid, required = false, onSaved }: { 
     );
   return (
     <form className="member-form" onSubmit={save} id="community-settings">
-      <h2 id="community-profile-title">{required ? "Make your profile yours" : "Your community identity"}</h2>
+      <h2 id={titleId}>{required ? "Make your profile yours" : "Your community identity"}</h2>
       {required && <p>Choose a username and add a profile photo to continue. A nickname is fine; no legal name or identity check is required.</p>}
       <Avatar profile={draft} />
       <label>

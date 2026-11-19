@@ -62,6 +62,7 @@ const appSession = (
     ? { user, transport: "supabase", expires_at: s.expires_at }
     : null;
 };
+export const readViewerIdentity = () => Promise.resolve(client.getSnapshot());
 export const viewerAuth = {
   async getSession(force = false) {
     if (!combinedViewer) {

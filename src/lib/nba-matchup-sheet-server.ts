@@ -111,6 +111,7 @@ export const teamMean = (team: Team, stat: Stat) =>
   mean(team.finals.map((g) => g.box[stat]));
 
 async function logo(abbr: string) {
+  if (process.env.VQ_COMBINED_STAGE_BUILD === "1") return null;
   const code = nbaLogoCode(abbr);
   if (!code) return null;
   try {

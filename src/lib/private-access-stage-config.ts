@@ -11,6 +11,40 @@ const forbiddenCredentials = [
   /^(?:SUPABASE_(?:URL|ANON_KEY)|NEXT_PUBLIC_SUPABASE_ANON_KEY|APP_URL|.*(?:DISPATCH|WEBHOOK|COLLECTOR)_(?:URL|TOKEN|SECRET))$/,
 ];
 
+/** A renamed variable must not smuggle a production endpoint or recognizable secret.
+ * This is an additional check, not a substitute for reviewing the effective inventory.
+ */
+function forbiddenValue(value: string) {
+  if (
+    /uowearboulykfcwnuirn|https?:\/\/vegasquant\.app\b/i.test(value) ||
+    /(?:sb_secret_|(?:sk|rk)_(?:live|test)_|whsec_)[A-Za-z0-9_-]+/.test(
+      value,
+    ) ||
+    /postgres(?:ql)?:\/\//i.test(value)
+  )
+    return true;
+  const endpoints =
+    value.match(/https?:\/\/[a-z0-9-]+\.supabase\.co\b/gi) ?? [];
+  if (endpoints.some((endpoint) => endpoint !== STAGE_SUPABASE_URL))
+    return true;
+  // Legacy service-role keys are JWTs; inspecting the payload does not authenticate it.
+  for (const token of value.match(
+    /[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/g,
+  ) ?? []) {
+    try {
+      const payload = token
+        .split(".")[1]
+        .replaceAll("-", "+")
+        .replaceAll("_", "/");
+      const claims = JSON.parse(atob(payload));
+      if (claims?.role === "service_role") return true;
+    } catch {
+      /* Non-JWT values are checked by name and inventory review. */
+    }
+  }
+  return false;
+}
+
 export type StageBuildProfile =
   | "standard"
   | "consumer-fixture"
@@ -45,6 +79,7 @@ export function stageBuildProfile(env: Environment): StageBuildProfile {
       "codex/atlas-final-integration",
       "codex/atlas-authenticated-experience",
       "codex/atlas-feature-preservation",
+      "codex/atlas-consumer-contracts",
       "elo/atlas-consumer-reader-ci",
     ].includes(env.VERCEL_GIT_COMMIT_REF ?? "") ||
     (env.VERCEL === "1" &&
@@ -73,6 +108,8 @@ export function privateAccessConfig(env: Environment) {
   const key = env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
   const host = env.VERCEL_URL;
   if (
+    (env.VQ_STAGE_FEATURE_CONTRACT !== undefined &&
+      env.VQ_STAGE_FEATURE_CONTRACT !== "vq-stage-features-v1") ||
     ref !== STAGE_SUPABASE_REF ||
     url !== STAGE_SUPABASE_URL ||
     !key ||
@@ -85,7 +122,9 @@ export function privateAccessConfig(env: Environment) {
     env.VQ_PUBLICATION_PREVIEW_LIVE_ENABLED !== "false" ||
     Object.keys(env).some(
       (name) =>
-        env[name] && forbiddenCredentials.some((pattern) => pattern.test(name)),
+        env[name] &&
+        (forbiddenCredentials.some((pattern) => pattern.test(name)) ||
+          forbiddenValue(env[name]!)),
     )
   ) {
     return null;

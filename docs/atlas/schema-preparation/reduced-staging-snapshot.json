@@ -1,0 +1,1225 @@
+{
+  "users": [
+    {
+      "id": "0cac6cd5-0262-49b7-a721-0817cd59dd8c",
+      "email": "phase1-allowed-a@vq-fixture.invalid",
+      "is_anonymous": false,
+      "email_confirmed": true
+    },
+    {
+      "id": "f882aa8e-9d4e-45df-b866-1f47131e51a9",
+      "email": "phase1-allowed-b@vq-fixture.invalid",
+      "is_anonymous": false,
+      "email_confirmed": true
+    },
+    {
+      "id": "5b21ac4f-b0fa-48e1-8066-ba644c2d4b56",
+      "email": "phase1-denied@vq-fixture.invalid",
+      "is_anonymous": false,
+      "email_confirmed": true
+    },
+    {
+      "id": "544541ae-c833-43de-838e-2f45542d1b94",
+      "email": "phase1-preview-20261115@vq-fixture.invalid",
+      "is_anonymous": false,
+      "email_confirmed": true
+    }
+  ],
+  "tables": [
+    {
+      "acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "vq_fixture.entitlements",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "allowed",
+          "type": "boolean",
+          "default": "false",
+          "notnull": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "entitlements_pkey",
+          "definition": "PRIMARY KEY (user_id)"
+        },
+        {
+          "name": "entitlements_user_id_fkey",
+          "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,anon=r/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "public.games",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "sport",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "away_team",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "home_team",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "kickoff",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "kickoff_tbd",
+          "type": "boolean",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "venue",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "roof",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "schedule_source",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "schedule_observed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "games_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,anon=r/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "public.nba_games",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "slug",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "away_team",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "home_team",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "away_abbreviation",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "home_abbreviation",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "tipoff",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "tipoff_tbd",
+          "type": "boolean",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "venue",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "nba_games_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "public.nba_observations",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "game_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "provider",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "observed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "payload",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "nba_observations_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "public.source_observations",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "game_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "provider",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "observed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "recorded_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "payload",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "source_observations_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "public.analysis_versions",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "game_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "version",
+          "type": "integer",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "sections",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "intelligence",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "analysis_versions_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "public.research_feed_posts",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "game_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "category",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "summary",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "why_watch",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "caution",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "source_url",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "source_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "research_feed_posts_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "public.market_snapshots",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "game_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "observed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "spread",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "moneyline",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "total",
+          "type": "jsonb",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "market_snapshots_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "public.published_legs",
+      "columns": [
+        {
+          "name": "leg_key",
+          "type": "text",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "game_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "market",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "why",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "risk",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "quote",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "quote_observed_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "published_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "result",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "published_legs_pkey",
+          "definition": "PRIMARY KEY (leg_key)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "vq_fixture.sports",
+      "columns": [
+        {
+          "name": "sport",
+          "type": "text",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "games",
+          "type": "jsonb",
+          "default": "'[]'::jsonb",
+          "notnull": true
+        },
+        {
+          "name": "facts",
+          "type": "jsonb",
+          "default": "'[]'::jsonb",
+          "notnull": true
+        },
+        {
+          "name": "markets",
+          "type": "jsonb",
+          "default": "'[]'::jsonb",
+          "notnull": true
+        },
+        {
+          "name": "selections",
+          "type": "jsonb",
+          "default": "'[]'::jsonb",
+          "notnull": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "sports_pkey",
+          "definition": "PRIMARY KEY (sport)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "vq_fixture.posts",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "sport",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "game_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "body",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "author_name",
+          "type": "text",
+          "default": "'SYNTHETIC TheDealer'::text",
+          "notnull": false
+        },
+        {
+          "name": "kind",
+          "type": "text",
+          "default": "'talk'::text",
+          "notnull": false
+        },
+        {
+          "name": "legs",
+          "type": "text[]",
+          "default": "'{}'::text[]",
+          "notnull": false
+        },
+        {
+          "name": "card",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "photo_path",
+          "type": "text",
+          "default": null,
+          "notnull": false
+        },
+        {
+          "name": "reactions",
+          "type": "integer",
+          "default": "0",
+          "notnull": false
+        },
+        {
+          "name": "comments",
+          "type": "integer",
+          "default": "0",
+          "notnull": false
+        }
+      ],
+      "constraints": [
+        {
+          "name": "posts_pkey",
+          "definition": "PRIMARY KEY (id)"
+        }
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres}",
+      "rls": true,
+      "name": "vq_fixture.age_states",
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "default": null,
+          "notnull": true
+        },
+        {
+          "name": "verified",
+          "type": "boolean",
+          "default": "false",
+          "notnull": true
+        }
+      ],
+      "constraints": [
+        {
+          "name": "age_states_pkey",
+          "definition": "PRIMARY KEY (user_id)"
+        },
+        {
+          "name": "age_states_user_id_fkey",
+          "definition": "FOREIGN KEY (user_id) REFERENCES auth.users(id)"
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "SELECT",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "entitlements",
+      "permissive": "PERMISSIVE",
+      "policyname": "own_entitlement",
+      "schemaname": "vq_fixture",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "games",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_schedule",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "nba_games",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_schedule",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "nba_observations",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "source_observations",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "analysis_versions",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "research_feed_posts",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "market_snapshots",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "published_legs",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "sports",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_sports",
+      "schemaname": "vq_fixture",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "posts",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_posts",
+      "schemaname": "vq_fixture",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "age_states",
+      "permissive": "PERMISSIVE",
+      "policyname": "own_age_fixture",
+      "schemaname": "vq_fixture",
+      "with_check": null
+    }
+  ],
+  "migrations": [
+    {
+      "name": "consumer_phase1_synthetic_contract_fixture",
+      "version": "20261115172210"
+    },
+    {
+      "name": "consumer_phase1_synthetic_age_shell",
+      "version": "20261115173820"
+    }
+  ],
+  "data": [
+    {
+      "name": "vq_fixture.entitlements",
+      "rows": [
+        {
+          "allowed": true,
+          "user_id": "0cac6cd5-0262-49b7-a721-0817cd59dd8c"
+        },
+        {
+          "allowed": false,
+          "user_id": "5b21ac4f-b0fa-48e1-8066-ba644c2d4b56"
+        },
+        {
+          "allowed": false,
+          "user_id": "f882aa8e-9d4e-45df-b866-1f47131e51a9"
+        }
+      ]
+    },
+    {
+      "name": "public.games",
+      "rows": [
+        {
+          "id": "00000000-0000-4000-8000-000000000101",
+          "roof": "outdoor",
+          "slug": "synthetic-nfl",
+          "sport": "nfl",
+          "venue": "Synthetic stadium",
+          "kickoff": "2026-11-15T20:22:15.321425+00:00",
+          "away_team": "SYNTHETIC Away NFL",
+          "home_team": "SYNTHETIC Home NFL",
+          "kickoff_tbd": false,
+          "schedule_source": "https://example.invalid/synthetic",
+          "schedule_observed_at": "2026-11-15T17:22:15.321425+00:00"
+        }
+      ]
+    },
+    {
+      "name": "public.nba_games",
+      "rows": [
+        {
+          "id": "00000000-0000-4000-8000-000000000102",
+          "slug": "synthetic-nba",
+          "venue": "Synthetic arena",
+          "source": "https://example.invalid/synthetic",
+          "status": "Scheduled",
+          "tipoff": "2026-11-15T21:22:15.321425+00:00",
+          "away_team": "SYNTHETIC Away NBA",
+          "home_team": "SYNTHETIC Home NBA",
+          "tipoff_tbd": false,
+          "updated_at": "2026-11-15T17:22:15.321425+00:00",
+          "away_abbreviation": "SYN-A",
+          "home_abbreviation": "SYN-H"
+        }
+      ]
+    },
+    {
+      "name": "public.nba_observations",
+      "rows": [
+        {
+          "id": "00000000-0000-4000-8000-000000000202",
+          "kind": "injury",
+          "source": "https://example.invalid/synthetic",
+          "game_id": "00000000-0000-4000-8000-000000000102",
+          "payload": {
+            "team": "SYNTHETIC Away NBA",
+            "player": "Fixture Player NBA",
+            "status": "Out — synthetic test"
+          },
+          "provider": "synthetic",
+          "observed_at": "2026-11-15T15:22:15.321425+00:00",
+          "recorded_at": "2026-11-15T17:22:15.321425+00:00"
+        }
+      ]
+    },
+    {
+      "name": "public.source_observations",
+      "rows": [
+        {
+          "id": "00000000-0000-4000-8000-000000000201",
+          "kind": "injury",
+          "source": "https://example.invalid/synthetic",
+          "game_id": "00000000-0000-4000-8000-000000000101",
+          "payload": {
+            "team": "SYNTHETIC Away NFL",
+            "player": "Fixture Player NFL",
+            "status": "Questionable — synthetic test"
+          },
+          "provider": "synthetic",
+          "observed_at": "2026-11-15T16:22:15.321425+00:00",
+          "recorded_at": "2026-11-15T17:22:15.321425+00:00"
+        }
+      ]
+    },
+    {
+      "name": "public.analysis_versions",
+      "rows": []
+    },
+    {
+      "name": "public.research_feed_posts",
+      "rows": []
+    },
+    {
+      "name": "public.market_snapshots",
+      "rows": []
+    },
+    {
+      "name": "public.published_legs",
+      "rows": []
+    },
+    {
+      "name": "vq_fixture.sports",
+      "rows": [
+        {
+          "facts": [
+            {
+              "id": "00000000-0000-4000-8000-000000000103:fact",
+              "kind": "team_context",
+              "source": {
+                "url": "https://example.invalid/synthetic",
+                "retrieved_at": "2026-11-15T17:22:15.321425+00:00"
+              },
+              "game_id": "00000000-0000-4000-8000-000000000103",
+              "payload": {
+                "summary": "SYNTHETIC research context; no real prediction or performance claim."
+              }
+            }
+          ],
+          "games": [
+            {
+              "id": "00000000-0000-4000-8000-000000000103",
+              "away": {
+                "name": "SYNTHETIC Away NHL"
+              },
+              "home": {
+                "name": "SYNTHETIC Home NHL"
+              },
+              "slug": "synthetic-nhl",
+              "sport": "nhl",
+              "venue": "Synthetic arena",
+              "source": {
+                "url": "https://example.invalid/synthetic",
+                "retrieved_at": "2026-11-15T17:22:15.321425+00:00"
+              },
+              "status": "Scheduled",
+              "completed": false,
+              "start_time": "2026-11-15T22:22:15.321425+00:00",
+              "start_time_tbd": false
+            }
+          ],
+          "sport": "nhl",
+          "markets": [],
+          "selections": []
+        },
+        {
+          "facts": [
+            {
+              "id": "00000000-0000-4000-8000-000000000104:fact",
+              "kind": "team_context",
+              "source": {
+                "url": "https://example.invalid/synthetic",
+                "retrieved_at": "2026-11-15T17:22:15.321425+00:00"
+              },
+              "game_id": "00000000-0000-4000-8000-000000000104",
+              "payload": {
+                "summary": "SYNTHETIC research context; no real prediction or performance claim."
+              }
+            }
+          ],
+          "games": [
+            {
+              "id": "00000000-0000-4000-8000-000000000104",
+              "away": {
+                "name": "SYNTHETIC Away NCAAB"
+              },
+              "home": {
+                "name": "SYNTHETIC Home NCAAB"
+              },
+              "slug": "synthetic-ncaab",
+              "sport": "ncaab",
+              "venue": "Synthetic arena",
+              "source": {
+                "url": "https://example.invalid/synthetic",
+                "retrieved_at": "2026-11-15T17:22:15.321425+00:00"
+              },
+              "status": "Scheduled",
+              "completed": false,
+              "start_time": "2026-11-15T22:22:15.321425+00:00",
+              "start_time_tbd": false
+            }
+          ],
+          "sport": "ncaab",
+          "markets": [],
+          "selections": []
+        }
+      ]
+    },
+    {
+      "name": "vq_fixture.posts",
+      "rows": [
+        {
+          "id": "00000000-0000-4000-8000-000000000301",
+          "body": "Fabricated acceptance fixture, not a published recommendation. Original-source placeholder: https://example.invalid/synthetic",
+          "card": null,
+          "kind": "talk",
+          "legs": [],
+          "sport": "nfl",
+          "title": "SYNTHETIC research preview",
+          "game_id": "00000000-0000-4000-8000-000000000101",
+          "comments": 0,
+          "reactions": 0,
+          "created_at": "2026-11-15T17:22:15.321425+00:00",
+          "photo_path": null,
+          "author_name": "SYNTHETIC TheDealer"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000302",
+          "body": "Fabricated acceptance fixture, not a published recommendation. Original-source placeholder: https://example.invalid/synthetic",
+          "card": null,
+          "kind": "talk",
+          "legs": [],
+          "sport": "nba",
+          "title": "SYNTHETIC research preview",
+          "game_id": "00000000-0000-4000-8000-000000000102",
+          "comments": 0,
+          "reactions": 0,
+          "created_at": "2026-11-15T17:22:15.321425+00:00",
+          "photo_path": null,
+          "author_name": "SYNTHETIC TheDealer"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000303",
+          "body": "Fabricated acceptance fixture, not a published recommendation. Original-source placeholder: https://example.invalid/synthetic",
+          "card": null,
+          "kind": "talk",
+          "legs": [],
+          "sport": "nhl",
+          "title": "SYNTHETIC research preview",
+          "game_id": "00000000-0000-4000-8000-000000000103",
+          "comments": 0,
+          "reactions": 0,
+          "created_at": "2026-11-15T17:22:15.321425+00:00",
+          "photo_path": null,
+          "author_name": "SYNTHETIC TheDealer"
+        },
+        {
+          "id": "00000000-0000-4000-8000-000000000304",
+          "body": "Fabricated acceptance fixture, not a published recommendation. Original-source placeholder: https://example.invalid/synthetic",
+          "card": null,
+          "kind": "talk",
+          "legs": [],
+          "sport": "ncaab",
+          "title": "SYNTHETIC research preview",
+          "game_id": "00000000-0000-4000-8000-000000000104",
+          "comments": 0,
+          "reactions": 0,
+          "created_at": "2026-11-15T17:22:15.321425+00:00",
+          "photo_path": null,
+          "author_name": "SYNTHETIC TheDealer"
+        }
+      ]
+    },
+    {
+      "name": "vq_fixture.age_states",
+      "rows": [
+        {
+          "user_id": "0cac6cd5-0262-49b7-a721-0817cd59dd8c",
+          "verified": true
+        },
+        {
+          "user_id": "f882aa8e-9d4e-45df-b866-1f47131e51a9",
+          "verified": true
+        },
+        {
+          "user_id": "5b21ac4f-b0fa-48e1-8066-ba644c2d4b56",
+          "verified": true
+        }
+      ]
+    }
+  ]
+}

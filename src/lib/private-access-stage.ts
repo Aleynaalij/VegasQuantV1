@@ -178,7 +178,10 @@ export async function checkCombinedStageRequest(request: NextRequest) {
   if (
     path === "/staging/discovery/session" ||
     path === "/staging/discovery/data" ||
-    /^\/staging\/discovery\/read\/(?:dealer|research)$/.test(path)
+    /^\/staging\/discovery\/read\/(?:dealer|research)$/.test(path) ||
+    /^\/staging\/discovery\/read\/matchup-sheet\/[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/.test(
+      path,
+    )
   )
     return null;
 

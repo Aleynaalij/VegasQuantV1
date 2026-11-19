@@ -21,6 +21,7 @@ import {
   type NbaObservation,
 } from "@/lib/nba-board";
 import NbaGamePropCard from "./nba-game-prop-card";
+import PropFinderLink from "./prop-finder-link";
 import "@/app/nba-board.css";
 
 const stamp = (s: string | null) => {
@@ -304,6 +305,7 @@ export function NbaGameDetails({
       <summary>Open research · lines, props & form</summary>
       {open && (
         <div>
+          <PropFinderLink game={game.id} label="Player props for this game" />
           {showLineups && <NbaLineups game={{ away: game.away_abbreviation, home: game.home_abbreviation, start: game.tipoff, tbd: game.tipoff_tbd }} />}
           {loading && <p role="status">Loading source snapshots…</p>}
           {error && (

@@ -16,14 +16,17 @@ export function viewerPresentation(viewer: ViewerIdentity) {
             : "Account unavailable",
     accountHref:
       viewer.state === "anonymous" ? "/staging/private-access" : "/membership",
-    message: allowed
-      ? "Your isolated staging session, age status and research access are verified."
-      : viewer.state === "checking"
-        ? "Checking your private-access session…"
-        : viewer.state === "anonymous"
-          ? "Sign in through private access to continue."
-          : viewer.state === "denied"
-            ? "This session no longer has authorized staging access."
-            : "Your account could not be verified. Protected content is unavailable. Retry or sign out.",
+    message:
+      viewer.failure === "logout"
+        ? "Sign-out could not be verified. Your staging session may still be active. Retry sign out."
+        : allowed
+          ? "Your isolated staging session, age status and research access are verified."
+          : viewer.state === "checking"
+            ? "Checking your private-access session…"
+            : viewer.state === "anonymous"
+              ? "Sign in through private access to continue."
+              : viewer.state === "denied"
+                ? "This session no longer has authorized staging access."
+                : "Your account could not be verified. Protected content is unavailable. Retry or sign out.",
   };
 }

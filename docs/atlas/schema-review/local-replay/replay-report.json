@@ -1,0 +1,1036 @@
+{
+  "source_ref": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "engine": "PostgreSQL 17.11 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0, 64-bit",
+  "endpoint": "127.0.0.1:55439/atlas_schema_replay",
+  "platform": "local-replay-platform.sql: Auth/storage structural stand-ins, native pgcrypto, inert cron, net always throws, unusable local-only vault placeholder",
+  "extensions_omitted": [
+    {
+      "path": "supabase/migrations/20261001125925_schedule_source_sync.sql",
+      "sql": "-- Hosted Supabase scheduling. Token is provisioned in Vault, never committed.\ncreate extension if not exists pg_cron with schema pg_catalog;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261001125925_schedule_source_sync.sql",
+      "sql": "\ncreate extension if not exists pg_net with schema extensions;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261018020000_research_board_timer.sql",
+      "sql": "-- GitHub delays or drops scheduled workflow runs under load (the hourly research-board schedule\n-- started 2 of 10 times overnight). Supabase's own scheduler now asks GitHub to start the\n-- workflow every hour at :07 (GitHub's schedule stays as a backup at :37). Runs are marked\n-- scheduled, so the script still publishes at most once every 2.5 hours.\n--\n-- The GitHub token never appears in code or migrations: the owner stores a fine-grained token\n-- (this repository only, Actions: read and write) in Supabase Vault as\n-- 'github_research_board_token'. Until it exists the job does nothing.\ncreate extension if not exists pg_cron;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261018020000_research_board_timer.sql",
+      "sql": "\ncreate extension if not exists pg_net;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261019010000_nba_shadow_scan_dispatch.sql",
+      "sql": "-- GitHub ran the NBA shadow scan's 15-minute schedule only 11 times between Oct 17 21:42Z and Oct 19\n-- 05:17Z. A FanDuel props snapshot arrives at most every 30 minutes to 6 hours and the scan only accepts\n-- quotes received within 30 minutes, so the first opening-night props (Oct 19 07:02Z) were never\n-- scanned. Supabase's scheduler now starts the workflow, the same way as the NFL model scan\n-- (20261018030000/20261018050000): every 5 minutes it looks for a FanDuel points or rebounds snapshot\n-- of an upcoming regular-season game newer than the last dispatch and, if one arrived in the last 10\n-- minutes, asks GitHub to run the workflow once for that batch. net.http_post only queues the request,\n-- so the request id is kept and a dispatch GitHub rejected is re-sent, up to three attempts, until the\n-- batch is 15 minutes old. The workflow's own GitHub schedule is removed so one batch starts one run.\n--\n-- Uses the research board's Vault token ('github_research_board_token': this repository only,\n-- Actions read and write). Without it the job does nothing.\ncreate extension if not exists pg_cron;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261019010000_nba_shadow_scan_dispatch.sql",
+      "sql": "\ncreate extension if not exists pg_net;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261022010000_nba_daily_collection.sql",
+      "sql": "-- NBA paused (owner decision, Oct 22 2026): the NBA pages are closed and NBA data is collected once a day,\n-- for the record only, until the season has enough games to reference.\n--  * nba-sync (ESPN schedule, scores and injuries; The Odds API lines and props within 36 hours) runs at\n--    6:00 a.m. Eastern instead of every 15 minutes. Its cadence rules still apply, so each morning reads\n--    today's lines and props once.\n--  * nba-results reads the previous night's box scores at 6:05 a.m. A final box score is recorded only\n--    when the same numbers are read again 3 hours later (20261018070000), so a free ESPN confirming read\n--    runs at 9:10 a.m.; anything still unconfirmed is picked up the next morning.\n--  * The NBA shadow scan stops: its dispatcher is unscheduled (the model stays SHADOW_ONLY, unchanged).\n-- pg_cron runs in UTC, so each job is scheduled at both the EDT and EST hour and runs only when it is that\n-- hour in New York.\ncreate extension if not exists pg_cron;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261022010000_nba_daily_collection.sql",
+      "sql": "\ncreate extension if not exists pg_net;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261028233000_nba_shadow_restart_pretip.sql",
+      "sql": "-- NBA shadow restart (owner, Oct 28 2026). The v0.1 shadow scan never stored a forecast: every hosted\n-- run from Oct 19-22 ended in HTTP 400 because record_nba_shadow_scan raised on the first forecast that\n-- failed a check, discarding the whole batch, and the run log could not say which check. Then the\n-- Oct 22 pause unscheduled the dispatcher.\n--  * Per-forecast checks are unchanged but now skip that forecast and count the reason; whole-scan checks\n--    (model, freshness, input hashes, size) still reject the scan. The run summary stores the counts.\n--  * The dispatcher is scheduled again (every 5 minutes it starts one scan per fresh FanDuel batch).\n--  * nba-sync also runs once a day 60-90 minutes before the day's first regular-season tip, so lines,\n--    props and injuries are fresh near tip and the shadow scan forecasts from pre-tip prices. The 6 a.m.\n--    run is unchanged; nba-sync's own cadence rules still decide which paid calls are due.\ncreate extension if not exists pg_cron;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261028233000_nba_shadow_restart_pretip.sql",
+      "sql": "\ncreate extension if not exists pg_net;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    },
+    {
+      "path": "supabase/migrations/20261029001000_nba_three_point_volume.sql",
+      "sql": "-- NBA 3-point volume (owner, Oct 28 2026): who attempts and who makes the most threes per game, for\n-- the players on that day's slate.\n--  * Box scores so far kept threes made only. Attempts are stored alongside, in their own append-only\n--    table: recorded box-score rows are immutable. An attempt row is accepted only when the game is\n--    recorded and every player's made count matches the recorded line.\n--  * nba-results fills attempts for each recorded game, and backfills older recorded games a few per run.\n--  * Every morning, after the overnight results are confirmed, a \"3-point volume\" post goes to The Zone\n--    from the owner's account (the one admin). It is research, not picks, and sends no notifications:\n--    Zone notifications stay for posts by members.\n--  * While NBA is paused, the Zone's Latest feed shows NBA posts too (community_feed 'all').\ncreate extension if not exists pg_cron;",
+      "reason": "Managed extension unavailable; inert local platform stand-in, not a source-function rewrite"
+    }
+  ],
+  "migrations": [
+    {
+      "path": "supabase/migrations/20260930111253_vegas_quant_initial.sql",
+      "sha256": "48f84b5ea50979fade93ee0894fb06f3eeba954e962a80416d8bf5bbc9f82972",
+      "statements": 47
+    },
+    {
+      "path": "supabase/migrations/20260930113206_publishing_hardening.sql",
+      "sha256": "a066eaaa30ab3fb5eae5f2ff83b19749ef115ac8f7949ebaf35669a37f3f13d3",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20260930133259_membership_and_payments.sql",
+      "sha256": "b10501719a2c6177a93f6c9d6a5227b5a3fdd2fda4cda7a524ecf01f1542edd8",
+      "statements": 51
+    },
+    {
+      "path": "supabase/schema/research_feed.sql",
+      "sha256": "b5ce8a529fb0a36be6f71d8a5f251abd410001f3670b48c963fed0959c055d09",
+      "inserted_after": "supabase/migrations/20260930133259_membership_and_payments.sql",
+      "reason": "Versioned repository baseline schema outside migration directory"
+    },
+    {
+      "path": "supabase/migrations/20260930192924_admin_accounts_and_friend_passes.sql",
+      "sha256": "3b79e685d25bc649cc72887365212737152ffa64093c3b53946d8400725d3154",
+      "statements": 20
+    },
+    {
+      "path": "supabase/migrations/20260930211752_pick_share_market_info.sql",
+      "sha256": "753eb887e6c48abd74a5a661c6efad755545950dd7e3d7b9511913be979d5c28",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20260930223839_personal_challenge_entries.sql",
+      "sha256": "c3ff7c4adc4f57a67a20d4797adc456a5399a2cb3d45e5582d2c0f9d9de2819d",
+      "statements": 30
+    },
+    {
+      "path": "supabase/schema/personal_bankroll_adjustments.sql",
+      "sha256": "2b788f021f95c5d5538678f24120deefdd92d3a3d2674e74cf603e078473b816",
+      "inserted_after": "supabase/migrations/20260930223839_personal_challenge_entries.sql",
+      "reason": "Versioned repository baseline schema outside migration directory"
+    },
+    {
+      "path": "supabase/migrations/20261001024251_personal_entry_corrections.sql",
+      "sha256": "c760d0dc40ea76230b8a356ab32b66c0609217ca53d9ab5d637127f4af0d01c8",
+      "statements": 34
+    },
+    {
+      "path": "supabase/migrations/20261001093211_private_data_intelligence.sql",
+      "sha256": "7eeba8d27cf92daeb33336edb5a9059547ba0c37afc90e8fa08974630456cdd1",
+      "statements": 14
+    },
+    {
+      "path": "supabase/migrations/20261001100444_challenge_runs.sql",
+      "sha256": "7d061262733283147d1f3c46a22a33ce2d839e801e3c0fb2bb8ffa5a29cb35a9",
+      "statements": 24
+    },
+    {
+      "path": "supabase/migrations/20261001104103_personal_bankroll_setup.sql",
+      "sha256": "26bac7ddaa47d241634972abd2b318c85b3251a130947e8f85f7a5e05d23698e",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261001124054_subscription_billing.sql",
+      "sha256": "7a924a11bb64b320463e113d24cb9dd972a9cb5337c2140399fd07c2ff3b3bb1",
+      "statements": 26
+    },
+    {
+      "path": "supabase/migrations/20261001124415_matchup_intelligence.sql",
+      "sha256": "a8b7a6f40d1d062ef722678aed73fb75dc971b1edb6978adbc994802f00e7c88",
+      "statements": 19
+    },
+    {
+      "path": "supabase/schema/edge_releases.sql",
+      "sha256": "c5b0f3688b9fbb765982eb445bfeb74b2deb1dd72b936210e8e5bbe3362bc26f",
+      "inserted_after": "supabase/migrations/20261001124415_matchup_intelligence.sql",
+      "reason": "Versioned repository baseline schema outside migration directory"
+    },
+    {
+      "path": "supabase/migrations/20261001125014_source_feeds.sql",
+      "sha256": "6ab84c5f8ebf6369a3e8bdb83b9d8efb87ad9479cd322e29369782e2c09e20fb",
+      "statements": 22
+    },
+    {
+      "path": "supabase/migrations/20261001125925_schedule_source_sync.sql",
+      "sha256": "2cebf51b0907b23357161dddb435a1a95f9c4195a3ca7a027014758acef1461a",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261001130201_release_hardening.sql",
+      "sha256": "1795b82412684c1b5d4f2111c4c47d278ceed77a57ad71f230720fe80a9eac0e",
+      "statements": 8
+    },
+    {
+      "path": "supabase/migrations/20261001130759_source_refresh_stability.sql",
+      "sha256": "a5f8609a10ba9692565313a418cf73d34030619c868ec8ed4a8812d823a29394",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261002030411_sportsbook_settlement_without_final_score.sql",
+      "sha256": "af9a10e5a2ee98cadb1bfd648a31892d35dbac5a476f44f20031ddbe2e4b2ea7",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261003000832_public_research_proof.sql",
+      "sha256": "3000f5291168707417b5ee9ef48e540e68f5249262c9c10ac4a7da902d60a112",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261003001359_official_pick_notifications.sql",
+      "sha256": "d355c0f92912364c02817d1fd1e4d103419475fe50e348d01f9369271a3cdad9",
+      "statements": 36
+    },
+    {
+      "path": "supabase/migrations/20261003001837_research_model_basis.sql",
+      "sha256": "29b9b6f6bbca92d044b6ea8eac8ee579ffb218240b37705f7f3e70663f2bd430",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261003001941_push_access_hardening.sql",
+      "sha256": "ade90388f8ce2551eb7b2fb1515979a176cb7586f31e749a288824561657c059",
+      "statements": 11
+    },
+    {
+      "path": "supabase/migrations/20261003104159_push_test_delivery.sql",
+      "sha256": "d122d9718404a5d602f28c7a281355314186a001149382bb8b03e6305641ae6b",
+      "statements": 4
+    },
+    {
+      "path": "supabase/migrations/20261003110139_personal_payout_pause.sql",
+      "sha256": "fb14f3959fa772a779ecb0e465fdb42ec9abb5d83eca7826828dc21c3cb86d5d",
+      "statements": 15
+    },
+    {
+      "path": "supabase/migrations/20261003112128_community_profiles.sql",
+      "sha256": "d03f5af443db9b7ac198cd3c4299145f7b6a938757cf5e069db604329d32a4f4",
+      "statements": 14
+    },
+    {
+      "path": "supabase/migrations/20261003115658_community_profile_pages.sql",
+      "sha256": "43696df46f990e0e26d5ff7e7578334d644f0c1ad132feb3ab37361e10f6bf54",
+      "statements": 8
+    },
+    {
+      "path": "supabase/migrations/20261003133413_free_community_paid_research.sql",
+      "sha256": "2f4b28400d0a218beb69e2c1f1bcd91e38f0c5189845aa43c50cdfa57bd35c73",
+      "statements": 11
+    },
+    {
+      "path": "supabase/migrations/20261003142216_community_settled_progress.sql",
+      "sha256": "4a262bc5af7874725e84d1534c1a2dce34e1f87517233c5c9b647f31767527b8",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261003144735_published_pick_money_splits.sql",
+      "sha256": "1e6473a6de6202bfeaa31dcbb2d38e1de4e0c1594cf7fe23ce70383b7a23f668",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261003151042_public_candidate_releases.sql",
+      "sha256": "d2903c481e4d52745fffce80c1382db408eaef64c7879384096733b3ecd18e94",
+      "statements": 7
+    },
+    {
+      "path": "supabase/migrations/20261003215821_signup_premium_trial.sql",
+      "sha256": "0bd28b68f65bd5e1c5c3baf75eb5c0dbb9c473f3fb9b0c53c174033267e98af6",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261003222312_research_signup_notifications.sql",
+      "sha256": "9d68a08ada3d0d751b257d1134320e3da9aca47bc981c6e98e70a3e9b8b17082",
+      "statements": 12
+    },
+    {
+      "path": "supabase/migrations/20261003223000_gambly_share_links.sql",
+      "sha256": "06aaf1f9fd495199084fa215ba832d4424cf4a48b3a19eabdd9d1da7898826ce",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261005212821_prop_price_indexing.sql",
+      "sha256": "f58898d8b3b90d9a9600b0f56331ddd04a4c8b05d0e21f6e3b957dc11e2a8760",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261005214140_admin_feed_failure_alerts.sql",
+      "sha256": "fe0ae54d1e75913f9b74207207c35a4c791bb76f2a52fc186015978fc83d5113",
+      "statements": 12
+    },
+    {
+      "path": "supabase/migrations/20261010224500_block_challenge_joins_before_launch.sql",
+      "sha256": "dbc25b91d22a90b190cc07b607528432b491802eb2c1e27235e3308d3f620ee5",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261010225000_block_prelaunch_challenge_checkins.sql",
+      "sha256": "62f58179111a095cbf1e672347ed5322b13214d2c36f54a7f407a0a3bb2f404d",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261010230000_community_roster_without_tailing.sql",
+      "sha256": "cd1e3c1ee9b20380b268d60ef86d26f0358f6e698a6b0c71232529cef8990639",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261010233000_community_visible_profiles_without_tailing.sql",
+      "sha256": "f2d7284d6ea944475c70f1d36b23ea94a95ef6342e4f673a078ac5409d0161d7",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261010233754_push_announcement_event_keys.sql",
+      "sha256": "24512e00f1416c914fff2766ffa8fb01a0cb3d107d91711994bc95b38d97c25a",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261010234142_private_member_phone_opt_in.sql",
+      "sha256": "cd795225e94aaa37dc4613bbbb9b49c799ffa00f187644d9f7251edbc39d4103",
+      "statements": 8
+    },
+    {
+      "path": "supabase/migrations/20261011001723_published_selection_record.sql",
+      "sha256": "db9ed2af60e2504aae63793965b728cb10557264ffc8505b035f93cb6cee14e8",
+      "statements": 10
+    },
+    {
+      "path": "supabase/migrations/20261011001739_member_saved_legs_and_follows.sql",
+      "sha256": "33b7e4af32444a728b2deb966ace8626cf81bab49b3f5ae3cc0020bbf4f96954",
+      "statements": 11
+    },
+    {
+      "path": "supabase/migrations/20261011001755_game_discussion_threads.sql",
+      "sha256": "63b85990009fe8f11f7a0f202de4484ddb638b1bb534baea699d77c64087c7c9",
+      "statements": 11
+    },
+    {
+      "path": "supabase/migrations/20261011001758_app_update_inbox.sql",
+      "sha256": "f83d56d002d41afc299dcd1a4cd8a58f3d629513bad93712caba4dcf3f02e366",
+      "statements": 13
+    },
+    {
+      "path": "supabase/migrations/20261011001815_member_onboarding_measurement.sql",
+      "sha256": "b00197425ebccbb3a6df44c48af2cc53acf18b9dd1aca329d0023647d9705e91",
+      "statements": 22
+    },
+    {
+      "path": "supabase/migrations/20261011002023_publication_follow_matcher.sql",
+      "sha256": "b18b4894fc8d4406858b4161b14b4f9971f9e52d3ef4442311c8edcc4270075e",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261011002309_validated_official_follow_filter.sql",
+      "sha256": "ab9bca125af6ce8202ed99863a5f0691c40bcecfc9cb6588c84d18ad0e881ed8",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261011002315_validated_research_follow_filter.sql",
+      "sha256": "70916821136a53fe70c50d432cf25c576bb29e577efc8e0b69aadbe8d51ce9fc",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261011012108_feed_edge_release_history.sql",
+      "sha256": "ea4fa71d916717537f27005633c01275e5171b1f417e03a15763ca8fb60b6818",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261014015003_nba_bible_rule_citations.sql",
+      "sha256": "80e568e166f4d432dfbae088be5aa7b32c1a7be62b8f394441860600b4c1018c",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261014025802_community_social_feed.sql",
+      "sha256": "e98d43d3a1b9e6d4f75e7385ecc3175876c49253bbe0103c8370ab0ac1859ddd",
+      "statements": 38
+    },
+    {
+      "path": "supabase/migrations/20261014041536_launch_safety_controls.sql",
+      "sha256": "7bf286df665c0ebe9f1918b2ef1f7b968ca113d15ce2ef41e79ebab32e0cd59f",
+      "statements": 37
+    },
+    {
+      "path": "supabase/migrations/20261014095726_full_account_deletion.sql",
+      "sha256": "79d9c58074c7acc7276b09ddcf0b25807db63432ecdd40be8f53b00ce202b86c",
+      "statements": 22
+    },
+    {
+      "path": "supabase/migrations/20261014103812_verified_age_gate.sql",
+      "sha256": "748fa543b13f34eda0952b5adfe6b2b55f59256a43346f6e0246546f6ec3ea25",
+      "statements": 52
+    },
+    {
+      "path": "supabase/migrations/20261014111651_age_erasure_initialization_guard.sql",
+      "sha256": "c2887434150fcf4ebbdd0f7d2ca18bf258b7fdc5458897b56f6da87f7df842c6",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261014120940_retain_started_tail_records.sql",
+      "sha256": "e2176123345aae554ba0f672066880ac884be234a192c5cbe0721a2b82f2278f",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261014162515_community_post_photos.sql",
+      "sha256": "3d995b6f98b4ee75e27cac9f5bcc003282d3b233877b535ad0ebcc5bc07dabdd",
+      "statements": 19
+    },
+    {
+      "path": "supabase/migrations/20261014170710_admin_game_sport.sql",
+      "sha256": "b5e5fa1b5ebca3e4716433a880720025f341eed2f6ae7831dd8385b718aed940",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261014172417_automatic_leg_results.sql",
+      "sha256": "8562159d49c2fe81f4cc9adcf7eed494bccf691927165ccfe2d447d7f7b9931b",
+      "statements": 28
+    },
+    {
+      "path": "supabase/migrations/20261014172715_schedule_editorial_result_sync.sql",
+      "sha256": "880ebd1e525f3306663aa41e69518d73c932eb0be26227326b1d67e40d447bda",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261014172844_editorial_progress_own_tails.sql",
+      "sha256": "337a407ecd4d689c932c0731f2f4dfaafda6c8490a405264541e40c3d58e5fcd",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261014173204_price_alerts_and_tail_leaderboard.sql",
+      "sha256": "2313795315bbc72c37c2892ac1e2fd4464b94ecca625954ee86806862f651851",
+      "statements": 13
+    },
+    {
+      "path": "supabase/migrations/20261014174249_weekly_platform_performance.sql",
+      "sha256": "3dcb9e4c2e767781641a142eb8f20531de797dfbb18eca7d2a1cdbfae0f12415",
+      "statements": 9
+    },
+    {
+      "path": "supabase/migrations/20261014180409_existing_accounts_complimentary_premium.sql",
+      "sha256": "ceca8b91167bb0a7ff9fb13e41e9b588cedb9708568612a8e5ee3ad1c6c7a878",
+      "statements": 7
+    },
+    {
+      "path": "supabase/migrations/20261014180740_price_alert_original_legs_and_board_bans.sql",
+      "sha256": "df5c77540ef38afd13f2a6288f1cbf5b0c67bc883156805fbc24a7f9fdbb0692",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261014183212_editorial_parlay_tracking.sql",
+      "sha256": "628c53966447b8ce088ea8815201851d772fe32db208e041efa02013fa3077f3",
+      "statements": 8
+    },
+    {
+      "path": "supabase/migrations/20261015180000_published_leg_prices.sql",
+      "sha256": "ed3d3afca127bd2e812a242b101c1b5b925b15699cc814b84d1dab7fa7400bbd",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261015190000_leg_market_prices.sql",
+      "sha256": "9286f571abe7fb095e24625e563d11ba812f0053df4ffa7ef58bb10c52f660d4",
+      "statements": 11
+    },
+    {
+      "path": "supabase/migrations/20261015200000_admin_member_portal.sql",
+      "sha256": "fa7a8e8e70e3df68623a8911e45ab8db6f3be063b2cb19dbf67bfa7a4d20efea",
+      "statements": 10
+    },
+    {
+      "path": "supabase/migrations/20261016130000_leg_history.sql",
+      "sha256": "ba1ac7929786128feaeeffbc967118035445d08e4d78b6b797ef345b709e22ba",
+      "statements": 5
+    },
+    {
+      "path": "supabase/migrations/20261016130632_nfl_selection_gate.sql",
+      "sha256": "86b949027bb472d292c728b1f11b47f2bd1cc9c03274d94216554a8905466b74",
+      "statements": 32
+    },
+    {
+      "path": "supabase/migrations/20261016132600_nfl_prospective_shadow_evidence.sql",
+      "sha256": "c6242b0d6fc3476a9a8109ee781a44e0a5b86436808d6c50251df114fdc36fd3",
+      "statements": 17
+    },
+    {
+      "path": "supabase/migrations/20261016142733_defensive_sack_contract_and_correction_evidence.sql",
+      "sha256": "2324dd8d633d3a966fca2352f3515d18f65c5310bea376e5696fa76cd54cf8f7",
+      "statements": 19
+    },
+    {
+      "path": "supabase/migrations/20261016150000_register_v03_shadow_manifest.sql",
+      "sha256": "493cf490a518d170a364fa043ef5fa61d8fa4397781993327dc1b00d0161d424",
+      "statements": 7
+    },
+    {
+      "path": "supabase/migrations/20261016151703_community_activity_bar.sql",
+      "sha256": "edf0588374b084122062d14820228cf03474eae353a4f75088e1a3bac3f3b96e",
+      "statements": 9
+    },
+    {
+      "path": "supabase/migrations/20261016161204_member_parlay_builder.sql",
+      "sha256": "f0596280e7e230dd0d71c522010f317deb8cdde5f799caa7f887ae94d242888f",
+      "statements": 19
+    },
+    {
+      "path": "supabase/migrations/20261016170000_line_shopping_books.sql",
+      "sha256": "ddedeb5931d2c920c453458521c0f2922eb043edee48df611c5a160642ca4fd5",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261016190000_price_move_alerts.sql",
+      "sha256": "abfb7eea2f3010d04536760ed86ea07e69e6f8dc831a654a0c6b3cc2a80e2231",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261016230144_member_parlays_seven_legs.sql",
+      "sha256": "434e60f30e1846be7268121c0803c825620d17226b4669d21659bcc3c333385f",
+      "statements": 5
+    },
+    {
+      "path": "supabase/migrations/20261017000000_research_board_tier.sql",
+      "sha256": "9d8cc99cd147a82453fb8625a8882920a271c88200b6c6193d7a6bfc9b15285b",
+      "statements": 12
+    },
+    {
+      "path": "supabase/migrations/20261017001000_research_board_grant.sql",
+      "sha256": "1bbd54882971c4f084ee942ba71d5bd691c1323a8b04f979b9aeaacbe938a57f",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261017005051_member_parlays_no_leg_cap.sql",
+      "sha256": "0b4604835f3b13eb25a44b7f4a04254ccb95a7f53df8c8adcf6c74d4ceb11f79",
+      "statements": 5
+    },
+    {
+      "path": "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql",
+      "sha256": "be105415c92dbcc0f560c4a6f7d2a5491087bee141451329c1f61e5c6ecaae99",
+      "statements": 13
+    },
+    {
+      "path": "supabase/migrations/20261017010812_fix_community_photo_owner_collision.sql",
+      "sha256": "88a6c5f194eefe5b7807d3e6f475ecb9ea61ca6c6d020e55fbadc5b16c2a7346",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261017015506_social_notification_system.sql",
+      "sha256": "093423a70ff822adff009eb24ff6b3eaf7eafb71c1635264a394821493c023a5",
+      "statements": 125
+    },
+    {
+      "path": "supabase/migrations/20261018000000_compact_desk_and_batch_tails.sql",
+      "sha256": "68cc0c4b22555a8da4323425b5597b79bb588dc72e8525157b56312f4a9d01da",
+      "statements": 9
+    },
+    {
+      "path": "supabase/migrations/20261018010000_desk_compact_latest_analyses.sql",
+      "sha256": "ec5f70cbbc72f5bfeb25e8feff23909d9ba4175c53bf1d37340bd7200ffc3a2c",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261018020000_research_board_timer.sql",
+      "sha256": "f64e36467dd1d5383be97f8534f9c4810cba79e3402b4b493a6844f522ed1575",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261018030000_model_scan_dispatch.sql",
+      "sha256": "826e4a125d0ddddca629aaec682958c53395e85af0d6ee4785d695cfa7ceaeae",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261018040000_nfl_shadow_outcomes.sql",
+      "sha256": "5e83be7d68f7bffada43ae7617a5f90b6724938aace6eb66f7826b483def69ba",
+      "statements": 13
+    },
+    {
+      "path": "supabase/migrations/20261018050000_model_scan_retry.sql",
+      "sha256": "1568d17459ac1250b0ca09c487725c47bba442efd28fe7da02cfac2f85d7f334",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261018051000_shadow_evaluation_pending.sql",
+      "sha256": "fe330578500350f8e998dda7050f321fa23fc31548a53ad36c4e6316ea31691c",
+      "statements": 14
+    },
+    {
+      "path": "supabase/migrations/20261018060000_nba_source_feed.sql",
+      "sha256": "662adaac50f6846b26497d9946e97d0c6cecda1c5a525a917cec1b7127eb94d9",
+      "statements": 23
+    },
+    {
+      "path": "supabase/migrations/20261018070000_nba_results.sql",
+      "sha256": "4374f3009395599e0a57246558af75c34614997ff7a7b4351efc766007b460f8",
+      "statements": 32
+    },
+    {
+      "path": "supabase/migrations/20261018080000_nba_shadow.sql",
+      "sha256": "3d374a7735227cdae42cc8fa3a9e3eaaf1015956624d3a5d2fa958d682278787",
+      "statements": 25
+    },
+    {
+      "path": "supabase/migrations/20261018090000_nba_shadow_hardening.sql",
+      "sha256": "d9b912e4b177d3291c639a6d3be2fd077c32432c1c0fb0827776362d17f5db6b",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261019010000_nba_shadow_scan_dispatch.sql",
+      "sha256": "bd051fb6c78572b3965eb5a31720d276536af275d12616cf1ccc2ef379057676",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261020010000_nba_research_board.sql",
+      "sha256": "22b5bb4f0833a9ce1b6a8bd731811839a70b3562c14db79afd6c811278a9f25b",
+      "statements": 13
+    },
+    {
+      "path": "supabase/migrations/20261020020000_nba_research_board_quotes.sql",
+      "sha256": "066213e70f01b38bffb75021ac88ccf069e7293e97827f377e94bf2051d11c6c",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261020021929_nba_editorial_picks.sql",
+      "sha256": "c2301cf4007ae822a595ab6559275fea57251d41585834c91fb7315bf20fd2f6",
+      "statements": 12
+    },
+    {
+      "path": "supabase/migrations/20261020023605_nba_editorial_provenance_and_revisions.sql",
+      "sha256": "ff1487667a74a238732370ae178f59b32a1e463e44d107a0dc794caa3885179e",
+      "statements": 5
+    },
+    {
+      "path": "supabase/migrations/20261020024250_nba_editorial_source_timeline.sql",
+      "sha256": "82c16043fac5516e58ee2491bd25c95f9bc9bcb7506b76f10563ae8ee6a6b1d7",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261020024912_nba_editorial_quote_timeline.sql",
+      "sha256": "15725a7048a9b20d105459acc1b2a6388ac7451de73990e0a67544d21e90bc92",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261022010000_nba_daily_collection.sql",
+      "sha256": "3edb39f70cff2c50972f068f42c411649990d180aa13f65859e6d9a6b107b44a",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261022203425_nfl_ngs_weekly_context.sql",
+      "sha256": "80141def34ec928c07b856c69bde95d75d2d421fd18bff2954c17b34854ebef5",
+      "statements": 14
+    },
+    {
+      "path": "supabase/migrations/20261022221744_sportradar_automatic_collection.sql",
+      "sha256": "3562e8e160fcbdf235bfa823106d673019b28d71da91e1b7af1c6b7dce5fe990",
+      "statements": 16
+    },
+    {
+      "path": "supabase/migrations/20261023000000_nfl_ngs_team_codes.sql",
+      "sha256": "68aecd6ecf7132a3243e92fdef929a16008a84604903dde4c1405b6958fd6a5c",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261023210220_ruby_contributor_cards.sql",
+      "sha256": "2f2b4dfd620c5c4ba907331de3f43bfb364d43586f4fb78e321fc2828b7518b1",
+      "statements": 33
+    },
+    {
+      "path": "supabase/migrations/20261023211000_ruby_feature_indexes.sql",
+      "sha256": "ace950e013af557e7be08e2347afb848636afb939d3e5880899e3e06d70f21c0",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261023212700_ruby_feature_account_erasure.sql",
+      "sha256": "508b9468b2458ef7ffe8a0db1881afec67435aa120dde21f08fa278bec5531fb",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261024080046_goat_diamond_contributor.sql",
+      "sha256": "4350f70f2694b04142073c909664d20bedc0adb74361d24000f7327647b89ab7",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261024134617_admin_contributor_card_revisions.sql",
+      "sha256": "77959fe9b2e69627ae80f7c840091e3bec5cbcef545f249476f7b21f408ec56a",
+      "statements": 12
+    },
+    {
+      "path": "supabase/migrations/20261024134918_admin_card_edit_verified_check.sql",
+      "sha256": "69656fb29351d350f467bd42e2059183d930ff3a01b3c1eba00b6e03025a808e",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261024160000_card_revision_erasure.sql",
+      "sha256": "d4ee22249932e2e1c332c356bec92630f03521f7a2779f96d03ea91fdc28ac07",
+      "statements": 4
+    },
+    {
+      "path": "supabase/migrations/20261024190000_contributor_records.sql",
+      "sha256": "0c855aa0caba85c6cdd42349bdea4b0e0e77acc5dd32c891ef92ea3a67d6fb23",
+      "statements": 28
+    },
+    {
+      "path": "supabase/migrations/20261024190005_markkuban_contributor_template.sql",
+      "sha256": "c132d9de053696cb2f02f211c4f8c0ed77f9f09aaedbde6c18095ba431fe68fb",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261024191000_solohendrix_contributor_template.sql",
+      "sha256": "d54a52cb355b859841777ff86e6b6a0f05e2b6284d2c7263d76326820b0ecb71",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261024210000_trapvegas_rename.sql",
+      "sha256": "03056f4ca97f1bea3da8accb541f21a505e7e41381bb741a40f2c8a5bdcebe1e",
+      "statements": 7
+    },
+    {
+      "path": "supabase/migrations/20261025112300_analyst_double_up.sql",
+      "sha256": "82edeb7293d967cea3f512db9c9dfa039898a0f0556aa23533583affd83a2707",
+      "statements": 17
+    },
+    {
+      "path": "supabase/migrations/20261025121434_weekly_sleeper_category.sql",
+      "sha256": "94817a7ae7d38f5a4ea7502952a98de02fff94fa6be7a25ea00b80ad759fc2f9",
+      "statements": 14
+    },
+    {
+      "path": "supabase/migrations/20261025123946_double_up_single.sql",
+      "sha256": "91574af3d2c57af491893fb7348fb56932d3156597c3d3dce85dcd40e4d84730",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261027152923_nfl_shadow_scorecard.sql",
+      "sha256": "b473cd556e9b0b98b7dbea8353d73a2539d964eff72d44a7b3b2fec0af337634",
+      "statements": 14
+    },
+    {
+      "path": "supabase/migrations/20261027153843_nfl_shadow_scorecard_fixes.sql",
+      "sha256": "b440918686c558d0d563017a6d2168c4c4173935891079dd91a8585ee5c5e33f",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261027162507_shadow_evaluation_indexes.sql",
+      "sha256": "d84d03a4ba5c03c056799e5d3d59266f11f2d98fbfc1f7d9907970daf6b6136e",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261027163531_shadow_forecasts_run_idx.sql",
+      "sha256": "f885f63b4541e1ec253b6b95f6b4190ee77888f64506e5b0913e921e0aad3d4f",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261027165100_sim_pregame_runs.sql",
+      "sha256": "f989385ae2fb03451312a26f71bd6070b0017ba1585bf937d411d56ffc8eecc9",
+      "statements": 20
+    },
+    {
+      "path": "supabase/migrations/20261028230000_zone_post_notifications.sql",
+      "sha256": "81db4f3e04d233d2925bf655869cad5418a4b6529d640c95ac0c3769c778ce79",
+      "statements": 8
+    },
+    {
+      "path": "supabase/migrations/20261028233000_nba_shadow_restart_pretip.sql",
+      "sha256": "7f1af70748a9dc8a0bf9fec619217b1cb75893191d6c633a37614b96c4d11679",
+      "statements": 8
+    },
+    {
+      "path": "supabase/migrations/20261029001000_nba_three_point_volume.sql",
+      "sha256": "0e7141a8236b35df1e6b9ff6a54430453667afb5b3997a0a55af5a2861ee6c88",
+      "statements": 29
+    },
+    {
+      "path": "supabase/migrations/20261029010000_nba_threes_post_skip_mismatch.sql",
+      "sha256": "c4218c80e3acef76c14f8ca4d545d8998f53354b0545eda37272e07aed693db4",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261029160000_nba_threes_card.sql",
+      "sha256": "bcc00883f4c1d1ebe3130249fd5216942c0b6f25bd6c465bba020e3d8128622b",
+      "statements": 8
+    },
+    {
+      "path": "supabase/migrations/20261029200000_community_avatars.sql",
+      "sha256": "cafc88340c9dc301e5291bbcddb7b5b4d384f2709d1d11ef06b33986fd52c8db",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261031145407_multisport_backend.sql",
+      "sha256": "deb3d79ec3ed40a1b416bb1f9357862f5ca90987e5378e81622a4c621396f3d8",
+      "statements": 41
+    },
+    {
+      "path": "supabase/migrations/20261031150209_nba_live_readiness.sql",
+      "sha256": "f62d5e98632e9e2bbc81de35ed1c3dc324c8e5b120644a976d350c400bbffded",
+      "statements": 5
+    },
+    {
+      "path": "supabase/migrations/20261031150619_multisport_schedule.sql",
+      "sha256": "0cf77cf90a8e236885926229729b2f20c568de3fd14cdc597b61fce801d07566",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261031152818_multisport_publishing_access.sql",
+      "sha256": "a87d47cdecbd3569e36bb15ad3be0ada8b893dfb876e637e79c60a528211de09",
+      "statements": 4
+    },
+    {
+      "path": "supabase/migrations/20261031160000_zone_all_sports.sql",
+      "sha256": "02d83f6f8e235cff2ed6b9fcd00a58605ece3995e0668c11e3093d3f9a851cb9",
+      "statements": 7
+    },
+    {
+      "path": "supabase/migrations/20261031170000_sports_display.sql",
+      "sha256": "a440859802ef6cf520a82e2d4588e28983b25a19069530e90595c4314c2bd03b",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261031173000_sports_automated_publication.sql",
+      "sha256": "936e10f5e4159043a1356e001740508d60fac9bbd35746e1c69726685dface70",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261031174000_sports_admin_publish_legs.sql",
+      "sha256": "283fa93a599719a6671fb8376b47ac22db2c4f0a5137313e0c0a878d32fe0b7e",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261031175232_sports_home_lightweight.sql",
+      "sha256": "cb83f0cb75e1c3c63b4a401f8a22e6bbd069c00862f4d7b9d604313ac152c56e",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261031180000_nba_live_dispatch.sql",
+      "sha256": "a735706abd1ee54b39db72079eba98687d62816ee6087260599cac9603c5daf1",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261031180100_sports_result_retractions.sql",
+      "sha256": "95c3a61a34a08d5c2f78bb608a15d247d06f56d204db386af142c7b047d2449a",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261031181000_nba_editorial_zone.sql",
+      "sha256": "53b10e9da75984a34b592e9495a27b0dbfaf6c3f57ad6f41e5e72b148d68d03a",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261031182000_sports_publication_serialization.sql",
+      "sha256": "cc7483f18700dfcbad4f73b126314a99ea9733fd3a0250c6dd800976aac4dd40",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261031183000_nba_editorial_records.sql",
+      "sha256": "0847bb58c7927c31cc6dcec006c8bd8b9e231f4a28cea9c3fa0bccf81ae66323",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261031184000_sports_result_attempts.sql",
+      "sha256": "7721cd528cf89bcaa66b21f2af44e2ba14fcffc6a962785f3845437ef4f49dc3",
+      "statements": 4
+    },
+    {
+      "path": "supabase/migrations/20261031185000_sports_context_attempts.sql",
+      "sha256": "0bcb6ba531e3f3352b3e2d61211c82f30b03e7bf4d80a2b82ed54ba3a9a6c588",
+      "statements": 4
+    },
+    {
+      "path": "supabase/migrations/20261031190000_frank_anniversary.sql",
+      "sha256": "37fd04951abc42480383d3e0ec1ad4975a6d26f3480c78ea35089697ae10f7c4",
+      "statements": 12
+    },
+    {
+      "path": "supabase/migrations/20261031190100_frank_nhl_feedback.sql",
+      "sha256": "085cf533f5182689ff41127b6c6cda5be2898530eb702756c4179907b8fd652d",
+      "statements": 13
+    },
+    {
+      "path": "supabase/migrations/20261031190200_zone_automated_cards.sql",
+      "sha256": "efae7dde8f73460183b2d21d2f2eb87371b55f1693663698d03f42b737f1a258",
+      "statements": 10
+    },
+    {
+      "path": "supabase/migrations/20261031191226_zone_card_editorial_provenance.sql",
+      "sha256": "a71b10a9f4f13f82b44e16c65c3bd30a3fc384f927cd9ec7c611688ca65e891f",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261031200000_sports_book_quotes.sql",
+      "sha256": "fd98179ec490f87e7c73753d9d43dcdd37e7f2ec300cfb6c7f28e65a95da94a8",
+      "statements": 12
+    },
+    {
+      "path": "supabase/migrations/20261031213617_nhl_expanded_context.sql",
+      "sha256": "d85d5f474504652217f6aec41984a4e97abf23531af38aa0167cb56e3b155edd",
+      "statements": 23
+    },
+    {
+      "path": "supabase/migrations/20261031214714_nhl_context_schedule.sql",
+      "sha256": "c19fab1c6d69ef759b6a0aa8a68fe952c31fc741624e4af6f81579fcb2f0cc62",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261101100000_live_pick_alerts.sql",
+      "sha256": "be148636c38fef96fabedcbabca21441113817bb69d566bebf05d15a4ce131ea",
+      "statements": 20
+    },
+    {
+      "path": "supabase/migrations/20261103102100_nba_grade_input_validation.sql",
+      "sha256": "9b33cd93b5b369564f2bed8ff06864b8f33f7c4f16defe4fe099c9dd9bf48a09",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261103113707_notification_access_contracts.sql",
+      "sha256": "db90c12e9177c455b91ec4e549af2038b1cebc192e7ea97ffebc6ada9c53b698",
+      "statements": 9
+    },
+    {
+      "path": "supabase/migrations/20261103122858_sports_incomplete_final_pending.sql",
+      "sha256": "79a0db4c3e7e0f19d2855b9286d32a330500505656778328234df7966c6945a0",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261103181103_community_typed_reactions.sql",
+      "sha256": "9086ed1c826769723363a0616c206e9cd619d77d97722513e4501a698051ae74",
+      "statements": 17
+    },
+    {
+      "path": "supabase/migrations/20261104015613_ruby_card_reactions.sql",
+      "sha256": "93e17414ac8d22a1b16401ba992983de68f420e846b4ced891754f98d7b8500c",
+      "statements": 10
+    },
+    {
+      "path": "supabase/migrations/20261104031500_ruby_card_comments.sql",
+      "sha256": "d459b078ee69cfbc2eefa97cbe3af723896da918f68247519601d0735c00988e",
+      "statements": 24
+    },
+    {
+      "path": "supabase/migrations/20261104101722_community_story_clock.sql",
+      "sha256": "539661890332c79531b4fd948abd388260becf96d954d03acc079d4d5e2d9a6f",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261105233947_ruby_kalshi_source_link.sql",
+      "sha256": "8523f6ebec840bd5b8f958ae6a0e4f935b03823a427734b7442e211bbafcc976",
+      "statements": 16
+    },
+    {
+      "path": "supabase/migrations/20261106221542_dealer_publisher_identity.sql",
+      "sha256": "a5bd0fcfbd4532efbb0eb1295a29640fec85ccb77cfc91c7f99a07b622382597",
+      "statements": 4
+    },
+    {
+      "path": "supabase/migrations/20261106221738_dealer_profile_visibility.sql",
+      "sha256": "f5269729637d54fbc4840842dfa8a47567b4cbcffb921da733f1203db7f821d0",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261106225003_kalshi_temporary_pause.sql",
+      "sha256": "8282f595245682de68e2b772f17381f0681c4919448be6193971e142138496ca",
+      "statements": 9
+    },
+    {
+      "path": "supabase/migrations/20261107173919_platform_tester_research_access.sql",
+      "sha256": "1912c5b06a1be4d7a5d49dc9197f4f70831b640c303dfaf03162423cd8272e36",
+      "statements": 45
+    },
+    {
+      "path": "supabase/migrations/20261107225716_sports_latest_indexes.sql",
+      "sha256": "0ab658f55cf731015e06bec2241fd492772d3cdedca5761ce281fb29df298482",
+      "statements": 4
+    },
+    {
+      "path": "supabase/migrations/20261107230653_sports_slate_light.sql",
+      "sha256": "fb608e5b15b39dc512cda6f6dd09668b46ff1b461f5002913a382265487f6fae",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261108020000_nfl_weekly_cards.sql",
+      "sha256": "a60ba5e83a3d5f60f0b22ca045c9c7228c228bf66ad5266320efe3a67db89911",
+      "statements": 13
+    },
+    {
+      "path": "supabase/migrations/20261108105426_admin_operations_support.sql",
+      "sha256": "1df8df18ee2b26d3563241e1a56a12e04abfc70c4156ce0c53117980970e25fe",
+      "statements": 11
+    },
+    {
+      "path": "supabase/migrations/20261108162552_community_polls.sql",
+      "sha256": "f28722f66ae0a7139e2894d640ad3de43b176d9f10909ca49a253ea3904abd49",
+      "statements": 23
+    },
+    {
+      "path": "supabase/migrations/20261108170014_community_post_votes.sql",
+      "sha256": "6afea3cc3802be3e3c677611cd778c96758c79783a341358970ac86c2f43a097",
+      "statements": 13
+    },
+    {
+      "path": "supabase/migrations/20261108171847_community_poll_safety.sql",
+      "sha256": "d32e7c3fb77ff11c3493e0a8d0b08787e037499eb4ede472b51a5495b6279b1b",
+      "statements": 2
+    },
+    {
+      "path": "supabase/migrations/20261109020607_community_profile.sql",
+      "sha256": "d69c9ee5b02b7429e832a5fc01ee0a5ad175e83ac32f35cdab959064133a05f7",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261109022151_community_profile_fields.sql",
+      "sha256": "2af80675406d579876d275c72f1612a5c562b9664c03e8c4c8f1466799c51d93",
+      "statements": 7
+    },
+    {
+      "path": "supabase/migrations/20261109030000_member_follows_any_profile.sql",
+      "sha256": "5e785cd2567da352803ca91c875fab763ce89c782bef568733c994a804f486a0",
+      "statements": 5
+    },
+    {
+      "path": "supabase/migrations/20261109032951_dealer_zone_follow_notifications.sql",
+      "sha256": "52db149e4711f5b28172bd68ee64bf5847223ba2948fc68b3913ac47dd6978b2",
+      "statements": 32
+    },
+    {
+      "path": "supabase/migrations/20261109212303_dealer_only_zone_feed.sql",
+      "sha256": "6741d083f4c6e6039720c867abcd9df8579702b95ca5564d52eee09f44a4a5d0",
+      "statements": 6
+    },
+    {
+      "path": "supabase/migrations/20261110225115_member_profile_account_links.sql",
+      "sha256": "c659b93ee0591c42050d9f961bfecc3a3b3d3924e533be09b6dacef74770d211",
+      "statements": 1
+    },
+    {
+      "path": "supabase/migrations/20261110233447_nfl_position_card_design.sql",
+      "sha256": "d95fd4cc19fe3850ed419200162d6bfe5a1f22eff241c766dd8bb1d4bfa02460",
+      "statements": 3
+    },
+    {
+      "path": "supabase/migrations/20261111000938_nhl_daily_chart_package.sql",
+      "sha256": "1a5ef46050bd579e1ab431f117635efb97ca4fcbc512b7ad358ef20f6ec5ef7c",
+      "statements": 11
+    },
+    {
+      "path": "supabase/migrations/20261111001158_nhl_chart_morning_integration.sql",
+      "sha256": "bd28f0670c6a9ba4843fecc42644438a5bd96635d4c7cc719d0bf0e637566681",
+      "statements": 10
+    },
+    {
+      "path": "supabase/migrations/20261111010000_zone_post_games.sql",
+      "sha256": "3a36ac63a90e29a57dc8c3e418bfb68d6b7b6a99754450efbba8653d10bf08ca",
+      "statements": 17
+    },
+    {
+      "path": "supabase/migrations/20261117120000_nba_prop_card_inputs.sql",
+      "sha256": "21e683954fba0f6677dd792ae4a3d99dc3b3fefbcbf474baef0d40c146039768",
+      "statements": 21
+    },
+    {
+      "path": "supabase/migrations/20261118010000_nba_minor_corrections.sql",
+      "sha256": "f37f96deedfe85d090cb7e2acfa50c12abef4e021326a37e8f47cb425e1739b6",
+      "statements": 4
+    }
+  ],
+  "status": "PASS",
+  "platform_sha256": "121dfab2f9fdba4234d53f25433493ce78b79d39857cf5340d03712a6966630e",
+  "synthetic_replay_seed": {
+    "purpose": "Local migration precondition only; not a real contributor or staged seed",
+    "email": "frank-placeholder@vq-replay.invalid",
+    "user_id": "00000000-0000-4000-8000-000000009001"
+  },
+  "synthetic_publisher_seed": {
+    "purpose": "Local original migration precondition only; not staged Dealer seed",
+    "user_id": "00000000-0000-4000-8000-000000009002",
+    "email": "publisher-placeholder@vq-replay.invalid"
+  },
+  "effective_coverage": {
+    "functions": 5,
+    "views": 2,
+    "migration_files": 187,
+    "baseline_files": 3
+  }
+}
