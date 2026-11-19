@@ -89,14 +89,15 @@ union all
 -- Preserved data: digests must equal the 2026-11-19 baseline (#294). Identity tables are limited to
 -- the four baseline users, so reviewed negative-control identities (M5) may be added without
 -- masking a change to existing rows, and identity rows are digested on their original columns
--- (user_id,allowed / user_id,verified) so the planned nullable entitlement bounds don't change them.
+-- (user_id,allowed / user_id,verified) so the planned nullable entitlement bounds don't change them;
+-- public.games likewise uses its original 11 columns ahead of the free-Home fixture columns (#294, option b).
 -- published_legs is read from the archive after the cutover.
 select 'preserved', t.tbl,
   case when d.digest = t.baseline and d.n = t.rows then 'PASS' else 'FAIL' end,
   d.n||' rows, '||d.digest
 from (values
   ('auth.users ids', 4, 'd49852dd726bfce1ac4d2f99bdcc05f4', 'select id::text x from auth.users where id::text in (''0cac6cd5-0262-49b7-a721-0817cd59dd8c'',''544541ae-c833-43de-838e-2f45542d1b94'',''5b21ac4f-b0fa-48e1-8066-ba644c2d4b56'',''f882aa8e-9d4e-45df-b866-1f47131e51a9'')'),
-  ('public.games', 1, '0d4f96e41536c949ef4d95a5b4f5c6a5', 'select x::text x from public.games x'),
+  ('public.games', 1, '0d4f96e41536c949ef4d95a5b4f5c6a5', 'select row(id,sport,slug,away_team,home_team,kickoff,kickoff_tbd,venue,roof,schedule_source,schedule_observed_at)::text x from public.games x'),
   ('public.nba_games', 1, 'bdae35bbdd8287e0f15464b5476ee623', 'select x::text x from public.nba_games x'),
   ('public.nba_observations', 1, '643eaae6c67e24ac752455074b80fd11', 'select x::text x from public.nba_observations x'),
   ('public.source_observations', 1, 'e06558504a3848d531eb98e56124379d', 'select x::text x from public.source_observations x'),
