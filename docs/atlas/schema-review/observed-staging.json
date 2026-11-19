@@ -1,0 +1,1039 @@
+{
+  "status": "READ_ONLY_OBSERVATION_NOT_REVIEWED_CATALOG",
+  "project_ref": "caynldluziwrzmvuslzg",
+  "observed_at": "2026-11-19T02:39:28.680Z",
+  "source_candidate": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "columns": [
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.analysis_versions",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.analysis_versions",
+      "column": "game_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.int4",
+      "table": "public.analysis_versions",
+      "column": "version",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.analysis_versions",
+      "column": "title",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "public.analysis_versions",
+      "column": "sections",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.analysis_versions",
+      "column": "source",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.analysis_versions",
+      "column": "created_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "public.analysis_versions",
+      "column": "intelligence",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.games",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.games",
+      "column": "sport",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.games",
+      "column": "slug",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.games",
+      "column": "away_team",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.games",
+      "column": "home_team",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.games",
+      "column": "kickoff",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.bool",
+      "table": "public.games",
+      "column": "kickoff_tbd",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.games",
+      "column": "venue",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.games",
+      "column": "roof",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.games",
+      "column": "schedule_source",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.games",
+      "column": "schedule_observed_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.market_snapshots",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.market_snapshots",
+      "column": "game_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.market_snapshots",
+      "column": "observed_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.market_snapshots",
+      "column": "created_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.market_snapshots",
+      "column": "source",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "public.market_snapshots",
+      "column": "spread",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "public.market_snapshots",
+      "column": "moneyline",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "public.market_snapshots",
+      "column": "total",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.market_snapshots",
+      "column": "kind",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.market_snapshots",
+      "column": "notes",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.nba_games",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_games",
+      "column": "slug",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_games",
+      "column": "away_team",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_games",
+      "column": "home_team",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_games",
+      "column": "away_abbreviation",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_games",
+      "column": "home_abbreviation",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.nba_games",
+      "column": "tipoff",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.bool",
+      "table": "public.nba_games",
+      "column": "tipoff_tbd",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_games",
+      "column": "venue",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_games",
+      "column": "status",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_games",
+      "column": "source",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.nba_games",
+      "column": "updated_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.nba_observations",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.nba_observations",
+      "column": "game_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_observations",
+      "column": "kind",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_observations",
+      "column": "provider",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.nba_observations",
+      "column": "source",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.nba_observations",
+      "column": "observed_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.nba_observations",
+      "column": "recorded_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "public.nba_observations",
+      "column": "payload",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.published_legs",
+      "column": "leg_key",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.published_legs",
+      "column": "game_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.published_legs",
+      "column": "name",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.published_legs",
+      "column": "market",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.published_legs",
+      "column": "why",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.published_legs",
+      "column": "risk",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.published_legs",
+      "column": "quote",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.published_legs",
+      "column": "quote_observed_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.published_legs",
+      "column": "published_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.published_legs",
+      "column": "result",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.research_feed_posts",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.research_feed_posts",
+      "column": "game_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.research_feed_posts",
+      "column": "category",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.research_feed_posts",
+      "column": "title",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.research_feed_posts",
+      "column": "summary",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.research_feed_posts",
+      "column": "why_watch",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.research_feed_posts",
+      "column": "caution",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.research_feed_posts",
+      "column": "source_url",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.research_feed_posts",
+      "column": "source_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.research_feed_posts",
+      "column": "created_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.source_observations",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "public.source_observations",
+      "column": "game_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.source_observations",
+      "column": "kind",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.source_observations",
+      "column": "provider",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "public.source_observations",
+      "column": "source",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.source_observations",
+      "column": "observed_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "public.source_observations",
+      "column": "recorded_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "public.source_observations",
+      "column": "payload",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "vq_fixture.age_states",
+      "column": "user_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.bool",
+      "table": "vq_fixture.age_states",
+      "column": "verified",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "vq_fixture.entitlements",
+      "column": "user_id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.bool",
+      "table": "vq_fixture.entitlements",
+      "column": "allowed",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "vq_fixture.posts",
+      "column": "id",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "vq_fixture.posts",
+      "column": "sport",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.uuid",
+      "table": "vq_fixture.posts",
+      "column": "game_id",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "vq_fixture.posts",
+      "column": "title",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "vq_fixture.posts",
+      "column": "body",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.timestamptz",
+      "table": "vq_fixture.posts",
+      "column": "created_at",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "vq_fixture.posts",
+      "column": "author_name",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "vq_fixture.posts",
+      "column": "kind",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog._text",
+      "table": "vq_fixture.posts",
+      "column": "legs",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "vq_fixture.posts",
+      "column": "card",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "vq_fixture.posts",
+      "column": "photo_path",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.int4",
+      "table": "vq_fixture.posts",
+      "column": "reactions",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.int4",
+      "table": "vq_fixture.posts",
+      "column": "comments",
+      "nullable": "YES"
+    },
+    {
+      "type": "pg_catalog.text",
+      "table": "vq_fixture.sports",
+      "column": "sport",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "vq_fixture.sports",
+      "column": "games",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "vq_fixture.sports",
+      "column": "facts",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "vq_fixture.sports",
+      "column": "markets",
+      "nullable": "NO"
+    },
+    {
+      "type": "pg_catalog.jsonb",
+      "table": "vq_fixture.sports",
+      "column": "selections",
+      "nullable": "NO"
+    }
+  ],
+  "policies": [
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "analysis_versions",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "games",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_schedule",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "market_snapshots",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "true",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "tablename": "nba_games",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_schedule",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "nba_observations",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "published_legs",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "research_feed_posts",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "source_observations",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_research",
+      "schemaname": "public",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "age_states",
+      "permissive": "PERMISSIVE",
+      "policyname": "own_age_fixture",
+      "schemaname": "vq_fixture",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "(user_id = ( SELECT auth.uid() AS uid))",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "entitlements",
+      "permissive": "PERMISSIVE",
+      "policyname": "own_entitlement",
+      "schemaname": "vq_fixture",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "posts",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_posts",
+      "schemaname": "vq_fixture",
+      "with_check": null
+    },
+    {
+      "cmd": "SELECT",
+      "qual": "( SELECT vq_fixture.allowed() AS allowed)",
+      "roles": [
+        "authenticated"
+      ],
+      "tablename": "sports",
+      "permissive": "PERMISSIVE",
+      "policyname": "fixture_sports",
+      "schemaname": "vq_fixture",
+      "with_check": null
+    }
+  ],
+  "functions": [
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "signature": "age_verification_status()",
+      "definition": "CREATE OR REPLACE FUNCTION public.age_verification_status()\n RETURNS jsonb\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$\n select jsonb_build_object('required',true,'verified',coalesce((select verified from vq_fixture.age_states where user_id=auth.uid()),false),'state','synthetic_fixture','version',1,'retry_after',null,'synthetic',true)\n$function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "signature": "game_zone_posts(text,uuid,integer)",
+      "definition": "CREATE OR REPLACE FUNCTION public.game_zone_posts(p_sport text, p_game uuid, p_limit integer DEFAULT 30)\n RETURNS jsonb\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select coalesce(jsonb_agg(to_jsonb(p)-'game_id'),'[]'::jsonb) from (select * from vq_fixture.posts where sport=p_sport and game_id=p_game order by created_at desc limit greatest(0,least(p_limit,50))) p $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres,anon=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "signature": "membership_status()",
+      "definition": "CREATE OR REPLACE FUNCTION public.membership_status()\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE\n SET search_path TO ''\nAS $function$ begin if auth.uid() is null then return jsonb_build_object('allowed',false); end if; return jsonb_build_object('allowed',vq_fixture.allowed()); end $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "signature": "sports_slate(text,integer)",
+      "definition": "CREATE OR REPLACE FUNCTION public.sports_slate(p_sport text, p_days integer DEFAULT 7)\n RETURNS jsonb\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select jsonb_build_object('version',1,'sport',p_sport,'access',vq_fixture.allowed(),'games',coalesce((select games from vq_fixture.sports where sport=p_sport),'[]'::jsonb),'facts',coalesce((select facts from vq_fixture.sports where sport=p_sport),'[]'::jsonb),'markets',coalesce((select markets from vq_fixture.sports where sport=p_sport),'[]'::jsonb),'selections',coalesce((select selections from vq_fixture.sports where sport=p_sport),'[]'::jsonb)) $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres,anon=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "signature": "tester_feature_access(text)",
+      "definition": "CREATE OR REPLACE FUNCTION public.tester_feature_access(p_feature text)\n RETURNS boolean\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select false $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,service_role=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "signature": "tester_observation_page(text,text,uuid,text,timestamp with time zone,timestamp with time zone,uuid)",
+      "definition": "CREATE OR REPLACE FUNCTION public.tester_observation_page(p_feature text, p_sport text, p_game uuid, p_section text, p_as_of timestamp with time zone, p_before timestamp with time zone DEFAULT NULL::timestamp with time zone, p_after_id uuid DEFAULT NULL::uuid)\n RETURNS jsonb\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select '[]'::jsonb $function$\n"
+    },
+    {
+      "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+      "owner": "postgres",
+      "signature": "vq_fixture.allowed()",
+      "definition": "CREATE OR REPLACE FUNCTION vq_fixture.allowed()\n RETURNS boolean\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select coalesce((select allowed from vq_fixture.entitlements where user_id=auth.uid()),false) $function$\n"
+    }
+  ],
+  "roles": [
+    {
+      "name": "anon",
+      "login": false,
+      "inherit": true,
+      "superuser": false,
+      "bypass_rls": false
+    },
+    {
+      "name": "authenticated",
+      "login": false,
+      "inherit": true,
+      "superuser": false,
+      "bypass_rls": false
+    },
+    {
+      "name": "postgres",
+      "login": true,
+      "inherit": true,
+      "superuser": false,
+      "bypass_rls": true
+    },
+    {
+      "name": "service_role",
+      "login": false,
+      "inherit": true,
+      "superuser": false,
+      "bypass_rls": true
+    }
+  ],
+  "buckets": 0,
+  "sessions": 0,
+  "relations": [
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17696",
+      "rls": true,
+      "kind": "r",
+      "name": "public.analysis_versions",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,anon=r/postgres,authenticated=r/postgres}",
+      "oid": "17668",
+      "rls": true,
+      "kind": "r",
+      "name": "public.games",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17710",
+      "rls": true,
+      "kind": "r",
+      "name": "public.market_snapshots",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,anon=r/postgres,authenticated=r/postgres}",
+      "oid": "17675",
+      "rls": true,
+      "kind": "r",
+      "name": "public.nba_games",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17682",
+      "rls": true,
+      "kind": "r",
+      "name": "public.nba_observations",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17717",
+      "rls": true,
+      "kind": "r",
+      "name": "public.published_legs",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (leg_key)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17703",
+      "rls": true,
+      "kind": "r",
+      "name": "public.research_feed_posts",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17689",
+      "rls": true,
+      "kind": "r",
+      "name": "public.source_observations",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17787",
+      "rls": true,
+      "kind": "r",
+      "name": "vq_fixture.age_states",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (user_id)",
+        "FOREIGN KEY (user_id) REFERENCES auth.users(id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17655",
+      "rls": true,
+      "kind": "r",
+      "name": "vq_fixture.entitlements",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (user_id)",
+        "FOREIGN KEY (user_id) REFERENCES auth.users(id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17735",
+      "rls": true,
+      "kind": "r",
+      "name": "vq_fixture.posts",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (id)"
+      ]
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres}",
+      "oid": "17724",
+      "rls": true,
+      "kind": "r",
+      "name": "vq_fixture.sports",
+      "owner": "postgres",
+      "options": null,
+      "triggers": null,
+      "force_rls": false,
+      "constraints": [
+        "PRIMARY KEY (sport)"
+      ]
+    }
+  ],
+  "auth_users": 4,
+  "extensions": [
+    "pg_stat_statements",
+    "pgcrypto",
+    "plpgsql",
+    "supabase_vault",
+    "uuid-ossp"
+  ],
+  "schema_acls": [
+    {
+      "acl": "{pg_database_owner=UC/pg_database_owner,=U/pg_database_owner,postgres=U/pg_database_owner,anon=U/pg_database_owner,authenticated=U/pg_database_owner,service_role=U/pg_database_owner}",
+      "owner": "pg_database_owner",
+      "schema": "public"
+    },
+    {
+      "acl": "{postgres=UC/postgres,authenticated=U/postgres}",
+      "owner": "postgres",
+      "schema": "vq_fixture"
+    }
+  ],
+  "realtime_tables": 0,
+  "non_invalid_emails": 0,
+  "published_legs_name_readers": null,
+  "published_legs_oid_dependents": [
+    {
+      "object": "type published_legs",
+      "dependency_type": "i"
+    },
+    {
+      "object": "toast table pg_toast.pg_toast_17717",
+      "dependency_type": "i"
+    },
+    {
+      "object": "policy fixture_research on table published_legs",
+      "dependency_type": "a"
+    },
+    {
+      "object": "constraint published_legs_pkey on table published_legs",
+      "dependency_type": "a"
+    }
+  ]
+}

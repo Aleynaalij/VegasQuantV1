@@ -1,0 +1,14 @@
+{
+  "purpose": "Source evidence hashes ONLY; not a reviewed hosted catalog",
+  "source_ref": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "sha256": {
+    "manifest.json": "3daf01234cc0c47ff78d79227257c63361719965c2107eac617297e9d14ded21",
+    "original-statements.json.gz": "21d1194034fef8b0cb2869ee44264d8e573d2146a0fe0395b64c52eceef948a3",
+    "adjacent-risk-statements.json.gz": "a5eec6cac4b734487665f6f7fff0b160d2077ae599308148e3f16d615f2fd4ce"
+  },
+  "uncompressed_sha256": {
+    "manifest.json": "3daf01234cc0c47ff78d79227257c63361719965c2107eac617297e9d14ded21",
+    "original-statements.json": "d4a6a7840ae45b2dee2a07ed6d00fedae47c56b8c43a5ab4472a7aa2bed28024",
+    "adjacent-risk-statements.json": "33343660afbea4a62df443efca49de95433494d7f80118f06a433619c3df9814"
+  }
+}

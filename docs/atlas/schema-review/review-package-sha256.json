@@ -1,0 +1,20 @@
+{
+  "purpose": "Delivery integrity only; UNREVIEWED proposal, not a reviewed hosted catalog",
+  "application_source_ref": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "sha256": {
+    "docs/atlas/schema-review/README.md": "3164d09cfa81163ff5eec78b55097aad487557393df670ebebd2364c7108865c",
+    "docs/atlas/schema-review/adjacent-risk-statements.json.gz": "a5eec6cac4b734487665f6f7fff0b160d2077ae599308148e3f16d615f2fd4ce",
+    "docs/atlas/schema-review/eligibility-adapters.sql.proposed": "308082008fc0480cb1f3b9d189c8c4b612bbad80e5bd69fb815a5748eaf382dc",
+    "docs/atlas/schema-review/manifest.json": "3daf01234cc0c47ff78d79227257c63361719965c2107eac617297e9d14ded21",
+    "docs/atlas/schema-review/observed-staging.json": "4b702241eea1dc8d7212bd1f2436704f4614c1c1b4ddb1e4aea79c9490490369",
+    "docs/atlas/schema-review/original-statements.json.gz": "21d1194034fef8b0cb2869ee44264d8e573d2146a0fe0395b64c52eceef948a3",
+    "docs/atlas/schema-review/review-index.md": "3ae3feb2125c045f2fb8b64e848952644c3bd408d75a2360c64d87359e7a0adf",
+    "docs/atlas/schema-review/source-hashes.json": "0a3730dd56ce366c7bdcafd7b6f615df5566459e0dfb0cc4831019591ab9a092",
+    "docs/atlas/schema-review/source-inputs-1.json.gz": "f2709abd533116712cb1b02fee8511ce24862dfdc9f48730db400aec92755571",
+    "docs/atlas/schema-review/source-inputs-2.json.gz": "3491c664c94d27f1931654e10aca58bd675530cd75a22cae80ce3c365057e7cd",
+    "docs/atlas/schema-review/source-inputs-3.json.gz": "3147aee5cba74ff972211408aab686ca8c059012c26de47540ad8333cba40107",
+    "docs/atlas/schema-review/source-inputs.json": "47febcf3be09c0cc8814b4d4942fb0c6e03e9a80ca10c5b029e94eb04b535216",
+    "scripts/operations/atlas-schema-review.mjs": "7a34717f535d841b8434d1b1d88fde75f63241b8107beaf3035454331bd573c7",
+    "tests/atlas-schema-review.test.ts": "943089327ed21aca75499be7186fd5473cb020d6524acb244dcc3ea9675730a9"
+  }
+}

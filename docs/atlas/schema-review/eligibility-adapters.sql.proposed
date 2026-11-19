@@ -1,0 +1,50 @@
+-- PROPOSED / UNREVIEWED. Source for independent review, NOT an installer.
+-- Only the future isolated preparation plan may include this after review.
+-- Do not copy the local fixture's test.* settings or constant-true helpers.
+begin;
+do $stage_only$
+begin
+ if current_user <> 'postgres' or session_user <> 'postgres'
+  or current_setting('vq.review.target_ref',true) is distinct from 'caynldluziwrzmvuslzg'
+  or to_regprocedure('vq_private_access_stage.authorized()') is null
+  or to_regprocedure('vq_fixture.allowed()') is null
+  or to_regclass('vq_fixture.age_states') is null
+  or to_regnamespace('private') is not null then
+  raise exception 'Review proposal requires the verified isolated gate, explicit target assertion, and absent private schema';
+ end if;
+end $stage_only$;
+-- The GUC is an operator assertion, NOT proof of which project a connection targets.
+-- A future executor must independently pin/verify the project before issuing SQL.
+create schema private;
+revoke all on schema private from public,anon,authenticated,service_role;
+grant usage on schema private to authenticated;
+
+create function private.has_membership() returns boolean
+language sql stable security invoker set search_path='' as $$
+ select coalesce(vq_private_access_stage.authorized(),false)
+  and coalesce(vq_fixture.allowed(),false)
+$$;
+
+-- Target eligibility is needed by original visibility rules for other authors.
+-- Definer use is limited to this boolean projection; the caller must pass the live
+-- gate. Do not expose age-state records or replace this with caller metadata.
+create function private.age_eligible(p_user uuid) returns boolean
+language sql stable security definer set search_path='' as $$
+ select coalesce(vq_private_access_stage.authorized(),false)
+  and p_user is not null
+  and exists(select 1 from vq_fixture.age_states a where a.user_id=p_user and a.verified)
+$$;
+
+create function private.age_member_allowed() returns boolean
+language sql stable security invoker set search_path='' as $$
+ select coalesce(vq_private_access_stage.authorized(),false)
+  and coalesce(private.age_eligible(auth.uid()),false)
+$$;
+
+revoke all on function private.has_membership(),private.age_eligible(uuid),private.age_member_allowed()
+ from public,anon,authenticated,service_role;
+grant execute on function private.has_membership(),private.age_eligible(uuid),private.age_member_allowed()
+ to authenticated;
+-- No account creation, real MFA, billing/provider table, service credential, worker,
+-- dispatch, cron, storage, schema exposure or feature-capability activation here.
+commit;

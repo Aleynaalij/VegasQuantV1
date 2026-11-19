@@ -1,0 +1,25 @@
+{
+  "purpose": "Immutable original source snapshot, not a hosted catalog or install selection",
+  "source_ref": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "source_tree": "9d76810d1994e12970bd9c3f579ec3160ac44cae",
+  "chunks": [
+    {
+      "filename": "source-inputs-1.json.gz",
+      "sha256": "f2709abd533116712cb1b02fee8511ce24862dfdc9f48730db400aec92755571",
+      "files": 74,
+      "bytes": 65089
+    },
+    {
+      "filename": "source-inputs-2.json.gz",
+      "sha256": "3491c664c94d27f1931654e10aca58bd675530cd75a22cae80ce3c365057e7cd",
+      "files": 62,
+      "bytes": 74021
+    },
+    {
+      "filename": "source-inputs-3.json.gz",
+      "sha256": "3147aee5cba74ff972211408aab686ca8c059012c26de47540ad8333cba40107",
+      "files": 60,
+      "bytes": 80667
+    }
+  ]
+}
