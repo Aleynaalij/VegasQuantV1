@@ -1,0 +1,91 @@
+{
+  "status": "UNREVIEWED_EXCLUSIONS_REQUIRED_BEFORE_PREPARATION",
+  "action": "OMIT definitions, scheduler activation and callers, not a callable no-op dispatcher",
+  "outbound_functions": [
+    {
+      "signature": "private.dispatch_model_scan()",
+      "name": "private.dispatch_model_scan",
+      "action": "OMIT; contract unavailable"
+    },
+    {
+      "signature": "private.dispatch_nba_shadow_scan()",
+      "name": "private.dispatch_nba_shadow_scan",
+      "action": "OMIT; contract unavailable"
+    },
+    {
+      "signature": "private.dispatch_research_board()",
+      "name": "private.dispatch_research_board",
+      "action": "OMIT; contract unavailable"
+    },
+    {
+      "signature": "private.dispatch_sportradar_collection()",
+      "name": "private.dispatch_sportradar_collection",
+      "action": "OMIT; contract unavailable"
+    },
+    {
+      "signature": "private.invoke_live_pick_alerts()",
+      "name": "private.invoke_live_pick_alerts",
+      "action": "OMIT; contract unavailable"
+    },
+    {
+      "signature": "private.invoke_push_dispatcher()",
+      "name": "private.invoke_push_dispatcher",
+      "action": "OMIT; contract unavailable"
+    },
+    {
+      "signature": "private.invoke_social_notification_dispatcher()",
+      "name": "private.invoke_social_notification_dispatcher",
+      "action": "OMIT; contract unavailable"
+    },
+    {
+      "signature": "private.nba_daily_post(text,integer)",
+      "name": "private.nba_daily_post",
+      "action": "OMIT; contract unavailable"
+    },
+    {
+      "signature": "private.nba_live_post(text)",
+      "name": "private.nba_live_post",
+      "action": "OMIT; contract unavailable"
+    },
+    {
+      "signature": "push_server_config()",
+      "name": "public.push_server_config",
+      "action": "OMIT; contract unavailable"
+    }
+  ],
+  "transitive_outbound_callers": [
+    "private.nba_pretip_sync"
+  ],
+  "provider_chain_exclusions": [
+    "private.push_config",
+    "private.push_deliveries",
+    "public.push_subscriptions",
+    "private.enqueue_pick_push",
+    "private.enqueue_research_push",
+    "private.enqueue_signup_push",
+    "private.push_public_key",
+    "public.push_public_key",
+    "public.push_server_config",
+    "public.register_push",
+    "public.claim_push_deliveries",
+    "public.finish_push_delivery"
+  ],
+  "trigger_exclusions": [
+    "enqueue_official_push ON public.official_picks",
+    "research_analysis_push ON public.analysis_versions",
+    "research_feed_push ON public.research_feed_posts",
+    "admin_signup_push ON auth.users",
+    "all Auth password/email/actor-erasure triggers",
+    "all triggers that call omitted enqueue_*_push helpers"
+  ],
+  "rewrite_exclusions": [
+    "20261003222312_research_signup_notifications.sql dispatcher/claim catalog rewrite",
+    "20261109032951_dealer_zone_follow_notifications.sql invoke_live_pick_alerts rewrite and Dealer/Zone wakeup paths"
+  ],
+  "schedulers": "Exclude all cron.schedule/alter_job/unschedule units and all pg_net/pg_cron/http registration; no cron worker or outbound function installed",
+  "storage": "Exclude ALL five storage.objects policy units, buckets/uploads and contributor-photo provisioning; upload contracts unavailable",
+  "dealer": "OFF. Omit private.is_dealer_publisher, account/config seeds and Dealer-only functions in adaptations.json. Retain pre-Dealer captures/explicit ordinary-profile adaptations only after review.",
+  "complimentary_premium": "Omit private.existing_member_premium, blanket INSERT SELECT auth.users, and premium union; use the explicit stored entitlement adapter only",
+  "assertion": "post-preparation-assertions.sql.proposed: zero forbidden body markers/extensions/vault rows, no unapproved PUBLIC private EXECUTE, no Dealer/premium residue and no authenticated archive SELECT",
+  "in_app_notifications": "Retain reviewed transactional recipient inbox behavior only; push_enabled/email_enabled constraints false before mutations. Source units that reference omitted helpers must be omitted or explicitly adapted and re-reviewed, never replayed wholesale."
+}

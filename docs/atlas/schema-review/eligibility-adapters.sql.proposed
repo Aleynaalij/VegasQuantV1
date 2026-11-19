@@ -9,6 +9,7 @@ begin
   or to_regprocedure('vq_private_access_stage.authorized()') is null
   or to_regprocedure('vq_fixture.allowed()') is null
   or to_regclass('vq_fixture.age_states') is null
+  or to_regclass('vq_fixture.entitlements') is null
   or to_regnamespace('private') is not null then
   raise exception 'Review proposal requires the verified isolated gate, explicit target assertion, and absent private schema';
  end if;
@@ -18,11 +19,18 @@ end $stage_only$;
 create schema private;
 revoke all on schema private from public,anon,authenticated,service_role;
 grant usage on schema private to authenticated;
+-- Per-schema REVOKE alone cannot subtract PostgreSQL global PUBLIC EXECUTE defaults.
+alter default privileges for role postgres revoke execute on functions from public;
+alter default privileges for role postgres in schema private revoke execute on functions from public;
 
-create function private.has_membership() returns boolean
+-- Preserve existing entitlement rows; null temporal bounds preserve existing behavior.
+alter table vq_fixture.entitlements add column starts_at timestamptz, add column expires_at timestamptz, add column revoked_at timestamptz;
+create or replace function vq_fixture.allowed() returns boolean
 language sql stable security invoker set search_path='' as $$
- select coalesce(vq_private_access_stage.authorized(),false)
-  and coalesce(vq_fixture.allowed(),false)
+ select coalesce((select e.allowed and e.revoked_at is null
+  and (e.starts_at is null or e.starts_at<=now())
+  and (e.expires_at is null or e.expires_at>now())
+  from vq_fixture.entitlements e where e.user_id=auth.uid()),false)
 $$;
 
 -- Target eligibility is needed by original visibility rules for other authors.
@@ -36,15 +44,29 @@ language sql stable security definer set search_path='' as $$
 $$;
 
 create function private.age_member_allowed() returns boolean
-language sql stable security invoker set search_path='' as $$
+language sql stable security definer set search_path='' as $$
  select coalesce(vq_private_access_stage.authorized(),false)
   and coalesce(private.age_eligible(auth.uid()),false)
 $$;
 
+create function private.before_age_has_membership() returns boolean
+language sql stable security invoker set search_path='' as $$select coalesce(vq_fixture.allowed(),false)$$;
+revoke all on function private.before_age_has_membership() from public,anon,authenticated,service_role;
+alter function private.before_age_has_membership() owner to postgres;
+
+create function private.has_membership() returns boolean
+language sql stable security definer set search_path='' as $$
+ select coalesce(vq_private_access_stage.authorized(),false)
+  and coalesce(private.age_member_allowed(),false)
+  and coalesce(private.before_age_has_membership(),false)
+$$;
+alter function private.age_eligible(uuid) owner to postgres;
+alter function private.age_member_allowed() owner to postgres;
+alter function private.has_membership() owner to postgres;
 revoke all on function private.has_membership(),private.age_eligible(uuid),private.age_member_allowed()
  from public,anon,authenticated,service_role;
-grant execute on function private.has_membership(),private.age_eligible(uuid),private.age_member_allowed()
- to authenticated;
--- No account creation, real MFA, billing/provider table, service credential, worker,
--- dispatch, cron, storage, schema exposure or feature-capability activation here.
+grant execute on function private.has_membership(),private.age_member_allowed() to authenticated;
+-- age_eligible remains definer-only: no direct caller oracle.
+-- Live session/AAL2/not_after checks are delegated to the existing authorized() gate.
+-- Anonymous calls are intentionally 42501; no staged anonymous consumer contract is enabled.
 commit;

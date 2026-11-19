@@ -1017,7 +1017,7 @@
   ],
   "realtime_tables": 0,
   "non_invalid_emails": 0,
-  "published_legs_name_readers": null,
+  "published_legs_name_readers": [],
   "published_legs_oid_dependents": [
     {
       "object": "type published_legs",
@@ -1035,5 +1035,11 @@
       "object": "constraint published_legs_pkey on table published_legs",
       "dependency_type": "a"
     }
-  ]
+  ],
+  "published_legs_preservation_observation": {
+    "rows": 0,
+    "archive_name_free": true,
+    "private_schema_absent": true,
+    "supplemental_evidence": "Claude read-only review #294 comment 6998332824; no hosted changes since package preparation"
+  }
 }

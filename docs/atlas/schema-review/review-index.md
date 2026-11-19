@@ -1,6 +1,6 @@
 # Original contract source navigation
 
-Source ref: `8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb`. PROPOSED / UNREVIEWED. Historical references are not install order. Full text and risk tags are in original-statements.json.gz.
+Source ref: `8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb`. PROPOSED / UNREVIEWED. History is not install order. Full text is in original-statements.json.gz.
 
 | Group | Object | Contract | Source history |
 |---|---|---|---|

@@ -150,7 +150,9 @@ export function describe(sql) {
   return {
     subjects,
     references,
-    declaration: declaration?.[1].toLowerCase() ?? null,
+    declaration: /^create\b/i.test(statement)
+      ? (declaration?.[1].toLowerCase() ?? null)
+      : null,
     dynamic,
     risk_tags,
   };
@@ -209,7 +211,12 @@ export async function buildReview(output) {
   };
   const paths = Object.keys(snapshot).sort();
   const sources = paths
-    .filter((p) => p.startsWith("supabase/migrations/") && p.endsWith(".sql"))
+    .filter(
+      (p) =>
+        (p.startsWith("supabase/migrations/") ||
+          p.startsWith("supabase/schema/")) &&
+        p.endsWith(".sql"),
+    )
     .sort();
   const registry = JSON.parse(read("src/lib/stage-feature-registry.json"));
   const rootObjects = [
@@ -264,7 +271,20 @@ export async function buildReview(output) {
     target_project: "caynldluziwrzmvuslzg",
     production_forbidden: "uowearboulykfcwnuirn",
     catalog_status: "NO_REVIEWED_CATALOG_CREATED",
-    reviewer_status: "UNASSIGNED; Devon proposed, not confirmed",
+    reviewer_status:
+      "Claude is reviewer of record; CHANGES REQUIRED pending exact-commit re-review",
+    owner_decisions: {
+      record:
+        "https://github.com/Aleynaalij/VegasQuantV1/issues/294#issuecomment-6998422208",
+      staging_boundary:
+        "Trusted operator, staging only; mandatory DDL/RLS preflight; operators Codex and Mike",
+      dealer:
+        "OFF: no staged Dealer identity, attribution seed or Dealer visibility rewrite",
+      effective_definitions:
+        "Disposable native local PostgreSQL replay only; never production",
+      production:
+        "NO-GO; staging boundary decision does not carry to production",
+    },
     limitations: [
       "Conservative lexical source dependency index, not a PostgreSQL semantic dependency proof.",
       "All historical source units are evidence; their order is NOT an install plan.",
@@ -298,6 +318,50 @@ export async function buildReview(output) {
       .map((path) => ({ path, sha256: hash(read(path)) })),
     sources: sourceMetadata.filter((s) => selectedPaths.has(s.path)),
   };
+  const replayRoot = new URL(
+    "../../docs/atlas/schema-review/local-replay/",
+    import.meta.url,
+  );
+  const replay = JSON.parse(
+    await readFile(new URL("effective-definitions.json", replayRoot), "utf8"),
+  );
+  const replayReport = JSON.parse(
+    await readFile(new URL("replay-report.json", replayRoot), "utf8"),
+  );
+  if (
+    replay.source_ref !== SOURCE_REF ||
+    replayReport.status !== "PASS" ||
+    replayReport.effective_coverage?.migration_files !== 187 ||
+    replayReport.effective_coverage?.baseline_files !== 3
+  )
+    throw Error("Native replay evidence incomplete");
+  const qualified = (signature) =>
+    signature.includes(".")
+      ? signature.split("(")[0]
+      : "public." + signature.split("(")[0];
+  const resolved = new Set(
+    replay.definitions.map((f) => qualified(f.signature)),
+  );
+  manifest.lexical_unresolved_source_names = manifest.unresolved_source_names;
+  manifest.unresolved_source_names = manifest.unresolved_source_names.filter(
+    (name) => !resolved.has(name),
+  );
+  manifest.effective_definition_evidence = {
+    status: "Native local replay, not hosted catalog approval",
+    source_ref: SOURCE_REF,
+    engine: replayReport.engine,
+    functions: replay.definitions.map((f) => ({
+      signature: f.signature,
+      sha256: hash(f.definition),
+    })),
+    views: replay.views.map((v) => ({
+      name: v.name,
+      sha256: hash(v.definition),
+    })),
+    adaptations: "adaptations.json",
+    platform_limitations:
+      "Explicit Auth/storage/cron/net stand-ins, unusable local placeholder and synthetic migration-precondition identities; see replay report. Never copy replay platform to staging.",
+  };
   const excludedRiskUnits = units.filter(
     (u) =>
       selectedPaths.has(u.path) &&
@@ -318,11 +382,36 @@ export async function buildReview(output) {
       statements: excludedRiskUnits,
     },
   };
+  outputs["review-index.md"] = [
+    "# Original contract source navigation",
+    "",
+    `Source ref: \`${SOURCE_REF}\`. PROPOSED / UNREVIEWED. History is not install order. Full text is in original-statements.json.gz.`,
+    "",
+    "| Group | Object | Contract | Source history |",
+    "|---|---|---|---|",
+    ...manifest.roots.map((root) => {
+      const contract = root.contract ?? {};
+      const paths = [
+        ...new Set(
+          root.source_units.map((id) => id.slice(0, id.lastIndexOf(":"))),
+        ),
+      ];
+      const links = paths
+        .map(
+          (path) =>
+            `[${path.split("/").at(-1)}](https://github.com/Aleynaalij/VegasQuantV1/blob/${SOURCE_REF}/${path})`,
+        )
+        .join("<br>");
+      return `| ${root.group} | \`${root.name}\` | ${contract.signature ?? contract.methods?.join(", ") ?? root.kind} | ${links} |`;
+    }),
+    "",
+  ].join("\n");
   const hashes = {};
   const uncompressed_hashes = {};
   for (const [name, value] of Object.entries(outputs)) {
-    const text = JSON.stringify(value, null, 2) + "\n";
-    const compressed = name !== "manifest.json";
+    const text =
+      typeof value === "string" ? value : JSON.stringify(value, null, 2) + "\n";
+    const compressed = name.endsWith(".json") && name !== "manifest.json";
     const filename = compressed ? `${name}.gz` : name;
     const bytes = compressed ? gzipSync(text, { level: 9 }) : text;
     await writeFile(resolve(output, filename), bytes);

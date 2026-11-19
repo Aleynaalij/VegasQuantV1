@@ -1,0 +1,79 @@
+{
+  "status": "PROPOSED_IDENTITY_PLAN_ONLY_NO_ACCOUNTS_CREATED",
+  "process": "Separately reviewed seed/identity preparation after isolation; no real login or session in this phase",
+  "domain": "vq-fixture.invalid",
+  "ordinary_roles": {
+    "admin": false,
+    "dealer": false,
+    "publisher": false
+  },
+  "gate_control": "All membership/age controls below must pass the SAME live owner/test gate and AAL2/session checks in rehearsal, isolating age and entitlement denial. Gate allowlisting needs its separate identity approval.",
+  "entitlement_schema": "Preserve allowed values. Add nullable starts_at/expires_at/revoked_at; update invoker vq_fixture.allowed to enforce those fields while retaining own-row RLS and original grants.",
+  "identities": [
+    {
+      "email": "active-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": true
+    },
+    {
+      "email": "entitled-unverified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": false,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": false
+    },
+    {
+      "email": "revoked-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": "past",
+      "expected_member": false
+    },
+    {
+      "email": "expired-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "past",
+      "revoked_at": null,
+      "expected_member": false
+    },
+    {
+      "email": "not-started-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "future",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": false
+    },
+    {
+      "email": "unentitled-verified@vq-fixture.invalid",
+      "allowed": false,
+      "verified": true,
+      "starts_at": null,
+      "expires_at": null,
+      "revoked_at": null,
+      "expected_member": false
+    }
+  ],
+  "required_paths": [
+    "direct base table SELECT under actual staged RLS",
+    "security-invoker published_legs and ruby_cards views",
+    "member/saved/parlay/profile/inbox RPCs as applicable",
+    "same-session application readers",
+    "age_eligible direct EXECUTE denied",
+    "expired/revoked session with otherwise active member denied"
+  ],
+  "evidence_requirement": "Record every identity/path as PASS/FAIL/UNRUN. No empty fixture or helper-only pass establishes all original contracts. Current disposable helper test covers protected table/view/RPC shapes; full prepared-schema and hosted tests remain later work.",
+  "preservation": "Existing fixture IDs, rows, original allowed values and age states stay unchanged; new identities use new UUIDs allocated only by the reviewed identity process. No credentials, production users, real MFA material, email or SMS delivery copied or enabled.",
+  "preservation_digest": "Verify preexisting rows by ordered ROW(user_id,allowed)::text digest after adding NULL temporal columns. Whole-row hashes change solely from added columns; record that planned schema change and establish a new approved baseline."
+}
