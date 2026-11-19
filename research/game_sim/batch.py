@@ -27,21 +27,42 @@ def game(model,seed,*,both_possessions=True,max_events=1200,trace=False,workload
     sampler=Sampler(model,seed,prepared_tables);receiver=sampler.rng.choice(('home','away'))
     s=State(possession='away' if receiver=='home' else 'home',phase='kickoff',down=None,distance=None,yardline=65,second_half_receiver='away' if receiver=='home' else 'home',ot_both_possessions=both_possessions)
     allocator=Allocator(workload_context,seed ^ 0x51A7) if workload_context else None
-    events=[];kinds=Counter();rejected=Counter()
+    queued_timeout=None;decision_read_state=None;previous_late_play=False
+    events=[];kinds=Counter();rejected=Counter();scoring=Counter();diagnostics=Counter()
     for sequence in range(max_events):
-        if s.phase=='final':return dict(seed=seed,home=s.home_score,away=s.away_score,event_count=sequence,kinds=dict(kinds),fallbacks=dict(sampler.fallbacks),rejected_templates=dict(rejected),events=events,workload=allocator.result() if allocator else None)
-        if s.phase=='overtime_required':a=Action('start_overtime',receiving_side=sampler.rng.choice(('home','away')))
+        if s.phase=='final':return dict(seed=seed,home=s.home_score,away=s.away_score,event_count=sequence,scoring=dict(scoring),diagnostics=dict(diagnostics),kinds=dict(kinds),fallbacks=dict(sampler.fallbacks),rejected_templates=dict(rejected),events=events,workload=allocator.result() if allocator else None)
+        coupling=None
+        if queued_timeout is not None:
+            if decision_read_state!=s:raise ValueError('queued timeout state mismatch')
+            a=queued_timeout;queued_timeout=None;decision_read_state=None
+        elif s.phase=='overtime_required':a=Action('start_overtime',receiving_side=sampler.rng.choice(('home','away')))
         elif s.clock==0 and s.phase!='try':a=Action('end_period')
         else:
             # Invalid source-template/state combinations are retried, never silent repair of scores.
             for _ in range(100):
-                a=sampler.draw(s)
+                a=sampler.draw(s,allow_timeout=decision_read_state!=s)
                 try:transition(s,a);break
                 except ValueError as e:rejected[str(e)]+=1
             else:raise ValueError('no legal empirical transition after 100 attempts')
+        decision_read_state=None
+        if a.kind in ('run','pass_complete'):
+            original=a
+            replacements_before=sampler.fallbacks['source_stop_runoff_replaced']
+            a,queued_timeout,decision_read_state=sampler.couple_stop(s,a)
+            coupling=dict(original_elapsed=original.elapsed,committed_elapsed=a.elapsed,source_followed_timeout=getattr(sampler,'last_source_followed_timeout',False),timeout_queued=queued_timeout is not None,runoff_replaced=sampler.fallbacks['source_stop_runoff_replaced']>replacements_before)
         event=transition(s,a);kinds[a.kind]+=1
+        late=s.phase=='scrimmage' and s.period in (2,4) and s.clock<=30 and s.yardline<=35
+        if a.kind in ('field_goal','blocked_field_goal'):
+            diagnostics['fg_attempts']+=1
+            if late:diagnostics['late_fg_attempts']+=1
+        if late and a.kind not in ('timeout','end_period'):diagnostics['late_decisions']+=1
+        delta=event.after.home_score+event.after.away_score-s.home_score-s.away_score
+        if delta==6:scoring['touchdowns']+=1
+        if a.kind=='field_goal' and delta==3:scoring['field_goals']+=1
+        if a.kind=='timeout' and previous_late_play:diagnostics['late_timeout_followed_plays']+=1
+        previous_late_play=s.phase=='scrimmage' and s.period in (2,4) and s.clock<=300 and a.kind in ('run','pass_complete') and event.after.phase=='scrimmage' and event.after.possession==s.possession and (event.after.home_score,event.after.away_score)==(s.home_score,s.away_score)
         participants=allocator.apply(event) if allocator else []
-        if trace:events.append(dict(sequence=sequence,before=asdict(s),action=asdict(a),after=asdict(event.after),participants=participants))
+        if trace:events.append(dict(sequence=sequence,before=asdict(s),action=asdict(a),after=asdict(event.after),participants=participants,clock_coupling=coupling))
         s=event.after
     raise ValueError('event limit: game incomplete')
 
@@ -49,11 +70,12 @@ def run_batch(model,n,seed,*,both_possessions=True,workload_context=None):
     if type(n) is not int or not 1<=n<=50000:raise ValueError('requested runs must be 1..50000')
     if type(seed) is not int:raise ValueError('integer seed required')
     if workload_context:validate_context(workload_context)
-    started=time.perf_counter();prepared_tables=Sampler(model,seed).tables;rows=[];failures=Counter();rejections=Counter();kinds=Counter()
+    started=time.perf_counter();prepared_tables=Sampler(model,seed).tables;rows=[];failures=Counter();rejections=Counter();kinds=Counter();censoring=Counter()
     for i in range(n):
         try:
             row=game(model,seed+i,both_possessions=both_possessions,workload_context=workload_context,prepared_tables=prepared_tables);rows.append(row)
             rejections.update(row['rejected_templates']);kinds.update(row['kinds'])
+            censoring.update({k:v for k,v in row['fallbacks'].items() if isinstance(k,str)})
         except ValueError as e:failures[str(e)]+=1
     actual=len(rows)
     if not actual:raise ValueError('All simulations failed: '+str(dict(failures)))
@@ -64,7 +86,7 @@ def run_batch(model,n,seed,*,both_possessions=True,workload_context=None):
     replay=game(model,typical['seed'],both_possessions=both_possessions,trace=True,workload_context=workload_context,prepared_tables=prepared_tables)
     model_hash=hashlib.sha256(canonical(model)).hexdigest()
     manifest=dict(model_id=model['model_id'],artifact_sha256=model_hash,protocol_id=PROTOCOL,seed=seed,runs=n,both_possessions=both_possessions,source_hashes=[s['sha256'] for s in model['sources']],workload_context=workload_context)
-    return dict(schema_version='vq-game-batch/0.1',mode='research_baseline',status='SHADOW_ONLY',generated_at=datetime.now(timezone.utc).isoformat(),model_id=model['model_id'],artifact_sha256=model_hash,input_hash=hashlib.sha256(canonical(manifest)).hexdigest(),protocol_id=PROTOCOL,runs=dict(requested=n,actual=actual,failed=n-actual),seed=seed,runtime_seconds=time.perf_counter()-started,sources=model['sources'],ensemble=dict(home_score=distribution(home),away_score=distribution(away),margin=distribution(margins),total=distribution(totals),home_win=dict(count=sum(h>a for h,a in zip(home,away)),n=actual),away_win=dict(count=sum(a>h for h,a in zip(home,away)),n=actual),tie=dict(count=sum(a==h for h,a in zip(home,away)),n=actual)),replay=dict(seed=typical['seed'],selection=dict(method='minimum_l1_team_score_medians',description='Smallest absolute home/away score distance to ensemble medians; lowest seed breaks ties.',distance=abs(typical['home']-med_h)+abs(typical['away']-med_a)),events=replay['events']),coverage=dict(failures=dict(failures),illegal_template_rejections=dict(rejections),sampled_kinds=dict(kinds)),players=([dict(player_id=p["id"],name=p["name"],team=p["team"],supported=False,unsupported_reason="Scenario allocation only; targets/compound credited stats incomplete and uncalibrated",stats={stat:distribution([next(q for q in r["workload"]["players"] if q["id"]==p["id"])["stats"][stat] for r in rows]) for stat in p["stats"]}) for p in rows[0]["workload"]["players"]] if workload_context else []),blockers=['UNCALIBRATED_LEAGUE_BASELINE','NOT_A_CURRENT_MATCHUP_FORECAST','NO_CURRENT_ROSTER_OR_AVAILABILITY','PLAYER_WORKLOAD_NOT_YET_SUPPORTED','HISTORICAL_KICKOFF_DISTRIBUTION','COMPOUND_LIVE_BALL_PENALTIES_EXCLUDED']+(['INCOMPLETE_SIMULATION_COVERAGE'] if actual<n else []))
+    return dict(schema_version='vq-game-batch/0.1',mode='research_baseline',status='SHADOW_ONLY',generated_at=datetime.now(timezone.utc).isoformat(),model_id=model['model_id'],artifact_sha256=model_hash,input_hash=hashlib.sha256(canonical(manifest)).hexdigest(),protocol_id=PROTOCOL,runs=dict(requested=n,actual=actual,failed=n-actual),seed=seed,runtime_seconds=time.perf_counter()-started,sources=model['sources'],research_metrics={name:distribution([r['scoring'].get(name,0) if name in ('touchdowns','field_goals') else r['kinds'].get('punt',0)+r['kinds'].get('punt_blocked',0) if name=='punts' else r['kinds'].get('timeout',0) if name=='timeouts' else r['diagnostics'].get(name,0) for r in rows]) for name in ('touchdowns','field_goals','punts','timeouts','fg_attempts','late_fg_attempts','late_decisions','late_timeout_followed_plays')},ensemble=dict(home_score=distribution(home),away_score=distribution(away),margin=distribution(margins),total=distribution(totals),home_win=dict(count=sum(h>a for h,a in zip(home,away)),n=actual),away_win=dict(count=sum(a>h for h,a in zip(home,away)),n=actual),tie=dict(count=sum(a==h for h,a in zip(home,away)),n=actual)),replay=dict(seed=typical['seed'],selection=dict(method='minimum_l1_team_score_medians',description='Smallest absolute home/away score distance to ensemble medians; lowest seed breaks ties.',distance=abs(typical['home']-med_h)+abs(typical['away']-med_a)),events=replay['events']),coverage=dict(failures=dict(failures),illegal_template_rejections=dict(rejections),sampled_kinds=dict(kinds),censoring=dict(censoring)),players=([dict(player_id=p["id"],name=p["name"],team=p["team"],supported=False,unsupported_reason="Scenario allocation only; targets/compound credited stats incomplete and uncalibrated",stats={stat:distribution([next(q for q in r["workload"]["players"] if q["id"]==p["id"])["stats"][stat] for r in rows]) for stat in p["stats"]}) for p in rows[0]["workload"]["players"]] if workload_context else []),blockers=['UNCALIBRATED_LEAGUE_BASELINE','NOT_A_CURRENT_MATCHUP_FORECAST','NO_CURRENT_ROSTER_OR_AVAILABILITY','PLAYER_WORKLOAD_NOT_YET_SUPPORTED','HISTORICAL_KICKOFF_DISTRIBUTION','COMPOUND_LIVE_BALL_PENALTIES_EXCLUDED']+(['INCOMPLETE_SIMULATION_COVERAGE'] if actual<n else [])+(['UNSUPPORTED_CENSORING'] if censoring.get('unsupported_censoring') else []))
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--train',nargs='+',type=Path);p.add_argument('--model',type=Path,required=True);p.add_argument('--output',type=Path);p.add_argument('--runs',type=int,default=1000);p.add_argument('--seed',type=int,default=1701);p.add_argument('--workload-context',type=Path);p.add_argument('--opening-td-sudden-death',action='store_true');a=p.parse_args()
