@@ -3,7 +3,10 @@ import { useEffect } from "react";
 import Home2, { type Home2Props } from "@/components/home2/home2";
 import { Shell } from "@/components/ui";
 import { gameRoomHref } from "@/lib/game-room";
-export default function HomeExperience(props: Omit<Home2Props, "gameHref">) {
+export default function HomeExperience({
+  ordinaryLinks = false,
+  ...props
+}: Omit<Home2Props, "gameHref"> & { ordinaryLinks?: boolean }) {
   useEffect(() => {
     const forward = () => {
       if (
@@ -18,7 +21,7 @@ export default function HomeExperience(props: Omit<Home2Props, "gameHref">) {
   }, []);
   return (
     <Shell active="lobby">
-      <Home2 {...props} gameHref={gameRoomHref} />
+      <Home2 {...props} gameHref={ordinaryLinks ? undefined : gameRoomHref} />
     </Shell>
   );
 }

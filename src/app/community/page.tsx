@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import Zone2Experience from "@/components/zone2/zone2-experience";
 import { consumerExperienceEnabled } from "@/lib/consumer-experience";
 import CommunityFeed from "@/components/community-feed";
+import { productionOwnerPreviewConfigured } from "@/lib/production-owner-server";
+import ProductionOwnerExperience from "@/components/consumer/production-owner-experience";
 export const metadata = {
   title: "The Zone | Vegas Quant",
   description: "Member slips, game discussion and transparent results.",
@@ -25,6 +27,10 @@ export default async function Page({
     <Suspense fallback={<p role="status">Loading Community…</p>}>
       {consumerExperienceEnabled(process.env) ? (
         <Zone2Experience basePath="/community" />
+      ) : productionOwnerPreviewConfigured() ? (
+        <ProductionOwnerExperience surface="zone">
+          <CommunityFeed />
+        </ProductionOwnerExperience>
       ) : (
         <CommunityFeed />
       )}

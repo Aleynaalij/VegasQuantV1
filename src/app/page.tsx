@@ -4,6 +4,8 @@ import { getDeskOrEmpty } from "@/lib/data";
 import HomeExperience from "@/components/consumer/home-experience";
 import { consumerExperienceEnabled } from "@/lib/consumer-experience";
 import VqLobby from "@/components/vq-lobby";
+import { productionOwnerPreviewConfigured } from "@/lib/production-owner-server";
+import ProductionOwnerExperience from "@/components/consumer/production-owner-experience";
 export const dynamic = "force-dynamic";
 /**
  * The neutral Vegas Quant lobby. Old NFL-desk links that carried a game (`/?game=<slug>`, shared and
@@ -37,6 +39,21 @@ export default async function Home({
           nflUnavailable={Boolean(desk.unavailable)}
         />
       </Suspense>
+    );
+  if (productionOwnerPreviewConfigured())
+    return (
+      <ProductionOwnerExperience
+        surface="home"
+        home={{
+          nflGames: desk.games,
+          nflUnavailable: Boolean(desk.unavailable),
+        }}
+      >
+        <VqLobby
+          nflGames={desk.games}
+          nflUnavailable={Boolean(desk.unavailable)}
+        />
+      </ProductionOwnerExperience>
     );
   return (
     <VqLobby nflGames={desk.games} nflUnavailable={Boolean(desk.unavailable)} />
