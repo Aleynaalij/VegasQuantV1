@@ -1,0 +1,14 @@
+{
+  "status": "PROPOSED_NOT_EXECUTED",
+  "deployed_sha": "677be0aafe7a4c2c023a032cc2ccd336d830d5bb",
+  "target": "caynldluziwrzmvuslzg",
+  "files": {
+    "docs/atlas/staging-sign-in-review/README.md": "3cca65bd2fb1f8f12da41c5f9014a70512e1519c092dc831ccf6338cd4694e6a",
+    "docs/atlas/staging-sign-in-review/account-map.json": "38c3877cf4379b63a3c84a639a441775e6cd6723b9da44b23fcd707ff5c98f87",
+    "docs/atlas/staging-sign-in-review/owner-support.sql": "8a89601cff5af256524b3ed8696ff9a556909c8eb5dd1e3372d389cb5c140bdb",
+    "docs/atlas/staging-sign-in-review/authorization-rehearsal.json": "56c62e2170c668f44cf28f3f3eb612b440e36501779293e538bf9c80d52ae393",
+    "scripts/operations/atlas-staging-sign-in-rehearsal.mjs": "fc1864ac27aad68fcfaac3cdb1d79609d6bb194251648ef552f243840c463ab8",
+    "scripts/operations/atlas-staging-sign-in-rehearsal.sh": "bd5d9abab9f75e26eada5070af783c8f9c442f5cc18bb86bfe2f94ea206156ea"
+  },
+  "auth_password_totp_rehearsal": "NOT_RUN_EXECUTION_BLOCKER"
+}

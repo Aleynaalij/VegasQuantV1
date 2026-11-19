@@ -1,0 +1,96 @@
+{
+  "status": "PROPOSED_NOT_EXECUTED",
+  "target": "caynldluziwrzmvuslzg",
+  "identities": [
+    {
+      "email": "active-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": true,
+      "id": "b21e0096-1939-48c0-b6e3-3f369e2ee0cc",
+      "kind": "control"
+    },
+    {
+      "email": "entitled-unverified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": false,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": false,
+      "id": "4d2d18b0-2cdc-4428-b921-09bbb596932a",
+      "kind": "control"
+    },
+    {
+      "email": "revoked-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": "past",
+      "expected_member": false,
+      "id": "973a73d1-db07-46e8-abf4-cd13d312244b",
+      "kind": "control"
+    },
+    {
+      "email": "expired-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "past",
+      "revoked_at": null,
+      "expected_member": false,
+      "id": "5da49d4b-2e27-462b-8806-8b048f007359",
+      "kind": "control"
+    },
+    {
+      "email": "not-started-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "future",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": false,
+      "id": "4fca30be-51e3-44c5-8e25-de3f39166d79",
+      "kind": "control"
+    },
+    {
+      "email": "unentitled-verified@vq-fixture.invalid",
+      "allowed": false,
+      "verified": true,
+      "starts_at": null,
+      "expires_at": null,
+      "revoked_at": null,
+      "expected_member": false,
+      "id": "ff632fc5-c528-4b70-b7d6-12cacbed6da0",
+      "kind": "control"
+    },
+    {
+      "email": "mike-owner@vq-fixture.invalid",
+      "id": "0854c91b-5fcb-5261-80a5-19171dc21a39",
+      "kind": "owner",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": true
+    },
+    {
+      "email": "elo-owner@vq-fixture.invalid",
+      "id": "d68da9b8-85e0-52b0-9483-6256283f5e97",
+      "kind": "owner",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": true
+    }
+  ],
+  "credential_recipient": "Elo via password manager only",
+  "scope": "staging Auth identities only; no application admin privileges"
+}
