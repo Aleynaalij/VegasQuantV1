@@ -30,7 +30,8 @@ verify_mode() {
   npm run build >"$work/build.log" 2>&1 || { cat "$work/build.log"; return 1; }
   node --input-type=module - "$1" <<'EOF'
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 const mode = process.argv[2];
 const paths = Object.keys(JSON.parse(readFileSync(".next/server/app-paths-manifest.json", "utf8")));
 const readers = ["/staging/discovery/read/dealer/route", "/staging/discovery/read/research/route", "/staging/discovery/session/route", "/staging/discovery/data/route", "/staging/discovery/read/matchup-sheet/[id]/route"];
@@ -40,6 +41,13 @@ const normalRoutes = ["/nba/props/page", "/page", "/community/page", "/research/
 for (const path of gateRoutes) assert.equal(paths.includes(path), mode === "gate" || mode === "combined", path);
 for (const path of normalRoutes) assert.equal(paths.includes(path), mode !== "gate", path);
 assert.equal(paths.includes("/api/atlas-combined-build-probe/route"), mode === "combined");
+// Vercel packages every traced file; next start alone misses dangling traces.
+for (const route of paths.filter((path) => /\/(?:api\/)?staging\/.*\/route$/.test(path))) {
+  const trace = resolve(".next/server/app", `.${route}.js.nft.json`);
+  for (const file of JSON.parse(readFileSync(trace, "utf8")).files) {
+    assert(existsSync(resolve(dirname(trace), file)), `${mode}: missing trace ${route}: ${file}`);
+  }
+}
 console.log(`${mode}: route manifest verified`);
 EOF
 }
