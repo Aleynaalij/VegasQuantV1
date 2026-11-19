@@ -1,0 +1,19 @@
+{
+  "candidate": false,
+  "status": "FAIL",
+  "scope": "DISPOSABLE_REAL_AUTH_ONLY",
+  "version": "v2.198.0",
+  "checks": [
+    {
+      "name": "Exact inert identity SQL on genuine Auth schema",
+      "result": "PASS"
+    }
+  ],
+  "accounts": [],
+  "sink_positive_controls": "PASS",
+  "phase": "ADMIN_PASSWORD_COMPATIBILITY",
+  "error": "updateUserById failed: user_not_found",
+  "unexpected_public_tables": [],
+  "mail_connections": 0,
+  "sms_requests": 0
+}

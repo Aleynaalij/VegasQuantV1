@@ -8,7 +8,14 @@
     "docs/atlas/staging-sign-in-review/owner-support.sql": "8a89601cff5af256524b3ed8696ff9a556909c8eb5dd1e3372d389cb5c140bdb",
     "docs/atlas/staging-sign-in-review/authorization-rehearsal.json": "56c62e2170c668f44cf28f3f3eb612b440e36501779293e538bf9c80d52ae393",
     "scripts/operations/atlas-staging-sign-in-rehearsal.mjs": "fc1864ac27aad68fcfaac3cdb1d79609d6bb194251648ef552f243840c463ab8",
-    "scripts/operations/atlas-staging-sign-in-rehearsal.sh": "bd5d9abab9f75e26eada5070af783c8f9c442f5cc18bb86bfe2f94ea206156ea"
+    "scripts/operations/atlas-staging-sign-in-rehearsal.sh": "bd5d9abab9f75e26eada5070af783c8f9c442f5cc18bb86bfe2f94ea206156ea",
+    "docs/atlas/staging-sign-in-review/auth-compatibility/README.md": "c210dada4dbff468a44a721d3dc64a2ea1f2fa70f60c712eb5402ea9be9b4924",
+    "docs/atlas/staging-sign-in-review/auth-compatibility/baseline-rehearsal.json": "ad1dfa68bae68ab69c3234d7be138eb2cd5be384573d4336cfdfc53011f6790d",
+    "docs/atlas/staging-sign-in-review/auth-compatibility/candidate-rehearsal.json": "a25b3327f8c63ec91823f34a7399cf04158c47a6cece395c07c8d2bf2cb395d2",
+    "docs/atlas/staging-sign-in-review/auth-compatibility/compatibility.sql": "abd63277807196fe519d46af1898486c68e5dd73b7ca5090d388ac2bd4b3386d",
+    "docs/atlas/staging-sign-in-review/auth-compatibility/runtime.json": "b56dac48e54f7102ff025db18ba0831df705797581fade3cadb50056b8f32eb9",
+    "scripts/operations/atlas-real-auth-rehearsal.mjs": "5d17afc20eadb52aabcb961993c4e378cc7d965989f5c6371322ddea7e570ac2",
+    "scripts/operations/atlas-real-auth-rehearsal.sh": "e5bb1bb23c1eed8eb94b7c7bab0ef73f1f95eaf73076adf5e9eee394b9029c60"
   },
-  "auth_password_totp_rehearsal": "NOT_RUN_EXECUTION_BLOCKER"
+  "auth_password_totp_rehearsal": "BASELINE_FAILS_CANDIDATE_PASS_PENDING_COMPATIBILITY_APPROVAL"
 }
