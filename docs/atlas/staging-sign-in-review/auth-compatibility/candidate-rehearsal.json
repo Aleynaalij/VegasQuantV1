@@ -1,0 +1,98 @@
+{
+  "candidate": true,
+  "status": "PASS",
+  "scope": "DISPOSABLE_REAL_AUTH_ONLY",
+  "version": "v2.198.0",
+  "checks": [
+    {
+      "name": "Exact inert identity SQL on genuine Auth schema",
+      "result": "PASS"
+    }
+  ],
+  "accounts": [
+    {
+      "email": "active-verified@vq-fixture.invalid",
+      "uuid_unchanged": true,
+      "aal1_gate": false,
+      "aal2_gate": true,
+      "member": true,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "entitled-unverified@vq-fixture.invalid",
+      "uuid_unchanged": true,
+      "aal1_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "revoked-verified@vq-fixture.invalid",
+      "uuid_unchanged": true,
+      "aal1_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "expired-verified@vq-fixture.invalid",
+      "uuid_unchanged": true,
+      "aal1_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "not-started-verified@vq-fixture.invalid",
+      "uuid_unchanged": true,
+      "aal1_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "unentitled-verified@vq-fixture.invalid",
+      "uuid_unchanged": true,
+      "aal1_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "mike-owner@vq-fixture.invalid",
+      "uuid_unchanged": true,
+      "aal1_gate": false,
+      "aal2_gate": true,
+      "member": true,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "elo-owner@vq-fixture.invalid",
+      "uuid_unchanged": true,
+      "aal1_gate": false,
+      "aal2_gate": true,
+      "member": true,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    }
+  ],
+  "sink_positive_controls": "PASS",
+  "compatibility_rollback": "PASS",
+  "compatibility_single_use": "PASS",
+  "control_states_preserved": "PASS",
+  "compatibility": "PROPOSED_LOCAL_ONLY",
+  "fresh_logins": "8/8 PASS",
+  "sessions_after": 0,
+  "catalog_checks": 33,
+  "email_identities_created_by_admin_api": 2,
+  "control_identity_rows_written_directly": 0,
+  "mail_connections": 0,
+  "sms_requests": 0
+}

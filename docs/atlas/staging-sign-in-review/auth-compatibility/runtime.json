@@ -1,0 +1,17 @@
+{
+  "version": "v2.198.0",
+  "hosted_health_origin": "https://caynldluziwrzmvuslzg.supabase.co/auth/v1/health",
+  "hosted_health_read_only": true,
+  "release_url": "https://github.com/supabase/auth/releases/download/v2.198.0/auth-v2.198.0-amd64.tar.xz",
+  "archive_sha256": "4abe9134d7615faa9149cab514acada8e7133cd69d2ccd96fdcef0d795c05171",
+  "binary_sha256": "77d5009ee8501fb380fe4ad0c42cfdeb3da8ac0e5660e59bf8d736ccb457a6c6",
+  "sdk_version": "2.117.2",
+  "hosted_users_column_defaults_observed": {
+    "instance_id": null,
+    "confirmation_token": null,
+    "recovery_token": null,
+    "email_change_token_new": null,
+    "email_change": null
+  },
+  "hosted_auth_mutations": 0
+}

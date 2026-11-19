@@ -1,0 +1,81 @@
+{
+  "status": "PASS",
+  "scope": "LOCAL_AUTHORIZATION_ONLY_NOT_PASSWORD_OR_TOTP_ENROLLMENT",
+  "cases": [
+    {
+      "email": "active-verified@vq-fixture.invalid",
+      "pre_mfa_gate": false,
+      "aal2_gate": true,
+      "member": true,
+      "expected_member": true,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "entitled-unverified@vq-fixture.invalid",
+      "pre_mfa_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "expected_member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "revoked-verified@vq-fixture.invalid",
+      "pre_mfa_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "expected_member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "expired-verified@vq-fixture.invalid",
+      "pre_mfa_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "expected_member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "not-started-verified@vq-fixture.invalid",
+      "pre_mfa_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "expected_member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "unentitled-verified@vq-fixture.invalid",
+      "pre_mfa_gate": false,
+      "aal2_gate": true,
+      "member": false,
+      "expected_member": false,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "mike-owner@vq-fixture.invalid",
+      "pre_mfa_gate": false,
+      "aal2_gate": true,
+      "member": true,
+      "expected_member": true,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    },
+    {
+      "email": "elo-owner@vq-fixture.invalid",
+      "pre_mfa_gate": false,
+      "aal2_gate": true,
+      "member": true,
+      "expected_member": true,
+      "revoked_session_gate": false,
+      "result": "PASS"
+    }
+  ],
+  "owner_support_single_use": "PASS",
+  "catalog_checks": 33,
+  "sessions_after": 0
+}
