@@ -88,7 +88,9 @@ from checks
 union all
 -- Preserved data: digests must equal the 2026-11-19 baseline (#294). Identity tables are limited to
 -- the four baseline users, so reviewed negative-control identities (M5) may be added without
--- masking a change to existing rows. published_legs is read from the archive after the cutover.
+-- masking a change to existing rows, and identity rows are digested on their original columns
+-- (user_id,allowed / user_id,verified) so the planned nullable entitlement bounds don't change them.
+-- published_legs is read from the archive after the cutover.
 select 'preserved', t.tbl,
   case when d.digest = t.baseline and d.n = t.rows then 'PASS' else 'FAIL' end,
   d.n||' rows, '||d.digest
@@ -100,8 +102,8 @@ from (values
   ('public.source_observations', 1, 'e06558504a3848d531eb98e56124379d', 'select x::text x from public.source_observations x'),
   ('vq_fixture.posts', 4, '41bd600253186d02cb3b466a9031357e', 'select x::text x from vq_fixture.posts x'),
   ('vq_fixture.sports', 2, '5f9f57bd3f4eb317dea0289e325887c7', 'select x::text x from vq_fixture.sports x'),
-  ('vq_fixture.age_states', 3, '416b0b9c1ca06c3f8b25e61ec2a44061', 'select x::text x from vq_fixture.age_states x where user_id::text in (''0cac6cd5-0262-49b7-a721-0817cd59dd8c'',''544541ae-c833-43de-838e-2f45542d1b94'',''5b21ac4f-b0fa-48e1-8066-ba644c2d4b56'',''f882aa8e-9d4e-45df-b866-1f47131e51a9'')'),
-  ('vq_fixture.entitlements', 3, '306327816f76304de7b1b2739d6ac5fd', 'select x::text x from vq_fixture.entitlements x where user_id::text in (''0cac6cd5-0262-49b7-a721-0817cd59dd8c'',''544541ae-c833-43de-838e-2f45542d1b94'',''5b21ac4f-b0fa-48e1-8066-ba644c2d4b56'',''f882aa8e-9d4e-45df-b866-1f47131e51a9'')'),
+  ('vq_fixture.age_states', 3, '416b0b9c1ca06c3f8b25e61ec2a44061', 'select row(user_id,verified)::text x from vq_fixture.age_states x where user_id::text in (''0cac6cd5-0262-49b7-a721-0817cd59dd8c'',''544541ae-c833-43de-838e-2f45542d1b94'',''5b21ac4f-b0fa-48e1-8066-ba644c2d4b56'',''f882aa8e-9d4e-45df-b866-1f47131e51a9'')'),
+  ('vq_fixture.entitlements', 3, '306327816f76304de7b1b2739d6ac5fd', 'select row(user_id,allowed)::text x from vq_fixture.entitlements x where user_id::text in (''0cac6cd5-0262-49b7-a721-0817cd59dd8c'',''544541ae-c833-43de-838e-2f45542d1b94'',''5b21ac4f-b0fa-48e1-8066-ba644c2d4b56'',''f882aa8e-9d4e-45df-b866-1f47131e51a9'')'),
   ('published_legs (table or archive)', 0, 'd41d8cd98f00b204e9800998ecf8427e',
      case when to_regclass('vq_fixture.published_legs_preserved') is not null
           then 'select x::text x from vq_fixture.published_legs_preserved x'
