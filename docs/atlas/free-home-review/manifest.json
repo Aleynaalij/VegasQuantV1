@@ -1,0 +1,61 @@
+{
+  "status": "AWAITING_CLAUDE_HASH_REVIEW_NO_HOSTED_EXECUTION",
+  "target": "caynldluziwrzmvuslzg",
+  "source_sha": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "free_home_sha256": "5648c29322e888e45c4048a223e5cf1b6b9de13c9cc11f6892b818cfa2d450e2",
+  "original_free_sha256": "3ad9fc204cbd41d693a2cb14b4e8d51989f43c8941bcc4c1b342987b83450bd4",
+  "wrapper_sha256": "7917f2563e5c86eb4f0b2b935e21fbe2c2231561a2cad02f89533426037a1282",
+  "column_source": [
+    {
+      "name": "slot",
+      "type": "text",
+      "default": null,
+      "notnull": true,
+      "identity": "",
+      "generated": ""
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": true,
+      "identity": "",
+      "generated": ""
+    }
+  ],
+  "original_game_columns": [
+    "id",
+    "sport",
+    "slug",
+    "away_team",
+    "home_team",
+    "kickoff",
+    "kickoff_tbd",
+    "venue",
+    "roof",
+    "schedule_source",
+    "schedule_observed_at"
+  ],
+  "game_projection": "select row(x.\"id\",x.\"sport\",x.\"slug\",x.\"away_team\",x.\"home_team\",x.\"kickoff\",x.\"kickoff_tbd\",x.\"venue\",x.\"roof\",x.\"schedule_source\",x.\"schedule_observed_at\")::text x from public.games x",
+  "public_adaptations": [
+    {
+      "name": "public.desk_data",
+      "signature": "public.desk_data()",
+      "original_sha256": "19a819a260f1f38a6fc4e68cb7c7774d2698e5290f1413f35d86f8cd8d037866",
+      "proposed_sha256": "3f2d1e713787dc6100008e8f33a833ab1f71c23a15a64d4030d4b735e9fcbdea",
+      "proposed_sql": "CREATE OR REPLACE FUNCTION public.desk_data()\n RETURNS jsonb\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select case when private.has_membership() then jsonb_build_object(\n 'access',public.membership_status(), 'overview',private.public_overview(),\n 'games',(select coalesce(jsonb_agg(t order by kickoff),'[]') from public.games t),\n 'challenges',(select coalesce(jsonb_agg(t order by number desc),'[]') from public.challenges t),\n 'stages',(select coalesce(jsonb_agg(t order by stage_number),'[]') from public.challenge_stages t),\n 'markets',(select coalesce(jsonb_agg(t order by observed_at desc,created_at desc),'[]') from public.market_snapshots t),\n 'analyses',(select coalesce(jsonb_agg(t order by created_at desc,version desc),'[]') from public.analysis_versions t),\n 'picks',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.official_picks t),\n 'entries',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.pick_entries t),\n 'closings',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.closing_lines t),\n 'results',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.pick_results t),\n 'reviews',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.process_reviews t),\n 'transactions',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.bankroll_transactions t),\n 'audit',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.audit_events t)) else vq_private_access_stage.free_challenge_desk() end; $function$\n",
+      "change": "Only the free-branch callee changes; original SQL SECURITY INVOKER and paid branch stay intact"
+    },
+    {
+      "name": "public.desk_data_compact",
+      "signature": "public.desk_data_compact()",
+      "original_sha256": "a610467afc78938eecb6548df7c94c3b7cd63593d815e861f34aa275cca17960",
+      "proposed_sha256": "853ffbea20d783c3d81e509a59abf271f063a02ad0423f04e921911fe9299093",
+      "proposed_sql": "CREATE OR REPLACE FUNCTION public.desk_data_compact()\n RETURNS jsonb\n LANGUAGE sql\n STABLE\n SET search_path TO ''\nAS $function$ select case when private.has_membership() then jsonb_build_object(\n 'access',public.membership_status(), 'overview',private.public_overview(),\n 'games',(select coalesce(jsonb_agg(t order by kickoff),'[]') from public.games t),\n 'challenges',(select coalesce(jsonb_agg(t order by number desc),'[]') from public.challenges t),\n 'stages',(select coalesce(jsonb_agg(t order by stage_number),'[]') from public.challenge_stages t),\n 'markets',(select coalesce(jsonb_agg(t order by observed_at desc,created_at desc),'[]') from (select * from public.market_snapshots order by observed_at desc,created_at desc,id desc limit 200) t),\n 'analyses',(select coalesce(jsonb_agg(t order by created_at desc,version desc),'[]') from (select distinct on (game_id) * from public.analysis_versions order by game_id,created_at desc,version desc) t),\n 'picks',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.official_picks t),\n 'entries',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.pick_entries t),\n 'closings',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.closing_lines t),\n 'results',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.pick_results t),\n 'reviews',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.process_reviews t),\n 'transactions',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from public.bankroll_transactions t),\n 'audit',(select coalesce(jsonb_agg(t order by created_at desc),'[]') from (select * from public.audit_events where false) t)) else vq_private_access_stage.free_challenge_desk() end; $function$\n",
+      "change": "Only the free-branch callee changes; original SQL SECURITY INVOKER and paid branch stay intact"
+    }
+  ],
+  "identity_approved_original_sha256": "dcbc7c45a5bbac3bac5e23a1c738ac05c4b978e85f14511f1704ba373e6af197",
+  "identity_proposed_sha256": "ee6f722f496e8dc132e3206d50ecb8a0052ad02ead30c3d24b0fb2d96da7fba7",
+  "identity_change": "Only two embedded games preservation queries change to the original 11-column projection. No identity, ACL, gate, temporal-window or I1 change."
+}
