@@ -1,0 +1,2763 @@
+{
+  "status": "AWAITING_CLAUDE_EXACT_HASH_SIGNOFF",
+  "target_project": "caynldluziwrzmvuslzg",
+  "approved_review_package": "bf1c08ad734a1f0e6f73d3bb4b07d0b40290dee3",
+  "source_ref": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "replay_catalog_sha256": "63793b3ea15e1ca3b2922f892d4a81c8a84c41ecb3a3776ccd3074002e3d93a0",
+  "preparation_sha256": "49fbe1f4b52be840685e8c4f271fb6920fab500f011cce07afbcbe9382ebef4d",
+  "tables": [
+    {
+      "name": "public.alert_preferences",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.app_update_reads",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.app_updates",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.audit_events",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.bankroll_transactions",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.candidate_releases",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.challenge_checkins",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.challenge_runs",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.challenge_stages",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.challenges",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.closing_lines",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_comment_reactions",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_poll_votes",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_polls",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_post_comments",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_post_votes",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_posts",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_profiles",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_reactions",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_reports",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.community_shares",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.edge_releases",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.intelligence_markets",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.intelligence_models",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.intelligence_news",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.intelligence_quotes",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.leg_book_prices",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.leg_history",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.leg_market_prices",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.leg_result_progress",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.leg_tails",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.member_blocks",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.member_follows",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.member_parlays",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.nba_editorial_picks",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.nba_game_results",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.nba_player_results",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.nba_player_shooting",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.nba_player_three_attempts",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.nba_result_progress",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.nfl_analyst_double_ups",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.notification_preferences",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.notifications",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.official_picks",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.onboarding_events",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.personal_challenges",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.personal_correction_decisions",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.personal_correction_requests",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.personal_entries",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.personal_run_events",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.personal_settlements",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.pick_entries",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.pick_results",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.account_erasure_jobs",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.admin_users",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.community_restrictions",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.editorial_parlay_results",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.leg_move_alerts",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.leg_result_contracts",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.leg_result_evidence",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.live_pick_alerts",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.memberships",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.nba_result_corrections",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.nba_result_staging",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.nba_threes_posts",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.nfl_selection_gate_decisions",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.nfl_selection_identities",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.nfl_selection_model_approvals",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.nfl_selection_rule_versions",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.nhl_chart_snapshots",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.notification_action_rates",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.notification_events",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.notification_presence",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.publish_receipts",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.research_identities",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.sports_sources",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.weekly_sleeper_reviews",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "private.zone_post_games",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.process_reviews",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.research_leg_results",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.ruby_card_comments",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.ruby_card_revisions",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.ruby_contributors",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.ruby_daily_features",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.ruby_result_reports",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.ruby_submissions",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.ruby_visibility_events",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.saved_legs",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.sports_games",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.sports_markets",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.sports_selections",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.target_legs",
+      "source_rls": true,
+      "staged_rls": true
+    },
+    {
+      "name": "public.topic_follows",
+      "source_rls": true,
+      "staged_rls": true
+    }
+  ],
+  "views": [
+    {
+      "name": "public.personal_entry_state",
+      "source_sha256": "adc09932e55b159864471f31c59a0f6aaf46305dd82bc129263d3f9af9529e06"
+    },
+    {
+      "name": "public.published_legs",
+      "source_sha256": "90ef8707091c156a60897e88578b33683f402db7aaeeefa8aa4a42f0570a7268"
+    },
+    {
+      "name": "public.ruby_cards",
+      "source_sha256": "d4b780310fccb3a00ea4a12a02794bc838d9b219e1b0c6d16e946d16c064fdd6"
+    }
+  ],
+  "functions": [
+    {
+      "signature": "private.audit_change()",
+      "roles": [],
+      "source_sha256": "9a525a7202f1d64a47f490a7055fabf6ee686608c6b568b1e83d81fdad1a8dc6"
+    },
+    {
+      "signature": "private.before_age_community_member(text)",
+      "roles": [],
+      "source_sha256": "95c3d58235a60a730f9fd91c50a5d7074cbe18442704d9c988fded4568367165"
+    },
+    {
+      "signature": "private.before_age_is_admin()",
+      "roles": [],
+      "source_sha256": "6d3e82925d172646f4b1e07b2a04d5788fc2ed1593cf6303636fe870ab6afd5e"
+    },
+    {
+      "signature": "private.capture_edge_release()",
+      "roles": [],
+      "source_sha256": "cc74bb05efccf2ad9a6a5cf8c12ac8fae5890970fadc4889a370d7b1b545a765"
+    },
+    {
+      "signature": "private.cite_bible_rules()",
+      "roles": [],
+      "source_sha256": "fc7a6c9b722093cc008beedac56d50839a3c96b045148f08ea7a196f6cb7c23f"
+    },
+    {
+      "signature": "private.community_activity()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "11c853515b4b67e3b02b59b5cf201218859a2fda6d59800be7e3a71cd6927e18"
+    },
+    {
+      "signature": "private.community_follow_target_allowed(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "0d46ccc79e9bc19b8426ddcd13e802ae7ced9fecc444848737b8d3595109eb3e"
+    },
+    {
+      "signature": "private.community_member_allowed(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "6d39af9ae8693393ec09159e2bd541ff4e2e8e898608750828bb9cb9fde4ed24"
+    },
+    {
+      "signature": "private.community_photo_access()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "6487bd8015031d3aeec79b84e3a707d8c31b87c491284600cdb91a6a6ea7812f"
+    },
+    {
+      "signature": "private.community_reaction_actor_allowed()",
+      "roles": [],
+      "source_sha256": "27f50af7f7b913812ca047b7615b2b933179d23c61a8f251ca2702c7823c2adb"
+    },
+    {
+      "signature": "private.community_safety_check()",
+      "roles": [],
+      "source_sha256": "88a35af33e20d8042ba8977fe42cb787319754cabf5bb24f1e0b38cbdfe45b6e"
+    },
+    {
+      "signature": "private.complete_editorial_parlay()",
+      "roles": [],
+      "source_sha256": "8ef9371c36325a60e68efe7209de90553449d81c0a98b76c0370095ca7253827"
+    },
+    {
+      "signature": "private.create_member_parlay(text,text[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "55962b9cb93aab17255db892938bdc2be5f8970983533b28301d8b0dafb70e09"
+    },
+    {
+      "signature": "private.edit_ruby_link(uuid,integer,text,jsonb,text,text,text,integer,text,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "097084403756b8c5f7a8747d24ea615ae16a50f319020288bc4a9c74f56ed5d2"
+    },
+    {
+      "signature": "private.enforce_nfl_selection_gate()",
+      "roles": [],
+      "source_sha256": "8ab7e4b8e717701eb2e2ee688af5f88638b65073981f6ce6654f7d246342446d"
+    },
+    {
+      "signature": "private.enforce_research_board()",
+      "roles": [],
+      "source_sha256": "1a26d76546781630e60566f3482398f37b61d8e2df217ad6e532e59176b58136"
+    },
+    {
+      "signature": "private.enforce_weekly_sleeper()",
+      "roles": [],
+      "source_sha256": "ce27296243fb23c0e3e0dafd745da9511bb419c28938e05fa96f4508471cb7bb"
+    },
+    {
+      "signature": "private.feature_ruby(uuid,integer,text,text,timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "d870f843c19455189cf520d25871690ce5a62490f3c2ae04ce0a0f6e96eaf943"
+    },
+    {
+      "signature": "private.free_challenge_desk()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "2525d3beebd51a7f3fc459f433c8b737c65e736cdd5b74738ea1df7058d8ecfa"
+    },
+    {
+      "signature": "private.guard_community_poll()",
+      "roles": [],
+      "source_sha256": "5e23016cd69dbbd68a41d2482ebccadd4e3da936bb877597f21f4c46a445db39"
+    },
+    {
+      "signature": "private.guard_community_profile_text()",
+      "roles": [],
+      "source_sha256": "003148cf8c9627211f85e64016a2e50fac3d241874c45065acec9a081e32eb46"
+    },
+    {
+      "signature": "private.guard_community_typed_reaction()",
+      "roles": [],
+      "source_sha256": "1fd006454b7a454216f6accbff408346a0ff8e008f71f737cf0360f64fbfd49d"
+    },
+    {
+      "signature": "private.guard_kalshi_revision_pause()",
+      "roles": [],
+      "source_sha256": "e71c3ed98d3b0853023a777d75297bfadd2c916a54b67294702431880ec9c2af"
+    },
+    {
+      "signature": "private.guard_kalshi_submission_pause()",
+      "roles": [],
+      "source_sha256": "311ad21a0502432ec9306cb234b5276e10c763f78936c98c407a4b51ca193ec6"
+    },
+    {
+      "signature": "private.guard_nfl_edge_release()",
+      "roles": [],
+      "source_sha256": "aa5d269e312b315b0e1c329a3e51a88f2b10aeaae35a172110071a1973472bf7"
+    },
+    {
+      "signature": "private.guard_nfl_feed_decision()",
+      "roles": [],
+      "source_sha256": "054a37bf1fe5acc6f530cf3cba732b4ebac418f01396fae0778c655fcd1319f2"
+    },
+    {
+      "signature": "private.guard_numeric_sack_contract()",
+      "roles": [],
+      "source_sha256": "456d4d44e85c09d9b3fad95a9245c3c8b8623986e95826402c754ce9d5c388ec"
+    },
+    {
+      "signature": "private.guard_ruby_revision()",
+      "roles": [],
+      "source_sha256": "b1b56c6935b5643207344ea55224d3d1b4844248cdacfec52bf0adf44ab1470a"
+    },
+    {
+      "signature": "private.guard_sack_result_credit()",
+      "roles": [],
+      "source_sha256": "53189d6d48aad2e32274b4c59df507ac6eec8510e85df2c00673be5c61a6d4e3"
+    },
+    {
+      "signature": "private.immutable()",
+      "roles": [],
+      "source_sha256": "864daef90b721b6a5a9424d1cf3d9437557525e1ad37e252d088e18a525ae6af"
+    },
+    {
+      "signature": "private.index_source_observation()",
+      "roles": [],
+      "source_sha256": "5a79765e9a6cd1ca2d192072005ebee231a4785ae848d2a15928603f05ae87d1"
+    },
+    {
+      "signature": "private.is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "fbad58da5e428c849447c9d5f23d6ccae169c88ae3c7e004591682a40c84946e"
+    },
+    {
+      "signature": "private.is_research_release(jsonb)",
+      "roles": [
+        "service_role"
+      ],
+      "source_sha256": "6d7b43727bd2889a34601c87443d3b1ad5d3434621acb7c579a5dc851c666787"
+    },
+    {
+      "signature": "private.is_weekly_sleeper(jsonb)",
+      "roles": [
+        "service_role"
+      ],
+      "source_sha256": "fd2e65e10b5658b43ffddd48310da9a5ca16f57cd7dbd295c1539f4bbe272d5b"
+    },
+    {
+      "signature": "private.keep_first_market_price()",
+      "roles": [],
+      "source_sha256": "9c2ed0c7f159a215fcd7eafb70320e13015b0c6584d1aeae349959f5a0760d91"
+    },
+    {
+      "signature": "private.leg_tail_counts(text[])",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "ccfe954fab8488ff66c4524a125fc3a8bdc28cf2d6c1464d234e46875c629802"
+    },
+    {
+      "signature": "private.lock_personal_run_event()",
+      "roles": [],
+      "source_sha256": "9a914594e9f10871130fcfa8afbb8e354c9fcf7265235c11cb449b98d9f0758d"
+    },
+    {
+      "signature": "private.nba_minor_correction(uuid,jsonb)",
+      "roles": [],
+      "source_sha256": "da58eb43557c99d4cc50356136ff759a8d9e4b07ef52d5446e57028b21548a68"
+    },
+    {
+      "signature": "private.nfl_gate_identity(uuid,text,text)",
+      "roles": [],
+      "source_sha256": "c21afc957d320edeae42c1c2c76bb13a957309f1f701e058ba0c1c85fda3d3d0"
+    },
+    {
+      "signature": "private.nfl_gate_number(jsonb)",
+      "roles": [],
+      "source_sha256": "821ca598f65601dfc858716983febe08dc4287a58128a327bea614497787ad39"
+    },
+    {
+      "signature": "private.nfl_gate_time(text)",
+      "roles": [],
+      "source_sha256": "f936b7a72739418bb8b3a766a99dd79a9382c888908fbabf5bcbab181a35cae4"
+    },
+    {
+      "signature": "private.nfl_selection_errors(jsonb,jsonb,timestamp with time zone)",
+      "roles": [],
+      "source_sha256": "c37d4a5af407ae1143e9cc523353a20006d7b3c8631fb966484a7f22f9ed4d11"
+    },
+    {
+      "signature": "private.nhl_chart_immutable()",
+      "roles": [],
+      "source_sha256": "63f19db873c7770b14f29faa654a1d57aa78101ce7442f2cd6c7336b00b95ebf"
+    },
+    {
+      "signature": "private.normalize_kalshi_source_link(text)",
+      "roles": [],
+      "source_sha256": "03b8da086a6899a4d002ef67339cfe4fdea4869c8f167eb67c3f9a9973ea06d2"
+    },
+    {
+      "signature": "private.notification_actor_followed(uuid,uuid,text)",
+      "roles": [],
+      "source_sha256": "9835546c5d918467adbcfd2f3e3932d663c1cf4e4d2029975eeba15083d54e57"
+    },
+    {
+      "signature": "private.notification_block_cleanup()",
+      "roles": [],
+      "source_sha256": "9e4b425df95f600b49730ea61f9507e8363820f1a5f2d02c54c6b4841b38471c"
+    },
+    {
+      "signature": "private.notification_follow_inbox_allowed(uuid,uuid,uuid,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "1808402d036ee9a540f8a8ba59b11e76208edecc74a46b49f24647166762c28f"
+    },
+    {
+      "signature": "private.notification_group_followed(uuid,uuid,uuid,text)",
+      "roles": [],
+      "source_sha256": "59d9a13b267198fe71ff5782f1bb3a1513c964a77ee527b89c2491905d22e6d4"
+    },
+    {
+      "signature": "private.notification_interaction_guard()",
+      "roles": [],
+      "source_sha256": "1ae8d0f94bdf90d8056e1087b4c480c1abdde1c43734bfff8c703c2c811c48b4"
+    },
+    {
+      "signature": "private.notification_pref_guard()",
+      "roles": [],
+      "source_sha256": "590f8448f0452a951e254996f496dce25466b8bc275a92027543ad7d275e44ad"
+    },
+    {
+      "signature": "private.notification_pulse(uuid,boolean)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "89aedd24ceba6d1d0b8e6f91721299abecc18ae3613735c7b4b63e3f348fd982"
+    },
+    {
+      "signature": "private.notification_search_document(text,text[],text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "c95a2d273497b8882efcb79fab9c57838e8d707b087a00c37c0f843e3ea884f9"
+    },
+    {
+      "signature": "private.personal_immutable_or_erasure()",
+      "roles": [],
+      "source_sha256": "95fd41d1025ba3285991b507ae9e4e8c1c5ab03e2f798c320def9b2ae6a4de43"
+    },
+    {
+      "signature": "private.public_overview()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "8c9a254b593e61e9e28ded426cde93b27715645afa579a095e76c40e0544ad94"
+    },
+    {
+      "signature": "private.publish(text,jsonb,uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "59ac722a833c9fd32605db25f3713a9a5e1715e1167513d94b6a42468d25d082"
+    },
+    {
+      "signature": "private.published_leg_recommendation(text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "c94b588440f6f748838e418c6727c9251f2cb57dead8b7904183d6a6ecb58c06"
+    },
+    {
+      "signature": "private.recent_ruby_card_comment()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "5035944bb64e7d882a484ba0dae8d71ee56894f26ab74f77f4bb372b2e8546b2"
+    },
+    {
+      "signature": "private.record_onboarding()",
+      "roles": [],
+      "source_sha256": "b6e5cc16f178e59b1cd8e112bab05ca92747df9cd663180815f9c591971d581b"
+    },
+    {
+      "signature": "private.require_cleared_personal_run()",
+      "roles": [],
+      "source_sha256": "3dc20d1ded7c0d8b49686e3b5ce5cc7b99f7077c3ad8fdaf3d3739eb5f8d08a6"
+    },
+    {
+      "signature": "private.require_research_model_basis()",
+      "roles": [],
+      "source_sha256": "1d7a7774860b8d5918e5f94a76b9989117496d692028cc581cc796c56552d519"
+    },
+    {
+      "signature": "private.ruby_card_open(uuid)",
+      "roles": [],
+      "source_sha256": "6a768de979c0048e56152f65cc5b6b9fb64ab2d5abf0468205e3cc00ba21a6de"
+    },
+    {
+      "signature": "private.ruby_home()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "59b44cf5b69e8e6da705c19d9b0cba3ab0d9c141c12650e4bfb5324a6f936118"
+    },
+    {
+      "signature": "private.ruby_visible(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "066b40bcb8145c72160ec2eed8989dfe41808d5fd879a1afa3b9dfe7fb7eec16"
+    },
+    {
+      "signature": "private.set_community_poll_vote(uuid,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "3f0639733af88dd7d2beacdece699db3898a0e4a948531f7658d8a5064548a2b"
+    },
+    {
+      "signature": "private.set_community_post_vote(uuid,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "06d685d0553920ccc121b9052d65cf0761df04a6a098a723b04bffdf61c35597"
+    },
+    {
+      "signature": "private.set_community_reaction(uuid,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "2181bd78572ce9b9a8d1ac795722322d2f68520dddc3e6f780c0aa1d46d8fb38"
+    },
+    {
+      "signature": "private.settle_personal_entries()",
+      "roles": [],
+      "source_sha256": "2e07c6e17f1cfaf19a1b08064ad6028fd758855251041b23db14bc0d7996f4f0"
+    },
+    {
+      "signature": "private.signup_trial_expires_at()",
+      "roles": [],
+      "source_sha256": "ab6420bd2dbc3b76c2048d426988c46a64c86d6b8e12c85670fa5e16b2fdea9b"
+    },
+    {
+      "signature": "private.stamp_intelligence()",
+      "roles": [],
+      "source_sha256": "7399d2b58e1f928cb5b9b019efc64fa0cd342b35889b5ab509dc356769b170c7"
+    },
+    {
+      "signature": "private.submit_ruby(uuid,text,text,jsonb,text,text,text,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "18c567927ec07e89ae66bf78784ae649fb8946e8756eddd26d309ea51020133f"
+    },
+    {
+      "signature": "private.submit_ruby_link(uuid,text,text,jsonb,text,text,text,integer,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "f2d8574f4caf80ed234cadaca5f34dbf91715396e941b93c4583fca3be6d68db"
+    },
+    {
+      "signature": "private.validate_nba_editorial_pick()",
+      "roles": [],
+      "source_sha256": "aa7b2f145bf00526994c846121a0543e0de1d5364eee5949de5d1907cc979149"
+    },
+    {
+      "signature": "private.validate_nba_editorial_provenance()",
+      "roles": [],
+      "source_sha256": "432c7768b38eab8ddd65cab1b1803b051875179689212d86f92019172d45e948"
+    },
+    {
+      "signature": "private.validate_nba_editorial_quote_timeline()",
+      "roles": [],
+      "source_sha256": "2ae06185221dcc9653b4d59089e05cdc880fe04773570868b48e2d0045cb4022"
+    },
+    {
+      "signature": "private.validate_nba_editorial_source_timeline()",
+      "roles": [],
+      "source_sha256": "7fabc0654df5a163f1dd6c50f3892fe007cfd609749393a534f8793fbc4c837e"
+    },
+    {
+      "signature": "private.zone_editorial_leg(uuid,uuid,text,text,text,timestamp with time zone)",
+      "roles": [],
+      "source_sha256": "65e8263f7cc0d207bd9807164e53be36ea8a7d93755299c693ffcc0ace33ace8"
+    },
+    {
+      "signature": "private.zone_like(text)",
+      "roles": [],
+      "source_sha256": "ef112ed02e321589e29c3955c8e9176ecd96fdb9554d01d6ff42656081efb043"
+    },
+    {
+      "signature": "private.zone_rx(text)",
+      "roles": [],
+      "source_sha256": "12bdecb9c2a73ee1f033d6d166cd7a8c5d57008bd9b9c733954a75eda579bcf4"
+    },
+    {
+      "signature": "private.zone_side_rx(text,text,text)",
+      "roles": [],
+      "source_sha256": "052d5372a836d1436945283d3d9ffb865dda4d99bd32d5ca19f2bd4fd12ff77a"
+    },
+    {
+      "signature": "public.add_ruby_card_comment(uuid,text,uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "cb3ecc0d35dce7adcaad96ad1da92e22bdf8c35ba547459950b199a8f6a2cc4f"
+    },
+    {
+      "signature": "public.community_activity()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "f39cd74f912f4a5c4648734fa32a5eb788a8ff098ea9772f7417f023d4f73267"
+    },
+    {
+      "signature": "public.community_avatars(uuid[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "b8fd89dbb8aa1fee09b64ec37925b48810a7ece72e070ec8e8b189d3902db5ca"
+    },
+    {
+      "signature": "public.community_comments(uuid,uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "cea17c86497dadfe9f7cd4a5c76617842b4571aecf4c4ac794ea9f0a1898a8e1"
+    },
+    {
+      "signature": "public.community_feed(text,integer,boolean)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "894a7abd4bd4346e5e4a59af8de35456ef9f99788a1e1c55ffdae9fb9a3af3c4"
+    },
+    {
+      "signature": "public.community_poll_states(uuid[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "d218ed43ada28ece6d7bfe94d68730791aef8d010f925a0ada6c9b741832246f"
+    },
+    {
+      "signature": "public.community_post(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "9630e0732593bee376dceff764fe80280361f8a8bd3a00360305e0221da6b5c3"
+    },
+    {
+      "signature": "public.community_profile(text,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "638ba3de183e9dd8bfc308c35f15cea78ce105fcc826e5927198082c0077acbf"
+    },
+    {
+      "signature": "public.community_reaction_state(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "e881613d9cd4fdffaed44bcdf5493deb20e301fe8e5fb28d72029bc8acba58b2"
+    },
+    {
+      "signature": "public.community_story_clock()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "1942860d1842ab19d1cc2acb1b0cea51ea5f59cbc9dedeab6d1eb86405472519"
+    },
+    {
+      "signature": "public.community_vote_states(uuid[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "800c17579558d1e535f9246e6e5842640605d6d3d72dca2f0ca37c67c2aa99f4"
+    },
+    {
+      "signature": "public.create_community_poll_post(uuid,text,text,text,text,jsonb)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "0b3fbe35db680ddbcea7006bc3acf45c144fd7ba4114492c88800a50f28e86fa"
+    },
+    {
+      "signature": "public.create_member_parlay(text,text[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "22ec75b70264c893b3d08f9c3be7e93f3fd8960a413b77c4996c023a0cbbfc69"
+    },
+    {
+      "signature": "public.delete_ruby_card_comment(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "9fe8c841a0ac8cc1b6de573c31ec940102270d400983255dc8d2e8ab3129ef48"
+    },
+    {
+      "signature": "public.desk_data()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "19a819a260f1f38a6fc4e68cb7c7774d2698e5290f1413f35d86f8cd8d037866"
+    },
+    {
+      "signature": "public.desk_data_compact()",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "a610467afc78938eecb6548df7c94c3b7cd63593d815e861f34aa275cca17960"
+    },
+    {
+      "signature": "public.edit_ruby(uuid,integer,text,jsonb,text,text,text,integer,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "5f512a518c2ab4857a477526f826a4910cf83bb5329d2addd314760cb0d57d3a"
+    },
+    {
+      "signature": "public.edit_ruby_link(uuid,integer,text,jsonb,text,text,text,integer,text,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "77144a4bf5fc0f79445764a3e48654e075130c748013428d7c1191b5affa6c77"
+    },
+    {
+      "signature": "public.feature_ruby(uuid,integer,text,text,timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "cada6e3a7766d14fa435504a34bdbfb655481af44b08662e48ab9d2753140a29"
+    },
+    {
+      "signature": "public.is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "00bd756d9158a92e622545ea2486cbebe43379361b10e9aee7c5596d84e3275c"
+    },
+    {
+      "signature": "public.leg_tail_counts(text[])",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "279d180f569827a898b0d82aae398e16ab6ea5fe7e69f766f4a6791768a854e5"
+    },
+    {
+      "signature": "public.nba_name_key(text)",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "5f77844253ab8a38cd7a45433cfe2746ccd92d22ebe810cc144342cb93d3b2ab"
+    },
+    {
+      "signature": "public.nba_player_usage(text[])",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "136d24209e4eba65d298f0f569c237df6b19dcaadd855b5d5124b887c5ee203e"
+    },
+    {
+      "signature": "public.notification_action(text,uuid,timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "ca4662bf2ce6df7b2575493a8189c857013bd7c0753d7e79c32358907e0a5e77"
+    },
+    {
+      "signature": "public.notification_counts()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "1ee67f0ea276c8551c02b80eff7224b229407577e9b7aaf44169b3631fc84a88"
+    },
+    {
+      "signature": "public.notification_inbox(text,text,boolean,timestamp with time zone,uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "c0a29383cfbf2dcba1c9867cc9e8d682b135e34969c79d17c06ce7742109cca2"
+    },
+    {
+      "signature": "public.notification_pulse(uuid,boolean)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "af547b81dfbfee9540e4323d490216280a1e245db60154aad135bfbaa9790ee3"
+    },
+    {
+      "signature": "public.notification_view(uuid[],timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "82f6c001c1a1a8cd9d35cc1629a4ea57a08c602459d1009f985a93d23492369f"
+    },
+    {
+      "signature": "public.published_leg_catalog(timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "b33b8a498326d28bc4866e372968b80e8dad03d7420204d14a60217f91270207"
+    },
+    {
+      "signature": "public.restrict_community_member(uuid,text,boolean)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "467b5ba9df067604858b328e58c7c7be905c4d76e566956db917ff37f8a4295a"
+    },
+    {
+      "signature": "public.ruby_card_comment_counts(uuid[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "7e26f72dd1eb7fd334b101fbf3575c9202fe693cd27f6645b3f052cae61efe49"
+    },
+    {
+      "signature": "public.ruby_card_comments(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "cd81f0d0b3ad4a91fbd7048271865d6bcd4736ed789f481ba75a6cfd0f1b4546"
+    },
+    {
+      "signature": "public.ruby_home()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "234dfa70dd9a0052dc753eea560420be227c818e0b6a6c3e3fc7fcfb379d2bd3"
+    },
+    {
+      "signature": "public.set_community_poll_vote(uuid,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "c9e57843e15c78623fbda04c7c8e7bed847bf0845a6495802bd7dac50f86b031"
+    },
+    {
+      "signature": "public.set_community_post_vote(uuid,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "be60891e15b4746fe5140575dca98b86cdc4dc1d1795525c0a071c87d72a6d7c"
+    },
+    {
+      "signature": "public.set_community_reaction(uuid,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "66e096aa85be243efeb709982750339d3ef4645b505140afaba1844b457a4bce"
+    },
+    {
+      "signature": "public.share_member_parlay(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "a1012cf50183a4324ccc353261cd80a30ad9298078d037197a65cd05c936af61"
+    },
+    {
+      "signature": "public.submit_ruby(uuid,text,text,jsonb,text,text,text,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "be77b49029b7dbbacd8e10e0af1539bdaf01723be4251b1034ab793d8b9a2048"
+    },
+    {
+      "signature": "public.submit_ruby_link(uuid,text,text,jsonb,text,text,text,integer,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "0c9680bb2602a66d167fc4ae553230cba7f2ece2412782c757da15504acf498c"
+    }
+  ],
+  "explicit_function_grants": [
+    {
+      "signature": "private.audit_change()",
+      "roles": [],
+      "source_sha256": "9a525a7202f1d64a47f490a7055fabf6ee686608c6b568b1e83d81fdad1a8dc6"
+    },
+    {
+      "signature": "private.before_age_community_member(text)",
+      "roles": [],
+      "source_sha256": "95c3d58235a60a730f9fd91c50a5d7074cbe18442704d9c988fded4568367165"
+    },
+    {
+      "signature": "private.before_age_is_admin()",
+      "roles": [],
+      "source_sha256": "6d3e82925d172646f4b1e07b2a04d5788fc2ed1593cf6303636fe870ab6afd5e"
+    },
+    {
+      "signature": "private.capture_edge_release()",
+      "roles": [],
+      "source_sha256": "cc74bb05efccf2ad9a6a5cf8c12ac8fae5890970fadc4889a370d7b1b545a765"
+    },
+    {
+      "signature": "private.cite_bible_rules()",
+      "roles": [],
+      "source_sha256": "fc7a6c9b722093cc008beedac56d50839a3c96b045148f08ea7a196f6cb7c23f"
+    },
+    {
+      "signature": "private.community_activity()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "11c853515b4b67e3b02b59b5cf201218859a2fda6d59800be7e3a71cd6927e18"
+    },
+    {
+      "signature": "private.community_follow_target_allowed(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "0d46ccc79e9bc19b8426ddcd13e802ae7ced9fecc444848737b8d3595109eb3e"
+    },
+    {
+      "signature": "private.community_member_allowed(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "6d39af9ae8693393ec09159e2bd541ff4e2e8e898608750828bb9cb9fde4ed24"
+    },
+    {
+      "signature": "private.community_photo_access()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "6487bd8015031d3aeec79b84e3a707d8c31b87c491284600cdb91a6a6ea7812f"
+    },
+    {
+      "signature": "private.community_reaction_actor_allowed()",
+      "roles": [],
+      "source_sha256": "27f50af7f7b913812ca047b7615b2b933179d23c61a8f251ca2702c7823c2adb"
+    },
+    {
+      "signature": "private.community_safety_check()",
+      "roles": [],
+      "source_sha256": "88a35af33e20d8042ba8977fe42cb787319754cabf5bb24f1e0b38cbdfe45b6e"
+    },
+    {
+      "signature": "private.complete_editorial_parlay()",
+      "roles": [],
+      "source_sha256": "8ef9371c36325a60e68efe7209de90553449d81c0a98b76c0370095ca7253827"
+    },
+    {
+      "signature": "private.create_member_parlay(text,text[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "55962b9cb93aab17255db892938bdc2be5f8970983533b28301d8b0dafb70e09"
+    },
+    {
+      "signature": "private.edit_ruby_link(uuid,integer,text,jsonb,text,text,text,integer,text,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "097084403756b8c5f7a8747d24ea615ae16a50f319020288bc4a9c74f56ed5d2"
+    },
+    {
+      "signature": "private.enforce_nfl_selection_gate()",
+      "roles": [],
+      "source_sha256": "8ab7e4b8e717701eb2e2ee688af5f88638b65073981f6ce6654f7d246342446d"
+    },
+    {
+      "signature": "private.enforce_research_board()",
+      "roles": [],
+      "source_sha256": "1a26d76546781630e60566f3482398f37b61d8e2df217ad6e532e59176b58136"
+    },
+    {
+      "signature": "private.enforce_weekly_sleeper()",
+      "roles": [],
+      "source_sha256": "ce27296243fb23c0e3e0dafd745da9511bb419c28938e05fa96f4508471cb7bb"
+    },
+    {
+      "signature": "private.feature_ruby(uuid,integer,text,text,timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "d870f843c19455189cf520d25871690ce5a62490f3c2ae04ce0a0f6e96eaf943"
+    },
+    {
+      "signature": "private.free_challenge_desk()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "2525d3beebd51a7f3fc459f433c8b737c65e736cdd5b74738ea1df7058d8ecfa"
+    },
+    {
+      "signature": "private.guard_community_poll()",
+      "roles": [],
+      "source_sha256": "5e23016cd69dbbd68a41d2482ebccadd4e3da936bb877597f21f4c46a445db39"
+    },
+    {
+      "signature": "private.guard_community_profile_text()",
+      "roles": [],
+      "source_sha256": "003148cf8c9627211f85e64016a2e50fac3d241874c45065acec9a081e32eb46"
+    },
+    {
+      "signature": "private.guard_community_typed_reaction()",
+      "roles": [],
+      "source_sha256": "1fd006454b7a454216f6accbff408346a0ff8e008f71f737cf0360f64fbfd49d"
+    },
+    {
+      "signature": "private.guard_kalshi_revision_pause()",
+      "roles": [],
+      "source_sha256": "e71c3ed98d3b0853023a777d75297bfadd2c916a54b67294702431880ec9c2af"
+    },
+    {
+      "signature": "private.guard_kalshi_submission_pause()",
+      "roles": [],
+      "source_sha256": "311ad21a0502432ec9306cb234b5276e10c763f78936c98c407a4b51ca193ec6"
+    },
+    {
+      "signature": "private.guard_nfl_edge_release()",
+      "roles": [],
+      "source_sha256": "aa5d269e312b315b0e1c329a3e51a88f2b10aeaae35a172110071a1973472bf7"
+    },
+    {
+      "signature": "private.guard_nfl_feed_decision()",
+      "roles": [],
+      "source_sha256": "054a37bf1fe5acc6f530cf3cba732b4ebac418f01396fae0778c655fcd1319f2"
+    },
+    {
+      "signature": "private.guard_numeric_sack_contract()",
+      "roles": [],
+      "source_sha256": "456d4d44e85c09d9b3fad95a9245c3c8b8623986e95826402c754ce9d5c388ec"
+    },
+    {
+      "signature": "private.guard_ruby_revision()",
+      "roles": [],
+      "source_sha256": "b1b56c6935b5643207344ea55224d3d1b4844248cdacfec52bf0adf44ab1470a"
+    },
+    {
+      "signature": "private.guard_sack_result_credit()",
+      "roles": [],
+      "source_sha256": "53189d6d48aad2e32274b4c59df507ac6eec8510e85df2c00673be5c61a6d4e3"
+    },
+    {
+      "signature": "private.immutable()",
+      "roles": [],
+      "source_sha256": "864daef90b721b6a5a9424d1cf3d9437557525e1ad37e252d088e18a525ae6af"
+    },
+    {
+      "signature": "private.index_source_observation()",
+      "roles": [],
+      "source_sha256": "5a79765e9a6cd1ca2d192072005ebee231a4785ae848d2a15928603f05ae87d1"
+    },
+    {
+      "signature": "private.is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "fbad58da5e428c849447c9d5f23d6ccae169c88ae3c7e004591682a40c84946e"
+    },
+    {
+      "signature": "private.is_research_release(jsonb)",
+      "roles": [
+        "service_role"
+      ],
+      "source_sha256": "6d7b43727bd2889a34601c87443d3b1ad5d3434621acb7c579a5dc851c666787"
+    },
+    {
+      "signature": "private.is_weekly_sleeper(jsonb)",
+      "roles": [
+        "service_role"
+      ],
+      "source_sha256": "fd2e65e10b5658b43ffddd48310da9a5ca16f57cd7dbd295c1539f4bbe272d5b"
+    },
+    {
+      "signature": "private.keep_first_market_price()",
+      "roles": [],
+      "source_sha256": "9c2ed0c7f159a215fcd7eafb70320e13015b0c6584d1aeae349959f5a0760d91"
+    },
+    {
+      "signature": "private.leg_tail_counts(text[])",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "ccfe954fab8488ff66c4524a125fc3a8bdc28cf2d6c1464d234e46875c629802"
+    },
+    {
+      "signature": "private.lock_personal_run_event()",
+      "roles": [],
+      "source_sha256": "9a914594e9f10871130fcfa8afbb8e354c9fcf7265235c11cb449b98d9f0758d"
+    },
+    {
+      "signature": "private.nba_minor_correction(uuid,jsonb)",
+      "roles": [],
+      "source_sha256": "da58eb43557c99d4cc50356136ff759a8d9e4b07ef52d5446e57028b21548a68"
+    },
+    {
+      "signature": "private.nfl_gate_identity(uuid,text,text)",
+      "roles": [],
+      "source_sha256": "c21afc957d320edeae42c1c2c76bb13a957309f1f701e058ba0c1c85fda3d3d0"
+    },
+    {
+      "signature": "private.nfl_gate_number(jsonb)",
+      "roles": [],
+      "source_sha256": "821ca598f65601dfc858716983febe08dc4287a58128a327bea614497787ad39"
+    },
+    {
+      "signature": "private.nfl_gate_time(text)",
+      "roles": [],
+      "source_sha256": "f936b7a72739418bb8b3a766a99dd79a9382c888908fbabf5bcbab181a35cae4"
+    },
+    {
+      "signature": "private.nfl_selection_errors(jsonb,jsonb,timestamp with time zone)",
+      "roles": [],
+      "source_sha256": "c37d4a5af407ae1143e9cc523353a20006d7b3c8631fb966484a7f22f9ed4d11"
+    },
+    {
+      "signature": "private.nhl_chart_immutable()",
+      "roles": [],
+      "source_sha256": "63f19db873c7770b14f29faa654a1d57aa78101ce7442f2cd6c7336b00b95ebf"
+    },
+    {
+      "signature": "private.normalize_kalshi_source_link(text)",
+      "roles": [],
+      "source_sha256": "03b8da086a6899a4d002ef67339cfe4fdea4869c8f167eb67c3f9a9973ea06d2"
+    },
+    {
+      "signature": "private.notification_actor_followed(uuid,uuid,text)",
+      "roles": [],
+      "source_sha256": "9835546c5d918467adbcfd2f3e3932d663c1cf4e4d2029975eeba15083d54e57"
+    },
+    {
+      "signature": "private.notification_block_cleanup()",
+      "roles": [],
+      "source_sha256": "9e4b425df95f600b49730ea61f9507e8363820f1a5f2d02c54c6b4841b38471c"
+    },
+    {
+      "signature": "private.notification_follow_inbox_allowed(uuid,uuid,uuid,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "1808402d036ee9a540f8a8ba59b11e76208edecc74a46b49f24647166762c28f"
+    },
+    {
+      "signature": "private.notification_group_followed(uuid,uuid,uuid,text)",
+      "roles": [],
+      "source_sha256": "59d9a13b267198fe71ff5782f1bb3a1513c964a77ee527b89c2491905d22e6d4"
+    },
+    {
+      "signature": "private.notification_interaction_guard()",
+      "roles": [],
+      "source_sha256": "1ae8d0f94bdf90d8056e1087b4c480c1abdde1c43734bfff8c703c2c811c48b4"
+    },
+    {
+      "signature": "private.notification_pref_guard()",
+      "roles": [],
+      "source_sha256": "590f8448f0452a951e254996f496dce25466b8bc275a92027543ad7d275e44ad"
+    },
+    {
+      "signature": "private.notification_pulse(uuid,boolean)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "89aedd24ceba6d1d0b8e6f91721299abecc18ae3613735c7b4b63e3f348fd982"
+    },
+    {
+      "signature": "private.notification_search_document(text,text[],text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "c95a2d273497b8882efcb79fab9c57838e8d707b087a00c37c0f843e3ea884f9"
+    },
+    {
+      "signature": "private.personal_immutable_or_erasure()",
+      "roles": [],
+      "source_sha256": "95fd41d1025ba3285991b507ae9e4e8c1c5ab03e2f798c320def9b2ae6a4de43"
+    },
+    {
+      "signature": "private.public_overview()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "8c9a254b593e61e9e28ded426cde93b27715645afa579a095e76c40e0544ad94"
+    },
+    {
+      "signature": "private.publish(text,jsonb,uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "59ac722a833c9fd32605db25f3713a9a5e1715e1167513d94b6a42468d25d082"
+    },
+    {
+      "signature": "private.published_leg_recommendation(text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "c94b588440f6f748838e418c6727c9251f2cb57dead8b7904183d6a6ecb58c06"
+    },
+    {
+      "signature": "private.recent_ruby_card_comment()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "5035944bb64e7d882a484ba0dae8d71ee56894f26ab74f77f4bb372b2e8546b2"
+    },
+    {
+      "signature": "private.record_onboarding()",
+      "roles": [],
+      "source_sha256": "b6e5cc16f178e59b1cd8e112bab05ca92747df9cd663180815f9c591971d581b"
+    },
+    {
+      "signature": "private.require_cleared_personal_run()",
+      "roles": [],
+      "source_sha256": "3dc20d1ded7c0d8b49686e3b5ce5cc7b99f7077c3ad8fdaf3d3739eb5f8d08a6"
+    },
+    {
+      "signature": "private.require_research_model_basis()",
+      "roles": [],
+      "source_sha256": "1d7a7774860b8d5918e5f94a76b9989117496d692028cc581cc796c56552d519"
+    },
+    {
+      "signature": "private.ruby_card_open(uuid)",
+      "roles": [],
+      "source_sha256": "6a768de979c0048e56152f65cc5b6b9fb64ab2d5abf0468205e3cc00ba21a6de"
+    },
+    {
+      "signature": "private.ruby_home()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "59b44cf5b69e8e6da705c19d9b0cba3ab0d9c141c12650e4bfb5324a6f936118"
+    },
+    {
+      "signature": "private.ruby_visible(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "066b40bcb8145c72160ec2eed8989dfe41808d5fd879a1afa3b9dfe7fb7eec16"
+    },
+    {
+      "signature": "private.set_community_poll_vote(uuid,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "3f0639733af88dd7d2beacdece699db3898a0e4a948531f7658d8a5064548a2b"
+    },
+    {
+      "signature": "private.set_community_post_vote(uuid,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "06d685d0553920ccc121b9052d65cf0761df04a6a098a723b04bffdf61c35597"
+    },
+    {
+      "signature": "private.set_community_reaction(uuid,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "2181bd78572ce9b9a8d1ac795722322d2f68520dddc3e6f780c0aa1d46d8fb38"
+    },
+    {
+      "signature": "private.settle_personal_entries()",
+      "roles": [],
+      "source_sha256": "2e07c6e17f1cfaf19a1b08064ad6028fd758855251041b23db14bc0d7996f4f0"
+    },
+    {
+      "signature": "private.signup_trial_expires_at()",
+      "roles": [],
+      "source_sha256": "ab6420bd2dbc3b76c2048d426988c46a64c86d6b8e12c85670fa5e16b2fdea9b"
+    },
+    {
+      "signature": "private.stamp_intelligence()",
+      "roles": [],
+      "source_sha256": "7399d2b58e1f928cb5b9b019efc64fa0cd342b35889b5ab509dc356769b170c7"
+    },
+    {
+      "signature": "private.submit_ruby(uuid,text,text,jsonb,text,text,text,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "18c567927ec07e89ae66bf78784ae649fb8946e8756eddd26d309ea51020133f"
+    },
+    {
+      "signature": "private.submit_ruby_link(uuid,text,text,jsonb,text,text,text,integer,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "f2d8574f4caf80ed234cadaca5f34dbf91715396e941b93c4583fca3be6d68db"
+    },
+    {
+      "signature": "private.validate_nba_editorial_pick()",
+      "roles": [],
+      "source_sha256": "aa7b2f145bf00526994c846121a0543e0de1d5364eee5949de5d1907cc979149"
+    },
+    {
+      "signature": "private.validate_nba_editorial_provenance()",
+      "roles": [],
+      "source_sha256": "432c7768b38eab8ddd65cab1b1803b051875179689212d86f92019172d45e948"
+    },
+    {
+      "signature": "private.validate_nba_editorial_quote_timeline()",
+      "roles": [],
+      "source_sha256": "2ae06185221dcc9653b4d59089e05cdc880fe04773570868b48e2d0045cb4022"
+    },
+    {
+      "signature": "private.validate_nba_editorial_source_timeline()",
+      "roles": [],
+      "source_sha256": "7fabc0654df5a163f1dd6c50f3892fe007cfd609749393a534f8793fbc4c837e"
+    },
+    {
+      "signature": "private.zone_editorial_leg(uuid,uuid,text,text,text,timestamp with time zone)",
+      "roles": [],
+      "source_sha256": "65e8263f7cc0d207bd9807164e53be36ea8a7d93755299c693ffcc0ace33ace8"
+    },
+    {
+      "signature": "private.zone_like(text)",
+      "roles": [],
+      "source_sha256": "ef112ed02e321589e29c3955c8e9176ecd96fdb9554d01d6ff42656081efb043"
+    },
+    {
+      "signature": "private.zone_rx(text)",
+      "roles": [],
+      "source_sha256": "12bdecb9c2a73ee1f033d6d166cd7a8c5d57008bd9b9c733954a75eda579bcf4"
+    },
+    {
+      "signature": "private.zone_side_rx(text,text,text)",
+      "roles": [],
+      "source_sha256": "052d5372a836d1436945283d3d9ffb865dda4d99bd32d5ca19f2bd4fd12ff77a"
+    },
+    {
+      "signature": "public.add_ruby_card_comment(uuid,text,uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "cb3ecc0d35dce7adcaad96ad1da92e22bdf8c35ba547459950b199a8f6a2cc4f"
+    },
+    {
+      "signature": "public.community_activity()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "f39cd74f912f4a5c4648734fa32a5eb788a8ff098ea9772f7417f023d4f73267"
+    },
+    {
+      "signature": "public.community_avatars(uuid[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "b8fd89dbb8aa1fee09b64ec37925b48810a7ece72e070ec8e8b189d3902db5ca"
+    },
+    {
+      "signature": "public.community_comments(uuid,uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "cea17c86497dadfe9f7cd4a5c76617842b4571aecf4c4ac794ea9f0a1898a8e1"
+    },
+    {
+      "signature": "public.community_feed(text,integer,boolean)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "894a7abd4bd4346e5e4a59af8de35456ef9f99788a1e1c55ffdae9fb9a3af3c4"
+    },
+    {
+      "signature": "public.community_poll_states(uuid[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "d218ed43ada28ece6d7bfe94d68730791aef8d010f925a0ada6c9b741832246f"
+    },
+    {
+      "signature": "public.community_post(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "9630e0732593bee376dceff764fe80280361f8a8bd3a00360305e0221da6b5c3"
+    },
+    {
+      "signature": "public.community_profile(text,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "638ba3de183e9dd8bfc308c35f15cea78ce105fcc826e5927198082c0077acbf"
+    },
+    {
+      "signature": "public.community_reaction_state(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "e881613d9cd4fdffaed44bcdf5493deb20e301fe8e5fb28d72029bc8acba58b2"
+    },
+    {
+      "signature": "public.community_story_clock()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "1942860d1842ab19d1cc2acb1b0cea51ea5f59cbc9dedeab6d1eb86405472519"
+    },
+    {
+      "signature": "public.community_vote_states(uuid[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "800c17579558d1e535f9246e6e5842640605d6d3d72dca2f0ca37c67c2aa99f4"
+    },
+    {
+      "signature": "public.create_community_poll_post(uuid,text,text,text,text,jsonb)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "0b3fbe35db680ddbcea7006bc3acf45c144fd7ba4114492c88800a50f28e86fa"
+    },
+    {
+      "signature": "public.create_member_parlay(text,text[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "22ec75b70264c893b3d08f9c3be7e93f3fd8960a413b77c4996c023a0cbbfc69"
+    },
+    {
+      "signature": "public.delete_ruby_card_comment(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "9fe8c841a0ac8cc1b6de573c31ec940102270d400983255dc8d2e8ab3129ef48"
+    },
+    {
+      "signature": "public.desk_data()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "19a819a260f1f38a6fc4e68cb7c7774d2698e5290f1413f35d86f8cd8d037866"
+    },
+    {
+      "signature": "public.desk_data_compact()",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "a610467afc78938eecb6548df7c94c3b7cd63593d815e861f34aa275cca17960"
+    },
+    {
+      "signature": "public.edit_ruby(uuid,integer,text,jsonb,text,text,text,integer,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "5f512a518c2ab4857a477526f826a4910cf83bb5329d2addd314760cb0d57d3a"
+    },
+    {
+      "signature": "public.edit_ruby_link(uuid,integer,text,jsonb,text,text,text,integer,text,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "77144a4bf5fc0f79445764a3e48654e075130c748013428d7c1191b5affa6c77"
+    },
+    {
+      "signature": "public.feature_ruby(uuid,integer,text,text,timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "cada6e3a7766d14fa435504a34bdbfb655481af44b08662e48ab9d2753140a29"
+    },
+    {
+      "signature": "public.is_admin()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "00bd756d9158a92e622545ea2486cbebe43379361b10e9aee7c5596d84e3275c"
+    },
+    {
+      "signature": "public.leg_tail_counts(text[])",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "279d180f569827a898b0d82aae398e16ab6ea5fe7e69f766f4a6791768a854e5"
+    },
+    {
+      "signature": "public.nba_name_key(text)",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "5f77844253ab8a38cd7a45433cfe2746ccd92d22ebe810cc144342cb93d3b2ab"
+    },
+    {
+      "signature": "public.nba_player_usage(text[])",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ],
+      "source_sha256": "136d24209e4eba65d298f0f569c237df6b19dcaadd855b5d5124b887c5ee203e"
+    },
+    {
+      "signature": "public.notification_action(text,uuid,timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "ca4662bf2ce6df7b2575493a8189c857013bd7c0753d7e79c32358907e0a5e77"
+    },
+    {
+      "signature": "public.notification_counts()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "1ee67f0ea276c8551c02b80eff7224b229407577e9b7aaf44169b3631fc84a88"
+    },
+    {
+      "signature": "public.notification_inbox(text,text,boolean,timestamp with time zone,uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "c0a29383cfbf2dcba1c9867cc9e8d682b135e34969c79d17c06ce7742109cca2"
+    },
+    {
+      "signature": "public.notification_pulse(uuid,boolean)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "af547b81dfbfee9540e4323d490216280a1e245db60154aad135bfbaa9790ee3"
+    },
+    {
+      "signature": "public.notification_view(uuid[],timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "82f6c001c1a1a8cd9d35cc1629a4ea57a08c602459d1009f985a93d23492369f"
+    },
+    {
+      "signature": "public.published_leg_catalog(timestamp with time zone)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "b33b8a498326d28bc4866e372968b80e8dad03d7420204d14a60217f91270207"
+    },
+    {
+      "signature": "public.restrict_community_member(uuid,text,boolean)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "467b5ba9df067604858b328e58c7c7be905c4d76e566956db917ff37f8a4295a"
+    },
+    {
+      "signature": "public.ruby_card_comment_counts(uuid[])",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "7e26f72dd1eb7fd334b101fbf3575c9202fe693cd27f6645b3f052cae61efe49"
+    },
+    {
+      "signature": "public.ruby_card_comments(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "cd81f0d0b3ad4a91fbd7048271865d6bcd4736ed789f481ba75a6cfd0f1b4546"
+    },
+    {
+      "signature": "public.ruby_home()",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "234dfa70dd9a0052dc753eea560420be227c818e0b6a6c3e3fc7fcfb379d2bd3"
+    },
+    {
+      "signature": "public.set_community_poll_vote(uuid,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "c9e57843e15c78623fbda04c7c8e7bed847bf0845a6495802bd7dac50f86b031"
+    },
+    {
+      "signature": "public.set_community_post_vote(uuid,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "be60891e15b4746fe5140575dca98b86cdc4dc1d1795525c0a071c87d72a6d7c"
+    },
+    {
+      "signature": "public.set_community_reaction(uuid,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "66e096aa85be243efeb709982750339d3ef4645b505140afaba1844b457a4bce"
+    },
+    {
+      "signature": "public.share_member_parlay(uuid)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "a1012cf50183a4324ccc353261cd80a30ad9298078d037197a65cd05c936af61"
+    },
+    {
+      "signature": "public.submit_ruby(uuid,text,text,jsonb,text,text,text,integer)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "be77b49029b7dbbacd8e10e0af1539bdaf01723be4251b1034ab793d8b9a2048"
+    },
+    {
+      "signature": "public.submit_ruby_link(uuid,text,text,jsonb,text,text,text,integer,text)",
+      "roles": [
+        "authenticated"
+      ],
+      "source_sha256": "0c9680bb2602a66d167fc4ae553230cba7f2ece2412782c757da15504acf498c"
+    },
+    {
+      "signature": "public.age_verification_status()",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "public.game_zone_posts(text,uuid,integer)",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "public.membership_status()",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "public.sports_slate(text,integer)",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "public.tester_feature_access(text)",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "public.tester_observation_page(text,text,uuid,text,timestamp with time zone,timestamp with time zone,uuid)",
+      "roles": [
+        "authenticated",
+        "service_role"
+      ]
+    },
+    {
+      "signature": "vq_fixture.allowed()",
+      "roles": [
+        "authenticated"
+      ]
+    },
+    {
+      "signature": "vq_private_access_stage.private_development_allowed()",
+      "roles": [
+        "authenticated"
+      ]
+    },
+    {
+      "signature": "vq_private_access_stage.authorized()",
+      "roles": [
+        "authenticated"
+      ]
+    },
+    {
+      "signature": "public.vq_private_access_stage_authorized()",
+      "roles": [
+        "authenticated"
+      ]
+    },
+    {
+      "signature": "public.vq_private_access_stage_read()",
+      "roles": [
+        "authenticated"
+      ]
+    },
+    {
+      "signature": "private.has_membership()",
+      "roles": [
+        "authenticated"
+      ]
+    },
+    {
+      "signature": "private.age_member_allowed()",
+      "roles": [
+        "authenticated"
+      ]
+    },
+    {
+      "signature": "private.age_eligible(uuid)",
+      "roles": []
+    },
+    {
+      "signature": "private.before_age_has_membership()",
+      "roles": []
+    }
+  ],
+  "gate_tables": [
+    "vq_private_access_stage.private_development_settings",
+    "vq_private_access_stage.private_development_owners",
+    "vq_private_access_stage.entitlements",
+    "public.vq_private_access_stage_records"
+  ],
+  "adaptations": [
+    {
+      "object": "private.free_challenge_desk",
+      "status": "NEW_ADAPTATION_REQUIRES_PREPARATION_HASH_REVIEW",
+      "original_sha256": "3ad9fc204cbd41d693a2cb14b4e8d51989f43c8941bcc4c1b342987b83450bd4",
+      "proposed_sha256": "2525d3beebd51a7f3fc459f433c8b737c65e736cdd5b74738ea1df7058d8ecfa",
+      "proposed_sql": "CREATE OR REPLACE FUNCTION private.free_challenge_desk()\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE\n SET search_path TO ''\nAS $function$\nbegin\n raise exception 'Anonymous/free consumer contracts are unavailable on isolated staging' using errcode='42501';\nend\n$function$\n",
+      "reason": "Anonymous/free-core contracts are unavailable on isolated staging. Original free-core branch needs missing games.slot/created_at; deny that branch explicitly instead of altering fixture columns or weakening entitlement."
+    },
+    {
+      "object": "private.before_age_community_member",
+      "sha256": "95c3d58235a60a730f9fd91c50a5d7074cbe18442704d9c988fded4568367165",
+      "source": "adaptations.json",
+      "exact_bytes": true
+    },
+    {
+      "object": "private.community_activity",
+      "sha256": "11c853515b4b67e3b02b59b5cf201218859a2fda6d59800be7e3a71cd6927e18",
+      "source": "adaptations.json",
+      "exact_bytes": true
+    },
+    {
+      "object": "public.community_avatars",
+      "sha256": "b8fd89dbb8aa1fee09b64ec37925b48810a7ece72e070ec8e8b189d3902db5ca",
+      "source": "adaptations.json",
+      "exact_bytes": true
+    },
+    {
+      "object": "private.community_follow_target_allowed",
+      "sha256": "0d46ccc79e9bc19b8426ddcd13e802ae7ced9fecc444848737b8d3595109eb3e",
+      "source": "adaptations.json",
+      "exact_bytes": true
+    },
+    {
+      "object": "private.notification_actor_followed",
+      "sha256": "9835546c5d918467adbcfd2f3e3932d663c1cf4e4d2029975eeba15083d54e57",
+      "source": "adaptations.json",
+      "exact_bytes": true
+    },
+    {
+      "object": "public.community_profile",
+      "sha256": "638ba3de183e9dd8bfc308c35f15cea78ce105fcc826e5927198082c0077acbf",
+      "source": "adaptations.json",
+      "exact_bytes": true
+    },
+    {
+      "object": "public.candidate_releases trigger enqueue_price_push",
+      "status": "OMITTED",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.community_comment_reactions trigger notification_comment_reaction",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "public.community_post_comments trigger notification_comment",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "public.community_post_comments trigger prepare_community_comment",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.is_live_pick_zone_post"
+    },
+    {
+      "object": "public.community_posts trigger a_attach_zone_automated_card",
+      "status": "OMITTED",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.community_posts trigger community_post_card_guard",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.zone_automation"
+    },
+    {
+      "object": "public.community_posts trigger notification_post",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "public.community_posts trigger prepare_community_post",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.is_live_pick_zone_post"
+    },
+    {
+      "object": "public.community_posts trigger zone_post_notify",
+      "status": "OMITTED",
+      "reason": "Forbidden source marker"
+    },
+    {
+      "object": "public.community_posts trigger zz_tag_post_games",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.zone_tag_post"
+    },
+    {
+      "object": "public.community_reactions trigger notification_like",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "public.community_shares trigger notification_share",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "public.leg_market_prices trigger enqueue_price_move_push",
+      "status": "OMITTED",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.member_follows trigger notification_follow",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "public.notifications policy notification_pick_contract",
+      "status": "OMITTED",
+      "reason": "references excluded operation; no replacement permissive policy"
+    },
+    {
+      "object": "public.official_picks trigger enqueue_official_push",
+      "status": "OMITTED",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.account_erasure_jobs trigger age_erasure_initialization_guard",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.age_checks"
+    },
+    {
+      "object": "private.community_restrictions trigger notification_restriction_change",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "public.ruby_submissions trigger ruby_notify",
+      "status": "OMITTED",
+      "reason": "Calls excluded private.emit_notification"
+    }
+  ],
+  "omitted": [
+    {
+      "object": "private.age_check_latest",
+      "reason": "Calls excluded private.age_checks"
+    },
+    {
+      "object": "private.age_check_sessions",
+      "reason": "Calls excluded private.age_checks"
+    },
+    {
+      "object": "private.age_checkout_guard",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.age_checks",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.age_erasure_initialization_guard",
+      "reason": "Calls excluded private.age_checks"
+    },
+    {
+      "object": "private.age_policy",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.age_push_delivery_allowed",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.age_push_guard",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.age_verification_status",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.attach_zone_automated_card",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.attempt_live_pick_zone_post",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.authorize_account_erasure",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.before_age_register_push",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.begin_account_erasure",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.begin_admin_account_erasure",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.begin_age_check",
+      "reason": "Calls excluded private.age_checks"
+    },
+    {
+      "object": "private.billing_account",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.billing_events",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.billing_fulfill",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.billing_invoices",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.billing_link",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.billing_order",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.billing_order_present",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.billing_orders",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.billing_revoke",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.billing_subscription_block",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.billing_subscription_sync",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.billing_subscriptions",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.bind_age_check",
+      "reason": "Calls excluded private.age_checks"
+    },
+    {
+      "object": "private.check_source_health",
+      "reason": "Calls excluded private.push_deliveries"
+    },
+    {
+      "object": "private.community_post_card_guard",
+      "reason": "Calls excluded private.zone_automation"
+    },
+    {
+      "object": "private.dealer_attribution_history",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.dispatch_model_scan",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.dispatch_nba_shadow_scan",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.dispatch_research_board",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.dispatch_sportradar_collection",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.emit_notification",
+      "reason": "Calls excluded private.notification_deliveries"
+    },
+    {
+      "object": "private.engagement_metrics",
+      "reason": "Calls excluded public.push_subscriptions"
+    },
+    {
+      "object": "private.enqueue_pick_push",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.enqueue_price_move_push",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.enqueue_price_push",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.enqueue_research_push",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.enqueue_signup_push",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.erase_member_dependencies",
+      "reason": "Calls excluded private.billing_events"
+    },
+    {
+      "object": "private.existing_member_premium",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.finish_age_check",
+      "reason": "Calls excluded private.age_checks"
+    },
+    {
+      "object": "private.frank_anniversary",
+      "reason": "Calls excluded private.frank_anniversary_config"
+    },
+    {
+      "object": "private.frank_anniversary_config",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.frank_anniversary_receipts",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.frank_nhl_feedback",
+      "reason": "Calls excluded private.frank_anniversary_config"
+    },
+    {
+      "object": "private.frank_nhl_feedback_review",
+      "reason": "Calls excluded private.frank_nhl_feedback"
+    },
+    {
+      "object": "private.guard_billing_during_erasure",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.guard_community_photo_upload",
+      "reason": "Calls excluded private.age_policy"
+    },
+    {
+      "object": "private.invoke_live_pick_alerts",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.invoke_push_dispatcher",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.invoke_social_notification_dispatcher",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.is_dealer_publisher",
+      "reason": "Forbidden source marker"
+    },
+    {
+      "object": "private.is_live_pick_zone_post",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.live_pick_alert",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.live_pick_zone_health",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.membership_status",
+      "reason": "Forbidden source marker"
+    },
+    {
+      "object": "private.nba_daily_post",
+      "reason": "Forbidden source marker"
+    },
+    {
+      "object": "private.nba_live_post",
+      "reason": "Forbidden source marker"
+    },
+    {
+      "object": "private.nba_pretip_sync",
+      "reason": "Reviewed outbound/provider/Dealer exclusion"
+    },
+    {
+      "object": "private.nba_threes_post",
+      "reason": "Calls excluded private.nba_threes_post_before_live_readiness"
+    },
+    {
+      "object": "private.nba_threes_post_before_live_readiness",
+      "reason": "Calls excluded private.zone_automation"
+    },
+    {
+      "object": "private.nfl_weekly_cards_post",
+      "reason": "Calls excluded private.zone_automation"
+    },
+    {
+      "object": "private.nhl_charts_run",
+      "reason": "Calls excluded private.nhl_charts_tick"
+    },
+    {
+      "object": "private.nhl_charts_tick",
+      "reason": "Forbidden source marker"
+    },
+    {
+      "object": "private.nhl_game_context",
+      "reason": "Calls excluded private.frank_anniversary_config"
+    },
+    {
+      "object": "private.notification_deliveries",
+      "reason": "External delivery queue excluded with provider chain"
+    },
+    {
+      "object": "private.notification_email_change",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "private.notification_password_change",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.notification_restriction_change",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "private.notification_social_event",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "private.notification_sync_updates",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "private.pick_notification_inbox_allowed",
+      "reason": "Calls excluded private.pick_notification_recipient_allowed"
+    },
+    {
+      "object": "private.pick_notification_recipient_allowed",
+      "reason": "Calls excluded private.billing_subscriptions"
+    },
+    {
+      "object": "private.post_live_pick_result",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.prepare_member_publication",
+      "reason": "Calls excluded private.is_live_pick_zone_post"
+    },
+    {
+      "object": "private.publish_analyst_double_up",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "private.publish_nba_editorial_zone",
+      "reason": "Calls excluded private.zone_automation"
+    },
+    {
+      "object": "private.push_config",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.push_deliveries",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.push_public_key",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.register_push",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.release_account_erasure",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.ruby_notify",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "private.sports_publish_automated",
+      "reason": "Calls excluded private.zone_automation"
+    },
+    {
+      "object": "private.wants_publication",
+      "reason": "Publication-delivery preference helper requires missing games abbreviations; delivery contracts excluded"
+    },
+    {
+      "object": "private.zone_automation",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "private.zone_dealer_publisher_id",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "private.zone_game_index",
+      "reason": "Original view requires games.away_abbreviation/home_abbreviation absent from preserved reduced fixture. No fixture column/data rewrite; zone enrichment unavailable."
+    },
+    {
+      "object": "private.zone_post_notify",
+      "reason": "Forbidden source marker"
+    },
+    {
+      "object": "private.zone_tag_post",
+      "reason": "Calls excluded private.zone_automation"
+    },
+    {
+      "object": "private.zone_tag_post_trigger",
+      "reason": "Calls excluded private.zone_tag_post"
+    },
+    {
+      "object": "public.age_check_latest",
+      "reason": "Calls excluded private.age_check_latest"
+    },
+    {
+      "object": "public.age_check_sessions",
+      "reason": "Calls excluded private.age_check_sessions"
+    },
+    {
+      "object": "public.age_push_delivery_allowed",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.age_verification_status",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.authorize_account_erasure",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.begin_account_erasure",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.begin_admin_account_erasure",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.begin_age_check",
+      "reason": "Calls excluded private.begin_age_check"
+    },
+    {
+      "object": "public.billing_account",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.billing_fulfill",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.billing_link",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.billing_order",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.billing_order_present",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.billing_revoke",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.billing_subscription_block",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.billing_subscription_sync",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.bind_age_check",
+      "reason": "Calls excluded private.bind_age_check"
+    },
+    {
+      "object": "public.claim_push_deliveries",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.claim_push_test",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.claim_social_notification_deliveries",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.community_dealer_feed",
+      "reason": "Calls excluded private.zone_dealer_publisher_id"
+    },
+    {
+      "object": "public.enable_health_push",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.engagement_metrics",
+      "reason": "Calls excluded private.engagement_metrics"
+    },
+    {
+      "object": "public.finish_age_check",
+      "reason": "Calls excluded private.finish_age_check"
+    },
+    {
+      "object": "public.finish_push_delivery",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.finish_social_notification_delivery",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.frank_anniversary",
+      "reason": "Calls excluded private.frank_anniversary"
+    },
+    {
+      "object": "public.frank_nhl_feedback",
+      "reason": "Calls excluded private.frank_nhl_feedback"
+    },
+    {
+      "object": "public.frank_nhl_feedback_review",
+      "reason": "Calls excluded private.frank_nhl_feedback_review"
+    },
+    {
+      "object": "public.live_pick_alert",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.live_pick_candidates",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.live_pick_zone_health",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.nba_defense_vs_position",
+      "reason": "Original SQL requires nba_games.season_type absent from preserved reduced fixture; research contract remains unavailable"
+    },
+    {
+      "object": "public.nfl_position_card",
+      "reason": "Forbidden source marker"
+    },
+    {
+      "object": "public.nhl_chart_snapshot",
+      "reason": "Forbidden source marker"
+    },
+    {
+      "object": "public.nhl_game_context",
+      "reason": "Calls excluded private.nhl_game_context"
+    },
+    {
+      "object": "public.notification_sync_updates",
+      "reason": "Calls excluded private.notification_sync_updates"
+    },
+    {
+      "object": "public.publish_analyst_double_up",
+      "reason": "Calls excluded private.publish_analyst_double_up"
+    },
+    {
+      "object": "public.publish_system_notification",
+      "reason": "Calls excluded private.emit_notification"
+    },
+    {
+      "object": "public.push_public_key",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.push_server_config",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.push_subscriptions",
+      "reason": "Provider/account/config/Dealer store excluded"
+    },
+    {
+      "object": "public.register_push",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.release_account_erasure",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.retry_live_pick_zone_posts",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.retry_social_notification_delivery",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.social_notification_delivery_allowed",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    },
+    {
+      "object": "public.social_notification_health",
+      "reason": "Provider, identity lifecycle, Dealer or delivery operation excluded"
+    }
+  ],
+  "sequences": [],
+  "identity_creation": "SEPARATE_ARTIFACT_NO_SESSIONS",
+  "capability_activation": "NOT_PERFORMED; actual target catalog review and registry equivalence remain required"
+}
