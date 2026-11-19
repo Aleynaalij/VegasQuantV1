@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth, combinedViewer, useViewerIdentity } from "@/lib/viewer-auth";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
@@ -10,6 +11,8 @@ import {
 } from "react";
 import Link from "next/link";
 import RubyHub from "./ruby-cards";
+import { Zone2Publication, Zone2Tools } from "./zone2/zone2-presentation";
+import { filterZone2Feed, zone2Publication } from "@/lib/zone2";
 import NhlChartPreview from "./nhl-chart-preview";
 import { nhlChartRef } from "@/lib/nhl-chart-package";
 import { memberProfileLink } from "@/lib/member-profile";
@@ -778,7 +781,13 @@ function ZoneLay({
     </article>
   );
 }
-export default function CommunityFeed() {
+export default function CommunityFeed({ experience = "legacy", basePath = "/community" }: { experience?: "legacy" | "zone2"; basePath?: string } = {}) {
+  const viewer = useViewerIdentity();
+  const socialReady = !combinedViewer || viewer.capabilities.social;
+  const zone2 = experience === "zone2";
+  const [contributorError, setContributorError] = useState(false);
+  const [researchQuery, setResearchQuery] = useState("");
+  const [researchOnly, setResearchOnly] = useState(true);
   const searchParams = useSearchParams();
   const router = useRouter();
   const routeSport = searchParams.get("sport");
@@ -908,11 +917,11 @@ export default function CommunityFeed() {
       setFeedError("");
       setAuthReady(true);
     };
-    void supabase.auth.getSession().then((s) => {
+    void viewerAuth.getSession().then((s) => {
       if (sessionUid.current === undefined)
         update(s.data.session?.user.id || null);
     });
-    const a = supabase.auth.onAuthStateChange((_e, s) =>
+    const a = viewerAuth.onAuthStateChange((_e, s) =>
       update(s?.user.id || null),
     );
     return () => {
@@ -949,7 +958,7 @@ export default function CommunityFeed() {
       setFeedError(
         dealerOnly
           ? "Dealer posts could not refresh. Please retry."
-          : "Community could not refresh. Your existing posts are preserved.",
+          : !socialReady ? "Zone stories, comments, reactions, following and saved content are unavailable: their isolated backend contracts are not verified. No changes were made." : "Community could not refresh. Your existing posts are preserved.",
       );
       return;
     }
@@ -987,6 +996,7 @@ export default function CommunityFeed() {
         .maybeSingle(),
     ]);
     if (n !== epoch.current) return;
+    setContributorError(!!cards.error);
     setLays(cards.data || []);
     if (!faces.error)
       setAvatars((known) => ({
@@ -1042,6 +1052,7 @@ export default function CommunityFeed() {
   async function post(e: FormEvent) {
     e.preventDefault();
     if (!uid) return;
+    if (!socialReady) { setNotice("Posting is unavailable: the isolated social mutation contract is not verified."); return; }
     if (!body.trim() && !photo && !poll) return;
     if (busy) return;
     const pollProblem = poll ? pollDraftProblem(poll) : null;
@@ -1055,6 +1066,7 @@ export default function CommunityFeed() {
     setBusy(true);
     setNotice("");
     try {
+      if (combinedViewer && photo) throw Error("Photo uploads are unavailable until isolated storage is separately reviewed.");
       if (photo) {
         const session = await supabase.auth.getSession();
         if (generation !== mutationEpoch.current) return;
@@ -1387,6 +1399,7 @@ export default function CommunityFeed() {
     );
   }
   async function remove(id: string) {
+    if (!socialReady) { setNotice("Post deletion is unavailable in isolated staging."); return; }
     if (busy) return;
     setBusy(true);
     const generation = mutationEpoch.current;
@@ -1434,16 +1447,20 @@ export default function CommunityFeed() {
     rows,
     dealerOnly ? [] : lays.filter((lay) => lay.id !== targetLay),
   );
+  const visibleFeed = zone2 ? filterZone2Feed(feed, { query: hasTargetPost || targetLay ? "" : researchQuery, researchOnly: researchOnly && !hasTargetPost && !targetLay && !followingOnly }) : feed;
   const face = (name: string, avatar: string | null | undefined) => (
     <Avatar name={name} avatar={avatar} />
   );
   return (
     <Shell active="community" sport={sport === "all" ? undefined : sport}>
-      <div className="community-feed zone-feed">
+      <div className={`community-feed zone-feed${zone2 ? " zone2-experience" : ""}`}>
+        {combinedViewer && !socialReady && <p className="zone-status" role="status">ISOLATED STAGING · Social interactions and full publication downloads need verified backend contracts. They are unavailable here; no production content or permissions are substituted.</p>}
+        {contributorError && <p role="status">Contributor cards could not load. Existing contributor records are preserved; retry to check their availability.</p>}
         <header className="zone-head">
           <h1>The Zone</h1>
-          <p>Takes, lays and research from the Vegas Quant floor.</p>
+          <p>{zone2 ? "Research first. Conversation in context." : "Takes, lays and research from the Vegas Quant floor."}</p>
         </header>
+        {zone2 && uid ? <Zone2Tools query={researchQuery} onQuery={setResearchQuery} researchOnly={researchOnly} onResearchOnly={setResearchOnly} count={visibleFeed.length} /> : null}
         {blocked.length ? (
           <details>
             <summary>Blocked members · {blocked.length}</summary>
@@ -1624,20 +1641,24 @@ export default function CommunityFeed() {
                 My lays · saved and in progress →
               </Link>
             </p>
-            <div className="zone-tabs" role="tablist" aria-label="Feed">
+            {/* Zone2 uses native toggle filters, not a tab widget: refresh is
+                an independent action and every filter remains keyboard reachable. */}
+            <div className="zone-tabs" role={zone2 ? "group" : "tablist"} aria-label="Feed">
               {(
                 [
-                  ["For you", !followingOnly && !dealerOnly, "all"],
+                  [zone2 ? "Community" : "For you", !followingOnly && !dealerOnly, "all"],
                   ["Following", followingOnly, "following"],
                   ["Dealer only", dealerOnly, "dealer"],
                 ] as const
               ).map(([label, on, view]) => (
                 <button
                   key={label}
-                  role="tab"
-                  aria-selected={on}
+                  role={zone2 ? undefined : "tab"}
+                  aria-selected={zone2 ? undefined : on}
+                  aria-pressed={zone2 ? on : undefined}
                   className={on ? "is-active" : ""}
                   onClick={() => {
+                    if (zone2 && view !== "dealer") setResearchOnly(false);
                     if (on) {
                       void refresh();
                       return;
@@ -1655,7 +1676,7 @@ export default function CommunityFeed() {
                     q.delete("post");
                     q.delete("comment");
                     q.delete("ruby");
-                    router.push(`/community${q.size ? `?${q}` : ""}`, {
+                    router.push(`${basePath}${q.size ? `?${q}` : ""}`, {
                       scroll: false,
                     });
                   }}
@@ -1677,7 +1698,7 @@ export default function CommunityFeed() {
               </button>
             </div>
             {liveSports().length > 1 ? (
-              <div className="zone-sports" aria-label="Sport">
+              <div className="zone-sports" role="group" aria-label="Sport">
                 {(["all", ...liveSports()] as const).map((key) => (
                   <button
                     key={key}
@@ -1698,7 +1719,7 @@ export default function CommunityFeed() {
                       if (key === "all") q.delete("sport");
                       else q.set("sport", key);
                       q.delete("post");
-                      router.replace(`/community${q.size ? `?${q}` : ""}`, {
+                      router.replace(`${basePath}${q.size ? `?${q}` : ""}`, {
                         scroll: false,
                       });
                     }}
@@ -1751,7 +1772,8 @@ export default function CommunityFeed() {
                 </p>
               </section>
             ) : null}
-            {feed.map((item) =>
+            {zone2 && !loading && !feedError && feed.length > 0 && visibleFeed.length === 0 ? <p role="status" className="zone-status">No matching content in the loaded feed. Clear your search, switch to all content, or load more posts below.</p> : null}
+            {visibleFeed.map((item) =>
               item.kind === "lay" ? (
                 <ZoneLay
                   key={`lay-${item.id}`}
@@ -1849,6 +1871,7 @@ export default function CommunityFeed() {
                       {p.title !== "Community post" ? (
                         <h2 className="zone-post-title">{p.title}</h2>
                       ) : null}
+                      <Zone2Publication enabled={zone2 && zone2Publication(p)} post={p} basePath={basePath}>
                       {nhlChartRef(p.card) ? (<NhlChartPreview id={nhlChartRef(p.card)!} body={p.body} />) : weeklyCardRef(p.card) || positionCardPostId(p) ? (
                         <figure
                           className="zone-card zone-media"
@@ -1921,6 +1944,7 @@ export default function CommunityFeed() {
                           <RichText text={p.body} />
                         </p>
                       )}
+                      </Zone2Publication>
                       {p.photo_path ? (
                         <div
                           className="zone-media"

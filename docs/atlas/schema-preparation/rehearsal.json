@@ -1,0 +1,2047 @@
+{
+  "status": "PASS",
+  "preparation_sha256": "49fbe1f4b52be840685e8c4f271fb6920fab500f011cce07afbcbe9382ebef4d",
+  "engine": "PostgreSQL 17.11 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0, 64-bit",
+  "scope": "Native local only; managed Auth/storage structural stand-ins; no hosted equivalence or acceptance claim",
+  "checks": [
+    {
+      "name": "Full preparation rollback retains reduced fixture OID/data/grants and absent schemas",
+      "status": "PASS"
+    },
+    {
+      "name": "Changed fixture digest and disabled fixture RLS reject atomically",
+      "status": "PASS"
+    },
+    {
+      "name": "All Claude preservation/isolation/prepared assertions",
+      "status": "PASS",
+      "count": 33
+    },
+    {
+      "name": "C3 six installed adaptation definitions byte-identical to approved proposed_sha256",
+      "status": "PASS"
+    },
+    {
+      "name": "C2 exact explicit authenticated/service_role grant checks embedded in preparation; full grants recorded",
+      "status": "PASS",
+      "functions": 133
+    },
+    {
+      "name": "C1 managed-code exemptions, word-boundary net regex, all five application markers rejected",
+      "status": "PASS"
+    },
+    {
+      "name": "Global/default PUBLIC EXECUTE denied for new private helper",
+      "status": "PASS"
+    },
+    {
+      "name": "C4 separate six-identity process: no password/phone/MFA/session/admin/publisher grants; all 10 preservation digests match",
+      "status": "PASS"
+    },
+    {
+      "name": "Six controls through real saved table, original ruby_cards view, published_leg_catalog RPC, inbox source, oracle ACL, real gate AAL/revocation/expiry, anonymous 42501; local content/sessions rolled back",
+      "status": "PASS"
+    }
+  ],
+  "before": [
+    {
+      "phase": "isolation",
+      "name": "auth users are synthetic (*.invalid, no phone)",
+      "result": "PASS",
+      "detail": "0 real emails, 0 phones"
+    },
+    {
+      "phase": "isolation",
+      "name": "complimentary-premium table absent",
+      "result": "PASS",
+      "detail": "false"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions owned by postgres",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions pin search_path",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "every public table has RLS on",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "excluded functions absent (Dealer, dispatchers)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no auth.users triggers",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no database webhooks schema",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no function body reaches production or outbound HTTP/vault",
+      "result": "PASS",
+      "detail": "none"
+    },
+    {
+      "phase": "isolation",
+      "name": "no pg_net/pg_cron/http/dblink/postgres_fdw",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no realtime publication tables",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no storage buckets",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "sessions (0 until isolation is accepted)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "vault.secrets empty",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_eligible not executable by authenticated/anon (M2)",
+      "result": "NOT_PREPARED",
+      "detail": "false"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_member_allowed is definer (M2)",
+      "result": "NOT_PREPARED",
+      "detail": "false"
+    },
+    {
+      "phase": "prepared",
+      "name": "gate schema installed",
+      "result": "NOT_PREPARED",
+      "detail": "false"
+    },
+    {
+      "phase": "prepared",
+      "name": "has_membership requires age (M1)",
+      "result": "NOT_PREPARED",
+      "detail": "false"
+    },
+    {
+      "phase": "prepared",
+      "name": "no private function executable by PUBLIC (F3)",
+      "result": "NOT_PREPARED",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "private schema present",
+      "result": "NOT_PREPARED",
+      "detail": "false"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs archive kept in vq_fixture",
+      "result": "NOT_PREPARED",
+      "detail": "false"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs is a security-invoker view",
+      "result": "NOT_PREPARED",
+      "detail": "r"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs not granted to anon/PUBLIC",
+      "result": "NOT_PREPARED",
+      "detail": "r"
+    },
+    {
+      "phase": "preserved",
+      "name": "auth.users ids",
+      "result": "PASS",
+      "detail": "4 rows, d49852dd726bfce1ac4d2f99bdcc05f4"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.games",
+      "result": "PASS",
+      "detail": "1 rows, 0d4f96e41536c949ef4d95a5b4f5c6a5"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_games",
+      "result": "PASS",
+      "detail": "1 rows, bdae35bbdd8287e0f15464b5476ee623"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_observations",
+      "result": "PASS",
+      "detail": "1 rows, 643eaae6c67e24ac752455074b80fd11"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.source_observations",
+      "result": "PASS",
+      "detail": "1 rows, e06558504a3848d531eb98e56124379d"
+    },
+    {
+      "phase": "preserved",
+      "name": "published_legs (table or archive)",
+      "result": "PASS",
+      "detail": "0 rows, d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.age_states",
+      "result": "PASS",
+      "detail": "3 rows, 416b0b9c1ca06c3f8b25e61ec2a44061"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.entitlements",
+      "result": "PASS",
+      "detail": "3 rows, 306327816f76304de7b1b2739d6ac5fd"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.posts",
+      "result": "PASS",
+      "detail": "4 rows, 41bd600253186d02cb3b466a9031357e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.sports",
+      "result": "PASS",
+      "detail": "2 rows, 5f9f57bd3f4eb317dea0289e325887c7"
+    }
+  ],
+  "after": [
+    {
+      "phase": "isolation",
+      "name": "auth users are synthetic (*.invalid, no phone)",
+      "result": "PASS",
+      "detail": "0 real emails, 0 phones"
+    },
+    {
+      "phase": "isolation",
+      "name": "complimentary-premium table absent",
+      "result": "PASS",
+      "detail": "false"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions owned by postgres",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions pin search_path",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "every public table has RLS on",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "excluded functions absent (Dealer, dispatchers)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no auth.users triggers",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no database webhooks schema",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no function body reaches production or outbound HTTP/vault",
+      "result": "PASS",
+      "detail": "none"
+    },
+    {
+      "phase": "isolation",
+      "name": "no pg_net/pg_cron/http/dblink/postgres_fdw",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no realtime publication tables",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no storage buckets",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "sessions (0 until isolation is accepted)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "vault.secrets empty",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_eligible not executable by authenticated/anon (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_member_allowed is definer (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "gate schema installed",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "has_membership requires age (M1)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "no private function executable by PUBLIC (F3)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "private schema present",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs archive kept in vq_fixture",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs is a security-invoker view",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs not granted to anon/PUBLIC",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "preserved",
+      "name": "auth.users ids",
+      "result": "PASS",
+      "detail": "4 rows, d49852dd726bfce1ac4d2f99bdcc05f4"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.games",
+      "result": "PASS",
+      "detail": "1 rows, 0d4f96e41536c949ef4d95a5b4f5c6a5"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_games",
+      "result": "PASS",
+      "detail": "1 rows, bdae35bbdd8287e0f15464b5476ee623"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_observations",
+      "result": "PASS",
+      "detail": "1 rows, 643eaae6c67e24ac752455074b80fd11"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.source_observations",
+      "result": "PASS",
+      "detail": "1 rows, e06558504a3848d531eb98e56124379d"
+    },
+    {
+      "phase": "preserved",
+      "name": "published_legs (table or archive)",
+      "result": "PASS",
+      "detail": "0 rows, d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.age_states",
+      "result": "PASS",
+      "detail": "3 rows, 416b0b9c1ca06c3f8b25e61ec2a44061"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.entitlements",
+      "result": "PASS",
+      "detail": "3 rows, 306327816f76304de7b1b2739d6ac5fd"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.posts",
+      "result": "PASS",
+      "detail": "4 rows, 41bd600253186d02cb3b466a9031357e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.sports",
+      "result": "PASS",
+      "detail": "2 rows, 5f9f57bd3f4eb317dea0289e325887c7"
+    }
+  ],
+  "adapted_definitions": [
+    {
+      "object": "private.before_age_community_member",
+      "sha256": "95c3d58235a60a730f9fd91c50a5d7074cbe18442704d9c988fded4568367165",
+      "expected_sha256": "95c3d58235a60a730f9fd91c50a5d7074cbe18442704d9c988fded4568367165",
+      "result": "PASS"
+    },
+    {
+      "object": "private.community_activity",
+      "sha256": "11c853515b4b67e3b02b59b5cf201218859a2fda6d59800be7e3a71cd6927e18",
+      "expected_sha256": "11c853515b4b67e3b02b59b5cf201218859a2fda6d59800be7e3a71cd6927e18",
+      "result": "PASS"
+    },
+    {
+      "object": "public.community_avatars",
+      "sha256": "b8fd89dbb8aa1fee09b64ec37925b48810a7ece72e070ec8e8b189d3902db5ca",
+      "expected_sha256": "b8fd89dbb8aa1fee09b64ec37925b48810a7ece72e070ec8e8b189d3902db5ca",
+      "result": "PASS"
+    },
+    {
+      "object": "private.community_follow_target_allowed",
+      "sha256": "0d46ccc79e9bc19b8426ddcd13e802ae7ced9fecc444848737b8d3595109eb3e",
+      "expected_sha256": "0d46ccc79e9bc19b8426ddcd13e802ae7ced9fecc444848737b8d3595109eb3e",
+      "result": "PASS"
+    },
+    {
+      "object": "private.notification_actor_followed",
+      "sha256": "9835546c5d918467adbcfd2f3e3932d663c1cf4e4d2029975eeba15083d54e57",
+      "expected_sha256": "9835546c5d918467adbcfd2f3e3932d663c1cf4e4d2029975eeba15083d54e57",
+      "result": "PASS"
+    },
+    {
+      "object": "public.community_profile",
+      "sha256": "638ba3de183e9dd8bfc308c35f15cea78ce105fcc826e5927198082c0077acbf",
+      "expected_sha256": "638ba3de183e9dd8bfc308c35f15cea78ce105fcc826e5927198082c0077acbf",
+      "result": "PASS"
+    }
+  ],
+  "grants": [
+    {
+      "name": "private.age_eligible",
+      "signature": "private.age_eligible(uuid)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.age_member_allowed",
+      "signature": "private.age_member_allowed()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.audit_change",
+      "signature": "private.audit_change()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.before_age_community_member",
+      "signature": "private.before_age_community_member(text)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.before_age_has_membership",
+      "signature": "private.before_age_has_membership()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.before_age_is_admin",
+      "signature": "private.before_age_is_admin()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.capture_edge_release",
+      "signature": "private.capture_edge_release()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.cite_bible_rules",
+      "signature": "private.cite_bible_rules()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.community_activity",
+      "signature": "private.community_activity()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.community_follow_target_allowed",
+      "signature": "private.community_follow_target_allowed(uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.community_member_allowed",
+      "signature": "private.community_member_allowed(uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.community_photo_access",
+      "signature": "private.community_photo_access()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.community_reaction_actor_allowed",
+      "signature": "private.community_reaction_actor_allowed()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.community_safety_check",
+      "signature": "private.community_safety_check()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.complete_editorial_parlay",
+      "signature": "private.complete_editorial_parlay()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.create_member_parlay",
+      "signature": "private.create_member_parlay(text,text[])",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.edit_ruby_link",
+      "signature": "private.edit_ruby_link(uuid,integer,text,jsonb,text,text,text,integer,text,text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.enforce_nfl_selection_gate",
+      "signature": "private.enforce_nfl_selection_gate()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.enforce_research_board",
+      "signature": "private.enforce_research_board()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.enforce_weekly_sleeper",
+      "signature": "private.enforce_weekly_sleeper()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.feature_ruby",
+      "signature": "private.feature_ruby(uuid,integer,text,text,timestamp with time zone)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.free_challenge_desk",
+      "signature": "private.free_challenge_desk()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_community_poll",
+      "signature": "private.guard_community_poll()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_community_profile_text",
+      "signature": "private.guard_community_profile_text()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_community_typed_reaction",
+      "signature": "private.guard_community_typed_reaction()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_kalshi_revision_pause",
+      "signature": "private.guard_kalshi_revision_pause()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_kalshi_submission_pause",
+      "signature": "private.guard_kalshi_submission_pause()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_nfl_edge_release",
+      "signature": "private.guard_nfl_edge_release()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_nfl_feed_decision",
+      "signature": "private.guard_nfl_feed_decision()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_numeric_sack_contract",
+      "signature": "private.guard_numeric_sack_contract()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_ruby_revision",
+      "signature": "private.guard_ruby_revision()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.guard_sack_result_credit",
+      "signature": "private.guard_sack_result_credit()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.has_membership",
+      "signature": "private.has_membership()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.immutable",
+      "signature": "private.immutable()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.index_source_observation",
+      "signature": "private.index_source_observation()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.is_admin",
+      "signature": "private.is_admin()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.is_research_release",
+      "signature": "private.is_research_release(jsonb)",
+      "authenticated": false,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.is_weekly_sleeper",
+      "signature": "private.is_weekly_sleeper(jsonb)",
+      "authenticated": false,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.keep_first_market_price",
+      "signature": "private.keep_first_market_price()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.leg_tail_counts",
+      "signature": "private.leg_tail_counts(text[])",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.lock_personal_run_event",
+      "signature": "private.lock_personal_run_event()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.nba_minor_correction",
+      "signature": "private.nba_minor_correction(uuid,jsonb)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.nfl_gate_identity",
+      "signature": "private.nfl_gate_identity(uuid,text,text)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.nfl_gate_number",
+      "signature": "private.nfl_gate_number(jsonb)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.nfl_gate_time",
+      "signature": "private.nfl_gate_time(text)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.nfl_selection_errors",
+      "signature": "private.nfl_selection_errors(jsonb,jsonb,timestamp with time zone)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.nhl_chart_immutable",
+      "signature": "private.nhl_chart_immutable()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.normalize_kalshi_source_link",
+      "signature": "private.normalize_kalshi_source_link(text)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.notification_actor_followed",
+      "signature": "private.notification_actor_followed(uuid,uuid,text)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.notification_block_cleanup",
+      "signature": "private.notification_block_cleanup()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.notification_follow_inbox_allowed",
+      "signature": "private.notification_follow_inbox_allowed(uuid,uuid,uuid,text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.notification_group_followed",
+      "signature": "private.notification_group_followed(uuid,uuid,uuid,text)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.notification_interaction_guard",
+      "signature": "private.notification_interaction_guard()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.notification_pref_guard",
+      "signature": "private.notification_pref_guard()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.notification_pulse",
+      "signature": "private.notification_pulse(uuid,boolean)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.notification_search_document",
+      "signature": "private.notification_search_document(text,text[],text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.personal_immutable_or_erasure",
+      "signature": "private.personal_immutable_or_erasure()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.public_overview",
+      "signature": "private.public_overview()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.publish",
+      "signature": "private.publish(text,jsonb,uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.published_leg_recommendation",
+      "signature": "private.published_leg_recommendation(text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.recent_ruby_card_comment",
+      "signature": "private.recent_ruby_card_comment()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.record_onboarding",
+      "signature": "private.record_onboarding()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.require_cleared_personal_run",
+      "signature": "private.require_cleared_personal_run()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.require_research_model_basis",
+      "signature": "private.require_research_model_basis()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.ruby_card_open",
+      "signature": "private.ruby_card_open(uuid)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.ruby_home",
+      "signature": "private.ruby_home()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.ruby_visible",
+      "signature": "private.ruby_visible(uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.set_community_poll_vote",
+      "signature": "private.set_community_poll_vote(uuid,integer)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.set_community_post_vote",
+      "signature": "private.set_community_post_vote(uuid,integer)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.set_community_reaction",
+      "signature": "private.set_community_reaction(uuid,text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.settle_personal_entries",
+      "signature": "private.settle_personal_entries()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.signup_trial_expires_at",
+      "signature": "private.signup_trial_expires_at()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.stamp_intelligence",
+      "signature": "private.stamp_intelligence()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.submit_ruby",
+      "signature": "private.submit_ruby(uuid,text,text,jsonb,text,text,text,integer)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.submit_ruby_link",
+      "signature": "private.submit_ruby_link(uuid,text,text,jsonb,text,text,text,integer,text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.validate_nba_editorial_pick",
+      "signature": "private.validate_nba_editorial_pick()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.validate_nba_editorial_provenance",
+      "signature": "private.validate_nba_editorial_provenance()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.validate_nba_editorial_quote_timeline",
+      "signature": "private.validate_nba_editorial_quote_timeline()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.validate_nba_editorial_source_timeline",
+      "signature": "private.validate_nba_editorial_source_timeline()",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.zone_editorial_leg",
+      "signature": "private.zone_editorial_leg(uuid,uuid,text,text,text,timestamp with time zone)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.zone_like",
+      "signature": "private.zone_like(text)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.zone_rx",
+      "signature": "private.zone_rx(text)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "private.zone_side_rx",
+      "signature": "private.zone_side_rx(text,text,text)",
+      "authenticated": false,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.add_ruby_card_comment",
+      "signature": "add_ruby_card_comment(uuid,text,uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.age_verification_status",
+      "signature": "age_verification_status()",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_activity",
+      "signature": "community_activity()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_avatars",
+      "signature": "community_avatars(uuid[])",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_comments",
+      "signature": "community_comments(uuid,uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_feed",
+      "signature": "community_feed(text,integer,boolean)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_poll_states",
+      "signature": "community_poll_states(uuid[])",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_post",
+      "signature": "community_post(uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_profile",
+      "signature": "community_profile(text,integer)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_reaction_state",
+      "signature": "community_reaction_state(uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_story_clock",
+      "signature": "community_story_clock()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.community_vote_states",
+      "signature": "community_vote_states(uuid[])",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.create_community_poll_post",
+      "signature": "create_community_poll_post(uuid,text,text,text,text,jsonb)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.create_member_parlay",
+      "signature": "create_member_parlay(text,text[])",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.delete_ruby_card_comment",
+      "signature": "delete_ruby_card_comment(uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.desk_data",
+      "signature": "desk_data()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.desk_data_compact",
+      "signature": "desk_data_compact()",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.edit_ruby",
+      "signature": "edit_ruby(uuid,integer,text,jsonb,text,text,text,integer,text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.edit_ruby_link",
+      "signature": "edit_ruby_link(uuid,integer,text,jsonb,text,text,text,integer,text,text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.feature_ruby",
+      "signature": "feature_ruby(uuid,integer,text,text,timestamp with time zone)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.game_zone_posts",
+      "signature": "game_zone_posts(text,uuid,integer)",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.is_admin",
+      "signature": "is_admin()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.leg_tail_counts",
+      "signature": "leg_tail_counts(text[])",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.membership_status",
+      "signature": "membership_status()",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.nba_name_key",
+      "signature": "nba_name_key(text)",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.nba_player_usage",
+      "signature": "nba_player_usage(text[])",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.notification_action",
+      "signature": "notification_action(text,uuid,timestamp with time zone)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.notification_counts",
+      "signature": "notification_counts()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.notification_inbox",
+      "signature": "notification_inbox(text,text,boolean,timestamp with time zone,uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.notification_pulse",
+      "signature": "notification_pulse(uuid,boolean)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.notification_view",
+      "signature": "notification_view(uuid[],timestamp with time zone)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.published_leg_catalog",
+      "signature": "published_leg_catalog(timestamp with time zone)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.restrict_community_member",
+      "signature": "restrict_community_member(uuid,text,boolean)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.ruby_card_comment_counts",
+      "signature": "ruby_card_comment_counts(uuid[])",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.ruby_card_comments",
+      "signature": "ruby_card_comments(uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.ruby_home",
+      "signature": "ruby_home()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.set_community_poll_vote",
+      "signature": "set_community_poll_vote(uuid,integer)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.set_community_post_vote",
+      "signature": "set_community_post_vote(uuid,integer)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.set_community_reaction",
+      "signature": "set_community_reaction(uuid,text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.share_member_parlay",
+      "signature": "share_member_parlay(uuid)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.sports_slate",
+      "signature": "sports_slate(text,integer)",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.submit_ruby",
+      "signature": "submit_ruby(uuid,text,text,jsonb,text,text,text,integer)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.submit_ruby_link",
+      "signature": "submit_ruby_link(uuid,text,text,jsonb,text,text,text,integer,text)",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.tester_feature_access",
+      "signature": "tester_feature_access(text)",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.tester_observation_page",
+      "signature": "tester_observation_page(text,text,uuid,text,timestamp with time zone,timestamp with time zone,uuid)",
+      "authenticated": true,
+      "service_role": true,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.vq_private_access_stage_authorized",
+      "signature": "vq_private_access_stage_authorized()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "public.vq_private_access_stage_read",
+      "signature": "vq_private_access_stage_read()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "vq_fixture.allowed",
+      "signature": "vq_fixture.allowed()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "vq_private_access_stage.authorized",
+      "signature": "vq_private_access_stage.authorized()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": false,
+      "public_execute": false
+    },
+    {
+      "name": "vq_private_access_stage.private_development_allowed",
+      "signature": "vq_private_access_stage.private_development_allowed()",
+      "authenticated": true,
+      "service_role": false,
+      "anon": true,
+      "public_execute": false
+    }
+  ],
+  "rls_disabled": [
+    {
+      "name": "vq_private_access_stage.entitlements",
+      "authenticated_access": false,
+      "anon_access": false
+    },
+    {
+      "name": "vq_private_access_stage.private_development_owners",
+      "authenticated_access": false,
+      "anon_access": false
+    },
+    {
+      "name": "vq_private_access_stage.private_development_settings",
+      "authenticated_access": false,
+      "anon_access": false
+    }
+  ],
+  "identity_sha256": "dcbc7c45a5bbac3bac5e23a1c738ac05c4b978e85f14511f1704ba373e6af197",
+  "after_identities": [
+    {
+      "phase": "isolation",
+      "name": "auth users are synthetic (*.invalid, no phone)",
+      "result": "PASS",
+      "detail": "0 real emails, 0 phones"
+    },
+    {
+      "phase": "isolation",
+      "name": "complimentary-premium table absent",
+      "result": "PASS",
+      "detail": "false"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions owned by postgres",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions pin search_path",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "every public table has RLS on",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "excluded functions absent (Dealer, dispatchers)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no auth.users triggers",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no database webhooks schema",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no function body reaches production or outbound HTTP/vault",
+      "result": "PASS",
+      "detail": "none"
+    },
+    {
+      "phase": "isolation",
+      "name": "no pg_net/pg_cron/http/dblink/postgres_fdw",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no realtime publication tables",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no storage buckets",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "sessions (0 until isolation is accepted)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "vault.secrets empty",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_eligible not executable by authenticated/anon (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_member_allowed is definer (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "gate schema installed",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "has_membership requires age (M1)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "no private function executable by PUBLIC (F3)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "private schema present",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs archive kept in vq_fixture",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs is a security-invoker view",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs not granted to anon/PUBLIC",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "preserved",
+      "name": "auth.users ids",
+      "result": "PASS",
+      "detail": "4 rows, d49852dd726bfce1ac4d2f99bdcc05f4"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.games",
+      "result": "PASS",
+      "detail": "1 rows, 0d4f96e41536c949ef4d95a5b4f5c6a5"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_games",
+      "result": "PASS",
+      "detail": "1 rows, bdae35bbdd8287e0f15464b5476ee623"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_observations",
+      "result": "PASS",
+      "detail": "1 rows, 643eaae6c67e24ac752455074b80fd11"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.source_observations",
+      "result": "PASS",
+      "detail": "1 rows, e06558504a3848d531eb98e56124379d"
+    },
+    {
+      "phase": "preserved",
+      "name": "published_legs (table or archive)",
+      "result": "PASS",
+      "detail": "0 rows, d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.age_states",
+      "result": "PASS",
+      "detail": "3 rows, 416b0b9c1ca06c3f8b25e61ec2a44061"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.entitlements",
+      "result": "PASS",
+      "detail": "3 rows, 306327816f76304de7b1b2739d6ac5fd"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.posts",
+      "result": "PASS",
+      "detail": "4 rows, 41bd600253186d02cb3b466a9031357e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.sports",
+      "result": "PASS",
+      "detail": "2 rows, 5f9f57bd3f4eb317dea0289e325887c7"
+    }
+  ],
+  "negative_controls": [
+    {
+      "email": "active-verified@vq-fixture.invalid",
+      "gate": true,
+      "expected_member": true,
+      "direct_saved_rows": 1,
+      "ruby_view_rows": 1,
+      "published_leg_rpc": "EMPTY_EXECUTION_ONLY_POSITIVE_CONTENT_UNRUN",
+      "inbox_source_rows": 1,
+      "inbox_rpc_items": 1,
+      "age_oracle": "42501",
+      "result": "PASS"
+    },
+    {
+      "email": "entitled-unverified@vq-fixture.invalid",
+      "gate": true,
+      "expected_member": false,
+      "direct_saved_rows": 0,
+      "ruby_view_rows": 0,
+      "published_leg_rpc": "EMPTY_EXECUTION_ONLY_POSITIVE_CONTENT_UNRUN",
+      "inbox_source_rows": 0,
+      "inbox_rpc_items": 0,
+      "age_oracle": "42501",
+      "result": "PASS"
+    },
+    {
+      "email": "revoked-verified@vq-fixture.invalid",
+      "gate": true,
+      "expected_member": false,
+      "direct_saved_rows": 0,
+      "ruby_view_rows": 0,
+      "published_leg_rpc": "EMPTY_EXECUTION_ONLY_POSITIVE_CONTENT_UNRUN",
+      "inbox_source_rows": 0,
+      "inbox_rpc_items": 0,
+      "age_oracle": "42501",
+      "result": "PASS"
+    },
+    {
+      "email": "expired-verified@vq-fixture.invalid",
+      "gate": true,
+      "expected_member": false,
+      "direct_saved_rows": 0,
+      "ruby_view_rows": 0,
+      "published_leg_rpc": "EMPTY_EXECUTION_ONLY_POSITIVE_CONTENT_UNRUN",
+      "inbox_source_rows": 0,
+      "inbox_rpc_items": 0,
+      "age_oracle": "42501",
+      "result": "PASS"
+    },
+    {
+      "email": "not-started-verified@vq-fixture.invalid",
+      "gate": true,
+      "expected_member": false,
+      "direct_saved_rows": 0,
+      "ruby_view_rows": 0,
+      "published_leg_rpc": "EMPTY_EXECUTION_ONLY_POSITIVE_CONTENT_UNRUN",
+      "inbox_source_rows": 0,
+      "inbox_rpc_items": 0,
+      "age_oracle": "42501",
+      "result": "PASS"
+    },
+    {
+      "email": "unentitled-verified@vq-fixture.invalid",
+      "gate": true,
+      "expected_member": false,
+      "direct_saved_rows": 0,
+      "ruby_view_rows": 0,
+      "published_leg_rpc": "EMPTY_EXECUTION_ONLY_POSITIVE_CONTENT_UNRUN",
+      "inbox_source_rows": 0,
+      "inbox_rpc_items": 0,
+      "age_oracle": "42501",
+      "result": "PASS"
+    }
+  ],
+  "final": [
+    {
+      "phase": "isolation",
+      "name": "auth users are synthetic (*.invalid, no phone)",
+      "result": "PASS",
+      "detail": "0 real emails, 0 phones"
+    },
+    {
+      "phase": "isolation",
+      "name": "complimentary-premium table absent",
+      "result": "PASS",
+      "detail": "false"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions owned by postgres",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions pin search_path",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "every public table has RLS on",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "excluded functions absent (Dealer, dispatchers)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no auth.users triggers",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no database webhooks schema",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no function body reaches production or outbound HTTP/vault",
+      "result": "PASS",
+      "detail": "none"
+    },
+    {
+      "phase": "isolation",
+      "name": "no pg_net/pg_cron/http/dblink/postgres_fdw",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no realtime publication tables",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no storage buckets",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "sessions (0 until isolation is accepted)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "vault.secrets empty",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_eligible not executable by authenticated/anon (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_member_allowed is definer (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "gate schema installed",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "has_membership requires age (M1)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "no private function executable by PUBLIC (F3)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "private schema present",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs archive kept in vq_fixture",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs is a security-invoker view",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs not granted to anon/PUBLIC",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "preserved",
+      "name": "auth.users ids",
+      "result": "PASS",
+      "detail": "4 rows, d49852dd726bfce1ac4d2f99bdcc05f4"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.games",
+      "result": "PASS",
+      "detail": "1 rows, 0d4f96e41536c949ef4d95a5b4f5c6a5"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_games",
+      "result": "PASS",
+      "detail": "1 rows, bdae35bbdd8287e0f15464b5476ee623"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_observations",
+      "result": "PASS",
+      "detail": "1 rows, 643eaae6c67e24ac752455074b80fd11"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.source_observations",
+      "result": "PASS",
+      "detail": "1 rows, e06558504a3848d531eb98e56124379d"
+    },
+    {
+      "phase": "preserved",
+      "name": "published_legs (table or archive)",
+      "result": "PASS",
+      "detail": "0 rows, d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.age_states",
+      "result": "PASS",
+      "detail": "3 rows, 416b0b9c1ca06c3f8b25e61ec2a44061"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.entitlements",
+      "result": "PASS",
+      "detail": "3 rows, 306327816f76304de7b1b2739d6ac5fd"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.posts",
+      "result": "PASS",
+      "detail": "4 rows, 41bd600253186d02cb3b466a9031357e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.sports",
+      "result": "PASS",
+      "detail": "2 rows, 5f9f57bd3f4eb317dea0289e325887c7"
+    }
+  ],
+  "unrun": [
+    "Positive-content published_legs (source publication/model gates intentionally not bypassed)",
+    "Full consumer contract/capability alignment and same-session website tests",
+    "Hosted preparation, actual-target catalog review, real MFA/member sessions, protected hosting and owner rollback acceptance"
+  ]
+}

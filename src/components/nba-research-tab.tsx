@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
+import { latestRequest } from "@/lib/latest-request";
 import { noAccess, type Access } from "@/lib/membership";
 import NbaLineups from "./nba-lineups";
 import NbaPropCard from "./nba-prop-card";
@@ -21,24 +22,33 @@ export default function NbaResearchTab() {
   const [error, setError] = useState("");
   const [open, setOpen] = useState<string | null>(null);
   useEffect(() => {
-    let live = true;
+    const gate = latestRequest();
     async function load() {
+      const current = gate.start();
       try {
         const a = await supabase.rpc("membership_status");
         const status = a.error ? noAccess : (a.data as Access);
         const s = await loadSlate(status.allowed);
-        if (!live) return;
+        if (!current()) return;
         setAccess(status);
         setSlate(s);
         setError("");
       } catch {
-        if (live) setError("NBA research could not load. Retry in a moment.");
+        if (current())
+          setError("NBA research could not load. Retry in a moment.");
       }
     }
     void load();
-    const stop = onUserChange(() => void load());
+    const stop = onUserChange(() => {
+      gate.cancel();
+      setSlate(null);
+      setAccess(noAccess);
+      setOpen(null);
+      setError("");
+      void load();
+    });
     return () => {
-      live = false;
+      gate.cancel();
       stop();
     };
   }, []);

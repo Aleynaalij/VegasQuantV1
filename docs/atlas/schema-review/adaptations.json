@@ -1,0 +1,133 @@
+{
+  "status": "UNREVIEWED_PROPOSAL_NOT_INSTALL_SQL",
+  "source_ref": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "objects": [
+    {
+      "object": "public.desk_data_compact",
+      "signature": "desk_data_compact()",
+      "replayed_definition_sha256": "a610467afc78938eecb6548df7c94c3b7cd63593d815e861f34aa275cca17960",
+      "adaptation": "Use FINAL latest-analysis replay body; original anon EXECUTE is recorded, revoke anon in the private staged surface",
+      "original_owner": "postgres",
+      "original_acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}"
+    },
+    {
+      "object": "private.before_age_community_member",
+      "signature": "private.before_age_community_member(text)",
+      "replayed_definition_sha256": "0da6e441aeeea9151cc7adc177bbb7a2ca6dad16890e59df78090da5332b10d5",
+      "adaptation": "USE_PRE_DEALER_CAPTURE",
+      "original_owner": "postgres",
+      "original_acl": "{postgres=X/postgres}"
+    },
+    {
+      "object": "private.before_age_has_membership",
+      "signature": "private.before_age_has_membership()",
+      "replayed_definition_sha256": "32360c4201d3beac0b25e5b8c0b00f649e91201cee361569a74c975db9508fac",
+      "adaptation": "REPLACE with stored staging entitlement lookup in eligibility-adapters.sql.proposed; exclude private.existing_member_premium and its blanket auth.users seed",
+      "original_owner": "postgres",
+      "original_acl": "{postgres=X/postgres}"
+    },
+    {
+      "object": "private.edit_ruby_link",
+      "signature": "private.edit_ruby_link(uuid,integer,text,jsonb,text,text,text,integer,text,text)",
+      "replayed_definition_sha256": "097084403756b8c5f7a8747d24ea615ae16a50f319020288bc4a9c74f56ed5d2",
+      "adaptation": "Use final replayed link-aware body AND include both Kalshi pause triggers from 20261106225003; historical links remain readable, new/changed links remain blocked",
+      "original_owner": "postgres",
+      "original_acl": "{postgres=X/postgres,authenticated=X/postgres}"
+    },
+    {
+      "object": "private.submit_ruby_link",
+      "signature": "private.submit_ruby_link(uuid,text,text,jsonb,text,text,text,integer,text)",
+      "replayed_definition_sha256": "f2d8574f4caf80ed234cadaca5f34dbf91715396e941b93c4583fca3be6d68db",
+      "adaptation": "Use final replayed link-aware body AND include both Kalshi pause triggers from 20261106225003; historical links remain readable, new/changed links remain blocked",
+      "original_owner": "postgres",
+      "original_acl": "{postgres=X/postgres,authenticated=X/postgres}"
+    },
+    {
+      "object": "public.published_legs",
+      "replayed_definition_sha256": "90ef8707091c156a60897e88578b33683f402db7aaeeefa8aa4a42f0570a7268",
+      "adaptation": "Use final replayed security-invoker view and complete approved source-table graph; preserve published_legs archive OID/data, revoke authenticated SELECT on archive",
+      "options": [
+        "security_invoker=true"
+      ],
+      "original_acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres,service_role=r/postgres}"
+    },
+    {
+      "object": "public.ruby_cards",
+      "replayed_definition_sha256": "d4b780310fccb3a00ea4a12a02794bc838d9b219e1b0c6d16e946d16c064fdd6",
+      "adaptation": "Use final replayed security-invoker view and complete approved source-table graph; preserve published_legs archive OID/data, revoke authenticated SELECT on archive",
+      "options": [
+        "security_invoker=true"
+      ],
+      "original_acl": "{postgres=arwdDxtm/postgres,authenticated=r/postgres}"
+    }
+  ],
+  "proposed_functions": [
+    {
+      "object": "private.before_age_community_member",
+      "signature": "private.before_age_community_member(text)",
+      "source": "pre-Dealer capture before 20261106221738",
+      "original_sha256": "95c3d58235a60a730f9fd91c50a5d7074cbe18442704d9c988fded4568367165",
+      "proposed_sql": "CREATE OR REPLACE FUNCTION private.before_age_community_member(p_username text)\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare p public.community_profiles; events jsonb;\nbegin\n if auth.uid() is null then raise exception 'Sign in to view member profiles'; end if;\n select cp.* into p from public.community_profiles cp join auth.users u on u.id=cp.user_id\n where lower(cp.username)=lower(p_username) and (cp.user_id=auth.uid() or (cp.visible))\n and u.email_confirmed_at is not null and (u.banned_until is null or u.banned_until<=now());\n if not found then return null; end if;\n select coalesce(jsonb_agg(to_jsonb(e)),'[]'::jsonb) into events from (\n select * from (\n select 'joined' as kind,c.number as challenge_number,null::integer as stage_number,r.joined_at as at\n from public.challenge_runs r join public.challenges c on c.id=r.challenge_id where r.user_id=p.user_id\n union all\n select 'followed',c.number,k.stage_number,k.created_at from public.challenge_checkins k join public.challenges c on c.id=k.challenge_id where k.user_id=p.user_id\n union all\n select 'won',c.number,st.stage_number,max(pr.created_at) from public.personal_entry_state e\n join public.official_picks op on op.id=e.pick_id join public.challenge_stages st on st.id=op.stage_id\n join public.challenges c on c.id=st.challenge_id\n join public.pick_results pr on pr.pick_id=op.id\n where e.user_id=p.user_id and e.result='WIN'\n group by c.number,st.stage_number\n ) x order by at desc limit 100\n ) e;\n return jsonb_build_object('username',p.username,'region',p.region,'avatar',p.avatar,'instagram_url',p.instagram_url,'x_url',p.x_url,'events',events);\nend $function$\n",
+      "proposed_sha256": "95c3d58235a60a730f9fd91c50a5d7074cbe18442704d9c988fded4568367165",
+      "status": "UNREVIEWED"
+    },
+    {
+      "object": "private.community_activity",
+      "signature": "private.community_activity()",
+      "source": "pre-Dealer capture before 20261106221738",
+      "original_sha256": "11c853515b4b67e3b02b59b5cf201218859a2fda6d59800be7e3a71cd6927e18",
+      "proposed_sql": "CREATE OR REPLACE FUNCTION private.community_activity()\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n if auth.uid() is null then return '[]'::jsonb; end if;\n return coalesce((select jsonb_agg(to_jsonb(x) order by x.created_at desc,x.post_id desc) from (\n  select latest.id as post_id,cp.username,cp.avatar,latest.sport,latest.created_at\n  from public.community_profiles cp\n  join auth.users u on u.id=cp.user_id\n  cross join lateral (\n   select p.id,p.sport,p.created_at from public.community_posts p\n   where p.user_id=cp.user_id\n   order by p.created_at desc,p.id desc limit 1\n  ) latest\n  where cp.visible and u.email_confirmed_at is not null\n  and (u.banned_until is null or u.banned_until<=now())\n  and private.community_member_allowed(cp.user_id)\n  order by latest.created_at desc,latest.id desc limit 24\n ) x),'[]'::jsonb);\nend $function$\n",
+      "proposed_sha256": "11c853515b4b67e3b02b59b5cf201218859a2fda6d59800be7e3a71cd6927e18",
+      "status": "UNREVIEWED"
+    },
+    {
+      "object": "public.community_avatars",
+      "signature": "community_avatars(uuid[])",
+      "source": "pre-Dealer capture before 20261106221738",
+      "original_sha256": "b8fd89dbb8aa1fee09b64ec37925b48810a7ece72e070ec8e8b189d3902db5ca",
+      "proposed_sql": "CREATE OR REPLACE FUNCTION public.community_avatars(p_users uuid[])\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\nbegin\n if auth.uid() is null or not (select private.age_member_allowed()) then return '[]'::jsonb; end if;\n return coalesce((select jsonb_agg(jsonb_build_object('user_id', cp.user_id, 'avatar', cp.avatar,\n   'staff', exists(select 1 from private.admin_users a where a.user_id = cp.user_id)))\n  from public.community_profiles cp join auth.users u on u.id = cp.user_id\n  where cp.user_id = any(p_users[1:100]) and cp.visible\n   and u.email_confirmed_at is not null and (u.banned_until is null or u.banned_until <= now())\n   and private.community_member_allowed(cp.user_id)), '[]'::jsonb);\nend $function$\n",
+      "proposed_sha256": "b8fd89dbb8aa1fee09b64ec37925b48810a7ece72e070ec8e8b189d3902db5ca",
+      "status": "UNREVIEWED"
+    },
+    {
+      "object": "private.community_follow_target_allowed",
+      "source": "final native replay; remove ONLY Dealer exception, preserving ordinary visibility/follow/age/block/identity guards",
+      "original_sha256": "f9da71de337f5f146b2435549476ea93f824335be595007e5a18503e33bcd56a",
+      "proposed_sql": "CREATE OR REPLACE FUNCTION private.community_follow_target_allowed(target uuid)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n select exists (\n  select 1 from public.community_profiles cp join auth.users u on u.id = cp.user_id\n  where cp.user_id = target and cp.visible\n   and ((u.email_confirmed_at is not null and (u.banned_until is null or u.banned_until <= now()))\n        )\n ) and coalesce(private.community_member_allowed(target), false)\n$function$\n",
+      "proposed_sha256": "0d46ccc79e9bc19b8426ddcd13e802ae7ced9fecc444848737b8d3595109eb3e",
+      "status": "UNREVIEWED"
+    },
+    {
+      "object": "private.notification_actor_followed",
+      "source": "final native replay; remove ONLY Dealer exception, preserving ordinary visibility/follow/age/block/identity guards",
+      "original_sha256": "e86ccad654d6757a422116389df3b70214db00ca7908f5f87f72e6ae339e50d9",
+      "proposed_sql": "CREATE OR REPLACE FUNCTION private.notification_actor_followed(p_recipient uuid, p_actor uuid, p_type text)\n RETURNS boolean\n LANGUAGE sql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\n select p_actor is null or p_type in ('security','password_change','account')\n \n or exists(select 1 from public.member_follows f where f.user_id=p_recipient and f.target_user_id=p_actor)\n$function$\n",
+      "proposed_sha256": "9835546c5d918467adbcfd2f3e3932d663c1cf4e4d2029975eeba15083d54e57",
+      "status": "UNREVIEWED"
+    },
+    {
+      "object": "public.community_profile",
+      "source": "final native replay; remove ONLY Dealer exception, preserving ordinary visibility/follow/age/block/identity guards",
+      "original_sha256": "28c5a2c3c86a41869708556ab55a91625ae328e030dc35b053782a2a43147797",
+      "proposed_sql": "CREATE OR REPLACE FUNCTION public.community_profile(p_username text, p_limit integer DEFAULT 30)\n RETURNS jsonb\n LANGUAGE plpgsql\n STABLE SECURITY DEFINER\n SET search_path TO ''\nAS $function$\ndeclare\n me uuid := auth.uid();\n p public.community_profiles;\n since timestamptz;\nbegin\n if me is null or not coalesce(private.age_member_allowed(), false) then return null; end if;\n select cp.* into p from public.community_profiles cp join auth.users u on u.id = cp.user_id\n where case\n   when p_username ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'\n     then cp.user_id::text = lower(p_username)\n   else lower(cp.username) = lower(p_username)\n end\n  and (cp.user_id = me or cp.visible)\n  and ((u.email_confirmed_at is not null and (u.banned_until is null or u.banned_until <= now()))\n       );\n if not found then return null; end if;\n if p.user_id <> me and not coalesce(private.community_member_allowed(p.user_id), false) then return null; end if;\n select created_at into since from auth.users where id = p.user_id;\n return jsonb_build_object(\n  'user_id', p.user_id,\n  'username', p.username,\n  'avatar', p.avatar,\n  'region', p.region,\n  'tagline', p.tagline,\n  'bio', p.bio,\n  'state', p.state,\n  'instagram_url', p.instagram_url,\n  'x_url', p.x_url,\n  'member_since', since,\n  'is_me', p.user_id = me,\n  'i_follow', exists (select 1 from public.member_follows f where f.user_id = me and f.target_user_id = p.user_id),\n  'followers', (select count(*) from public.member_follows f where f.target_user_id = p.user_id),\n  'following', (select count(*) from public.member_follows f where f.user_id = p.user_id),\n  'post_count', (select count(*) from public.community_posts c where c.user_id = p.user_id),\n  'posts', coalesce((\n   select jsonb_agg(to_jsonb(x) order by x.created_at desc, x.id desc) from (\n    select c.id, c.sport, c.kind, c.title, c.body, c.legs, c.photo_path, c.card, c.created_at,\n     (select count(*) from public.community_reactions r where r.post_id = c.id) as reactions,\n     (select count(*) from public.community_post_comments k where k.post_id = c.id) as comments\n    from public.community_posts c where c.user_id = p.user_id\n    order by c.created_at desc, c.id desc limit greatest(1, least(coalesce(p_limit, 30), 60))\n   ) x), '[]'::jsonb)\n );\nend $function$\n",
+      "proposed_sha256": "638ba3de183e9dd8bfc308c35f15cea78ce105fcc826e5927198082c0077acbf",
+      "status": "UNREVIEWED"
+    }
+  ],
+  "unavailable_dealer_functions": [
+    "private.is_live_pick_zone_post",
+    "private.nhl_charts_tick",
+    "private.post_live_pick_result",
+    "private.zone_dealer_publisher_id",
+    "private.zone_post_notify",
+    "public.nfl_position_card",
+    "public.nhl_chart_snapshot"
+  ],
+  "excluded": [
+    "private.is_dealer_publisher",
+    "private.existing_member_premium",
+    "all production account/admin/Dealer/complimentary seeds",
+    "all storage.objects policy units and bucket provisioning"
+  ],
+  "registry_note": "Adapted stage function hashes intentionally differ from production. They require independent equivalence review and a separately reviewed stage registry alignment; do not force capabilities or bless a fresh export."
+}

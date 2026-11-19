@@ -32,6 +32,7 @@ const failures = [];
 const evidenceRoot = process.argv[2] || "/tmp/story-lifetime-evidence";
 await (await import("node:fs/promises")).mkdir(evidenceRoot, { recursive: true });
 async function open(name, { width = 390, detail = null, detailStatus = 200, readIds = null, plan = null, expiry = false, freeze = false, clockFailure = false, single = false } = {}, run) {
+  if (process.env.UI_SMOKE_CASE && !name.includes(process.env.UI_SMOKE_CASE)) return;
   // Run each deliberate mutation only against the behavior it is intended to break.
   // This keeps unrelated fixture failures from being mistaken for negative evidence.
   if (process.env.UI_SMOKE_NEGATIVE === "no-taps" && !name.includes("tap right for the next post")) return;
@@ -426,8 +427,23 @@ for (const width of [390, 1280]) {
     // Device wall time cannot grant or reset the server-created lifetime.
     await page.evaluate(() => { Date.now = () => 0; });
     await page.clock.fastForward(20000);
-    if (await viewer(page).locator(".story-post").count()) fail("expired story remained visible after all original expiries");
-    if (await page.locator(".community-story").count()) fail("expired rail survived original expiry");
+    // fastForward delivers expiry callbacks, but React may commit their state updates
+    // after that protocol call resolves. Wait for DOM settlement WITHOUT advancing the
+    // frozen monotonic clock: no extra story lifetime or subsequent refresh is allowed.
+    const expiryNow = await page.evaluate(() => performance.now());
+    await page.locator("dialog.story-viewer[open] .story-post, .community-story")
+      .first().waitFor({ state: "detached", timeout: 1000 }).catch(() => {});
+    const remainingPosts = await viewer(page).locator(".story-post").count();
+    const remainingRail = await page.locator(".community-story").count();
+    const settledNow = await page.evaluate(() => performance.now());
+    if (settledNow !== expiryNow) fail("expiry assertion advanced the frozen clock");
+    if (remainingPosts) fail("expired story remained visible after all original expiries");
+    if (remainingRail) fail("expired rail survived original expiry");
+    if (remainingPosts || remainingRail) console.error(JSON.stringify({
+      name: "original-expiry-diagnostics", width, expiryNow, settledNow,
+      remainingPosts, remainingRail,
+      clockRequests: await page.evaluate(() => window.__clockRequests),
+    }));
     await page.screenshot({ path: `${evidenceRoot}/story-expiry-${width}.png`, fullPage: true });
   });
 }

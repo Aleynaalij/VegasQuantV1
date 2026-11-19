@@ -1,0 +1,7 @@
+{
+  "purpose": "Delivery integrity; not a new review or acceptance",
+  "sha256": {
+    "docs/atlas/free-home-execution/README.md": "0861ac0a5b6c0e1d610602a84ea12ff0d2bfce15241877db3452052d802c2c3b",
+    "docs/atlas/free-home-execution/evidence.json": "fac0308962b518399b83e81b99bce3e18816bcfe1e786b6ce4cc3527a55daebe"
+  }
+}

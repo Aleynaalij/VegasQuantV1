@@ -1,0 +1,147 @@
+name: Discovery isolated staging acceptance
+on:
+  push:
+    branches: [elo/home-zone-phase1-staging, elo/consumer-integration, codex/atlas-combined-stage, codex/atlas-final-integration, elo/atlas-consumer-reader-ci]
+  pull_request:
+    paths:
+      - "src/components/home2/**"
+      - "src/components/zone2/**"
+      - "src/components/game-room/**"
+      - "src/components/consumer/**"
+      - "src/components/community-feed.tsx"
+      - "src/lib/consumer-experience.ts"
+      - "src/lib/stage-viewer-session.ts"
+      - "src/lib/stage-data-gateway.ts"
+      - "src/lib/stage-consumer-reader.ts"
+      - "tests/stage-consumer-reader.test.ts"
+      - "src/lib/private-access-stage-config.ts"
+      - "tests/viewer-session.test.ts"
+      - "tests/private-access-stage.test.ts"
+      - "src/lib/home2.ts"
+      - "src/lib/home-dealer.ts"
+      - "src/lib/zone2.ts"
+      - "src/lib/game-room.ts"
+      - "src/app/page.tsx"
+      - "src/app/community/page.tsx"
+      - "tests/consumer*.test.ts"
+      - "tests/home2*.test.ts"
+      - "tests/home-dealer*.test.ts"
+      - "tests/zone2*.test.ts"
+      - "tests/game-room*.test.ts"
+      - "scripts/ui-smoke/consumer-*.mjs"
+      - "src/**/discovery/**"
+      - "src/app/staging/discovery/**"
+      - "tests/discovery*.test.ts"
+      - "scripts/ui-smoke/discovery-*.mjs"
+      - "scripts/ui-smoke/contrast-bound*.mjs"
+      - ".github/workflows/discovery-staging.yml"
+permissions:
+  contents: read
+jobs:
+  synthetic-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://synthetic.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: synthetic-public-fixture
+      STAGING_DISCOVERY_PROJECT: synthetic
+      STAGING_DISCOVERY_ENABLED: "true"
+      STAGING_DISCOVERY_FIXTURES: "true"
+      VERCEL_ENV: preview
+      VQ_STAGE_BUILD_PROFILE: consumer-fixture
+      DISCOVERY_A11Y_OUTPUT: artifacts/discovery-staging
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test scripts/ui-smoke/contrast-bound.test.mjs
+      - run: npm run build
+      - name: Install pinned browser audit dependencies
+        run: |
+          npm install --no-save playwright@1.56.1 axe-core@4.14.0
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install chromium
+          fi
+      - name: Audit synthetic staging only
+        run: |
+          set -euo pipefail
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 -p 3197 >/tmp/discovery-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3197/staging/discovery && break; sleep 2; done
+          node scripts/ui-smoke/discovery-a11y.mjs
+      - name: Verify isolated feature disable rollback
+        env:
+          STAGING_DISCOVERY_ENABLED: "false"
+        run: |
+          set -euo pipefail
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 -p 3199 >/tmp/discovery-rollback-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3199/research && break; sleep 2; done
+          mkdir -p artifacts/discovery-staging/rollback
+          for route in staging/discovery research community; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:3199/$route")
+            printf '%s %s\n' "$route" "$code" | tee -a artifacts/discovery-staging/rollback/status.txt
+            if [ "$route" = "staging/discovery" ]; then test "$code" = 404; else test "$code" = 200; fi
+          done
+      - name: Audit connected reader lifecycle with intercepted synthetic transport
+        env:
+          STAGING_DISCOVERY_FIXTURES: "false"
+          STAGING_DISCOVERY_LINKED_PUBLICATIONS: "false"
+          DISCOVERY_A11Y_OUTPUT: artifacts/discovery-staging/lifecycle
+          DISCOVERY_TEST_URL: http://127.0.0.1:3198
+        run: |
+          set -euo pipefail
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 -p 3198 >/tmp/discovery-lifecycle-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3198/staging/discovery && break; sleep 2; done
+          node scripts/ui-smoke/discovery-lifecycle.mjs
+      - name: Verify consumer candidate activation and legacy rollback
+        run: |
+          set -euo pipefail
+          for enabled in true false; do
+            CONSUMER_UI_ENABLED="$enabled" node node_modules/next/dist/bin/next start --hostname 127.0.0.1 -p 3201 >/tmp/consumer-server.log 2>&1 &
+            server=$!
+            trap 'kill "$server" 2>/dev/null || true' EXIT
+            for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3201/research && break; sleep 2; done
+            EXPECT_CONSUMER_UI="$enabled" node scripts/ui-smoke/consumer-routes.mjs
+            if [ "$enabled" = true ]; then
+              CONSUMER_AUDIT_OUTPUT=artifacts/discovery-staging/consumer-mobile node scripts/ui-smoke/consumer-mobile-a11y.mjs
+              CONSUMER_AUDIT_OUTPUT=artifacts/discovery-staging/consumer-zone-signed-in node scripts/ui-smoke/consumer-zone-signed-in.mjs
+            fi
+            kill "$server"
+            wait "$server" || true
+            trap - EXIT
+          done
+      - name: Verify connected consumer interrupted-session lifecycle
+        env:
+          CONSUMER_UI_ENABLED: "true"
+          STAGING_DISCOVERY_FIXTURES: "false"
+          STAGING_DISCOVERY_LINKED_PUBLICATIONS: "false"
+          CONSUMER_TEST_URL: http://127.0.0.1:3202
+          CONSUMER_AUDIT_OUTPUT: artifacts/discovery-staging/consumer-lifecycle
+        run: |
+          set -euo pipefail
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 -p 3202 >/tmp/consumer-lifecycle-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          for i in $(seq 1 30); do curl -sf -o /dev/null http://127.0.0.1:3202/research && break; sleep 2; done
+          node scripts/ui-smoke/consumer-auth-lifecycle.mjs
+      - name: Preserve synthetic audit and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery-staging-acceptance
+          path: artifacts/discovery-staging
+          if-no-files-found: warn

@@ -1,0 +1,57 @@
+{
+  "source_ref": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "status": "LOCAL_ORIGINAL_REPLAY_REFERENCE_ONLY_OMIT_FROM_STAGING",
+  "functions": [
+    {
+      "name": "private.dispatch_model_scan",
+      "signature": "private.dispatch_model_scan()"
+    },
+    {
+      "name": "private.dispatch_nba_shadow_scan",
+      "signature": "private.dispatch_nba_shadow_scan()"
+    },
+    {
+      "name": "private.dispatch_research_board",
+      "signature": "private.dispatch_research_board()"
+    },
+    {
+      "name": "private.dispatch_sportradar_collection",
+      "signature": "private.dispatch_sportradar_collection()"
+    },
+    {
+      "name": "private.invoke_live_pick_alerts",
+      "signature": "private.invoke_live_pick_alerts()"
+    },
+    {
+      "name": "private.invoke_push_dispatcher",
+      "signature": "private.invoke_push_dispatcher()"
+    },
+    {
+      "name": "private.invoke_social_notification_dispatcher",
+      "signature": "private.invoke_social_notification_dispatcher()"
+    },
+    {
+      "name": "private.nba_daily_post",
+      "signature": "private.nba_daily_post(text,integer)"
+    },
+    {
+      "name": "private.nba_live_post",
+      "signature": "private.nba_live_post(text)"
+    },
+    {
+      "name": "public.push_server_config",
+      "signature": "push_server_config()"
+    }
+  ],
+  "transitive_callers": [
+    "private.nba_pretip_sync"
+  ],
+  "kalshi_pause_triggers": [
+    {
+      "tgname": "kalshi_revision_pause"
+    },
+    {
+      "tgname": "kalshi_submission_pause"
+    }
+  ]
+}

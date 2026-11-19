@@ -1,4 +1,6 @@
 "use client";
+import { combinedViewer, useViewerIdentity } from "@/lib/viewer-auth";
+import { CombinedNotificationContent } from "./combined-viewer";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Shell } from "./ui";
@@ -7,6 +9,7 @@ import { useNotifications } from "./notification-provider";
 import { supabase } from "@/lib/supabase";
 import {
   notificationText,
+  notificationConnectionLabel,
   notificationLink,
   defaultNotificationPreferences,
   type NotificationRow,
@@ -51,6 +54,16 @@ const switches = [
   ["profile_reminder", "Profile reminders"],
 ];
 export default function NotificationCenter() {
+  const viewer = useViewerIdentity();
+  return combinedViewer && !viewer.capabilities.notifications ? (
+    <Shell active="membership">
+      <CombinedNotificationContent />
+    </Shell>
+  ) : (
+    <OrdinaryNotificationCenter />
+  );
+}
+function OrdinaryNotificationCenter() {
   const { uid, counts, revision, connected, failed, refresh, preferences } =
     useNotifications();
   const [rows, setRows] = useState<NotificationRow[]>([]),
@@ -77,6 +90,7 @@ export default function NotificationCenter() {
   }, [preferences, uid]);
   useEffect(() => {
     let live = true;
+    if (combinedViewer) return;
     void fetch("/api/notifications/channels")
       .then((r) => r.json())
       .then((d) => {
@@ -207,6 +221,8 @@ export default function NotificationCenter() {
     setSaving(true);
     setPrefNotice("");
     try {
+      if (combinedViewer && (pref.push_enabled || pref.email_enabled))
+        throw Error("External delivery is disabled in isolated staging.");
       if (pref.push_enabled) {
         if (!supportsPush())
           throw Error(
@@ -270,11 +286,7 @@ export default function NotificationCenter() {
             notifications
           </p>
           <small>
-            {connected
-              ? "Live updates connected"
-              : failed
-                ? "Reconnecting · your notification history is saved"
-                : "Live connection pending · refresh fallback enabled"}
+            {notificationConnectionLabel(combinedViewer, connected, failed)}
           </small>
         </header>
         {!uid ? (

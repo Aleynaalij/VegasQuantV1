@@ -68,9 +68,10 @@ export async function loadSlate(
   member: boolean,
   /** An nba_games id to load that game's Eastern day instead of tonight's (per-game links). */
   forGame?: string,
+  client = supabase,
 ): Promise<Slate> {
   const now = Date.now();
-  const upcoming = await supabase
+  const upcoming = await client
     .from("nba_games")
     .select(
       "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,season",
@@ -84,13 +85,13 @@ export async function loadSlate(
   // per-game link to a later day loads that game's day instead.
   let pool = upcoming.data || [];
   if (forGame && !pool.some((g) => g.id === forGame)) {
-    const one = await supabase
+    const one = await client
       .from("nba_games")
       .select("tipoff")
       .eq("id", forGame)
       .maybeSingle();
     if (!one.error && one.data) {
-      const day = await supabase
+      const day = await client
         .from("nba_games")
         .select(
           "id,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,season",
@@ -135,7 +136,7 @@ export async function loadSlate(
     home_abbreviation: string | null;
   };
   const season = await all<Played>((from, to) => {
-    const q = supabase
+    const q = client
       .from("nba_games")
       .select(
         "id,tipoff,away_team,home_team,away_abbreviation,home_abbreviation",
@@ -151,7 +152,7 @@ export async function loadSlate(
   const confirmed = new Set(
     (
       await all<{ game_id: string }>((from, to) =>
-        supabase
+        client
           .from("nba_result_progress")
           .select("game_id")
           .eq("status", "FINAL")
@@ -169,7 +170,7 @@ export async function loadSlate(
   // Everyone who has played for tonight's teams, then each of those players' full history (traded
   // players keep the games they played elsewhere); a player's team is the one in his latest game.
   const onTeams = await all<{ athlete_id: string | number }>((from, to) =>
-    supabase
+    client
       .from("nba_player_results")
       .select("athlete_id")
       .in("team", teams)
@@ -188,7 +189,7 @@ export async function loadSlate(
       athlete_id: string;
       attempts: number;
     }>((from, to) =>
-      supabase
+      client
         .from("nba_player_three_attempts")
         .select("game_id,athlete_id,attempts")
         .in("athlete_id", ids)
@@ -199,7 +200,7 @@ export async function loadSlate(
       attempts.set(`${a.game_id}:${a.athlete_id}`, a.attempts);
     box.push(
       ...(await all<Row>((from, to) =>
-        supabase
+        client
           .from("nba_player_results")
           .select(columns)
           .in("athlete_id", ids)
@@ -221,7 +222,7 @@ export async function loadSlate(
     };
     const [u, d] = await Promise.all([
       all<Usage>((from, to) =>
-        supabase
+        client
           .rpc("nba_player_usage", { p_athletes: athletes })
           .order("game_id")
           .order("athlete_id")
@@ -229,7 +230,7 @@ export async function loadSlate(
       ).catch(() => [] as Usage[]),
       first.season == null
         ? Promise.resolve({ data: [], error: null })
-        : supabase.rpc("nba_defense_vs_position", { p_season: first.season }),
+        : client.rpc("nba_defense_vs_position", { p_season: first.season }),
     ]);
     // Both are extras for the prop card: a failure leaves the card without them, not the tab broken.
     for (const r of u)
@@ -267,7 +268,7 @@ export async function loadSlate(
     // Injury reports and every book's props, each read in full (paged), so no book crowds out another.
     const observations = (kind: "injury" | "prop") =>
       all<Observation>((from, to) => {
-        const q = supabase
+        const q = client
           .from("nba_observations")
           .select("game_id,kind,recorded_at,observed_at,payload")
           .in(

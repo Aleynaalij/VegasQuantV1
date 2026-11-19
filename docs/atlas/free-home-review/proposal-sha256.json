@@ -1,0 +1,17 @@
+{
+  "status": "UNREVIEWED_PROPOSAL_ONLY_NOT_EXECUTED",
+  "sha256": {
+    "docs/atlas/free-home-review/README.md": "56103c6592d6b576e6dc3aa8d2c10bb8b936e834f43ac271d0d0049895dc0e31",
+    "docs/atlas/free-home-review/catalog-assertions-after-free-home.sql": "24aea17b3ac7b96467ccf22e244b94613a2a50cb77d3e012b6345100605711a4",
+    "docs/atlas/free-home-review/free-home.sha256": "e0930f2d2b4b05e01f052bfa23873bf774082a51f10b7d2f06703a3660f06aef",
+    "docs/atlas/free-home-review/free-home.sql": "5648c29322e888e45c4048a223e5cf1b6b9de13c9cc11f6892b818cfa2d450e2",
+    "docs/atlas/free-home-review/identities-after-free-home.sha256": "f7b0ebb4fa2ccf68aa8c9042d086870e623690194f0a60183b0130e47afcb0e5",
+    "docs/atlas/free-home-review/identities-after-free-home.sql": "ee6f722f496e8dc132e3206d50ecb8a0052ad02ead30c3d24b0fb2d96da7fba7",
+    "docs/atlas/free-home-review/manifest.json": "4cef59cf35a87096d0b1e5c0e209143a64f1467d7ed08a8f3d94a70e568a9b66",
+    "docs/atlas/free-home-review/rehearsal.json": "e7acdd8aa0271cd3cc40b764117a8914bcaa521a95584825008cf20a2d30f06c",
+    "scripts/operations/atlas-free-home-prepare.mjs": "d10844e82ed709ce360b40e9485402133559113daff1de19fb51806176b4e2e6",
+    "scripts/operations/atlas-free-home-rehearsal.mjs": "2e86f4a45270ae800005e87d4a6234993c8fc38fdaec94a3aa4e23e55c3665fa",
+    "scripts/operations/atlas-free-home-rehearsal.sh": "b1e575035edc0bc3da30207123b0f4e242fd3f97a744b1234664749f69fe794e",
+    "tests/atlas-free-home.test.ts": "de198c469d2f0fba56a702de41e3f3ede60b0fcfd09477cb3271547d6028083e"
+  }
+}

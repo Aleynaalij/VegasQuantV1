@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -33,7 +34,7 @@ export default function CommunityStories({
       const version = ++generation.current;
       // Do not show cached identity metadata while authorization is rechecked.
       setMembers([]);
-      const session = await supabase.auth.getSession();
+      const session = await viewerAuth.getSession();
       if (!live || version !== generation.current) return;
       viewer.current = session.data.session?.user.id || null;
       setSignedIn(Boolean(viewer.current));
@@ -70,7 +71,7 @@ export default function CommunityStories({
     window.addEventListener("pageshow", refresh);
     document.addEventListener("visibilitychange", refresh);
     window.addEventListener("vq-community-changed", refresh);
-    const auth = supabase.auth.onAuthStateChange(() => {
+    const auth = viewerAuth.onAuthStateChange(() => {
       generation.current++;
       setMembers([]);
       setTimeout(() => {
@@ -173,7 +174,11 @@ export default function CommunityStories({
           |
         </span>
       ) : null}
-      <div className="community-stories" aria-label="Recent community posts">
+      <div
+        className="community-stories"
+        role="region"
+        aria-label="Recent community posts"
+      >
         {unread.map((member) => (
           <button
             type="button"

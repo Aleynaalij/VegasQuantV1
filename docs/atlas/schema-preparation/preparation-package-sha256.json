@@ -1,0 +1,27 @@
+{
+  "purpose": "Delivery integrity and exact preparation review; NOT approval or a reviewed hosted catalog",
+  "approved_prior_package": "bf1c08ad734a1f0e6f73d3bb4b07d0b40290dee3",
+  "sha256": {
+    "docs/atlas/schema-preparation/README.md": "7b68a80b03878e695ab7f9a16f6b8e44dd7c6b2326d8078e1025cc9832a98de8",
+    "docs/atlas/schema-preparation/identities.sha256": "39a8d2f8359b3950a1fae111b02a110dac43e66c6c3847529caa84bbbf061be2",
+    "docs/atlas/schema-preparation/identities.sql": "dcbc7c45a5bbac3bac5e23a1c738ac05c4b978e85f14511f1704ba373e6af197",
+    "docs/atlas/schema-preparation/identity-map.json": "0114a112bb804ef7736a53d1522306da50f34c4109e8f81d2564d9fa07d13d1a",
+    "docs/atlas/schema-preparation/inventory.json": "6928d577bac545107fd63d247e92c04668e6d465a04da620ec4c12ff2d335dc2",
+    "docs/atlas/schema-preparation/post-preparation-assertions.sql": "da9d8f1d528994bad4c3964fe2b05ae98304931b37578f9c7899a8a8342271ff",
+    "docs/atlas/schema-preparation/prepare.sha256": "3f9ff867d2ba8be3adc99da21c7054352473c0d9bf3e8f2805d74a00560d48b6",
+    "docs/atlas/schema-preparation/prepare.sql": "49fbe1f4b52be840685e8c4f271fb6920fab500f011cce07afbcbe9382ebef4d",
+    "docs/atlas/schema-preparation/reduced-staging-snapshot.json": "eaccea8211f165174b41e3530164083763e802937f33dc63a273008a1bc18d8c",
+    "docs/atlas/schema-preparation/rehearsal.json": "db15a01405a7435bdc9d7b480e82395e7a17953cd479159335db6f6c0786068e",
+    "docs/atlas/schema-preparation/replay-catalog.json.gz": "63793b3ea15e1ca3b2922f892d4a81c8a84c41ecb3a3776ccd3074002e3d93a0",
+    "docs/atlas/schema-preparation/replay-catalog.sha256": "6310ff253911ed0e352d6388184e3fde9b399f95ce6108dab74b552264a3bf7a",
+    "scripts/operations/atlas-schema-preparation-evidence.mjs": "5b279095383a1b0aa421969faca3b28946b8dcc24f53d24b93c72d33fd8f855a",
+    "scripts/operations/atlas-schema-preparation-reference.mjs": "e0d46547d85a5862d2c11aa4553318500dcc9c8eea9b58df36ebabd366a8a86b",
+    "scripts/operations/atlas-schema-preparation-reference.sh": "71ea76407adf664b72741b1d5d5f368fa3f9708308b32fc76c44143234e6554d",
+    "scripts/operations/atlas-schema-preparation-rehearsal.mjs": "e946c181204433f6e54543735d2c6c48538fd9995b1ed229ed07d0337cb5bdae",
+    "scripts/operations/atlas-schema-preparation-rehearsal.sh": "a4edade7d5cc4d146cffd7edc114dfc8fdd6763daac119e1ac31cbd3efe156d3",
+    "scripts/operations/atlas-schema-preparation-request.mjs": "630dbf124a6ac47a67f797ce4d319e379a666364e356c001b8c4689592ebfba2",
+    "scripts/operations/atlas-schema-prepare.mjs": "bb3735926e51b9dd44b7d11c1a576c721898333271c1d956ed5e752bab45e577",
+    "scripts/operations/atlas-staging-catalog-assertions.sql": "6b668e69c57d4143daf088c02fe15407fd24aea956b04c1cc2dd3414544a1493",
+    "tests/atlas-schema-preparation.test.ts": "811f7e5811801a54639581ae0b63373e700884f3a56b1b45ed01673515faf184"
+  }
+}

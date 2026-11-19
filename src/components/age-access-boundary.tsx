@@ -1,4 +1,6 @@
 "use client";
+import { combinedViewer } from "@/lib/viewer-auth";
+import { CombinedAgeBoundary } from "./combined-viewer";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -14,7 +16,17 @@ const accountPaths = new Set([
   "/faq",
   "/responsible-play",
 ]);
-export default function AgeAccessBoundary({
+export default function AgeAccessBoundary(props: {
+  children: ReactNode;
+  extras?: ReactNode;
+}) {
+  return combinedViewer ? (
+    <CombinedAgeBoundary {...props} />
+  ) : (
+    <OrdinaryAgeAccessBoundary {...props} />
+  );
+}
+function OrdinaryAgeAccessBoundary({
   children,
   extras,
 }: {
@@ -72,7 +84,11 @@ export default function AgeAccessBoundary({
       try {
         const status = await supabase.rpc("age_verification_status");
         if (!live || current !== generation.current || status.error) return;
-        setMode(status.data.required && !status.data.verified ? "required" : "allowed");
+        setMode(
+          status.data.required && !status.data.verified
+            ? "required"
+            : "allowed",
+        );
       } catch {
         // Keep the current decision on a brief connection problem.
       }

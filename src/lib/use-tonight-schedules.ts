@@ -31,7 +31,7 @@ const REFRESH = 5 * 60000;
  * server-rendered desk, the rest from the readers VQ Tonight already used. The overview and each
  * Skybox face derive from this one set of reads, so turning the box never fetches.
  */
-export function useTonightSchedules(nflGames: Game[], nflUnavailable = false) {
+export function useTonightSchedules(nflGames: Game[], nflUnavailable = false, enabled = true) {
   const [now, setNow] = useState(() => Date.now());
   const day = useMemo(() => tonightWindow(now), [now]);
   const [loads, setLoads] = useState<Record<ClientSport, Load>>({
@@ -44,6 +44,7 @@ export function useTonightSchedules(nflGames: Game[], nflUnavailable = false) {
   const dayStart = useRef(day.start);
   dayStart.current = day.start;
   const load = useCallback(async (sport: ClientSport, w = day) => {
+    if (!enabled) return;
     const n = ++latest.current[sport];
     const current = () => n === latest.current[sport] && w.start === dayStart.current;
     // Keep showing what we have while refreshing; only a first load shows "loading".
@@ -77,9 +78,10 @@ export function useTonightSchedules(nflGames: Game[], nflUnavailable = false) {
         return { ...l, [sport]: prev.state === "ok" ? { ...prev, stale: true } : { state: "error" } };
       });
     }
-  }, [day]);
+  }, [day, enabled]);
 
   useEffect(() => {
+    if (!enabled) return;
     // A new ET day starts clean: the previous day's games are never shown as today's.
     setLoads({ nba: { state: "loading" }, nhl: { state: "loading" }, ncaab: { state: "loading" } });
     const all = () => CLIENT_SPORTS.forEach((s) => void load(s));
@@ -89,7 +91,7 @@ export function useTonightSchedules(nflGames: Game[], nflUnavailable = false) {
       if (document.visibilityState === "visible") all();
     }, REFRESH);
     return () => clearInterval(timer);
-  }, [load]);
+  }, [load, enabled]);
 
   // Roll over at ET midnight, and catch up when the tab wakes.
   useEffect(() => {

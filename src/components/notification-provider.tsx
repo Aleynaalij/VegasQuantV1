@@ -1,4 +1,5 @@
 "use client";
+import { combinedViewer, useViewerIdentity } from "@/lib/viewer-auth";
 import {
   createContext,
   useContext,
@@ -29,15 +30,17 @@ const Context = createContext({
 });
 export const useNotifications = () => useContext(Context);
 export function NotificationBell() {
-  const { counts, failed } = useNotifications();
+  const { counts, failed, connected } = useNotifications();
   return (
     <Link
       className="update-bell"
       href="/notifications"
       aria-label={
-        failed
-          ? "Notifications · reconnecting"
-          : `Notifications · ${counts.unread} unread`
+        combinedViewer && !connected
+          ? "Notifications · unavailable in isolated staging"
+          : failed
+            ? "Notifications · reconnecting"
+            : `Notifications · ${counts.unread} unread`
       }
     >
       <Bell size={21} />
@@ -49,11 +52,107 @@ export function NotificationBell() {
     </Link>
   );
 }
-export default function NotificationProvider({
+export default function NotificationProvider(props: { children: ReactNode }) {
+  return combinedViewer ? (
+    <CombinedNotificationProvider {...props} />
+  ) : (
+    <OrdinaryNotificationProvider {...props} />
+  );
+}
+function CombinedNotificationProvider({ children }: { children: ReactNode }) {
+  const viewer = useViewerIdentity();
+  const uid =
+    viewer.state === "ready" && viewer.capabilities.notifications
+      ? (viewer.session?.user.id ?? null)
+      : null;
+  return (
+    <CombinedNotificationSession key={uid ?? "unavailable"} uid={uid}>
+      {children}
+    </CombinedNotificationSession>
+  );
+}
+function CombinedNotificationSession({
   children,
+  uid,
 }: {
   children: ReactNode;
+  uid: string | null;
 }) {
+  const [state, setState] = useState({
+    counts: empty,
+    revision: 0,
+    connected: false,
+    failed: true,
+    preferences: null as NotificationPreferences | null,
+  });
+  const refreshRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    let active = true,
+      generation = 0;
+    const refresh = async () => {
+      if (!uid) return;
+      const request = ++generation;
+      const [counts, preferences] = await Promise.all([
+        supabase.rpc("notification_counts"),
+        supabase
+          .from("notification_preferences")
+          .select("*")
+          .eq("user_id", uid)
+          .maybeSingle(),
+      ]);
+      if (!active || request !== generation) return;
+      const c = counts.data;
+      if (
+        counts.error ||
+        preferences.error ||
+        !c ||
+        [c.unread, c.unviewed, c.messages].some(
+          (n) => !Number.isInteger(n) || n < 0,
+        )
+      ) {
+        setState((s) => ({
+          ...s,
+          counts: empty,
+          connected: false,
+          failed: true,
+          preferences: null,
+        }));
+        return;
+      }
+      setState((s) => ({
+        counts: c,
+        revision: s.revision + 1,
+        connected: true,
+        failed: false,
+        preferences: preferences.data,
+      }));
+    };
+    refreshRef.current = () => {
+      void refresh();
+    };
+    void refresh();
+    const timer = uid ? setInterval(refreshRef.current, 30000) : undefined;
+    window.addEventListener("vq-notification-preferences", refreshRef.current);
+    return () => {
+      active = false;
+      clearInterval(timer);
+      window.removeEventListener(
+        "vq-notification-preferences",
+        refreshRef.current,
+      );
+      refreshRef.current = () => {};
+    };
+  }, [uid]);
+  // Deliberately no realtime, pulse, push, email, sounds or outbound dispatch.
+  return (
+    <Context.Provider
+      value={{ ...state, uid, refresh: () => refreshRef.current() }}
+    >
+      {children}
+    </Context.Provider>
+  );
+}
+function OrdinaryNotificationProvider({ children }: { children: ReactNode }) {
   const [uid, setUid] = useState<string | null>(null),
     [counts, setCounts] = useState(empty),
     [revision, setRevision] = useState(0),

@@ -1,0 +1,3378 @@
+{
+  "format": "vq-atlas-schema-review-v1",
+  "status": "PROPOSED_UNREVIEWED_NOT_INSTALLABLE",
+  "source_ref": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+  "target_project": "caynldluziwrzmvuslzg",
+  "production_forbidden": "uowearboulykfcwnuirn",
+  "catalog_status": "NO_REVIEWED_CATALOG_CREATED",
+  "reviewer_status": "Claude is reviewer of record; CHANGES REQUIRED pending exact-commit re-review",
+  "owner_decisions": {
+    "record": "https://github.com/Aleynaalij/VegasQuantV1/issues/294#issuecomment-6998422208",
+    "staging_boundary": "Trusted operator, staging only; mandatory DDL/RLS preflight; operators Codex and Mike",
+    "dealer": "OFF: no staged Dealer identity, attribution seed or Dealer visibility rewrite",
+    "effective_definitions": "Disposable native local PostgreSQL replay only; never production",
+    "production": "NO-GO; staging boundary decision does not carry to production"
+  },
+  "limitations": [
+    "Conservative lexical source dependency index, not a PostgreSQL semantic dependency proof.",
+    "All historical source units are evidence; their order is NOT an install plan.",
+    "Dynamic rewrites, unqualified references, overloads and runtime SQL require manual resolution.",
+    "Source SHA256 and registry function hashes do not approve a target-specific hosted catalog.",
+    "Original complete consumer schema and publication/research dependencies must be reconciled before installation."
+  ],
+  "roots": [
+    {
+      "name": "public.community_profiles",
+      "kind": "table",
+      "group": "profile",
+      "contract": {
+        "group": "profile",
+        "write": [
+          "user_id",
+          "username",
+          "region",
+          "avatar",
+          "visible",
+          "instagram_url",
+          "x_url",
+          "tagline",
+          "bio",
+          "state",
+          "updated_at"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "PATCH"
+        ],
+        "key": [
+          "user_id"
+        ],
+        "columns": [
+          "user_id",
+          "username",
+          "region",
+          "avatar",
+          "visible",
+          "updated_at",
+          "instagram_url",
+          "x_url",
+          "tagline",
+          "bio",
+          "state"
+        ],
+        "upsert": true
+      },
+      "source_units": [
+        "supabase/migrations/20261003112128_community_profiles.sql:1",
+        "supabase/migrations/20261003112128_community_profiles.sql:3",
+        "supabase/migrations/20261003112128_community_profiles.sql:4",
+        "supabase/migrations/20261003112128_community_profiles.sql:5",
+        "supabase/migrations/20261003112128_community_profiles.sql:6",
+        "supabase/migrations/20261003112128_community_profiles.sql:7",
+        "supabase/migrations/20261003112128_community_profiles.sql:8",
+        "supabase/migrations/20261003115658_community_profile_pages.sql:1",
+        "supabase/migrations/20261003115658_community_profile_pages.sql:2",
+        "supabase/migrations/20261011001815_member_onboarding_measurement.sql:10",
+        "supabase/migrations/20261031190200_zone_automated_cards.sql:1",
+        "supabase/migrations/20261106221542_dealer_publisher_identity.sql:4",
+        "supabase/migrations/20261109022151_community_profile_fields.sql:1",
+        "supabase/migrations/20261109022151_community_profile_fields.sql:4"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261003112128_community_profiles.sql:1"
+      ]
+    },
+    {
+      "name": "public.community_posts",
+      "kind": "table",
+      "group": "social",
+      "contract": {
+        "group": "social",
+        "write": [
+          "id",
+          "user_id",
+          "sport",
+          "kind",
+          "title",
+          "body",
+          "legs",
+          "stake",
+          "photo_path"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "DELETE"
+        ],
+        "key": [
+          "id"
+        ],
+        "columns": [
+          "id",
+          "user_id",
+          "sport",
+          "kind",
+          "title",
+          "body",
+          "legs",
+          "stake",
+          "author_name",
+          "created_at",
+          "photo_path",
+          "card"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:1",
+        "supabase/migrations/20261014025802_community_social_feed.sql:11",
+        "supabase/migrations/20261014025802_community_social_feed.sql:13",
+        "supabase/migrations/20261014025802_community_social_feed.sql:18",
+        "supabase/migrations/20261014025802_community_social_feed.sql:19",
+        "supabase/migrations/20261014025802_community_social_feed.sql:21",
+        "supabase/migrations/20261014025802_community_social_feed.sql:22",
+        "supabase/migrations/20261014025802_community_social_feed.sql:23",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:11",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:21",
+        "supabase/migrations/20261014162515_community_post_photos.sql:1",
+        "supabase/migrations/20261014162515_community_post_photos.sql:2",
+        "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql:8",
+        "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql:9",
+        "supabase/migrations/20261017015506_social_notification_system.sql:52",
+        "supabase/migrations/20261028230000_zone_post_notifications.sql:8",
+        "supabase/migrations/20261029160000_nba_threes_card.sql:1",
+        "supabase/migrations/20261029160000_nba_threes_card.sql:3",
+        "supabase/migrations/20261029160000_nba_threes_card.sql:8",
+        "supabase/migrations/20261031160000_zone_all_sports.sql:1",
+        "supabase/migrations/20261031160000_zone_all_sports.sql:2",
+        "supabase/migrations/20261031160000_zone_all_sports.sql:3",
+        "supabase/migrations/20261031190200_zone_automated_cards.sql:2",
+        "supabase/migrations/20261031190200_zone_automated_cards.sql:3",
+        "supabase/migrations/20261031190200_zone_automated_cards.sql:8",
+        "supabase/migrations/20261031190200_zone_automated_cards.sql:10",
+        "supabase/migrations/20261106221542_dealer_publisher_identity.sql:4",
+        "supabase/migrations/20261108020000_nfl_weekly_cards.sql:3",
+        "supabase/migrations/20261108020000_nfl_weekly_cards.sql:4",
+        "supabase/migrations/20261109032951_dealer_zone_follow_notifications.sql:16",
+        "supabase/migrations/20261109032951_dealer_zone_follow_notifications.sql:17",
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:9",
+        "supabase/migrations/20261111010000_zone_post_games.sql:13"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:1"
+      ]
+    },
+    {
+      "name": "public.community_post_comments",
+      "kind": "table",
+      "group": "social",
+      "contract": {
+        "group": "social",
+        "write": [
+          "id",
+          "post_id",
+          "user_id",
+          "body",
+          "parent_id"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "DELETE"
+        ],
+        "key": [
+          "id"
+        ],
+        "columns": [
+          "id",
+          "post_id",
+          "user_id",
+          "author_name",
+          "body",
+          "created_at",
+          "parent_id"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:4",
+        "supabase/migrations/20261014025802_community_social_feed.sql:12",
+        "supabase/migrations/20261014025802_community_social_feed.sql:14",
+        "supabase/migrations/20261014025802_community_social_feed.sql:18",
+        "supabase/migrations/20261014025802_community_social_feed.sql:19",
+        "supabase/migrations/20261014025802_community_social_feed.sql:24",
+        "supabase/migrations/20261014025802_community_social_feed.sql:25",
+        "supabase/migrations/20261014025802_community_social_feed.sql:26",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:12",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:22",
+        "supabase/migrations/20261017015506_social_notification_system.sql:36",
+        "supabase/migrations/20261017015506_social_notification_system.sql:37",
+        "supabase/migrations/20261017015506_social_notification_system.sql:53"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:4"
+      ]
+    },
+    {
+      "name": "public.community_reactions",
+      "kind": "table",
+      "group": "social",
+      "contract": {
+        "group": "social",
+        "write": [
+          "post_id",
+          "user_id",
+          "reaction_type"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "DELETE"
+        ],
+        "key": [
+          "post_id",
+          "user_id"
+        ],
+        "columns": [
+          "post_id",
+          "user_id",
+          "created_at",
+          "reaction_type"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:7",
+        "supabase/migrations/20261014025802_community_social_feed.sql:15",
+        "supabase/migrations/20261014025802_community_social_feed.sql:18",
+        "supabase/migrations/20261014025802_community_social_feed.sql:19",
+        "supabase/migrations/20261014025802_community_social_feed.sql:27",
+        "supabase/migrations/20261014025802_community_social_feed.sql:28",
+        "supabase/migrations/20261014025802_community_social_feed.sql:29",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:24",
+        "supabase/migrations/20261017015506_social_notification_system.sql:54",
+        "supabase/migrations/20261017015506_social_notification_system.sql:115",
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:1",
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:6",
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:7",
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:8"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:7"
+      ]
+    },
+    {
+      "name": "public.community_comment_reactions",
+      "kind": "table",
+      "group": "social",
+      "contract": {
+        "group": "social",
+        "write": [
+          "comment_id",
+          "user_id"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "DELETE"
+        ],
+        "key": [
+          "comment_id",
+          "user_id"
+        ],
+        "columns": [
+          "comment_id",
+          "user_id",
+          "created_at"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:39",
+        "supabase/migrations/20261017015506_social_notification_system.sql:41",
+        "supabase/migrations/20261017015506_social_notification_system.sql:43",
+        "supabase/migrations/20261017015506_social_notification_system.sql:44",
+        "supabase/migrations/20261017015506_social_notification_system.sql:46",
+        "supabase/migrations/20261017015506_social_notification_system.sql:47",
+        "supabase/migrations/20261017015506_social_notification_system.sql:48",
+        "supabase/migrations/20261017015506_social_notification_system.sql:57",
+        "supabase/migrations/20261017015506_social_notification_system.sql:117"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:39"
+      ]
+    },
+    {
+      "name": "public.member_follows",
+      "kind": "table",
+      "group": "social",
+      "contract": {
+        "group": "social",
+        "write": [
+          "user_id",
+          "target_user_id"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "DELETE"
+        ],
+        "key": [
+          "user_id",
+          "target_user_id"
+        ],
+        "columns": [
+          "user_id",
+          "target_user_id",
+          "created_at"
+        ],
+        "upsert": true
+      },
+      "source_units": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:8",
+        "supabase/migrations/20261014025802_community_social_feed.sql:16",
+        "supabase/migrations/20261014025802_community_social_feed.sql:18",
+        "supabase/migrations/20261014025802_community_social_feed.sql:19",
+        "supabase/migrations/20261014025802_community_social_feed.sql:30",
+        "supabase/migrations/20261014025802_community_social_feed.sql:31",
+        "supabase/migrations/20261014025802_community_social_feed.sql:32",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:25",
+        "supabase/migrations/20261017015506_social_notification_system.sql:55",
+        "supabase/migrations/20261017015506_social_notification_system.sql:118",
+        "supabase/migrations/20261109030000_member_follows_any_profile.sql:4",
+        "supabase/migrations/20261109030000_member_follows_any_profile.sql:5"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:8"
+      ]
+    },
+    {
+      "name": "public.member_blocks",
+      "kind": "table",
+      "group": "social",
+      "contract": {
+        "group": "social",
+        "write": [
+          "user_id",
+          "target_user_id",
+          "label"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "DELETE"
+        ],
+        "key": [
+          "user_id",
+          "target_user_id"
+        ],
+        "columns": [
+          "user_id",
+          "target_user_id",
+          "label",
+          "created_at"
+        ],
+        "upsert": true
+      },
+      "source_units": [
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:1",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:2",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:3",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:4",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:5",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:6",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:7",
+        "supabase/migrations/20261017015506_social_notification_system.sql:84"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:1"
+      ]
+    },
+    {
+      "name": "public.community_reports",
+      "kind": "table",
+      "group": "social",
+      "contract": {
+        "group": "social",
+        "write": [
+          "id",
+          "post_id",
+          "user_id",
+          "reason"
+        ],
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "key": [
+          "post_id",
+          "user_id"
+        ],
+        "columns": [
+          "id",
+          "post_id",
+          "user_id",
+          "reason",
+          "created_at"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:9",
+        "supabase/migrations/20261014025802_community_social_feed.sql:17",
+        "supabase/migrations/20261014025802_community_social_feed.sql:18",
+        "supabase/migrations/20261014025802_community_social_feed.sql:20",
+        "supabase/migrations/20261014025802_community_social_feed.sql:33",
+        "supabase/migrations/20261014025802_community_social_feed.sql:34",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:26"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:9"
+      ]
+    },
+    {
+      "name": "public.saved_legs",
+      "kind": "table",
+      "group": "desk",
+      "contract": {
+        "group": "desk",
+        "write": [
+          "user_id",
+          "leg_key"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "DELETE"
+        ],
+        "key": [
+          "user_id",
+          "leg_key"
+        ],
+        "columns": [
+          "user_id",
+          "leg_key",
+          "created_at"
+        ],
+        "upsert": true
+      },
+      "source_units": [
+        "supabase/migrations/20261011001739_member_saved_legs_and_follows.sql:1",
+        "supabase/migrations/20261011001739_member_saved_legs_and_follows.sql:8",
+        "supabase/migrations/20261011001815_member_onboarding_measurement.sql:8"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261011001739_member_saved_legs_and_follows.sql:1"
+      ]
+    },
+    {
+      "name": "public.leg_tails",
+      "kind": "table",
+      "group": "desk",
+      "contract": {
+        "group": "desk",
+        "write": [
+          "user_id",
+          "leg_key"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "DELETE"
+        ],
+        "key": [
+          "user_id",
+          "leg_key"
+        ],
+        "columns": [
+          "user_id",
+          "leg_key",
+          "created_at"
+        ],
+        "upsert": true
+      },
+      "source_units": [
+        "supabase/migrations/20261011001739_member_saved_legs_and_follows.sql:2",
+        "supabase/migrations/20261011001739_member_saved_legs_and_follows.sql:9",
+        "supabase/migrations/20261014120940_retain_started_tail_records.sql:1"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261011001739_member_saved_legs_and_follows.sql:2"
+      ]
+    },
+    {
+      "name": "public.member_parlays",
+      "kind": "table",
+      "group": "desk",
+      "contract": {
+        "group": "desk",
+        "write": [
+          "title"
+        ],
+        "methods": [
+          "GET",
+          "PATCH",
+          "DELETE"
+        ],
+        "key": [
+          "id"
+        ],
+        "columns": [
+          "id",
+          "user_id",
+          "title",
+          "leg_keys",
+          "legs",
+          "created_at",
+          "expires_at",
+          "community_post_id"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:1",
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:2",
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:3",
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:4",
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:5",
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:6",
+        "supabase/migrations/20261016230144_member_parlays_seven_legs.sql:1",
+        "supabase/migrations/20261016230144_member_parlays_seven_legs.sql:2",
+        "supabase/migrations/20261016230144_member_parlays_seven_legs.sql:3",
+        "supabase/migrations/20261016230144_member_parlays_seven_legs.sql:4",
+        "supabase/migrations/20261017005051_member_parlays_no_leg_cap.sql:1",
+        "supabase/migrations/20261017005051_member_parlays_no_leg_cap.sql:2",
+        "supabase/migrations/20261017005051_member_parlays_no_leg_cap.sql:3",
+        "supabase/migrations/20261017005051_member_parlays_no_leg_cap.sql:4",
+        "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql:10"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:1"
+      ]
+    },
+    {
+      "name": "public.notification_preferences",
+      "kind": "table",
+      "group": "notifications",
+      "contract": {
+        "group": "notifications",
+        "write": [
+          "user_id",
+          "disabled_types",
+          "push_enabled",
+          "email_enabled",
+          "sound_enabled",
+          "haptics_enabled",
+          "batch_minutes",
+          "timezone",
+          "quiet_enabled",
+          "quiet_start",
+          "quiet_end",
+          "updated_at"
+        ],
+        "methods": [
+          "GET",
+          "POST",
+          "PATCH"
+        ],
+        "key": [
+          "user_id"
+        ],
+        "columns": [
+          "user_id",
+          "disabled_types",
+          "push_enabled",
+          "email_enabled",
+          "sound_enabled",
+          "haptics_enabled",
+          "batch_minutes",
+          "timezone",
+          "quiet_enabled",
+          "quiet_start",
+          "quiet_end",
+          "updated_at"
+        ],
+        "upsert": true
+      },
+      "source_units": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:1",
+        "supabase/migrations/20261017015506_social_notification_system.sql:18",
+        "supabase/migrations/20261017015506_social_notification_system.sql:22",
+        "supabase/migrations/20261017015506_social_notification_system.sql:25",
+        "supabase/migrations/20261017015506_social_notification_system.sql:29",
+        "supabase/migrations/20261017015506_social_notification_system.sql:30",
+        "supabase/migrations/20261017015506_social_notification_system.sql:31",
+        "supabase/migrations/20261017015506_social_notification_system.sql:33",
+        "supabase/migrations/20261023210220_ruby_contributor_cards.sql:26",
+        "supabase/migrations/20261023210220_ruby_contributor_cards.sql:27",
+        "supabase/migrations/20261028230000_zone_post_notifications.sql:3",
+        "supabase/migrations/20261028230000_zone_post_notifications.sql:4",
+        "supabase/migrations/20261101100000_live_pick_alerts.sql:3",
+        "supabase/migrations/20261101100000_live_pick_alerts.sql:4"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:1"
+      ]
+    },
+    {
+      "name": "public.published_legs",
+      "kind": "security_invoker_view",
+      "group": "desk",
+      "contract": {
+        "group": "desk",
+        "write": [],
+        "methods": [
+          "GET"
+        ],
+        "key": [
+          "leg_key"
+        ],
+        "columns": [
+          "leg_key",
+          "release_id",
+          "leg_index",
+          "official_pick_id",
+          "game_id",
+          "kind",
+          "name",
+          "market",
+          "matchup",
+          "quote",
+          "quote_observed_at",
+          "gambly_url",
+          "copy_text",
+          "why",
+          "risk",
+          "published_at",
+          "expires_at",
+          "result",
+          "result_source",
+          "odds",
+          "original_leg_key"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261011001723_published_selection_record.sql:8",
+        "supabase/migrations/20261011001723_published_selection_record.sql:9",
+        "supabase/migrations/20261011001723_published_selection_record.sql:10",
+        "supabase/migrations/20261014172417_automatic_leg_results.sql:27",
+        "supabase/migrations/20261014183212_editorial_parlay_tracking.sql:1",
+        "supabase/migrations/20261015180000_published_leg_prices.sql:1",
+        "supabase/migrations/20261017000000_research_board_tier.sql:12"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261011001723_published_selection_record.sql:8",
+        "supabase/migrations/20261015180000_published_leg_prices.sql:1"
+      ]
+    },
+    {
+      "name": "public.candidate_releases",
+      "kind": "table",
+      "group": "desk",
+      "contract": {
+        "group": "desk",
+        "write": [],
+        "methods": [
+          "GET"
+        ],
+        "key": [
+          "id"
+        ],
+        "columns": [
+          "id",
+          "stage_id",
+          "title",
+          "candidates",
+          "expires_at",
+          "created_at",
+          "publication_key"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261003151042_public_candidate_releases.sql:1",
+        "supabase/migrations/20261003151042_public_candidate_releases.sql:2",
+        "supabase/migrations/20261003151042_public_candidate_releases.sql:3",
+        "supabase/migrations/20261003151042_public_candidate_releases.sql:4",
+        "supabase/migrations/20261003151042_public_candidate_releases.sql:5",
+        "supabase/migrations/20261003151042_public_candidate_releases.sql:7",
+        "supabase/migrations/20261014172417_automatic_leg_results.sql:27",
+        "supabase/migrations/20261014173204_price_alerts_and_tail_leaderboard.sql:7",
+        "supabase/migrations/20261016130632_nfl_selection_gate.sql:22",
+        "supabase/migrations/20261017000000_research_board_tier.sql:8",
+        "supabase/migrations/20261017000000_research_board_tier.sql:9",
+        "supabase/migrations/20261017000000_research_board_tier.sql:10",
+        "supabase/migrations/20261017000000_research_board_tier.sql:11",
+        "supabase/migrations/20261025121434_weekly_sleeper_category.sql:10",
+        "supabase/migrations/20261025121434_weekly_sleeper_category.sql:11",
+        "supabase/migrations/20261025121434_weekly_sleeper_category.sql:12",
+        "supabase/migrations/20261025121434_weekly_sleeper_category.sql:13",
+        "supabase/migrations/20261025121434_weekly_sleeper_category.sql:14"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261003151042_public_candidate_releases.sql:1"
+      ]
+    },
+    {
+      "name": "public.community_shares",
+      "kind": "table",
+      "group": "social",
+      "contract": {
+        "columns": [
+          "post_id",
+          "user_id",
+          "created_at"
+        ],
+        "group": "social",
+        "methods": [
+          "GET",
+          "POST"
+        ],
+        "write": [
+          "post_id",
+          "user_id"
+        ],
+        "key": [
+          "post_id",
+          "user_id"
+        ],
+        "upsert": true
+      },
+      "source_units": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:40",
+        "supabase/migrations/20261017015506_social_notification_system.sql:42",
+        "supabase/migrations/20261017015506_social_notification_system.sql:43",
+        "supabase/migrations/20261017015506_social_notification_system.sql:45",
+        "supabase/migrations/20261017015506_social_notification_system.sql:49",
+        "supabase/migrations/20261017015506_social_notification_system.sql:56",
+        "supabase/migrations/20261017015506_social_notification_system.sql:116"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:40"
+      ]
+    },
+    {
+      "name": "public.leg_book_prices",
+      "kind": "table",
+      "group": "desk",
+      "contract": {
+        "columns": [
+          "leg_key",
+          "book",
+          "price",
+          "point",
+          "observed_at",
+          "kickoff",
+          "updated_at"
+        ],
+        "group": "desk",
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "leg_key"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261016170000_line_shopping_books.sql:2",
+        "supabase/migrations/20261016170000_line_shopping_books.sql:3",
+        "supabase/migrations/20261016170000_line_shopping_books.sql:4",
+        "supabase/migrations/20261016170000_line_shopping_books.sql:5",
+        "supabase/migrations/20261016170000_line_shopping_books.sql:6"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261016170000_line_shopping_books.sql:2"
+      ]
+    },
+    {
+      "name": "public.leg_history",
+      "kind": "table",
+      "group": "desk",
+      "contract": {
+        "columns": [
+          "leg_key",
+          "player_id",
+          "position",
+          "games",
+          "cleared",
+          "sample",
+          "median",
+          "computed_at"
+        ],
+        "group": "desk",
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "leg_key"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261016130000_leg_history.sql:1",
+        "supabase/migrations/20261016130000_leg_history.sql:2",
+        "supabase/migrations/20261016130000_leg_history.sql:3",
+        "supabase/migrations/20261016130000_leg_history.sql:4",
+        "supabase/migrations/20261016130000_leg_history.sql:5"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261016130000_leg_history.sql:1"
+      ]
+    },
+    {
+      "name": "public.leg_market_prices",
+      "kind": "table",
+      "group": "desk",
+      "contract": {
+        "columns": [
+          "leg_key",
+          "book",
+          "first_price",
+          "first_point",
+          "first_observed_at",
+          "last_price",
+          "last_point",
+          "last_observed_at",
+          "kickoff",
+          "updated_at"
+        ],
+        "group": "desk",
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "leg_key"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261015190000_leg_market_prices.sql:1",
+        "supabase/migrations/20261015190000_leg_market_prices.sql:2",
+        "supabase/migrations/20261015190000_leg_market_prices.sql:3",
+        "supabase/migrations/20261015190000_leg_market_prices.sql:4",
+        "supabase/migrations/20261015190000_leg_market_prices.sql:5",
+        "supabase/migrations/20261015190000_leg_market_prices.sql:7",
+        "supabase/migrations/20261016190000_price_move_alerts.sql:6"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261015190000_leg_market_prices.sql:1"
+      ]
+    },
+    {
+      "name": "public.leg_result_progress",
+      "kind": "table",
+      "group": "desk",
+      "contract": {
+        "columns": [
+          "leg_key",
+          "status",
+          "value",
+          "reason",
+          "source_url",
+          "checked_at"
+        ],
+        "group": "desk",
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "leg_key"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261014172417_automatic_leg_results.sql:8",
+        "supabase/migrations/20261014172417_automatic_leg_results.sql:9",
+        "supabase/migrations/20261014172417_automatic_leg_results.sql:10",
+        "supabase/migrations/20261014172417_automatic_leg_results.sql:11",
+        "supabase/migrations/20261014172417_automatic_leg_results.sql:19",
+        "supabase/migrations/20261014172844_editorial_progress_own_tails.sql:1"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014172417_automatic_leg_results.sql:8"
+      ]
+    },
+    {
+      "name": "public.research_leg_results",
+      "kind": "table",
+      "group": "desk",
+      "contract": {
+        "columns": [
+          "leg_key",
+          "result",
+          "source_url",
+          "verified_at"
+        ],
+        "group": "desk",
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "leg_key"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261011001723_published_selection_record.sql:1",
+        "supabase/migrations/20261011001723_published_selection_record.sql:2",
+        "supabase/migrations/20261011001723_published_selection_record.sql:3",
+        "supabase/migrations/20261011001723_published_selection_record.sql:4",
+        "supabase/migrations/20261011001723_published_selection_record.sql:5",
+        "supabase/migrations/20261011001723_published_selection_record.sql:6",
+        "supabase/migrations/20261011001723_published_selection_record.sql:7",
+        "supabase/migrations/20261014172417_automatic_leg_results.sql:20",
+        "supabase/migrations/20261014183212_editorial_parlay_tracking.sql:8"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261011001723_published_selection_record.sql:1"
+      ]
+    },
+    {
+      "name": "public.ruby_cards",
+      "kind": "security_invoker_view",
+      "group": "social",
+      "contract": {
+        "columns": [
+          "id",
+          "user_id",
+          "brand",
+          "theme",
+          "submission_day",
+          "sport",
+          "title",
+          "legs",
+          "note",
+          "photo_path",
+          "sportsbook",
+          "reported_odds",
+          "created_at",
+          "revision",
+          "edited_at",
+          "hidden",
+          "reported_result",
+          "source_link"
+        ],
+        "group": "social",
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "id"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261024134617_admin_contributor_card_revisions.sql:11",
+        "supabase/migrations/20261024134617_admin_contributor_card_revisions.sql:12",
+        "supabase/migrations/20261024190000_contributor_records.sql:22",
+        "supabase/migrations/20261105233947_ruby_kalshi_source_link.sql:15"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261024134617_admin_contributor_card_revisions.sql:11",
+        "supabase/migrations/20261024190000_contributor_records.sql:22"
+      ]
+    },
+    {
+      "name": "public.nba_games",
+      "kind": "table",
+      "group": "research",
+      "contract": {
+        "group": "research",
+        "columns": [
+          "id",
+          "away_team",
+          "home_team",
+          "away_abbreviation",
+          "home_abbreviation",
+          "tipoff",
+          "tipoff_tbd",
+          "season",
+          "season_type"
+        ],
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "id"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261018060000_nba_source_feed.sql:1",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:3",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:4",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:5",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:6"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018060000_nba_source_feed.sql:1"
+      ]
+    },
+    {
+      "name": "public.nba_result_progress",
+      "kind": "table",
+      "group": "research",
+      "contract": {
+        "group": "research",
+        "columns": [
+          "game_id",
+          "status"
+        ],
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "game_id"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261018070000_nba_results.sql:5",
+        "supabase/migrations/20261018070000_nba_results.sql:13",
+        "supabase/migrations/20261018070000_nba_results.sql:16",
+        "supabase/migrations/20261018070000_nba_results.sql:19",
+        "supabase/migrations/20261018070000_nba_results.sql:22",
+        "supabase/migrations/20261118010000_nba_minor_corrections.sql:4"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018070000_nba_results.sql:5"
+      ]
+    },
+    {
+      "name": "public.nba_player_results",
+      "kind": "table",
+      "group": "research",
+      "contract": {
+        "group": "research",
+        "columns": [
+          "game_id",
+          "athlete_id",
+          "player",
+          "team",
+          "played",
+          "minutes",
+          "points",
+          "rebounds",
+          "assists",
+          "threes",
+          "position"
+        ],
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "game_id",
+          "athlete_id"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261018070000_nba_results.sql:3",
+        "supabase/migrations/20261018070000_nba_results.sql:9",
+        "supabase/migrations/20261018070000_nba_results.sql:12",
+        "supabase/migrations/20261018070000_nba_results.sql:16",
+        "supabase/migrations/20261018070000_nba_results.sql:18",
+        "supabase/migrations/20261018070000_nba_results.sql:21",
+        "supabase/migrations/20261018080000_nba_shadow.sql:1"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018070000_nba_results.sql:3"
+      ]
+    },
+    {
+      "name": "public.nba_player_three_attempts",
+      "kind": "table",
+      "group": "research",
+      "contract": {
+        "group": "research",
+        "columns": [
+          "game_id",
+          "athlete_id",
+          "attempts"
+        ],
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "game_id",
+          "athlete_id"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:2",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:3",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:4",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:5",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:6",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:7"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:2"
+      ]
+    },
+    {
+      "name": "public.nba_observations",
+      "kind": "table",
+      "group": "research",
+      "contract": {
+        "group": "research",
+        "columns": [
+          "id",
+          "game_id",
+          "kind",
+          "recorded_at",
+          "observed_at",
+          "payload"
+        ],
+        "methods": [
+          "GET"
+        ],
+        "write": [],
+        "key": [
+          "id"
+        ],
+        "upsert": false
+      },
+      "source_units": [
+        "supabase/migrations/20261018060000_nba_source_feed.sql:7",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:9",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:10",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:11",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:12",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:13"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018060000_nba_source_feed.sql:7"
+      ]
+    },
+    {
+      "name": "public.community_activity",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [],
+        "name": "community_activity",
+        "types": [],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "community_activity()",
+        "source_hash": "f39cd74f912f4a5c4648734fa32a5eb788a8ff098ea9772f7417f023d4f73267",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261016151703_community_activity_bar.sql:4",
+        "supabase/migrations/20261016151703_community_activity_bar.sql:5",
+        "supabase/migrations/20261016151703_community_activity_bar.sql:6"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261016151703_community_activity_bar.sql:4"
+      ]
+    },
+    {
+      "name": "public.community_avatars",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_users"
+        ],
+        "name": "community_avatars",
+        "types": [
+          "uuid[]"
+        ],
+        "return": "jsonb",
+        "definer": true,
+        "signature": "community_avatars(uuid[])",
+        "source_hash": "931aa3cda32dbe4d11316a9e219339f1304b657287c31c040691debcc057f0dd",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261029200000_community_avatars.sql:1",
+        "supabase/migrations/20261029200000_community_avatars.sql:2",
+        "supabase/migrations/20261029200000_community_avatars.sql:3",
+        "supabase/migrations/20261106221738_dealer_profile_visibility.sql:3"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261029200000_community_avatars.sql:1"
+      ]
+    },
+    {
+      "name": "public.community_comments",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_post",
+          "p_target"
+        ],
+        "name": "community_comments",
+        "types": [
+          "uuid",
+          "uuid"
+        ],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "community_comments(uuid,uuid)",
+        "source_hash": "cea17c86497dadfe9f7cd4a5c76617842b4571aecf4c4ac794ea9f0a1898a8e1",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:67",
+        "supabase/migrations/20261017015506_social_notification_system.sql:78",
+        "supabase/migrations/20261017015506_social_notification_system.sql:79"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:67"
+      ]
+    },
+    {
+      "name": "public.community_dealer_feed",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_sport",
+          "p_limit"
+        ],
+        "name": "community_dealer_feed",
+        "types": [
+          "text",
+          "integer"
+        ],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "community_dealer_feed(text,integer)",
+        "source_hash": "bb8c26a3b1dab066aeba677c328bb3ebeb9380c44d84cb394c43f792f888f105",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261109212303_dealer_only_zone_feed.sql:4",
+        "supabase/migrations/20261109212303_dealer_only_zone_feed.sql:5",
+        "supabase/migrations/20261109212303_dealer_only_zone_feed.sql:6"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261109212303_dealer_only_zone_feed.sql:4"
+      ]
+    },
+    {
+      "name": "public.community_feed",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_sport",
+          "p_limit",
+          "p_following"
+        ],
+        "name": "community_feed",
+        "types": [
+          "text",
+          "integer",
+          "boolean"
+        ],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "community_feed(text,integer,boolean)",
+        "source_hash": "de793d75199d0c0e3a3fe10cf55a5391df87a8b3cdb29228fa36b6cda7a1d428",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:36",
+        "supabase/migrations/20261014025802_community_social_feed.sql:37",
+        "supabase/migrations/20261014025802_community_social_feed.sql:38",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:29"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:36",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:29"
+      ]
+    },
+    {
+      "name": "public.community_post",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_id"
+        ],
+        "name": "community_post",
+        "types": [
+          "uuid"
+        ],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "community_post(uuid)",
+        "source_hash": "9630e0732593bee376dceff764fe80280361f8a8bd3a00360305e0221da6b5c3",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261016151703_community_activity_bar.sql:7",
+        "supabase/migrations/20261016151703_community_activity_bar.sql:8",
+        "supabase/migrations/20261016151703_community_activity_bar.sql:9"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261016151703_community_activity_bar.sql:7"
+      ]
+    },
+    {
+      "name": "public.community_profile",
+      "kind": "function",
+      "group": "profile",
+      "contract": {
+        "args": [
+          "p_username",
+          "p_limit"
+        ],
+        "name": "community_profile",
+        "types": [
+          "text",
+          "integer"
+        ],
+        "return": "jsonb",
+        "definer": true,
+        "signature": "community_profile(text,integer)",
+        "source_hash": "28c5a2c3c86a41869708556ab55a91625ae328e030dc35b053782a2a43147797",
+        "group": "profile",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261109020607_community_profile.sql:1",
+        "supabase/migrations/20261109020607_community_profile.sql:2",
+        "supabase/migrations/20261109020607_community_profile.sql:3",
+        "supabase/migrations/20261109022151_community_profile_fields.sql:5",
+        "supabase/migrations/20261109022151_community_profile_fields.sql:6",
+        "supabase/migrations/20261109022151_community_profile_fields.sql:7",
+        "supabase/migrations/20261110225115_member_profile_account_links.sql:1"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261109020607_community_profile.sql:1",
+        "supabase/migrations/20261109022151_community_profile_fields.sql:5"
+      ]
+    },
+    {
+      "name": "public.community_reaction_state",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_post"
+        ],
+        "name": "community_reaction_state",
+        "types": [
+          "uuid"
+        ],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "community_reaction_state(uuid)",
+        "source_hash": "b6e3e1c051746e02b3b1ecb85b18373a4383bfb89579ea56800844332afa9408",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:9",
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:10",
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:11"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:9"
+      ]
+    },
+    {
+      "name": "public.create_member_parlay",
+      "kind": "function",
+      "group": "desk",
+      "contract": {
+        "args": [
+          "p_title",
+          "p_leg_keys"
+        ],
+        "name": "create_member_parlay",
+        "types": [
+          "text",
+          "text[]"
+        ],
+        "return": "uuid",
+        "definer": false,
+        "signature": "create_member_parlay(text,text[])",
+        "source_hash": "22ec75b70264c893b3d08f9c3be7e93f3fd8960a413b77c4996c023a0cbbfc69",
+        "group": "desk",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:17",
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:18",
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:19"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:17"
+      ]
+    },
+    {
+      "name": "public.is_admin",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [],
+        "name": "is_admin",
+        "types": [],
+        "return": "boolean",
+        "definer": false,
+        "signature": "is_admin()",
+        "source_hash": "00bd756d9158a92e622545ea2486cbebe43379361b10e9aee7c5596d84e3275c",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20260930111253_vegas_quant_initial.sql:29",
+        "supabase/migrations/20260930111253_vegas_quant_initial.sql:33",
+        "supabase/migrations/20260930111253_vegas_quant_initial.sql:34"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20260930111253_vegas_quant_initial.sql:29"
+      ]
+    },
+    {
+      "name": "public.notification_action",
+      "kind": "function",
+      "group": "notifications",
+      "contract": {
+        "args": [
+          "p_action",
+          "p_id",
+          "p_before"
+        ],
+        "name": "notification_action",
+        "types": [
+          "text",
+          "uuid",
+          "timestamp with time zone"
+        ],
+        "return": "void",
+        "definer": false,
+        "signature": "notification_action(text,uuid,timestamp with time zone)",
+        "source_hash": "ca4662bf2ce6df7b2575493a8189c857013bd7c0753d7e79c32358907e0a5e77",
+        "group": "notifications",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:66",
+        "supabase/migrations/20261017015506_social_notification_system.sql:78",
+        "supabase/migrations/20261017015506_social_notification_system.sql:79"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:66"
+      ]
+    },
+    {
+      "name": "public.notification_counts",
+      "kind": "function",
+      "group": "notifications",
+      "contract": {
+        "args": [],
+        "name": "notification_counts",
+        "types": [],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "notification_counts()",
+        "source_hash": "1ee67f0ea276c8551c02b80eff7224b229407577e9b7aaf44169b3631fc84a88",
+        "group": "notifications",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:64",
+        "supabase/migrations/20261017015506_social_notification_system.sql:78",
+        "supabase/migrations/20261017015506_social_notification_system.sql:79"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:64"
+      ]
+    },
+    {
+      "name": "public.notification_inbox",
+      "kind": "function",
+      "group": "notifications",
+      "contract": {
+        "args": [
+          "p_type",
+          "p_search",
+          "p_unread",
+          "p_before",
+          "p_id"
+        ],
+        "name": "notification_inbox",
+        "types": [
+          "text",
+          "text",
+          "boolean",
+          "timestamp with time zone",
+          "uuid"
+        ],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "notification_inbox(text,text,boolean,timestamp with time zone,uuid)",
+        "source_hash": "c0a29383cfbf2dcba1c9867cc9e8d682b135e34969c79d17c06ce7742109cca2",
+        "group": "notifications",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:65",
+        "supabase/migrations/20261017015506_social_notification_system.sql:78",
+        "supabase/migrations/20261017015506_social_notification_system.sql:79"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:65"
+      ]
+    },
+    {
+      "name": "public.notification_view",
+      "kind": "function",
+      "group": "notifications",
+      "contract": {
+        "args": [
+          "p_ids",
+          "p_before"
+        ],
+        "name": "notification_view",
+        "types": [
+          "uuid[]",
+          "timestamp with time zone"
+        ],
+        "return": "void",
+        "definer": false,
+        "signature": "notification_view(uuid[],timestamp with time zone)",
+        "source_hash": "82f6c001c1a1a8cd9d35cc1629a4ea57a08c602459d1009f985a93d23492369f",
+        "group": "notifications",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:88",
+        "supabase/migrations/20261017015506_social_notification_system.sql:89",
+        "supabase/migrations/20261017015506_social_notification_system.sql:90"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261017015506_social_notification_system.sql:88"
+      ]
+    },
+    {
+      "name": "public.published_leg_catalog",
+      "kind": "function",
+      "group": "desk",
+      "contract": {
+        "args": [
+          "p_since"
+        ],
+        "name": "published_leg_catalog",
+        "types": [
+          "timestamp with time zone"
+        ],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "published_leg_catalog(timestamp with time zone)",
+        "source_hash": "b33b8a498326d28bc4866e372968b80e8dad03d7420204d14a60217f91270207",
+        "group": "desk",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:11",
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:12",
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:13"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261016161204_member_parlay_builder.sql:11"
+      ]
+    },
+    {
+      "name": "public.set_community_reaction",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_post",
+          "p_reaction"
+        ],
+        "name": "set_community_reaction",
+        "types": [
+          "uuid",
+          "text"
+        ],
+        "return": "jsonb",
+        "definer": false,
+        "signature": "set_community_reaction(uuid,text)",
+        "source_hash": "66e096aa85be243efeb709982750339d3ef4645b505140afaba1844b457a4bce",
+        "group": "social",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:15",
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:16",
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:17"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261103181103_community_typed_reactions.sql:15"
+      ]
+    },
+    {
+      "name": "public.share_member_parlay",
+      "kind": "function",
+      "group": "desk",
+      "contract": {
+        "args": [
+          "p_parlay"
+        ],
+        "name": "share_member_parlay",
+        "types": [
+          "uuid"
+        ],
+        "return": "uuid",
+        "definer": true,
+        "signature": "share_member_parlay(uuid)",
+        "source_hash": "a1012cf50183a4324ccc353261cd80a30ad9298078d037197a65cd05c936af61",
+        "group": "desk",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql:11",
+        "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql:12",
+        "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql:13"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql:11"
+      ]
+    },
+    {
+      "name": "public.nhl_chart_snapshot",
+      "kind": "function",
+      "group": "research",
+      "contract": {
+        "args": [
+          "p_id"
+        ],
+        "types": [
+          "uuid"
+        ],
+        "name": "nhl_chart_snapshot",
+        "return": "jsonb",
+        "definer": true,
+        "signature": "nhl_chart_snapshot(uuid)",
+        "source_hash": "2a9b395bb7728e8661f1275c5fb224dd40138799f782775da3a6047e1b0aed47",
+        "group": "research",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:6",
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:7",
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:8"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:6"
+      ]
+    },
+    {
+      "name": "public.add_ruby_card_comment",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_card",
+          "p_body",
+          "p_parent"
+        ],
+        "name": "add_ruby_card_comment",
+        "types": [
+          "uuid",
+          "text",
+          "uuid"
+        ],
+        "return": "jsonb",
+        "signature": "add_ruby_card_comment(uuid, text, uuid)",
+        "source_hash": "578d778c084e3d00bcc163df2c14ce7d94bbb901de49c84f1f52de042e574dcc",
+        "group": "social",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:15",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:16",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:17"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:15"
+      ]
+    },
+    {
+      "name": "public.create_community_poll_post",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_id",
+          "p_sport",
+          "p_body",
+          "p_photo_path",
+          "p_question",
+          "p_options"
+        ],
+        "name": "create_community_poll_post",
+        "types": [
+          "uuid",
+          "text",
+          "text",
+          "text",
+          "text",
+          "jsonb"
+        ],
+        "return": "uuid",
+        "signature": "create_community_poll_post(uuid, text, text, text, text, jsonb)",
+        "source_hash": "0b3fbe35db680ddbcea7006bc3acf45c144fd7ba4114492c88800a50f28e86fa",
+        "group": "social",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261108162552_community_polls.sql:12",
+        "supabase/migrations/20261108162552_community_polls.sql:13",
+        "supabase/migrations/20261108162552_community_polls.sql:14"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261108162552_community_polls.sql:12"
+      ]
+    },
+    {
+      "name": "public.delete_ruby_card_comment",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_comment"
+        ],
+        "name": "delete_ruby_card_comment",
+        "types": [
+          "uuid"
+        ],
+        "return": "boolean",
+        "signature": "delete_ruby_card_comment(uuid)",
+        "source_hash": "2db5f31ab3a3ad4f37a5b831c93149114cd8dfdbab2f8873fc6ca5df704d781e",
+        "group": "social",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:18",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:19",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:20"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:18"
+      ]
+    },
+    {
+      "name": "public.leg_tail_counts",
+      "kind": "function",
+      "group": "desk",
+      "contract": {
+        "args": [
+          "p_legs"
+        ],
+        "name": "leg_tail_counts",
+        "types": [
+          "text[]"
+        ],
+        "return": "TABLE(leg_key text, tail_count bigint)",
+        "signature": "leg_tail_counts(text[])",
+        "source_hash": "279d180f569827a898b0d82aae398e16ab6ea5fe7e69f766f4a6791768a854e5",
+        "group": "desk",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261018000000_compact_desk_and_batch_tails.sql:7",
+        "supabase/migrations/20261018000000_compact_desk_and_batch_tails.sql:8",
+        "supabase/migrations/20261018000000_compact_desk_and_batch_tails.sql:9"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018000000_compact_desk_and_batch_tails.sql:7"
+      ]
+    },
+    {
+      "name": "public.restrict_community_member",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_user",
+          "p_reason",
+          "p_restricted"
+        ],
+        "name": "restrict_community_member",
+        "types": [
+          "uuid",
+          "text",
+          "boolean"
+        ],
+        "return": "void",
+        "signature": "restrict_community_member(uuid, text, boolean)",
+        "source_hash": "467b5ba9df067604858b328e58c7c7be905c4d76e566956db917ff37f8a4295a",
+        "group": "social",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:16",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:17",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:18"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:16"
+      ]
+    },
+    {
+      "name": "public.ruby_card_comment_counts",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_cards"
+        ],
+        "name": "ruby_card_comment_counts",
+        "types": [
+          "uuid[]"
+        ],
+        "return": "jsonb",
+        "signature": "ruby_card_comment_counts(uuid[])",
+        "source_hash": "57bf573552c0a98668ae38246a2a6cc3ff5784a99dca3b4162c8ade16d2ef415",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:12",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:13",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:14"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:12"
+      ]
+    },
+    {
+      "name": "public.ruby_card_comments",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_card"
+        ],
+        "name": "ruby_card_comments",
+        "types": [
+          "uuid"
+        ],
+        "return": "jsonb",
+        "signature": "ruby_card_comments(uuid)",
+        "source_hash": "4e81b93f020f56d378a6c0932e8b7e4172ec5ab6a2b13a67b7f2881190aa2028",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:1",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:5",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:6",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:9",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:10",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:11"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:1",
+        "supabase/migrations/20261104031500_ruby_card_comments.sql:9"
+      ]
+    },
+    {
+      "name": "public.set_community_post_vote",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_post",
+          "p_value"
+        ],
+        "name": "set_community_post_vote",
+        "types": [
+          "uuid",
+          "integer"
+        ],
+        "return": "jsonb",
+        "signature": "set_community_post_vote(uuid, integer)",
+        "source_hash": "be60891e15b4746fe5140575dca98b86cdc4dc1d1795525c0a071c87d72a6d7c",
+        "group": "social",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261108170014_community_post_votes.sql:11",
+        "supabase/migrations/20261108170014_community_post_votes.sql:12",
+        "supabase/migrations/20261108170014_community_post_votes.sql:13"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261108170014_community_post_votes.sql:11"
+      ]
+    },
+    {
+      "name": "public.community_story_clock",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [],
+        "name": "community_story_clock",
+        "types": [],
+        "return": "jsonb",
+        "signature": "community_story_clock()",
+        "source_hash": "1942860d1842ab19d1cc2acb1b0cea51ea5f59cbc9dedeab6d1eb86405472519",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261104101722_community_story_clock.sql:1",
+        "supabase/migrations/20261104101722_community_story_clock.sql:2",
+        "supabase/migrations/20261104101722_community_story_clock.sql:3"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261104101722_community_story_clock.sql:1"
+      ]
+    },
+    {
+      "name": "public.set_community_poll_vote",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_post",
+          "p_option"
+        ],
+        "name": "set_community_poll_vote",
+        "types": [
+          "uuid",
+          "integer"
+        ],
+        "return": "jsonb",
+        "signature": "set_community_poll_vote(uuid, integer)",
+        "source_hash": "c9e57843e15c78623fbda04c7c8e7bed847bf0845a6495802bd7dac50f86b031",
+        "group": "social",
+        "write": true
+      },
+      "source_units": [
+        "supabase/migrations/20261108162552_community_polls.sql:21",
+        "supabase/migrations/20261108162552_community_polls.sql:22",
+        "supabase/migrations/20261108162552_community_polls.sql:23"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261108162552_community_polls.sql:21"
+      ]
+    },
+    {
+      "name": "public.community_poll_states",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_posts"
+        ],
+        "name": "community_poll_states",
+        "types": [
+          "uuid[]"
+        ],
+        "return": "jsonb",
+        "signature": "community_poll_states(uuid[])",
+        "source_hash": "d218ed43ada28ece6d7bfe94d68730791aef8d010f925a0ada6c9b741832246f",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261108162552_community_polls.sql:15",
+        "supabase/migrations/20261108162552_community_polls.sql:16",
+        "supabase/migrations/20261108162552_community_polls.sql:17"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261108162552_community_polls.sql:15"
+      ]
+    },
+    {
+      "name": "public.community_vote_states",
+      "kind": "function",
+      "group": "social",
+      "contract": {
+        "args": [
+          "p_posts"
+        ],
+        "name": "community_vote_states",
+        "types": [
+          "uuid[]"
+        ],
+        "return": "jsonb",
+        "signature": "community_vote_states(uuid[])",
+        "source_hash": "800c17579558d1e535f9246e6e5842640605d6d3d72dca2f0ca37c67c2aa99f4",
+        "group": "social",
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261108170014_community_post_votes.sql:5",
+        "supabase/migrations/20261108170014_community_post_votes.sql:6",
+        "supabase/migrations/20261108170014_community_post_votes.sql:7"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261108170014_community_post_votes.sql:5"
+      ]
+    },
+    {
+      "name": "public.nba_player_usage",
+      "kind": "function",
+      "group": "research",
+      "contract": {
+        "group": "research",
+        "args": [
+          "p_athletes"
+        ],
+        "types": [
+          "text[]"
+        ],
+        "signature": "nba_player_usage(text[])",
+        "source_hash": "136d24209e4eba65d298f0f569c237df6b19dcaadd855b5d5124b887c5ee203e",
+        "return": "TABLE(game_id uuid, athlete_id text, usage numeric)",
+        "definer": false,
+        "write": false,
+        "page_columns": [
+          "game_id",
+          "athlete_id",
+          "usage"
+        ]
+      },
+      "source_units": [
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:16",
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:17",
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:18"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:16"
+      ]
+    },
+    {
+      "name": "public.nba_defense_vs_position",
+      "kind": "function",
+      "group": "research",
+      "contract": {
+        "group": "research",
+        "args": [
+          "p_season"
+        ],
+        "types": [
+          "integer"
+        ],
+        "signature": "nba_defense_vs_position(integer)",
+        "source_hash": "04f3beed0596b26dd53677fdffb148af5469a0b3057680c58ce2fed5df9ed9ba",
+        "return": "TABLE(team text, pos text, games integer, points numeric, rebounds numeric, assists numeric, points_rank integer, rebounds_rank integer, assists_rank integer)",
+        "definer": false,
+        "write": false
+      },
+      "source_units": [
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:19",
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:20",
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:21"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:19"
+      ]
+    },
+    {
+      "name": "public.nba_games",
+      "kind": "prerequisite",
+      "group": "research",
+      "source_units": [
+        "supabase/migrations/20261018060000_nba_source_feed.sql:1",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:3",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:4",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:5",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:6"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018060000_nba_source_feed.sql:1"
+      ]
+    },
+    {
+      "name": "public.nba_player_results",
+      "kind": "prerequisite",
+      "group": "research",
+      "source_units": [
+        "supabase/migrations/20261018070000_nba_results.sql:3",
+        "supabase/migrations/20261018070000_nba_results.sql:9",
+        "supabase/migrations/20261018070000_nba_results.sql:12",
+        "supabase/migrations/20261018070000_nba_results.sql:16",
+        "supabase/migrations/20261018070000_nba_results.sql:18",
+        "supabase/migrations/20261018070000_nba_results.sql:21",
+        "supabase/migrations/20261018080000_nba_shadow.sql:1"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018070000_nba_results.sql:3"
+      ]
+    },
+    {
+      "name": "public.nba_player_three_attempts",
+      "kind": "prerequisite",
+      "group": "research",
+      "source_units": [
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:2",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:3",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:4",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:5",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:6",
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:7"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261029001000_nba_three_point_volume.sql:2"
+      ]
+    },
+    {
+      "name": "public.nba_observations",
+      "kind": "prerequisite",
+      "group": "research",
+      "source_units": [
+        "supabase/migrations/20261018060000_nba_source_feed.sql:7",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:9",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:10",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:11",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:12",
+        "supabase/migrations/20261018060000_nba_source_feed.sql:13"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018060000_nba_source_feed.sql:7"
+      ]
+    },
+    {
+      "name": "public.community_posts",
+      "kind": "prerequisite",
+      "group": "research",
+      "source_units": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:1",
+        "supabase/migrations/20261014025802_community_social_feed.sql:11",
+        "supabase/migrations/20261014025802_community_social_feed.sql:13",
+        "supabase/migrations/20261014025802_community_social_feed.sql:18",
+        "supabase/migrations/20261014025802_community_social_feed.sql:19",
+        "supabase/migrations/20261014025802_community_social_feed.sql:21",
+        "supabase/migrations/20261014025802_community_social_feed.sql:22",
+        "supabase/migrations/20261014025802_community_social_feed.sql:23",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:11",
+        "supabase/migrations/20261014041536_launch_safety_controls.sql:21",
+        "supabase/migrations/20261014162515_community_post_photos.sql:1",
+        "supabase/migrations/20261014162515_community_post_photos.sql:2",
+        "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql:8",
+        "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql:9",
+        "supabase/migrations/20261017015506_social_notification_system.sql:52",
+        "supabase/migrations/20261028230000_zone_post_notifications.sql:8",
+        "supabase/migrations/20261029160000_nba_threes_card.sql:1",
+        "supabase/migrations/20261029160000_nba_threes_card.sql:3",
+        "supabase/migrations/20261029160000_nba_threes_card.sql:8",
+        "supabase/migrations/20261031160000_zone_all_sports.sql:1",
+        "supabase/migrations/20261031160000_zone_all_sports.sql:2",
+        "supabase/migrations/20261031160000_zone_all_sports.sql:3",
+        "supabase/migrations/20261031190200_zone_automated_cards.sql:2",
+        "supabase/migrations/20261031190200_zone_automated_cards.sql:3",
+        "supabase/migrations/20261031190200_zone_automated_cards.sql:8",
+        "supabase/migrations/20261031190200_zone_automated_cards.sql:10",
+        "supabase/migrations/20261106221542_dealer_publisher_identity.sql:4",
+        "supabase/migrations/20261108020000_nfl_weekly_cards.sql:3",
+        "supabase/migrations/20261108020000_nfl_weekly_cards.sql:4",
+        "supabase/migrations/20261109032951_dealer_zone_follow_notifications.sql:16",
+        "supabase/migrations/20261109032951_dealer_zone_follow_notifications.sql:17",
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:9",
+        "supabase/migrations/20261111010000_zone_post_games.sql:13"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261014025802_community_social_feed.sql:1"
+      ]
+    },
+    {
+      "name": "private.nhl_chart_snapshots",
+      "kind": "prerequisite",
+      "group": "research",
+      "source_units": [
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:1",
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:2",
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:3",
+        "supabase/migrations/20261111001158_nhl_chart_morning_integration.sql:4"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261111000938_nhl_daily_chart_package.sql:1"
+      ]
+    },
+    {
+      "name": "public.nba_result_progress",
+      "kind": "prerequisite",
+      "group": "research",
+      "source_units": [
+        "supabase/migrations/20261018070000_nba_results.sql:5",
+        "supabase/migrations/20261018070000_nba_results.sql:13",
+        "supabase/migrations/20261018070000_nba_results.sql:16",
+        "supabase/migrations/20261018070000_nba_results.sql:19",
+        "supabase/migrations/20261018070000_nba_results.sql:22",
+        "supabase/migrations/20261118010000_nba_minor_corrections.sql:4"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018070000_nba_results.sql:5"
+      ]
+    },
+    {
+      "name": "public.nba_player_shooting",
+      "kind": "prerequisite",
+      "group": "research",
+      "source_units": [
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:1",
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:2",
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:3",
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:4",
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:5",
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:6"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261117120000_nba_prop_card_inputs.sql:1"
+      ]
+    },
+    {
+      "name": "public.nba_game_results",
+      "kind": "prerequisite",
+      "group": "research",
+      "source_units": [
+        "supabase/migrations/20261018070000_nba_results.sql:2",
+        "supabase/migrations/20261018070000_nba_results.sql:8",
+        "supabase/migrations/20261018070000_nba_results.sql:11",
+        "supabase/migrations/20261018070000_nba_results.sql:16",
+        "supabase/migrations/20261018070000_nba_results.sql:17",
+        "supabase/migrations/20261018070000_nba_results.sql:20"
+      ],
+      "direct_declarations": [
+        "supabase/migrations/20261018070000_nba_results.sql:2"
+      ]
+    }
+  ],
+  "dependency_names": [
+    "private.account_erasure_jobs",
+    "private.admin_users",
+    "private.age_checkout_guard",
+    "private.age_checks",
+    "private.age_eligible",
+    "private.age_erasure_initialization_guard",
+    "private.age_member_allowed",
+    "private.age_policy",
+    "private.age_push_guard",
+    "private.attach_zone_automated_card",
+    "private.audit_change",
+    "private.before_age_community_member",
+    "private.before_age_has_membership",
+    "private.billing_invoices",
+    "private.billing_orders",
+    "private.billing_subscriptions",
+    "private.capture_edge_release",
+    "private.cite_bible_rules",
+    "private.community_activity",
+    "private.community_follow_target_allowed",
+    "private.community_member_allowed",
+    "private.community_photo_access",
+    "private.community_post_card_guard",
+    "private.community_reaction_actor_allowed",
+    "private.community_restrictions",
+    "private.community_safety_check",
+    "private.complete_editorial_parlay",
+    "private.create_member_parlay",
+    "private.dealer_attribution_history",
+    "private.edit_ruby_link",
+    "private.editorial_parlay_results",
+    "private.emit_notification",
+    "private.enforce_nfl_selection_gate",
+    "private.enforce_research_board",
+    "private.enforce_weekly_sleeper",
+    "private.enqueue_pick_push",
+    "private.enqueue_price_move_push",
+    "private.enqueue_price_push",
+    "private.enqueue_research_push",
+    "private.existing_member_premium",
+    "private.feature_ruby",
+    "private.frank_anniversary_config",
+    "private.frank_anniversary_receipts",
+    "private.free_challenge_desk",
+    "private.guard_billing_during_erasure",
+    "private.guard_community_poll",
+    "private.guard_community_profile_text",
+    "private.guard_community_typed_reaction",
+    "private.guard_kalshi_revision_pause",
+    "private.guard_kalshi_submission_pause",
+    "private.guard_nfl_edge_release",
+    "private.guard_nfl_feed_decision",
+    "private.guard_numeric_sack_contract",
+    "private.guard_ruby_revision",
+    "private.guard_sack_result_credit",
+    "private.has_membership",
+    "private.immutable",
+    "private.index_source_observation",
+    "private.invoke_live_pick_alerts",
+    "private.invoke_push_dispatcher",
+    "private.is_admin",
+    "private.is_dealer_publisher",
+    "private.is_live_pick_zone_post",
+    "private.is_research_release",
+    "private.is_weekly_sleeper",
+    "private.keep_first_market_price",
+    "private.leg_move_alerts",
+    "private.leg_result_contracts",
+    "private.leg_result_evidence",
+    "private.leg_tail_counts",
+    "private.live_pick_alert",
+    "private.live_pick_alerts",
+    "private.live_pick_zone_health",
+    "private.lock_personal_run_event",
+    "private.membership_status",
+    "private.memberships",
+    "private.nba_minor_correction",
+    "private.nba_result_corrections",
+    "private.nba_result_staging",
+    "private.nba_threes_posts",
+    "private.nfl_gate_identity",
+    "private.nfl_gate_number",
+    "private.nfl_gate_time",
+    "private.nfl_selection_errors",
+    "private.nfl_selection_gate_decisions",
+    "private.nfl_selection_identities",
+    "private.nfl_selection_model_approvals",
+    "private.nfl_selection_rule_versions",
+    "private.nhl_chart_immutable",
+    "private.nhl_chart_snapshots",
+    "private.normalize_kalshi_source_link",
+    "private.notification_action_rates",
+    "private.notification_actor_followed",
+    "private.notification_block_cleanup",
+    "private.notification_deliveries",
+    "private.notification_events",
+    "private.notification_follow_inbox_allowed",
+    "private.notification_group_followed",
+    "private.notification_interaction_guard",
+    "private.notification_pref_guard",
+    "private.notification_presence",
+    "private.notification_pulse",
+    "private.notification_restriction_change",
+    "private.notification_search_document",
+    "private.notification_social_event",
+    "private.notification_sync_updates",
+    "private.pick_notification_inbox_allowed",
+    "private.pick_notification_recipient_allowed",
+    "private.prepare_member_publication",
+    "private.public_overview",
+    "private.publish",
+    "private.publish_analyst_double_up",
+    "private.publish_receipts",
+    "private.published_leg_recommendation",
+    "private.push_config",
+    "private.push_deliveries",
+    "private.recent_ruby_card_comment",
+    "private.record_onboarding",
+    "private.require_cleared_personal_run",
+    "private.require_research_model_basis",
+    "private.research_identities",
+    "private.ruby_card_open",
+    "private.ruby_home",
+    "private.ruby_notify",
+    "private.ruby_visible",
+    "private.set_community_poll_vote",
+    "private.set_community_post_vote",
+    "private.set_community_reaction",
+    "private.settle_personal_entries",
+    "private.signup_trial_expires_at",
+    "private.sports_sources",
+    "private.stamp_intelligence",
+    "private.submit_ruby",
+    "private.submit_ruby_link",
+    "private.validate_nba_editorial_pick",
+    "private.validate_nba_editorial_provenance",
+    "private.validate_nba_editorial_quote_timeline",
+    "private.validate_nba_editorial_source_timeline",
+    "private.wants_publication",
+    "private.weekly_sleeper_reviews",
+    "private.zone_automation",
+    "private.zone_dealer_publisher_id",
+    "private.zone_editorial_leg",
+    "private.zone_game_index",
+    "private.zone_like",
+    "private.zone_post_games",
+    "private.zone_post_notify",
+    "private.zone_rx",
+    "private.zone_side_rx",
+    "private.zone_tag_post",
+    "private.zone_tag_post_trigger",
+    "public.add_ruby_card_comment",
+    "public.alert_preferences",
+    "public.analysis_versions",
+    "public.app_update_reads",
+    "public.app_updates",
+    "public.audit_events",
+    "public.bankroll_transactions",
+    "public.candidate_releases",
+    "public.challenge_stages",
+    "public.challenges",
+    "public.claim_push_deliveries",
+    "public.claim_social_notification_deliveries",
+    "public.closing_lines",
+    "public.community_activity",
+    "public.community_avatars",
+    "public.community_comment_reactions",
+    "public.community_comments",
+    "public.community_dealer_feed",
+    "public.community_feed",
+    "public.community_poll_states",
+    "public.community_poll_votes",
+    "public.community_polls",
+    "public.community_post",
+    "public.community_post_comments",
+    "public.community_post_votes",
+    "public.community_posts",
+    "public.community_profile",
+    "public.community_profiles",
+    "public.community_reaction_state",
+    "public.community_reactions",
+    "public.community_reports",
+    "public.community_shares",
+    "public.community_story_clock",
+    "public.community_vote_states",
+    "public.create_community_poll_post",
+    "public.create_member_parlay",
+    "public.delete_ruby_card_comment",
+    "public.desk_data",
+    "public.desk_data_compact",
+    "public.edge_releases",
+    "public.edit_ruby",
+    "public.edit_ruby_link",
+    "public.feature_ruby",
+    "public.finish_social_notification_delivery",
+    "public.games",
+    "public.intelligence_markets",
+    "public.intelligence_models",
+    "public.intelligence_news",
+    "public.intelligence_quotes",
+    "public.is_admin",
+    "public.leg_book_prices",
+    "public.leg_history",
+    "public.leg_market_prices",
+    "public.leg_result_progress",
+    "public.leg_tail_counts",
+    "public.leg_tails",
+    "public.live_pick_alert",
+    "public.live_pick_candidates",
+    "public.market_snapshots",
+    "public.member_blocks",
+    "public.member_follows",
+    "public.member_parlays",
+    "public.membership_status",
+    "public.nba_defense_vs_position",
+    "public.nba_editorial_picks",
+    "public.nba_game_results",
+    "public.nba_games",
+    "public.nba_name_key",
+    "public.nba_observations",
+    "public.nba_player_results",
+    "public.nba_player_shooting",
+    "public.nba_player_three_attempts",
+    "public.nba_player_usage",
+    "public.nba_result_progress",
+    "public.nfl_analyst_double_ups",
+    "public.nhl_chart_snapshot",
+    "public.notification_action",
+    "public.notification_counts",
+    "public.notification_inbox",
+    "public.notification_preferences",
+    "public.notification_pulse",
+    "public.notification_sync_updates",
+    "public.notification_view",
+    "public.notifications",
+    "public.official_picks",
+    "public.onboarding_events",
+    "public.personal_challenges",
+    "public.personal_correction_decisions",
+    "public.personal_correction_requests",
+    "public.personal_entries",
+    "public.personal_entry_state",
+    "public.personal_run_events",
+    "public.personal_settlements",
+    "public.pick_entries",
+    "public.pick_results",
+    "public.process_reviews",
+    "public.publish_analyst_double_up",
+    "public.published_leg_catalog",
+    "public.published_legs",
+    "public.push_subscriptions",
+    "public.research_feed_posts",
+    "public.research_leg_results",
+    "public.restrict_community_member",
+    "public.retry_social_notification_delivery",
+    "public.ruby_card_comment_counts",
+    "public.ruby_card_comments",
+    "public.ruby_card_revisions",
+    "public.ruby_cards",
+    "public.ruby_contributors",
+    "public.ruby_daily_features",
+    "public.ruby_home",
+    "public.ruby_result_reports",
+    "public.ruby_submissions",
+    "public.ruby_visibility_events",
+    "public.saved_legs",
+    "public.set_community_poll_vote",
+    "public.set_community_post_vote",
+    "public.set_community_reaction",
+    "public.share_member_parlay",
+    "public.social_notification_delivery_allowed",
+    "public.social_notification_health",
+    "public.source_observations",
+    "public.sports_games",
+    "public.sports_markets",
+    "public.sports_selections",
+    "public.submit_ruby",
+    "public.submit_ruby_link",
+    "public.target_legs",
+    "public.topic_follows"
+  ],
+  "boundary_references": [
+    "auth.jwt",
+    "auth.role",
+    "auth.sessions",
+    "auth.uid",
+    "auth.users",
+    "net.http_post",
+    "storage.objects",
+    "vault.decrypted_secrets"
+  ],
+  "unresolved_source_names": [],
+  "gate_sources": [
+    {
+      "path": "scripts/operations/private-access-stage-dealer.sql",
+      "sha256": "01d06ad77d2002bb7d1125322b19e9ca81a210a836521347f4ec861d6aeb4fb5"
+    },
+    {
+      "path": "scripts/operations/private-access-stage-feature-install.mjs",
+      "sha256": "a5e65e2b070735ae35e002f718cdf252d7289775ffe07b2df66c1112c0c70f39"
+    },
+    {
+      "path": "scripts/operations/private-access-stage-features.sql",
+      "sha256": "18f6491381a6dc320276cb333be9a903f75ea98a7599f90a92257fb87ad88a8c"
+    },
+    {
+      "path": "scripts/operations/private-access-stage-install.mjs",
+      "sha256": "94d535ff2540a1bc4d19957397ce7483012636a1e0bcf84011c0533c553cf01f"
+    },
+    {
+      "path": "scripts/operations/private-access-stage-preflight.sql",
+      "sha256": "962167201d6086dde33758c69600eb4c1a79bd8751f8d6d2a58610f6adf12557"
+    },
+    {
+      "path": "scripts/operations/private-access-stage-research.sql",
+      "sha256": "67866ef21779c70cec98e35fda30f37d459ce27d694a0e47bbafb0652a0efb6f"
+    },
+    {
+      "path": "scripts/operations/private-access-stage-surfaces.sql",
+      "sha256": "b68a4267c86c897633cc680f00116832851869c258ca92c0104f912c35154b74"
+    },
+    {
+      "path": "scripts/operations/private-development-policy.sql",
+      "sha256": "fffa2b9fd740dff36c26bb67bac67b89d931ca37d23da66e3d68da5169787a9d"
+    }
+  ],
+  "sources": [
+    {
+      "path": "supabase/migrations/20260930111253_vegas_quant_initial.sql",
+      "sha256": "48f84b5ea50979fade93ee0894fb06f3eeba954e962a80416d8bf5bbc9f82972",
+      "bytes": 25329,
+      "units": 47
+    },
+    {
+      "path": "supabase/migrations/20260930113206_publishing_hardening.sql",
+      "sha256": "a066eaaa30ab3fb5eae5f2ff83b19749ef115ac8f7949ebaf35669a37f3f13d3",
+      "bytes": 13978,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20260930133259_membership_and_payments.sql",
+      "sha256": "b10501719a2c6177a93f6c9d6a5227b5a3fdd2fda4cda7a524ecf01f1542edd8",
+      "bytes": 12277,
+      "units": 51
+    },
+    {
+      "path": "supabase/migrations/20260930211752_pick_share_market_info.sql",
+      "sha256": "753eb887e6c48abd74a5a661c6efad755545950dd7e3d7b9511913be979d5c28",
+      "bytes": 1133,
+      "units": 2
+    },
+    {
+      "path": "supabase/migrations/20260930223839_personal_challenge_entries.sql",
+      "sha256": "c3ff7c4adc4f57a67a20d4797adc456a5399a2cb3d45e5582d2c0f9d9de2819d",
+      "bytes": 12593,
+      "units": 30
+    },
+    {
+      "path": "supabase/migrations/20261001024251_personal_entry_corrections.sql",
+      "sha256": "c760d0dc40ea76230b8a356ab32b66c0609217ca53d9ab5d637127f4af0d01c8",
+      "bytes": 19304,
+      "units": 34
+    },
+    {
+      "path": "supabase/migrations/20261001093211_private_data_intelligence.sql",
+      "sha256": "7eeba8d27cf92daeb33336edb5a9059547ba0c37afc90e8fa08974630456cdd1",
+      "bytes": 8592,
+      "units": 14
+    },
+    {
+      "path": "supabase/migrations/20261001124054_subscription_billing.sql",
+      "sha256": "7a924a11bb64b320463e113d24cb9dd972a9cb5337c2140399fd07c2ff3b3bb1",
+      "bytes": 8393,
+      "units": 26
+    },
+    {
+      "path": "supabase/migrations/20261001124415_matchup_intelligence.sql",
+      "sha256": "a8b7a6f40d1d062ef722678aed73fb75dc971b1edb6978adbc994802f00e7c88",
+      "bytes": 10302,
+      "units": 19
+    },
+    {
+      "path": "supabase/migrations/20261001125014_source_feeds.sql",
+      "sha256": "6ab84c5f8ebf6369a3e8bdb83b9d8efb87ad9479cd322e29369782e2c09e20fb",
+      "bytes": 5639,
+      "units": 22
+    },
+    {
+      "path": "supabase/migrations/20261001130201_release_hardening.sql",
+      "sha256": "1795b82412684c1b5d4f2111c4c47d278ceed77a57ad71f230720fe80a9eac0e",
+      "bytes": 4716,
+      "units": 8
+    },
+    {
+      "path": "supabase/migrations/20261002030411_sportsbook_settlement_without_final_score.sql",
+      "sha256": "af9a10e5a2ee98cadb1bfd648a31892d35dbac5a476f44f20031ddbe2e4b2ea7",
+      "bytes": 323,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261003001359_official_pick_notifications.sql",
+      "sha256": "d355c0f92912364c02817d1fd1e4d103419475fe50e348d01f9369271a3cdad9",
+      "bytes": 7340,
+      "units": 36
+    },
+    {
+      "path": "supabase/migrations/20261003001837_research_model_basis.sql",
+      "sha256": "29b9b6f6bbca92d044b6ea8eac8ee579ffb218240b37705f7f3e70663f2bd430",
+      "bytes": 1216,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261003001941_push_access_hardening.sql",
+      "sha256": "ade90388f8ce2551eb7b2fb1515979a176cb7586f31e749a288824561657c059",
+      "bytes": 1129,
+      "units": 11
+    },
+    {
+      "path": "supabase/migrations/20261003104159_push_test_delivery.sql",
+      "sha256": "d122d9718404a5d602f28c7a281355314186a001149382bb8b03e6305641ae6b",
+      "bytes": 831,
+      "units": 4
+    },
+    {
+      "path": "supabase/migrations/20261003110139_personal_payout_pause.sql",
+      "sha256": "fb14f3959fa772a779ecb0e465fdb42ec9abb5d83eca7826828dc21c3cb86d5d",
+      "bytes": 2733,
+      "units": 15
+    },
+    {
+      "path": "supabase/migrations/20261003112128_community_profiles.sql",
+      "sha256": "d03f5af443db9b7ac198cd3c4299145f7b6a938757cf5e069db604329d32a4f4",
+      "bytes": 2861,
+      "units": 14
+    },
+    {
+      "path": "supabase/migrations/20261003115658_community_profile_pages.sql",
+      "sha256": "43696df46f990e0e26d5ff7e7578334d644f0c1ad132feb3ab37361e10f6bf54",
+      "bytes": 2161,
+      "units": 8
+    },
+    {
+      "path": "supabase/migrations/20261003133413_free_community_paid_research.sql",
+      "sha256": "2f4b28400d0a218beb69e2c1f1bcd91e38f0c5189845aa43c50cdfa57bd35c73",
+      "bytes": 5025,
+      "units": 11
+    },
+    {
+      "path": "supabase/migrations/20261003151042_public_candidate_releases.sql",
+      "sha256": "d2903c481e4d52745fffce80c1382db408eaef64c7879384096733b3ecd18e94",
+      "bytes": 1043,
+      "units": 7
+    },
+    {
+      "path": "supabase/migrations/20261003215821_signup_premium_trial.sql",
+      "sha256": "0bd28b68f65bd5e1c5c3baf75eb5c0dbb9c473f3fb9b0c53c174033267e98af6",
+      "bytes": 1322,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261003222312_research_signup_notifications.sql",
+      "sha256": "9d68a08ada3d0d751b257d1134320e3da9aca47bc981c6e98e70a3e9b8b17082",
+      "bytes": 3051,
+      "units": 12
+    },
+    {
+      "path": "supabase/migrations/20261003223000_gambly_share_links.sql",
+      "sha256": "06aaf1f9fd495199084fa215ba832d4424cf4a48b3a19eabdd9d1da7898826ce",
+      "bytes": 1175,
+      "units": 2
+    },
+    {
+      "path": "supabase/migrations/20261005212821_prop_price_indexing.sql",
+      "sha256": "f58898d8b3b90d9a9600b0f56331ddd04a4c8b05d0e21f6e3b957dc11e2a8760",
+      "bytes": 2728,
+      "units": 2
+    },
+    {
+      "path": "supabase/migrations/20261005214140_admin_feed_failure_alerts.sql",
+      "sha256": "fe0ae54d1e75913f9b74207207c35a4c791bb76f2a52fc186015978fc83d5113",
+      "bytes": 3925,
+      "units": 12
+    },
+    {
+      "path": "supabase/migrations/20261010233754_push_announcement_event_keys.sql",
+      "sha256": "24512e00f1416c914fff2766ffa8fb01a0cb3d107d91711994bc95b38d97c25a",
+      "bytes": 207,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261011001723_published_selection_record.sql",
+      "sha256": "db9ed2af60e2504aae63793965b728cb10557264ffc8505b035f93cb6cee14e8",
+      "bytes": 2699,
+      "units": 10
+    },
+    {
+      "path": "supabase/migrations/20261011001739_member_saved_legs_and_follows.sql",
+      "sha256": "33b7e4af32444a728b2deb966ace8626cf81bab49b3f5ae3cc0020bbf4f96954",
+      "bytes": 2374,
+      "units": 11
+    },
+    {
+      "path": "supabase/migrations/20261011001758_app_update_inbox.sql",
+      "sha256": "f83d56d002d41afc299dcd1a4cd8a58f3d629513bad93712caba4dcf3f02e366",
+      "bytes": 1337,
+      "units": 13
+    },
+    {
+      "path": "supabase/migrations/20261011001815_member_onboarding_measurement.sql",
+      "sha256": "b00197425ebccbb3a6df44c48af2cc53acf18b9dd1aca329d0023647d9705e91",
+      "bytes": 3651,
+      "units": 22
+    },
+    {
+      "path": "supabase/migrations/20261011002023_publication_follow_matcher.sql",
+      "sha256": "b18b4894fc8d4406858b4161b14b4f9971f9e52d3ef4442311c8edcc4270075e",
+      "bytes": 687,
+      "units": 2
+    },
+    {
+      "path": "supabase/migrations/20261011002309_validated_official_follow_filter.sql",
+      "sha256": "ab9bca125af6ce8202ed99863a5f0691c40bcecfc9cb6588c84d18ad0e881ed8",
+      "bytes": 375,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261011002315_validated_research_follow_filter.sql",
+      "sha256": "70916821136a53fe70c50d432cf25c576bb29e577efc8e0b69aadbe8d51ce9fc",
+      "bytes": 546,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261014015003_nba_bible_rule_citations.sql",
+      "sha256": "80e568e166f4d432dfbae088be5aa7b32c1a7be62b8f394441860600b4c1018c",
+      "bytes": 1780,
+      "units": 6
+    },
+    {
+      "path": "supabase/migrations/20261014025802_community_social_feed.sql",
+      "sha256": "e98d43d3a1b9e6d4f75e7385ecc3175876c49253bbe0103c8370ab0ac1859ddd",
+      "bytes": 8274,
+      "units": 38
+    },
+    {
+      "path": "supabase/migrations/20261014041536_launch_safety_controls.sql",
+      "sha256": "7bf286df665c0ebe9f1918b2ef1f7b968ca113d15ce2ef41e79ebab32e0cd59f",
+      "bytes": 7716,
+      "units": 37
+    },
+    {
+      "path": "supabase/migrations/20261014095726_full_account_deletion.sql",
+      "sha256": "79d9c58074c7acc7276b09ddcf0b25807db63432ecdd40be8f53b00ce202b86c",
+      "bytes": 9319,
+      "units": 22
+    },
+    {
+      "path": "supabase/migrations/20261014103812_verified_age_gate.sql",
+      "sha256": "748fa543b13f34eda0952b5adfe6b2b55f59256a43346f6e0246546f6ec3ea25",
+      "bytes": 15033,
+      "units": 52
+    },
+    {
+      "path": "supabase/migrations/20261014111651_age_erasure_initialization_guard.sql",
+      "sha256": "c2887434150fcf4ebbdd0f7d2ca18bf258b7fdc5458897b56f6da87f7df842c6",
+      "bytes": 919,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261014120940_retain_started_tail_records.sql",
+      "sha256": "e2176123345aae554ba0f672066880ac884be234a192c5cbe0721a2b82f2278f",
+      "bytes": 452,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261014162515_community_post_photos.sql",
+      "sha256": "3d995b6f98b4ee75e27cac9f5bcc003282d3b233877b535ad0ebcc5bc07dabdd",
+      "bytes": 7843,
+      "units": 19
+    },
+    {
+      "path": "supabase/migrations/20261014172417_automatic_leg_results.sql",
+      "sha256": "8562159d49c2fe81f4cc9adcf7eed494bccf691927165ccfe2d447d7f7b9931b",
+      "bytes": 7971,
+      "units": 28
+    },
+    {
+      "path": "supabase/migrations/20261014172844_editorial_progress_own_tails.sql",
+      "sha256": "337a407ecd4d689c932c0731f2f4dfaafda6c8490a405264541e40c3d58e5fcd",
+      "bytes": 373,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261014173204_price_alerts_and_tail_leaderboard.sql",
+      "sha256": "2313795315bbc72c37c2892ac1e2fd4464b94ecca625954ee86806862f651851",
+      "bytes": 5085,
+      "units": 13
+    },
+    {
+      "path": "supabase/migrations/20261014180409_existing_accounts_complimentary_premium.sql",
+      "sha256": "ceca8b91167bb0a7ff9fb13e41e9b588cedb9708568612a8e5ee3ad1c6c7a878",
+      "bytes": 2023,
+      "units": 7
+    },
+    {
+      "path": "supabase/migrations/20261014180740_price_alert_original_legs_and_board_bans.sql",
+      "sha256": "df5c77540ef38afd13f2a6288f1cbf5b0c67bc883156805fbc24a7f9fdbb0692",
+      "bytes": 3567,
+      "units": 2
+    },
+    {
+      "path": "supabase/migrations/20261014183212_editorial_parlay_tracking.sql",
+      "sha256": "628c53966447b8ce088ea8815201851d772fe32db208e041efa02013fa3077f3",
+      "bytes": 2887,
+      "units": 8
+    },
+    {
+      "path": "supabase/migrations/20261015180000_published_leg_prices.sql",
+      "sha256": "ed3d3afca127bd2e812a242b101c1b5b925b15699cc814b84d1dab7fa7400bbd",
+      "bytes": 2662,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261015190000_leg_market_prices.sql",
+      "sha256": "9286f571abe7fb095e24625e563d11ba812f0053df4ffa7ef58bb10c52f660d4",
+      "bytes": 2491,
+      "units": 11
+    },
+    {
+      "path": "supabase/migrations/20261016130000_leg_history.sql",
+      "sha256": "ba1ac7929786128feaeeffbc967118035445d08e4d78b6b797ef345b709e22ba",
+      "bytes": 1129,
+      "units": 5
+    },
+    {
+      "path": "supabase/migrations/20261016130632_nfl_selection_gate.sql",
+      "sha256": "86b949027bb472d292c728b1f11b47f2bd1cc9c03274d94216554a8905466b74",
+      "bytes": 27935,
+      "units": 32
+    },
+    {
+      "path": "supabase/migrations/20261016132600_nfl_prospective_shadow_evidence.sql",
+      "sha256": "c6242b0d6fc3476a9a8109ee781a44e0a5b86436808d6c50251df114fdc36fd3",
+      "bytes": 8276,
+      "units": 17
+    },
+    {
+      "path": "supabase/migrations/20261016142733_defensive_sack_contract_and_correction_evidence.sql",
+      "sha256": "2324dd8d633d3a966fca2352f3515d18f65c5310bea376e5696fa76cd54cf8f7",
+      "bytes": 6852,
+      "units": 19
+    },
+    {
+      "path": "supabase/migrations/20261016151703_community_activity_bar.sql",
+      "sha256": "edf0588374b084122062d14820228cf03474eae353a4f75088e1a3bac3f3b96e",
+      "bytes": 2500,
+      "units": 9
+    },
+    {
+      "path": "supabase/migrations/20261016161204_member_parlay_builder.sql",
+      "sha256": "f0596280e7e230dd0d71c522010f317deb8cdde5f799caa7f887ae94d242888f",
+      "bytes": 7795,
+      "units": 19
+    },
+    {
+      "path": "supabase/migrations/20261016170000_line_shopping_books.sql",
+      "sha256": "ddedeb5931d2c920c453458521c0f2922eb043edee48df611c5a160642ca4fd5",
+      "bytes": 3190,
+      "units": 6
+    },
+    {
+      "path": "supabase/migrations/20261016190000_price_move_alerts.sql",
+      "sha256": "abfb7eea2f3010d04536760ed86ea07e69e6f8dc831a654a0c6b3cc2a80e2231",
+      "bytes": 3354,
+      "units": 6
+    },
+    {
+      "path": "supabase/migrations/20261016230144_member_parlays_seven_legs.sql",
+      "sha256": "434e60f30e1846be7268121c0803c825620d17226b4669d21659bcc3c333385f",
+      "bytes": 1187,
+      "units": 5
+    },
+    {
+      "path": "supabase/migrations/20261017000000_research_board_tier.sql",
+      "sha256": "9d8cc99cd147a82453fb8625a8882920a271c88200b6c6193d7a6bfc9b15285b",
+      "bytes": 7419,
+      "units": 12
+    },
+    {
+      "path": "supabase/migrations/20261017001000_research_board_grant.sql",
+      "sha256": "1bbd54882971c4f084ee942ba71d5bd691c1323a8b04f979b9aeaacbe938a57f",
+      "bytes": 355,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261017005051_member_parlays_no_leg_cap.sql",
+      "sha256": "0b4604835f3b13eb25a44b7f4a04254ccb95a7f53df8c8adcf6c74d4ceb11f79",
+      "bytes": 1110,
+      "units": 5
+    },
+    {
+      "path": "supabase/migrations/20261017005801_community_sharing_and_photo_uploads.sql",
+      "sha256": "be105415c92dbcc0f560c4a6f7d2a5491087bee141451329c1f61e5c6ecaae99",
+      "bytes": 5526,
+      "units": 13
+    },
+    {
+      "path": "supabase/migrations/20261017015506_social_notification_system.sql",
+      "sha256": "093423a70ff822adff009eb24ff6b3eaf7eafb71c1635264a394821493c023a5",
+      "bytes": 42145,
+      "units": 125
+    },
+    {
+      "path": "supabase/migrations/20261018000000_compact_desk_and_batch_tails.sql",
+      "sha256": "68cc0c4b22555a8da4323425b5597b79bb588dc72e8525157b56312f4a9d01da",
+      "bytes": 2367,
+      "units": 9
+    },
+    {
+      "path": "supabase/migrations/20261018010000_desk_compact_latest_analyses.sql",
+      "sha256": "ec5f70cbbc72f5bfeb25e8feff23909d9ba4175c53bf1d37340bd7200ffc3a2c",
+      "bytes": 1117,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261018060000_nba_source_feed.sql",
+      "sha256": "662adaac50f6846b26497d9946e97d0c6cecda1c5a525a917cec1b7127eb94d9",
+      "bytes": 7397,
+      "units": 23
+    },
+    {
+      "path": "supabase/migrations/20261018070000_nba_results.sql",
+      "sha256": "4374f3009395599e0a57246558af75c34614997ff7a7b4351efc766007b460f8",
+      "bytes": 19188,
+      "units": 32
+    },
+    {
+      "path": "supabase/migrations/20261018080000_nba_shadow.sql",
+      "sha256": "3d374a7735227cdae42cc8fa3a9e3eaaf1015956624d3a5d2fa958d682278787",
+      "bytes": 20754,
+      "units": 25
+    },
+    {
+      "path": "supabase/migrations/20261020021929_nba_editorial_picks.sql",
+      "sha256": "c2301cf4007ae822a595ab6559275fea57251d41585834c91fb7315bf20fd2f6",
+      "bytes": 5054,
+      "units": 12
+    },
+    {
+      "path": "supabase/migrations/20261020023605_nba_editorial_provenance_and_revisions.sql",
+      "sha256": "ff1487667a74a238732370ae178f59b32a1e463e44d107a0dc794caa3885179e",
+      "bytes": 2464,
+      "units": 5
+    },
+    {
+      "path": "supabase/migrations/20261020024250_nba_editorial_source_timeline.sql",
+      "sha256": "82c16043fac5516e58ee2491bd25c95f9bc9bcb7506b76f10563ae8ee6a6b1d7",
+      "bytes": 755,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261020024912_nba_editorial_quote_timeline.sql",
+      "sha256": "15725a7048a9b20d105459acc1b2a6388ac7451de73990e0a67544d21e90bc92",
+      "bytes": 660,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261023210220_ruby_contributor_cards.sql",
+      "sha256": "2f2b4dfd620c5c4ba907331de3f43bfb364d43586f4fb78e321fc2828b7518b1",
+      "bytes": 12324,
+      "units": 33
+    },
+    {
+      "path": "supabase/migrations/20261023212700_ruby_feature_account_erasure.sql",
+      "sha256": "508b9468b2458ef7ffe8a0db1881afec67435aa120dde21f08fa278bec5531fb",
+      "bytes": 474,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261024080046_goat_diamond_contributor.sql",
+      "sha256": "4350f70f2694b04142073c909664d20bedc0adb74361d24000f7327647b89ab7",
+      "bytes": 883,
+      "units": 6
+    },
+    {
+      "path": "supabase/migrations/20261024134617_admin_contributor_card_revisions.sql",
+      "sha256": "77959fe9b2e69627ae80f7c840091e3bec5cbcef545f249476f7b21f408ec56a",
+      "bytes": 3964,
+      "units": 12
+    },
+    {
+      "path": "supabase/migrations/20261024134918_admin_card_edit_verified_check.sql",
+      "sha256": "69656fb29351d350f467bd42e2059183d930ff3a01b3c1eba00b6e03025a808e",
+      "bytes": 1996,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261024160000_card_revision_erasure.sql",
+      "sha256": "d4ee22249932e2e1c332c356bec92630f03521f7a2779f96d03ea91fdc28ac07",
+      "bytes": 1534,
+      "units": 4
+    },
+    {
+      "path": "supabase/migrations/20261024190000_contributor_records.sql",
+      "sha256": "0c855aa0caba85c6cdd42349bdea4b0e0e77acc5dd32c891ef92ea3a67d6fb23",
+      "bytes": 10575,
+      "units": 28
+    },
+    {
+      "path": "supabase/migrations/20261024190005_markkuban_contributor_template.sql",
+      "sha256": "c132d9de053696cb2f02f211c4f8c0ed77f9f09aaedbde6c18095ba431fe68fb",
+      "bytes": 938,
+      "units": 6
+    },
+    {
+      "path": "supabase/migrations/20261024191000_solohendrix_contributor_template.sql",
+      "sha256": "d54a52cb355b859841777ff86e6b6a0f05e2b6284d2c7263d76326820b0ecb71",
+      "bytes": 986,
+      "units": 6
+    },
+    {
+      "path": "supabase/migrations/20261024210000_trapvegas_rename.sql",
+      "sha256": "03056f4ca97f1bea3da8accb541f21a505e7e41381bb741a40f2c8a5bdcebe1e",
+      "bytes": 1082,
+      "units": 7
+    },
+    {
+      "path": "supabase/migrations/20261025112300_analyst_double_up.sql",
+      "sha256": "82edeb7293d967cea3f512db9c9dfa039898a0f0556aa23533583affd83a2707",
+      "bytes": 9944,
+      "units": 17
+    },
+    {
+      "path": "supabase/migrations/20261025121434_weekly_sleeper_category.sql",
+      "sha256": "94817a7ae7d38f5a4ea7502952a98de02fff94fa6be7a25ea00b80ad759fc2f9",
+      "bytes": 11250,
+      "units": 14
+    },
+    {
+      "path": "supabase/migrations/20261025123946_double_up_single.sql",
+      "sha256": "91574af3d2c57af491893fb7348fb56932d3156597c3d3dce85dcd40e4d84730",
+      "bytes": 1854,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261028230000_zone_post_notifications.sql",
+      "sha256": "81db4f3e04d233d2925bf655869cad5418a4b6529d640c95ac0c3769c778ce79",
+      "bytes": 3098,
+      "units": 8
+    },
+    {
+      "path": "supabase/migrations/20261029001000_nba_three_point_volume.sql",
+      "sha256": "0e7141a8236b35df1e6b9ff6a54430453667afb5b3997a0a55af5a2861ee6c88",
+      "bytes": 15957,
+      "units": 30
+    },
+    {
+      "path": "supabase/migrations/20261029160000_nba_threes_card.sql",
+      "sha256": "bcc00883f4c1d1ebe3130249fd5216942c0b6f25bd6c465bba020e3d8128622b",
+      "bytes": 7588,
+      "units": 8
+    },
+    {
+      "path": "supabase/migrations/20261029200000_community_avatars.sql",
+      "sha256": "cafc88340c9dc301e5291bbcddb7b5b4d384f2709d1d11ef06b33986fd52c8db",
+      "bytes": 1425,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261031145407_multisport_backend.sql",
+      "sha256": "deb3d79ec3ed40a1b416bb1f9357862f5ca90987e5378e81622a4c621396f3d8",
+      "bytes": 27263,
+      "units": 41
+    },
+    {
+      "path": "supabase/migrations/20261031160000_zone_all_sports.sql",
+      "sha256": "02d83f6f8e235cff2ed6b9fcd00a58605ece3995e0668c11e3093d3f9a851cb9",
+      "bytes": 1259,
+      "units": 7
+    },
+    {
+      "path": "supabase/migrations/20261031173000_sports_automated_publication.sql",
+      "sha256": "936e10f5e4159043a1356e001740508d60fac9bbd35746e1c69726685dface70",
+      "bytes": 4021,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261031190000_frank_anniversary.sql",
+      "sha256": "37fd04951abc42480383d3e0ec1ad4975a6d26f3480c78ea35089697ae10f7c4",
+      "bytes": 3961,
+      "units": 12
+    },
+    {
+      "path": "supabase/migrations/20261031190100_frank_nhl_feedback.sql",
+      "sha256": "085cf533f5182689ff41127b6c6cda5be2898530eb702756c4179907b8fd652d",
+      "bytes": 5506,
+      "units": 13
+    },
+    {
+      "path": "supabase/migrations/20261031190200_zone_automated_cards.sql",
+      "sha256": "efae7dde8f73460183b2d21d2f2eb87371b55f1693663698d03f42b737f1a258",
+      "bytes": 4606,
+      "units": 10
+    },
+    {
+      "path": "supabase/migrations/20261031191226_zone_card_editorial_provenance.sql",
+      "sha256": "a71b10a9f4f13f82b44e16c65c3bd30a3fc384f927cd9ec7c611688ca65e891f",
+      "bytes": 1278,
+      "units": 2
+    },
+    {
+      "path": "supabase/migrations/20261101100000_live_pick_alerts.sql",
+      "sha256": "be148636c38fef96fabedcbabca21441113817bb69d566bebf05d15a4ce131ea",
+      "bytes": 7503,
+      "units": 20
+    },
+    {
+      "path": "supabase/migrations/20261103113707_notification_access_contracts.sql",
+      "sha256": "db90c12e9177c455b91ec4e549af2038b1cebc192e7ea97ffebc6ada9c53b698",
+      "bytes": 4327,
+      "units": 9
+    },
+    {
+      "path": "supabase/migrations/20261103181103_community_typed_reactions.sql",
+      "sha256": "9086ed1c826769723363a0616c206e9cd619d77d97722513e4501a698051ae74",
+      "bytes": 5270,
+      "units": 17
+    },
+    {
+      "path": "supabase/migrations/20261104031500_ruby_card_comments.sql",
+      "sha256": "d459b078ee69cfbc2eefa97cbe3af723896da918f68247519601d0735c00988e",
+      "bytes": 9818,
+      "units": 24
+    },
+    {
+      "path": "supabase/migrations/20261104101722_community_story_clock.sql",
+      "sha256": "539661890332c79531b4fd948abd388260becf96d954d03acc079d4d5e2d9a6f",
+      "bytes": 609,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261105233947_ruby_kalshi_source_link.sql",
+      "sha256": "8523f6ebec840bd5b8f958ae6a0e4f935b03823a427734b7442e211bbafcc976",
+      "bytes": 8525,
+      "units": 16
+    },
+    {
+      "path": "supabase/migrations/20261106221542_dealer_publisher_identity.sql",
+      "sha256": "a5bd0fcfbd4532efbb0eb1295a29640fec85ccb77cfc91c7f99a07b622382597",
+      "bytes": 16789,
+      "units": 4
+    },
+    {
+      "path": "supabase/migrations/20261106221738_dealer_profile_visibility.sql",
+      "sha256": "f5269729637d54fbc4840842dfa8a47567b4cbcffb921da733f1203db7f821d0",
+      "bytes": 1475,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261106225003_kalshi_temporary_pause.sql",
+      "sha256": "8282f595245682de68e2b772f17381f0681c4919448be6193971e142138496ca",
+      "bytes": 3170,
+      "units": 9
+    },
+    {
+      "path": "supabase/migrations/20261108020000_nfl_weekly_cards.sql",
+      "sha256": "a60ba5e83a3d5f60f0b22ca045c9c7228c228bf66ad5266320efe3a67db89911",
+      "bytes": 6115,
+      "units": 13
+    },
+    {
+      "path": "supabase/migrations/20261108162552_community_polls.sql",
+      "sha256": "f28722f66ae0a7139e2894d640ad3de43b176d9f10909ca49a253ea3904abd49",
+      "bytes": 7858,
+      "units": 23
+    },
+    {
+      "path": "supabase/migrations/20261108170014_community_post_votes.sql",
+      "sha256": "6afea3cc3802be3e3c677611cd778c96758c79783a341358970ac86c2f43a097",
+      "bytes": 4306,
+      "units": 13
+    },
+    {
+      "path": "supabase/migrations/20261108171847_community_poll_safety.sql",
+      "sha256": "d32e7c3fb77ff11c3493e0a8d0b08787e037499eb4ede472b51a5495b6279b1b",
+      "bytes": 1385,
+      "units": 2
+    },
+    {
+      "path": "supabase/migrations/20261109020607_community_profile.sql",
+      "sha256": "d69c9ee5b02b7429e832a5fc01ee0a5ad175e83ac32f35cdab959064133a05f7",
+      "bytes": 3170,
+      "units": 3
+    },
+    {
+      "path": "supabase/migrations/20261109022151_community_profile_fields.sql",
+      "sha256": "2af80675406d579876d275c72f1612a5c562b9664c03e8c4c8f1466799c51d93",
+      "bytes": 4300,
+      "units": 7
+    },
+    {
+      "path": "supabase/migrations/20261109030000_member_follows_any_profile.sql",
+      "sha256": "5e785cd2567da352803ca91c875fab763ce89c782bef568733c994a804f486a0",
+      "bytes": 1806,
+      "units": 5
+    },
+    {
+      "path": "supabase/migrations/20261109032951_dealer_zone_follow_notifications.sql",
+      "sha256": "52db149e4711f5b28172bd68ee64bf5847223ba2948fc68b3913ac47dd6978b2",
+      "bytes": 16854,
+      "units": 32
+    },
+    {
+      "path": "supabase/migrations/20261109212303_dealer_only_zone_feed.sql",
+      "sha256": "6741d083f4c6e6039720c867abcd9df8579702b95ca5564d52eee09f44a4a5d0",
+      "bytes": 1725,
+      "units": 6
+    },
+    {
+      "path": "supabase/migrations/20261110225115_member_profile_account_links.sql",
+      "sha256": "c659b93ee0591c42050d9f961bfecc3a3b3d3924e533be09b6dacef74770d211",
+      "bytes": 811,
+      "units": 1
+    },
+    {
+      "path": "supabase/migrations/20261111000938_nhl_daily_chart_package.sql",
+      "sha256": "1a5ef46050bd579e1ab431f117635efb97ca4fcbc512b7ad358ef20f6ec5ef7c",
+      "bytes": 12008,
+      "units": 11
+    },
+    {
+      "path": "supabase/migrations/20261111001158_nhl_chart_morning_integration.sql",
+      "sha256": "bd28f0670c6a9ba4843fecc42644438a5bd96635d4c7cc719d0bf0e637566681",
+      "bytes": 2897,
+      "units": 10
+    },
+    {
+      "path": "supabase/migrations/20261111010000_zone_post_games.sql",
+      "sha256": "3a36ac63a90e29a57dc8c3e418bfb68d6b7b6a99754450efbba8653d10bf08ca",
+      "bytes": 9464,
+      "units": 17
+    },
+    {
+      "path": "supabase/migrations/20261117120000_nba_prop_card_inputs.sql",
+      "sha256": "21e683954fba0f6677dd792ae4a3d99dc3b3fefbcbf474baef0d40c146039768",
+      "bytes": 10058,
+      "units": 21
+    },
+    {
+      "path": "supabase/migrations/20261118010000_nba_minor_corrections.sql",
+      "sha256": "f37f96deedfe85d090cb7e2acfa50c12abef4e021326a37e8f47cb425e1739b6",
+      "bytes": 13920,
+      "units": 4
+    },
+    {
+      "path": "supabase/schema/edge_releases.sql",
+      "sha256": "c5b0f3688b9fbb765982eb445bfeb74b2deb1dd72b936210e8e5bbe3362bc26f",
+      "bytes": 3763,
+      "units": 11
+    },
+    {
+      "path": "supabase/schema/research_feed.sql",
+      "sha256": "b5ce8a529fb0a36be6f71d8a5f251abd410001f3670b48c963fed0959c055d09",
+      "bytes": 2199,
+      "units": 12
+    }
+  ],
+  "lexical_unresolved_source_names": [
+    "private.before_age_community_member",
+    "private.before_age_has_membership",
+    "private.edit_ruby_link",
+    "private.submit_ruby_link",
+    "public.desk_data_compact"
+  ],
+  "effective_definition_evidence": {
+    "status": "Native local replay, not hosted catalog approval",
+    "source_ref": "8d6b0446094f234e4ad7b8e6539a59adb1cdeaeb",
+    "engine": "PostgreSQL 17.11 on x86_64-pc-linux-gnu, compiled by gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0, 64-bit",
+    "functions": [
+      {
+        "signature": "desk_data_compact()",
+        "sha256": "a610467afc78938eecb6548df7c94c3b7cd63593d815e861f34aa275cca17960"
+      },
+      {
+        "signature": "private.before_age_community_member(text)",
+        "sha256": "0da6e441aeeea9151cc7adc177bbb7a2ca6dad16890e59df78090da5332b10d5"
+      },
+      {
+        "signature": "private.before_age_has_membership()",
+        "sha256": "32360c4201d3beac0b25e5b8c0b00f649e91201cee361569a74c975db9508fac"
+      },
+      {
+        "signature": "private.edit_ruby_link(uuid,integer,text,jsonb,text,text,text,integer,text,text)",
+        "sha256": "097084403756b8c5f7a8747d24ea615ae16a50f319020288bc4a9c74f56ed5d2"
+      },
+      {
+        "signature": "private.submit_ruby_link(uuid,text,text,jsonb,text,text,text,integer,text)",
+        "sha256": "f2d8574f4caf80ed234cadaca5f34dbf91715396e941b93c4583fca3be6d68db"
+      }
+    ],
+    "views": [
+      {
+        "name": "published_legs",
+        "sha256": "90ef8707091c156a60897e88578b33683f402db7aaeeefa8aa4a42f0570a7268"
+      },
+      {
+        "name": "ruby_cards",
+        "sha256": "d4b780310fccb3a00ea4a12a02794bc838d9b219e1b0c6d16e946d16c064fdd6"
+      }
+    ],
+    "adaptations": "adaptations.json",
+    "platform_limitations": "Explicit Auth/storage/cron/net stand-ins, unusable local placeholder and synthetic migration-precondition identities; see replay report. Never copy replay platform to staging."
+  }
+}

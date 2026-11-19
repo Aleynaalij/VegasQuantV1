@@ -1,0 +1,57 @@
+name: ATLAS isolated staging acceptance
+on:
+  push:
+    branches: [codex/atlas-combined-stage, codex/atlas-final-integration, elo/atlas-consumer-reader-ci, codex/atlas-authenticated-experience, codex/atlas-feature-preservation, codex/atlas-consumer-contracts]
+  pull_request:
+    branches: [elo/consumer-integration, codex/atlas-combined-stage, codex/atlas-final-integration, codex/atlas-authenticated-experience, codex/atlas-feature-preservation]
+
+permissions:
+  contents: read
+
+jobs:
+  staging:
+    if: github.event_name == 'push' || contains(fromJSON('["codex/atlas-combined-stage","codex/atlas-final-integration","elo/atlas-consumer-reader-ci","codex/atlas-authenticated-experience","codex/atlas-feature-preservation","codex/atlas-consumer-contracts"]'), github.head_ref)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: git rev-parse HEAD
+      - run: npm test
+      - run: npm run typecheck
+      - run: node --import tsx --test tests/private-access-stage.test.ts tests/discovery-proxy.test.ts tests/consumer-integration.test.ts tests/stage-consumer-reader.test.ts tests/stage-consumer-client.test.ts tests/stage-dealer-client.test.ts
+      - run: node --test tests/sql/private-development-access.mjs
+      - name: Install pinned browser for connected combined acceptance
+        run: |
+          npm install --no-save --package-lock=false playwright@1.56.1
+          browser_path=$(command -v google-chrome || command -v chromium || true)
+          if [ -n "$browser_path" ]; then
+            echo "PLAYWRIGHT_EXECUTABLE=$browser_path" >> "$GITHUB_ENV"
+          else
+            npx playwright install chromium
+          fi
+      - run: bash scripts/ui-smoke/atlas-staging-modes.sh
+        env:
+          ATLAS_BROWSER_ACCEPTANCE: "1"
+          ATLAS_BROWSER_OUTPUT: artifacts/atlas-connected-home
+      - name: Verify connected original consumer feature contracts (synthetic only)
+        if: github.ref_name == 'codex/atlas-consumer-contracts' || github.head_ref == 'codex/atlas-consumer-contracts'
+        run: bash scripts/ui-smoke/atlas-consumer-features.sh
+        env:
+          ATLAS_FEATURE_OUTPUT: artifacts/atlas-consumer-features
+      - name: Preserve connected combined browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: atlas-connected-home
+          path: |
+            artifacts/atlas-connected-home
+            artifacts/atlas-consumer-features
+          if-no-files-found: warn

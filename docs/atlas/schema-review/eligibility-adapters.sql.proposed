@@ -1,0 +1,72 @@
+-- PROPOSED / UNREVIEWED. Source for independent review, NOT an installer.
+-- Only the future isolated preparation plan may include this after review.
+-- Do not copy the local fixture's test.* settings or constant-true helpers.
+begin;
+do $stage_only$
+begin
+ if current_user <> 'postgres' or session_user <> 'postgres'
+  or current_setting('vq.review.target_ref',true) is distinct from 'caynldluziwrzmvuslzg'
+  or to_regprocedure('vq_private_access_stage.authorized()') is null
+  or to_regprocedure('vq_fixture.allowed()') is null
+  or to_regclass('vq_fixture.age_states') is null
+  or to_regclass('vq_fixture.entitlements') is null
+  or to_regnamespace('private') is not null then
+  raise exception 'Review proposal requires the verified isolated gate, explicit target assertion, and absent private schema';
+ end if;
+end $stage_only$;
+-- The GUC is an operator assertion, NOT proof of which project a connection targets.
+-- A future executor must independently pin/verify the project before issuing SQL.
+create schema private;
+revoke all on schema private from public,anon,authenticated,service_role;
+grant usage on schema private to authenticated;
+-- Per-schema REVOKE alone cannot subtract PostgreSQL global PUBLIC EXECUTE defaults.
+alter default privileges for role postgres revoke execute on functions from public;
+alter default privileges for role postgres in schema private revoke execute on functions from public;
+
+-- Preserve existing entitlement rows; null temporal bounds preserve existing behavior.
+alter table vq_fixture.entitlements add column starts_at timestamptz, add column expires_at timestamptz, add column revoked_at timestamptz;
+create or replace function vq_fixture.allowed() returns boolean
+language sql stable security invoker set search_path='' as $$
+ select coalesce((select e.allowed and e.revoked_at is null
+  and (e.starts_at is null or e.starts_at<=now())
+  and (e.expires_at is null or e.expires_at>now())
+  from vq_fixture.entitlements e where e.user_id=auth.uid()),false)
+$$;
+
+-- Target eligibility is needed by original visibility rules for other authors.
+-- Definer use is limited to this boolean projection; the caller must pass the live
+-- gate. Do not expose age-state records or replace this with caller metadata.
+create function private.age_eligible(p_user uuid) returns boolean
+language sql stable security definer set search_path='' as $$
+ select coalesce(vq_private_access_stage.authorized(),false)
+  and p_user is not null
+  and exists(select 1 from vq_fixture.age_states a where a.user_id=p_user and a.verified)
+$$;
+
+create function private.age_member_allowed() returns boolean
+language sql stable security definer set search_path='' as $$
+ select coalesce(vq_private_access_stage.authorized(),false)
+  and coalesce(private.age_eligible(auth.uid()),false)
+$$;
+
+create function private.before_age_has_membership() returns boolean
+language sql stable security invoker set search_path='' as $$select coalesce(vq_fixture.allowed(),false)$$;
+revoke all on function private.before_age_has_membership() from public,anon,authenticated,service_role;
+alter function private.before_age_has_membership() owner to postgres;
+
+create function private.has_membership() returns boolean
+language sql stable security definer set search_path='' as $$
+ select coalesce(vq_private_access_stage.authorized(),false)
+  and coalesce(private.age_member_allowed(),false)
+  and coalesce(private.before_age_has_membership(),false)
+$$;
+alter function private.age_eligible(uuid) owner to postgres;
+alter function private.age_member_allowed() owner to postgres;
+alter function private.has_membership() owner to postgres;
+revoke all on function private.has_membership(),private.age_eligible(uuid),private.age_member_allowed()
+ from public,anon,authenticated,service_role;
+grant execute on function private.has_membership(),private.age_member_allowed() to authenticated;
+-- age_eligible remains definer-only: no direct caller oracle.
+-- Live session/AAL2/not_after checks are delegated to the existing authorized() gate.
+-- Anonymous calls are intentionally 42501; no staged anonymous consumer contract is enabled.
+commit;

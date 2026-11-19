@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { memberProfileLink } from "@/lib/member-profile";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -163,7 +164,7 @@ export default function StoryViewer({
     let live = true;
     const generation = ++session.current.generation;
     void (async () => {
-      const s = await supabase.auth.getSession();
+      const s = await viewerAuth.getSession();
       const viewerId = s.data.session?.user.id ?? null;
       if (!live || generation !== session.current.generation) return;
       session.current.viewerId = viewerId;

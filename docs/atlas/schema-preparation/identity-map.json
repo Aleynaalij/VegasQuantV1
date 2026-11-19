@@ -1,0 +1,66 @@
+{
+  "status": "AWAITING_SEPARATE_PROCESS_REVIEW",
+  "target": "caynldluziwrzmvuslzg",
+  "identities": [
+    {
+      "email": "active-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": true,
+      "id": "b21e0096-1939-48c0-b6e3-3f369e2ee0cc"
+    },
+    {
+      "email": "entitled-unverified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": false,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": false,
+      "id": "4d2d18b0-2cdc-4428-b921-09bbb596932a"
+    },
+    {
+      "email": "revoked-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "future",
+      "revoked_at": "past",
+      "expected_member": false,
+      "id": "973a73d1-db07-46e8-abf4-cd13d312244b"
+    },
+    {
+      "email": "expired-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "past",
+      "expires_at": "past",
+      "revoked_at": null,
+      "expected_member": false,
+      "id": "5da49d4b-2e27-462b-8806-8b048f007359"
+    },
+    {
+      "email": "not-started-verified@vq-fixture.invalid",
+      "allowed": true,
+      "verified": true,
+      "starts_at": "future",
+      "expires_at": "future",
+      "revoked_at": null,
+      "expected_member": false,
+      "id": "4fca30be-51e3-44c5-8e25-de3f39166d79"
+    },
+    {
+      "email": "unentitled-verified@vq-fixture.invalid",
+      "allowed": false,
+      "verified": true,
+      "starts_at": null,
+      "expires_at": null,
+      "revoked_at": null,
+      "expected_member": false,
+      "id": "ff632fc5-c528-4b70-b7d6-12cacbed6da0"
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
@@ -11,7 +12,7 @@ export default function BeatTheClose() {
   useEffect(() => {
     let live = true;
     async function load() {
-      const s = await supabase.auth.getSession();
+      const s = await viewerAuth.getSession();
       if (!s.data.session) return live && setRecord(null);
       // Every page of closing prices and published legs, shared with the other Records cards.
       const [tracked, all] = await Promise.all([closingPrices.get(), publishedLegs.get()]);

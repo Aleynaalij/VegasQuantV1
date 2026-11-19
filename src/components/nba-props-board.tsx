@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { onUserChange } from "@/lib/auth-user";
+import { combinedViewer } from "@/lib/viewer-auth";
 import { noAccess, type Access } from "@/lib/membership";
 import { nbaNickname, nbaWhen } from "@/lib/nba-home";
 import { loadSlate, type Slate } from "@/lib/nba-tonight";
@@ -45,7 +46,7 @@ function Headshot({ id, name }: { id: string; name: string }) {
     .join("");
   return (
     <span className="pf-face" aria-hidden="true">
-      {failed ? (
+      {failed || combinedViewer ? (
         <span>{initials}</span>
       ) : (
         <img

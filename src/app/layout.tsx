@@ -1,3 +1,5 @@
+import StagingAccessShell from "@/components/discovery/staging-access-shell";
+import { discoveryStagingEnabled } from "@/lib/discovery/access";
 import "./ruby.css";
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
@@ -103,23 +105,28 @@ export default function RootLayout({
         />
         <BrandOpening />
         <ThemePrompt />
-        <NotificationProvider>
-          <AgeAccessBoundary
-            extras={
-              <>
-                <AppRefreshNotice />
-                <Welcome />
-                <ProfileSetupGate />
-                <UpdateInbox autoOpenId={RELEASE_ANNOUNCEMENT_ID} />
-                <NotificationBootstrap />
-                <PhoneContactPrompt />
-                <DailyLuck />
-              </>
-            }
-          >
-            {children}
-          </AgeAccessBoundary>
-        </NotificationProvider>
+        <StagingAccessShell
+          enabled={discoveryStagingEnabled(process.env)}
+          deniedContent={children}
+        >
+          <NotificationProvider>
+            <AgeAccessBoundary
+              extras={
+                <>
+                  <AppRefreshNotice />
+                  <Welcome />
+                  <ProfileSetupGate />
+                  <UpdateInbox autoOpenId={RELEASE_ANNOUNCEMENT_ID} />
+                  <NotificationBootstrap />
+                  <PhoneContactPrompt />
+                  <DailyLuck />
+                </>
+              }
+            >
+              {children}
+            </AgeAccessBoundary>
+          </NotificationProvider>
+        </StagingAccessShell>
       </body>
     </html>
   );

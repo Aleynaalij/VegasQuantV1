@@ -1,4 +1,5 @@
 "use client";
+import { viewerAuth } from "@/lib/viewer-auth";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
@@ -65,7 +66,7 @@ export default function UpdateInbox({ autoOpenId }: { autoOpenId?: string }) {
     async function load() {
       const request = ++epoch;
       try {
-        const session = await supabase.auth.getSession();
+        const session = await viewerAuth.getSession();
         if (!live || request !== epoch) return;
         if (session.error) throw session.error;
         const id = session.data.session?.user.id || null;
@@ -125,7 +126,7 @@ export default function UpdateInbox({ autoOpenId }: { autoOpenId?: string }) {
       if (document.visibilityState === "visible") void load();
     };
     const timer = setInterval(focus, 60000);
-    const auth = supabase.auth.onAuthStateChange((_event, session) => {
+    const auth = viewerAuth.onAuthStateChange((_event, session) => {
       ++epoch;
       account(session?.user.id || null);
       setTimeout(() => {

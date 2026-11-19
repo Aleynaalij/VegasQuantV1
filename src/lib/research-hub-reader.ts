@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { readStageResearch } from "./stage-consumer-client";
 import { testerFeatureAccess, testerObservationPage } from "./tester-research";
 import type { Analysis, Market } from "./domain";
 import { researchFacts } from "./research-facts";
@@ -412,6 +413,7 @@ async function readInjuries(
   events: ResearchEvent[],
   now: number,
   data: HubData,
+  client = supabase,
 ) {
   const table = sport === "nba" ? "nba_observations" : "source_observations";
   const since = new Date(now - INJURY_LOOKBACK_MS).toISOString();
@@ -423,7 +425,7 @@ async function readInjuries(
     await Promise.all(
       selected.slice(i, i + INJURY_CONCURRENCY).map(async (e) => {
         try {
-          const result = await supabase
+          const result = await client
             .from(table)
             .select(
               "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
@@ -480,6 +482,15 @@ async function readInjuries(
 
 /** Reads existing RLS-protected stores only. Provider collection and publication remain separate. */
 export async function readResearchHub(): Promise<HubData> {
+  if (process.env.VQ_COMBINED_STAGE_BUILD === "1") return readStageResearch();
+  return readResearchHubWithClient();
+}
+
+/** A request-scoped publishable client; verifiedSession is set only after the live staging gate. */
+export async function readResearchHubWithClient(
+  client = supabase,
+  verifiedSession = false,
+): Promise<HubData> {
   const now = new Date(),
     end = new Date(now.getTime() + 7 * 86400000).toISOString(),
     start = new Date(now.getTime() - 6 * 3600000).toISOString();
@@ -492,14 +503,16 @@ export async function readResearchHub(): Promise<HubData> {
     truncated: false,
   };
   const [session, access] = await Promise.all([
-    supabase.auth.getSession(),
-    supabase.rpc("membership_status"),
+    verifiedSession
+      ? Promise.resolve({ data: { session: true } })
+      : client.auth.getSession(),
+    client.rpc("membership_status"),
   ]);
   data.signedIn = !!session.data.session;
   const member = !access.error && access.data?.allowed === true;
   const tester =
     data.signedIn && !access.error && !member
-      ? await testerFeatureAccess("research")
+      ? await testerFeatureAccess("research", client)
       : null;
   const testerAllowed = !tester?.error && tester?.data === true;
   data.denied = !member && !testerAllowed;
@@ -523,7 +536,7 @@ export async function readResearchHub(): Promise<HubData> {
     (["nfl", "nba", "nhl", "ncaab"] as Sport[]).map(async (sport) => {
       try {
         if (sport === "nfl") {
-          const r = await supabase
+          const r = await client
             .from("games")
             .select(
               "id,slug,away_team,home_team,kickoff,kickoff_tbd,venue,roof,schedule_source,schedule_observed_at",
@@ -549,7 +562,7 @@ export async function readResearchHub(): Promise<HubData> {
               scheduleAt: g.schedule_observed_at,
             });
         } else if (sport === "nba") {
-          const r = await supabase
+          const r = await client
             .from("nba_games")
             .select(
               "id,slug,away_team,home_team,away_abbreviation,home_abbreviation,tipoff,tipoff_tbd,venue,status,source,updated_at",
@@ -575,7 +588,7 @@ export async function readResearchHub(): Promise<HubData> {
               homeAbbreviation: g.home_abbreviation || undefined,
             });
         } else {
-          const r = await supabase.rpc("sports_slate", {
+          const r = await client.rpc("sports_slate", {
             p_sport: sport,
             p_days: 7,
           });
@@ -617,17 +630,23 @@ export async function readResearchHub(): Promise<HubData> {
     }),
   );
   if (testerAllowed) {
-    await readTesterResearch(data, now.getTime());
+    await readTesterResearch(data, now.getTime(), client);
   } else if (member) {
     await Promise.all(
       (["nfl", "nba"] as const).map(async (sport) => {
         const events = data.events.filter((e) => e.sport === sport);
         const ids = events.map((e) => e.id);
         if (!ids.length) return;
-        const injuries = readInjuries(sport, events, now.getTime(), data);
+        const injuries = readInjuries(
+          sport,
+          events,
+          now.getTime(),
+          data,
+          client,
+        );
         try {
           if (sport === "nba") {
-            const r = await supabase
+            const r = await client
               .from("nba_observations")
               .select(
                 "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
@@ -653,7 +672,7 @@ export async function readResearchHub(): Promise<HubData> {
               );
           } else {
             const results = await Promise.all([
-              supabase
+              client
                 .from("analysis_versions")
                 .select(
                   "id,game_id,version,title,sections,source,created_at,intelligence",
@@ -661,7 +680,7 @@ export async function readResearchHub(): Promise<HubData> {
                 .in("game_id", ids)
                 .order("version", { ascending: false })
                 .limit(500),
-              supabase
+              client
                 .from("research_feed_posts")
                 .select(
                   "id,game_id,category,title,summary,why_watch,caution,source_url,source_at,created_at",
@@ -669,7 +688,7 @@ export async function readResearchHub(): Promise<HubData> {
                 .in("game_id", ids)
                 .order("created_at", { ascending: false })
                 .limit(500),
-              supabase
+              client
                 .from("market_snapshots")
                 .select(
                   "id,game_id,observed_at,created_at,source,spread,moneyline,total,kind,notes",
@@ -677,7 +696,7 @@ export async function readResearchHub(): Promise<HubData> {
                 .in("game_id", ids)
                 .order("observed_at", { ascending: false })
                 .limit(500),
-              supabase
+              client
                 .from("source_observations")
                 .select(
                   "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
@@ -690,7 +709,7 @@ export async function readResearchHub(): Promise<HubData> {
                 )
                 .order("recorded_at", { ascending: false })
                 .limit(1000),
-              supabase
+              client
                 .from("source_observations")
                 .select(
                   "id,game_id,kind,provider,source,observed_at,recorded_at,payload",
@@ -704,7 +723,7 @@ export async function readResearchHub(): Promise<HubData> {
                 )
                 .order("recorded_at", { ascending: false })
                 .limit(1000),
-              supabase
+              client
                 .from("published_legs")
                 .select(
                   "leg_key,game_id,name,market,why,risk,quote,quote_observed_at,published_at,result",
@@ -766,7 +785,11 @@ export async function readResearchHub(): Promise<HubData> {
   return data;
 }
 
-async function readTesterResearch(data: HubData, now: number) {
+async function readTesterResearch(
+  data: HubData,
+  now: number,
+  client = supabase,
+) {
   // The tester reader cannot fall back to raw member tables. Request only the
   // published feature's event-scoped observations and signal partial coverage.
   const events = data.events.filter(
@@ -786,7 +809,16 @@ async function readTesterResearch(data: HubData, now: number) {
             : (["quotes", "injury", "context"] as const);
         const results = await Promise.allSettled(
           sections.map((section) =>
-            testerObservationPage("research", sport, e.id, section, now),
+            testerObservationPage(
+              "research",
+              sport,
+              e.id,
+              section,
+              now,
+              undefined,
+              undefined,
+              client,
+            ),
           ),
         );
         const rows: NbaObservation[] = [];
