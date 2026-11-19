@@ -6,6 +6,7 @@ import {
   gameRoomHref,
   resolveRoom,
   roomSources,
+  roomSourceErrors,
   roomPublicationHref,
 } from "../src/lib/game-room";
 import { stagingDiscoveryFixture as data } from "../src/lib/discovery/fixtures";
@@ -134,4 +135,46 @@ test("linked charts use existing permission-aware renderers and clear on access 
   assert.match(view, /!data.denied/);
   assert.match(view, /data.signedIn/);
   assert.doesNotMatch(source, /service_role|SUPABASE_SERVICE|\.from\(/);
+});
+
+test("room source notices retain matching and global failures without blaming another sport", () => {
+  const nfl =
+    "Some NFL research sources could not load. Available sections are partial; retry.";
+  const nba = "NBA provider unavailable";
+  const global = "Source reader reached its limit";
+  const multi = "NBA and NHL source outage";
+  assert.deepEqual(roomSourceErrors([nfl, nba, global, multi], "nba"), [
+    nba,
+    global,
+    multi,
+  ]);
+  assert.deepEqual(roomSourceErrors([nfl, nba, global, multi], "nfl"), [
+    nfl,
+    global,
+  ]);
+  assert.deepEqual(roomSourceErrors([nfl, nba, global, multi], "nhl"), [
+    global,
+    multi,
+  ]);
+  assert.deepEqual(roomSourceErrors([nfl, nba, global, multi], "ncaab"), [
+    global,
+  ]);
+  const view = readFileSync(
+    "src/components/game-room/game-intelligence-room.tsx",
+    "utf8",
+  );
+  assert.match(view, /roomSourceErrors\(data.errors, reference.sport\)/);
+  assert.match(view, /sourceErrors.map/);
+  assert.doesNotMatch(view, /data.errors.map/);
+  assert.match(view, /data.truncated/);
+  assert.match(view, /coverage\(data, event\)/);
+});
+
+test("unsupported sport Rooms retain the actual reader's global coverage limitation", () => {
+  const coverage =
+    "Tester coverage currently includes NFL and NBA observations. Other research sources may be unavailable.";
+  const nfl =
+    "Some NFL research sources could not load. Available sections are partial; retry.";
+  for (const sport of ["nhl", "ncaab"] as const)
+    assert.deepEqual(roomSourceErrors([coverage, nfl], sport), [coverage]);
 });

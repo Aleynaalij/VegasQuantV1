@@ -9,6 +9,7 @@ import { useNotifications } from "./notification-provider";
 import { supabase } from "@/lib/supabase";
 import {
   notificationText,
+  notificationConnectionLabel,
   notificationLink,
   defaultNotificationPreferences,
   type NotificationRow,
@@ -285,11 +286,7 @@ function OrdinaryNotificationCenter() {
             notifications
           </p>
           <small>
-            {connected
-              ? "Live updates connected"
-              : failed
-                ? "Reconnecting · your notification history is saved"
-                : "Live connection pending · refresh fallback enabled"}
+            {notificationConnectionLabel(combinedViewer, connected, failed)}
           </small>
         </header>
         {!uid ? (

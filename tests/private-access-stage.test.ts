@@ -104,6 +104,51 @@ test("requires explicit stage-only configuration and rejects production and side
     assert.equal(privateAccessConfig({ ...stage, ...overrides }), null);
 });
 
+test("renaming a production endpoint or recognizable privileged credential does not admit staging", () => {
+  const payload = Buffer.from(
+    JSON.stringify({ role: "service_role" }),
+  ).toString("base64url");
+  for (const value of [
+    "https://uowearboulykfcwnuirn.supabase.co",
+    "https://another-project.supabase.co/rest/v1",
+    "https://vegasquant.app/api/notifications/dispatch",
+    "sb_secret_synthetic",
+    "sk_live_synthetic",
+    "rk_test_synthetic",
+    "whsec_synthetic",
+    "postgresql://synthetic:synthetic@localhost/db",
+    `e30.${payload}.synthetic`,
+  ]) {
+    assert.equal(
+      privateAccessConfig({ ...combined, UNRELATED_SETTING: value }),
+      null,
+    );
+    assert.throws(() =>
+      stageBuildProfile({ ...combined, UNRELATED_SETTING: value }),
+    );
+  }
+  assert.ok(
+    privateAccessConfig({
+      ...combined,
+      UNRELATED_SETTING: "non-secret-build-metadata",
+    }),
+  );
+  assert.ok(
+    privateAccessConfig({
+      ...combined,
+      UNRELATED_SETTING: stage.NEXT_PUBLIC_SUPABASE_URL,
+    }),
+  );
+  // The new scan remains isolated to gate/combined profiles.
+  assert.equal(
+    stageBuildProfile({
+      VERCEL_ENV: "production",
+      UNRELATED_SETTING: "sk_live_synthetic",
+    }),
+    "standard",
+  );
+});
+
 test("combined proxy checks the same live stage identity and denies effects before dispatch", async (t) => {
   const variables = { ...combined, VQ_COMBINED_STAGE_BUILD: "1" };
   const saved = Object.fromEntries(
