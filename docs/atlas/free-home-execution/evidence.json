@@ -1,0 +1,540 @@
+{
+  "status": "APPROVED_FREE_HOME_COMMITTED_RECHECK_PASS",
+  "approval": "https://github.com/Aleynaalij/VegasQuantV1/issues/294#issuecomment-7007496575",
+  "target": "caynldluziwrzmvuslzg",
+  "source": "612c70a6339f9437e9b353f7bf87b1a6a16905bb",
+  "sha256": "5648c29322e888e45c4048a223e5cf1b6b9de13c9cc11f6892b818cfa2d450e2",
+  "started_utc": "2026-11-19T11:18:07.856Z",
+  "completed_utc": "2026-11-19T11:18:08.330Z",
+  "receipt": [
+    {
+      "pg_advisory_xact_lock": ""
+    }
+  ],
+  "before_checks": [
+    {
+      "phase": "isolation",
+      "name": "auth users are synthetic (*.invalid, no phone)",
+      "result": "PASS",
+      "detail": "0 real emails, 0 phones"
+    },
+    {
+      "phase": "isolation",
+      "name": "complimentary-premium table absent",
+      "result": "PASS",
+      "detail": "false"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions owned by postgres",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions pin search_path",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "every public table has RLS on",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "excluded functions absent (Dealer, dispatchers)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no auth.users triggers",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no database webhooks schema",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no function body reaches production or outbound HTTP/vault",
+      "result": "PASS",
+      "detail": "none"
+    },
+    {
+      "phase": "isolation",
+      "name": "no pg_net/pg_cron/http/dblink/postgres_fdw",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no realtime publication tables",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no storage buckets",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "sessions (0 until isolation is accepted)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "vault.secrets empty",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_eligible not executable by authenticated/anon (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_member_allowed is definer (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "gate schema installed",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "has_membership requires age (M1)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "no private function executable by PUBLIC (F3)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "private schema present",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs archive kept in vq_fixture",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs is a security-invoker view",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs not granted to anon/PUBLIC",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "preserved",
+      "name": "auth.users ids",
+      "result": "PASS",
+      "detail": "4 rows, d49852dd726bfce1ac4d2f99bdcc05f4"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.games",
+      "result": "PASS",
+      "detail": "1 rows, 0d4f96e41536c949ef4d95a5b4f5c6a5"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_games",
+      "result": "PASS",
+      "detail": "1 rows, bdae35bbdd8287e0f15464b5476ee623"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_observations",
+      "result": "PASS",
+      "detail": "1 rows, 643eaae6c67e24ac752455074b80fd11"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.source_observations",
+      "result": "PASS",
+      "detail": "1 rows, e06558504a3848d531eb98e56124379d"
+    },
+    {
+      "phase": "preserved",
+      "name": "published_legs (table or archive)",
+      "result": "PASS",
+      "detail": "0 rows, d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.age_states",
+      "result": "PASS",
+      "detail": "3 rows, 416b0b9c1ca06c3f8b25e61ec2a44061"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.entitlements",
+      "result": "PASS",
+      "detail": "3 rows, 306327816f76304de7b1b2739d6ac5fd"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.posts",
+      "result": "PASS",
+      "detail": "4 rows, 41bd600253186d02cb3b466a9031357e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.sports",
+      "result": "PASS",
+      "detail": "2 rows, 5f9f57bd3f4eb317dea0289e325887c7"
+    }
+  ],
+  "after_checks": [
+    {
+      "phase": "isolation",
+      "name": "auth users are synthetic (*.invalid, no phone)",
+      "result": "PASS",
+      "detail": "0 real emails, 0 phones"
+    },
+    {
+      "phase": "isolation",
+      "name": "complimentary-premium table absent",
+      "result": "PASS",
+      "detail": "false"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions owned by postgres",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "definer functions pin search_path",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "every public table has RLS on",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "excluded functions absent (Dealer, dispatchers)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no auth.users triggers",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no database webhooks schema",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no function body reaches production or outbound HTTP/vault",
+      "result": "PASS",
+      "detail": "none"
+    },
+    {
+      "phase": "isolation",
+      "name": "no pg_net/pg_cron/http/dblink/postgres_fdw",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no realtime publication tables",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "no storage buckets",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "sessions (0 until isolation is accepted)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "isolation",
+      "name": "vault.secrets empty",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_eligible not executable by authenticated/anon (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "age_member_allowed is definer (M2)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "gate schema installed",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "has_membership requires age (M1)",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "no private function executable by PUBLIC (F3)",
+      "result": "PASS",
+      "detail": "0"
+    },
+    {
+      "phase": "prepared",
+      "name": "private schema present",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs archive kept in vq_fixture",
+      "result": "PASS",
+      "detail": "true"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs is a security-invoker view",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "prepared",
+      "name": "published_legs not granted to anon/PUBLIC",
+      "result": "PASS",
+      "detail": "v"
+    },
+    {
+      "phase": "preserved",
+      "name": "auth.users ids",
+      "result": "PASS",
+      "detail": "4 rows, d49852dd726bfce1ac4d2f99bdcc05f4"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.games",
+      "result": "PASS",
+      "detail": "1 rows, 0d4f96e41536c949ef4d95a5b4f5c6a5"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_games",
+      "result": "PASS",
+      "detail": "1 rows, bdae35bbdd8287e0f15464b5476ee623"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.nba_observations",
+      "result": "PASS",
+      "detail": "1 rows, 643eaae6c67e24ac752455074b80fd11"
+    },
+    {
+      "phase": "preserved",
+      "name": "public.source_observations",
+      "result": "PASS",
+      "detail": "1 rows, e06558504a3848d531eb98e56124379d"
+    },
+    {
+      "phase": "preserved",
+      "name": "published_legs (table or archive)",
+      "result": "PASS",
+      "detail": "0 rows, d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.age_states",
+      "result": "PASS",
+      "detail": "3 rows, 416b0b9c1ca06c3f8b25e61ec2a44061"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.entitlements",
+      "result": "PASS",
+      "detail": "3 rows, 306327816f76304de7b1b2739d6ac5fd"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.posts",
+      "result": "PASS",
+      "detail": "4 rows, 41bd600253186d02cb3b466a9031357e"
+    },
+    {
+      "phase": "preserved",
+      "name": "vq_fixture.sports",
+      "result": "PASS",
+      "detail": "2 rows, 5f9f57bd3f4eb317dea0289e325887c7"
+    }
+  ],
+  "metadata": {
+    "users": 4,
+    "sessions": 0,
+    "functions": [
+      {
+        "acl": "{postgres=X/postgres}",
+        "hash": "3ad9fc204cbd41d693a2cb14b4e8d51989f43c8941bcc4c1b342987b83450bd4",
+        "definer": true,
+        "signature": "private.free_challenge_desk()"
+      },
+      {
+        "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+        "hash": "3f2d1e713787dc6100008e8f33a833ab1f71c23a15a64d4030d4b735e9fcbdea",
+        "definer": false,
+        "signature": "desk_data()"
+      },
+      {
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "hash": "853ffbea20d783c3d81e509a59abf271f063a02ad0423f04e921911fe9299093",
+        "definer": false,
+        "signature": "desk_data_compact()"
+      },
+      {
+        "acl": "{postgres=X/postgres,authenticated=X/postgres}",
+        "hash": "7917f2563e5c86eb4f0b2b935e21fbe2c2231561a2cad02f89533426037a1282",
+        "definer": true,
+        "signature": "vq_private_access_stage.free_challenge_desk()"
+      }
+    ],
+    "games_oid": "17668",
+    "archive_oid": "17717",
+    "new_columns": [
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "nullable": true
+      },
+      {
+        "name": "slot",
+        "type": "text",
+        "nullable": true
+      }
+    ]
+  },
+  "production": {
+    "before_migrations": [
+      {
+        "migrations": 180,
+        "latest": "20261118010000",
+        "digest": "6d2d6b44f16eabc800712a9d0d4a1bed"
+      }
+    ],
+    "after_migrations": [
+      {
+        "migrations": 180,
+        "latest": "20261118010000",
+        "digest": "6d2d6b44f16eabc800712a9d0d4a1bed"
+      }
+    ],
+    "before_deployment": {
+      "deployments": {
+        "pagination": {
+          "count": 1,
+          "next": 1795037062818,
+          "prev": 1795037062818
+        },
+        "deployments": [
+          {
+            "id": "dpl_8dCL41hbSPhjYebGywC5M4RRjoxk",
+            "name": "vegas-quant-v1",
+            "url": "vegas-quant-v1-7q8umr2xu-goatq2s-projects.vercel.app",
+            "created": 1795037062818,
+            "state": "READY",
+            "target": "production",
+            "creator": {
+              "uid": "XrweYPUofTcYATutjs3ZANe6",
+              "username": "goatq2"
+            },
+            "meta": {
+              "githubCommitRef": "main",
+              "githubCommitSha": "8ea6c4add7219acf7411b7850eeb322b804caf8e",
+              "githubCommitMessage": "Prop Finder card: draw the chart icon as SVG instead of text glyphs (#307)\n\nThe entry card's icon was the text \"▮▮▯▮\"; phones without a glyph for one of\nthose characters showed a broken box. It is now a small inline SVG bar chart\n(three tall bars and one short red one, the hit strip in miniature)...",
+              "githubRepo": "VegasQuantV1",
+              "githubOrg": "Aleynaalij"
+            },
+            "inspectorUrl": "https://vercel.com/goatq2s-projects/vegas-quant-v1/8dCL41hbSPhjYebGywC5M4RRjoxk",
+            "isRollbackCandidate": true
+          }
+        ]
+      }
+    },
+    "after_deployment": {
+      "deployments": {
+        "pagination": {
+          "count": 1,
+          "next": 1795037062818,
+          "prev": 1795037062818
+        },
+        "deployments": [
+          {
+            "id": "dpl_8dCL41hbSPhjYebGywC5M4RRjoxk",
+            "name": "vegas-quant-v1",
+            "url": "vegas-quant-v1-7q8umr2xu-goatq2s-projects.vercel.app",
+            "created": 1795037062818,
+            "state": "READY",
+            "target": "production",
+            "creator": {
+              "uid": "XrweYPUofTcYATutjs3ZANe6",
+              "username": "goatq2"
+            },
+            "meta": {
+              "githubCommitRef": "main",
+              "githubCommitSha": "8ea6c4add7219acf7411b7850eeb322b804caf8e",
+              "githubCommitMessage": "Prop Finder card: draw the chart icon as SVG instead of text glyphs (#307)\n\nThe entry card's icon was the text \"▮▮▯▮\"; phones without a glyph for one of\nthose characters showed a broken box. It is now a small inline SVG bar chart\n(three tall bars and one short red one, the hit strip in miniature)...",
+              "githubRepo": "VegasQuantV1",
+              "githubOrg": "Aleynaalij"
+            },
+            "inspectorUrl": "https://vercel.com/goatq2s-projects/vegas-quant-v1/8dCL41hbSPhjYebGywC5M4RRjoxk",
+            "isRollbackCandidate": true
+          }
+        ]
+      }
+    }
+  },
+  "identities_executed": false,
+  "atlas_deployment_created": false
+}

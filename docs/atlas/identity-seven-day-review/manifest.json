@@ -1,0 +1,15 @@
+{
+  "status": "AWAITING_CLAUDE_INTERVAL_ONLY_REVIEW_NO_IDENTITY_EXECUTION",
+  "target": "caynldluziwrzmvuslzg",
+  "source_approved_sha256": "ee6f722f496e8dc132e3206d50ecb8a0052ad02ead30c3d24b0fb2d96da7fba7",
+  "proposed_sha256": "4cfc305211e5c5153c58bf0e37097f5f720f897dcf0464136fac072d8565f564",
+  "changed_constants": 5,
+  "changes": {
+    "active_expiry": "+7 days",
+    "entitled_unverified_expiry": "+7 days",
+    "revoked_expiry": "+7 days",
+    "not_started_start": "+7 days",
+    "not_started_expiry": "+14 days (seven-day eligible window after future start)"
+  },
+  "unchanged": "All UUIDs, metadata, past bounds, expired/revoked states, grants, gate allowlisting, original-column digests and I1 sequencing; only five future interval constants differ"
+}

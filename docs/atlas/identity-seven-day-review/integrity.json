@@ -1,0 +1,14 @@
+{
+  "purpose": "Delivery integrity; not a new review or acceptance",
+  "sha256": {
+    "docs/atlas/identity-seven-day-review/README.md": "4f3b12cbf48a232477329924a874936a9682dab8c63638c5dcdf3a924fe4a2f6",
+    "docs/atlas/identity-seven-day-review/identities-seven-day.sha256": "08fa69d01612c9c159f38ec3575a692aa07d1245b0fc88bf145a75a1e20e2bc4",
+    "docs/atlas/identity-seven-day-review/identities-seven-day.sql": "4cfc305211e5c5153c58bf0e37097f5f720f897dcf0464136fac072d8565f564",
+    "docs/atlas/identity-seven-day-review/manifest.json": "a0f111863ddb4807481f36163b7413e70a3da675d264150ffe2e74b2176062e5",
+    "docs/atlas/identity-seven-day-review/rehearsal.json": "67e20be4b03a7bca9b50c90ad16cabbec5c2286582ba3f0f80ad160614bbdee7",
+    "scripts/operations/atlas-identity-seven-day-rehearsal.mjs": "3889b0bfe681727ba802f3ae09f7eda5577338461a524279402eda132a9c0bed",
+    "scripts/operations/atlas-identity-seven-day-rehearsal.sh": "6eae562a2153ce5ebde930d5460c90ed9570ed5d17121fd38dc56806511674cd",
+    "scripts/operations/atlas-identity-seven-day.mjs": "9a92eac57053a32d91548333a80e93c2f8c9bdb6db19610bf1db81b332df9bd1",
+    "tests/atlas-identity-seven-day.test.ts": "6ba4ecb2f838f7886eba7c213bd43cd737468fdd190ba0ab37482c0d3931e9a4"
+  }
+}
