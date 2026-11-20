@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowUpRight,
   Flame,
@@ -15,9 +15,9 @@ import type { Game } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
 import { SPORTS, liveSports, type Sport } from "@/lib/sports";
 import { useTonightSchedules } from "@/lib/use-tonight-schedules";
-import { startLabel } from "@/lib/vq-tonight";
+import { startLabel, statusLabel } from "@/lib/vq-tonight";
 import { isLiveSport, type LiveGame, type LiveSport } from "@/lib/live-scores";
-import { loadSlate } from "@/lib/nba-tonight";
+import { loadSlate, type Slate } from "@/lib/nba-tonight";
 import { buildPropRows, type PropRow } from "@/lib/nba-props";
 import { nbaWhen } from "@/lib/nba-home";
 import {
@@ -117,33 +117,68 @@ export type Edges = {
   state: "loading" | "ready" | "error";
   member: boolean;
   rows: PropRow[];
+  /** When the rows were last built; the rails filter on this clock. */
+  now: number;
 };
-/** Tonight's NBA prop rows, the same reads and math as Prop Finder. */
+/**
+ * Tonight's NBA prop rows, the same reads and math as Prop Finder. Like Prop Finder, lines refresh
+ * quietly every 15 minutes while Home is on screen, and the clock ticks every minute so a quote that
+ * ages past an hour, or a game that tips off, drops out of the rails even if a refresh fails.
+ */
 function useEdges() {
   const [edges, setEdges] = useState<Edges>({
     state: "loading",
     member: false,
     rows: [],
+    now: Date.now(),
   });
+  const slate = useRef<{ member: boolean; data: Slate } | null>(null);
   useEffect(() => {
     let active = true;
-    void (async () => {
+    const rebuild = () => {
+      const s = slate.current;
+      if (!s) return;
+      const now = Date.now();
+      setEdges({
+        state: "ready",
+        member: s.member,
+        rows: buildPropRows(s.data, now),
+        now,
+      });
+    };
+    const load = async (quiet = false) => {
       try {
         const a = await supabase.rpc("membership_status");
         const member = !a.error && a.data?.allowed === true;
-        const slate = await loadSlate(member);
-        if (active)
-          setEdges({
-            state: "ready",
-            member,
-            rows: buildPropRows(slate, Date.now()),
-          });
+        const data = await loadSlate(member);
+        if (!active) return;
+        slate.current = { member, data };
+        rebuild();
       } catch {
-        if (active) setEdges({ state: "error", member: false, rows: [] });
+        if (active && !quiet && !slate.current)
+          setEdges({
+            state: "error",
+            member: false,
+            rows: [],
+            now: Date.now(),
+          });
       }
-    })();
+    };
+    void load();
+    let fetchedAt = Date.now();
+    const tick = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - fetchedAt >= 15 * 60000) {
+        fetchedAt = Date.now();
+        void load(true);
+      } else rebuild();
+    };
+    const timer = setInterval(tick, 60000);
+    document.addEventListener("visibilitychange", tick);
     return () => {
       active = false;
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", tick);
     };
   }, []);
   return edges;
@@ -408,7 +443,7 @@ function StreakRail({ rows, now }: { rows: PropRow[]; now: number }) {
 
 function score(g: BoardRow, side: "away" | "home") {
   const s = g.live?.[side]?.score;
-  return g.phase === "upcoming" || s == null ? null : s;
+  return g.phase === "upcoming" || g.phase === "off" || s == null ? null : s;
 }
 
 function Ticker({ rows }: { rows: BoardRow[] }) {
@@ -535,6 +570,8 @@ function Board({
                     </span>
                   ) : g.phase === "final" ? (
                     "Final"
+                  ) : g.phase === "off" ? (
+                    <span className="h3-off">{statusLabel(g.status)}</span>
                   ) : (
                     startLabel(g)
                   )}
@@ -596,6 +633,8 @@ export function Home3View({
   zoneHref,
   dealer,
 }: Home3ViewProps) {
+  // Rails filter on the later of the page clock and when the edge rows were last rebuilt.
+  const clock = Math.max(now, edges.now);
   const t = tally(rows);
   return (
     <div className="home3">
@@ -617,9 +656,9 @@ export function Home3View({
         </p>
       </header>
       <Ticker rows={rows} />
-      <Headliner edges={edges} now={now} />
-      <EdgeRail edges={edges} now={now} />
-      <StreakRail rows={edges.rows} now={now} />
+      <Headliner edges={edges} now={clock} />
+      <EdgeRail edges={edges} now={clock} />
+      <StreakRail rows={edges.rows} now={clock} />
       <section
         className="h3-section h3-dealer"
         aria-labelledby="h3-dealer-title"

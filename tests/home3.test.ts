@@ -221,3 +221,33 @@ test("board: live first, upcoming by start, finals last; live scores match by te
     ["live", "upcoming", "upcoming"],
   );
 });
+
+test("board: NHL/college short names match ESPN's full names; postponed games are flagged, not upcoming", () => {
+  const rows = board(
+    [
+      game("nhl", "Stars", "Golden Knights", -1),
+      game("ncaab", "Gators", "Mountaineers", 2, "STATUS_POSTPONED"),
+      game("nhl", "Kings", "Ducks", 1, "STATUS_CANCELED"),
+      game("nba", "Boston Celtics", "Denver Nuggets", 3),
+    ],
+    {
+      nhl: [live("Dallas Stars", "Vegas Golden Knights", -1, "in")],
+      ncaab: [],
+    },
+  );
+  assert.deepEqual(
+    rows.map((r) => [r.home, r.phase]),
+    [
+      ["Golden Knights", "live"],
+      ["Denver Nuggets", "upcoming"],
+      ["Ducks", "off"],
+      ["Mountaineers", "off"],
+    ],
+  );
+  assert.equal(rows[0].live?.away.score, 50);
+  assert.deepEqual(
+    tickerItems(rows).map((r) => r.home),
+    ["Golden Knights", "Denver Nuggets"],
+    "postponed and cancelled games stay off the next-up ticker",
+  );
+});

@@ -4,6 +4,7 @@
  */
 import type { LiveGame, LiveSport } from "./live-scores";
 import { sameGame } from "./live-scores";
+import { statusLabel } from "./vq-tonight";
 import { lean, type PropRow } from "./nba-props";
 import type { Sport } from "./sports";
 import type { TonightGame } from "./vq-tonight";
@@ -92,27 +93,61 @@ export function hotStreaks(rows: PropRow[], now: number, limit = 6) {
 
 export type BoardRow = TonightGame & {
   live: LiveGame | null;
-  phase: "live" | "upcoming" | "final";
+  /** "off": the schedule reports it postponed, cancelled or suspended. */
+  phase: "live" | "upcoming" | "final" | "off";
 };
+
+const nameKey = (s: string) =>
+  s
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "");
+/** "Golden Knights" (our NHL/college short name) is the end of "Vegas Golden Knights" (ESPN's). */
+const sameTeam = (full: string, ours: string) => {
+  const a = nameKey(full),
+    b = nameKey(ours);
+  return !!b && (a === b || a.endsWith(b) || b.endsWith(a));
+};
+
+/**
+ * A live game for one of ours, always within six hours of our start: the same provider id, else
+ * the exact team pair, else team names where one is the end of the other.
+ */
+export function liveMatch(g: TonightGame, live: LiveGame[]) {
+  const near = live.filter(
+    (l) => Math.abs(Date.parse(l.start) - Date.parse(g.start)) <= 6 * 3600000,
+  );
+  return (
+    near.find((l) => l.id === g.id) ||
+    near.find((l) => sameGame(l, g)) ||
+    near.find(
+      (l) => sameTeam(l.away.name, g.away) && sameTeam(l.home.name, g.home),
+    ) ||
+    null
+  );
+}
 
 /** Tonight's games with any matching live score, live first, then upcoming by start, then finals. */
 export function board(
   games: TonightGame[],
   live: Partial<Record<LiveSport, LiveGame[]>>,
 ): BoardRow[] {
-  const rank = { live: 0, upcoming: 1, final: 2 } as const;
+  const rank = { live: 0, upcoming: 1, final: 2, off: 3 } as const;
   return games
     .map((g) => {
-      const match =
-        (live[g.sport as LiveSport] || []).find((l) =>
-          sameGame(l, { away: g.away, home: g.home, start: g.start }),
-        ) || null;
+      const match = liveMatch(g, live[g.sport as LiveSport] || []);
+      const label = statusLabel(g.status);
       const phase: BoardRow["phase"] =
         match?.state === "in"
           ? "live"
-          : match?.state === "post" || /FINAL/i.test(g.status || "")
+          : match?.state === "post" || label === "Final"
             ? "final"
-            : "upcoming";
+            : label === "Postponed" ||
+                label === "Cancelled" ||
+                label === "Suspended"
+              ? "off"
+              : "upcoming";
       return { ...g, live: match, phase };
     })
     .sort(

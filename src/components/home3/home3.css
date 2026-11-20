@@ -578,6 +578,14 @@
 .h3-game.final .h3-when {
   color: var(--muted);
 }
+.h3-off {
+  color: #f0b45a;
+}
+.h3-game.off .h3-teams {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: rgba(240, 180, 90, 0.5);
+}
 .h3-when small {
   color: var(--muted);
   font-size: 10.5px;
