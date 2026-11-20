@@ -38,14 +38,25 @@ const readHint = () => {
   }
 };
 const noSubscribe = () => () => {};
-/** Opt-in choice, this device only (Mike). Eligibility is still the server's answer every time. */
+/**
+ * The member's own choice on this device (Mike: remembered per device): "new" or "classic". Unset
+ * means: follow the server (new by default in default-on mode, classic in opt-in). Eligibility is
+ * still the server's answer every time. The earlier opt-in key counts as "new".
+ */
+const CHOICE = "vq-new-home-choice";
 const OPTIN = "vq-new-home-optin";
-const readOptin = () => {
+const readChoice = (): "new" | "classic" | null => {
   try {
-    return localStorage.getItem(OPTIN) === "1";
+    const c = localStorage.getItem(CHOICE);
+    if (c === "new" || c === "classic") return c;
+    return localStorage.getItem(OPTIN) === "1" ? "new" : null;
   } catch {
-    return false;
+    return null;
   }
+};
+const wantsNew = (preferred: boolean) => {
+  const c = readChoice();
+  return c === "new" || (c !== "classic" && preferred);
 };
 const optinCss = `.vq-optin{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:1120px;margin:8px auto 12px;padding:10px 14px;border:1px solid #ffffff17;border-radius:12px;background:#11161f;color:var(--muted,#b9c0ca);font-size:13.5px}.vq-optin b{color:var(--text,#f4f5ec)}.vq-optin button{flex:none;min-height:36px;padding:0 14px;border:1px solid #f4dc99;border-radius:999px;background:transparent;color:#f4dc99;font:inherit;font-weight:800;cursor:pointer}.vq-optin.is-on button{border-color:#ffffff33;color:var(--muted,#b9c0ca)}`;
 const remember = (on: boolean) => {
@@ -67,7 +78,8 @@ export default function ProductionOwnerExperience({
 }) {
   const [enabled, setEnabled] = useState(false);
   const [eligible, setEligible] = useState(false);
-  const [optedIn, setOptedIn] = useState(false);
+  const [preferred, setPreferred] = useState(false);
+  const [choice, setChoice] = useState<"new" | "classic" | null>(null);
   // Client-rendered path (e.g. behind the age gate): hold classic in state. Server-rendered path:
   // the inline script below hides it before paint. Either way, released on the server's answer.
   const hinted = useSyncExternalStore(noSubscribe, readHint, () => false);
@@ -84,17 +96,21 @@ export default function ProductionOwnerExperience({
     };
     if (readHint()) void (surface === "home" ? loadHome() : loadZone());
     const holdTimer = setTimeout(release, HOLD_MS);
-    setOptedIn(readOptin());
-    const selection = createOwnerPreviewSelection((next, settled, may) => {
-      // selected: something new is on screen and worth re-checking (owner, or an opted-in member).
-      selected.current = next || (may && readOptin());
-      setEnabled(next);
-      setEligible(may);
-      if (settled) {
-        remember(next || (may && readOptin()));
-        release();
-      }
-    });
+    setChoice(readChoice());
+    const selection = createOwnerPreviewSelection(
+      (next, settled, may, prefer) => {
+        // selected: something new is on screen and worth re-checking.
+        const on = next || (may && wantsNew(prefer));
+        selected.current = on;
+        setEnabled(next);
+        setEligible(may);
+        setPreferred(prefer);
+        if (settled) {
+          remember(on);
+          release();
+        }
+      },
+    );
     const update = (session: Session | null) => {
       observed = true;
       current = session;
@@ -142,16 +158,19 @@ export default function ProductionOwnerExperience({
   }, []);
   const choose = (on: boolean) => {
     try {
-      if (on) localStorage.setItem(OPTIN, "1");
-      else localStorage.removeItem(OPTIN);
+      localStorage.setItem(CHOICE, on ? "new" : "classic");
+      localStorage.removeItem(OPTIN);
     } catch {}
     remember(on);
-    setOptedIn(on);
+    setChoice(on ? "new" : "classic");
     selected.current = on;
   };
-  // Owners always see the new experience; eligible members choose it (and can go back).
+  // Owners always see the new experience; other eligible accounts start where the server says
+  // (new in default-on, classic in opt-in) and can switch either way.
   const member = eligible && !enabled;
-  const show = enabled || (member && optedIn);
+  const show =
+    enabled ||
+    (member && (choice === "new" || (choice !== "classic" && preferred)));
   const label = surface === "home" ? "Home" : "Zone";
   const bar = member ? (
     <>
@@ -163,15 +182,22 @@ export default function ProductionOwnerExperience({
       >
         {show ? (
           <span>
-            You&rsquo;re trying the new <b>{label}</b>.
+            {preferred ? "Welcome to" : "You\u2019re trying"} the new{" "}
+            <b>{label}</b>.
           </span>
         ) : (
           <span>
-            Members: the new <b>{label}</b> is ready to try.
+            {preferred ? "You\u2019re on the classic" : "Members: the new"}{" "}
+            <b>{label}</b>
+            {preferred ? "." : " is ready to try."}
           </span>
         )}
         <button type="button" onClick={() => choose(!show)}>
-          {show ? "Back to classic" : `Try the new ${label}`}
+          {show
+            ? "Back to classic"
+            : preferred
+              ? `Switch to the new ${label}`
+              : `Try the new ${label}`}
         </button>
       </div>
     </>

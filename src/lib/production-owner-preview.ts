@@ -7,7 +7,7 @@ const zero = "00000000-0000-0000-0000-000000000000";
 export function productionOwnerConfig(env: Environment) {
   if (
     env.VERCEL_ENV !== "production" ||
-    (env.HOME2_PRODUCTION !== "owners" && env.HOME2_PRODUCTION !== "optin") ||
+    !["owners", "optin", "default"].includes(env.HOME2_PRODUCTION || "") ||
     env.VQ_COMBINED_STAGE_BUILD === "1" ||
     env.STAGING_DISCOVERY_ENABLED === "true" ||
     env.VQ_STAGE_BUILD_PROFILE !== undefined ||
@@ -31,15 +31,20 @@ export function productionOwnerConfig(env: Environment) {
     url: productionUrl,
     key: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     owners,
-    /** "owners": owner preview only. "optin": paying members may also choose the new Home. */
-    mode: env.HOME2_PRODUCTION as "owners" | "optin",
+    /**
+     * "owners": owner preview only. "optin": paying members may choose the new Home.
+     * "default": every signed-in account gets the new Home first and may go back to classic.
+     */
+    mode: env.HOME2_PRODUCTION as "owners" | "optin" | "default",
   };
 }
 
 const jwtShape = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
 
 /**
- * Opt-in eligibility (mode "optin" only): a paying member. The pinned Auth server validates the
+ * Eligibility for a non-owner. Mode "optin": a paying member. Mode "default": any account the Auth
+ * server confirms (signed in, email confirmed, not anonymous, not banned or deleted).
+ * Opt-in detail: a paying member. The pinned Auth server validates the
  * token, then the database's own membership_status() is asked with that token. Trials do not
  * count (Mike: paying members only); complimentary premium does. UI selection only: RLS still
  * decides every read.
@@ -53,7 +58,7 @@ export async function verifyProductionMember(
   const config = productionOwnerConfig(env);
   if (
     !config ||
-    config.mode !== "optin" ||
+    config.mode === "owners" ||
     !token ||
     token.length > 4096 ||
     !jwtShape.test(token)
@@ -89,6 +94,8 @@ export async function verifyProductionMember(
       (user.banned_until && Date.parse(user.banned_until) > now)
     )
       return false;
+    // Default-on: any confirmed account (Mike: "everyone who has a current account").
+    if (config.mode === "default") return true;
     const status = await request(
       `${config.url}/rest/v1/rpc/membership_status`,
       {
@@ -171,9 +178,14 @@ export async function productionOwnerResponse(
   // enabled: the owner preview (always on). eligible: may choose the new Home (owners, and in
   // "optin" mode paying members). Dark (404) and rejected (403) replies stay exactly
   // {enabled:false}: they disclose nothing new.
+  // preferred: the new experience is the starting point (mode "default"); a member who chose
+  // classic on this device stays on classic.
+  const preferred = productionOwnerConfig(env)?.mode === "default";
   const reply = (enabled: boolean, status = 200, eligible?: boolean) =>
     Response.json(
-      eligible === undefined ? { enabled } : { enabled, eligible },
+      eligible === undefined
+        ? { enabled }
+        : { enabled, eligible, preferred: eligible && preferred },
       {
         status,
         headers: {
