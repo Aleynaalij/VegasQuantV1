@@ -3,13 +3,21 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   ArrowUpRight,
+  Bookmark,
+  Dices,
   Flame,
+  Gauge,
+  History,
+  Layers,
   Lock,
   Radio,
   Search,
   Sparkles,
+  SquarePlus,
+  Target,
   TrendingDown,
   TrendingUp,
+  Users,
 } from "lucide-react";
 import type { Game } from "@/lib/domain";
 import { supabase } from "@/lib/supabase";
@@ -481,16 +489,35 @@ function Ticker({ rows }: { rows: BoardRow[] }) {
   );
 }
 
-const PILLS = [
-  { href: "/nba/props", label: "Prop Finder", hot: true },
-  { href: "/community", label: "The Zone" },
-  { href: "/parlays", label: "My Lays" },
-  { href: "/parlays?build=1", label: "Build a Lay" },
-  { href: "/saved", label: "Saved picks" },
-  { href: "/nba/records", label: "Records" },
-  { href: "/vegas-fear", label: "Fear Index" },
-  { href: "/slots", label: "VQ Slots" },
+/** The tools menu: a left rail, top to bottom (Mike's call: no tab row at the bottom of Home). */
+const TOOLS: {
+  href: string;
+  label: string;
+  icon: typeof Target;
+  hot?: boolean;
+}[] = [
+  { href: "/nba/props", label: "Prop Finder", icon: Target, hot: true },
+  { href: "/community", label: "The Zone", icon: Users },
+  { href: "/parlays", label: "My Lays", icon: Layers },
+  { href: "/parlays?build=1", label: "Build a Lay", icon: SquarePlus },
+  { href: "/saved", label: "Saved picks", icon: Bookmark },
+  { href: "/nba/records", label: "Records", icon: History },
+  { href: "/vegas-fear", label: "Fear Index", icon: Gauge },
+  { href: "/slots", label: "VQ Slots", icon: Dices },
 ];
+
+function ToolRail() {
+  return (
+    <nav className="h3-tools" aria-label="Your tools">
+      {TOOLS.map(({ href, label, icon: Icon, hot }) => (
+        <Link key={href} href={href} className={hot ? "hot" : ""}>
+          <Icon size={19} aria-hidden="true" />
+          <span>{label}</span>
+        </Link>
+      ))}
+    </nav>
+  );
+}
 
 function Board({
   rows,
@@ -637,55 +664,51 @@ export function Home3View({
   const clock = Math.max(now, edges.now);
   const t = tally(rows);
   return (
-    <div className="home3">
-      <header className="h3-hello">
-        <h1>
-          {greeting(now)}
-          {name ? `, ${name}` : ""}.
-        </h1>
-        <p>
-          {dayLabel} · {t.games} {t.games === 1 ? "game" : "games"} tonight
-          {t.live > 0 && (
-            <>
-              {" · "}
-              <span className="h3-live">
-                <i aria-hidden="true" /> {t.live} live now
-              </span>
-            </>
-          )}
-        </p>
-      </header>
-      <Ticker rows={rows} />
-      <Headliner edges={edges} now={clock} />
-      <EdgeRail edges={edges} now={clock} />
-      <StreakRail rows={edges.rows} now={clock} />
-      <section
-        className="h3-section h3-dealer"
-        aria-labelledby="h3-dealer-title"
-      >
-        <div className="h3-heading">
-          <div>
-            <span className="h3-eyebrow">Published research</span>
-            <h2 id="h3-dealer-title">From The Dealer</h2>
+    <div className="h3-layout">
+      <ToolRail />
+      <div className="home3">
+        <header className="h3-hello">
+          <h1>
+            {greeting(now)}
+            {name ? `, ${name}` : ""}.
+          </h1>
+          <p>
+            {dayLabel} · {t.games} {t.games === 1 ? "game" : "games"} tonight
+            {t.live > 0 && (
+              <>
+                {" · "}
+                <span className="h3-live">
+                  <i aria-hidden="true" /> {t.live} live now
+                </span>
+              </>
+            )}
+          </p>
+        </header>
+        <Ticker rows={rows} />
+        <Headliner edges={edges} now={clock} />
+        <EdgeRail edges={edges} now={clock} />
+        <StreakRail rows={edges.rows} now={clock} />
+        <section
+          className="h3-section h3-dealer"
+          aria-labelledby="h3-dealer-title"
+        >
+          <div className="h3-heading">
+            <div>
+              <span className="h3-eyebrow">Published research</span>
+              <h2 id="h3-dealer-title">From The Dealer</h2>
+            </div>
+            <Link href={zoneHref}>
+              The Zone <ArrowUpRight size={15} />
+            </Link>
           </div>
-          <Link href={zoneHref}>
-            The Zone <ArrowUpRight size={15} />
-          </Link>
-        </div>
-        {dealer}
-      </section>
-      <Board rows={rows} loading={loading} failed={failed} />
-      <nav className="h3-pills" aria-label="Your tools">
-        {PILLS.map((p) => (
-          <Link key={p.href} href={p.href} className={p.hot ? "hot" : ""}>
-            {p.label}
-          </Link>
-        ))}
-      </nav>
-      <footer className="h3-foot">
-        Research, not guarantees. Edges compare our estimate with the
-        book&rsquo;s no-vig price on fresh lines only.
-      </footer>
+          {dealer}
+        </section>
+        <Board rows={rows} loading={loading} failed={failed} />
+        <footer className="h3-foot">
+          Research, not guarantees. Edges compare our estimate with the
+          book&rsquo;s no-vig price on fresh lines only.
+        </footer>
+      </div>
     </div>
   );
 }
