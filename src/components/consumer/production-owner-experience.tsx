@@ -5,7 +5,7 @@ import type { Session } from "@supabase/supabase-js";
 import type { Home2Props } from "@/components/home2/home2";
 import { supabase } from "@/lib/supabase";
 import { createOwnerPreviewSelection } from "@/lib/production-owner-client";
-const Home = dynamic(() => import("./home-experience"));
+const Home = dynamic(() => import("./home3-experience"));
 const Zone = dynamic(() => import("@/components/zone2/zone2-experience"));
 
 /** Mounted only by server configuration; renders classic until server approval. */
@@ -69,7 +69,7 @@ export default function ProductionOwnerExperience({
   }, []);
   if (!enabled) return children;
   return surface === "home" && home ? (
-    <Home {...home} ordinaryLinks />
+    <Home {...home} />
   ) : (
     <Zone basePath="/community" />
   );
