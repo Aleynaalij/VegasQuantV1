@@ -28,6 +28,9 @@ export type GameStat = {
   reb: number;
   ast: number;
   min: number;
+  /** The nba_games id and the player's team in that game, when known (with/without splits). */
+  game?: string;
+  team?: string;
   at?: string;
   opp?: string | null;
   home?: boolean | null;
@@ -87,6 +90,8 @@ export function seasonLines(rows: BoxRow[]): PlayerLine[] {
       reb: r.rebounds ?? 0,
       ast: r.assists ?? 0,
       min: r.minutes ?? 0,
+      ...(r.game_id ? { game: r.game_id } : {}),
+      team: r.team,
       at: r.tipoff,
       opp: r.opponent_abbr ?? r.opponent ?? null,
       home: r.home ?? null,

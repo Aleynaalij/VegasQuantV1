@@ -14,12 +14,14 @@ import {
   type BookQuote,
   type DefenseRow,
   type Estimate,
+  type Injury,
   type Market,
   type Matchup,
   type PlayerLine,
   type PropGame,
   type PropTrend,
 } from "./nba-research-tab";
+import { teammateSplits, type TeammateSplit } from "./nba-teammate";
 
 export type PropSlateGame = {
   id: string;
@@ -64,6 +66,8 @@ export type PropRow = {
    * labelled, but has no edge and drops out of "Best edge".
    */
   stale: boolean;
+  /** How he has done without each teammate who is out or doubtful tonight (members: injuries). */
+  splits: TeammateSplit[];
 };
 
 const implied = (o: number) => (o > 0 ? 100 / (o + 100) : -o / (-o + 100));
@@ -103,6 +107,7 @@ export function buildPropRows(
     trends: Map<string, PropTrend[]>;
     quotes: Map<string, BookQuote[]>;
     defense: DefenseRow[];
+    injuries?: Map<string, Injury[]>;
   },
   now: number,
 ): PropRow[] {
@@ -165,6 +170,13 @@ export function buildPropRows(
         bestUnder: best(books, "under"),
         books,
         stale,
+        splits: teammateSplits(
+          player,
+          slate.lines,
+          slate.injuries?.get(player.team) || [],
+          trend.market,
+          trend.line,
+        ),
       });
     }
   }
