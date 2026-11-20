@@ -19,6 +19,7 @@ import {
   type PropSort,
 } from "@/lib/nba-props";
 import type { Market } from "@/lib/nba-research-tab";
+import { signed } from "@/lib/nba-line-moves";
 import NbaPropCard from "./nba-prop-card";
 import "@/app/nba-research-tab.css";
 import "@/app/nba-props-board.css";
@@ -132,6 +133,15 @@ export function PropRowItem({ r, onOpen }: { r: PropRow; onOpen: () => void }) {
         <span className="pf-bet">
           <span className={s.over ? "pf-o" : "pf-u"}>{s.label}</span>{" "}
           <b>{r.trend.line}</b> {SHORT[r.trend.market]} <em>{odds(s.price)}</em>
+          {r.move && r.move.delta !== 0 && (
+            <span
+              className={`pf-move-tag ${r.move.delta > 0 ? "up" : "down"}`}
+              aria-label={`Line moved ${signed(r.move.delta)} since open`}
+            >
+              {r.move.delta > 0 ? "▲" : "▼"}
+              {Math.abs(r.move.delta)}
+            </span>
+          )}
         </span>
         <span className="pf-form">
           <Strip r={r} over={s.over} />
@@ -207,6 +217,7 @@ export function PropSheet({
             </div>
           </section>
         ) : null}
+        {r.move && <Movement r={r} />}
         <div className="nbar">
           <NbaPropCard
             trend={r.trend}
@@ -222,6 +233,70 @@ export function PropSheet({
         </div>
       </div>
     </div>
+  );
+}
+
+/** FanDuel's line from its first stored snapshot to now, with a step chart of every change. */
+function Movement({ r }: { r: PropRow }) {
+  const m = r.move!;
+  const lines = m.steps.map((p) => p.line);
+  const lo = Math.min(...lines),
+    hi = Math.max(...lines);
+  const t0 = Date.parse(m.open.at),
+    t1 = Math.max(Date.parse(m.now.at), t0 + 1);
+  const W = 280,
+    H = 64,
+    pad = 8;
+  const x = (at: string) =>
+    pad + ((Date.parse(at) - t0) / (t1 - t0)) * (W - 2 * pad);
+  const y = (line: number) =>
+    hi === lo ? H / 2 : pad + ((hi - line) / (hi - lo)) * (H - 2 * pad);
+  let path = "";
+  m.steps.forEach((p, i) => {
+    const px = x(p.at),
+      py = y(p.line);
+    path += i === 0 ? `M${px},${py}` : `H${px}V${py}`;
+  });
+  path += `H${W - pad}`;
+  const dir = m.delta > 0 ? "up" : m.delta < 0 ? "down" : "flat";
+  return (
+    <section className="pf-move-box" aria-label="Line movement">
+      <p>
+        Line movement · {m.book} · {m.steps.length - 1}{" "}
+        {m.steps.length - 1 === 1 ? "change" : "changes"}
+      </p>
+      <div className="pf-move-row">
+        <div>
+          <small>Opened {time(m.open.at)}</small>
+          <b>{m.open.line}</b>
+          <span>
+            O {odds(m.open.over)} / U {odds(m.open.under)}
+          </span>
+        </div>
+        <span className={`pf-move-delta ${dir}`}>
+          {dir === "up" ? "▲" : dir === "down" ? "▼" : "•"}{" "}
+          {m.delta === 0 ? "price only" : signed(m.delta)}
+        </span>
+        <div>
+          <small>Now {time(m.now.at)}</small>
+          <b>{m.now.line}</b>
+          <span>
+            O {odds(m.now.over)} / U {odds(m.now.under)}
+          </span>
+        </div>
+      </div>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className={`pf-move-chart ${dir}`}
+        role="img"
+        aria-label={`Line went from ${m.open.line} to ${m.now.line}`}
+      >
+        <path d={path} />
+        {m.steps.map((p, i) => (
+          <circle key={i} cx={x(p.at)} cy={y(p.line)} r={2.6} />
+        ))}
+      </svg>
+    </section>
   );
 }
 

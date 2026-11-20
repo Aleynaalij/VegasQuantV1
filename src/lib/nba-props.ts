@@ -20,6 +20,7 @@ import {
   type PropGame,
   type PropTrend,
 } from "./nba-research-tab";
+import type { LineMove } from "./nba-line-moves";
 
 export type PropSlateGame = {
   id: string;
@@ -64,6 +65,8 @@ export type PropRow = {
    * labelled, but has no edge and drops out of "Best edge".
    */
   stale: boolean;
+  /** FanDuel's line from its first stored snapshot to now, when it has more than one state. */
+  move: LineMove | null;
 };
 
 const implied = (o: number) => (o > 0 ? 100 / (o + 100) : -o / (-o + 100));
@@ -95,6 +98,11 @@ function best(books: BookQuote[], side: "over" | "under"): Price | null {
   return top;
 }
 
+/** A movement worth showing: more than one recorded state. */
+function movement(m: LineMove | undefined) {
+  return m && m.steps.length > 1 ? m : null;
+}
+
 /** Rows as of `now`: freshness is judged against the clock each time, not only when loaded. */
 export function buildPropRows(
   slate: {
@@ -103,6 +111,7 @@ export function buildPropRows(
     trends: Map<string, PropTrend[]>;
     quotes: Map<string, BookQuote[]>;
     defense: DefenseRow[];
+    moves?: Map<string, Map<string, LineMove>>;
   },
   now: number,
 ): PropRow[] {
@@ -165,6 +174,9 @@ export function buildPropRows(
         bestUnder: best(books, "under"),
         books,
         stale,
+        move: movement(
+          slate.moves?.get(game.id)?.get(`${trend.market}|${trend.player}`),
+        ),
       });
     }
   }
