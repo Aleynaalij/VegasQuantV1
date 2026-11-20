@@ -155,3 +155,18 @@ test("rebounds use rebounds", () => {
   assert.equal(s.with.avg, 5);
   assert.equal(s.with.hits, 2);
 });
+
+test("no shared game means no baseline: the split is skipped, never shown as zero", () => {
+  // Oubre played only g9, a game Maxey missed.
+  const oubre = line("3", "Kelly Oubre Jr.", [g("g9", 15)]);
+  assert.deepEqual(
+    teammateSplits(
+      maxey,
+      [maxey, oubre],
+      [hurt("Kelly Oubre Jr.")],
+      "player_points",
+      26.5,
+    ),
+    [],
+  );
+});

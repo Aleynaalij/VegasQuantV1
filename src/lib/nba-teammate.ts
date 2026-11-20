@@ -66,7 +66,8 @@ export function teammateSplits(
     if (!together.size) continue;
     const withMate = mine.filter((g) => together.has(g.game!));
     const without = mine.filter((g) => !together.has(g.game!));
-    if (without.length < MIN_WITHOUT) continue;
+    // No shared game means no baseline to compare against: skip rather than show "with" as zero.
+    if (!withMate.length || without.length < MIN_WITHOUT) continue;
     out.push({
       teammate: mate.player,
       status: injury.status,
