@@ -173,8 +173,15 @@ await open("in-day refresh: a status change appears, a failed refresh keeps the 
   await page.clock.fastForward("05:05");
   const final = await tonight(page).getByRole("link", { name: /AwayN1 at HomeN1, Final/i }).waitFor({ timeout: 8000 }).then(() => true, () => false);
   if (!final) fail("in-day status change (Final) did not appear after the scheduled refresh");
+  // NBA and NCAAB refresh as separate requests: wait for the failed NCAAB refresh to report, rather
+  // than reading the page the instant the NBA update lands (a race on slow CI runners).
+  const stale = await page
+    .getByText(/Couldn’t refresh NCAAB: showing games as last checked/)
+    .first()
+    .waitFor({ timeout: 8000 })
+    .then(() => true, () => false);
   const t2 = await text(page);
-  if (!/Couldn’t refresh NCAAB: showing games as last checked/.test(t2)) fail("failed refresh is not reported as stale");
+  if (!stale) fail("failed refresh is not reported as stale");
   if (!(await tonight(page).getByRole("link", { name: /AwayC1 at HomeC1/i }).count())) fail("failed refresh dropped the games it had");
   const checked2 = /Schedules checked ([0-9:]+ [AP]M) ET/.exec(t2)?.[1];
   if (checked2 !== checked1) fail(`checked time moved to ${checked2} although college's refresh failed (it should show the oldest successful check)`);

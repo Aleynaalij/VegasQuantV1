@@ -132,7 +132,9 @@ html[data-theme] body:has(.home3) {
 .h3-ticker::-webkit-scrollbar,
 .h3-rail::-webkit-scrollbar,
 .h3-fire::-webkit-scrollbar,
-.h3-chips::-webkit-scrollbar,
+.h3-chips::-webkit-scrollbar {
+  display: none;
+}
 .h3-ticker a {
   flex: none;
   scroll-snap-align: start;
@@ -561,7 +563,14 @@ html[data-theme] body:has(.home3) {
 }
 
 /* Board */
-.h3-chips,
+.h3-chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 -16px;
+  padding: 0 16px;
+}
 .h3-chips button {
   flex: none;
   min-height: 36px;
@@ -697,7 +706,6 @@ html[data-theme] body:has(.home3) {
   cursor: pointer;
 }
 
-/* Tool pills */
 .h3-foot {
   color: var(--muted);
   font-size: 12px;
