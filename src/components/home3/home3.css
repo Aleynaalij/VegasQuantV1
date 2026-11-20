@@ -1,4 +1,75 @@
 /* Home 3 (owner-preview arena Home). Prefix h3-. Uses the app's tokens: --bg --panel --line --text --muted. */
+
+/* No arena / skyline art behind this Home: a plain, calm background (as Home 2 did). */
+.screen-lobby .main-wrap:has(.home3)::before,
+html[data-theme] body:has(.home3)::before {
+  display: none;
+}
+html[data-theme] body:has(.home3) {
+  background: var(--bg) !important;
+}
+
+/* Tools menu: a left rail, top to bottom. Slim icon + label column on phones and tablets
+   (below the shell's 950px sidebar breakpoint), a labelled list beside the content above it. */
+.h3-layout {
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.h3-tools {
+  position: sticky;
+  top: 72px;
+  display: grid;
+  gap: 4px;
+  max-height: calc(100dvh - 160px);
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 6px 0;
+  border-right: 1px solid var(--line);
+}
+.h3-tools::-webkit-scrollbar {
+  display: none;
+}
+.h3-tools a {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 9px 2px;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  text-decoration: none;
+}
+.h3-tools a:hover,
+.h3-tools a:focus-visible {
+  background: #ffffff0a;
+  color: var(--text);
+}
+.h3-tools a.hot {
+  color: #f4dc99;
+}
+@media (min-width: 950px) {
+  .h3-layout {
+    grid-template-columns: 176px minmax(0, 1fr);
+    gap: 28px;
+  }
+  .h3-tools {
+    top: 24px;
+    padding: 4px 14px 4px 0;
+  }
+  .h3-tools a {
+    grid-auto-flow: column;
+    justify-content: start;
+    gap: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    text-align: left;
+  }
+}
 .home3 {
   --gold: #f4dc99;
   --gold-deep: #b48a36;
@@ -62,9 +133,6 @@
 .h3-rail::-webkit-scrollbar,
 .h3-fire::-webkit-scrollbar,
 .h3-chips::-webkit-scrollbar,
-.h3-pills::-webkit-scrollbar {
-  display: none;
-}
 .h3-ticker a {
   flex: none;
   scroll-snap-align: start;
@@ -188,6 +256,15 @@
 .h3-headliner .h3-edge-pill {
   background: #3ddc9724;
   color: var(--win);
+}
+/* Narrow phones (the tools rail takes 74px): drop the initials badge so the name gets the room. */
+@media (max-width: 520px) {
+  .h3-hl-body {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .h3-hl-body .h3-face {
+    display: none;
+  }
 }
 .h3-headliner p {
   margin: 0;
@@ -485,14 +562,6 @@
 
 /* Board */
 .h3-chips,
-.h3-pills {
-  display: flex;
-  gap: 6px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  margin: 0 -16px;
-  padding: 0 16px;
-}
 .h3-chips button {
   flex: none;
   min-height: 36px;
@@ -629,32 +698,25 @@
 }
 
 /* Tool pills */
-.h3-pills a {
-  flex: none;
-  padding: 9px 14px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel);
-  font-size: 13.5px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.h3-pills a.hot {
-  border-color: var(--gold);
-  color: var(--gold);
-}
 .h3-foot {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
 }
 
+/* The tools rail sits on the left, so scrolling rows bleed to the right edge only. */
+.h3-ticker,
+.h3-rail,
+.h3-fire,
+.h3-chips {
+  margin-left: 0;
+  padding-left: 0;
+}
 @media (min-width: 900px) {
   .h3-ticker,
   .h3-rail,
   .h3-fire,
-  .h3-chips,
-  .h3-pills {
+  .h3-chips {
     margin: 0;
     padding-left: 0;
     padding-right: 0;
