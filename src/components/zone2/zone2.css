@@ -1,13 +1,25 @@
+/* Calm, like Home 3: plain dark page (no card-back lattice) and neutral dark cards. */
+html[data-theme] body:has(.zone2-experience)::before {
+  display: none;
+}
+html[data-theme] body:has(.zone2-experience) {
+  background: var(--bg) !important;
+}
+.zone-feed.zone2-experience {
+  --zf-card: #11161f;
+  --zf-line: #ffffff17;
+  --zf-muted: #b9c0ca;
+}
 .zone2-experience {
   --zone2-gold: #e3ca8f;
-  --zone2-muted: #b8c8bf;
+  --zone2-muted: #b9c0ca;
   max-width: 1100px;
   margin-inline: auto;
   color: #f4f5ec;
 }
 .zone2-experience .zone-head {
-  padding-block: 24px;
-  border-bottom: 1px solid #355346;
+  padding-block: 16px;
+  border-bottom: 1px solid #ffffff17;
 }
 .zone2-experience .zone-head h1 {
   font-size: clamp(2.3rem, 7vw, 4rem);
@@ -18,11 +30,11 @@
   color: var(--zone2-muted);
 }
 .zone2-discovery {
-  background: #10271e;
-  border: 1px solid #3b5545;
-  border-radius: 20px;
-  padding: clamp(18px, 3vw, 30px);
-  margin: 20px 0;
+  background: #11161f;
+  border: 1px solid #ffffff17;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 12px 0;
 }
 .zone2-heading .eyebrow {
   color: var(--zone2-gold);
@@ -34,8 +46,7 @@
 .zone2-controls {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
-  margin-top: 22px;
+  gap: 12px;
   align-items: center;
 }
 .zone2-controls label:first-child {
@@ -46,8 +57,8 @@
 .zone2-controls input[type="search"] {
   width: 100%;
   min-height: 48px;
-  border: 1px solid #70917d;
-  background: #091a13;
+  border: 1px solid #ffffff33;
+  background: #0b0f15;
   color: #f4f5ec;
   padding: 12px;
   border-radius: 10px;
@@ -85,10 +96,12 @@
   text-decoration: underline;
   text-underline-offset: 4px;
 }
+/* Outranks the theme-wide green card (html[data-theme] body .zone-feed .zone-post:not(.zone-lay)). */
+html[data-theme] body .zone-feed.zone2-experience .zone-post:not(.zone-lay),
 .zone2-experience .zone-post {
   border-radius: 16px;
-  border: 1px solid #3b5545;
-  background: #10271e;
+  border: 1px solid #ffffff17;
+  background: #11161f;
   box-shadow: none;
 }
 .zone2-experience .zone-post-title {
@@ -107,30 +120,28 @@
 .zone2-provenance {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 30px;
-  margin-block: 16px;
-  font-size: 0.85rem;
-}
-.zone2-provenance dt {
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 16px;
+  margin: 12px 0 0;
   color: var(--zone2-muted);
+  font-size: 0.8rem;
 }
-.zone2-provenance dd {
-  margin: 4px 0 0;
+.zone2-provenance small {
+  flex-basis: 100%;
+  font-size: 0.72rem;
+  opacity: 0.8;
 }
 .zone2-provenance a {
   color: var(--zone2-gold);
-  text-decoration: underline;
-}
-.zone2-publication summary {
-  color: var(--zone2-gold);
-  cursor: pointer;
-  min-height: 44px;
-  padding-block: 12px;
   font-weight: 700;
+  text-decoration: none;
 }
 .zone2-full-research {
-  margin-top: 12px;
   min-width: 0;
+}
+.zone2-waiting {
+  min-height: 120px;
 }
 .zone2-experience :is(a, button, input, select, summary):focus-visible {
   outline: 3px solid #f5d98e;
@@ -155,4 +166,49 @@
     transition: none !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Player faces under a post's title (NBA / NFL / NHL headshots, initials when an image fails). */
+.zone2-faces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 10px;
+  padding: 0;
+  list-style: none;
+}
+.zone2-face {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px 4px 4px;
+  border: 1px solid #ffffff14;
+  border-radius: 999px;
+  background: #ffffff08;
+}
+.zone2-face-img {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #1b2433;
+  color: var(--zone2-gold, #f4dc99);
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+.zone2-face-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+}
+.zone2-face.is-nhl .zone2-face-img img {
+  background: #e9edf2;
+}
+.zone2-face b {
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
