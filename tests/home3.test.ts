@@ -50,6 +50,8 @@ function row(p: {
     defense: "",
     minutes: 30,
     matchup: null,
+    move: null,
+    splits: [],
     game: {
       id: "g",
       tipoff: tip(p.tipIn ?? 1),

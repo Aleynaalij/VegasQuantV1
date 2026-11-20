@@ -1,5 +1,6 @@
 /** Tonight's NBA slate for the research tab and the Prop Finder: season lines, injuries, FanDuel prop trends, every book's quotes. Browser-side reads only. */
 import { supabase } from "@/lib/supabase";
+import { lineMoves, type LineMove } from "./nba-line-moves";
 import { nbaWhen } from "@/lib/nba-home";
 import {
   allBookQuotes,
@@ -42,6 +43,8 @@ export type Slate = {
   defense: DefenseRow[];
   /** Every book's latest points/rebounds quotes per game, for line shopping; members only. */
   quotes: Map<string, BookQuote[]>;
+  /** FanDuel line movement per game: `${market}|${player}` → open, now and each change. Members only. */
+  moves: Map<string, Map<string, LineMove>>;
 };
 const HOUR = 3600000;
 const etDay = (iso: string) =>
@@ -124,6 +127,7 @@ export async function loadSlate(
       propsAt: null,
       defense: [],
       quotes: new Map(),
+      moves: new Map(),
     };
   const teams = [...new Set(games.flatMap((g) => [g.away_team, g.home_team]))];
   // This season's finished games only, so "season" numbers reset at the season boundary.
@@ -264,6 +268,7 @@ export async function loadSlate(
   const trends = new Map<string, PropTrend[]>();
   let propsAt: string | null = null;
   const quotes = new Map<string, BookQuote[]>();
+  const moves = new Map<string, Map<string, LineMove>>();
   if (member) {
     // Injury reports and every book's props, each read in full (paged), so no book crowds out another.
     const observations = (kind: "injury" | "prop") =>
@@ -312,6 +317,7 @@ export async function loadSlate(
           Date.now(),
         ),
       );
+      moves.set(g.id, lineMoves(props as Parameters<typeof lineMoves>[0]));
       trends.set(
         g.id,
         propTrends(
@@ -326,7 +332,7 @@ export async function loadSlate(
       );
     }
   }
-  return { games, lines, injuries, trends, propsAt, defense, quotes };
+  return { games, lines, injuries, trends, propsAt, defense, quotes, moves };
 }
 
 /** NBA research tab: tonight's slate, injuries, double-double rates and prop trends. Never picks. */

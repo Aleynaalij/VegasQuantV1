@@ -21,6 +21,7 @@ import {
   type PropGame,
   type PropTrend,
 } from "./nba-research-tab";
+import type { LineMove } from "./nba-line-moves";
 import { teammateSplits, type TeammateSplit } from "./nba-teammate";
 
 export type PropSlateGame = {
@@ -66,6 +67,8 @@ export type PropRow = {
    * labelled, but has no edge and drops out of "Best edge".
    */
   stale: boolean;
+  /** FanDuel's line from its first stored snapshot to now, when it has more than one state. */
+  move: LineMove | null;
   /** How he has done without each teammate who is out or doubtful tonight (members: injuries). */
   splits: TeammateSplit[];
 };
@@ -99,6 +102,15 @@ function best(books: BookQuote[], side: "over" | "under"): Price | null {
   return top;
 }
 
+/**
+ * A movement worth showing: more than one recorded state, ending at the line the row shows. When the
+ * latest two-sided quote is not the row's line (the book has moved on, one side only), showing it as
+ * "now" would be wrong, so there is no movement block.
+ */
+function movement(m: LineMove | undefined, line: number) {
+  return m && m.steps.length > 1 && m.now.line === line ? m : null;
+}
+
 /** Rows as of `now`: freshness is judged against the clock each time, not only when loaded. */
 export function buildPropRows(
   slate: {
@@ -107,6 +119,7 @@ export function buildPropRows(
     trends: Map<string, PropTrend[]>;
     quotes: Map<string, BookQuote[]>;
     defense: DefenseRow[];
+    moves?: Map<string, Map<string, LineMove>>;
     injuries?: Map<string, Injury[]>;
   },
   now: number,
@@ -170,6 +183,10 @@ export function buildPropRows(
         bestUnder: best(books, "under"),
         books,
         stale,
+        move: movement(
+          slate.moves?.get(game.id)?.get(`${trend.market}|${trend.player}`),
+          trend.line,
+        ),
         splits: teammateSplits(
           player,
           slate.lines,
