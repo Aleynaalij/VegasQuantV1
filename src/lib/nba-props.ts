@@ -98,9 +98,13 @@ function best(books: BookQuote[], side: "over" | "under"): Price | null {
   return top;
 }
 
-/** A movement worth showing: more than one recorded state. */
-function movement(m: LineMove | undefined) {
-  return m && m.steps.length > 1 ? m : null;
+/**
+ * A movement worth showing: more than one recorded state, ending at the line the row shows. When the
+ * latest two-sided quote is not the row's line (the book has moved on, one side only), showing it as
+ * "now" would be wrong, so there is no movement block.
+ */
+function movement(m: LineMove | undefined, line: number) {
+  return m && m.steps.length > 1 && m.now.line === line ? m : null;
 }
 
 /** Rows as of `now`: freshness is judged against the clock each time, not only when loaded. */
@@ -176,6 +180,7 @@ export function buildPropRows(
         stale,
         move: movement(
           slate.moves?.get(game.id)?.get(`${trend.market}|${trend.player}`),
+          trend.line,
         ),
       });
     }

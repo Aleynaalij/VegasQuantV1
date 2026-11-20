@@ -118,6 +118,19 @@ test("with alternate lines, the main line is the most balanced two-sided one", (
   assert.equal(moves.get("player_points|Ja Morant")!.now.line, 22.5);
 });
 
+test("balance compares implied chances, not price magnitudes", () => {
+  // |250 - 240| = 10 beats |120 - 105| = 15 on raw prices; implied, -120/-105 is far closer to even.
+  const moves = lineMoves([
+    snap("2026-11-20T15:00:00Z", [
+      ["Over", "Ja Morant", 18.5, -250],
+      ["Under", "Ja Morant", 18.5, 240],
+      ["Over", "Ja Morant", 22.5, -120],
+      ["Under", "Ja Morant", 22.5, -105],
+    ]),
+  ]);
+  assert.equal(moves.get("player_points|Ja Morant")!.now.line, 22.5);
+});
+
 test("signed", () => {
   assert.deepEqual([signed(1), signed(-0.5), signed(0)], ["+1", "-0.5", "0"]);
 });

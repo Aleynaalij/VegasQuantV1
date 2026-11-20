@@ -383,4 +383,31 @@ test("Freshness is judged per quote against the clock: stale lines are labelled 
   )!;
   assert.equal(muchLater.stale, true);
   assert.equal(muchLater.bestOver, null);
+
+  // Movement shows only when its "now" is the row's line; a book that has moved past it hides it.
+  const pt = (at: string, line: number) => ({
+    at,
+    line,
+    over: -110,
+    under: -110,
+  });
+  const move = (now: number) => ({
+    book: "FanDuel",
+    open: pt("2026-11-18T12:00:00Z", 23.5),
+    now: pt("2026-11-18T15:00:00Z", now),
+    delta: now - 23.5,
+    steps: [pt("2026-11-18T12:00:00Z", 23.5), pt("2026-11-18T15:00:00Z", now)],
+  });
+  const withMove = (now: number) =>
+    buildPropRows(
+      {
+        ...slate,
+        moves: new Map([
+          ["g1", new Map([["player_points|Tyrese Maxey", move(now)]])],
+        ]),
+      },
+      NOW,
+    ).find((r) => r.trend.player === "Tyrese Maxey")!.move;
+  assert.equal(withMove(24.5)?.delta, 1);
+  assert.equal(withMove(25.5), null);
 });

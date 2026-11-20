@@ -37,10 +37,14 @@ type Snapshot = {
   };
 };
 
+/** The book's implied chance for American odds. */
+const implied = (odds: number) =>
+  odds < 0 ? -odds / (-odds + 100) : 100 / (odds + 100);
+/** How far apart the two sides' implied chances are: the main line is the closest to even. */
 const balance = (p: { over: number | null; under: number | null }) =>
   p.over == null || p.under == null
     ? Infinity
-    : Math.abs(Math.abs(p.over) - Math.abs(p.under));
+    : Math.abs(implied(p.over) - implied(p.under));
 
 /**
  * One snapshot's main line per player: the half-point line quoted on both sides, and when several
