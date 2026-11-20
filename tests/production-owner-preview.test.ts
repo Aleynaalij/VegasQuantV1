@@ -56,7 +56,7 @@ test("production preview is dark by default and rejects all unreviewed targets/m
     { HOME2_PRODUCTION: undefined },
     { HOME2_PRODUCTION: "off" },
     { HOME2_PRODUCTION: "true" },
-    { HOME2_PRODUCTION: "default" },
+    { HOME2_PRODUCTION: "everyone" },
     { VERCEL_ENV: "preview" },
     { VERCEL_ENV: undefined },
     { HOME2_OWNER_IDS: "" },
@@ -217,12 +217,20 @@ test("cross-origin/GET/noncanonical-host requests reject; cookies alone are igno
     env,
     verified(),
   );
-  assert.deepEqual(await r.json(), { enabled: false, eligible: false });
+  assert.deepEqual(await r.json(), {
+    enabled: false,
+    eligible: false,
+    preferred: false,
+  });
 });
-test("selection response is private, contains only two booleans, and sets no cookie", async () => {
+test("selection response is private, contains only three booleans, and sets no cookie", async () => {
   const r = await productionOwnerResponse(request(), env, verified());
   assert.equal(r.status, 200);
-  assert.deepEqual(await r.json(), { enabled: true, eligible: true });
+  assert.deepEqual(await r.json(), {
+    enabled: true,
+    eligible: true,
+    preferred: false,
+  });
   assert.equal(r.headers.get("cache-control"), "private, no-store");
   assert.match(r.headers.get("vary")!, /Authorization/);
   assert.equal(r.headers.has("set-cookie"), false);
@@ -325,9 +333,17 @@ test("opt-in: a paying member is eligible but not force-enabled; owners stay ena
     optin,
     memberFetch({ allowed: true, trial_active: false }),
   );
-  assert.deepEqual(await r.json(), { enabled: false, eligible: true });
+  assert.deepEqual(await r.json(), {
+    enabled: false,
+    eligible: true,
+    preferred: false,
+  });
   const o = await productionOwnerResponse(request(), optin, verified());
-  assert.deepEqual(await o.json(), { enabled: true, eligible: true });
+  assert.deepEqual(await o.json(), {
+    enabled: true,
+    eligible: true,
+    preferred: false,
+  });
 });
 
 test("opt-in: trials, free accounts and failed or malformed membership replies are not eligible", async () => {
@@ -392,6 +408,72 @@ test("owners mode never asks membership: a paying member stays classic and is no
     env,
     memberFetch({ allowed: true, trial_active: false }, calls),
   );
-  assert.deepEqual(await r.json(), { enabled: false, eligible: false });
+  assert.deepEqual(await r.json(), {
+    enabled: false,
+    eligible: false,
+    preferred: false,
+  });
   assert.ok(!calls.some((c) => c.includes("membership_status")));
+});
+
+// Default-on (Mike: "everyone who has a current account gets the new experience").
+const everyone = { ...env, HOME2_PRODUCTION: "default" };
+
+test("default mode: any confirmed account is eligible with the new experience preferred, no membership asked", async () => {
+  const calls: string[] = [];
+  const r = await productionOwnerResponse(
+    request(memberToken()),
+    everyone,
+    memberFetch({ allowed: false, trial_active: false }, calls),
+  );
+  assert.deepEqual(await r.json(), {
+    enabled: false,
+    eligible: true,
+    preferred: true,
+  });
+  assert.ok(
+    !calls.some((c) => c.includes("membership_status")),
+    "free accounts qualify",
+  );
+  const o = await productionOwnerResponse(request(), everyone, verified());
+  assert.deepEqual(await o.json(), {
+    enabled: true,
+    eligible: true,
+    preferred: true,
+  });
+});
+
+test("default mode still requires Auth to confirm a real, current account", async () => {
+  for (const body of [
+    { ...user, id: other },
+    { ...user, id: member, is_anonymous: true },
+    { ...user, id: member, email_confirmed_at: null },
+    { ...user, id: member, deleted_at: "2026-01-01T00:00:00Z" },
+    { ...user, id: member, banned_until: "2999-01-01T00:00:00Z" },
+  ])
+    assert.equal(
+      await verifyProductionMember(everyone, memberToken(), verified(body)),
+      false,
+    );
+  assert.equal(
+    await verifyProductionMember(
+      everyone,
+      memberToken({ exp: 1 }),
+      verified({ ...user, id: member }),
+    ),
+    false,
+  );
+  const r = await productionOwnerResponse(
+    new Request("https://vegasquant.app/api/consumer/owner-preview", {
+      method: "POST",
+      headers: { Origin: "https://vegasquant.app" },
+    }),
+    everyone,
+    verified(),
+  );
+  assert.deepEqual(
+    await r.json(),
+    { enabled: false, eligible: false, preferred: false },
+    "signed out stays classic",
+  );
 });
