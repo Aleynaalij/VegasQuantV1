@@ -169,10 +169,11 @@ export async function productionOwnerResponse(
   request: typeof fetch = fetch,
 ) {
   // enabled: the owner preview (always on). eligible: may choose the new Home (owners, and in
-  // "optin" mode paying members).
-  const reply = (enabled: boolean, status = 200, eligible = enabled) =>
+  // "optin" mode paying members). Dark (404) and rejected (403) replies stay exactly
+  // {enabled:false}: they disclose nothing new.
+  const reply = (enabled: boolean, status = 200, eligible?: boolean) =>
     Response.json(
-      { enabled, eligible },
+      eligible === undefined ? { enabled } : { enabled, eligible },
       {
         status,
         headers: {
@@ -194,6 +195,7 @@ export async function productionOwnerResponse(
     return reply(false, 403);
   const token =
     req.headers.get("authorization")?.match(/^Bearer (\S+)$/)?.[1] ?? null;
-  if (await verifyProductionOwner(env, token, request)) return reply(true);
+  if (await verifyProductionOwner(env, token, request))
+    return reply(true, 200, true);
   return reply(false, 200, await verifyProductionMember(env, token, request));
 }

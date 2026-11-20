@@ -115,7 +115,7 @@ test("public flags, query/body and cookies cannot turn on a dark deployment", as
     },
   );
   assert.equal(res.status, 404);
-  assert.deepEqual(await res.json(), { enabled: false, eligible: false });
+  assert.deepEqual(await res.json(), { enabled: false });
 });
 test("only the authenticated server-verified allowlisted owner selects the preview", async () => {
   let calls = 0;
