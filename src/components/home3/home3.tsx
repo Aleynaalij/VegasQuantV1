@@ -39,6 +39,7 @@ import {
   tally,
   tickerItems,
   topEdges,
+  boardPreview,
   type BoardRow,
 } from "@/lib/home3";
 import SectionBoundary from "@/components/section-boundary";
@@ -538,7 +539,8 @@ function Board({
       (sport === "all" || g.sport === sport) &&
       (!q || `${g.away} ${g.home}`.toLowerCase().includes(q)),
   );
-  const visible = all ? shown : shown.slice(0, 24);
+  const visible = boardPreview(shown, all);
+  const collapsed = boardPreview(shown, false);
   return (
     <section className="h3-section" aria-labelledby="h3-board-title">
       <div className="h3-heading">
@@ -550,14 +552,23 @@ function Board({
         </div>
       </div>
       <div className="h3-chips" role="group" aria-label="Filter by sport">
-        <button aria-pressed={sport === "all"} onClick={() => setSport("all")}>
+        <button
+          aria-pressed={sport === "all"}
+          onClick={() => {
+            setSport("all");
+            setAll(false);
+          }}
+        >
           All <small>{rows.length}</small>
         </button>
         {liveSports().map((s) => (
           <button
             key={s}
             aria-pressed={sport === s}
-            onClick={() => setSport(s)}
+            onClick={() => {
+              setSport(s);
+              setAll(false);
+            }}
           >
             {SPORTS[s].label} <small>{counts[s] || 0}</small>
           </button>
@@ -627,9 +638,13 @@ function Board({
       {!visible.length && !loading.length && (
         <p className="h3-quiet">No games match.</p>
       )}
-      {shown.length > visible.length && (
-        <button className="h3-more" onClick={() => setAll(true)}>
-          Show all {shown.length} games
+      {shown.length > collapsed.length && (
+        <button
+          className="h3-more"
+          aria-expanded={all}
+          onClick={() => setAll(!all)}
+        >
+          {all ? "Show fewer" : `Show all ${shown.length} games`}
         </button>
       )}
     </section>

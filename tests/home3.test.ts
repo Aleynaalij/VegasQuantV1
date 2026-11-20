@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   board,
+  boardPreview,
   edgeSide,
   greeting,
   headline,
@@ -252,4 +253,15 @@ test("board: NHL/college short names match ESPN's full names; postponed games ar
     ["Golden Knights", "Denver Nuggets"],
     "postponed and cancelled games stay off the next-up ticker",
   );
+});
+
+test("board preview: first five games, widened so every live game shows; expanded shows all", () => {
+  const rows = (live: number, total: number) =>
+    Array.from({ length: total }, (_, i) => ({
+      phase: (i < live ? "live" : "upcoming") as "live" | "upcoming",
+    }));
+  assert.equal(boardPreview(rows(2, 30), false).length, 5);
+  assert.equal(boardPreview(rows(7, 30), false).length, 7);
+  assert.equal(boardPreview(rows(0, 3), false).length, 3);
+  assert.equal(boardPreview(rows(2, 30), true).length, 30);
 });

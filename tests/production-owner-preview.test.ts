@@ -246,6 +246,21 @@ test("account switch and sign-out discard a late successful owner response", asy
   await controller.check("later");
   assert.deepEqual(rendered, [false, false]);
 });
+test("only the server's answer for the current token is marked settled", async () => {
+  const calls: [boolean, boolean][] = [];
+  const c = createOwnerPreviewSelection(
+    (v, settled) => calls.push([v, settled]),
+    async () => Response.json({ enabled: true }),
+  );
+  await c.check(null);
+  await c.check("owner-token");
+  assert.deepEqual(calls, [
+    [false, false],
+    [false, false],
+    [true, true],
+  ]);
+  c.dispose();
+});
 test("client fails closed on rejection/malformed replies and does not send cookies", async () => {
   for (const response of [
     Response.json({ enabled: false }),
