@@ -632,3 +632,32 @@
 .pf-move-tag.down {
   color: #ff8a8a;
 }
+
+/* Free teaser for non-members: two real rows, then locked placeholders and the join card. */
+.pf-teaser-row {
+  cursor: default;
+}
+.pf-locked span {
+  display: block;
+  height: 64px;
+  margin: 6px 0;
+  border-radius: 14px;
+  background: linear-gradient(90deg, #ffffff0a, #ffffff05);
+  filter: blur(1px);
+}
+.pf-locked {
+  position: relative;
+  list-style: none;
+}
+.pf-locked::after {
+  content: "🔒";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  opacity: 0.55;
+}
+.pf-unlock {
+  margin-top: 8px;
+}
