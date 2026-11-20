@@ -170,6 +170,17 @@ export async function verifyProductionOwner(
   }
 }
 
+/**
+ * The production domains, plus the project's own production alias on vercel.app: members who added
+ * the app to their home screen from that address run it there, and would otherwise always get
+ * classic. Preview and other vercel.app hosts stay rejected.
+ */
+const productionOrigins = [
+  "https://vegasquant.app",
+  "https://www.vegasquant.app",
+  "https://vegas-quant-v1.vercel.app",
+];
+
 export async function productionOwnerResponse(
   req: Request,
   env: Environment,
@@ -199,9 +210,7 @@ export async function productionOwnerResponse(
   const url = new URL(req.url);
   if (
     req.method !== "POST" ||
-    !["https://vegasquant.app", "https://www.vegasquant.app"].includes(
-      url.origin,
-    ) ||
+    !productionOrigins.includes(url.origin) ||
     req.headers.get("origin") !== url.origin
   )
     return reply(false, 403);

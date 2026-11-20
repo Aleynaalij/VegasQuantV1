@@ -201,6 +201,23 @@ test("cross-origin/GET/noncanonical-host requests reject; cookies alone are igno
       method: "POST",
       headers: { Origin: "https://preview.vercel.app" },
     }),
+    new Request(
+      "https://vegas-quant-v1-git-main-goatq2s-projects.vercel.app/api/consumer/owner-preview",
+      {
+        method: "POST",
+        headers: {
+          Origin: "https://vegas-quant-v1-git-main-goatq2s-projects.vercel.app",
+        },
+      },
+    ),
+    // The production alias, but called from another site.
+    new Request(
+      "https://vegas-quant-v1.vercel.app/api/consumer/owner-preview",
+      {
+        method: "POST",
+        headers: { Origin: "https://vegasquant.app" },
+      },
+    ),
   ])
     assert.equal(
       (await productionOwnerResponse(req, env, verified())).status,
@@ -476,4 +493,27 @@ test("default mode still requires Auth to confirm a real, current account", asyn
     { enabled: false, eligible: false, preferred: false },
     "signed out stays classic",
   );
+});
+
+test("the project's production vercel.app alias gets the same answer as vegasquant.app", async () => {
+  const r = await productionOwnerResponse(
+    new Request(
+      "https://vegas-quant-v1.vercel.app/api/consumer/owner-preview",
+      {
+        method: "POST",
+        headers: {
+          Origin: "https://vegas-quant-v1.vercel.app",
+          Authorization: "Bearer " + token(),
+        },
+      },
+    ),
+    env,
+    verified(),
+  );
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), {
+    enabled: true,
+    eligible: true,
+    preferred: false,
+  });
 });
