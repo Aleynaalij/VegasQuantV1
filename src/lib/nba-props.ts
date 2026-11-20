@@ -14,6 +14,7 @@ import {
   type BookQuote,
   type DefenseRow,
   type Estimate,
+  type Injury,
   type Market,
   type Matchup,
   type PlayerLine,
@@ -21,6 +22,7 @@ import {
   type PropTrend,
 } from "./nba-research-tab";
 import type { LineMove } from "./nba-line-moves";
+import { teammateSplits, type TeammateSplit } from "./nba-teammate";
 
 export type PropSlateGame = {
   id: string;
@@ -67,6 +69,8 @@ export type PropRow = {
   stale: boolean;
   /** FanDuel's line from its first stored snapshot to now, when it has more than one state. */
   move: LineMove | null;
+  /** How he has done without each teammate who is out or doubtful tonight (members: injuries). */
+  splits: TeammateSplit[];
 };
 
 const implied = (o: number) => (o > 0 ? 100 / (o + 100) : -o / (-o + 100));
@@ -116,6 +120,7 @@ export function buildPropRows(
     quotes: Map<string, BookQuote[]>;
     defense: DefenseRow[];
     moves?: Map<string, Map<string, LineMove>>;
+    injuries?: Map<string, Injury[]>;
   },
   now: number,
 ): PropRow[] {
@@ -180,6 +185,13 @@ export function buildPropRows(
         stale,
         move: movement(
           slate.moves?.get(game.id)?.get(`${trend.market}|${trend.player}`),
+          trend.line,
+        ),
+        splits: teammateSplits(
+          player,
+          slate.lines,
+          slate.injuries?.get(player.team) || [],
+          trend.market,
           trend.line,
         ),
       });

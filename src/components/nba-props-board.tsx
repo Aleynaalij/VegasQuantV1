@@ -118,6 +118,13 @@ export function PropRowItem({ r, onOpen }: { r: PropRow; onOpen: () => void }) {
           <b>{r.trend.player}</b>
           <small>
             {team} {r.home ? "vs" : "@"} {r.opponent} · {time(r.game.tipoff)}
+            {r.splits[0] && (
+              <em className="pf-mate">
+                {" "}
+                · w/o {r.splits[0].teammate.split(" ").slice(-1)[0]}{" "}
+                {r.splits[0].without.hits}/{r.splits[0].without.n}
+              </em>
+            )}
           </small>
         </span>
         <span className={`pf-score ${tone}`}>
@@ -218,6 +225,7 @@ export function PropSheet({
           </section>
         ) : null}
         {r.move && <Movement r={r} />}
+        {r.splits.length > 0 && <Splits r={r} />}
         <div className="nbar">
           <NbaPropCard
             trend={r.trend}
@@ -296,6 +304,55 @@ function Movement({ r }: { r: PropRow }) {
           <circle key={i} cx={x(p.at)} cy={y(p.line)} r={2.6} />
         ))}
       </svg>
+    </section>
+  );
+}
+
+/** With / without each teammate out tonight, against tonight's line. */
+function Splits({ r }: { r: PropRow }) {
+  const unit = SHORT[r.trend.market];
+  return (
+    <section className="pf-splits" aria-label="With and without teammates">
+      <p>
+        Teammates out tonight · {r.trend.line} {unit}
+      </p>
+      {r.splits.map((s) => {
+        const up = s.without.avg >= s.with.avg;
+        return (
+          <div key={s.teammate} className="pf-split">
+            <div className="pf-split-who">
+              <b>{s.teammate}</b>
+              <span className={s.status === "Out" ? "pf-out" : "pf-doubt"}>
+                {s.status}
+              </span>
+            </div>
+            <div className="pf-split-cols">
+              <div className={up ? "pf-split-up" : "pf-split-down"}>
+                <small>Without him</small>
+                <b>
+                  {s.without.hits}/{s.without.n}
+                </b>
+                <span>
+                  over · {s.without.avg} {unit} avg
+                </span>
+              </div>
+              <div>
+                <small>With him</small>
+                <b>
+                  {s.with.hits}/{s.with.n}
+                </b>
+                <span>
+                  over · {s.with.avg} {unit} avg
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+      <small className="pf-split-note">
+        His games for this team this season. Games without him include any he
+        missed or wasn&rsquo;t on the roster for.
+      </small>
     </section>
   );
 }
