@@ -431,8 +431,10 @@ for (const width of [390, 1280]) {
     // after that protocol call resolves. Wait for DOM settlement WITHOUT advancing the
     // frozen monotonic clock: no extra story lifetime or subsequent refresh is allowed.
     const expiryNow = await page.evaluate(() => performance.now());
+    // Real-time budget only: the page clock is frozen, so waiting longer grants no lifetime. 1s was
+    // too tight for a busy runner at 1280px (rail removal committed late on #316's CI).
     await page.locator("dialog.story-viewer[open] .story-post, .community-story")
-      .first().waitFor({ state: "detached", timeout: 1000 }).catch(() => {});
+      .first().waitFor({ state: "detached", timeout: 5000 }).catch(() => {});
     const remainingPosts = await viewer(page).locator(".story-post").count();
     const remainingRail = await page.locator(".community-story").count();
     const settledNow = await page.evaluate(() => performance.now());

@@ -260,12 +260,11 @@ try {
       feedReads > 0,
       "Real feed component must read synthetic caller feed",
     );
+    // The stat sheet shows inline and loads on its own once the post is near the screen: no tap.
     assert.equal(
-      chartReads,
+      await compact.getByText("Full research, charts and downloads").count(),
       0,
-      "Compact feed must not request the heavyweight chart",
     );
-    assert.equal(await compact.locator(".zone2-full-research").count(), 0);
     assert.equal(
       await compact.locator("time").getAttribute("datetime"),
       post.created_at,
@@ -351,19 +350,13 @@ try {
     await search.fill("");
     await item.waitFor();
     await audit("compact-signed-in");
-    const disclosure = compact.getByText(
-      "Full research, charts and downloads",
-      { exact: true },
-    );
-    await disclosure.focus();
-    await page.keyboard.press("Enter");
     await compact.locator(".zone2-full-research").waitFor();
     const preview = item.locator(".zone-sheet-preview");
     await preview.scrollIntoViewIfNeeded();
     const image = preview.locator("img");
     await image.waitFor();
     await image.evaluate((img) => img.decode());
-    assert(chartReads > 0, "Expanded original renderer must load mocked sheet");
+    assert(chartReads > 0, "Inline original renderer must load mocked sheet on its own");
     assert.equal(
       await preview.getAttribute("href"),
       `/nba/matchup-sheet/${postId}`,
@@ -377,11 +370,6 @@ try {
       .getByText(fullMarker, { exact: false })
       .waitFor({ state: "visible" });
     await audit("expanded-signed-in");
-    await disclosure.focus();
-    await page.keyboard.press("Enter");
-    await compact
-      .locator(".zone2-full-research")
-      .waitFor({ state: "detached" });
     await context.close();
   }
 } catch (error) {

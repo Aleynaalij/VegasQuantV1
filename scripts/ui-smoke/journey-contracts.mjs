@@ -114,8 +114,11 @@ for (const width of [360, 390, 1280]) {
   assert.doesNotMatch(await page.locator("body").innerText(), /OTHER ACCOUNT PRIVATE DRAFT/);
   // Closing preserves the exact selection keys, including across a route round trip.
   await page.getByRole("button", { name: "Close builder", exact: true }).click();
-  await page.goto(BASE + "/feed?view=latest", { waitUntil: "networkidle" });
-  await page.goBack({ waitUntil: "networkidle" });
+  // The feed keeps background requests going, so "networkidle" can miss its 15s budget on a busy
+  // runner (seen on #312 and #316). The round trip only needs the page rendered, then back.
+  await page.goto(BASE + "/feed?view=latest", { waitUntil: "domcontentloaded" });
+  await page.locator("main").first().waitFor();
+  await page.goBack({ waitUntil: "domcontentloaded" });
   await draft.waitFor();
   assert.equal(await draft.getByRole("button", { name: /^Remove / }).count(), 2);
   assert.equal(await page.getByLabel("Lay name", { exact: true }).inputValue(), "Sample recovered journey");

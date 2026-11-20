@@ -73,19 +73,17 @@ test("Zone2 opts into existing social engine without changing legacy defaults", 
   );
 });
 
-test("compact publication source retains lazy mount and freshness disclosure", () => {
+test("publication source mounts the research only near the screen and keeps the freshness disclosure", () => {
   // Presentation module imports CSS, so verify the mount guard at the boundary
   // without pretending this source check is rendered browser acceptance.
   const source = readFileSync(
     "src/components/zone2/zone2-presentation.tsx",
     "utf8",
   );
-  assert.match(source, /expanded \? \(/);
+  assert.match(source, /near \? \(/);
+  assert.match(source, /new IntersectionObserver\(/);
+  assert.match(source, /rootMargin: "600px 0px"/);
   assert.match(source, /Publication time is not source freshness/);
-  assert.match(
-    source,
-    /onToggle=\{\(e\) => setExpanded\(e.currentTarget.open\)\}/,
-  );
 });
 
 test("Zone stories mount only once through the existing Shell", () => {
@@ -101,5 +99,8 @@ test("Zone2 exposes feed filters as native grouped toggles and keeps refresh an 
   assert.match(source, /role=\{zone2 \? undefined : "tab"\}/);
   assert.match(source, /aria-selected=\{zone2 \? undefined : on\}/);
   assert.match(source, /aria-pressed=\{zone2 \? on : undefined\}/);
-  assert.match(source, /className="zone-sports" role="group" aria-label="Sport"/);
+  assert.match(
+    source,
+    /className="zone-sports" role="group" aria-label="Sport"/,
+  );
 });

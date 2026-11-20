@@ -11,7 +11,7 @@ import {
 } from "react";
 import Link from "next/link";
 import RubyHub from "./ruby-cards";
-import { Zone2Publication, Zone2Tools } from "./zone2/zone2-presentation";
+import { Zone2Faces, Zone2Publication, Zone2Tools } from "./zone2/zone2-presentation";
 import { filterZone2Feed, zone2Publication } from "@/lib/zone2";
 import NhlChartPreview from "./nhl-chart-preview";
 import { nhlChartRef } from "@/lib/nhl-chart-package";
@@ -1871,6 +1871,7 @@ export default function CommunityFeed({ experience = "legacy", basePath = "/comm
                       {p.title !== "Community post" ? (
                         <h2 className="zone-post-title">{p.title}</h2>
                       ) : null}
+                      {zone2 ? <Zone2Faces title={p.title} legs={p.legs || []} body={p.body} sport={p.sport} /> : null}
                       <Zone2Publication enabled={zone2 && zone2Publication(p)} post={p} basePath={basePath}>
                       {nhlChartRef(p.card) ? (<NhlChartPreview id={nhlChartRef(p.card)!} body={p.body} />) : weeklyCardRef(p.card) || positionCardPostId(p) ? (
                         <figure

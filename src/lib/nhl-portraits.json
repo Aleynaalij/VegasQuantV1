@@ -1,0 +1,3015 @@
+{
+ "source": "Vegas Quant NHL chart rosters (NHL.com player ids), latest snapshot per team",
+ "retrieved_at": "2026-11-20",
+ "season": "20262027",
+ "portraits": {
+  "a.j. greer": [
+   "8478421",
+   "ANA"
+  ],
+  "aaron ekblad": [
+   "8477932",
+   "FLA"
+  ],
+  "adam edstrom": [
+   "8481726",
+   "NSH"
+  ],
+  "adam engstrom": [
+   "8483686",
+   "MTL"
+  ],
+  "adam fantilli": [
+   "8484166",
+   "CBJ"
+  ],
+  "adam fox": [
+   "8479323",
+   "NYR"
+  ],
+  "adam gaudette": [
+   "8478874",
+   "SJ"
+  ],
+  "adam klapka": [
+   "8483609",
+   "CGY"
+  ],
+  "adam larsson": [
+   "8476457",
+   "SEA"
+  ],
+  "adam lowry": [
+   "8476392",
+   "WPG"
+  ],
+  "adam pelech": [
+   "8476917",
+   "NYI"
+  ],
+  "adam sykora": [
+   "8483669",
+   "NYR"
+  ],
+  "adam wilsby": [
+   "8482482",
+   "NSH"
+  ],
+  "adrian kempe": [
+   "8477960",
+   "LA"
+  ],
+  "albert johansson": [
+   "8481607",
+   "DET"
+  ],
+  "alberts smits": [
+   "8485957",
+   "NYR"
+  ],
+  "alec regula": [
+   "8480831",
+   "EDM"
+  ],
+  "aleksander barkov": [
+   "8477493",
+   "FLA"
+  ],
+  "aleksanteri kaskimaki": [
+   "8483463",
+   "STL"
+  ],
+  "alex debrincat": [
+   "8479337",
+   "DET"
+  ],
+  "alex formenton": [
+   "8480029",
+   "EDM"
+  ],
+  "alex gagne": [
+   "8482942",
+   "COL"
+  ],
+  "alex iafallo": [
+   "8480113",
+   "WPG"
+  ],
+  "alex killorn": [
+   "8473986",
+   "ANA"
+  ],
+  "alex laferriere": [
+   "8482155",
+   "LA"
+  ],
+  "alex newhook": [
+   "8481618",
+   "MTL"
+  ],
+  "alex ovechkin": [
+   "8471214",
+   "WSH"
+  ],
+  "alex tuch": [
+   "8477949",
+   "WSH"
+  ],
+  "alex turcotte": [
+   "8481532",
+   "LA"
+  ],
+  "alex vlasic": [
+   "8481568",
+   "CHI"
+  ],
+  "alexander kerfoot": [
+   "8477021",
+   "NSH"
+  ],
+  "alexander nikishin": [
+   "8482100",
+   "CAR"
+  ],
+  "alexander romanov": [
+   "8481014",
+   "NYI"
+  ],
+  "alexander wennberg": [
+   "8477505",
+   "SJ"
+  ],
+  "alexandre carrier": [
+   "8478851",
+   "MTL"
+  ],
+  "alexandre texier": [
+   "8480074",
+   "MTL"
+  ],
+  "alexey toropchenko": [
+   "8480281",
+   "STL"
+  ],
+  "alexis lafrenière": [
+   "8482109",
+   "NYR"
+  ],
+  "aliaksei protas": [
+   "8481656",
+   "WSH"
+  ],
+  "amadeus lombardi": [
+   "8483695",
+   "NJ"
+  ],
+  "anders lee": [
+   "8475314",
+   "UTA"
+  ],
+  "andre burakovsky": [
+   "8477444",
+   "OTT"
+  ],
+  "andre lee": [
+   "8481732",
+   "LA"
+  ],
+  "andreas englund": [
+   "8477971",
+   "DET"
+  ],
+  "andrei kuzmenko": [
+   "8483808",
+   "PIT"
+  ],
+  "andrei svechnikov": [
+   "8480830",
+   "CAR"
+  ],
+  "andrew copp": [
+   "8477429",
+   "DET"
+  ],
+  "andrew mangiapane": [
+   "8478233",
+   "CHI"
+  ],
+  "andrew peeke": [
+   "8479369",
+   "UTA"
+  ],
+  "anthony beauvillier": [
+   "8478463",
+   "WSH"
+  ],
+  "anthony cirelli": [
+   "8478519",
+   "TB"
+  ],
+  "anthony duclair": [
+   "8477407",
+   "NYI"
+  ],
+  "anthony mantha": [
+   "8477511",
+   "NJ"
+  ],
+  "anton frondell": [
+   "8485391",
+   "CHI"
+  ],
+  "anton johansson": [
+   "8483679",
+   "DET"
+  ],
+  "anton lundell": [
+   "8482113",
+   "FLA"
+  ],
+  "anton silaev": [
+   "8484987",
+   "NJ"
+  ],
+  "arber xhekaj": [
+   "8482964",
+   "MTL"
+  ],
+  "arseny gritsyuk": [
+   "8481721",
+   "NJ"
+  ],
+  "arshdeep bains": [
+   "8483395",
+   "VAN"
+  ],
+  "artem duda": [
+   "8483436",
+   "UTA"
+  ],
+  "artem zub": [
+   "8482245",
+   "OTT"
+  ],
+  "artemi panarin": [
+   "8478550",
+   "LA"
+  ],
+  "arttu hyry": [
+   "8484938",
+   "DAL"
+  ],
+  "artturi lehkonen": [
+   "8477476",
+   "COL"
+  ],
+  "arturs silovs": [
+   "8481668",
+   "PIT"
+  ],
+  "artyom levshunov": [
+   "8484783",
+   "CHI"
+  ],
+  "auston matthews": [
+   "8479318",
+   "TOR"
+  ],
+  "aydar suniev": [
+   "8484234",
+   "CGY"
+  ],
+  "barclay goodrow": [
+   "8476624",
+   "SJ"
+  ],
+  "barrett hayton": [
+   "8480849",
+   "UTA"
+  ],
+  "beck malenstyn": [
+   "8479359",
+   "BUF"
+  ],
+  "beckett sennecke": [
+   "8484762",
+   "ANA"
+  ],
+  "ben chiarot": [
+   "8475279",
+   "DET"
+  ],
+  "ben hutton": [
+   "8477018",
+   "NYI"
+  ],
+  "ben kindel": [
+   "8485414",
+   "PIT"
+  ],
+  "ben mccartney": [
+   "8481827",
+   "UTA"
+  ],
+  "ben meyers": [
+   "8483570",
+   "SEA"
+  ],
+  "berkly catton": [
+   "8484800",
+   "SEA"
+  ],
+  "blake coleman": [
+   "8476399",
+   "MIN"
+  ],
+  "blake lizotte": [
+   "8481481",
+   "PIT"
+  ],
+  "bo groulx": [
+   "8480870",
+   "TOR"
+  ],
+  "bo horvat": [
+   "8477500",
+   "NYI"
+  ],
+  "bobby brink": [
+   "8481553",
+   "MIN"
+  ],
+  "bobby mcmann": [
+   "8482259",
+   "SEA"
+  ],
+  "bokondji imama": [
+   "8478147",
+   "FLA"
+  ],
+  "boone jenner": [
+   "8476432",
+   "WSH"
+  ],
+  "bowen byram": [
+   "8481524",
+   "CHI"
+  ],
+  "brad marchand": [
+   "8473419",
+   "FLA"
+  ],
+  "braden schneider": [
+   "8482073",
+   "NYR"
+  ],
+  "brady skjei": [
+   "8476869",
+   "NSH"
+  ],
+  "brady tkachuk": [
+   "8480801",
+   "FLA"
+  ],
+  "braeden bowman": [
+   "8483890",
+   "VGK"
+  ],
+  "brandon carlo": [
+   "8478443",
+   "STL"
+  ],
+  "brandon duhaime": [
+   "8479520",
+   "TOR"
+  ],
+  "brandon hagel": [
+   "8479542",
+   "TB"
+  ],
+  "brandon montour": [
+   "8477986",
+   "SEA"
+  ],
+  "brandt clarke": [
+   "8482730",
+   "LA"
+  ],
+  "brayden mcnabb": [
+   "8475188",
+   "VGK"
+  ],
+  "brayden pachal": [
+   "8481167",
+   "CGY"
+  ],
+  "brayden point": [
+   "8478010",
+   "TB"
+  ],
+  "brayden schenn": [
+   "8475170",
+   "NYI"
+  ],
+  "brayden yager": [
+   "8484242",
+   "WPG"
+  ],
+  "brendan brisson": [
+   "8482153",
+   "TOR"
+  ],
+  "brendan gallagher": [
+   "8475848",
+   "VAN"
+  ],
+  "brenden dillon": [
+   "8475455",
+   "NJ"
+  ],
+  "brennan othmann": [
+   "8482747",
+   "CGY"
+  ],
+  "brent burns": [
+   "8470613",
+   "COL"
+  ],
+  "brett berard": [
+   "8482132",
+   "MTL"
+  ],
+  "brett howden": [
+   "8479353",
+   "VGK"
+  ],
+  "brett kulak": [
+   "8476967",
+   "COL"
+  ],
+  "brett pesce": [
+   "8477488",
+   "NJ"
+  ],
+  "brian dumoulin": [
+   "8475208",
+   "LA"
+  ],
+  "brock boeser": [
+   "8478444",
+   "VAN"
+  ],
+  "brock faber": [
+   "8482122",
+   "MIN"
+  ],
+  "brock nelson": [
+   "8475754",
+   "COL"
+  ],
+  "bryan rust": [
+   "8475810",
+   "PIT"
+  ],
+  "cale fleury": [
+   "8479985",
+   "SEA"
+  ],
+  "cale makar": [
+   "8480069",
+   "COL"
+  ],
+  "calle rosen": [
+   "8480157",
+   "STL"
+  ],
+  "cam fowler": [
+   "8475764",
+   "STL"
+  ],
+  "cam york": [
+   "8481546",
+   "PHI"
+  ],
+  "cameron crotty": [
+   "8480075",
+   "VAN"
+  ],
+  "carter hart": [
+   "8479394",
+   "VGK"
+  ],
+  "carter mazur": [
+   "8482802",
+   "DET"
+  ],
+  "carter verhaeghe": [
+   "8477409",
+   "FLA"
+  ],
+  "carter yakemchuk": [
+   "8484759",
+   "OTT"
+  ],
+  "casey cizikas": [
+   "8475231",
+   "NYI"
+  ],
+  "casey mittelstadt": [
+   "8479999",
+   "BOS"
+  ],
+  "chandler stephenson": [
+   "8476905",
+   "SEA"
+  ],
+  "charle-edouard d'astous": [
+   "8480426",
+   "TB"
+  ],
+  "charlie coyle": [
+   "8475745",
+   "CBJ"
+  ],
+  "charlie mcavoy": [
+   "8479325",
+   "BOS"
+  ],
+  "chris kreider": [
+   "8475184",
+   "MTL"
+  ],
+  "chris tanev": [
+   "8475690",
+   "TOR"
+  ],
+  "christian dvorak": [
+   "8477989",
+   "PHI"
+  ],
+  "claude giroux": [
+   "8473512",
+   "OTT"
+  ],
+  "clayton keller": [
+   "8479343",
+   "UTA"
+  ],
+  "cody ceci": [
+   "8476879",
+   "LA"
+  ],
+  "cody glass": [
+   "8479996",
+   "NJ"
+  ],
+  "cole caufield": [
+   "8481540",
+   "MTL"
+  ],
+  "cole hutson": [
+   "8484873",
+   "WSH"
+  ],
+  "cole knuble": [
+   "8483787",
+   "PHI"
+  ],
+  "cole koepke": [
+   "8481043",
+   "WPG"
+  ],
+  "cole mcward": [
+   "8484287",
+   "TOR"
+  ],
+  "cole perfetti": [
+   "8482149",
+   "WPG"
+  ],
+  "cole reinhardt": [
+   "8481133",
+   "FLA"
+  ],
+  "cole schwindt": [
+   "8481655",
+   "FLA"
+  ],
+  "cole sillinger": [
+   "8482705",
+   "CBJ"
+  ],
+  "cole smith": [
+   "8482062",
+   "CHI"
+  ],
+  "colin blackwell": [
+   "8476278",
+   "DAL"
+  ],
+  "collin graf": [
+   "8484911",
+   "SJ"
+  ],
+  "colton dach": [
+   "8482703",
+   "EDM"
+  ],
+  "colton parayko": [
+   "8476892",
+   "STL"
+  ],
+  "colton sissons": [
+   "8476925",
+   "TOR"
+  ],
+  "connor bedard": [
+   "8484144",
+   "CHI"
+  ],
+  "connor brown": [
+   "8477015",
+   "NJ"
+  ],
+  "connor clifton": [
+   "8477365",
+   "BOS"
+  ],
+  "connor dewar": [
+   "8480980",
+   "PIT"
+  ],
+  "connor mcdavid": [
+   "8478402",
+   "EDM"
+  ],
+  "connor mcmichael": [
+   "8481580",
+   "STL"
+  ],
+  "connor murphy": [
+   "8476473",
+   "EDM"
+  ],
+  "conor garland": [
+   "8478856",
+   "CBJ"
+  ],
+  "conor geekie": [
+   "8483447",
+   "TB"
+  ],
+  "conor timmins": [
+   "8479982",
+   "BUF"
+  ],
+  "corey perry": [
+   "8470621",
+   "LA"
+  ],
+  "curtis douglas": [
+   "8480876",
+   "SEA"
+  ],
+  "cutter gauthier": [
+   "8483445",
+   "ANA"
+  ],
+  "daemon hunt": [
+   "8482094",
+   "NSH"
+  ],
+  "dakota joshua": [
+   "8478057",
+   "TOR"
+  ],
+  "dakota mermis": [
+   "8477541",
+   "TOR"
+  ],
+  "dalibor dvorsky": [
+   "8484164",
+   "STL"
+  ],
+  "damon severson": [
+   "8476923",
+   "CBJ"
+  ],
+  "dan vladar": [
+   "8478435",
+   "PHI"
+  ],
+  "daniil but": [
+   "8484388",
+   "UTA"
+  ],
+  "daniil tarasov": [
+   "8480193",
+   "DET"
+  ],
+  "danil zhilkin": [
+   "8483526",
+   "WPG"
+  ],
+  "danila yurov": [
+   "8483525",
+   "MIN"
+  ],
+  "dante fabbro": [
+   "8479371",
+   "CBJ"
+  ],
+  "darcy kuemper": [
+   "8475311",
+   "LA"
+  ],
+  "darnell nurse": [
+   "8477498",
+   "SJ"
+  ],
+  "darren raddysh": [
+   "8478178",
+   "TOR"
+  ],
+  "david jiricek": [
+   "8483460",
+   "PHI"
+  ],
+  "david pastrnak": [
+   "8477956",
+   "BOS"
+  ],
+  "david perron": [
+   "8474102",
+   "DAL"
+  ],
+  "david reinbacher": [
+   "8484220",
+   "MTL"
+  ],
+  "david spacek": [
+   "8483766",
+   "MIN"
+  ],
+  "dawson mercer": [
+   "8482110",
+   "WPG"
+  ],
+  "declan carlile": [
+   "8483398",
+   "PIT"
+  ],
+  "declan chisholm": [
+   "8480990",
+   "NJ"
+  ],
+  "denton mateychuk": [
+   "8483485",
+   "CBJ"
+  ],
+  "denver barkey": [
+   "8484142",
+   "PHI"
+  ],
+  "devon levi": [
+   "8482221",
+   "EDM"
+  ],
+  "devon toews": [
+   "8478038",
+   "COL"
+  ],
+  "dillon boucher": [
+   "8485554",
+   "CHI"
+  ],
+  "dillon dube": [
+   "8479346",
+   "STL"
+  ],
+  "dmitri simashev": [
+   "8484386",
+   "UTA"
+  ],
+  "dmitri voronkov": [
+   "8481716",
+   "CBJ"
+  ],
+  "dmitry kulikov": [
+   "8475179",
+   "FLA"
+  ],
+  "dmitry orlov": [
+   "8475200",
+   "SJ"
+  ],
+  "dougie hamilton": [
+   "8476462",
+   "NJ"
+  ],
+  "drake batherson": [
+   "8480208",
+   "OTT"
+  ],
+  "drew doughty": [
+   "8474563",
+   "LA"
+  ],
+  "drew helleson": [
+   "8481563",
+   "ANA"
+  ],
+  "drew o'connor": [
+   "8482055",
+   "VAN"
+  ],
+  "dustin wolf": [
+   "8481692",
+   "CGY"
+  ],
+  "dylan coghlan": [
+   "8479639",
+   "VGK"
+  ],
+  "dylan cozens": [
+   "8481528",
+   "OTT"
+  ],
+  "dylan demelo": [
+   "8476331",
+   "WPG"
+  ],
+  "dylan guenther": [
+   "8482699",
+   "UTA"
+  ],
+  "dylan holloway": [
+   "8482077",
+   "STL"
+  ],
+  "dylan samberg": [
+   "8480049",
+   "WPG"
+  ],
+  "dylan strome": [
+   "8478440",
+   "WSH"
+  ],
+  "easton cowan": [
+   "8484158",
+   "TOR"
+  ],
+  "eeli tolvanen": [
+   "8480009",
+   "NYR"
+  ],
+  "eetu luostarinen": [
+   "8480185",
+   "FLA"
+  ],
+  "egor chinakhov": [
+   "8482475",
+   "PIT"
+  ],
+  "elias lindholm": [
+   "8477496",
+   "BOS"
+  ],
+  "elias pettersson": [
+   "8480012",
+   "VAN"
+  ],
+  "elmer soderblom": [
+   "8481725",
+   "PIT"
+  ],
+  "emil heineman": [
+   "8482476",
+   "NYI"
+  ],
+  "emil lilleberg": [
+   "8482929",
+   "TB"
+  ],
+  "emmitt finnie": [
+   "8484471",
+   "DET"
+  ],
+  "eric pohlkamp": [
+   "8484421",
+   "SJ"
+  ],
+  "eric robinson": [
+   "8480762",
+   "CAR"
+  ],
+  "erik cernak": [
+   "8478416",
+   "TB"
+  ],
+  "erik gudbranson": [
+   "8475790",
+   "CBJ"
+  ],
+  "erik gustafsson": [
+   "8476979",
+   "LA"
+  ],
+  "erik haula": [
+   "8475287",
+   "LA"
+  ],
+  "erik karlsson": [
+   "8474578",
+   "PIT"
+  ],
+  "esa lindell": [
+   "8476902",
+   "DAL"
+  ],
+  "ethan del mastro": [
+   "8482807",
+   "CHI"
+  ],
+  "ethen frank": [
+   "8483573",
+   "WSH"
+  ],
+  "evan bouchard": [
+   "8480803",
+   "EDM"
+  ],
+  "evan rodrigues": [
+   "8478542",
+   "NJ"
+  ],
+  "evgeni malkin": [
+   "8471215",
+   "PIT"
+  ],
+  "fabian zetterlund": [
+   "8480188",
+   "OTT"
+  ],
+  "fedor svechkov": [
+   "8482768",
+   "COL"
+  ],
+  "filip chytil": [
+   "8480078",
+   "VAN"
+  ],
+  "filip forsberg": [
+   "8476887",
+   "NSH"
+  ],
+  "filip hallander": [
+   "8480842",
+   "EDM"
+  ],
+  "filip hronek": [
+   "8479425",
+   "VAN"
+  ],
+  "florian xhekaj": [
+   "8484403",
+   "MTL"
+  ],
+  "frank nazar": [
+   "8483493",
+   "CHI"
+  ],
+  "frank vatrano": [
+   "8478366",
+   "ANA"
+  ],
+  "fraser minten": [
+   "8483489",
+   "BOS"
+  ],
+  "frederic brunet": [
+   "8483017",
+   "BOS"
+  ],
+  "frederick gaudreau": [
+   "8477919",
+   "SEA"
+  ],
+  "gabe perreault": [
+   "8484210",
+   "NYR"
+  ],
+  "gabriel landeskog": [
+   "8476455",
+   "COL"
+  ],
+  "gabriel vilardi": [
+   "8480014",
+   "WPG"
+  ],
+  "gage goncalves": [
+   "8482201",
+   "TB"
+  ],
+  "garnet hathaway": [
+   "8477903",
+   "FLA"
+  ],
+  "gavin brindley": [
+   "8484149",
+   "COL"
+  ],
+  "gavin mckenna": [
+   "8486067",
+   "TOR"
+  ],
+  "glenn gawdin": [
+   "8478446",
+   "NYR"
+  ],
+  "guillaume brisebois": [
+   "8478465",
+   "VAN"
+  ],
+  "gustav forsling": [
+   "8478055",
+   "FLA"
+  ],
+  "hampus lindholm": [
+   "8476854",
+   "BOS"
+  ],
+  "hayden hodgson": [
+   "8478173",
+   "OTT"
+  ],
+  "haydn fleury": [
+   "8477938",
+   "WPG"
+  ],
+  "hendrix lapierre": [
+   "8482148",
+   "PIT"
+  ],
+  "henry thrun": [
+   "8481567",
+   "WPG"
+  ],
+  "ian cole": [
+   "8474013",
+   "CHI"
+  ],
+  "ian moore": [
+   "8482178",
+   "ANA"
+  ],
+  "igor chernyshov": [
+   "8484994",
+   "SJ"
+  ],
+  "ilya lyubushkin": [
+   "8480950",
+   "NSH"
+  ],
+  "ilya mikheyev": [
+   "8481624",
+   "TB"
+  ],
+  "ilya protas": [
+   "8484999",
+   "WSH"
+  ],
+  "ilya sorokin": [
+   "8478009",
+   "NYI"
+  ],
+  "isac lundeström": [
+   "8480806",
+   "CBJ"
+  ],
+  "isak rosen": [
+   "8482765",
+   "WPG"
+  ],
+  "ivan barbashev": [
+   "8477964",
+   "VGK"
+  ],
+  "ivan demidov": [
+   "8484984",
+   "MTL"
+  ],
+  "ivan miroshnichenko": [
+   "8483491",
+   "WSH"
+  ],
+  "ivan provorov": [
+   "8478500",
+   "CBJ"
+  ],
+  "ivar stenberg": [
+   "8486103",
+   "SJ"
+  ],
+  "j.j. moser": [
+   "8482655",
+   "TB"
+  ],
+  "j.t. compher": [
+   "8477456",
+   "DET"
+  ],
+  "j.t. miller": [
+   "8476468",
+   "NYR"
+  ],
+  "jaccob slavin": [
+   "8476958",
+   "CAR"
+  ],
+  "jack drury": [
+   "8480835",
+   "NSH"
+  ],
+  "jack eichel": [
+   "8478403",
+   "VGK"
+  ],
+  "jack hughes": [
+   "8481559",
+   "NJ"
+  ],
+  "jack mcbain": [
+   "8480855",
+   "UTA"
+  ],
+  "jack quinn": [
+   "8482097",
+   "BUF"
+  ],
+  "jack roslovic": [
+   "8478458",
+   "TOR"
+  ],
+  "jack st. ivany": [
+   "8481030",
+   "WSH"
+  ],
+  "jack williams": [
+   "8485469",
+   "CBJ"
+  ],
+  "jackson blake": [
+   "8482809",
+   "CAR"
+  ],
+  "jackson lacombe": [
+   "8481605",
+   "ANA"
+  ],
+  "jacob bernard-docker": [
+   "8480879",
+   "DET"
+  ],
+  "jacob markstrom": [
+   "8474593",
+   "FLA"
+  ],
+  "jacob melanson": [
+   "8482874",
+   "SEA"
+  ],
+  "jacob quillan": [
+   "8484901",
+   "VAN"
+  ],
+  "jacob trouba": [
+   "8476885",
+   "SJ"
+  ],
+  "jaden schwartz": [
+   "8475768",
+   "COL"
+  ],
+  "jagger firkus": [
+   "8483442",
+   "SEA"
+  ],
+  "jake christiansen": [
+   "8481161",
+   "CBJ"
+  ],
+  "jake debrusk": [
+   "8478498",
+   "VAN"
+  ],
+  "jake evans": [
+   "8478133",
+   "MTL"
+  ],
+  "jake guentzel": [
+   "8477404",
+   "TB"
+  ],
+  "jake mccabe": [
+   "8476931",
+   "TOR"
+  ],
+  "jake middleton": [
+   "8478136",
+   "CGY"
+  ],
+  "jake neighbours": [
+   "8482089",
+   "STL"
+  ],
+  "jake o'brien": [
+   "8485383",
+   "SEA"
+  ],
+  "jake oettinger": [
+   "8479979",
+   "DAL"
+  ],
+  "jake sanderson": [
+   "8482105",
+   "OTT"
+  ],
+  "jake walman": [
+   "8478013",
+   "EDM"
+  ],
+  "jakob chychrun": [
+   "8479345",
+   "WSH"
+  ],
+  "jakub dobes": [
+   "8482487",
+   "MTL"
+  ],
+  "jalen chatfield": [
+   "8478970",
+   "CAR"
+  ],
+  "james hagens": [
+   "8485395",
+   "BOS"
+  ],
+  "jamie benn": [
+   "8473994",
+   "DAL"
+  ],
+  "jamie drysdale": [
+   "8482142",
+   "PHI"
+  ],
+  "jamie oleksiak": [
+   "8476467",
+   "VAN"
+  ],
+  "jani nyman": [
+   "8483497",
+   "SEA"
+  ],
+  "jared mccann": [
+   "8477955",
+   "SEA"
+  ],
+  "jared spurgeon": [
+   "8474716",
+   "MIN"
+  ],
+  "jaroslav chmelar": [
+   "8482877",
+   "NYR"
+  ],
+  "jason dickinson": [
+   "8477450",
+   "EDM"
+  ],
+  "jason robertson": [
+   "8480027",
+   "DAL"
+  ],
+  "jason zucker": [
+   "8475722",
+   "BUF"
+  ],
+  "jayden struble": [
+   "8481593",
+   "NSH"
+  ],
+  "jean-gabriel pageau": [
+   "8476419",
+   "NYI"
+  ],
+  "jeff malott": [
+   "8482408",
+   "ANA"
+  ],
+  "jeffrey viel": [
+   "8479705",
+   "TB"
+  ],
+  "jeremy lauzon": [
+   "8478468",
+   "VGK"
+  ],
+  "jeremy swayman": [
+   "8480280",
+   "BOS"
+  ],
+  "jesper boqvist": [
+   "8480003",
+   "NJ"
+  ],
+  "jesper bratt": [
+   "8479407",
+   "NJ"
+  ],
+  "jesper wallstedt": [
+   "8482661",
+   "MIN"
+  ],
+  "jesperi kotkaniemi": [
+   "8480829",
+   "CAR"
+  ],
+  "jet greaves": [
+   "8482982",
+   "CBJ"
+  ],
+  "jimmy snuggerud": [
+   "8483516",
+   "STL"
+  ],
+  "jiri kulich": [
+   "8483468",
+   "BUF"
+  ],
+  "jj peterka": [
+   "8482175",
+   "BOS"
+  ],
+  "joel armia": [
+   "8476469",
+   "LA"
+  ],
+  "joel edmundson": [
+   "8476441",
+   "LA"
+  ],
+  "joel eriksson ek": [
+   "8478493",
+   "MIN"
+  ],
+  "joel farabee": [
+   "8480797",
+   "CGY"
+  ],
+  "joel hanley": [
+   "8477810",
+   "CGY"
+  ],
+  "joel hofer": [
+   "8480981",
+   "STL"
+  ],
+  "joel kiviranta": [
+   "8481641",
+   "DAL"
+  ],
+  "john carlson": [
+   "8474590",
+   "TB"
+  ],
+  "john marino": [
+   "8478507",
+   "UTA"
+  ],
+  "john tavares": [
+   "8475166",
+   "TOR"
+  ],
+  "johnathan kovacevic": [
+   "8480192",
+   "NJ"
+  ],
+  "jonah gadjovich": [
+   "8479981",
+   "FLA"
+  ],
+  "jonas brodin": [
+   "8476463",
+   "MIN"
+  ],
+  "jonas siegenthaler": [
+   "8478399",
+   "NJ"
+  ],
+  "jonatan berggren": [
+   "8481013",
+   "STL"
+  ],
+  "jonathan aspirot": [
+   "8481219",
+   "BOS"
+  ],
+  "jonathan castagna": [
+   "8484154",
+   "CGY"
+  ],
+  "jonathan huberdeau": [
+   "8476456",
+   "CGY"
+  ],
+  "jonathan lekkerimäki": [
+   "8483476",
+   "VAN"
+  ],
+  "jonathan marchessault": [
+   "8476539",
+   "NSH"
+  ],
+  "joonas korpisalo": [
+   "8476914",
+   "NYR"
+  ],
+  "jordan eberle": [
+   "8474586",
+   "SEA"
+  ],
+  "jordan greenway": [
+   "8478413",
+   "CHI"
+  ],
+  "jordan kyrou": [
+   "8479385",
+   "WSH"
+  ],
+  "jordan martinook": [
+   "8476921",
+   "CAR"
+  ],
+  "jordan spence": [
+   "8481606",
+   "OTT"
+  ],
+  "jordan staal": [
+   "8473533",
+   "CAR"
+  ],
+  "joseph veleno": [
+   "8480813",
+   "NYR"
+  ],
+  "josh anderson": [
+   "8476981",
+   "MTL"
+  ],
+  "josh doan": [
+   "8482659",
+   "BUF"
+  ],
+  "josh mahura": [
+   "8479372",
+   "SEA"
+  ],
+  "josh manson": [
+   "8476312",
+   "COL"
+  ],
+  "josh morrissey": [
+   "8477504",
+   "WPG"
+  ],
+  "josh norris": [
+   "8480064",
+   "BUF"
+  ],
+  "judd caulfield": [
+   "8481538",
+   "ANA"
+  ],
+  "juraj slafkovský": [
+   "8483515",
+   "MTL"
+  ],
+  "justin barron": [
+   "8482111",
+   "STL"
+  ],
+  "justin brazeau": [
+   "8479638",
+   "PIT"
+  ],
+  "justin danforth": [
+   "8479941",
+   "BUF"
+  ],
+  "justin faulk": [
+   "8475753",
+   "DET"
+  ],
+  "justin holl": [
+   "8475718",
+   "WSH"
+  ],
+  "justin hryckowian": [
+   "8484829",
+   "DAL"
+  ],
+  "justin sourdif": [
+   "8482088",
+   "WSH"
+  ],
+  "juuse saros": [
+   "8477424",
+   "NSH"
+  ],
+  "juuso välimäki": [
+   "8479976",
+   "CAR"
+  ],
+  "k'andre miller": [
+   "8480817",
+   "CAR"
+  ],
+  "kaapo kakko": [
+   "8481554",
+   "SEA"
+  ],
+  "kaedan korczak": [
+   "8481527",
+   "PIT"
+  ],
+  "kaiden guhle": [
+   "8482087",
+   "MTL"
+  ],
+  "kailer yamamoto": [
+   "8479977",
+   "UTA"
+  ],
+  "karel vejmelka": [
+   "8478872",
+   "UTA"
+  ],
+  "kasperi kapanen": [
+   "8477953",
+   "EDM"
+  ],
+  "keegan kolesar": [
+   "8478434",
+   "DET"
+  ],
+  "kent johnson": [
+   "8482660",
+   "CBJ"
+  ],
+  "kevin bahl": [
+   "8480860",
+   "CGY"
+  ],
+  "kevin fiala": [
+   "8477942",
+   "LA"
+  ],
+  "kevin korchinski": [
+   "8483466",
+   "CHI"
+  ],
+  "kevin stenlund": [
+   "8478831",
+   "UTA"
+  ],
+  "kiefer sherwood": [
+   "8480748",
+   "SJ"
+  ],
+  "kirby dach": [
+   "8481523",
+   "MTL"
+  ],
+  "kirill kaprizov": [
+   "8478864",
+   "MIN"
+  ],
+  "kirill marchenko": [
+   "8480893",
+   "TOR"
+  ],
+  "konsta helenius": [
+   "8484797",
+   "BUF"
+  ],
+  "kris letang": [
+   "8471724",
+   "PIT"
+  ],
+  "kyle burroughs": [
+   "8477335",
+   "DAL"
+  ],
+  "kyle capobianco": [
+   "8478476",
+   "DAL"
+  ],
+  "kyle connor": [
+   "8478398",
+   "WPG"
+  ],
+  "kyle palmieri": [
+   "8475151",
+   "NYI"
+  ],
+  "lane hutson": [
+   "8483457",
+   "MTL"
+  ],
+  "lars eller": [
+   "8474189",
+   "FLA"
+  ],
+  "lawson crouse": [
+   "8478474",
+   "UTA"
+  ],
+  "leevi merilainen": [
+   "8482447",
+   "VAN"
+  ],
+  "lenni hameenaho": [
+   "8484177",
+   "NJ"
+  ],
+  "leo carlsson": [
+   "8484153",
+   "ANA"
+  ],
+  "leon draisaitl": [
+   "8477934",
+   "EDM"
+  ],
+  "liam o'brien": [
+   "8477070",
+   "UTA"
+  ],
+  "liam ohgren": [
+   "8483499",
+   "VAN"
+  ],
+  "lian bichsel": [
+   "8483425",
+   "DAL"
+  ],
+  "linus karlsson": [
+   "8481024",
+   "VAN"
+  ],
+  "linus ullmark": [
+   "8476999",
+   "OTT"
+  ],
+  "logan cooley": [
+   "8483431",
+   "UTA"
+  ],
+  "logan mailloux": [
+   "8482733",
+   "STL"
+  ],
+  "logan o'connor": [
+   "8481186",
+   "COL"
+  ],
+  "logan stankoven": [
+   "8482702",
+   "CAR"
+  ],
+  "logan stanley": [
+   "8479378",
+   "NYI"
+  ],
+  "logan thompson": [
+   "8480313",
+   "WSH"
+  ],
+  "louis crevier": [
+   "8481806",
+   "BUF"
+  ],
+  "luca del bel belluz": [
+   "8483432",
+   "CBJ"
+  ],
+  "lucas raymond": [
+   "8482078",
+   "DET"
+  ],
+  "lukas dostal": [
+   "8480843",
+   "ANA"
+  ],
+  "luke evangelista": [
+   "8482146",
+   "NJ"
+  ],
+  "luke glendening": [
+   "8476822",
+   "NYR"
+  ],
+  "luke hughes": [
+   "8482684",
+   "NJ"
+  ],
+  "luke schenn": [
+   "8474568",
+   "VAN"
+  ],
+  "mackenzie weegar": [
+   "8477346",
+   "UTA"
+  ],
+  "mackie samoskevich": [
+   "8482713",
+   "SEA"
+  ],
+  "macklin celebrini": [
+   "8484801",
+   "SJ"
+  ],
+  "marat khusnutdinov": [
+   "8482177",
+   "BOS"
+  ],
+  "marc del gaizo": [
+   "8481743",
+   "NYR"
+  ],
+  "marc gatcomb": [
+   "8483553",
+   "VGK"
+  ],
+  "marco kasper": [
+   "8483464",
+   "DET"
+  ],
+  "marco rossi": [
+   "8482079",
+   "VAN"
+  ],
+  "marcus foligno": [
+   "8475220",
+   "MIN"
+  ],
+  "marcus pettersson": [
+   "8477969",
+   "NYR"
+  ],
+  "mario ferraro": [
+   "8479983",
+   "WPG"
+  ],
+  "mark jankowski": [
+   "8476873",
+   "CAR"
+  ],
+  "mark kastelic": [
+   "8480355",
+   "BOS"
+  ],
+  "mark scheifele": [
+   "8476460",
+   "WPG"
+  ],
+  "mark stone": [
+   "8475913",
+   "VGK"
+  ],
+  "marshall rifai": [
+   "8483546",
+   "TOR"
+  ],
+  "martin fehérváry": [
+   "8480796",
+   "WSH"
+  ],
+  "martin necas": [
+   "8480039",
+   "COL"
+  ],
+  "martin pospisil": [
+   "8481028",
+   "CGY"
+  ],
+  "mason appleton": [
+   "8478891",
+   "DET"
+  ],
+  "mason lohrei": [
+   "8482511",
+   "BOS"
+  ],
+  "mason marchment": [
+   "8478975",
+   "SJ"
+  ],
+  "mason mctavish": [
+   "8482745",
+   "STL"
+  ],
+  "mathew barzal": [
+   "8478445",
+   "NYI"
+  ],
+  "mathieu joseph": [
+   "8478472",
+   "EDM"
+  ],
+  "mathieu olivier": [
+   "8479671",
+   "CBJ"
+  ],
+  "matias maccelli": [
+   "8481711",
+   "NYI"
+  ],
+  "mats zuccarello": [
+   "8475692",
+   "LA"
+  ],
+  "matt boldy": [
+   "8481557",
+   "MIN"
+  ],
+  "matt coronato": [
+   "8482679",
+   "CGY"
+  ],
+  "matt duchene": [
+   "8475168",
+   "DAL"
+  ],
+  "matt grzelcyk": [
+   "8476891",
+   "BUF"
+  ],
+  "matt kiersted": [
+   "8482641",
+   "MIN"
+  ],
+  "matt rempe": [
+   "8482460",
+   "NYR"
+  ],
+  "matt roy": [
+   "8478911",
+   "WSH"
+  ],
+  "matt savoie": [
+   "8483512",
+   "EDM"
+  ],
+  "matthew kessel": [
+   "8482516",
+   "NYI"
+  ],
+  "matthew knies": [
+   "8482720",
+   "CBJ"
+  ],
+  "matthew poitras": [
+   "8483505",
+   "BOS"
+  ],
+  "matthew robertson": [
+   "8481525",
+   "NYR"
+  ],
+  "matthew schaefer": [
+   "8485366",
+   "NYI"
+  ],
+  "matthew tkachuk": [
+   "8479314",
+   "FLA"
+  ],
+  "matthew wood": [
+   "8484241",
+   "SEA"
+  ],
+  "mattias ekholm": [
+   "8475218",
+   "EDM"
+  ],
+  "mattias janmark": [
+   "8477406",
+   "EDM"
+  ],
+  "mattias samuelsson": [
+   "8480807",
+   "BUF"
+  ],
+  "matty beniers": [
+   "8482665",
+   "SEA"
+  ],
+  "matvei gridin": [
+   "8484860",
+   "CGY"
+  ],
+  "matvei michkov": [
+   "8484387",
+   "PHI"
+  ],
+  "maveric lamoureux": [
+   "8483472",
+   "UTA"
+  ],
+  "mavrik bourque": [
+   "8482145",
+   "NSH"
+  ],
+  "max crozier": [
+   "8481719",
+   "TB"
+  ],
+  "max jones": [
+   "8479368",
+   "EDM"
+  ],
+  "max sasson": [
+   "8484136",
+   "VAN"
+  ],
+  "maxim shabanov": [
+   "8485702",
+   "MIN"
+  ],
+  "maxim tsyplakov": [
+   "8484958",
+   "CGY"
+  ],
+  "michael amadio": [
+   "8478020",
+   "OTT"
+  ],
+  "michael brandsegg-nygård": [
+   "8484794",
+   "DET"
+  ],
+  "michael bunting": [
+   "8478047",
+   "PHI"
+  ],
+  "michael carcone": [
+   "8479619",
+   "UTA"
+  ],
+  "michael eyssimont": [
+   "8479591",
+   "BOS"
+  ],
+  "michael kesselring": [
+   "8480891",
+   "SJ"
+  ],
+  "michael mccarron": [
+   "8477446",
+   "MIN"
+  ],
+  "michael misa": [
+   "8485402",
+   "SJ"
+  ],
+  "michael rasmussen": [
+   "8479992",
+   "DET"
+  ],
+  "mika zibanejad": [
+   "8476459",
+   "NYR"
+  ],
+  "mikael backlund": [
+   "8474150",
+   "CGY"
+  ],
+  "mikael granlund": [
+   "8475798",
+   "ANA"
+  ],
+  "mike matheson": [
+   "8476875",
+   "MTL"
+  ],
+  "mike reilly": [
+   "8476422",
+   "COL"
+  ],
+  "mikey anderson": [
+   "8479998",
+   "LA"
+  ],
+  "mikhail sergachev": [
+   "8479410",
+   "UTA"
+  ],
+  "mikko rantanen": [
+   "8478420",
+   "DAL"
+  ],
+  "miles wood": [
+   "8477425",
+   "TOR"
+  ],
+  "miro heiskanen": [
+   "8480036",
+   "DAL"
+  ],
+  "mitch marner": [
+   "8478483",
+   "VGK"
+  ],
+  "mitchell chaffee": [
+   "8482070",
+   "NYI"
+  ],
+  "morgan barron": [
+   "8480289",
+   "WPG"
+  ],
+  "morgan frost": [
+   "8480028",
+   "CGY"
+  ],
+  "morgan geekie": [
+   "8479987",
+   "BOS"
+  ],
+  "morgan rielly": [
+   "8476853",
+   "TOR"
+  ],
+  "moritz seider": [
+   "8481542",
+   "DET"
+  ],
+  "nate schmidt": [
+   "8477220",
+   "UTA"
+  ],
+  "nathan mackinnon": [
+   "8477492",
+   "COL"
+  ],
+  "nathan walker": [
+   "8477573",
+   "STL"
+  ],
+  "nazem kadri": [
+   "8475172",
+   "COL"
+  ],
+  "neal pionk": [
+   "8480145",
+   "WPG"
+  ],
+  "nic dowd": [
+   "8475343",
+   "VGK"
+  ],
+  "nick blankenburg": [
+   "8483565",
+   "TOR"
+  ],
+  "nick cousins": [
+   "8476393",
+   "OTT"
+  ],
+  "nick desimone": [
+   "8480084",
+   "UTA"
+  ],
+  "nick foligno": [
+   "8473422",
+   "MIN"
+  ],
+  "nick paul": [
+   "8477426",
+   "TOR"
+  ],
+  "nick perbix": [
+   "8480246",
+   "NSH"
+  ],
+  "nick robertson": [
+   "8481582",
+   "PIT"
+  ],
+  "nick schmaltz": [
+   "8477951",
+   "UTA"
+  ],
+  "nick seeler": [
+   "8476372",
+   "PHI"
+  ],
+  "nick suzuki": [
+   "8480018",
+   "MTL"
+  ],
+  "nico hischier": [
+   "8480002",
+   "NJ"
+  ],
+  "nico sturm": [
+   "8481477",
+   "MIN"
+  ],
+  "nicolas deslauriers": [
+   "8475235",
+   "CAR"
+  ],
+  "nicolas hague": [
+   "8479980",
+   "NSH"
+  ],
+  "nicolas roy": [
+   "8478462",
+   "COL"
+  ],
+  "nikita grebenkin": [
+   "8483733",
+   "PHI"
+  ],
+  "nikita kucherov": [
+   "8476453",
+   "TB"
+  ],
+  "nikita nesterenko": [
+   "8481754",
+   "ANA"
+  ],
+  "nikita zadorov": [
+   "8477507",
+   "BOS"
+  ],
+  "niko mikkola": [
+   "8478859",
+   "FLA"
+  ],
+  "nikolaj ehlers": [
+   "8477940",
+   "CAR"
+  ],
+  "nikolas matinpalo": [
+   "8484321",
+   "OTT"
+  ],
+  "nils hoglander": [
+   "8481535",
+   "NSH"
+  ],
+  "nils lundkvist": [
+   "8480878",
+   "DAL"
+  ],
+  "nino niederreiter": [
+   "8475799",
+   "WPG"
+  ],
+  "noah cates": [
+   "8480220",
+   "PHI"
+  ],
+  "noah dobson": [
+   "8480865",
+   "MTL"
+  ],
+  "noah hanifin": [
+   "8478396",
+   "VGK"
+  ],
+  "noah juulsen": [
+   "8478454",
+   "COL"
+  ],
+  "noah laba": [
+   "8483690",
+   "NYR"
+  ],
+  "noah ostlund": [
+   "8483500",
+   "BUF"
+  ],
+  "noah warren": [
+   "8483521",
+   "ANA"
+  ],
+  "noel acciari": [
+   "8478569",
+   "PHI"
+  ],
+  "nolan allan": [
+   "8482700",
+   "SJ"
+  ],
+  "olen zellweger": [
+   "8482803",
+   "BUF"
+  ],
+  "oliver bjorkstrand": [
+   "8477416",
+   "NYR"
+  ],
+  "oliver bonk": [
+   "8484148",
+   "PHI"
+  ],
+  "oliver ekman-larsson": [
+   "8475171",
+   "TOR"
+  ],
+  "oliver kapanen": [
+   "8482775",
+   "MTL"
+  ],
+  "oliver moore": [
+   "8484197",
+   "CHI"
+  ],
+  "olli maatta": [
+   "8476874",
+   "MIN"
+  ],
+  "ondrej palat": [
+   "8476292",
+   "NYI"
+  ],
+  "oskar bäck": [
+   "8480840",
+   "DAL"
+  ],
+  "owen beck": [
+   "8483424",
+   "MTL"
+  ],
+  "owen michaels": [
+   "8486161",
+   "EDM"
+  ],
+  "owen power": [
+   "8482671",
+   "BUF"
+  ],
+  "owen tippett": [
+   "8480015",
+   "PHI"
+  ],
+  "parker kelly": [
+   "8480448",
+   "COL"
+  ],
+  "parker wotherspoon": [
+   "8478450",
+   "VGK"
+  ],
+  "patrick kane": [
+   "8474141",
+   "CHI"
+  ],
+  "paul cotter": [
+   "8481032",
+   "VAN"
+  ],
+  "pavel buchnevich": [
+   "8477402",
+   "STL"
+  ],
+  "pavel dorofeyev": [
+   "8481604",
+   "NYR"
+  ],
+  "pavel mintyukov": [
+   "8483490",
+   "ANA"
+  ],
+  "pavel zacha": [
+   "8478401",
+   "BOS"
+  ],
+  "peyton krebs": [
+   "8481522",
+   "BUF"
+  ],
+  "philip broberg": [
+   "8481598",
+   "STL"
+  ],
+  "philipp grubauer": [
+   "8475831",
+   "SEA"
+  ],
+  "phillip danault": [
+   "8476479",
+   "MTL"
+  ],
+  "pierre-luc dubois": [
+   "8479400",
+   "WSH"
+  ],
+  "pius suter": [
+   "8480459",
+   "STL"
+  ],
+  "pontus holmberg": [
+   "8480995",
+   "TB"
+  ],
+  "porter martone": [
+   "8485406",
+   "PHI"
+  ],
+  "pyotr kochetkov": [
+   "8481611",
+   "CAR"
+  ],
+  "quinn hughes": [
+   "8480800",
+   "MIN"
+  ],
+  "quinton byfield": [
+   "8482124",
+   "LA"
+  ],
+  "radek faksa": [
+   "8476889",
+   "DAL"
+  ],
+  "radko gudas": [
+   "8475462",
+   "FLA"
+  ],
+  "raphael lavoie": [
+   "8481534",
+   "VGK"
+  ],
+  "rasmus andersson": [
+   "8478397",
+   "VGK"
+  ],
+  "rasmus dahlin": [
+   "8480839",
+   "BUF"
+  ],
+  "rasmus ristolainen": [
+   "8477499",
+   "PHI"
+  ],
+  "rasmus sandin": [
+   "8480873",
+   "WSH"
+  ],
+  "reid schaefer": [
+   "8483513",
+   "NSH"
+  ],
+  "rickard rakell": [
+   "8476483",
+   "PIT"
+  ],
+  "ridly greig": [
+   "8482092",
+   "OTT"
+  ],
+  "robert thomas": [
+   "8480023",
+   "STL"
+  ],
+  "roger mcqueen": [
+   "8485400",
+   "ANA"
+  ],
+  "roman josi": [
+   "8474600",
+   "NSH"
+  ],
+  "roman kantserov": [
+   "8484390",
+   "CHI"
+  ],
+  "roope hintz": [
+   "8478449",
+   "DAL"
+  ],
+  "ross colton": [
+   "8479525",
+   "NSH"
+  ],
+  "ross johnston": [
+   "8477527",
+   "STL"
+  ],
+  "rutger mcgroarty": [
+   "8483487",
+   "PIT"
+  ],
+  "ryan donato": [
+   "8477987",
+   "CHI"
+  ],
+  "ryan greene": [
+   "8483450",
+   "CHI"
+  ],
+  "ryan hartman": [
+   "8477451",
+   "MIN"
+  ],
+  "ryan leonard": [
+   "8484186",
+   "WSH"
+  ],
+  "ryan lindgren": [
+   "8479324",
+   "SEA"
+  ],
+  "ryan lomberg": [
+   "8479066",
+   "CBJ"
+  ],
+  "ryan mcdonagh": [
+   "8474151",
+   "TB"
+  ],
+  "ryan mcleod": [
+   "8480802",
+   "BUF"
+  ],
+  "ryan nugent-hopkins": [
+   "8476454",
+   "EDM"
+  ],
+  "ryan o'reilly": [
+   "8475158",
+   "NSH"
+  ],
+  "ryan poehling": [
+   "8480068",
+   "ANA"
+  ],
+  "ryan pulock": [
+   "8477506",
+   "NYI"
+  ],
+  "ryan shea": [
+   "8478854",
+   "EDM"
+  ],
+  "ryan strome": [
+   "8476458",
+   "CGY"
+  ],
+  "ryan tverberg": [
+   "8482525",
+   "TOR"
+  ],
+  "ryan winterton": [
+   "8482751",
+   "SEA"
+  ],
+  "ryker evans": [
+   "8482858",
+   "SEA"
+  ],
+  "sam bennett": [
+   "8477935",
+   "FLA"
+  ],
+  "sam carrick": [
+   "8475842",
+   "BUF"
+  ],
+  "sam colangelo": [
+   "8482118",
+   "ANA"
+  ],
+  "sam dickinson": [
+   "8484806",
+   "SJ"
+  ],
+  "sam malinski": [
+   "8484258",
+   "COL"
+  ],
+  "sam o'reilly": [
+   "8484770",
+   "TB"
+  ],
+  "sam reinhart": [
+   "8477933",
+   "FLA"
+  ],
+  "sam rinzel": [
+   "8483506",
+   "CHI"
+  ],
+  "sam steel": [
+   "8479351",
+   "DAL"
+  ],
+  "samuel girard": [
+   "8479398",
+   "PIT"
+  ],
+  "samuel helenius": [
+   "8482726",
+   "LA"
+  ],
+  "sandis vilmanis": [
+   "8483771",
+   "FLA"
+  ],
+  "scott laughton": [
+   "8476872",
+   "LA"
+  ],
+  "scott mayfield": [
+   "8476429",
+   "NYI"
+  ],
+  "scott morrow": [
+   "8482666",
+   "NYR"
+  ],
+  "scott sabourin": [
+   "8477149",
+   "TB"
+  ],
+  "scott wedgewood": [
+   "8475809",
+   "COL"
+  ],
+  "sean couturier": [
+   "8476461",
+   "PHI"
+  ],
+  "sean durzi": [
+   "8480434",
+   "NYR"
+  ],
+  "sean kuraly": [
+   "8476374",
+   "BOS"
+  ],
+  "sean monahan": [
+   "8477497",
+   "CBJ"
+  ],
+  "sean walker": [
+   "8480336",
+   "CAR"
+  ],
+  "sebastian aho": [
+   "8478427",
+   "CAR"
+  ],
+  "sergei bobrovsky": [
+   "8475683",
+   "TOR"
+  ],
+  "seth jarvis": [
+   "8482093",
+   "CAR"
+  ],
+  "seth jones": [
+   "8477495",
+   "FLA"
+  ],
+  "shakir mukhamadullin": [
+   "8482166",
+   "EDM"
+  ],
+  "shane pinto": [
+   "8481596",
+   "OTT"
+  ],
+  "shane wright": [
+   "8483524",
+   "NSH"
+  ],
+  "shayne gostisbehere": [
+   "8476906",
+   "CAR"
+  ],
+  "shea theodore": [
+   "8477447",
+   "VGK"
+  ],
+  "sheldon dries": [
+   "8480326",
+   "DET"
+  ],
+  "sidney crosby": [
+   "8471675",
+   "PIT"
+  ],
+  "simon benoit": [
+   "8481122",
+   "PHI"
+  ],
+  "simon holmstrom": [
+   "8481601",
+   "NYI"
+  ],
+  "simon nemec": [
+   "8483495",
+   "CGY"
+  ],
+  "spencer knight": [
+   "8481519",
+   "CHI"
+  ],
+  "spencer stastney": [
+   "8481056",
+   "PIT"
+  ],
+  "stefan noesen": [
+   "8476474",
+   "NJ"
+  ],
+  "stephen halliday": [
+   "8483676",
+   "OTT"
+  ],
+  "steven lorentz": [
+   "8478904",
+   "CBJ"
+  ],
+  "steven stamkos": [
+   "8474564",
+   "NSH"
+  ],
+  "stuart skinner": [
+   "8479973",
+   "WPG"
+  ],
+  "t.j. hughes": [
+   "8486171",
+   "COL"
+  ],
+  "tage thompson": [
+   "8479420",
+   "BUF"
+  ],
+  "tanner jeannot": [
+   "8479661",
+   "BOS"
+  ],
+  "taylor hall": [
+   "8475791",
+   "CAR"
+  ],
+  "teddy blueger": [
+   "8476927",
+   "TOR"
+  ],
+  "teuvo teravainen": [
+   "8476882",
+   "CHI"
+  ],
+  "thomas chabot": [
+   "8478469",
+   "OTT"
+  ],
+  "thomas harley": [
+   "8481581",
+   "DAL"
+  ],
+  "tim stützle": [
+   "8482116",
+   "OTT"
+  ],
+  "tim washe": [
+   "8485512",
+   "ANA"
+  ],
+  "timo meier": [
+   "8478414",
+   "NJ"
+  ],
+  "timothy liljegren": [
+   "8480043",
+   "WSH"
+  ],
+  "tom willander": [
+   "8484240",
+   "VAN"
+  ],
+  "tom wilson": [
+   "8476880",
+   "WSH"
+  ],
+  "tomas hertl": [
+   "8476881",
+   "VGK"
+  ],
+  "tommy novak": [
+   "8478438",
+   "PIT"
+  ],
+  "tony deangelo": [
+   "8477950",
+   "NYI"
+  ],
+  "travis konecny": [
+   "8478439",
+   "PHI"
+  ],
+  "travis mitchell": [
+   "8484262",
+   "ANA"
+  ],
+  "travis sanheim": [
+   "8477948",
+   "PHI"
+  ],
+  "trent frederic": [
+   "8479365",
+   "EDM"
+  ],
+  "trevor connelly": [
+   "8484803",
+   "VGK"
+  ],
+  "trevor moore": [
+   "8479675",
+   "LA"
+  ],
+  "trevor van riemsdyk": [
+   "8477845",
+   "PIT"
+  ],
+  "trevor zegras": [
+   "8481533",
+   "PHI"
+  ],
+  "trey taylor": [
+   "8485468",
+   "DAL"
+  ],
+  "tristan luneau": [
+   "8483482",
+   "ANA"
+  ],
+  "troy stecher": [
+   "8479442",
+   "TOR"
+  ],
+  "troy terry": [
+   "8478873",
+   "ANA"
+  ],
+  "ty dellandrea": [
+   "8480848",
+   "SJ"
+  ],
+  "ty emberson": [
+   "8480834",
+   "EDM"
+  ],
+  "tye kartye": [
+   "8481789",
+   "NYR"
+  ],
+  "tyler bertuzzi": [
+   "8477479",
+   "CHI"
+  ],
+  "tyler kleven": [
+   "8482095",
+   "OTT"
+  ],
+  "tyler myers": [
+   "8474574",
+   "DAL"
+  ],
+  "tyler seguin": [
+   "8475794",
+   "DAL"
+  ],
+  "tyler toffoli": [
+   "8475726",
+   "SJ"
+  ],
+  "tyler tucker": [
+   "8481006",
+   "STL"
+  ],
+  "tyrel bauer": [
+   "8482459",
+   "WPG"
+  ],
+  "tyson foerster": [
+   "8482159",
+   "PHI"
+  ],
+  "tyson hinds": [
+   "8482731",
+   "ANA"
+  ],
+  "tyson kozak": [
+   "8482896",
+   "BUF"
+  ],
+  "uvis balinskis": [
+   "8484304",
+   "FLA"
+  ],
+  "valeri nichushkin": [
+   "8477501",
+   "CBJ"
+  ],
+  "vasily podkolzin": [
+   "8481617",
+   "EDM"
+  ],
+  "victor eklund": [
+   "8485388",
+   "NYI"
+  ],
+  "victor hedman": [
+   "8475167",
+   "TB"
+  ],
+  "victor olofsson": [
+   "8478109",
+   "VGK"
+  ],
+  "viggo björck": [
+   "8486025",
+   "WPG"
+  ],
+  "viktor arvidsson": [
+   "8478042",
+   "DET"
+  ],
+  "ville koivunen": [
+   "8482758",
+   "PIT"
+  ],
+  "ville ottavainen": [
+   "8482866",
+   "SEA"
+  ],
+  "vince dunn": [
+   "8478407",
+   "SEA"
+  ],
+  "vincent desharnais": [
+   "8479576",
+   "WSH"
+  ],
+  "vincent trocheck": [
+   "8476389",
+   "UTA"
+  ],
+  "vitali pinchuk": [
+   "8486189",
+   "NSH"
+  ],
+  "vladislav gavrikov": [
+   "8478882",
+   "NYR"
+  ],
+  "vladislav namestnikov": [
+   "8476480",
+   "WPG"
+  ],
+  "warren foegele": [
+   "8477998",
+   "OTT"
+  ],
+  "will borgen": [
+   "8478840",
+   "BOS"
+  ],
+  "will cuylle": [
+   "8482157",
+   "NYR"
+  ],
+  "will smith": [
+   "8484227",
+   "SJ"
+  ],
+  "william carrier": [
+   "8477478",
+   "CAR"
+  ],
+  "william eklund": [
+   "8482667",
+   "OTT"
+  ],
+  "william karlsson": [
+   "8476448",
+   "VGK"
+  ],
+  "william nylander": [
+   "8477939",
+   "TOR"
+  ],
+  "william trudeau": [
+   "8482806",
+   "NSH"
+  ],
+  "william wallinder": [
+   "8482171",
+   "DET"
+  ],
+  "wyatt johnston": [
+   "8482740",
+   "DAL"
+  ],
+  "wyatt kaiser": [
+   "8482176",
+   "CHI"
+  ],
+  "yakov trenin": [
+   "8478508",
+   "MIN"
+  ],
+  "yan kuznetsov": [
+   "8482165",
+   "CGY"
+  ],
+  "yanni gourde": [
+   "8476826",
+   "TB"
+  ],
+  "yaroslav askarov": [
+   "8482137",
+   "SJ"
+  ],
+  "yegor sharangovich": [
+   "8481068",
+   "CGY"
+  ],
+  "zac jones": [
+   "8481708",
+   "UTA"
+  ],
+  "zach benson": [
+   "8484145",
+   "BUF"
+  ],
+  "zach bogosian": [
+   "8474567",
+   "MIN"
+  ],
+  "zach hyman": [
+   "8475786",
+   "EDM"
+  ],
+  "zach metsa": [
+   "8484305",
+   "BUF"
+  ],
+  "zach werenski": [
+   "8478460",
+   "CBJ"
+  ],
+  "zach whitecloud": [
+   "8480727",
+   "CGY"
+  ],
+  "zachary bolduc": [
+   "8482737",
+   "MTL"
+  ],
+  "zachary l'heureux": [
+   "8482742",
+   "COL"
+  ],
+  "zack macewen": [
+   "8479772",
+   "TOR"
+  ],
+  "zack ostapchuk": [
+   "8482859",
+   "SJ"
+  ],
+  "zayne parekh": [
+   "8484768",
+   "CGY"
+  ],
+  "zeev buium": [
+   "8484798",
+   "VAN"
+  ],
+  "zemgus girgensons": [
+   "8476878",
+   "TB"
+  ]
+ }
+}
