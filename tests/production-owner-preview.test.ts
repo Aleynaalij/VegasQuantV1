@@ -3,6 +3,7 @@ import { test } from "node:test";
 import {
   productionOwnerConfig,
   productionOwnerResponse,
+  verifyProductionMember,
   verifyProductionOwner,
 } from "../src/lib/production-owner-preview";
 import { createOwnerPreviewSelection } from "../src/lib/production-owner-client";
@@ -55,7 +56,6 @@ test("production preview is dark by default and rejects all unreviewed targets/m
     { HOME2_PRODUCTION: undefined },
     { HOME2_PRODUCTION: "off" },
     { HOME2_PRODUCTION: "true" },
-    { HOME2_PRODUCTION: "optin" },
     { HOME2_PRODUCTION: "default" },
     { VERCEL_ENV: "preview" },
     { VERCEL_ENV: undefined },
@@ -217,12 +217,12 @@ test("cross-origin/GET/noncanonical-host requests reject; cookies alone are igno
     env,
     verified(),
   );
-  assert.deepEqual(await r.json(), { enabled: false });
+  assert.deepEqual(await r.json(), { enabled: false, eligible: false });
 });
-test("selection response is private, contains only a boolean, and sets no cookie", async () => {
+test("selection response is private, contains only two booleans, and sets no cookie", async () => {
   const r = await productionOwnerResponse(request(), env, verified());
   assert.equal(r.status, 200);
-  assert.deepEqual(await r.json(), { enabled: true });
+  assert.deepEqual(await r.json(), { enabled: true, eligible: true });
   assert.equal(r.headers.get("cache-control"), "private, no-store");
   assert.match(r.headers.get("vary")!, /Authorization/);
   assert.equal(r.headers.has("set-cookie"), false);
@@ -297,4 +297,101 @@ test("current owner approval mounts 2.0 and a later failed recheck restores clas
   await c.check("current-owner", false);
   assert.deepEqual(rendered, [false, true, false]);
   c.dispose();
+});
+
+// Opt-in (Mike: paying members only, remembered per device). Owners mode never asks membership.
+const optin = { ...env, HOME2_PRODUCTION: "optin" };
+const member = "33333333-3333-4333-8333-333333333333";
+const memberToken = (extra: Record<string, unknown> = {}) =>
+  token({ sub: member, aal: "aal1", ...extra });
+/** Auth answers with the member; membership_status answers `status`. Records the calls made. */
+const memberFetch = (status: unknown, calls: string[] = []) =>
+  (async (input: RequestInfo | URL) => {
+    const url = String(input);
+    calls.push(url.replace(/^https:\/\/[^/]+/, ""));
+    return url.endsWith("/auth/v1/user")
+      ? Response.json({ ...user, id: member })
+      : Response.json(status);
+  }) as typeof fetch;
+
+test("opt-in mode is a reviewed mode: config carries it; owners mode stays owners-only", () => {
+  assert.equal(productionOwnerConfig(optin)?.mode, "optin");
+  assert.equal(productionOwnerConfig(env)?.mode, "owners");
+});
+
+test("opt-in: a paying member is eligible but not force-enabled; owners stay enabled", async () => {
+  const r = await productionOwnerResponse(
+    request(memberToken()),
+    optin,
+    memberFetch({ allowed: true, trial_active: false }),
+  );
+  assert.deepEqual(await r.json(), { enabled: false, eligible: true });
+  const o = await productionOwnerResponse(request(), optin, verified());
+  assert.deepEqual(await o.json(), { enabled: true, eligible: true });
+});
+
+test("opt-in: trials, free accounts and failed or malformed membership replies are not eligible", async () => {
+  for (const status of [
+    { allowed: true, trial_active: true },
+    { allowed: false, trial_active: false },
+    { allowed: "true" },
+    null,
+  ])
+    assert.equal(
+      await verifyProductionMember(optin, memberToken(), memberFetch(status)),
+      false,
+    );
+  assert.equal(
+    await verifyProductionMember(optin, memberToken(), (async (
+      input: RequestInfo | URL,
+    ) =>
+      String(input).endsWith("/auth/v1/user")
+        ? Response.json({ ...user, id: member })
+        : new Response("no", { status: 500 })) as typeof fetch),
+    false,
+  );
+});
+
+test("opt-in: Auth must confirm the same user before membership is even asked", async () => {
+  const calls: string[] = [];
+  const mismatch = (async (input: RequestInfo | URL) => {
+    calls.push(String(input));
+    return Response.json({ ...user, id: other });
+  }) as typeof fetch;
+  assert.equal(
+    await verifyProductionMember(optin, memberToken(), mismatch),
+    false,
+  );
+  assert.equal(
+    calls.length,
+    1,
+    "membership_status is never called for an unconfirmed user",
+  );
+  assert.equal(
+    await verifyProductionMember(
+      optin,
+      memberToken({ exp: 1 }),
+      memberFetch({ allowed: true }),
+    ),
+    false,
+  );
+  assert.equal(
+    await verifyProductionMember(
+      optin,
+      memberToken({ is_anonymous: true }),
+      memberFetch({ allowed: true }),
+    ),
+    false,
+  );
+});
+
+test("owners mode never asks membership: a paying member stays classic and is not eligible", async () => {
+  const calls: string[] = [];
+  const r = await productionOwnerResponse(
+    request(memberToken()),
+    env,
+    memberFetch({ allowed: true, trial_active: false }, calls),
+  );
+  assert.deepEqual(await r.json(), { enabled: false, eligible: false });
+  assert.ok(!calls.some((c) => c.includes("membership_status")));
 });

@@ -38,6 +38,16 @@ const readHint = () => {
   }
 };
 const noSubscribe = () => () => {};
+/** Opt-in choice, this device only (Mike). Eligibility is still the server's answer every time. */
+const OPTIN = "vq-new-home-optin";
+const readOptin = () => {
+  try {
+    return localStorage.getItem(OPTIN) === "1";
+  } catch {
+    return false;
+  }
+};
+const optinCss = `.vq-optin{display:flex;align-items:center;justify-content:space-between;gap:12px;max-width:1120px;margin:8px auto 12px;padding:10px 14px;border:1px solid #ffffff17;border-radius:12px;background:#11161f;color:var(--muted,#b9c0ca);font-size:13.5px}.vq-optin b{color:var(--text,#f4f5ec)}.vq-optin button{flex:none;min-height:36px;padding:0 14px;border:1px solid #f4dc99;border-radius:999px;background:transparent;color:#f4dc99;font:inherit;font-weight:800;cursor:pointer}.vq-optin.is-on button{border-color:#ffffff33;color:var(--muted,#b9c0ca)}`;
 const remember = (on: boolean) => {
   try {
     if (on) localStorage.setItem(HINT, "1");
@@ -56,6 +66,8 @@ export default function ProductionOwnerExperience({
   children: ReactNode;
 }) {
   const [enabled, setEnabled] = useState(false);
+  const [eligible, setEligible] = useState(false);
+  const [optedIn, setOptedIn] = useState(false);
   // Client-rendered path (e.g. behind the age gate): hold classic in state. Server-rendered path:
   // the inline script below hides it before paint. Either way, released on the server's answer.
   const hinted = useSyncExternalStore(noSubscribe, readHint, () => false);
@@ -72,11 +84,14 @@ export default function ProductionOwnerExperience({
     };
     if (readHint()) void (surface === "home" ? loadHome() : loadZone());
     const holdTimer = setTimeout(release, HOLD_MS);
-    const selection = createOwnerPreviewSelection((next, settled) => {
-      selected.current = next;
+    setOptedIn(readOptin());
+    const selection = createOwnerPreviewSelection((next, settled, may) => {
+      // selected: something new is on screen and worth re-checking (owner, or an opted-in member).
+      selected.current = next || (may && readOptin());
       setEnabled(next);
+      setEligible(may);
       if (settled) {
-        remember(next);
+        remember(next || (may && readOptin()));
         release();
       }
     });
@@ -125,7 +140,43 @@ export default function ProductionOwnerExperience({
     // The surface never changes for a mounted instance.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  if (!enabled)
+  const choose = (on: boolean) => {
+    try {
+      if (on) localStorage.setItem(OPTIN, "1");
+      else localStorage.removeItem(OPTIN);
+    } catch {}
+    remember(on);
+    setOptedIn(on);
+    selected.current = on;
+  };
+  // Owners always see the new experience; eligible members choose it (and can go back).
+  const member = eligible && !enabled;
+  const show = enabled || (member && optedIn);
+  const label = surface === "home" ? "Home" : "Zone";
+  const bar = member ? (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: optinCss }} />
+      <div
+        className={`vq-optin${show ? " is-on" : ""}`}
+        role="region"
+        aria-label="New experience"
+      >
+        {show ? (
+          <span>
+            You&rsquo;re trying the new <b>{label}</b>.
+          </span>
+        ) : (
+          <span>
+            Members: the new <b>{label}</b> is ready to try.
+          </span>
+        )}
+        <button type="button" onClick={() => choose(!show)}>
+          {show ? "Back to classic" : `Try the new ${label}`}
+        </button>
+      </div>
+    </>
+  ) : null;
+  if (!show)
     return (
       <>
         <script dangerouslySetInnerHTML={{ __html: holdScript }} />
@@ -140,13 +191,19 @@ export default function ProductionOwnerExperience({
           className="vq-owner-classic"
           style={{ display: held ? "none" : "contents" }}
         >
+          {held ? null : bar}
           {children}
         </div>
       </>
     );
-  return surface === "home" && home ? (
-    <Home {...home} />
-  ) : (
-    <Zone basePath="/community" />
+  return (
+    <>
+      {bar}
+      {surface === "home" && home ? (
+        <Home {...home} />
+      ) : (
+        <Zone basePath="/community" />
+      )}
+    </>
   );
 }

@@ -7,7 +7,7 @@ const zero = "00000000-0000-0000-0000-000000000000";
 export function productionOwnerConfig(env: Environment) {
   if (
     env.VERCEL_ENV !== "production" ||
-    env.HOME2_PRODUCTION !== "owners" ||
+    (env.HOME2_PRODUCTION !== "owners" && env.HOME2_PRODUCTION !== "optin") ||
     env.VQ_COMBINED_STAGE_BUILD === "1" ||
     env.STAGING_DISCOVERY_ENABLED === "true" ||
     env.VQ_STAGE_BUILD_PROFILE !== undefined ||
@@ -31,7 +31,81 @@ export function productionOwnerConfig(env: Environment) {
     url: productionUrl,
     key: env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     owners,
+    /** "owners": owner preview only. "optin": paying members may also choose the new Home. */
+    mode: env.HOME2_PRODUCTION as "owners" | "optin",
   };
+}
+
+const jwtShape = /^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/;
+
+/**
+ * Opt-in eligibility (mode "optin" only): a paying member. The pinned Auth server validates the
+ * token, then the database's own membership_status() is asked with that token. Trials do not
+ * count (Mike: paying members only); complimentary premium does. UI selection only: RLS still
+ * decides every read.
+ */
+export async function verifyProductionMember(
+  env: Environment,
+  token: string | null,
+  request: typeof fetch = fetch,
+  now = Date.now(),
+) {
+  const config = productionOwnerConfig(env);
+  if (
+    !config ||
+    config.mode !== "optin" ||
+    !token ||
+    token.length > 4096 ||
+    !jwtShape.test(token)
+  )
+    return false;
+  try {
+    const claims = JSON.parse(
+      Buffer.from(token.split(".")[1], "base64url").toString("utf8"),
+    );
+    if (
+      typeof claims.sub !== "string" ||
+      !uuid.test(claims.sub) ||
+      claims.role !== "authenticated" ||
+      claims.is_anonymous === true ||
+      !Number.isSafeInteger(claims.exp) ||
+      claims.exp * 1000 <= now
+    )
+      return false;
+    const headers = { apikey: config.key, Authorization: `Bearer ${token}` };
+    const userResponse = await request(`${config.url}/auth/v1/user`, {
+      headers,
+      cache: "no-store",
+      redirect: "error",
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!userResponse.ok) return false;
+    const user = await userResponse.json();
+    if (
+      user?.id !== claims.sub ||
+      user.is_anonymous !== false ||
+      typeof user.email_confirmed_at !== "string" ||
+      user.deleted_at ||
+      (user.banned_until && Date.parse(user.banned_until) > now)
+    )
+      return false;
+    const status = await request(
+      `${config.url}/rest/v1/rpc/membership_status`,
+      {
+        method: "POST",
+        headers: { ...headers, "Content-Type": "application/json" },
+        body: "{}",
+        cache: "no-store",
+        redirect: "error",
+        signal: AbortSignal.timeout(5000),
+      },
+    );
+    if (!status.ok) return false;
+    const m = await status.json();
+    return m?.allowed === true && m.trial_active !== true;
+  } catch {
+    return false;
+  }
 }
 
 /** No cookie, URL, query, body, email or user_metadata selects the audience. */
@@ -94,9 +168,12 @@ export async function productionOwnerResponse(
   env: Environment,
   request: typeof fetch = fetch,
 ) {
-  const reply = (enabled: boolean, status = 200) =>
+  // enabled: the owner preview (always on). eligible: may choose the new Home (owners, and in
+  // "optin" mode paying members). Dark (404) and rejected (403) replies stay exactly
+  // {enabled:false}: they disclose nothing new.
+  const reply = (enabled: boolean, status = 200, eligible?: boolean) =>
     Response.json(
-      { enabled },
+      eligible === undefined ? { enabled } : { enabled, eligible },
       {
         status,
         headers: {
@@ -118,5 +195,7 @@ export async function productionOwnerResponse(
     return reply(false, 403);
   const token =
     req.headers.get("authorization")?.match(/^Bearer (\S+)$/)?.[1] ?? null;
-  return reply(await verifyProductionOwner(env, token, request));
+  if (await verifyProductionOwner(env, token, request))
+    return reply(true, 200, true);
+  return reply(false, 200, await verifyProductionMember(env, token, request));
 }
