@@ -158,6 +158,20 @@ export function board(
     );
 }
 
+/**
+ * The board's collapsed view: the first `min` games, widened so every live game always shows (they
+ * sort first). Expanded, everything.
+ */
+export function boardPreview<T extends { phase: BoardRow["phase"] }>(
+  rows: T[],
+  expanded: boolean,
+  min = 5,
+) {
+  if (expanded) return rows;
+  const live = rows.filter((r) => r.phase === "live").length;
+  return rows.slice(0, Math.max(min, live));
+}
+
 /** Counts for the greeting line and sport chips. */
 export function tally(rows: BoardRow[]) {
   const bySport: Partial<Record<Sport, number>> = {};
