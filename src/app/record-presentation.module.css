@@ -1,0 +1,318 @@
+/* Local to the record card and /history. No sport, story, shared-shell or data rules. */
+.card,
+.dashboard,
+.history :global(.priced-record),
+.history :global(.panel),
+.history :global(.admin-section) {
+  --record-ink: #f5eedd;
+  --record-muted: #c0c9bc;
+  --record-gold: #e7cb82;
+  --record-line: #82754f;
+  --record-surface: #102b24;
+  --record-inset: #0b211c;
+  --panel: var(--record-surface);
+  --panel2: var(--record-inset);
+  --text: var(--record-ink);
+  --muted: var(--record-muted);
+  --line: var(--record-line);
+  --money: #95e3bd;
+  --loss: #ffb3a6;
+  color: var(--record-ink);
+}
+
+.card:global(.home-record) {
+  position: relative;
+  padding: clamp(18px, 3vw, 28px);
+  margin: 24px 0;
+  border: 1px solid var(--record-line);
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at top left, #244334 0, transparent 65%),
+    var(--record-surface);
+  box-shadow:
+    0 16px 34px #0003,
+    inset 0 1px #f5eedd15;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.monogram {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  height: 44px;
+  border: 1px solid var(--record-line);
+  border-radius: 13px;
+  color: var(--record-gold);
+  background: var(--record-inset);
+  font:
+    800 24px/1 var(--font-board),
+    sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--record-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.card :global(.home-record-head) {
+  gap: 14px;
+  align-items: center;
+}
+.card :global(.home-record-head) h2 {
+  font:
+    700 clamp(23px, 4vw, 29px) / 1.1 var(--font-board),
+    sans-serif;
+  letter-spacing: 0.025em;
+  color: var(--record-gold);
+}
+.card :global(.home-record-head) > small {
+  color: var(--record-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.card :global(.home-record-preview) {
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--record-line);
+  border-radius: 12px;
+  background: #302d1e;
+  color: #f1dfae;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.card :global(.home-record-stats) {
+  gap: 12px;
+  margin-top: 22px;
+}
+.card :global(.home-record-stats) > div {
+  padding: 16px;
+  align-content: start;
+  gap: 8px;
+  border: 1px solid #516550;
+  border-radius: 14px;
+  background: var(--record-inset);
+  min-width: 0;
+}
+.card :global(.home-record-stats) dt {
+  color: var(--record-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+}
+.card :global(.home-record-stats) dd {
+  font-size: clamp(28px, 5vw, 36px);
+  color: var(--record-ink);
+  overflow-wrap: anywhere;
+}
+.card :global(.home-record-stats) small {
+  color: var(--record-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.card :global(.home-record-stats .is-up) dd {
+  color: var(--money);
+}
+.card :global(.home-record-stats .is-down) dd {
+  color: var(--loss);
+}
+.card :global(.home-record-note) {
+  margin: 20px 0 0;
+  padding-top: 16px;
+  border-top: 1px solid #516550;
+  color: var(--record-muted);
+  font-size: 12px;
+  line-height: 1.65;
+}
+.card :global(.home-record-note) a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--record-gold);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.card a:focus-visible,
+.history :global(main) :is(a, button, select, input, summary):focus-visible {
+  outline: 3px solid #e7cb82;
+  outline-offset: 4px;
+}
+
+/* Route scoping leaves the mounted components, content order and access checks intact. */
+:global(html[data-theme]) .history :global(.records-title) {
+  margin: 28px 0 18px;
+  color: #e7cb82;
+  font-size: 27px;
+  line-height: 1.2;
+}
+.history :global(.priced-record),
+.history :global(.panel),
+.history :global(.admin-section) {
+  border-radius: 20px;
+  border-color: var(--record-line);
+  box-shadow: 0 12px 28px #0002;
+}
+.history :global(.priced-record) {
+  padding: 22px;
+  gap: 16px;
+  margin: 20px 0;
+}
+:global(html[data-theme]) .history :global(.priced-record) h3 {
+  color: var(--record-gold);
+  font:
+    700 25px/1.15 var(--font-board),
+    sans-serif;
+}
+.history :global(.priced-record-stats) {
+  gap: 12px;
+}
+.history :global(.priced-record-stats) > div {
+  padding: 16px;
+  gap: 7px;
+  border-color: #516550;
+}
+:global(html[data-theme]) .history :global(.priced-record-stats) b {
+  font:
+    700 31px/1.15 var(--font-board),
+    sans-serif;
+}
+.history :global(.priced-record-gates) {
+  padding-top: 16px;
+  border-top: 1px solid #516550;
+}
+.history :global(.section-switch) {
+  gap: 10px;
+  border-color: #82754f;
+}
+.history :global(.section-switch) a {
+  min-height: 44px;
+  border-color: #82754f;
+  color: #f5eedd;
+  background: #102b24;
+}
+.history :global(.section-switch) a:global(.selected) {
+  background: #e7cb82;
+  color: #102b24;
+  font-weight: 800;
+}
+.history :global(.weekly-flashcard) {
+  background: #0b211c;
+  border-color: #82754f;
+  border-top-color: #95e3bd;
+}
+.history :global(.weekly-misses) {
+  border-top-color: #ffb3a6;
+}
+.history :global(.weekly-flashcard) :is(small, footer) {
+  color: #c0c9bc;
+}
+.history :global(.weekly-flashcard) strong {
+  color: #95e3bd;
+}
+.history :global(.weekly-misses) strong {
+  color: #ffb3a6;
+}
+
+.dashboard:global(.records-dash) {
+  gap: 16px;
+  margin: 24px 0;
+}
+.dashboard :global(.records-kpis) {
+  gap: 12px;
+}
+.dashboard :global(.records-kpis) > div,
+.dashboard :global(.records-proof) > div,
+.dashboard :global(.records-chart) {
+  border-radius: 16px;
+  padding: 18px;
+}
+:global(html[data-theme]) .dashboard :global(.records-kpis) strong {
+  color: var(--record-ink);
+  font-family: var(--font-board), sans-serif;
+  font-size: 34px;
+}
+:global(html[data-theme])
+  .dashboard
+  :global(.records-kpis)
+  strong:global(.positive) {
+  color: var(--money);
+}
+:global(html[data-theme])
+  .dashboard
+  :global(.records-kpis)
+  strong:global(.negative) {
+  color: var(--loss);
+}
+.dashboard :global(.records-chart-head) {
+  flex-wrap: wrap;
+  line-height: 1.5;
+}
+.dashboard :global(.records-form) {
+  padding: 16px;
+  border: 1px solid var(--record-line);
+  border-radius: 16px;
+  background: var(--record-inset);
+}
+.dashboard :global(.records-form) > span {
+  width: 32px;
+  height: 32px;
+}
+.dashboard :global(.records-form) > span:global(.form-win) {
+  background: #205a42;
+  color: #f5eedd;
+}
+.dashboard :global(.records-form) > span:global(.form-loss) {
+  background: #733e37;
+  color: #fff0e9;
+}
+.dashboard :global(.records-form) a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--record-gold);
+}
+
+@media (max-width: 600px) {
+  .card :global(.home-record-head) {
+    align-items: flex-start;
+  }
+  .card :global(.home-record-stats) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .card :global(.home-record-stats) > div {
+    padding: 13px 11px;
+  }
+  .card :global(.home-record-note) a {
+    display: flex;
+    width: fit-content;
+  }
+  .history :global(.priced-record) {
+    padding: 18px;
+  }
+  .history :global(.priced-record-stats) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .history :global(.priced-record-stats) > div:last-child {
+    grid-column: 1 / -1;
+  }
+  .dashboard :global(.records-proof) {
+    grid-template-columns: 1fr;
+  }
+  .dashboard :global(.records-form) a {
+    margin-left: 0;
+    flex-basis: 100%;
+  }
+}
