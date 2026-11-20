@@ -31,6 +31,7 @@ function row(p: {
       market: p.market || "player_points",
       over: -110,
       under: -110,
+      observedAt: new Date(NOW - 5 * 60000).toISOString(),
     } as never,
     player: { athlete_id: p.id, team: "Team" } as never,
     home: true,
@@ -119,6 +120,7 @@ test("teaser: the strongest two fresh upcoming edges, slim and public-safe, plus
       "line",
       "market",
       "n",
+      "observedAt",
       "opponent",
       "player",
       "price",
@@ -146,4 +148,20 @@ test("teaser for visitors: nothing from a snapshot over 90 minutes old, never a 
   );
   assert.deepEqual(liveTeaserRows(t, NOW + 91 * 60000), []);
   assert.deepEqual(liveTeaserRows(null, NOW), []);
+});
+
+test("teaser rows expire with their quote, by the member board's one-hour rule", () => {
+  const quoted = (minsAgo: number) =>
+    new Date(NOW - minsAgo * 60000).toISOString();
+  const r1 = row({ id: "1", edge: 8, chance: 61, tipIn: 3 });
+  const r2 = row({ id: "2", edge: 6, chance: 60, tipIn: 3 });
+  (r1.trend as { observedAt?: string }).observedAt = quoted(55);
+  (r2.trend as { observedAt?: string }).observedAt = quoted(5);
+  const t = buildTeaser([r1, r2], NOW);
+  assert.equal(liveTeaserRows(t, NOW).length, 2);
+  assert.deepEqual(
+    liveTeaserRows(t, NOW + 10 * 60000).map((r) => r.athleteId),
+    ["2"],
+    "the 55-minute-old quote is past an hour 10 minutes later",
+  );
 });

@@ -5,6 +5,7 @@
  */
 import { edgeSide, topEdges } from "./home3";
 import type { PropRow } from "./nba-props";
+import { quoteIsFresh } from "./nba-research-tab";
 
 export type TeaserRow = {
   athleteId: string;
@@ -27,6 +28,8 @@ export type TeaserRow = {
   best: { book: string; price: number } | null;
   tipoff: string;
   gameId: string;
+  /** The FanDuel quote's own time: the row expires when the member board's freshness rule would. */
+  observedAt: string | null;
 };
 export type Teaser = {
   computedAt: string;
@@ -65,14 +68,21 @@ export function buildTeaser(rows: PropRow[], now: number, limit = 2): Teaser {
           best: s.best ?? null,
           tipoff: r.game.tipoff,
           gameId: r.game.id,
+          observedAt: r.trend.observedAt ?? null,
         },
       ];
     }),
   };
 }
 
-/** Rows still worth showing to a visitor at `now`: not tipped off, and the snapshot under 90 min old. */
+/**
+ * Rows still worth showing at `now`: the snapshot under 90 minutes old, the game not tipped off,
+ * and the quote itself still fresh by the member board's rule (quoteIsFresh, one hour), so a price
+ * never outlives the moment the member pipeline would drop its edge.
+ */
 export function liveTeaserRows(t: Teaser | null, now: number) {
   if (!t || now - Date.parse(t.computedAt) > 90 * 60000) return [];
-  return t.rows.filter((r) => Date.parse(r.tipoff) > now);
+  return t.rows.filter(
+    (r) => Date.parse(r.tipoff) > now && quoteIsFresh(r.observedAt, now),
+  );
 }
