@@ -20,6 +20,7 @@ import {
 } from "@/lib/nba-props";
 import type { Market } from "@/lib/nba-research-tab";
 import { signed } from "@/lib/nba-line-moves";
+import { liveTeaserRows, type Teaser, type TeaserRow } from "@/lib/nba-teaser";
 import NbaPropCard from "./nba-prop-card";
 import "@/app/nba-research-tab.css";
 import "@/app/nba-props-board.css";
@@ -156,6 +157,109 @@ export function PropRowItem({ r, onOpen }: { r: PropRow; onOpen: () => void }) {
         </span>
       </button>
     </li>
+  );
+}
+
+/** One free prop for a non-member: the same row as the member board, without the detail sheet. */
+function TeaserRowItem({ t }: { t: TeaserRow }) {
+  const over = t.side === "over";
+  const tone = t.edge >= 5 ? "pf-strong" : t.edge >= 2 ? "pf-lean" : "pf-flat";
+  return (
+    <li>
+      <div className="pf-row pf-teaser-row">
+        <Headshot id={t.athleteId} name={t.player} />
+        <span className="pf-who">
+          <b>{t.player}</b>
+          <small>
+            {t.team} {t.home ? "vs" : "@"} {t.opponent} · {time(t.tipoff)}
+            {t.best ? ` · best ${t.best.book} ${odds(t.best.price)}` : ""}
+          </small>
+        </span>
+        <span className={`pf-score ${tone}`}>
+          <b>{t.chance}%</b>
+          <small>{`${t.edge > 0 ? "+" : ""}${t.edge} edge`}</small>
+        </span>
+        <span className="pf-bet">
+          <span className={over ? "pf-o" : "pf-u"}>{over ? "O" : "U"}</span>{" "}
+          <b>{t.line}</b> {SHORT[t.market]} <em>{odds(t.price)}</em>
+        </span>
+        <span className="pf-form">
+          <small>{t.hits == null ? "" : `${t.hits}/${t.n}`}</small>
+        </span>
+      </div>
+    </li>
+  );
+}
+
+/**
+ * The free teaser (Mike: signed-in free users see tonight's top 2 in full, the rest locked;
+ * visitors see the count and top edge). Data: public.nba_prop_teaser / nba_prop_teaser_summary.
+ */
+export function PropTeaser({
+  teaser,
+  summary,
+  now,
+}: {
+  teaser: Teaser | null;
+  summary: {
+    total: number;
+    top_edge: number | null;
+    computed_at: string;
+  } | null;
+  now: number;
+}) {
+  const rows = liveTeaserRows(teaser, now);
+  const fresh =
+    summary && now - Date.parse(summary.computed_at) <= 90 * 60000
+      ? summary
+      : null;
+  if (teaser && rows.length) {
+    const locked = Math.max(0, teaser.total - rows.length);
+    return (
+      <section className="pf-teaser" aria-label="Free props tonight">
+        <p className="pf-count">
+          Tonight&rsquo;s top {rows.length} free · {teaser.total} on the board
+        </p>
+        <ul className="pf-list">
+          {rows.map((t) => (
+            <TeaserRowItem key={`${t.athleteId}|${t.market}`} t={t} />
+          ))}
+          {Array.from({ length: Math.min(locked, 4) }, (_, i) => (
+            <li key={`lock-${i}`} className="pf-locked" aria-hidden="true">
+              <span />
+            </li>
+          ))}
+        </ul>
+        {locked > 0 && (
+          <div className="pf-empty pf-unlock">
+            <b>{locked} more props tonight</b>
+            <p>
+              Members see every prop, ranked against each player&rsquo;s game
+              log, with line movement and best prices.
+            </p>
+            <Link className="vq-btn" href="/membership">
+              Join to see all {teaser.total}
+            </Link>
+          </div>
+        )}
+      </section>
+    );
+  }
+  return (
+    <div className="pf-empty">
+      <b>Members see every prop</b>
+      <p>
+        {fresh && fresh.total > 0
+          ? `${fresh.total} props on tonight's board${fresh.top_edge != null && fresh.top_edge > 0 ? `, top edge +${fresh.top_edge}` : ""}. `
+          : ""}
+        {teaser
+          ? "Tonight's free props have tipped off. Join to rank every line against each player's game log."
+          : "Sign in free to see tonight's top 2 props, or join to rank every line against each player's game log."}
+      </p>
+      <Link className="vq-btn" href="/membership">
+        {teaser ? "Join" : "Sign in free"}
+      </Link>
+    </div>
   );
 }
 
@@ -381,6 +485,12 @@ function BookRow({ b, r }: { b: PropRow["books"][number]; r: PropRow }) {
 export default function NbaPropsBoard() {
   const params = useSearchParams();
   const [slate, setSlate] = useState<Slate | null>(null);
+  const [teaser, setTeaser] = useState<Teaser | null>(null);
+  const [summary, setSummary] = useState<{
+    total: number;
+    top_edge: number | null;
+    computed_at: string;
+  } | null>(null);
   const [access, setAccess] = useState<Access>(noAccess);
   const [error, setError] = useState("");
   const [query, setQuery] = useState(params.get("q") || "");
@@ -412,8 +522,30 @@ export default function NbaPropsBoard() {
           status.allowed,
           params.get("game") || undefined,
         );
+        // Non-members: the free teaser (signed in) or its counts-only summary (visitors).
+        let t: Teaser | null = null,
+          sum: typeof summary = null;
+        if (!status.allowed) {
+          const row = await supabase
+            .from("nba_prop_teaser")
+            .select("computed_at,total,rows")
+            .eq("id", 1)
+            .maybeSingle();
+          if (!row.error && row.data)
+            t = {
+              computedAt: row.data.computed_at,
+              total: row.data.total,
+              rows: row.data.rows as TeaserRow[],
+            };
+          else {
+            const r = await supabase.rpc("nba_prop_teaser_summary");
+            if (!r.error && r.data) sum = r.data as typeof summary;
+          }
+        }
         if (!current()) return;
         setAccess(status);
+        setTeaser(t);
+        setSummary(sum);
         setSlate(s);
         setError("");
         setNow(Date.now());
@@ -429,6 +561,8 @@ export default function NbaPropsBoard() {
       gate.cancel();
       setOpen(null);
       setSlate(null);
+      setTeaser(null);
+      setSummary(null);
       setAccess(noAccess);
       setError("");
       void load();
@@ -582,16 +716,7 @@ export default function NbaPropsBoard() {
           ))}
         </ul>
       ) : !access.allowed ? (
-        <div className="pf-empty">
-          <b>Members see every prop</b>
-          <p>
-            Sign in with research access to rank tonight&rsquo;s lines against
-            each player&rsquo;s game log.
-          </p>
-          <Link className="vq-btn" href="/membership">
-            Sign in
-          </Link>
-        </div>
+        <PropTeaser teaser={teaser} summary={summary} now={now} />
       ) : !rows.length ? (
         <div className="pf-empty">
           <b>No props posted yet</b>

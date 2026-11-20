@@ -1,0 +1,33 @@
+name: NBA Prop Finder teaser
+# Stores the free slice of tonight's Prop Finder board (top 2 fresh edges + count) for signed-in
+# free users. Counts-only logs: this repository is public.
+on:
+  schedule:
+    - cron: '7,27,47 * * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Compute without storing
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: nba-prop-teaser
+  cancel-in-progress: false
+jobs:
+  teaser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - name: Compute and store the teaser
+        run: npx tsx scripts/nba-teaser/run.ts ${{ inputs.dry_run && '--dry-run' || '' }}
