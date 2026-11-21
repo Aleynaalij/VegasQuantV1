@@ -152,7 +152,11 @@ test("Prop Finder rows: edge, streak, best price across books, lean and ranking"
   assert.equal(wagner.streak, -3);
   assert.deepEqual([maxey.l10?.hits, maxey.l10?.n], [10, 10]);
   assert.equal(maxey.fair, 50);
-  assert.ok(maxey.estimate && maxey.edge === maxey.estimate.chance - 50);
+  assert.ok(
+    maxey.estimate &&
+      maxey.projGap ===
+        Math.round((maxey.estimate.projection - maxey.trend.line) * 10) / 10,
+  );
   assert.equal(lean(maxey), "over");
   // Best price at the same line only; the Caesars 25.5 quote is a different line.
   assert.deepEqual(maxey.bestOver, { book: "DraftKings", price: -102 });
@@ -205,7 +209,7 @@ test("No-vig chance and streaks", () => {
   assert.equal(streakOf([]), 0);
 });
 
-test("Line shopping ignores books that stopped refreshing; lean follows the edge", async () => {
+test("Line shopping ignores books that stopped refreshing; lean follows the projection", async () => {
   const { allBookQuotes } = await import("../src/lib/nba-research-tab");
   const now = Date.parse("2026-11-18T16:00:00Z");
   const snap = (book: string, at: string, over: number) => ({
@@ -238,17 +242,24 @@ test("Line shopping ignores books that stopped refreshing; lean follows the edge
     ["FanDuel", -110],
   ]);
 
-  // Our 55% over against the book's 58%: the under is the side with the edge.
+  // The lean is the side of the line the projection falls on; a stale line (no gap) falls back to
+  // the raw projection, then the L10 hit rate. Never the book's price.
   const row = {
-    edge: -3,
-    estimate: { chance: 55, projection: 0, sd: 1 },
-    l10: null,
+    projGap: -2.4,
+    estimate: { chance: 55, projection: 23.1, sd: 1 },
+    trend: { line: 25.5 },
+    l10: { hits: 8, n: 10, pct: 80 },
   } as unknown as Parameters<typeof lean>[0];
   assert.equal(lean(row), "under");
-  assert.equal(lean({ ...row, edge: null } as typeof row), "over");
+  assert.equal(lean({ ...row, projGap: 1.2 } as typeof row), "over");
+  assert.equal(lean({ ...row, projGap: null } as typeof row), "under");
+  assert.equal(
+    lean({ ...row, projGap: null, estimate: null } as typeof row),
+    "over",
+  );
 });
 
-test("Freshness is judged per quote against the clock: stale lines are labelled and lose their edge", async () => {
+test("Freshness is judged per quote against the clock: stale lines are labelled and lose their projection gap", async () => {
   const { propQuotes } = await import("../src/lib/nba-research-tab");
   // A snapshot recorded just now that carries an old provider observation time is still old.
   const [late] = propQuotes([
@@ -350,16 +361,16 @@ test("Freshness is judged per quote against the clock: stale lines are labelled 
       ],
     ]),
   };
-  // Mixed: the fresh game keeps its edge; the old FanDuel line is stale, with no edge.
+  // Mixed: the fresh game keeps its projection gap; the old FanDuel line is stale, with none.
   const at4 = buildPropRows(slate, NOW);
   const maxey = at4.find((r) => r.trend.player === "Tyrese Maxey")!;
   const embiid = at4.find((r) => r.trend.player === "Joel Embiid")!;
   assert.equal(maxey.stale, false);
-  assert.ok(maxey.edge != null);
+  assert.ok(maxey.projGap != null);
   assert.deepEqual(maxey.bestOver, { book: "DraftKings", price: 120 });
   assert.equal(embiid.stale, true);
-  assert.equal(embiid.edge, null);
-  assert.equal(sortRows(at4, "edge").at(-1)!.trend.player, "Joel Embiid");
+  assert.equal(embiid.projGap, null);
+  assert.equal(sortRows(at4, "gap").at(-1)!.trend.player, "Joel Embiid");
   // Unknown provider time counts as stale.
   assert.equal(
     buildPropRows(

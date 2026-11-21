@@ -21,6 +21,7 @@ import {
 import type { Market } from "@/lib/nba-research-tab";
 import { signed } from "@/lib/nba-line-moves";
 import { liveTeaserRows, type Teaser, type TeaserRow } from "@/lib/nba-teaser";
+import { heat } from "@/lib/home3";
 import NbaPropCard from "./nba-prop-card";
 import "@/app/nba-research-tab.css";
 import "@/app/nba-props-board.css";
@@ -65,6 +66,9 @@ function Headshot({ id, name }: { id: string; name: string }) {
   );
 }
 
+/** Score styling by projection-gap weight (home3 heat): display only, not a likelier hit. */
+const TONE = ["", "pf-flat", "pf-lean", "pf-strong"] as const;
+
 /** What the row shows for the side the numbers lean to. */
 function side(r: PropRow) {
   const s = lean(r) || "over";
@@ -75,12 +79,8 @@ function side(r: PropRow) {
     label: over ? "O" : "U",
     price: over ? r.trend.over : r.trend.under,
     best: over ? r.bestOver : r.bestUnder,
-    chance: r.estimate
-      ? over
-        ? r.estimate.chance
-        : 100 - r.estimate.chance
-      : null,
-    edge: r.edge == null ? null : over ? r.edge : -r.edge,
+    projection: r.estimate?.projection ?? null,
+    gap: r.projGap == null ? null : Math.abs(r.projGap),
     hits,
     n: r.l10?.n ?? 0,
   };
@@ -103,14 +103,7 @@ export function PropRowItem({ r, onOpen }: { r: PropRow; onOpen: () => void }) {
     r.home ? r.game.home_abbreviation : r.game.away_abbreviation,
     r.player.team,
   );
-  const tone =
-    s.edge == null
-      ? ""
-      : s.edge >= 5
-        ? "pf-strong"
-        : s.edge >= 2
-          ? "pf-lean"
-          : "pf-flat";
+  const tone = TONE[heat(s.gap, r.trend.line)];
   return (
     <li>
       <button type="button" className="pf-row" onClick={onOpen}>
@@ -129,13 +122,13 @@ export function PropRowItem({ r, onOpen }: { r: PropRow; onOpen: () => void }) {
           </small>
         </span>
         <span className={`pf-score ${tone}`}>
-          <b>{s.chance == null ? "—" : `${s.chance}%`}</b>
+          <b>{s.projection == null ? "—" : s.projection}</b>
           <small>
             {r.stale
               ? `old line · ${r.trend.observedAt ? time(r.trend.observedAt) : "time unknown"}`
-              : s.edge == null
-                ? "our est."
-                : `${s.edge > 0 ? "+" : ""}${s.edge} edge`}
+              : s.gap == null
+                ? "our proj."
+                : `proj. · ${s.gap} ${s.over ? "over" : "under"}`}
           </small>
         </span>
         <span className="pf-bet">
@@ -163,7 +156,7 @@ export function PropRowItem({ r, onOpen }: { r: PropRow; onOpen: () => void }) {
 /** One free prop for a non-member: the same row as the member board, without the detail sheet. */
 function TeaserRowItem({ t }: { t: TeaserRow }) {
   const over = t.side === "over";
-  const tone = t.edge >= 5 ? "pf-strong" : t.edge >= 2 ? "pf-lean" : "pf-flat";
+  const tone = TONE[heat(t.gap, t.line)];
   return (
     <li>
       <div className="pf-row pf-teaser-row">
@@ -176,8 +169,8 @@ function TeaserRowItem({ t }: { t: TeaserRow }) {
           </small>
         </span>
         <span className={`pf-score ${tone}`}>
-          <b>{t.chance}%</b>
-          <small>{`${t.edge > 0 ? "+" : ""}${t.edge} edge`}</small>
+          <b>{t.projection}</b>
+          <small>{`proj. · ${t.gap} ${over ? "over" : "under"}`}</small>
         </span>
         <span className="pf-bet">
           <span className={over ? "pf-o" : "pf-u"}>{over ? "O" : "U"}</span>{" "}
@@ -193,7 +186,7 @@ function TeaserRowItem({ t }: { t: TeaserRow }) {
 
 /**
  * The free teaser (Mike: signed-in free users see tonight's top 2 in full, the rest locked;
- * visitors see the count and top edge). Data: public.nba_prop_teaser / nba_prop_teaser_summary.
+ * visitors see the count). Data: public.nba_prop_teaser / nba_prop_teaser_summary.
  */
 export function PropTeaser({
   teaser,
@@ -203,7 +196,6 @@ export function PropTeaser({
   teaser: Teaser | null;
   summary: {
     total: number;
-    top_edge: number | null;
     computed_at: string;
   } | null;
   now: number;
@@ -250,7 +242,7 @@ export function PropTeaser({
       <b>Members see every prop</b>
       <p>
         {fresh && fresh.total > 0
-          ? `${fresh.total} props on tonight's board${fresh.top_edge != null && fresh.top_edge > 0 ? `, top edge +${fresh.top_edge}` : ""}. `
+          ? `${fresh.total} props on tonight's board. `
           : ""}
         {teaser
           ? "Tonight's free props have tipped off. Join to rank every line against each player's game log."
@@ -488,7 +480,6 @@ export default function NbaPropsBoard() {
   const [teaser, setTeaser] = useState<Teaser | null>(null);
   const [summary, setSummary] = useState<{
     total: number;
-    top_edge: number | null;
     computed_at: string;
   } | null>(null);
   const [access, setAccess] = useState<Access>(noAccess);
@@ -504,7 +495,7 @@ export default function NbaPropsBoard() {
   const [sort, setSort] = useState<PropSort>(
     SORTS.some((s) => s.key === params.get("sort"))
       ? (params.get("sort") as PropSort)
-      : "edge",
+      : "gap",
   );
   const [game, setGame] = useState(params.get("game") || "all");
   const [open, setOpen] = useState<string | null>(null);
@@ -569,7 +560,7 @@ export default function NbaPropsBoard() {
     });
     // Lines are collected about every 15 minutes: refresh quietly while the board is on screen,
     // and at once when it comes back into view. The clock ticks every minute so a line that ages
-    // past an hour is flagged (and drops out of Best edge) even if a refresh fails.
+    // past an hour is flagged (and drops out of the projection ranking) even if a refresh fails.
     let fetchedAt = Date.now();
     const refreshIfDue = () => {
       if (document.visibilityState !== "visible") return;
@@ -606,7 +597,7 @@ export default function NbaPropsBoard() {
           : "all",
       "all",
     );
-    set("sort", sort, "edge");
+    set("sort", sort, "gap");
     set("game", game, "all");
     window.history.replaceState(null, "", u.toString());
   }, [query, market, sort, game]);
@@ -705,8 +696,8 @@ export default function NbaPropsBoard() {
         <p className="pf-stale" role="status">
           {staleCount} of {rows.length} FanDuel lines are over an hour old by
           the book&rsquo;s own time. They are marked &ldquo;old line&rdquo;,
-          show no edge and sit at the bottom of Best edge until fresh prices
-          arrive.
+          show no projection gap and sit at the bottom of the projection ranking
+          until fresh prices arrive.
         </p>
       ) : null}
       {!slate ? (
@@ -743,10 +734,11 @@ export default function NbaPropsBoard() {
             </div>
           )}
           <p className="pf-note pf-foot">
-            Our % is the chance the side shown hits, from the player&rsquo;s
-            per-minute production, projected minutes and tonight&rsquo;s
-            matchup. Edge is that minus FanDuel&rsquo;s no-vig chance. History
-            and estimates, not picks.
+            Our projection is the player&rsquo;s per-minute production times
+            projected minutes, adjusted for tonight&rsquo;s matchup; the gap is
+            how far it sits from the line. It is a projection, not a win chance
+            or an edge: the line already prices in most of what it knows.
+            History and projections, not picks.
           </p>
         </>
       )}

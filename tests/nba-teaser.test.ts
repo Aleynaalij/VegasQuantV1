@@ -10,8 +10,8 @@ function row(p: {
   id: string;
   name?: string;
   market?: "player_points" | "player_rebounds";
-  edge: number | null;
-  chance?: number;
+  /** Projection minus the line (projGap). */
+  gap: number | null;
   fair?: number | null;
   streak?: number;
   stale?: boolean;
@@ -21,10 +21,10 @@ function row(p: {
   return {
     key: `${p.id}|${p.market || "player_points"}`,
     stale: !!p.stale,
-    edge: p.edge,
+    projGap: p.gap,
     fair: p.fair === undefined ? 50 : p.fair,
     streak: p.streak ?? 0,
-    estimate: p.chance == null ? null : ({ chance: p.chance } as never),
+    estimate: p.gap == null ? null : ({ projection: 20.5 + p.gap } as never),
     trend: {
       player: p.name || `Player ${p.id}`,
       line: 20.5,
@@ -59,41 +59,20 @@ function row(p: {
   } as PropRow;
 }
 
-test("teaser: the strongest two fresh upcoming edges, slim and public-safe, plus the board count", () => {
+test("teaser: the two biggest fresh upcoming projection gaps, slim and public-safe, plus the board count", () => {
   const rows = [
-    row({
-      id: "1",
-      name: "Jalen Brunson",
-      edge: 8,
-      chance: 61,
-      fair: 53,
-      hits: 8,
-    }),
-    row({
-      id: "2",
-      name: "Rudy Gobert",
-      edge: 3,
-      chance: 55,
-      fair: 52,
-      hits: 6,
-    }),
-    row({
-      id: "3",
-      name: "Old Line",
-      edge: 12,
-      chance: 70,
-      fair: 58,
-      stale: true,
-    }),
-    row({ id: "4", name: "Tipped Off", edge: 10, chance: 66, tipIn: -1 }),
-    row({ id: "5", name: "Josh Hart", edge: 5, chance: 58, fair: 53, hits: 7 }),
+    row({ id: "1", name: "Jalen Brunson", gap: 4.5, fair: 53, hits: 8 }),
+    row({ id: "2", name: "Rudy Gobert", gap: 1.5, fair: 52, hits: 6 }),
+    row({ id: "3", name: "Old Line", gap: 9, fair: 58, stale: true }),
+    row({ id: "4", name: "Tipped Off", gap: 8, tipIn: -1 }),
+    row({ id: "5", name: "Josh Hart", gap: -3, fair: 53, hits: 7 }),
   ];
   const t = buildTeaser(rows, NOW);
   assert.deepEqual(
-    t.rows.map((r) => [r.player, r.edge, r.side]),
+    t.rows.map((r) => [r.player, r.gap, r.side]),
     [
-      ["Jalen Brunson", 8, "over"],
-      ["Josh Hart", 5, "over"],
+      ["Jalen Brunson", 4.5, "over"],
+      ["Josh Hart", 3, "under"],
     ],
   );
   assert.equal(
@@ -101,9 +80,12 @@ test("teaser: the strongest two fresh upcoming edges, slim and public-safe, plus
     4,
     "every prop not yet tipped off, stale lines included",
   );
-  const [b] = t.rows;
-  assert.equal(b.chance, 61);
+  const [b, h] = t.rows;
+  assert.equal(b.projection, 25);
   assert.equal(b.fair, 53);
+  assert.equal(h.projection, 17.5);
+  assert.equal(h.fair, 47, "the book's no-vig chance for the under");
+  assert.equal(h.hits, 3, "under hits are the misses of the over");
   assert.equal(b.hits, 8);
   assert.equal(b.team, "HOM");
   assert.deepEqual(
@@ -111,10 +93,9 @@ test("teaser: the strongest two fresh upcoming edges, slim and public-safe, plus
     [
       "athleteId",
       "best",
-      "chance",
-      "edge",
       "fair",
       "gameId",
+      "gap",
       "hits",
       "home",
       "line",
@@ -124,6 +105,7 @@ test("teaser: the strongest two fresh upcoming edges, slim and public-safe, plus
       "opponent",
       "player",
       "price",
+      "projection",
       "side",
       "team",
       "tipoff",
@@ -135,8 +117,8 @@ test("teaser: the strongest two fresh upcoming edges, slim and public-safe, plus
 test("teaser for visitors: nothing from a snapshot over 90 minutes old, never a tipped-off game", () => {
   const t = buildTeaser(
     [
-      row({ id: "1", edge: 8, chance: 61, tipIn: 0.5 }),
-      row({ id: "2", edge: 6, chance: 60, tipIn: 3 }),
+      row({ id: "1", gap: 4.5, tipIn: 0.5 }),
+      row({ id: "2", gap: 3, tipIn: 3 }),
     ],
     NOW,
   );
@@ -153,8 +135,8 @@ test("teaser for visitors: nothing from a snapshot over 90 minutes old, never a 
 test("teaser rows expire with their quote, by the member board's one-hour rule", () => {
   const quoted = (minsAgo: number) =>
     new Date(NOW - minsAgo * 60000).toISOString();
-  const r1 = row({ id: "1", edge: 8, chance: 61, tipIn: 3 });
-  const r2 = row({ id: "2", edge: 6, chance: 60, tipIn: 3 });
+  const r1 = row({ id: "1", gap: 4.5, tipIn: 3 });
+  const r2 = row({ id: "2", gap: 3, tipIn: 3 });
   (r1.trend as { observedAt?: string }).observedAt = quoted(55);
   (r2.trend as { observedAt?: string }).observedAt = quoted(5);
   const t = buildTeaser([r1, r2], NOW);
@@ -164,4 +146,17 @@ test("teaser rows expire with their quote, by the member board's one-hour rule",
     ["2"],
     "the 55-minute-old quote is past an hour 10 minutes later",
   );
+});
+
+test("rows stored before the switch to projections (an edge, no projection) are not shown", () => {
+  const t = buildTeaser([row({ id: "1", gap: 4.5, tipIn: 3 })], NOW);
+  const old = {
+    ...t,
+    rows: t.rows.map((r) => {
+      const { projection: _p, gap: _g, ...rest } = r;
+      return { ...rest, chance: 76, edge: 26 } as never;
+    }),
+  };
+  assert.equal(liveTeaserRows(t, NOW).length, 1);
+  assert.deepEqual(liveTeaserRows(old, NOW), []);
 });
