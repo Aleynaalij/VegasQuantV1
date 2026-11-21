@@ -25,49 +25,50 @@ export function greeting(now: number) {
 }
 
 /** The side a row leans to, with the numbers a card shows for that side. */
-export function edgeSide(r: PropRow) {
+export function leanSide(r: PropRow) {
   const over = (lean(r) || "over") === "over";
   return {
     over,
     price: over ? r.trend.over : r.trend.under,
     best: over ? r.bestOver : r.bestUnder,
-    chance: r.estimate
-      ? over
-        ? r.estimate.chance
-        : 100 - r.estimate.chance
-      : null,
-    edge: r.edge == null ? null : over ? r.edge : -r.edge,
+    projection: r.estimate?.projection ?? null,
+    /** How far the projection sits from the line on the side shown, in points/rebounds (never negative). */
+    gap: r.projGap == null ? null : Math.abs(r.projGap),
     hits: r.l10 ? (over ? r.l10.hits : r.l10.n - r.l10.hits) : null,
     n: r.l10?.n ?? 0,
   };
 }
 
-/** Edge heat for styling: 3 hot, 2 warm, 1 mild, 0 none. */
-export function heat(edge: number | null) {
-  if (edge == null) return 0;
-  if (edge >= 6) return 3;
-  if (edge >= 3) return 2;
-  return edge > 0 ? 1 : 0;
+/**
+ * Styling weight for a projection gap, relative to the line: 3 at a quarter of the line or more,
+ * 2 at an eighth, 1 for any gap. Display only: a bigger gap is not a likelier hit.
+ */
+export function heat(gap: number | null, line: number) {
+  if (gap == null || gap <= 0 || line <= 0) return 0;
+  if (gap / line >= 0.25) return 3;
+  if (gap / line >= 0.125) return 2;
+  return 1;
 }
 
 /**
- * Tonight's best edges for the rail: fresh lines only, games not yet started, one card per player
- * (the stronger of their markets), strongest first. Stale or edge-less rows never lead.
+ * Tonight's biggest gaps between our projection and the line, for the rail: fresh lines only, games
+ * not yet started, one card per player (the bigger of their markets), biggest first, in the stat's
+ * own units. Stale rows and rows without a projection never lead.
  */
-export function topEdges(rows: PropRow[], now: number, limit = 8) {
-  const best = new Map<string, { r: PropRow; edge: number }>();
+export function topGaps(rows: PropRow[], now: number, limit = 8) {
+  const best = new Map<string, { r: PropRow; gap: number }>();
   for (const r of rows) {
     if (r.stale || Date.parse(r.game.tipoff) <= now) continue;
-    const edge = edgeSide(r).edge;
-    if (edge == null || edge <= 0) continue;
+    const gap = leanSide(r).gap;
+    if (gap == null || gap <= 0) continue;
     const id = r.player.athlete_id;
     const prev = best.get(id);
-    if (!prev || edge > prev.edge) best.set(id, { r, edge });
+    if (!prev || gap > prev.gap) best.set(id, { r, gap });
   }
   return [...best.values()]
     .sort(
       (a, b) =>
-        b.edge - a.edge || a.r.trend.player.localeCompare(b.r.trend.player),
+        b.gap - a.gap || a.r.trend.player.localeCompare(b.r.trend.player),
     )
     .slice(0, limit)
     .map((x) => x.r);
@@ -194,13 +195,12 @@ export const odds = (p: number | null | undefined) =>
   p == null ? "—" : p > 0 ? `+${p}` : `${p}`;
 
 /**
- * The #1 edge as a sentence: how often the player cleared the line, our estimate for the side and
- * the book's no-vig chance for it. Null when the numbers to tell it are missing.
+ * The top projection gap as a sentence: how often the player cleared the line, and where our
+ * projection sits against it. Null when the numbers to tell it are missing.
  */
 export function headline(r: PropRow) {
-  const s = edgeSide(r);
-  if (s.chance == null || r.fair == null || s.edge == null) return null;
-  const book = s.over ? r.fair : 100 - r.fair;
+  const s = leanSide(r);
+  if (s.projection == null || s.gap == null) return null;
   const stat = r.trend.market === "player_points" ? "points" : "rebounds";
   const form =
     s.hits != null && s.n
@@ -208,7 +208,7 @@ export function headline(r: PropRow) {
       : `${r.trend.player} faces a ${r.trend.line}-${stat} line tonight.`;
   return {
     form,
-    case: `We make the ${s.over ? "over" : "under"} ${s.chance}%; the book's fair price says ${book}%.`,
-    edge: s.edge,
+    case: `We project ${s.projection} ${stat}, ${s.gap} ${s.over ? "over" : "under"} the line.`,
+    gap: s.gap,
   };
 }

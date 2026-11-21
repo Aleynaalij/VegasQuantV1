@@ -35,7 +35,7 @@ export default function PropFinderLink({
         <b>{label || "NBA Prop Finder"}</b>
         <small>
           {game
-            ? "Every player prop in this game, ranked with hit rates and our estimate"
+            ? "Every player prop in this game, with hit rates and our projection against the line"
             : "Every NBA prop tonight, ranked. Search a player, tap for the chart."}
         </small>
       </span>

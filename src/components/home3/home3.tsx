@@ -30,7 +30,7 @@ import { buildPropRows, type PropRow } from "@/lib/nba-props";
 import { nbaWhen } from "@/lib/nba-home";
 import {
   board,
-  edgeSide,
+  leanSide,
   greeting,
   headline,
   heat,
@@ -38,7 +38,7 @@ import {
   odds,
   tally,
   tickerItems,
-  topEdges,
+  topGaps,
   boardPreview,
   type BoardRow,
 } from "@/lib/home3";
@@ -265,8 +265,8 @@ function opponentLine(r: PropRow) {
 }
 
 function EdgeCard({ r, rank }: { r: PropRow; rank: number }) {
-  const s = edgeSide(r);
-  const h = heat(s.edge);
+  const s = leanSide(r);
+  const h = heat(s.gap, r.trend.line);
   return (
     <Link
       className={`h3-edge heat-${h}`}
@@ -290,12 +290,14 @@ function EdgeCard({ r, rank }: { r: PropRow; rank: number }) {
         <em>{odds(s.price)}</em>
       </div>
       <div className="h3-edge-nums">
-        <span className="h3-edge-pill">
-          +{s.edge} <small>edge</small>
-        </span>
-        {s.chance != null && (
+        {s.projection != null && (
+          <span className="h3-edge-pill">
+            {s.projection} <small>proj.</small>
+          </span>
+        )}
+        {s.gap != null && (
           <span className="h3-chance">
-            {s.chance}% <small>our est.</small>
+            {s.gap} <small>{s.over ? "over" : "under"} the line</small>
           </span>
         )}
       </div>
@@ -317,7 +319,7 @@ function EdgeCard({ r, rank }: { r: PropRow; rank: number }) {
 }
 
 function EdgeRail({ edges, now }: { edges: Edges; now: number }) {
-  const top = useMemo(() => topEdges(edges.rows, now), [edges.rows, now]);
+  const top = useMemo(() => topGaps(edges.rows, now), [edges.rows, now]);
   const total = edges.rows.length;
   return (
     <section className="h3-section" aria-labelledby="h3-edges-title">
@@ -326,7 +328,7 @@ function EdgeRail({ edges, now }: { edges: Edges; now: number }) {
           <span className="h3-eyebrow">
             <Sparkles size={13} /> NBA · tonight
           </span>
-          <h2 id="h3-edges-title">Best edges on the board</h2>
+          <h2 id="h3-edges-title">Projection vs the line</h2>
         </div>
         <Link href="/nba/props">
           {total ? `All ${total} props` : "Prop Finder"}{" "}
@@ -350,10 +352,10 @@ function EdgeRail({ edges, now }: { edges: Edges; now: number }) {
         <Link className="h3-locked" href="/membership">
           <Lock size={18} />
           <span>
-            <b>Tonight&rsquo;s edges are for members</b>
+            <b>Tonight&rsquo;s props are for members</b>
             <small>
-              Our estimate vs the book&rsquo;s no-vig price, the best price
-              across books and every hit rate.
+              Our projection against every line, the best price across books and
+              every hit rate.
             </small>
           </span>
           <ArrowUpRight size={16} />
@@ -361,7 +363,7 @@ function EdgeRail({ edges, now }: { edges: Edges; now: number }) {
       )}
       {edges.state === "ready" && edges.member && !top.length && (
         <p className="h3-quiet">
-          No edges yet: lines post closer to tip.{" "}
+          No props yet: lines post closer to tip.{" "}
           <Link href="/nba/props">See every prop</Link>
         </p>
       )}
@@ -377,10 +379,10 @@ function EdgeRail({ edges, now }: { edges: Edges; now: number }) {
 }
 
 function Headliner({ edges, now }: { edges: Edges; now: number }) {
-  const r = useMemo(() => topEdges(edges.rows, now, 1)[0], [edges.rows, now]);
+  const r = useMemo(() => topGaps(edges.rows, now, 1)[0], [edges.rows, now]);
   const story = r ? headline(r) : null;
   if (!r || !story) return null;
-  const s = edgeSide(r);
+  const s = leanSide(r);
   return (
     <Link
       className="h3-headliner"
@@ -399,7 +401,7 @@ function Headliner({ edges, now }: { edges: Edges; now: number }) {
           <small>{opponentLine(r)}</small>
         </div>
         <span className="h3-edge-pill">
-          +{story.edge} <small>edge</small>
+          {story.gap} <small>{s.over ? "over" : "under"}</small>
         </span>
       </div>
       <p>
@@ -720,8 +722,8 @@ export function Home3View({
         </section>
         <Board rows={rows} loading={loading} failed={failed} />
         <footer className="h3-foot">
-          Research, not guarantees. Edges compare our estimate with the
-          book&rsquo;s no-vig price on fresh lines only.
+          Research, not guarantees. Projections come from each player&rsquo;s
+          game log on fresh lines only; they are not win chances or edges.
         </footer>
       </div>
     </div>

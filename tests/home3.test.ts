@@ -3,14 +3,14 @@ import test from "node:test";
 import {
   board,
   boardPreview,
-  edgeSide,
+  leanSide,
   greeting,
   headline,
   heat,
   hotStreaks,
   tally,
   tickerItems,
-  topEdges,
+  topGaps,
 } from "../src/lib/home3";
 import type { PropRow } from "../src/lib/nba-props";
 import type { LiveGame } from "../src/lib/live-scores";
@@ -23,8 +23,8 @@ function row(p: {
   id: string;
   name?: string;
   market?: "player_points" | "player_rebounds";
-  edge: number | null;
-  chance?: number;
+  /** Projection minus the line (projGap). */
+  gap: number | null;
   fair?: number | null;
   streak?: number;
   stale?: boolean;
@@ -34,10 +34,10 @@ function row(p: {
   return {
     key: `${p.id}|${p.market || "player_points"}`,
     stale: !!p.stale,
-    edge: p.edge,
+    projGap: p.gap,
     fair: p.fair === undefined ? 50 : p.fair,
     streak: p.streak ?? 0,
-    estimate: p.chance == null ? null : ({ chance: p.chance } as never),
+    estimate: p.gap == null ? null : ({ projection: 20.5 + p.gap } as never),
     trend: {
       player: p.name || `Player ${p.id}`,
       line: 20.5,
@@ -78,51 +78,55 @@ test("greeting follows Eastern time", () => {
   assert.equal(greeting(Date.parse("2026-11-20T07:00:00Z")), "Late night");
 });
 
-test("edge side flips the numbers for an under lean", () => {
-  const over = edgeSide(row({ id: "a", edge: 6, chance: 58, hits: 7 }));
+test("lean side flips the numbers for an under lean, gap never negative", () => {
+  const over = leanSide(row({ id: "a", gap: 4.2, hits: 7 }));
   assert.equal(over.over, true);
-  assert.equal(over.edge, 6);
-  assert.equal(over.chance, 58);
+  assert.equal(over.gap, 4.2);
+  assert.equal(over.projection, 24.7);
   assert.equal(over.hits, 7);
-  const under = edgeSide(row({ id: "b", edge: -5, chance: 40, hits: 3 }));
+  const under = leanSide(row({ id: "b", gap: -3.5, hits: 3 }));
   assert.equal(under.over, false);
-  assert.equal(under.edge, 5);
-  assert.equal(under.chance, 60);
+  assert.equal(under.gap, 3.5);
+  assert.equal(under.projection, 17);
   assert.equal(under.hits, 7, "under hits are the misses of the over");
+  const none = leanSide(row({ id: "c", gap: null }));
+  assert.equal(none.gap, null);
+  assert.equal(none.projection, null);
 });
 
-test("heat bands", () => {
+test("heat bands are relative to the line", () => {
   assert.deepEqual(
-    [null, 0, 1, 3, 5.9, 6, 12].map(heat),
-    [0, 0, 1, 2, 2, 3, 3],
+    [null, 0, 1, 2.5, 2.6, 5, 5.2, 9].map((g) => heat(g, 20.5)),
+    [0, 0, 1, 1, 2, 2, 3, 3],
   );
+  assert.equal(heat(2, 0), 0);
 });
 
-test("top edges: fresh, upcoming, positive, one per player, strongest first", () => {
+test("top gaps: fresh, upcoming, any side, one per player, biggest first", () => {
   const rows = [
-    row({ id: "a", edge: 3, chance: 55 }),
-    row({ id: "a", market: "player_rebounds", edge: 7, chance: 60 }),
-    row({ id: "b", edge: -9, chance: 30 }),
-    row({ id: "c", edge: 12, chance: 70, stale: true }),
-    row({ id: "d", edge: 10, chance: 65, tipIn: -1 }),
-    row({ id: "e", edge: null }),
-    row({ id: "f", edge: 0, chance: 50 }),
+    row({ id: "a", gap: 2 }),
+    row({ id: "a", market: "player_rebounds", gap: 4 }),
+    row({ id: "b", gap: -6 }),
+    row({ id: "c", gap: 9, stale: true }),
+    row({ id: "d", gap: 8, tipIn: -1 }),
+    row({ id: "e", gap: null }),
+    row({ id: "f", gap: 0 }),
   ];
-  const top = topEdges(rows, NOW);
+  const top = topGaps(rows, NOW);
   assert.deepEqual(
     top.map((r) => r.key),
     ["b|player_points", "a|player_rebounds"],
   );
-  assert.equal(topEdges(rows, NOW, 1).length, 1);
+  assert.equal(topGaps(rows, NOW, 1).length, 1);
 });
 
 test("hot streaks: 3+ active, one per player, longest first", () => {
   const rows = [
-    row({ id: "a", edge: 1, streak: 4 }),
-    row({ id: "a", market: "player_rebounds", edge: 1, streak: -6 }),
-    row({ id: "b", edge: 1, streak: 2 }),
-    row({ id: "c", edge: 1, streak: 5, tipIn: -2 }),
-    row({ id: "d", edge: 1, streak: 3 }),
+    row({ id: "a", gap: 1, streak: 4 }),
+    row({ id: "a", market: "player_rebounds", gap: 1, streak: -6 }),
+    row({ id: "b", gap: 1, streak: 2 }),
+    row({ id: "c", gap: 1, streak: 5, tipIn: -2 }),
+    row({ id: "d", gap: 1, streak: 3 }),
   ];
   assert.deepEqual(
     hotStreaks(rows, NOW).map((r) => [r.player.athlete_id, r.streak]),
@@ -133,14 +137,12 @@ test("hot streaks: 3+ active, one per player, longest first", () => {
   );
 });
 
-test("headline states form, our estimate and the book's fair chance for the side", () => {
+test("headline states form and the projection against the line, never a win chance", () => {
   const h = headline(
     row({
       id: "a",
       name: "Jalen Brunson",
-      edge: 8,
-      chance: 61,
-      fair: 53,
+      gap: 4.5,
       hits: 8,
     }),
   );
@@ -149,14 +151,12 @@ test("headline states form, our estimate and the book's fair chance for the side
     h.form,
     /Jalen Brunson has gone over 20\.5 points in 8 of his last 10\./,
   );
-  assert.match(h.case, /over 61%; the book's fair price says 53%/);
-  const u = headline(row({ id: "b", edge: -6, chance: 40, fair: 54, hits: 3 }));
+  assert.equal(h.case, "We project 25 points, 4.5 over the line.");
+  assert.doesNotMatch(h.case, /%|edge/);
+  const u = headline(row({ id: "b", gap: -3, hits: 3 }));
   assert.ok(u);
-  assert.match(u.case, /under 60%; the book's fair price says 46%/);
-  assert.equal(
-    headline(row({ id: "c", edge: 4, chance: 55, fair: null })),
-    null,
-  );
+  assert.equal(u.case, "We project 17.5 points, 3 under the line.");
+  assert.equal(headline(row({ id: "c", gap: null })), null);
 });
 
 const game = (

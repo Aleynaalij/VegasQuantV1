@@ -35,10 +35,10 @@ function fairOver(over: number | null, under: number | null) {
 }
 
 /**
- * One FanDuel prop against the player's recorded games: our estimate and projection, projected
+ * One FanDuel prop against the player's recorded games: our projection against the line, projected
  * minutes, a bar per game with the line drawn across, minutes and usage per game, hit rates over the
  * last 5, 10 and 20 games and the season, Home/Away and rest filters, and how tonight's defense
- * treats his position. Recorded box scores only; the estimate is research, not a pick.
+ * treats his position. Recorded box scores only; the projection is research, not a pick.
  */
 export default function NbaPropCard({
   trend,
@@ -110,11 +110,11 @@ export default function NbaPropCard({
           </small>
         </div>
         <div className="npc-rate">
-          <b>{estimate ? `${estimate.chance}%` : "—"}</b>
+          <b>{estimate ? estimate.projection : "—"}</b>
           <small>
             {estimate
-              ? `our estimate · projecting ${estimate.projection}`
-              : "estimate needs 5 games"}
+              ? `our projection · ${Math.abs(Math.round((estimate.projection - trend.line) * 10) / 10)} ${estimate.projection >= trend.line ? "over" : "under"} the line`
+              : "projection needs 5 games"}
           </small>
         </div>
       </header>
@@ -323,10 +323,10 @@ export default function NbaPropCard({
       ) : null}
 
       <p className="nbar-note">
-        Our estimate: his per-minute {STAT[trend.market]} (season and last 10)
+        Our projection: his per-minute {STAT[trend.market]} (season and last 10)
         times projected minutes, adjusted for tonight&rsquo;s defense against
-        his position, with the spread of his own games. From our recorded box
-        scores; research, not a pick.
+        his position. From our recorded box scores. A projection, not a win
+        chance or an edge; research, not a pick.
       </p>
     </div>
   );

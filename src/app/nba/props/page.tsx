@@ -4,7 +4,7 @@ import { Shell } from "@/components/ui";
 export const metadata = {
   title: "NBA Prop Finder | Vegas Quant",
   description:
-    "Tonight's NBA player props ranked by our estimate, hit rates and best price across books. Research, not picks.",
+    "Tonight's NBA player props with our projection against each line, hit rates and best price across books. Research, not picks.",
 };
 export default function Page() {
   return (

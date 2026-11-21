@@ -1,7 +1,11 @@
 /**
  * Prop Finder rows: one row per FanDuel points/rebounds line on tonight's slate, with everything a
- * bettor scans for at a glance (hit rates, streak, our estimate, the edge over the book's no-vig
- * price, the best price across books). Pure functions; the slate comes from nba-tonight.
+ * bettor scans for at a glance (hit rates, streak, our projection against the line, the book's
+ * no-vig price, the best price across books). Pure functions; the slate comes from nba-tonight.
+ *
+ * No edge or win chance is shown: a season backtest (3,463 FanDuel lines, Nov 2026) found the
+ * model's "edge" over the no-vig price did not hold up (15+ point edges hit about 53% while
+ * claiming about 73%; the market alone predicted better). The projection is shown as a projection.
  */
 import {
   hitRate,
@@ -54,8 +58,11 @@ export type PropRow = {
   estimate: Estimate | null;
   /** FanDuel's over chance with the vig removed. */
   fair: number | null;
-  /** Our estimate minus the book's no-vig chance, in percentage points. */
-  edge: number | null;
+  /**
+   * Our projection minus the line, in the stat's own units (points or rebounds), to one decimal.
+   * Null without a projection or when FanDuel's line is stale.
+   */
+  projGap: number | null;
   matchup: Matchup | null;
   /** Best over and under price at this exact line across books. */
   bestOver: Price | null;
@@ -64,7 +71,7 @@ export type PropRow = {
   books: BookQuote[];
   /**
    * FanDuel's line is over an hour old by provider time (or its time is unknown): the row is shown,
-   * labelled, but has no edge and drops out of "Best edge".
+   * labelled, but has no projection gap and drops out of "Biggest gap".
    */
   stale: boolean;
   /** FanDuel's line from its first stored snapshot to now, when it has more than one state. */
@@ -177,7 +184,10 @@ export function buildPropRows(
         minutes,
         estimate,
         fair,
-        edge: estimate && fair != null ? estimate.chance - fair : null,
+        projGap:
+          estimate && !stale
+            ? Math.round((estimate.projection - trend.line) * 10) / 10
+            : null,
         matchup,
         bestOver: best(books, "over"),
         bestUnder: best(books, "under"),
@@ -200,9 +210,9 @@ export function buildPropRows(
   return rows;
 }
 
-export type PropSort = "edge" | "hot" | "streak" | "line";
+export type PropSort = "gap" | "hot" | "streak" | "line";
 export const SORTS: { key: PropSort; label: string }[] = [
-  { key: "edge", label: "Best edge" },
+  { key: "gap", label: "Projection vs line" },
   { key: "hot", label: "Hottest L10" },
   { key: "streak", label: "Streaks" },
   { key: "line", label: "Avg vs line" },
@@ -212,7 +222,7 @@ export const SORTS: { key: PropSort; label: string }[] = [
 export function sortRows(rows: PropRow[], by: PropSort) {
   const pct = (r: ReturnType<typeof hitRate>) => (r ? r.pct : 50);
   const score: Record<PropSort, (r: PropRow) => number> = {
-    edge: (r) => (r.edge == null ? -1 : Math.abs(r.edge)),
+    gap: (r) => (r.projGap == null ? -1 : Math.abs(r.projGap)),
     hot: (r) => Math.abs(pct(r.l10) - 50),
     streak: (r) => Math.abs(r.streak),
     line: (r) => Math.abs(r.trend.gap),
@@ -225,13 +235,13 @@ export function sortRows(rows: PropRow[], by: PropSort) {
 }
 
 /**
- * Which side the numbers favor. Against the book when both prices are known: the side our estimate
- * rates above the book's no-vig chance, so the edge shown (and ranked) is never negative. Otherwise
- * our estimate, else the L10 hit rate.
+ * Which side the numbers point to: the side of the line our projection falls on, else the L10 hit
+ * rate. A direction, not a pick or a win chance.
  */
 export function lean(r: PropRow): "over" | "under" | null {
-  if (r.edge != null) return r.edge >= 0 ? "over" : "under";
-  if (r.estimate) return r.estimate.chance >= 50 ? "over" : "under";
+  if (r.projGap != null) return r.projGap >= 0 ? "over" : "under";
+  if (r.estimate)
+    return r.estimate.projection >= r.trend.line ? "over" : "under";
   if (r.l10) return r.l10.pct >= 50 ? "over" : "under";
   return null;
 }
