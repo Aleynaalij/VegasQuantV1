@@ -1,0 +1,81 @@
+{
+  "model_id": "vq-empirical-game/0.2.10.1",
+  "status": "RESEARCH_REVIEW_REQUIRED",
+  "model_sha256": "3497dee8dd2263230311d897b96a1dc1c6d31df929b45583458db75c91a09086",
+  "seed": 1701,
+  "runs": {
+    "requested": 10000,
+    "actual": 10000,
+    "failed": 0
+  },
+  "reproduction_passed": true,
+  "calibration_adopted": false,
+  "trace": {
+    "events": 153,
+    "rules_replay_verified": true
+  },
+  "files": {
+    "model.json.gz": {
+      "sha256": "3808867f2d641f7b6c2d4f8df9006f5289b91cd9ffcaf6e0386010d86ab5bc5a",
+      "canonical_sha256": "3497dee8dd2263230311d897b96a1dc1c6d31df929b45583458db75c91a09086"
+    },
+    "batch.json.gz": {
+      "sha256": "6c8fa2ee25cba90c3b046fc75bf2dbb027d59eac483f07713baceb9a9d6859bc",
+      "canonical_sha256": "2900f9ee968835c5a96c81d0c548ae03a966a34dbba6315ec2d9636c453dfe6b"
+    },
+    "gate.json.gz": {
+      "sha256": "703cefc3116cb96c242fce07fa2290753a5a2a39d7773e5f399010cfadce11f4",
+      "canonical_sha256": "ed204e08be9c6dcdbc04ec42c89c13845e000c294f9ccd500081cd1e1ed34b69"
+    },
+    "calibration.json.gz": {
+      "sha256": "1c5800fa0dec2e7d9637781440f3662c00f73e4bfe46501429ca5856a22755c9",
+      "canonical_sha256": "22ca2f157ced54924ba417d1605fe5af8f9315dc99c43f93082dcab77646269f"
+    },
+    "replay.json.gz": {
+      "sha256": "9e7d96edfb5228577079a239da2a5aeccc91e8940bcbd1de61c24fc43beed56f",
+      "canonical_sha256": "3de5e1e32ee0a702e90e61f78e0c46ec856abf1a431ccd571b52a5f4aaab6a23"
+    },
+    "runtime-source.json.gz": {
+      "sha256": "8fc1ac29b17793071c968ea1aa3fed4fc105deba2eb44a6e30981b5688e78071",
+      "canonical_sha256": "f5f24c390b6e7cce86a13203fa8ceeffad895fbdfa23016eff739b2018752bf1"
+    }
+  },
+  "implementation_sha256": {
+    "integrated.py": "95570f6b1fa48944a817d65d6d8c57b9e4a736fe16060f6db7405bd734c0008b",
+    "model.py": "91a303e042650ca54d4ac1b88848057c3cb5974af4be30bd674a7dcf383bc41b",
+    "state.py": "5b3147c3e8e3fdd71c2e9838fe2a02fd5071ba3aa2dec6298a6ced91accb6c3e",
+    "batch.py": "09b6586a127ca0b441946d2d4a263ded1c933447f2109abefee84d1ac17ddaa3",
+    "evaluate.py": "529a0e5c4d869049cd736045d9720208b8c93c6af5c007bcc0454e91742bf0d1",
+    "render.py": "f3fb9d395e8d069c4733cbbc0da0427b6031c66804669b714c9c4a995a007450",
+    "INTEGRATED_BUILD_PROTOCOL.md": "9f6b36fdfb1a76b2b1e28e2a8294ecf589c4ba4bf4c5c053379164eca95b9a1f",
+    "FIELD_CONTEXT_PROTOCOL.md": "450b171ca212c7bf462bf87e98f5f14deff4bb9fd91204131405fdec29aa5632",
+    "LATE_SCORE_PROTOCOL.md": "a6b6b3a8709c54b5001a5a8168574bbabd6031f9d633d10698361e8c9b86095d",
+    "HALF_CONTEXT_PROTOCOL.md": "6619c3aa81b35b7f57ef3503f79bfa6d1963be0e7223d90379bf1f13adadec72",
+    "TIMEOUT_BUDGET_PROTOCOL.md": "abe8f2ad6b8c3b80f5dde5d8a14c0654e63d72959cadcf51485313f9b9f3ea0e",
+    "TIMEOUT_SUPPORT_PROTOCOL.md": "beedd471ad8bfcde55c843a503552210061259247509d531a2a32e812d59cea8",
+    "LAST300_PROTOCOL.md": "e9c110f68438ff5d03ca9c10e5cb44a1a76ea8400213f1f9a52e0f53c20a6cfb",
+    "COMPOUND_TIMEOUT_PROTOCOL.md": "69496ce56ad41cc61289b4015a7dfc754bde6eef231ebdb8b9ee79612ca3f422",
+    "TWO_STAGE_TIMEOUT_PROTOCOL.md": "fd32157850b849776849ce997342516ef00f5a8cf94f13c10bd40e4d7e032434",
+    "STOP_CLOCK_PROTOCOL.md": "8c4cc7170a04cc7404f0509f7f375bd715429414b62096ad37ca65860e8ea330",
+    "COMPETING_TIMEOUT_PROTOCOL.md": "a64aba1199e0eb1a4c21fe930397029ce6a210d1162b458340d4b0af319a0161",
+    "RELOAD_PROTOCOL.md": "890f3c69dd41e1a17795636fd0f3d534b6f0a7e95e56a8a5a94d25cd49922447"
+  },
+  "blockers": [
+    "UNCALIBRATED_LEAGUE_BASELINE",
+    "NOT_A_CURRENT_MATCHUP_FORECAST",
+    "NO_CURRENT_ROSTER_OR_AVAILABILITY",
+    "PLAYER_WORKLOAD_NOT_YET_SUPPORTED",
+    "HISTORICAL_KICKOFF_DISTRIBUTION",
+    "COMPOUND_LIVE_BALL_PENALTIES_EXCLUDED"
+  ],
+  "sources": [
+    {
+      "file": "play_by_play_2022.csv.gz",
+      "sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+      "source_url": "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2022.csv.gz"
+    }
+  ],
+  "approval": false,
+  "current_matchup_supported": false,
+  "team_player_coupling_enabled": false
+}

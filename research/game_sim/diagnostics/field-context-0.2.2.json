@@ -1,0 +1,30 @@
+{
+  "model_id": "vq-empirical-game/0.2.2",
+  "seed": 1701,
+  "counts": {
+    "states": 39347,
+    "source_fg": 1044,
+    "sample_fg": 910,
+    "sample_punt_before_fourth": 0,
+    "sample_fg_beyond_62_yards": 4,
+    "late_states": 569,
+    "late_source_fg": 132,
+    "late_sample_fg": 79
+  },
+  "excluded": {
+    "could not convert string to float: ''": 3391
+  },
+  "fallbacks": {
+    "6": 32467,
+    "5": 4356,
+    "4": 2089,
+    "clock_preserved_samples": 5166,
+    "censoring_non_td": 135,
+    "censoring_restored_td": 279,
+    "3": 435,
+    "thin_context_support": 37
+  },
+  "model_file_sha256": "062aff748c5b5ac2dabb880cfb496f888d4be39120614309447d456ec8873333",
+  "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "scope": "One sampled action at each valid historical state; source-state fit diagnostic, not held-out accuracy or executable recommendations"
+}

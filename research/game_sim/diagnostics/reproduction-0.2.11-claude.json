@@ -1,0 +1,33 @@
+{
+  "scope": "Claude independent reproduction of v0.2.11 at f5d1bc0 (SIMULATOR-RESUME-01); no model or artifact changed",
+  "run_on": "2026-11-06",
+  "source": "play_by_play_2022.csv.gz",
+  "source_sha256": "0c69a71eb39498956c7b1d5c1ca52ce7fe679934a95d1af249facb5ea9829ea4",
+  "tests": "python -m unittest discover -s tests/game_sim: 129 OK, 1 skipped (source-byte test needs local data)",
+  "verify_package": {
+    "v0.2.10.1": "6/6 files, source verified, 10000/0 failed, base checks pass; gate predates the 9th diagnostic (not measured)",
+    "v0.2.11": "6/6 files, source verified, 10000/0 failed; FAIL timeouts 7.3488 vs 7.7823 (tol 0.3896)",
+    "v0.2.11-evidence-correction": "FAIL late_timeout_followed_plays 1.995 vs corrected source 4.4834; timeouts as above"
+  },
+  "refit": {
+    "model_sha256": "7989b3f3a69e304c941f2826b0721f3d2cf3b36c7dd6946e37a120660fb3397b",
+    "refit_model_sha256": "7989b3f3a69e304c941f2826b0721f3d2cf3b36c7dd6946e37a120660fb3397b",
+    "matches": true
+  },
+  "reload_batch": {
+    "runs": {
+      "requested": 10000,
+      "actual": 10000,
+      "failed": 0
+    },
+    "seed": 1701,
+    "overtime": "old",
+    "stored_canonical_sha256": "9fa52aac36a9809d2bbbd263f6b7190176fe625737d79e03047bb5febb543e24",
+    "rerun_canonical_sha256": "44a00fc696ff10bd67604cf32bad30005a0af9224a238f2749b67437f7727a12",
+    "differing_fields": [
+      "generated_at",
+      "runtime_seconds"
+    ],
+    "all_other_fields_identical": true
+  }
+}

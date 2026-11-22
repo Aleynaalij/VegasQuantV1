@@ -1,0 +1,431 @@
+{
+  "scope": "ACCOUNTING_ONLY",
+  "package": "research/game_sim/artifacts/v0.2.24",
+  "runs": {
+    "actual": 10000,
+    "failed": 0,
+    "requested": 10000
+  },
+  "model_sha256": "f0b8ab26b0605ad50e0212b23b3186f7a78eeced281989e2655505950977512d",
+  "play_context_paths": {
+    "last300_normal": {
+      "drop:distance+lead": 454,
+      "drop:down+distance+lead": 39,
+      "drop:lead": 939,
+      "exact": 1396
+    },
+    "late": {
+      "drop:distance": 29094,
+      "drop:down+distance": 142506,
+      "exact": 45376,
+      "floor:coarse_lead": 108382,
+      "floor:coarse_lead+goal_zone": 2252,
+      "pooled_half:coarse_lead": 265
+    },
+    "normal": {
+      "drop:distance+lead": 24288,
+      "drop:down+distance+lead": 1497,
+      "drop:lead": 84789,
+      "exact": 1229810,
+      "floor:phase+clock+zone": 168
+    }
+  },
+  "play_context_draws": 1671255,
+  "play_context_length": {
+    "3": 1704,
+    "4": 278147,
+    "5": 114822,
+    "6": 1276582
+  },
+  "band_labels": {
+    "band_preserved_samples": 327875,
+    "band_half_preserved_samples": 327610,
+    "band_half_pooled_fallback": 265,
+    "last300_normal_fallback": 2828
+  },
+  "two_minute_warning": {
+    "two_minute_warning_snapped": 19233,
+    "two_minute_warning_seconds_restored": 322949,
+    "warning_censored_resampled": 14860,
+    "warning_censored_unresolved": 378
+  },
+  "terminal_full_count_keys": {
+    "running": [
+      "le300@h1|defense",
+      "le300@h1|offense",
+      "le300@h2|defense",
+      "le300@h2|offense"
+    ],
+    "stopped": [
+      "le120@h1|both",
+      "le120@h1|offense",
+      "le300@h2|both",
+      "le300@h2|defense",
+      "le300@h2|offense"
+    ]
+  },
+  "terminal_full_count_lookups": 15533,
+  "terminal_full_count_by_key": {
+    "running:le300@h1|defense": 1293,
+    "running:le300@h1|offense": 2304,
+    "running:le300@h2|defense": 2179,
+    "running:le300@h2|offense": 660,
+    "stopped:le120@h1|both": 668,
+    "stopped:le120@h1|offense": 2915,
+    "stopped:le300@h2|both": 2943,
+    "stopped:le300@h2|defense": 816,
+    "stopped:le300@h2|offense": 1755
+  },
+  "terminal_floor_lookups": {
+    "timeout_terminal_floor:running:le300@h1|both": 2080,
+    "timeout_terminal_floor:running:le300@h1|defense": 1293,
+    "timeout_terminal_floor:running:le300@h1|offense": 2304,
+    "timeout_terminal_floor:running:le300@h2|both": 3359,
+    "timeout_terminal_floor:running:le300@h2|defense": 2179,
+    "timeout_terminal_floor:running:le300@h2|offense": 660,
+    "timeout_terminal_floor:stopped:le120@h1|both": 668,
+    "timeout_terminal_floor:stopped:le120@h1|offense": 2915,
+    "timeout_terminal_floor:stopped:le300@h2|both": 2943,
+    "timeout_terminal_floor:stopped:le300@h2|defense": 816,
+    "timeout_terminal_floor:stopped:le300@h2|offense": 1755,
+    "timeout_terminal_floor:stopped:normal@all~role|both": 2517,
+    "timeout_terminal_floor:stopped:normal@all~role|offense": 5964
+  },
+  "clipping": {
+    "elapsed_clipped_to_clock": 36728,
+    "spot_clamped": 2937,
+    "yards_clamped_to_field": 16131,
+    "runoff_clipped_to_clock": 1325,
+    "penalty_half_distance": 1166
+  },
+  "other_paths": {
+    "avoided_runoff_seconds": 549227,
+    "band_half_pooled_fallback": 265,
+    "band_half_preserved_samples": 327610,
+    "band_preserved_samples": 327875,
+    "censoring_non_td": 5318,
+    "censoring_restored_td": 12070,
+    "coarsened_timeout_cell": 35608,
+    "coupled_stops": 42780,
+    "elapsed_clipped_to_clock": 36728,
+    "last300_normal_fallback": 2828,
+    "missing_eligible_stop_duration": 1824,
+    "penalty_half_distance": 1166,
+    "role_marginal_timeout_cell": 8481,
+    "role_marginal_timeout_cell:both": 2517,
+    "runoff_clipped_to_clock": 1325,
+    "source_stop_runoff_replaced": 25851,
+    "spot_clamped": 2937,
+    "stop_clock_candidates": 184216,
+    "thin_context_support": 50190,
+    "thin_runoff_context": 1268,
+    "thin_stop_duration_context": 47650,
+    "two_minute_warning_seconds_restored": 322949,
+    "two_minute_warning_snapped": 19233,
+    "warning_censored_resampled": 14860,
+    "warning_censored_unresolved": 378,
+    "yards_clamped_to_field": 16131
+  },
+  "timeout_cell_depths": {
+    "timeout_cell:running:depth0": 93654,
+    "timeout_cell:running:depth1": 55276,
+    "timeout_cell:running:depth2": 6086,
+    "timeout_cell:running:depth3": 15501,
+    "timeout_cell:running:depth4": 6404,
+    "timeout_cell:running:depth6": 5471,
+    "timeout_cell:stopped:depth0": 1246593,
+    "timeout_cell:stopped:depth1": 80890,
+    "timeout_cell:stopped:depth2": 21377,
+    "timeout_cell:stopped:depth3": 24585,
+    "timeout_cell:stopped:depth4": 4480,
+    "timeout_cell:stopped:depth5": 6288,
+    "timeout_cell:stopped:depth6": 12965
+  },
+  "reconciliation": {
+    "mode": "cross_version_comparison",
+    "relabel_checks": "not_applicable: the previous batch has no retired labels",
+    "counters_changed": {
+      "avoided_runoff_seconds": {
+        "old": 548746,
+        "new": 549227
+      },
+      "band_half_pooled_fallback": {
+        "old": 266,
+        "new": 265
+      },
+      "band_half_preserved_samples": {
+        "old": 327650,
+        "new": 327610
+      },
+      "band_preserved_samples": {
+        "old": 327916,
+        "new": 327875
+      },
+      "censoring_non_td": {
+        "old": 5324,
+        "new": 5318
+      },
+      "censoring_restored_td": {
+        "old": 12077,
+        "new": 12070
+      },
+      "coarsened_timeout_cell": {
+        "old": 35461,
+        "new": 35608
+      },
+      "coupled_stops": {
+        "old": 42791,
+        "new": 42780
+      },
+      "elapsed_clipped_to_clock": {
+        "old": 36726,
+        "new": 36728
+      },
+      "last300_normal_fallback": {
+        "old": 2833,
+        "new": 2828
+      },
+      "missing_eligible_stop_duration": {
+        "old": 1826,
+        "new": 1824
+      },
+      "penalty_half_distance": {
+        "old": 1161,
+        "new": 1166
+      },
+      "play_context:last300_normal:drop:distance+lead": {
+        "old": 453,
+        "new": 454
+      },
+      "play_context:last300_normal:drop:down+distance+lead": {
+        "old": 40,
+        "new": 39
+      },
+      "play_context:last300_normal:exact": {
+        "old": 1401,
+        "new": 1396
+      },
+      "play_context:late:drop:distance": {
+        "old": 29099,
+        "new": 29094
+      },
+      "play_context:late:drop:down+distance": {
+        "old": 142511,
+        "new": 142506
+      },
+      "play_context:late:exact": {
+        "old": 45396,
+        "new": 45376
+      },
+      "play_context:late:floor:coarse_lead": {
+        "old": 108390,
+        "new": 108382
+      },
+      "play_context:late:floor:coarse_lead+goal_zone": {
+        "old": 2254,
+        "new": 2252
+      },
+      "play_context:late:pooled_half:coarse_lead": {
+        "old": 266,
+        "new": 265
+      },
+      "play_context:normal:drop:distance+lead": {
+        "old": 24255,
+        "new": 24288
+      },
+      "play_context:normal:drop:lead": {
+        "old": 84774,
+        "new": 84789
+      },
+      "play_context:normal:exact": {
+        "old": 1229845,
+        "new": 1229810
+      },
+      "play_context_length:3": {
+        "old": 1705,
+        "new": 1704
+      },
+      "play_context_length:4": {
+        "old": 278129,
+        "new": 278147
+      },
+      "play_context_length:5": {
+        "old": 114812,
+        "new": 114822
+      },
+      "play_context_length:6": {
+        "old": 1276642,
+        "new": 1276582
+      },
+      "role_marginal_timeout_cell": {
+        "old": 8381,
+        "new": 8481
+      },
+      "role_marginal_timeout_cell:both": {
+        "old": null,
+        "new": 2517
+      },
+      "runoff_clipped_to_clock": {
+        "old": 1326,
+        "new": 1325
+      },
+      "separate_timeout:running:defense": {
+        "old": 24210,
+        "new": 24194
+      },
+      "separate_timeout:running:offense": {
+        "old": 18581,
+        "new": 18586
+      },
+      "separate_timeout:stopped:defense": {
+        "old": 12851,
+        "new": 12858
+      },
+      "separate_timeout:stopped:offense": {
+        "old": 20758,
+        "new": 20771
+      },
+      "source_stop_runoff_replaced": {
+        "old": 25847,
+        "new": 25851
+      },
+      "spot_clamped": {
+        "old": 2940,
+        "new": 2937
+      },
+      "stop_clock_candidates": {
+        "old": 184250,
+        "new": 184216
+      },
+      "thin_context_support": {
+        "old": 50169,
+        "new": 50190
+      },
+      "thin_runoff_context": {
+        "old": 1271,
+        "new": 1268
+      },
+      "thin_stop_duration_context": {
+        "old": 47660,
+        "new": 47650
+      },
+      "timeout_cell:running:depth0": {
+        "old": 93693,
+        "new": 93654
+      },
+      "timeout_cell:running:depth1": {
+        "old": 55283,
+        "new": 55276
+      },
+      "timeout_cell:running:depth2": {
+        "old": 6096,
+        "new": 6086
+      },
+      "timeout_cell:running:depth3": {
+        "old": 15473,
+        "new": 15501
+      },
+      "timeout_cell:running:depth4": {
+        "old": 6398,
+        "new": 6404
+      },
+      "timeout_cell:running:depth6": {
+        "old": 5481,
+        "new": 5471
+      },
+      "timeout_cell:stopped:depth0": {
+        "old": 1246678,
+        "new": 1246593
+      },
+      "timeout_cell:stopped:depth1": {
+        "old": 81016,
+        "new": 80890
+      },
+      "timeout_cell:stopped:depth2": {
+        "old": 21390,
+        "new": 21377
+      },
+      "timeout_cell:stopped:depth3": {
+        "old": 24564,
+        "new": 24585
+      },
+      "timeout_cell:stopped:depth4": {
+        "old": 4457,
+        "new": 4480
+      },
+      "timeout_cell:stopped:depth5": {
+        "old": 6264,
+        "new": 6288
+      },
+      "timeout_cell:stopped:depth6": {
+        "old": 12861,
+        "new": 12965
+      },
+      "timeout_terminal_floor:running:le300@h1|both": {
+        "old": 2082,
+        "new": 2080
+      },
+      "timeout_terminal_floor:running:le300@h1|defense": {
+        "old": 1292,
+        "new": 1293
+      },
+      "timeout_terminal_floor:running:le300@h1|offense": {
+        "old": 2301,
+        "new": 2304
+      },
+      "timeout_terminal_floor:running:le300@h2|both": {
+        "old": 3366,
+        "new": 3359
+      },
+      "timeout_terminal_floor:running:le300@h2|defense": {
+        "old": 2176,
+        "new": 2179
+      },
+      "timeout_terminal_floor:running:le300@h2|offense": {
+        "old": 662,
+        "new": 660
+      },
+      "timeout_terminal_floor:stopped:le120@h1|offense": {
+        "old": 2910,
+        "new": 2915
+      },
+      "timeout_terminal_floor:stopped:le300@h2|both": {
+        "old": 2941,
+        "new": 2943
+      },
+      "timeout_terminal_floor:stopped:le300@h2|defense": {
+        "old": 813,
+        "new": 816
+      },
+      "timeout_terminal_floor:stopped:le300@h2|offense": {
+        "old": 1739,
+        "new": 1755
+      },
+      "timeout_terminal_floor:stopped:normal@all~role|both": {
+        "old": 2449,
+        "new": 2517
+      },
+      "timeout_terminal_floor:stopped:normal@all~role|offense": {
+        "old": 5932,
+        "new": 5964
+      },
+      "two_minute_warning_seconds_restored": {
+        "old": 323005,
+        "new": 322949
+      },
+      "warning_censored_resampled": {
+        "old": 14869,
+        "new": 14860
+      },
+      "warning_censored_unresolved": {
+        "old": 379,
+        "new": 378
+      },
+      "yards_clamped_to_field": {
+        "old": 16121,
+        "new": 16131
+      }
+    },
+    "scope": "Descriptive; equality is not required across model versions"
+  }
+}
