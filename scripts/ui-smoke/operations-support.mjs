@@ -29,6 +29,20 @@ const publicationIntelligence = JSON.parse(
   ),
 );
 
+const autopilotTasks = JSON.parse(
+  execFileSync(
+    process.execPath,
+    [
+      "--import",
+      "tsx",
+      "-e",
+      'const { previewAutopilotTasks } = require("./src/lib/autopilot-tasks"); console.log(JSON.stringify(previewAutopilotTasks(JSON.parse(process.argv[1]))));',
+      JSON.stringify(publicationIntelligence.fixtures),
+    ],
+    { encoding: "utf8" },
+  ),
+);
+
 const base = process.env.UI_SMOKE_URL || "http://127.0.0.1:3100";
 const browser = await chromium.launch({
   executablePath: process.env.PLAYWRIGHT_EXECUTABLE,
@@ -116,6 +130,7 @@ async function fixture(width, role, intercept) {
           state: "ready",
           tickets: [ticket],
           next: null,
+          autopilotTasks: width === 390 ? autopilotTasks : undefined,
           publicationMonitor: publicationFixtures,
           publicationIntelligence: publicationIntelligence,
           feedHealth: {
@@ -338,6 +353,33 @@ try {
   for (const width of [390, 1280]) {
     const admin = await fixture(width, "admin");
     await admin.page.goto(base + "/admin/operations");
+    const tasks = admin.page.getByRole("region", {
+      name: "Autopilot task queue",
+    });
+    if (width === 390) {
+      await tasks
+        .getByText(/scheduler without post.*blocked|overdue.*blocked/)
+        .click();
+      await tasks
+        .getByText(/Awaiting an authoritative slate coverage record/)
+        .first()
+        .waitFor();
+      const link = tasks.getByRole("link", { name: /Eastern.*evidence/ });
+      const target = await link.getAttribute("href");
+      assert.equal(
+        await admin.page
+          .locator("[id]")
+          .evaluateAll(
+            (elements, hash) =>
+              elements.filter((el) => "#" + el.id === hash).length,
+            target,
+          ),
+        1,
+      );
+      assert.equal(await tasks.getByRole("button").count(), 0);
+    } else {
+      assert.equal(await tasks.count(), 0);
+    }
     const monitor = admin.page.getByRole("region", {
       name: /Publication Monitor/,
     });

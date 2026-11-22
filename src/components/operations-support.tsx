@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AutopilotTaskQueue } from "./autopilot-task-queue";
 import { NbaPublicationIntelligence } from "./nba-publication-intelligence";
 import { NbaPublicationMonitor } from "./nba-publication-monitor";
 import { useEffect, useRef, useState, type FormEvent } from "react";
@@ -187,6 +188,9 @@ export function OperationsQueue() {
       </div>
       {queue && (
         <>
+          {queue.autopilotTasks && (
+            <AutopilotTaskQueue tasks={queue.autopilotTasks} />
+          )}
           {queue.publicationIntelligence && (
             <NbaPublicationIntelligence
               key={queue.publicationIntelligence.live?.checkedAt ?? "fixture"}
