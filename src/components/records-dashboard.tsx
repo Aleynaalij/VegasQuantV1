@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { money, signedMoney, type Desk, type Pick } from "@/lib/domain";
 import { performance } from "@/lib/performance";
+import styles from "@/app/record-presentation.module.css";
 const pct = (n: number | null, digits = 1) =>
   n === null ? "—" : `${n > 0 ? "+" : ""}${n.toFixed(digits)}%`;
 /** Sportsbook-style summary of the official record: KPIs, settled P/L curve and recent form. */
@@ -27,7 +28,10 @@ export default function RecordsDashboard({
   const up = m.net >= 0;
   const form = m.settled.slice(-10);
   return (
-    <section className="records-dash" aria-label="Official record summary">
+    <section
+      className={`records-dash ${styles.dashboard}`}
+      aria-label="Official record summary"
+    >
       <div className="records-kpis">
         <div>
           <small>Record</small>
@@ -86,12 +90,12 @@ export default function RecordsDashboard({
               <linearGradient id="records-fill" x1="0" x2="0" y1="0" y2="1">
                 <stop
                   offset="0%"
-                  stopColor={up ? "#1ed883" : "#ff5468"}
+                  stopColor={up ? "#95e3bd" : "#ffb3a6"}
                   stopOpacity=".35"
                 />
                 <stop
                   offset="100%"
-                  stopColor={up ? "#1ed883" : "#ff5468"}
+                  stopColor={up ? "#95e3bd" : "#ffb3a6"}
                   stopOpacity="0"
                 />
               </linearGradient>
@@ -109,7 +113,7 @@ export default function RecordsDashboard({
             <polyline
               points={line}
               fill="none"
-              stroke={up ? "#1ed883" : "#ff5468"}
+              stroke={up ? "#95e3bd" : "#ffb3a6"}
               strokeWidth="3"
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
