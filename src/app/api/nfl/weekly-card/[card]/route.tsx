@@ -4,7 +4,7 @@ import path from "node:path";
 import { ImageResponse } from "next/og";
 import { createClient } from "@supabase/supabase-js";
 import { publishableKey, supabaseUrl } from "@/lib/supabase";
-import { positionCardPayload } from "@/lib/nfl-position-card";
+import { positionCardPayload, type PositionCard } from "@/lib/nfl-position-card";
 import { cardDate } from "@/lib/nba-threes-card";
 import {
   kickoffLabel,
@@ -330,6 +330,102 @@ function DvpBody({ card, single = false }: { card: DvpCard; single?: boolean }) 
   );
 }
 
+function DvpAveragesBody({
+  card,
+  averages,
+}: {
+  card: PositionCard;
+  averages: NonNullable<PositionCard["averages"]>;
+}) {
+  const game = card.games[0];
+  return (
+    <div style={{ display: "flex", flexDirection: "column", marginTop: 28 }}>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          padding: "22px 28px",
+          background: "#12382a66",
+          borderRadius: 16,
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            fontFamily: "Barlow Condensed",
+            fontSize: 48,
+            color: PALE,
+          }}
+        >
+          {nickname(game.awayAbbr)} @ {nickname(game.homeAbbr)}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            marginTop: 6,
+            fontFamily: "DM Sans",
+            fontSize: 24,
+            color: TEXT,
+          }}
+        >
+          {kickoffLabel(game.kickoff)}
+        </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          marginTop: 20,
+          height: 58,
+          padding: "0 24px",
+          borderBottom: `2px solid ${GOLD}66`,
+          fontFamily: "Barlow Condensed",
+          fontSize: 35,
+          color: GOLD,
+        }}
+      >
+        <span style={{ flexGrow: 1 }}>ALLOWED PER GAME</span>
+        <span style={{ width: 150, textAlign: "right" }}>
+          {averages.awayLabel}
+        </span>
+        <span style={{ width: 150, textAlign: "right" }}>
+          {averages.homeLabel}
+        </span>
+      </div>
+      {averages.rows.map((row) => (
+        <div
+          key={row.label}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            height: 72,
+            padding: "0 24px",
+            borderBottom: "1px solid #ffffff20",
+            color: TEXT,
+            fontFamily: "Barlow Condensed",
+            fontSize: 38,
+          }}
+        >
+          <span style={{ flexGrow: 1 }}>{row.label.toUpperCase()}</span>
+          <span style={{ width: 150, textAlign: "right" }}>{row.away}</span>
+          <span style={{ width: 150, textAlign: "right" }}>{row.home}</span>
+        </div>
+      ))}
+      <div
+        style={{
+          display: "flex",
+          margin: "24px 24px 0",
+          fontFamily: "DM Sans",
+          fontSize: 24,
+          color: MUTED,
+        }}
+      >
+        Checked {averages.checked}
+      </div>
+    </div>
+  );
+}
+
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ card: string }> },
@@ -357,9 +453,10 @@ export async function GET(
       status: 503,
       headers: { "Cache-Control": "no-store", "Retry-After": "2" },
     });
-  const data = post ? positionCardPayload(r.data) : r.data as WrCard | DvpCard | null;
-  if (post && data) ref = {kind:"dvp",day:data.day,page:1};
-  if (!ref) return new Response("No card", {status:404});
+  const position = post ? positionCardPayload(r.data) : null;
+  const data = post ? position : r.data as WrCard | DvpCard | null;
+  if (position) ref = {kind:"dvp",day:position.day,page:1};
+  if (!ref) return new Response("No card", {status:404, headers: { "Cache-Control": "no-store" }});
   const ok =
     ref.kind === "wr"
       ? Array.isArray((data as WrCard | null)?.rows) &&
@@ -387,6 +484,16 @@ export async function GET(
         footer="Matchup 0–100: how much the opponent allows to WRs per game (yards 50%, TDs 30%, catches 20%). Green 60+, yellow 40–59, red under 40. Team defense, not a cornerback assignment. Research only, not picks. Stats: nflverse."
       >
         <WrBody card={data as WrCard} />
+      </Frame>
+    ) : position?.averages ? (
+      <Frame
+        accent="DEFENSE"
+        title="VS POSITION"
+        subtitle="TEAM DEFENSIVE AVERAGES"
+        meta={`${cardDate(ref.day)} · ${position.averages.season} REG WEEKS 1–${position.throughWeek} · ${position.averages.sampleGames} GAMES PER DEFENSE`}
+        footer="Research only, not picks or individual coverage assignments. See original publication for sources and limitations."
+      >
+        <DvpAveragesBody card={position} averages={position.averages} />
       </Frame>
     ) : (
       <Frame
