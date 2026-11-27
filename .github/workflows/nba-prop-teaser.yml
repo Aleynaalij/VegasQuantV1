@@ -1,6 +1,8 @@
 name: NBA Prop Finder teaser
-# Stores the free slice of tonight's Prop Finder board (top 2 fresh edges + count) for signed-in
+# Stores the free slice of tonight's Prop Finder board (top 2 projection gaps + count) for signed-in
 # free users. Counts-only logs: this repository is public.
+# Started every 20 minutes on NBA game days by Supabase (private.dispatch_nba_teaser,
+# 20261127200000_nba_teaser_timer.sql); the GitHub schedule below is a backup.
 on:
   schedule:
     - cron: '7,27,47 * * * *'
